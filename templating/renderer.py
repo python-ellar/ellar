@@ -52,6 +52,12 @@ class _RenderOperation:
 
         template = jinja_environment.get_template(template_name)
         response = _TemplateResponse(template=template, context=template_context)
+        if ctx.has_response:
+            endpoint_response = ctx.get_response()
+            if endpoint_response.status_code != 200:
+                response.status_code = endpoint_response.status_code
+            response.headers.raw.extend(endpoint_response.headers.raw)
+            response.background = endpoint_response.background
         return response
 
     def get_view_function(self) -> Callable:

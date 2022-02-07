@@ -7,25 +7,25 @@ from starlette.middleware import Middleware
 from starlette.routing import BaseRoute
 
 from starletteapi.middleware.versioning import RequestVersioningMiddleware
+from starletteapi.static_files import StarletteStaticFiles
 from starletteapi.types import TScope, TReceive, TSend, ASGIApp
 from starletteapi.middleware.errors import ServerErrorMiddleware
 from starletteapi.di.injector import StarletteInjector
 from starletteapi.exception_handlers import api_exception_handler, request_validation_exception_handler
 from starletteapi.exceptions import RequestValidationError, APIException
 from starletteapi.guard import GuardCanActivate
-from starletteapi.module import Module, ApplicationModuleBase
+from starletteapi.module import ApplicationModule
 from starletteapi.routing import APIRouter
 from starletteapi.settings import Config
 from starletteapi.templating import StarletteAppTemplating
-from starletteapi.versioning import HeaderAPIVersioning, QueryParameterAPIVersioning, HostNameAPIVersioning, VERSIONING, \
-    BaseAPIVersioning
+from starletteapi.versioning import VERSIONING, BaseAPIVersioning
 
 
 class StarletteApp(Starlette, StarletteAppTemplating):
     def __init__(
             self,
             *,
-            root_module: t.Type[ApplicationModuleBase],
+            root_module: ApplicationModule,
             routes: t.Sequence[BaseRoute] = None,
             middleware: t.Sequence[Middleware] = None,
             guards: t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]] = None,
@@ -37,7 +37,7 @@ class StarletteApp(Starlette, StarletteAppTemplating):
             lifespan: t.Callable[["Starlette"], t.AsyncContextManager] = None,
             config: t.Type[Config] = None,
     ):
-        self._injector = StarletteInjector(app=self, root_module=root_module)
+        self._injector = StarletteInjector(app=self, root_module=root_module.module)
         _config = config or Config
         self._config = self._injector.create_object(_config)
 
@@ -59,7 +59,7 @@ class StarletteApp(Starlette, StarletteAppTemplating):
         self._root_path = self._config.BASE_DIR
         self._static_folder = self._config.STATIC_FOLDER
 
-        self._module_loaders = []
+        self._module_loaders = [root_module] + root_module.get_modules()
 
         self._guards = guards or []
         self.router = APIRouter(
@@ -70,6 +70,9 @@ class StarletteApp(Starlette, StarletteAppTemplating):
         self.user_middleware = [] if middleware is None else list(middleware)
         self.middleware_stack = self.build_middleware_stack()
         self._process_route_versioning()
+
+        if self.static_files:
+            self.router.mount('/static', app=StarletteStaticFiles(directories=self.static_files), name='static')
 
         self.Get = self.router.Get
         self.Post = self.router.Post
@@ -88,10 +91,6 @@ class StarletteApp(Starlette, StarletteAppTemplating):
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         return self._guards
-
-    def add_modules(self, *modules: Module) -> None:
-        if modules:
-            self._module_loaders.extend(list(modules))
 
     @property
     def injector(self) -> StarletteInjector:

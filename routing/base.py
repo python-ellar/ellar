@@ -35,7 +35,7 @@ class APIRouter(Router):
     def __init__(self, *args: t.Any, **kwargs: t.Any):
         super().__init__(*args, **kwargs)
 
-        self._route_definitions = RouteDefinitions(Operation, WebsocketOperation, self.routes or [])
+        self._route_definitions = RouteDefinitions(Operation, WebsocketOperation, self.routes)
 
         self.Get = self._route_definitions.get
         self.Post = self._route_definitions.post

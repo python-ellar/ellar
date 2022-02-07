@@ -55,10 +55,17 @@ class ExtraOperationArgs(Generic[T]):
 
 
 class OperationMeta(dict):
-    extra_route_args: List[ExtraOperationArgs] = []
-    response_override: Union[Dict[int, Union[Type, Any]], Type, None] = None
-    route_versioning: Set[Union[int, float, str]] = set()
-    route_guards: List[Union[Type['GuardCanActivate'], 'GuardCanActivate']] = []
+    extra_route_args: List[ExtraOperationArgs]
+    response_override: Union[Dict[int, Union[Type, Any]], Type, None]
+    route_versioning: Set[Union[int, float, str]]
+    route_guards: List[Union[Type['GuardCanActivate'], 'GuardCanActivate']]
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('extra_route_args', [])
+        kwargs.setdefault('response_override', None)
+        kwargs.setdefault('route_versioning', set())
+        kwargs.setdefault('route_guards', [])
+        super(OperationMeta, self).__init__(*args, **kwargs)
 
     def __getitem__(self, name) -> Any:
         try:

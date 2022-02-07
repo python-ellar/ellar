@@ -31,6 +31,7 @@ class ExecutionContext:
         self.receive = receive
         self.send = send
         self._operation = operation
+        self._response: Optional[Response] = None
 
     @property
     def operation(self):
@@ -39,10 +40,6 @@ class ExecutionContext:
     @property
     def has_response(self) -> bool:
         return self._response is not None
-
-    @cached_property
-    def _response(self):
-        return Response(background=BackgroundTasks())
 
     @cached_property
     def _service_provider(self) -> Optional['DIRequestServiceProvider']:
@@ -80,6 +77,8 @@ class ExecutionContext:
         return self._websocket
 
     def get_response(self) -> Response:
+        if not self._response:
+            self._response = Response(background=BackgroundTasks())
         return self._response
 
     def get_app(self) -> 'StarletteApp':

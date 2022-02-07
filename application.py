@@ -63,15 +63,13 @@ class _StarletteAppFactory:
         #     )
         app = StarletteApp(
             routes=routes,
-            root_module=app_module.module,
+            root_module=app_module,
             middleware=middleware,
             exception_handlers=exception_handlers,
             guards=self.application_module.guards,
             config=config,
             **events
         )
-        modules = [app_module] + app_module.get_modules()
-        app.add_modules(*modules)
         self._finalize_app_initialization(app=app)
         return app
 

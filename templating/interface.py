@@ -123,3 +123,11 @@ class StarletteAppTemplating(JinjaTemplating):
 
     def create_global_jinja_loader(self) -> StarletteJinjaLoader:
         return StarletteJinjaLoader(t.cast('StarletteApp', self))
+
+    @cached_property
+    def static_files(self) -> t.List[str]:
+        static_directories = []
+        for module in self.get_module_loaders():
+            if module.static_directory:
+                static_directories.append(module.static_directory)
+        return static_directories

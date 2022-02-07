@@ -37,8 +37,8 @@ class StarletteJinjaLoader(BaseLoader):
         if loader is not None:
             yield loader
 
-        for blueprint in self.app.get_module_loaders():
-            loader = blueprint.jinja_loader
+        for module in self.app.get_module_loaders():
+            loader = module.jinja_loader
             if loader is not None:
                 yield loader
 

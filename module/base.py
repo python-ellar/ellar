@@ -87,7 +87,7 @@ class ApplicationModuleBase(ModuleBase):
         return None
 
 
-class Module(InjectorModule, ModuleTemplating, ABC):
+class Module(ModuleTemplating, ABC):
     def __init__(
             self,
             *,
@@ -97,7 +97,7 @@ class Module(InjectorModule, ModuleTemplating, ABC):
             providers: Sequence[Type] = tuple(),
             template_folder: Optional[str] = None,
             base_directory: Optional[str] = None,
-            static_folder: Optional[str] = None,
+            static_folder: str = 'static',
     ):
         self.name = name
         self.controllers = controllers
@@ -168,7 +168,7 @@ class ApplicationModule(Module):
             guards: List[Union[Type[GuardCanActivate], GuardCanActivate]] = None,
             template_folder: Optional[str] = None,
             base_directory: Optional[str] = None,
-            static_folder: Optional[str] = None,
+            static_folder: str = 'static',
     ) -> None:
         super().__init__(
             controllers=controllers,
