@@ -1,7 +1,7 @@
 from typing import List, Sequence, Dict, Optional, Type
 from starlette.middleware import Middleware
 from starlette.routing import BaseRoute
-from starletteapi.controller import ControllerBase, Controller
+from starletteapi.controller import Controller
 from starletteapi.main import StarletteApp
 from starletteapi.module import ApplicationModule
 from starletteapi.settings import Config
@@ -20,18 +20,13 @@ class _StarletteAppFactory:
         app.injector.container.add_instance(app)
         app.injector.container.add_instance(app.config, Config)
         app.injector.container.add_instance(app.jinja_environment, Environment)
-        app.injector.container.add_exact_scoped(ControllerBase)
 
     def _build_controller_routes(self) -> List[BaseRoute]:
         controllers = self.application_module.get_controllers()
         routes = []
         for controller in controllers:
-            if isinstance(controller, type) and issubclass(controller, ControllerBase):
-                routes.append(controller.get_route())
-                continue
             if isinstance(controller, Controller):
-                routes.append(controller.mount)
-                continue
+                routes.append(controller.get_route())
         return routes
 
     def _build_module_routes(self) -> List[BaseRoute]:

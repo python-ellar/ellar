@@ -177,7 +177,7 @@ class NotAcceptable(APIException):
 
     def __init__(
         self,
-        detail: Optional[Union[List, Dict, "ErrorDetail"]] = None,
+        detail: Optional[Union[List, Dict, "ErrorDetail", str]] = None,
         code: Optional[Union[str, int]] = None,
         available_renderers: Optional[str] = None,
     ):

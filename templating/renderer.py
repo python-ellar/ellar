@@ -37,8 +37,7 @@ class _RenderOperation:
         template_name = self.template_name
         if self.use_mvc and isinstance(ctx.operation, ControllerOperation):
             operation = cast(ControllerOperation, ctx.operation)
-            instance = ctx.get_service_provider().get(operation.controller_class)
-            template_name = instance.full_view_name(self.template_name)
+            template_name = operation.controller.full_view_name(self.template_name)
         return get_template_name(template_name)
 
     def _create_template_response(

@@ -31,8 +31,6 @@ class ExecutionContext:
         self.receive = receive
         self.send = send
         self._operation = operation
-        self._request_body: Optional[Any] = None
-        self._request_form: Optional[Any] = None
 
     @property
     def operation(self):
@@ -48,11 +46,7 @@ class ExecutionContext:
 
     @cached_property
     def _service_provider(self) -> Optional['DIRequestServiceProvider']:
-        service_provider = self.scope.get('service_provider')
-        if not service_provider:
-            service_provider = self.get_app().injector.create_di_request_service_provider(
-                {ExecutionContext: self}
-            )
+        service_provider = self.switch_to_http_connection().service_provider
         if ExecutionContext not in service_provider.context:
             service_provider.update_context(ExecutionContext, self)
         return service_provider
@@ -72,48 +66,6 @@ class ExecutionContext:
         if self.scope['type'] != 'websocket':
             raise ExecutionContextException(f"Context Switch is not allow for scope[type]={self.scope['type']}")
         return WebSocket(self.scope, receive=self.receive, send=self.send)
-
-    async def get_request_body(self) -> Any:
-        if not self._request_body:
-            try:
-                request = self.switch_to_request()
-                body_bytes = await request.body()
-                if body_bytes:
-                    json_body: Any = Undefined
-                    content_type_value = request.headers.get("content-type")
-                    if not content_type_value:
-                        json_body = await request.json()
-                    else:
-                        message = email.message.Message()
-                        message["content-type"] = content_type_value
-                        if message.get_content_maintype() == "application":
-                            subtype = message.get_content_subtype()
-                            if subtype == "json" or subtype.endswith("+json"):
-                                json_body = await request.json()
-                    if json_body != Undefined:
-                        body = json_body
-                    else:
-                        body = body_bytes
-                    self._request_body = body
-            except json.JSONDecodeError as e:
-                raise RequestValidationError([ErrorWrapper(e, ("body", e.pos))])
-            except Exception as e:
-                raise HTTPException(
-                    status_code=400, detail="There was an error parsing the body"
-                ) from e
-        return self._request_body
-
-    async def get_request_form(self) -> Any:
-        if not self._request_form:
-            try:
-                request = self.switch_to_request()
-                body_bytes = await request.form()
-                self._request_form = body_bytes
-            except Exception as e:
-                raise HTTPException(
-                    status_code=400, detail="There was an error parsing the body"
-                ) from e
-        return self._request_form
 
     def get_service_provider(self) -> "DIRequestServiceProvider":
         return self._service_provider

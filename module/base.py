@@ -9,7 +9,7 @@ from starletteapi.di.scopes import ScopeDecorator, DIScope, SingletonScope
 from starletteapi.middleware import Middleware
 from starletteapi.requests import Request
 from starletteapi.guard import GuardCanActivate
-from starletteapi.controller import ControllerBase
+from starletteapi.controller import Controller
 from starletteapi.types import TRequest
 from starletteapi.templating.interface import ModuleTemplating
 from starletteapi.routing import ModuleRouter
@@ -92,7 +92,7 @@ class Module(InjectorModule, ModuleTemplating, ABC):
             self,
             *,
             name: Optional[str] = __name__,
-            controllers: Union[Sequence[Type[ControllerBase]], Sequence[Type]] = tuple(),
+            controllers: Sequence[Controller] = tuple(),
             routers: Sequence[ModuleRouter] = tuple(),
             providers: Sequence[Type] = tuple(),
             template_folder: Optional[str] = None,
@@ -131,7 +131,7 @@ class Module(InjectorModule, ModuleTemplating, ABC):
             scope = cast(Union[Type[DIScope], ScopeDecorator], getattr(_provider, '__di_scope__', SingletonScope))
             container.register(base_type=_provider, scope=scope)
 
-    def get_controllers(self) -> List[Type]:
+    def get_controllers(self) -> List[Controller]:
         if not self.controllers:
             return []
 
@@ -160,7 +160,7 @@ class ApplicationModule(Module):
     def __init__(
             self,
             *,
-            controllers: Union[Sequence[Type[ControllerBase]], Sequence[Type]] = tuple(),
+            controllers: Sequence[Controller] = tuple(),
             routers: Sequence[ModuleRouter] = tuple(),
             providers: Sequence[Type] = tuple(),
             middleware: Sequence[Middleware] = (),
@@ -207,7 +207,7 @@ class ApplicationModule(Module):
         self.resolve_module_base_directory(module_class)
         return self
 
-    def get_controllers(self) -> Union[Sequence[ControllerBase], Sequence[Type]]:
+    def get_controllers(self) -> List[Controller]:
         controllers = super(ApplicationModule, self).get_controllers()
         for module in self.get_modules():
             controllers.extend(module.get_controllers())
