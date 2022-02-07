@@ -18,6 +18,9 @@ OPTIONS = "OPTIONS"
 TRACE = "TRACE"
 ROUTE_METHODS = [POST, PUT, PATCH, DELETE, GET, HEAD, OPTIONS, TRACE]
 
+SCOPE_SERVICE_PROVIDER = "service_provider"
+SCOPE_API_VERSIONING_RESOLVER = "api_versioning_resolver"
+SCOPE_API_VERSIONING_SCHEME = "api_versioning_scheme"
 
 sequence_shapes = {
     SHAPE_LIST,

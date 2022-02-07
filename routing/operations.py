@@ -1,12 +1,13 @@
 import inspect
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, List, Optional, Any, Dict, Sequence, Union, Type, cast, Generic, TypeVar
+from typing import TYPE_CHECKING, List, Optional, Any, Dict, Sequence, Union, Type, cast, Generic, TypeVar, Set, Tuple
 
 from starlette.concurrency import run_in_threadpool
-from starlette.routing import iscoroutinefunction_or_partial
 from starlette.status import WS_1008_POLICY_VIOLATION
+
+from starletteapi.constants import NOT_SET, SCOPE_API_VERSIONING_RESOLVER
 from starletteapi.types import ASGIApp, TScope, TReceive, TSend
-from starletteapi.routing import Route, WebSocketRoute
+from starletteapi.routing import Route, WebSocketRoute, iscoroutinefunction_or_partial, Match
 from starletteapi.context import ExecutionContext
 from starletteapi.api_documentation import OpenAPIDocumentation
 from starletteapi.exceptions import RequestValidationError, WebSocketRequestValidationError
@@ -14,10 +15,11 @@ from starletteapi.guard import GuardInterface
 from starletteapi.responses.model import RouteResponseModel
 from starletteapi.routing.route_models.route_param_model import RouteParameterModel
 from starletteapi.schema import RouteParameters, WsRouteParameters
-from starletteapi.controller.base import ControllerBase
+from starletteapi.controller.base import Controller, ControllerBase
 
 if TYPE_CHECKING:
     from starletteapi.guard.base import GuardCanActivate
+    from starletteapi.versioning.resolver import BaseAPIVersioningResolver
 
 T = TypeVar('T')
 
@@ -53,13 +55,16 @@ class ExtraOperationArgs(Generic[T]):
 
 
 class OperationMeta(dict):
-    extra_route_args: List[ExtraOperationArgs]
-    response_override: Union[Dict[int, Union[Type, Any]], Type, None]
+    extra_route_args: List[ExtraOperationArgs] = []
+    response_override: Union[Dict[int, Union[Type, Any]], Type, None] = None
+    route_versioning: Set[Union[int, float, str]] = set()
+    route_guards: List[Union[Type['GuardCanActivate'], 'GuardCanActivate']] = []
 
-    def __init__(self, **kwargs: Any) -> None:
-        kwargs.setdefault('extra_route_args', [])
-        kwargs.setdefault('response_override')
-        super(OperationMeta, self).__init__(**kwargs)
+    def __getitem__(self, name) -> Any:
+        try:
+            return self.__getattr__(name)
+        except AttributeError:
+            raise KeyError(name)
 
     def __getattr__(self, name) -> Any:
         if name in self:
@@ -71,8 +76,7 @@ class OperationMeta(dict):
 
 
 class OperationBase(GuardInterface):
-    _guards: List[Union[Type['GuardCanActivate'], 'GuardCanActivate']] = []
-    _meta: Dict[str, Any] = {}
+    _meta: OperationMeta
 
     @property
     def app(self) -> ASGIApp:
@@ -83,14 +87,14 @@ class OperationBase(GuardInterface):
         ...
 
     def get_guards(self) -> List[Union[Type['GuardCanActivate'], 'GuardCanActivate']]:
-        return self._guards
+        return self._meta.route_guards
 
     def get_meta(self) -> Dict[str, Any]:
         return self._meta
 
     def add_guards(self, *guards: Sequence['GuardCanActivate']) -> None:
         if guards:
-            self._guards += list(guards)
+            self._meta.route_guards += list(guards)
 
     def update_operation_meta(self, **kwargs: Any) -> None:
         self._meta.update(**kwargs)
@@ -98,9 +102,9 @@ class OperationBase(GuardInterface):
     async def run_route_guards(self, context: ExecutionContext) -> None:
         app = context.get_app()
         _guards = self.get_guards() or app.get_guards()
-        if self._guards:
+        if _guards:
             injector = context.get_service_provider()
-            for guard in self._guards:
+            for guard in _guards:
                 if isinstance(guard, type):
                     guard = injector.get(cast(Type['GuardCanActivate'], guard))
                 result = await guard.can_activate(context)
@@ -115,6 +119,17 @@ class OperationBase(GuardInterface):
     @abstractmethod
     async def _handle(self, *, context: ExecutionContext) -> None:
         """return a context"""
+
+    def get_allowed_version(self) -> Set[str]:
+        return self._meta.route_versioning
+
+    def matches(self, scope: TScope) -> Tuple[Match, TScope]:
+        match = super().matches(scope)
+        if match[0] is not Match.NONE:
+            version_scheme_resolver = cast('BaseAPIVersioningResolver', scope[SCOPE_API_VERSIONING_RESOLVER])
+            if not version_scheme_resolver.can_activate(route_versions=self.get_allowed_version()):
+                return Match.NONE, {}
+        return match
 
 
 class WebsocketOperationBase(OperationBase, ABC):
@@ -144,7 +159,6 @@ class Operation(OperationBase, Route):
         if self._meta.extra_route_args:
             self.route_parameter_model.add_extra_route_args(*self._meta.extra_route_args)
 
-        self._guards: List[Union[Type['GuardCanActivate'], 'GuardCanActivate']] = []
         self.response_model = RouteResponseModel(
             route_responses=self._meta.response_override or route_parameter.response
         )
@@ -153,9 +167,6 @@ class Operation(OperationBase, Route):
             description=route_parameter.description, deprecated=route_parameter.deprecated,
             tags=route_parameter.tags, route_parameter_model=self.route_parameter_model
         )
-        _guards = getattr(self.endpoint, '_guards', [])
-        if _guards:
-            self.add_guards(*_guards)
 
     async def _handle(self, context: ExecutionContext) -> None:
         func_kwargs, errors = await self.route_parameter_model.resolve_dependencies(ctx=context)
@@ -179,11 +190,15 @@ class WebsocketOperation(WebsocketOperationBase, WebSocketRoute):
             endpoint=self.endpoint,
             name=ws_route_parameters.name
         )
-
         self.route_parameter_model = RouteParameterModel(path=self.path_format, endpoint=self.endpoint)
+        _meta = OperationMeta()
+        if hasattr(self.endpoint, "_meta"):
+            _meta = getattr(self.endpoint, "_meta")
 
-        self._meta: Dict[str, Any] = {}
-        self._guards: List[Union[Type['GuardCanActivate'], 'GuardCanActivate']] = []
+        self._meta: OperationMeta = cast(OperationMeta, _meta)
+
+        if self._meta.extra_route_args:
+            self.route_parameter_model.add_extra_route_args(*self._meta.extra_route_args)
 
     async def _handle(self, context: ExecutionContext) -> None:
         func_kwargs, errors = await self.route_parameter_model.resolve_dependencies(ctx=context)
@@ -196,38 +211,42 @@ class WebsocketOperation(WebsocketOperationBase, WebSocketRoute):
 
 
 class ClassBasedOperation:
+    _meta: OperationMeta
+
     def __init__(
-            self, *, controller_class: Optional[ControllerBase] = None, **kwargs: Any
+            self, *, controller: Optional[Controller] = None, **kwargs: Any
     ) -> None:
         super(ClassBasedOperation, self).__init__(**kwargs)
-        self._controller_class: Optional[Type[ControllerBase]] = controller_class
+        self._controller: Optional[Controller] = controller
 
     @property
-    def controller_class(self) -> Type[ControllerBase]:
-        assert self._controller_class, 'Controller Operation is not fully setup'
-        return self._controller_class
+    def controller(self) -> Controller:
+        assert self._controller, 'Controller Operation is not fully setup'
+        return self._controller
 
-    @controller_class.setter
-    def controller_class(self, value: Type[ControllerBase]):
-        if not isinstance(value, type):
-            raise Exception('Value must be a type')
-        self._controller_class = value
+    @controller.setter
+    def controller(self, value: Controller):
+        if not isinstance(value, Controller):
+            raise Exception('value must be instance of a Controller')
+        self._controller = value
 
     def _get_controller_instance(self, ctx: ExecutionContext) -> ControllerBase:
         service_provider = ctx.get_service_provider()
 
         controller_instance = service_provider.get(
-            self.controller_class
+            self.controller.controller_class
         )
         controller_instance.context = ctx
         return controller_instance
 
+    def get_guards(self) -> List[Union[Type['GuardCanActivate'], 'GuardCanActivate']]:
+        return self._meta.route_guards or self.controller.get_guards()
+
+    def get_allowed_version(self) -> Set[str]:
+        return self._meta.route_versioning or self.controller.version
+
 
 class ControllerOperation(ClassBasedOperation, Operation):
-
-    def get_guards(self) -> List[Union[Type['GuardCanActivate'], 'GuardCanActivate']]:
-        return self._guards or self.controller_class.get_guards()
-
     async def _handle(self, context: ExecutionContext) -> Any:
         controller_instance = self._get_controller_instance(ctx=context)
         context.get_service_provider().update_context(ControllerBase, controller_instance)
@@ -245,9 +264,6 @@ class ControllerOperation(ClassBasedOperation, Operation):
 
 
 class ControllerWebsocketOperation(ClassBasedOperation, WebsocketOperation):
-    def get_guards(self) -> List[Union[Type['GuardCanActivate'], 'GuardCanActivate']]:
-        return self._guards or self.controller_class.get_guards()
-
     async def _handle(self, context: ExecutionContext) -> None:
         controller_instance = self._get_controller_instance(ctx=context)
         context.get_service_provider().update_context(ControllerBase, controller_instance)

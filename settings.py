@@ -1,10 +1,10 @@
 import inspect
-import os
-from typing import Optional, List
+from typing import Optional
 
 from starlette.responses import JSONResponse
 from typing_extensions import Type
 from pathlib import Path
+from starletteapi.versioning import DefaultAPIVersioning, BaseAPIVersioning
 
 
 class Config:
@@ -19,3 +19,5 @@ class Config:
     TEMPLATE_FOLDER: Optional[str] = 'templates'
 
     STATIC_FOLDER: Optional[str] = 'statics'
+    VERSIONING_SCHEME: BaseAPIVersioning = DefaultAPIVersioning()
+    REDIRECT_SLASHES: bool = False

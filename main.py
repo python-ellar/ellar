@@ -1,8 +1,12 @@
 import typing as t
 from starlette.applications import Starlette
+
+from starletteapi.middleware.di import DIRequestServiceProviderMiddleware
 from starletteapi.middleware.exceptions import ExceptionMiddleware
 from starlette.middleware import Middleware
 from starlette.routing import BaseRoute
+
+from starletteapi.middleware.versioning import RequestVersioningMiddleware
 from starletteapi.types import TScope, TReceive, TSend, ASGIApp
 from starletteapi.middleware.errors import ServerErrorMiddleware
 from starletteapi.di.injector import StarletteInjector
@@ -13,6 +17,8 @@ from starletteapi.module import Module, ApplicationModuleBase
 from starletteapi.routing import APIRouter
 from starletteapi.settings import Config
 from starletteapi.templating import StarletteAppTemplating
+from starletteapi.versioning import HeaderAPIVersioning, QueryParameterAPIVersioning, HostNameAPIVersioning, VERSIONING, \
+    BaseAPIVersioning
 
 
 class StarletteApp(Starlette, StarletteAppTemplating):
@@ -57,11 +63,13 @@ class StarletteApp(Starlette, StarletteAppTemplating):
 
         self._guards = guards or []
         self.router = APIRouter(
-            routes, on_startup=on_startup, on_shutdown=on_shutdown, lifespan=lifespan
+            routes, on_startup=on_startup, on_shutdown=on_shutdown,
+            lifespan=lifespan, redirect_slashes=self._config.REDIRECT_SLASHES
         )
         self.exception_handlers = exception_handlers
         self.user_middleware = [] if middleware is None else list(middleware)
         self.middleware_stack = self.build_middleware_stack()
+        self._process_route_versioning()
 
         self.Get = self.router.Get
         self.Post = self.router.Post
@@ -89,10 +97,6 @@ class StarletteApp(Starlette, StarletteAppTemplating):
     def injector(self) -> StarletteInjector:
         return self._injector
 
-    @injector.setter
-    def injector(self, value):
-        ...
-
     @property
     def config(self) -> Config:
         return self._config
@@ -117,7 +121,9 @@ class StarletteApp(Starlette, StarletteAppTemplating):
             + [
                 Middleware(
                     ExceptionMiddleware, handlers=exception_handlers, debug=self._debug
-                )
+                ),
+                Middleware(RequestVersioningMiddleware, debug=self._debug, config=self.config),
+                Middleware(DIRequestServiceProviderMiddleware, debug=self._debug, injector=self.injector),
             ]
         )
 
@@ -128,8 +134,6 @@ class StarletteApp(Starlette, StarletteAppTemplating):
 
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
         scope["app"] = self
-        scope['service_provider'] = self.injector.create_di_request_service_provider(context={})
-
         await self.middleware_stack(scope, receive, send)
 
     def route(
@@ -145,3 +149,20 @@ class StarletteApp(Starlette, StarletteAppTemplating):
     def websocket_route(self, path: str, name: str = None) -> t.Callable:
         # TODO
         """Override with new configuration"""
+
+    def _process_route_versioning(self):
+        versioning = self.config.VERSIONING_SCHEME
+        if isinstance(versioning, BaseAPIVersioning):
+            versioning.modify_routes(self.routes)
+
+    def enable_versioning(
+            self, version_type: VERSIONING,
+            version_parameter: str = 'version',
+            default_version: t.Optional[str] = None,
+            **kwargs
+    ):
+        kwargs.setdefault('version_parameter', version_parameter)
+        kwargs.setdefault('default_version', default_version)
+        versioning = version_type.value(**kwargs)
+        self.config.VERSIONING_SCHEME = versioning
+        self._process_route_versioning()

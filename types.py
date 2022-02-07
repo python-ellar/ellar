@@ -1,5 +1,5 @@
 from typing import Union
-from starlette.types import Scope as TScope, Receive as TReceive, Send as TSend, ASGIApp  # noqa
+from starlette.types import Scope as TScope, Receive as TReceive, Send as TSend, ASGIApp, Message  # noqa
 from starletteapi.requests import Request
 from starletteapi.websockets import WebSocket
 
