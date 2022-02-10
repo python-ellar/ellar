@@ -6,7 +6,3 @@ from starletteapi.requests import HTTPConnection
 
 class WebSocket(StarletteWebSocket, HTTPConnection):
     pass
-
-
-
-

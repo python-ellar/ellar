@@ -1,6 +1,5 @@
-import re
 from abc import ABC
-from typing import Any, Set, List, TYPE_CHECKING, Type, Optional
+from typing import List, TYPE_CHECKING, Type, Optional
 
 from starletteapi.routing.path import PathModifier
 from starletteapi.types import TScope
@@ -24,11 +23,8 @@ class BaseAPIVersioning(ABC):
             default_version: Optional[str] = None,
             **kwargs
     ):
-        self.version_parameter = version_parameter or NOT_SET
-        self.default_version = default_version or NOT_SET
-
-    def modify_routes(self, routes: List['BaseRoute']) -> None:
-        pass
+        self.version_parameter = version_parameter
+        self.default_version = default_version
 
     def get_version_resolver(self, scope: TScope) -> BaseAPIVersioningResolver:
         return self.resolver_class(

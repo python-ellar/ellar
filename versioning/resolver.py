@@ -1,14 +1,14 @@
 import email
 import re
-from abc import abstractmethod, ABC
-from typing import Any, Set, List, TYPE_CHECKING
+from abc import abstractmethod
+from typing import Any, Set, Optional
+
+from starlette.routing import compile_path
+
 from starletteapi.types import TScope
 from starletteapi.constants import NOT_SET
 from starletteapi.requests import HTTPConnection
 from starletteapi import exceptions
-
-if TYPE_CHECKING:
-    from starletteapi.routing import BaseRoute
 
 
 class BaseAPIVersioningResolver:
@@ -33,11 +33,6 @@ class BaseAPIVersioningResolver:
         pass
 
     def can_activate(self, route_versions: Set[str]) -> bool:
-        is_version_allowed = self.is_version_allowed(route_versions=route_versions)
-        self.find_route_with_wrong_version = not is_version_allowed
-        return is_version_allowed
-
-    def is_version_allowed(self, route_versions: Set[str]) -> bool:
         version = self.resolve()
 
         if version is NOT_SET:
@@ -45,18 +40,9 @@ class BaseAPIVersioningResolver:
 
         return version is not None and version == self.default_version or version in route_versions
 
-    @abstractmethod
-    def raise_exception_from(self, ex: Exception) -> bool:
-        pass
-
 
 class DefaultAPIVersionResolver(BaseAPIVersioningResolver):
     invalid_version_message = 'Invalid API version'
-
-    def raise_exception_from(self, ex: Exception) -> None:
-        if self.find_route_with_wrong_version:
-            raise exceptions.NotFound(detail=self.invalid_version_message)
-        raise ex
 
     def resolve_version(self) -> str:
         return NOT_SET
@@ -65,8 +51,48 @@ class DefaultAPIVersionResolver(BaseAPIVersioningResolver):
 class UrlPathVersionResolver(DefaultAPIVersionResolver):
     invalid_version_message = 'Invalid version in URL path.'
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super(UrlPathVersionResolver, self).__init__(*args, **kwargs)
+
+        prefix = '/{' + self.version_parameter + '}'
+        self.path_regex, self.path_format, self.param_convertors = compile_path(
+            prefix + "/{path:path}"
+        )
+        # we expected v[1-9] or (1-9).(1-9) as outcome of the result
+        # to tell when a version is part of the url
+        self.version_regex = re.compile('(v?[1-9]?(.[0-9]))', re.IGNORECASE)
+
+    def _resolve_url_prefix(self) -> Optional[str]:
+        """Since we expect a extra parameter that is not path any router routes,
+        there is need to fix the path in order to avoid some unnecessary `Not Found`"""
+
+        scope = self.connection.scope
+        path = scope["path"]
+
+        match = self.path_regex.match(path)
+        if match:
+            matched_params = match.groupdict()
+            for key, value in matched_params.items():
+                matched_params[key] = self.param_convertors[key].convert(value)
+
+            _version = matched_params.get(self.version_parameter)
+            if self.version_regex.match(_version):
+                remaining_path = "/" + matched_params.pop("path")
+                path_params = dict(scope.get("path_params", {}))
+                path_params.update(matched_params)
+                _scope_update = {
+                    "path_params": path_params,
+                    "path": remaining_path,
+                }
+                scope.update(_scope_update)
+                return _version
+
     def resolve_version(self) -> str:
-        version = self.connection.path_params.get(self.version_parameter, self.default_version)
+        version = self._resolve_url_prefix()
+        if not version:
+            version = self.default_version
+        if not version:
+            raise exceptions.NotFound(detail=self.invalid_version_message)
         return version
 
 
@@ -77,16 +103,13 @@ class HeaderVersionResolver(BaseAPIVersioningResolver):
 
     invalid_version_message = 'Invalid version in "Accept" header.'
 
-    def raise_exception_from(self, ex: Exception) -> None:
-        if self.find_route_with_wrong_version:
-            raise exceptions.NotAcceptable(detail=self.invalid_version_message)
-        raise ex
-
     def resolve_version(self) -> str:
         message = email.message.Message()
         message[self.header_parameter] = self.connection.headers.get(self.header_parameter)
         accept = dict(message.get_params(header=self.header_parameter))
         version = accept.get(self.version_parameter, self.default_version)
+        if not version:
+            raise exceptions.NotAcceptable(detail=self.invalid_version_message)
         return version
 
 
@@ -106,7 +129,9 @@ class HostNameAPIVersionResolver(DefaultAPIVersionResolver):
         host_value = self.connection.headers.get('Host')
         hostname, separator, port = str(host_value).partition(':')
         match = self.hostname_regex.match(hostname)
-        if not match:
+        if not match and self.default_version:
             return self.default_version
+        if not match:
+            raise exceptions.NotFound(detail=self.invalid_version_message)
         version = match.group(1)
         return version

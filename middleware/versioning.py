@@ -25,8 +25,6 @@ class RequestVersioningMiddleware:
             scheme = scheme()
         # await scheme.resolve(scope)
         version_scheme_resolver = scheme.get_version_resolver(scope)
-        try:
-            scope[SCOPE_API_VERSIONING_RESOLVER] = version_scheme_resolver
-            await self.app(scope, receive, send)
-        except Exception as ex:
-            version_scheme_resolver.raise_exception_from(ex)
+        version_scheme_resolver.resolve()
+        scope[SCOPE_API_VERSIONING_RESOLVER] = version_scheme_resolver
+        await self.app(scope, receive, send)

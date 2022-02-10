@@ -69,7 +69,6 @@ class StarletteApp(Starlette, StarletteAppTemplating):
         self.exception_handlers = exception_handlers
         self.user_middleware = [] if middleware is None else list(middleware)
         self.middleware_stack = self.build_middleware_stack()
-        self._process_route_versioning()
 
         if self.static_files:
             self.router.mount('/static', app=StarletteStaticFiles(directories=self.static_files), name='static')
@@ -149,11 +148,6 @@ class StarletteApp(Starlette, StarletteAppTemplating):
         # TODO
         """Override with new configuration"""
 
-    def _process_route_versioning(self):
-        versioning = self.config.VERSIONING_SCHEME
-        if isinstance(versioning, BaseAPIVersioning):
-            versioning.modify_routes(self.routes)
-
     def enable_versioning(
             self, version_type: VERSIONING,
             version_parameter: str = 'version',
@@ -164,4 +158,3 @@ class StarletteApp(Starlette, StarletteAppTemplating):
         kwargs.setdefault('default_version', default_version)
         versioning = version_type.value(**kwargs)
         self.config.VERSIONING_SCHEME = versioning
-        self._process_route_versioning()
