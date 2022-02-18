@@ -104,6 +104,7 @@ class APIException(StarletteHTTPException):
             detail: Optional[Union[List, Dict, "ErrorDetail", str]] = None,
             code: Optional[Union[str, int]] = None,
             status_code: Optional[int] = None,
+            headers: Optional[Dict[str, Any]] = None,
     ) -> None:
         if detail is None:
             detail = self.default_detail
@@ -113,6 +114,7 @@ class APIException(StarletteHTTPException):
         if status_code is None:
             status_code = self.status_code
 
+        self.headers = headers
         super(APIException, self).__init__(status_code=status_code, detail=_get_error_details(detail, code))
 
     def get_codes(self) -> Union[str, Dict, List[dict]]:

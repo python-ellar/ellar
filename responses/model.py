@@ -1,48 +1,88 @@
-from typing import Union, Dict, List, Sequence, cast, Type, Tuple, Any
+from typing import Union, Dict, List, Sequence, cast, Type, Tuple, Any, NamedTuple, Optional
 
 from dataclasses import is_dataclass
 from pydantic import BaseModel
 from pydantic.fields import ModelField
 from pydantic.schema import model_schema
 
-from .responses import Response
+from .responses import Response, JSONResponse
 from starletteapi.context import ExecutionContext
 from starletteapi.converters import TypeDefinitionConverter
 from starletteapi.exceptions import RequestValidationError
-from starletteapi.routing.route_models.helpers import create_response_field
+from starletteapi.route_models.helpers import create_response_field
 from starletteapi.responses.serializer import BaseSerializer, DataClassSerializer, PydanticSerializerBase, \
     PydanticSerializer, convert_dataclass_to_pydantic_model, serialize_object
 
 
+class ResponseResolver(NamedTuple):
+    status_code: int
+    response_model: 'ResponseModel'
+    response_object: Any
+
+
 class ResponseModel:
-    def __init__(self, response_type: Any) -> None:
+    def __init__(self, response_type: Type[Response], description: str = 'Successful Response') -> None:
         self.response_type = response_type
         self.media_type = getattr(response_type or {}, 'media_type', None)
+        self.description = description
 
     def serialize(self, response_obj: Any) -> Union[List[Dict], Dict]:
         return response_obj
 
-    def get_schema(self, ref_prefix: str = '#/components/schemas/') -> Dict[str, Any]:
-        return dict()
+    def get_model_field(self) -> Optional[ModelField]:
+        return None
+
+    def create_response(self, context: ExecutionContext, response_obj: Any, status_code: int) -> Response:
+        raise Exception('Cant create custom responses, Please override this function to create a custom response')
+
+    @classmethod
+    def get_context_response(cls, context: ExecutionContext, **kwargs: Any) -> Tuple[Dict, List]:
+        response_args = dict(kwargs)
+        if context.has_response:
+            endpoint_response = context.get_response()
+            response_args = dict(
+                background=endpoint_response.background
+            )
+            return response_args, endpoint_response.headers.raw
+        return response_args, []
 
 
-class APIResponseModel(ResponseModel):
-    def __init__(self, response_model_field: 'ResponseModelField') -> None:
-        super().__init__(response_type=None)
-        self.response_model_field = response_model_field
-        self.media_type = 'application/json'
+class _JSONResponseModel(ResponseModel):
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(response_type=JSONResponse, **kwargs)
+        model_field = create_response_field(
+            name="response_model", type_=dict, model_field_class=ResponseModelField
+        )
+        self.response_model_field = model_field
+
+    def get_model_field(self) -> Optional[ModelField]:
+        return self.response_model_field
+
+    def create_response(self, context: ExecutionContext, response_obj: Any, status_code: int) -> Response:
+        json_response_class = context.get_app().config.DEFAULT_JSON_CLASS
+        response_args, headers = self.get_context_response(context=context)
+        response = json_response_class(**response_args, content=self.serialize(response_obj))
+
+        if headers:
+            response.headers.raw.extend(headers)
+        return response
+
+
+class APIResponseModel(_JSONResponseModel):
+    def __init__(self, response_schema: Type[BaseModel], description: str = 'Successful Response') -> None:
+        super().__init__(description=description)
+
+        new_response_schema = ResponseTypeDefinitionConverter(response_schema).re_group_outer_type()
+        model_field = create_response_field(
+            name="response_model", type_=new_response_schema, model_field_class=ResponseModelField
+        )
+        self.response_model_field: 'ResponseModelField' = cast(ResponseModelField, model_field)
 
     def serialize(self, response_obj: Any) -> Union[List[Dict], Dict]:
         return self.response_model_field.serialize(response_obj)
 
-    def get_schema(self, ref_prefix: str = '#/components/schemas/') -> Dict[str, Any]:
-        return model_schema(self.response_model_field, by_alias=True, ref_prefix=ref_prefix)
 
-
-class EmptyAPIResponseModel(ResponseModel):
-    def __init__(self) -> None:
-        super().__init__(response_type={})
-
+class EmptyAPIResponseModel(_JSONResponseModel):
     def serialize(self, response_obj: Any) -> Union[List[Dict], Dict]:
         try:
             # try an serialize object
@@ -50,9 +90,6 @@ class EmptyAPIResponseModel(ResponseModel):
         except Exception:
             """Failed to auto serialize object"""
         return response_obj
-
-    def get_schema(self, ref_prefix: str = '#/components/schemas/') -> Dict[str, Any]:
-        return dict()
 
 
 class ResponseModelField(ModelField):
@@ -64,11 +101,7 @@ class ResponseModelField(ModelField):
 
     def serialize(self, obj) -> Union[List[Dict], Dict]:
         values = self.validate_object(obj=obj)
-        if isinstance(values, list):
-            values = cast(Sequence[BaseSerializer], values)
-            return [item.serialize() for item in values]
-        values = cast(BaseSerializer, values)
-        return values.serialize()
+        return serialize_object(values)
 
 
 class RouteResponseExecution(Exception):
@@ -122,21 +155,20 @@ class RouteResponseModel:
                 self.models[status_code] = response_schema
                 continue
 
-            new_response_schema = ResponseTypeDefinitionConverter(response_schema).re_group_outer_type()
-            model_field = create_response_field(
-                name="response_model", type_=new_response_schema, model_field_class=ResponseModelField
-            )
-            self.models[status_code] = APIResponseModel(cast(ResponseModelField, model_field))
+            self.models[status_code] = APIResponseModel(cast(Type[BaseModel], response_schema))
 
-    def resolve_content(
-            self, endpoint_response_content: Union[Any, Tuple[int, Any]]
-    ) -> Union[Tuple[int, Union[Dict, List[Dict]]], Dict, List[dict]]:
+    def response_resolver(
+            self, ctx: ExecutionContext, endpoint_response_content: Union[Any, Tuple[int, Any]]
+    ) -> ResponseResolver:
         status_code: int = 200
         response_obj = endpoint_response_content
         response_model = None
 
         if len(self.models) == 1:
             status_code = list(self.models.keys())[0]
+
+        if ctx.has_response:
+            status_code = ctx.get_response().status_code
 
         if isinstance(response_obj, tuple) and len(response_obj) == 2:
             status_code, response_obj = endpoint_response_content
@@ -150,9 +182,7 @@ class RouteResponseModel:
                 f"No response Schema with status_code={status_code} in response {self.models.keys()}"
             )
 
-        if response_model:
-            return status_code, response_model.serialize(response_obj)
-        return status_code, endpoint_response_content
+        return ResponseResolver(status_code, response_model, response_obj)
 
     def process_response(
             self, ctx: ExecutionContext, response_obj: Union[Any, Tuple[int, Any]]
@@ -160,23 +190,10 @@ class RouteResponseModel:
         if isinstance(response_obj, Response):
             return response_obj
 
-        json_response_class = ctx.get_app().config.DEFAULT_JSON_CLASS
-
-        if ctx.has_response:
-            endpoint_response = ctx.get_response()
-            response_args = dict(
-                background=endpoint_response.background, status_code=endpoint_response.status_code
-            )
-            if not isinstance(response_obj, tuple):
-                response_obj = (endpoint_response.status_code, response_obj)
-            _, content = self.resolve_content(response_obj)
-            response = json_response_class(content=content, **response_args)
-            response.headers.raw.extend(endpoint_response.headers.raw)
-            return response
-
-        status_code, content = self.resolve_content(response_obj)
-        response = json_response_class(content=content, status_code=status_code)
-        return response
+        resolver = self.response_resolver(ctx, response_obj)
+        return resolver.response_model.create_response(
+            status_code=resolver.status_code, context=ctx, response_obj=resolver.response_object
+        )
 
     @classmethod
     def get_route_responses_as_dict(cls, route_responses: Union[Type, Dict[int, Type]]) -> Dict[int, Type]:
@@ -186,7 +203,7 @@ class RouteResponseModel:
             if isinstance(route_responses, type) and issubclass(route_responses, Response):
                 if route_responses.media_type and route_responses.media_type.lower() == 'application/json':
                     raise RouteResponseExecution('JSONResponse type is not required.')
-                _route_responses[200] = route_responses
+            _route_responses[200] = route_responses
             return _route_responses
 
         if not isinstance(route_responses, dict):

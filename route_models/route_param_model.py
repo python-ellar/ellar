@@ -1,44 +1,29 @@
 import inspect
 import re
-from typing import Callable, Set, List, Mapping, Tuple, Any, Dict, Union, cast, TYPE_CHECKING, Type, Optional
+from typing import Callable, Set, List, Mapping, Tuple, Any, Dict, cast, TYPE_CHECKING, Type, Optional
 from pydantic.error_wrappers import ErrorWrapper
-from pydantic import BaseModel
+from pydantic import BaseModel, create_model
 from pydantic.fields import (
-    SHAPE_SINGLETON,
     FieldInfo,
     ModelField,
     Required
 )
 
-from pydantic.schema import SHAPE_SINGLETON, get_annotation_from_field_info
-from pydantic.utils import lenient_issubclass
+from pydantic.schema import get_annotation_from_field_info
 
 from pydantic.typing import evaluate_forwardref, ForwardRef
-
-from starletteapi.constants import sequence_types
 from starletteapi.context import ExecutionContext
-from .helpers import create_response_field
-from .param_resolvers import NonFieldRouteParameter, ParameterResolver, BodyParameterResolver
+from .helpers import create_response_field, is_scalar_field
+from .param_resolvers import (
+    NonFieldRouteParameterResolver, BaseRouteParameterResolver,
+    BodyParameterResolver, RouteParameterResolver, RequestParameter, WebSocketParameter
+)
 from . import params
+from ..websockets import WebSocket
+from ..requests import Request
 
 if TYPE_CHECKING:
     from starletteapi.routing.operations import ExtraOperationArgs
-
-
-def is_scalar_field(field: ModelField) -> bool:
-    field_info = field.field_info
-    if not (
-            field.shape == SHAPE_SINGLETON
-            and not lenient_issubclass(field.type_, BaseModel)
-            and not lenient_issubclass(field.type_, sequence_types + (dict,))
-            # and not dataclasses.is_dataclass(field.type_)
-            and not isinstance(field_info, params.Body)
-    ):
-        return False
-    if field.sub_fields:
-        if not all(is_scalar_field(f) for f in field.sub_fields):
-            return False
-    return True
 
 
 def get_parameter_field(
@@ -92,31 +77,31 @@ def get_parameter_field(
     return field
 
 
-class RouteParameterModel:
-    def __init__(self, *, path: str, endpoint: Callable):
+class EndpointParameterModel:
+    def __init__(self, *, path: str, endpoint: Callable,):
         self.path = path
-        self.body_resolvers = []
+        self._models: List[BaseRouteParameterResolver] = []
         self.path_param_names = self.get_path_param_names(path)
         endpoint_signature = self.get_typed_signature(endpoint)
-        self.models: List[Union[NonFieldRouteParameter, params.Param]] = []
         self.compute_route_parameter_list(endpoint_signature.parameters)
-        self.compute_body_resolvers()
+        self.body_resolver: Optional[RouteParameterResolver] = None
 
-    def compute_body_resolvers(self):
-        body_resolvers = [
-            resolver
-            for resolver in self.models
-            if isinstance(resolver, BodyParameterResolver)
-        ]
-        if len(body_resolvers) > 1:
-            for resolver in body_resolvers:
-                setattr(resolver.model_field.field_info, 'embed', True)
-        self.body_resolvers = body_resolvers
+    def get_models(self) -> List[BaseRouteParameterResolver]:
+        return list(self._models)
 
     def compute_route_parameter_list(self, signature_params: Mapping[str, inspect.Parameter]) -> None:
         for param_name, param in signature_params.items():
-            if param.kind == param.VAR_KEYWORD or param.kind == param.VAR_POSITIONAL or (param.name == 'self' and param.annotation == inspect.Parameter.empty):
+            if param.kind == param.VAR_KEYWORD or param.kind == param.VAR_POSITIONAL or (
+                    param.name == 'self' and param.annotation == inspect.Parameter.empty
+            ):
                 # Skipping **kwargs, *args, self
+                continue
+            if param_name == 'request' and param.default == inspect.Parameter.empty:
+                self._models.append(RequestParameter()(param_name, Request))
+                continue
+
+            if param_name == 'websocket' and param.default == inspect.Parameter.empty:
+                self._models.append(WebSocketParameter()(param_name, WebSocket))
                 continue
 
             if self.add_non_field_param_to_dependency(param=param):
@@ -146,10 +131,10 @@ class RouteParameterModel:
     def add_non_field_param_to_dependency(
             self, *, param: inspect.Parameter
     ) -> Optional[bool]:
-        if isinstance(param.default, NonFieldRouteParameter):
-            _model = cast(NonFieldRouteParameter, param.default)
+        if isinstance(param.default, NonFieldRouteParameterResolver):
+            _model = cast(NonFieldRouteParameterResolver, param.default)
             model = _model(param.name, param.annotation)
-            self.models.append(model)
+            self._models.append(model)
             return True
         return None
 
@@ -183,7 +168,7 @@ class RouteParameterModel:
 
     def add_to_model(self, *, field: ModelField) -> None:
         field_info = cast(params.Param, field.field_info)
-        self.models.append(field_info.get_resolver())
+        self._models.append(field_info.get_resolver())
 
     async def resolve_dependencies(
             self,
@@ -192,20 +177,21 @@ class RouteParameterModel:
     ) -> Tuple[Dict[str, Any], List[ErrorWrapper]]:
         values: Dict[str, Any] = {}
         errors: List[ErrorWrapper] = []
-        for parameter_resolver in self.models:
-            parameter_resolver = cast(ParameterResolver, parameter_resolver)
+        for parameter_resolver in self._models:
+            parameter_resolver = cast(BaseRouteParameterResolver, parameter_resolver)
             value_, errors_ = await parameter_resolver.resolve(ctx=ctx)
             if value_:
                 values.update(value_)
-            errors += errors_
+            if errors:
+                errors += errors_
         return values, errors
 
     def add_extra_route_args(self, *extra_operation_args: 'ExtraOperationArgs') -> None:
         for param in extra_operation_args:
-            if isinstance(param.default, NonFieldRouteParameter):
-                _model = cast(NonFieldRouteParameter, param.default)
+            if isinstance(param.default, NonFieldRouteParameterResolver):
+                _model = cast(NonFieldRouteParameterResolver, param.default)
                 model = _model(param.name, param.annotation)
-                self.models.append(model)
+                self._models.append(model)
                 continue
 
             default_field_info = param.default if isinstance(param.default, FieldInfo) else params.Query
@@ -216,5 +202,59 @@ class RouteParameterModel:
             )
             self.add_to_model(field=param_field)
 
-        self.compute_body_resolvers()
 
+class APIEndpointParameterModel(EndpointParameterModel):
+    def __init__(self, *, path: str, endpoint: Callable, operation_unique_id: str):
+        super().__init__(path=path, endpoint=endpoint)
+        self.operation_unique_id = operation_unique_id
+        self.build_endpoint_body_field()
+
+    def _compute_body_resolvers(self):
+        body_resolvers = [
+            resolver
+            for resolver in self._models
+            if isinstance(resolver, BodyParameterResolver)
+        ]
+        if len(body_resolvers) > 1:
+            for resolver in body_resolvers:
+                setattr(resolver.model_field.field_info, 'embed', True)
+        return body_resolvers
+
+    def add_extra_route_args(self, *extra_operation_args: 'ExtraOperationArgs') -> None:
+        super(APIEndpointParameterModel, self).add_extra_route_args(*extra_operation_args)
+        self.build_endpoint_body_field()
+
+    def build_endpoint_body_field(self):
+        self.body_resolver = None
+        
+        body_resolvers = self._compute_body_resolvers()
+        if body_resolvers and len(body_resolvers) == 1:
+            self.body_resolver = body_resolvers[0]
+            return
+        if body_resolvers:
+            _body_resolvers_model_fields = [item.model_field for item in body_resolvers]
+            model_name = "body_" + self.operation_unique_id
+            body_model_field: Type[BaseModel] = create_model(model_name)
+            _fields_required, _body_param_class = [], dict()
+            for f in _body_resolvers_model_fields:
+                body_model_field.__fields__[f.name] = f
+                _fields_required.append(f.required)
+                _body_param_class[f.field_info.__class__] = f.field_info
+
+            required = any(_fields_required)
+            body_field_info = params.Body
+            media_type = "application/json"
+            if len(_body_param_class) == 1:
+                klass, field_info = _body_param_class.popitem()
+                body_field_info = klass
+                media_type = getattr(field_info, 'media_type', media_type)
+
+            final_field = create_response_field(
+                name="body",
+                type_=body_model_field,
+                required=required,
+                alias="body",
+                field_info=body_field_info(media_type=media_type, default=None),
+            )
+            final_field.field_info.init_resolver(final_field)
+            self.body_resolver = final_field.field_info.get_resolver()

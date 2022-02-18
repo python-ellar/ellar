@@ -1,12 +1,49 @@
 import functools
 from typing import Any, Dict, Optional, Type, Union
-from pydantic import BaseConfig
+from pydantic import BaseConfig, BaseModel
 from pydantic.class_validators import Validator
 from pydantic.fields import (
+    UndefinedType,
+    SHAPE_SINGLETON,
     FieldInfo,
     ModelField,
-    UndefinedType,
 )
+
+from pydantic.schema import SHAPE_SINGLETON
+from pydantic.utils import lenient_issubclass
+
+from starletteapi.constants import sequence_types, sequence_shapes
+
+
+def is_scalar_sequence_field(field: ModelField) -> bool:
+    if (field.shape in sequence_shapes) and not lenient_issubclass(
+        field.type_, BaseModel
+    ):
+        if field.sub_fields is not None:
+            for sub_field in field.sub_fields:
+                if not is_scalar_field(sub_field):
+                    return False
+        return True
+    if lenient_issubclass(field.type_, sequence_types):
+        return True
+    return False
+
+
+def is_scalar_field(field: ModelField) -> bool:
+    from .params import Body
+    field_info = field.field_info
+    if not (
+            field.shape == SHAPE_SINGLETON
+            and not lenient_issubclass(field.type_, BaseModel)
+            and not lenient_issubclass(field.type_, sequence_types + (dict,))
+            # and not dataclasses.is_dataclass(field.type_)
+            and not isinstance(field_info, Body)
+    ):
+        return False
+    if field.sub_fields:
+        if not all(is_scalar_field(f) for f in field.sub_fields):
+            return False
+    return True
 
 
 def create_response_field(

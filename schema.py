@@ -1,6 +1,6 @@
-from typing import Optional, List, Union, Type, Dict, Tuple, Callable, Any
+import typing as t
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
 
 from starletteapi.constants import ROUTE_METHODS
 from starletteapi.responses.model import EmptyAPIResponseModel
@@ -8,16 +8,16 @@ from starletteapi.responses.model import EmptyAPIResponseModel
 
 class RouteParameters(BaseModel):
     path: str
-    methods: List[str]
-    endpoint: Callable
-    operation_id: Optional[str] = None
-    summary: Optional[str] = None
-    description: Optional[str] = None
-    tags: Optional[List[str]] = None
-    deprecated: Optional[bool] = None
-    name: Optional[str] = None
+    methods: t.List[str]
+    endpoint: t.Callable
+    operation_id: t.Optional[str] = None
+    summary: t.Optional[str] = None
+    description: t.Optional[str] = None
+    tags: t.Optional[t.List[str]] = None
+    deprecated: t.Optional[bool] = None
+    name: t.Optional[str] = None
     include_in_schema: bool = True
-    response: Union[Dict[int, Union[Type, Any]], Type, None] = None
+    response: t.Union[t.Dict[int, t.Union[t.Type, t.Any]], t.Type, None] = None
 
     @validator('methods')
     def validate_methods(cls, value):
@@ -44,8 +44,8 @@ class RouteParameters(BaseModel):
 
 class WsRouteParameters(BaseModel):
     path: str
-    name: Optional[str] = None
-    endpoint: Callable
+    name: t.Optional[str] = None
+    endpoint: t.Callable
 
     @validator('endpoint')
     def validate_endpoint(cls, value):
@@ -53,6 +53,15 @@ class WsRouteParameters(BaseModel):
         return value
 
 
+class ValidationError(BaseModel):
+    loc: t.List[str] = Field(..., title='Location')
+    msg: str = Field(..., title='Message')
+    type: str = Field(..., title='Error Type')
+
+
+class HTTPValidationError(BaseModel):
+    detail: t.List[ValidationError] = Field(..., title='Details')
+
+
 class PydanticSchema(BaseModel):
     pass
-

@@ -47,7 +47,10 @@ class Controller(GuardInterface):
             self,
             prefix: Optional[str] = None,
             *,
-            tags: Union[Optional[List[str]], str] = None,
+            tag: Optional[str] = None,
+            description: Optional[str] = None,
+            external_doc_description: Optional[str] = None,
+            external_doc_url: Optional[str] = None,
             name: Optional[str] = None,
             version: Union[List[str], str] = ()
     ) -> None:
@@ -64,7 +67,6 @@ class Controller(GuardInterface):
         self.prefix = _prefix
 
         self._route_guards: List[Union[Type['GuardCanActivate'], 'GuardCanActivate']] = []
-        self.tags = tags  # type: ignore
         # `controller_class`
         self._controller_class: Optional[Type[ControllerBase]] = None
         # `_path_operations`
@@ -72,6 +74,9 @@ class Controller(GuardInterface):
         self._mount: Optional[ControllerMount] = None
         self.name = name
         self._version: Set[str] = set([version] if isinstance(version, str) else version)
+        self._meta = dict(tag=tag, description=description, external_doc_description=external_doc_description,
+                          external_doc_url=external_doc_url)
+        self.tag = tag
 
         if _controller_class:
             self(_controller_class)
@@ -85,18 +90,6 @@ class Controller(GuardInterface):
         assert self._controller_class, "Controller Class is not available"
         return self._controller_class
 
-    @property
-    def tags(self) -> Optional[List[str]]:
-        # `tags` is a property for grouping endpoint in Swagger API docs
-        return self._tags
-
-    @tags.setter
-    def tags(self, value: Union[str, List[str], None]) -> None:
-        tag: Optional[List[str]] = cast(Optional[List[str]], value)
-        if tag and isinstance(value, str):
-            tag = [value]
-        self._tags = tag
-
     def __call__(self, cls: Type) -> 'Controller':
         if not issubclass(cls, ControllerBase):
             # We force the cls to inherit from `ControllerBase` by creating another type.
@@ -105,8 +98,8 @@ class Controller(GuardInterface):
         self._controller_class = cast(Type[ControllerBase], cls)
 
         tag = self.controller_class_name()
-        if not self.tags:
-            self.tags = [tag]
+        if not self.tag:
+            self.tag = tag
 
         if self.prefix is NOT_SET:
             self.prefix = f"/{tag}"
@@ -144,7 +137,9 @@ class Controller(GuardInterface):
 
     def get_route(self) -> ControllerMount:
         if not self._mount:
-            self._mount = ControllerMount(self.prefix, routes=list(self._routes.values()), name=self.name)
+            self._mount = ControllerMount(
+                self.prefix, routes=list(self._routes.values()), name=self.name, **self._meta
+            )
         return self._mount
 
     def __repr__(self) -> str:  # pragma: no cover

@@ -2,7 +2,7 @@ import inspect
 from abc import ABC, abstractmethod
 from typing import List, Type, TYPE_CHECKING, Union, Sequence, Dict, AsyncContextManager, Callable, Any, Optional, cast
 
-from injector import Module as InjectorModule, inject, ConstructorOrClassT
+from injector import Module as _InjectorModule
 
 from starletteapi.di.injector import Container
 from starletteapi.di.scopes import ScopeDecorator, DIScope, SingletonScope
@@ -19,40 +19,28 @@ if TYPE_CHECKING:
     from starletteapi.main import StarletteApp
 
 
-class _Injectable:
-    def __init__(self, scope: Optional[Union[Type[DIScope], ScopeDecorator]] = None):
-        self.scope = scope or SingletonScope
-
-    def __call__(self, func_or_class: ConstructorOrClassT) -> ConstructorOrClassT:
-        inject(func_or_class)
-        setattr(func_or_class, '__di_scope__', self.scope)
-        return func_or_class
-
-
-def injectable(
-        scope: Optional[Union[Type[DIScope], ScopeDecorator]] = None
-) -> Union[ConstructorOrClassT, Callable]:
-    if callable(scope):
-        _injectable = _Injectable(SingletonScope)
-        return _injectable(scope)
-    elif not isinstance(scope, ScopeDecorator) or isinstance(scope, type) and not issubclass(scope, DIScope):
-        _injectable = _Injectable(SingletonScope)
-        return _injectable(scope)
-    return _Injectable(scope)
+def _configure_module(func):
+    def _configure_module_wrapper(self, container: Container) -> Any:
+        result = func(self, container=container)
+        if hasattr(self, '_module_decorator'):
+            _module_decorator = cast(Module, self._module_decorator)
+            _module_decorator.configure_module(container=container)
+        return result
+    return _configure_module_wrapper
 
 
-class ModuleBase(InjectorModule):
+class StarletteAPIModuleBase(_InjectorModule):
     _module_decorator: Optional['Module']
 
     def configure_module(self, container: Container) -> None:
-        if hasattr(self, '_module_decorator'):
-            self._module_decorator.configure_module(container=container)
+        """Register other services manually"""
 
+    @_configure_module
     def configure(self, container: Container) -> None:
         self.configure_module(container=container)
 
 
-class ApplicationModuleBase(ModuleBase):
+class ApplicationModuleBase(StarletteAPIModuleBase):
     @classmethod
     @abstractmethod
     def register_custom_exceptions(
@@ -87,7 +75,14 @@ class ApplicationModuleBase(ModuleBase):
         return None
 
 
-class Module(ModuleTemplating, ABC):
+class BaseModule(ModuleTemplating, ABC):
+    @property
+    @abstractmethod
+    def module(self) -> Union[Type[StarletteAPIModuleBase], Type[ApplicationModuleBase]]:
+        """decorated module class"""
+
+
+class Module(BaseModule):
     def __init__(
             self,
             *,
@@ -104,20 +99,20 @@ class Module(ModuleTemplating, ABC):
         self.providers = providers
         self._template_folder = template_folder
         self._static_folder = static_folder
-        self._module_class: Optional[Union[Type[InjectorModule], Type[ApplicationModuleBase]]] = None
+        self._module_class: Optional[Union[Type[StarletteAPIModuleBase], Type[ApplicationModuleBase]]] = None
         self._module_base_directory = base_directory
         self.module_routers = routers
 
     @property
-    def module(self) -> Union[Type[InjectorModule], Type[ApplicationModuleBase]]:
+    def module(self) -> Union[Type[StarletteAPIModuleBase], Type[ApplicationModuleBase]]:
         return self._module_class
 
     def __call__(self, module_class: Type) -> 'Module':
-        if isinstance(module_class, type) and issubclass(module_class, ModuleBase):
+        if isinstance(module_class, type) and issubclass(module_class, StarletteAPIModuleBase):
             self._module_class = module_class
         else:
             self._module_class = type(
-                module_class.__name__, (module_class, ModuleBase), {'_module_decorator': self}
+                module_class.__name__, (module_class, StarletteAPIModuleBase), {'_module_decorator': self}
             )
         self.resolve_module_base_directory(module_class)
         return self
@@ -192,7 +187,7 @@ class ApplicationModule(Module):
 
         for module in self.registered_modules:
             instance = module
-            if isinstance(module, type) and issubclass(module, InjectorModule):
+            if isinstance(module, type) and issubclass(module, StarletteAPIModuleBase):
                 instance = module()
             self._modules.append(instance)
         return self._modules

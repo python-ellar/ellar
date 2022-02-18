@@ -7,5 +7,5 @@ from starlette.routing import ( # noqa
     iscoroutinefunction_or_partial
 )
 from .base import ModuleRouter, APIRouter # noqa
-from .route_models.params import Header, Query, Cookie, Body, File, Form, Path # noqa
+from starletteapi.route_models.params import Header, Query, Cookie, Body, File, Form, Path # noqa
 

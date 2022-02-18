@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 
 from starlette.exceptions import HTTPException
 from starletteapi.status import HTTP_403_FORBIDDEN
@@ -22,9 +22,16 @@ class GuardCanActivate(ABC):
         )
 
 
-class AuthGuard(GuardCanActivate, ABC):
+class BaseAuthGuard(GuardCanActivate, ABC):
+    openapi_scope = []
+
     @abstractmethod
     async def handle_request(self, *, connection: HTTPConnection) -> Optional[Any]:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def get_guard_scheme(cls) -> Dict:
         pass
 
     async def can_activate(self, context: ExecutionContext) -> bool:

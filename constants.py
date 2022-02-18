@@ -38,6 +38,10 @@ sequence_shape_to_type = {
     SHAPE_TUPLE_ELLIPSIS: list,
 }
 
+METHODS_WITH_BODY = {"GET", "HEAD", "POST", "PUT", "DELETE", "PATCH"}
+STATUS_CODES_WITH_NO_BODY = {100, 101, 102, 103, 204, 304}
+REF_PREFIX = "#/components/schemas/"
+
 
 class _NOT_SET:
     def __copy__(self) -> Any:

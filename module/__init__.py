@@ -1,1 +1,2 @@
-from .base import ApplicationModule, Module, ModuleBase, ApplicationModuleBase, injectable
+from .base import ApplicationModule, Module, ApplicationModuleBase, StarletteAPIModuleBase
+from .common import injectable

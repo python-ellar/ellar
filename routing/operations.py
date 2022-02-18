@@ -5,21 +5,21 @@ from typing import TYPE_CHECKING, List, Optional, Any, Dict, Sequence, Union, Ty
 from starlette.concurrency import run_in_threadpool
 from starlette.status import WS_1008_POLICY_VIOLATION
 
-from starletteapi.constants import NOT_SET, SCOPE_API_VERSIONING_RESOLVER
+from starletteapi.constants import SCOPE_API_VERSIONING_RESOLVER
+from starletteapi.helper import generate_operation_unique_id
+from starletteapi.operation_meta import OperationMeta
 from starletteapi.types import ASGIApp, TScope, TReceive, TSend
 from starletteapi.routing import Route, WebSocketRoute, iscoroutinefunction_or_partial, Match
 from starletteapi.context import ExecutionContext
-from starletteapi.api_documentation import OpenAPIDocumentation
 from starletteapi.exceptions import RequestValidationError, WebSocketRequestValidationError
 from starletteapi.guard import GuardInterface
 from starletteapi.responses.model import RouteResponseModel
-from starletteapi.routing.route_models.route_param_model import RouteParameterModel
+from starletteapi.route_models import EndpointParameterModel, APIEndpointParameterModel
 from starletteapi.schema import RouteParameters, WsRouteParameters
 from starletteapi.controller.base import Controller, ControllerBase
 
 if TYPE_CHECKING:
     from starletteapi.guard.base import GuardCanActivate
-    from starletteapi.versioning.resolver import BaseAPIVersioningResolver
 
 T = TypeVar('T')
 
@@ -54,34 +54,6 @@ class ExtraOperationArgs(Generic[T]):
         raise AttributeError(f'{self.name} ExtraOperationArgs not found')
 
 
-class OperationMeta(dict):
-    extra_route_args: List[ExtraOperationArgs]
-    response_override: Union[Dict[int, Union[Type, Any]], Type, None]
-    route_versioning: Set[Union[int, float, str]]
-    route_guards: List[Union[Type['GuardCanActivate'], 'GuardCanActivate']]
-
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault('extra_route_args', [])
-        kwargs.setdefault('response_override', None)
-        kwargs.setdefault('route_versioning', set())
-        kwargs.setdefault('route_guards', [])
-        super(OperationMeta, self).__init__(*args, **kwargs)
-
-    def __getitem__(self, name) -> Any:
-        try:
-            return self.__getattr__(name)
-        except AttributeError:
-            raise KeyError(name)
-
-    def __getattr__(self, name) -> Any:
-        if name in self:
-            value = self.get(name)
-            return value
-        raise AttributeError(
-            f"'{self.__class__.__name__}' object has no attribute '{name}'"
-        )
-
-
 class OperationBase(GuardInterface):
     _meta: OperationMeta
 
@@ -94,7 +66,7 @@ class OperationBase(GuardInterface):
         ...
 
     def get_guards(self) -> List[Union[Type['GuardCanActivate'], 'GuardCanActivate']]:
-        return self._meta.route_guards
+        return list(self._meta.route_guards)
 
     def get_meta(self) -> Dict[str, Any]:
         return self._meta
@@ -156,7 +128,13 @@ class Operation(OperationBase, Route):
             path=route_parameter.path, endpoint=route_parameter.endpoint, methods=route_parameter.methods,
             name=route_parameter.name, include_in_schema=route_parameter.include_in_schema
         )
-        self.route_parameter_model = RouteParameterModel(path=self.path_format, endpoint=self.endpoint)
+
+        self.route_parameter_model = APIEndpointParameterModel(
+            path=self.path_format, endpoint=self.endpoint,
+            operation_unique_id=self.get_operation_unique_id(
+                method=list(self.methods)[0]
+            )
+        )
         _meta = OperationMeta()
         if hasattr(self.endpoint, "_meta"):
             _meta = getattr(self.endpoint, "_meta")
@@ -169,10 +147,15 @@ class Operation(OperationBase, Route):
         self.response_model = RouteResponseModel(
             route_responses=self._meta.response_override or route_parameter.response
         )
-        self.open_api_documentation = OpenAPIDocumentation(
+        self._meta.update(
             operation_id=route_parameter.operation_id, summary=route_parameter.summary,
             description=route_parameter.description, deprecated=route_parameter.deprecated,
-            tags=route_parameter.tags, route_parameter_model=self.route_parameter_model
+            tags=route_parameter.tags, route=self
+        )
+
+    def get_operation_unique_id(self, method: str):
+        return generate_operation_unique_id(
+            name=self.name, path=self.path_format, method=method
         )
 
     async def _handle(self, context: ExecutionContext) -> None:
@@ -197,7 +180,9 @@ class WebsocketOperation(WebsocketOperationBase, WebSocketRoute):
             endpoint=self.endpoint,
             name=ws_route_parameters.name
         )
-        self.route_parameter_model = RouteParameterModel(path=self.path_format, endpoint=self.endpoint)
+        self.route_parameter_model = EndpointParameterModel(
+            path=self.path_format, endpoint=self.endpoint
+        )
         _meta = OperationMeta()
         if hasattr(self.endpoint, "_meta"):
             _meta = getattr(self.endpoint, "_meta")

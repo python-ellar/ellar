@@ -18,7 +18,10 @@ from starletteapi.module import ApplicationModule
 from starletteapi.routing import APIRouter
 from starletteapi.settings import Config
 from starletteapi.templating import StarletteAppTemplating
-from starletteapi.versioning import VERSIONING, BaseAPIVersioning
+from starletteapi.versioning import VERSIONING
+
+if t.TYPE_CHECKING:
+    from starletteapi.templating.interface import ModuleTemplating
 
 
 class StarletteApp(Starlette, StarletteAppTemplating):
@@ -87,6 +90,12 @@ class StarletteApp(Starlette, StarletteAppTemplating):
 
         self.Route = self.router.Route
         self.Websocket = self.router.Websocket
+
+    def add_module(self, module: 'ModuleTemplating') -> None:
+        set_module_loaders = set(self._module_loaders)
+        set_module_loaders.add(module)
+        if len(set_module_loaders) > len(self._module_loaders):
+            self._module_loaders.append(module)
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         return self._guards
