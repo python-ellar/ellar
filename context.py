@@ -1,21 +1,14 @@
-import email
-import json
-from typing import TYPE_CHECKING, cast, Optional, Any
-
-from pydantic.error_wrappers import ErrorWrapper
-from pydantic.fields import Undefined
+import typing as t
 from starlette.background import BackgroundTasks
-
-from starlette.exceptions import HTTPException
+from starletteapi.di.providers import CallableProvider
 from starletteapi.requests import Request, HTTPConnection
 from starletteapi.responses import Response
 from starletteapi.types import TScope, TReceive, TSend
 from starletteapi.websockets import WebSocket
-from .exceptions import RequestValidationError
 
-from .helper import cached_property
+from .compatible import cached_property
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from starletteapi.main import StarletteApp
     from starletteapi.di.injector import DIRequestServiceProvider
     from starletteapi.routing.operations import OperationBase
@@ -26,12 +19,14 @@ class ExecutionContextException(Exception):
 
 
 class ExecutionContext:
+    __slots__ = ('scope', 'receive', 'send', '_operation', '_response')
+
     def __init__(self, *, scope: TScope, receive: TReceive, send: TSend, operation: 'OperationBase'):
         self.scope = scope
         self.receive = receive
         self.send = send
         self._operation = operation
-        self._response: Optional[Response] = None
+        self._response: t.Optional[Response] = None
 
     @property
     def operation(self):
@@ -42,10 +37,14 @@ class ExecutionContext:
         return self._response is not None
 
     @cached_property
-    def _service_provider(self) -> Optional['DIRequestServiceProvider']:
+    def _service_provider(self) -> t.Optional['DIRequestServiceProvider']:
         service_provider = self.switch_to_http_connection().service_provider
         if ExecutionContext not in service_provider.context:
             service_provider.update_context(ExecutionContext, self)
+            service_provider.update_context(HTTPConnection, CallableProvider(self.switch_to_http_connection))
+            service_provider.update_context(WebSocket, CallableProvider(self.switch_to_websocket))
+            service_provider.update_context(Request, CallableProvider(self.switch_to_request))
+            service_provider.update_context(Response, CallableProvider(self.get_response))
         return service_provider
 
     @cached_property
@@ -78,8 +77,14 @@ class ExecutionContext:
 
     def get_response(self) -> Response:
         if not self._response:
-            self._response = Response(background=BackgroundTasks())
+            self._response = Response(
+                background=BackgroundTasks(),
+                content=None,
+                status_code=-100,
+                headers=None,  # type: ignore # in Starlette
+                media_type=None,  # type: ignore # in Starlette
+            )
         return self._response
 
     def get_app(self) -> 'StarletteApp':
-        return cast('StarletteApp', self.scope["app"])
+        return t.cast('StarletteApp', self.scope["app"])
