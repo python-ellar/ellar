@@ -10,7 +10,7 @@ from starletteapi.main import StarletteApp
 from .route_doc_models import OpenAPIRouteDocumentation, OpenAPIMountDocumentation, OpenAPIRoute
 from ..constants import REF_PREFIX
 from ..controller import ControllerMount
-from ..helper import cached_property
+from ..compatible import cached_property
 from ..route_models.helpers import create_response_field
 from ..routing import ModuleRouter
 from ..routing.operations import Operation

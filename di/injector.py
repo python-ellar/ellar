@@ -1,16 +1,16 @@
 import typing as t
 from inspect import isabstract
-from injector import Injector, Binder as InjectorBinder, Binding
+from injector import Injector, Binder as InjectorBinder, Binding, Module as InjectorModule
 from starletteapi.context import ExecutionContext
 from .scopes import DIScope, ScopeDecorator, TransientScope, SingletonScope, RequestScope
 from .providers import InstanceProvider, Provider
 from starletteapi.logger import logger as log
+from starletteapi.module import StarletteAPIModuleBase, BaseModule
 
 from starletteapi.helper import get_name
 
 if t.TYPE_CHECKING:
     from starletteapi.main import StarletteApp
-    from starletteapi.module import ApplicationModuleBase
 
 T = t.TypeVar("T")
 
@@ -49,6 +49,8 @@ class DIRequestServiceProvider:
 
 class Container(InjectorBinder):
     __slots__ = ('injector', '_auto_bind', '_bindings', 'parent')
+
+    injector: 'StarletteInjector'
 
     def create_binding(
             self, interface: type, to: t.Any = None, scope: t.Union[ScopeDecorator, t.Type[DIScope]] = None
@@ -151,6 +153,19 @@ class StarletteInjector(Injector):
     def create_di_request_service_provider(self, context: t.Dict) -> DIRequestServiceProvider:
         return DIRequestServiceProvider(self.container, context)
 
-    def initialize_root_module(self, *, root_module: t.Type['ApplicationModuleBase']):
-        # Initialise modules
-        self.container.install(root_module)
+    def install_module(
+            self,
+            *,
+            module: t.Union[t.Type['StarletteAPIModuleBase'], StarletteAPIModuleBase, BaseModule]
+    ) -> t.Union[InjectorModule, StarletteAPIModuleBase, BaseModule]:
+        # Initialise module
+        installation_module = module
+        if isinstance(module, BaseModule):
+            installation_module = module.module
+
+        if isinstance(installation_module, type) and issubclass(t.cast(type, installation_module), InjectorModule):
+            instance = t.cast(type, installation_module)()
+        else:
+            instance = installation_module
+        instance(self.container)
+        return instance

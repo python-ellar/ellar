@@ -182,7 +182,7 @@ class EndpointParameterModel:
             value_, errors_ = await parameter_resolver.resolve(ctx=ctx)
             if value_:
                 values.update(value_)
-            if errors:
+            if errors_:
                 errors += errors_
         return values, errors
 

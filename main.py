@@ -7,18 +7,14 @@ from starlette.middleware import Middleware
 from starlette.routing import BaseRoute
 
 from starletteapi.middleware.versioning import RequestVersioningMiddleware
-from starletteapi.static_files import StarletteStaticFiles
 from starletteapi.types import TScope, TReceive, TSend, ASGIApp
 from starletteapi.middleware.errors import ServerErrorMiddleware
 from starletteapi.di.injector import StarletteInjector
 from starletteapi.guard import GuardCanActivate
-from starletteapi.module import ApplicationModule
+from starletteapi.module import ApplicationModule, BaseModule, StarletteAPIModuleBase
 from starletteapi.routing import APIRouter
 from starletteapi.conf import Config
 from starletteapi.templating import StarletteAppTemplating
-
-if t.TYPE_CHECKING:
-    from starletteapi.templating.interface import ModuleTemplating
 
 
 class StarletteApp(StarletteAppTemplating):
@@ -48,11 +44,16 @@ class StarletteApp(StarletteAppTemplating):
         self._injector = StarletteInjector(app=self, auto_bind=False)
         self.middleware_stack = self.build_middleware_stack()
 
+        self._static_app: t.Optional[ASGIApp] = None
+
         if self.static_files or self.config.validate_config.STATIC_FOLDER_PACKAGES:
+            self._static_app = self.create_static_app()
+
+            async def _statics(scope: TScope, receive: TReceive, send: TSend):
+                return await self._static_app(scope, receive, send)
+
             self.router.mount(
-                self.config.validate_config.STATIC_MOUNT_PATH, app=StarletteStaticFiles(
-                    directories=self.static_files, packages=self.config.validate_config.STATIC_FOLDER_PACKAGES
-                ), name='static'
+                self.config.validate_config.STATIC_MOUNT_PATH, app=_statics, name='static'
             )
 
         self.Get = self.router.Get
@@ -69,13 +70,26 @@ class StarletteApp(StarletteAppTemplating):
 
         self.Route = self.router.Route
         self.Websocket = self.router.Websocket
-        self._injector.initialize_root_module(root_module=root_module.module)
+        self._injector.install_module(module=root_module)
 
-    def add_module(self, module: 'ModuleTemplating') -> None:
-        set_module_loaders = set(self._module_loaders)
-        set_module_loaders.add(module)
-        if len(set_module_loaders) > len(self._module_loaders):
-            self._module_loaders.append(module)
+    def install_module(
+            self, module: t.Union[t.Type[StarletteAPIModuleBase], BaseModule]
+    ) -> t.Union[StarletteAPIModuleBase, BaseModule]:
+        _module_instance = self.injector.install_module(module=module)
+        if self._append_modules(module, _module_instance):
+            self.reload_static_app()
+        return _module_instance
+
+    def _append_modules(self, *modules: BaseModule) -> bool:
+        has_template_module = False
+        for module in modules:
+            if isinstance(module, BaseModule):
+                set_module_loaders = set(self._module_loaders)
+                set_module_loaders.add(module)
+                if len(set_module_loaders) > len(self._module_loaders):
+                    self._module_loaders.append(module)
+                    has_template_module = True
+        return has_template_module
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         return self._global_guards

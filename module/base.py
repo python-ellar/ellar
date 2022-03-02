@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from injector import Module as _InjectorModule
 
 from starletteapi.compatible import cached_property
-from starletteapi.di.injector import Container
 from starletteapi.di.scopes import ScopeDecorator, DIScope, SingletonScope
 from starletteapi.guard import GuardCanActivate
 from starletteapi.controller import Controller
@@ -15,12 +14,13 @@ from pathlib import Path
 
 if t.TYPE_CHECKING:
     from starletteapi.main import StarletteApp
+    from starletteapi.di.injector import Container
 
 T = t.TypeVar('T')
 
 
 def _configure_module(func):
-    def _configure_module_wrapper(self, container: Container) -> t.Any:
+    def _configure_module_wrapper(self, container: 'Container') -> t.Any:
         result = func(self, container=container)
         if hasattr(self, '_module_decorator'):
             _module_decorator = t.cast(Module, self._module_decorator)
@@ -32,11 +32,11 @@ def _configure_module(func):
 class StarletteAPIModuleBase(_InjectorModule):
     _module_decorator: t.Optional['Module']
 
-    def register_services(self, container: Container) -> None:
+    def register_services(self, container: 'Container') -> None:
         """Register other services manually"""
 
     @_configure_module
-    def configure(self, container: Container) -> None:
+    def configure(self, container: 'Container') -> None:
         self.register_services(container=container)
 
 
@@ -83,7 +83,7 @@ class ServiceConfig:
         self.use_value = use_value
         self.use_class = use_class
 
-    def register(self, container: Container):
+    def register(self, container: 'Container'):
         scope = t.cast(t.Union[t.Type[DIScope], ScopeDecorator], getattr(self.provider, '__di_scope__', SingletonScope))
         if self.use_class:
             scope = t.cast(t.Union[t.Type[DIScope], ScopeDecorator], getattr(self.use_class, '__di_scope__', SingletonScope))
@@ -134,7 +134,7 @@ class Module(BaseModule):
             self._module_base_directory = Path(inspect.getfile(module_class)).resolve().parent
         module_class._module_decorator = self
 
-    def configure_module(self, container: Container) -> None:
+    def configure_module(self, container: 'Container') -> None:
         for _provider in self.get_services():
             _provider.register(container)
 
@@ -238,7 +238,7 @@ class ApplicationModule(Module):
 
         return module_routers or []
 
-    def configure_module(self, container: Container) -> None:
+    def configure_module(self, container: 'Container') -> None:
         super().configure_module(container=container)
         modules = self.get_modules()
         for dec_module in modules:

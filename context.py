@@ -19,7 +19,7 @@ class ExecutionContextException(Exception):
 
 
 class ExecutionContext:
-    __slots__ = ('scope', 'receive', 'send', '_operation', '_response')
+    __slots__ = ('scope', 'receive', 'send', '_operation', '_response', '__dict__')
 
     def __init__(self, *, scope: TScope, receive: TReceive, send: TSend, operation: 'OperationBase'):
         self.scope = scope

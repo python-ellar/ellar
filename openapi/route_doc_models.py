@@ -9,8 +9,8 @@ from starlette.routing import Mount
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from starletteapi.constants import METHODS_WITH_BODY, REF_PREFIX
-from starletteapi.guard import GuardCanActivate, BaseAuthGuard
-from starletteapi.helper import cached_property
+from starletteapi.guard import BaseAuthGuard
+from starletteapi.compatible import cached_property
 from starletteapi.route_models.param_resolvers import RouteParameterResolver, BodyParameterResolver
 from starletteapi.route_models.params import Param, Body
 from starletteapi.routing.operations import Operation
@@ -45,17 +45,21 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
         meta: t.Dict = dict()
         if hasattr(mount, 'get_meta') and callable(mount.get_meta):
             meta = mount.get_meta()
-        self.tag = tag or meta.get('tag')
+        self.tag = meta.get('tag') or tag
         self.description = description or meta.get('description')
         self.external_doc_description = external_doc_description or meta.get('external_doc_description')
         self.external_doc_url = external_doc_url or meta.get('external_doc_url')
         self.mount = mount
 
     def get_tag(self):
+        external_doc = None
+        if self.external_doc_url:
+            external_doc = dict(url=self.external_doc_url, description=self.external_doc_description)
+
         if self.tag:
             return dict(
                 name=self.tag, description=self.description,
-                externalDocs=dict(description=self.external_doc_description, url=self.external_doc_url)
+                externalDocs=external_doc
             )
         return dict()
 
@@ -153,7 +157,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         security_definitions = {}
         operation_security = []
         for item in self.route.get_guards():
-            if (isinstance(item, type) and not issubclass(item, BaseAuthGuard)):
+            if isinstance(item, type) and not issubclass(item, BaseAuthGuard):
                 continue
             security_scheme = item.get_guard_scheme()
             scheme_name = security_scheme['name']
@@ -310,7 +314,3 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             )
             paths.setdefault(route_path, {}).update(_path)
         return paths, _security_schemes
-
-
-
-

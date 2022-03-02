@@ -2,15 +2,16 @@ import json
 import os
 import typing as t
 from abc import abstractmethod
-
-from injector import Injector
 from jinja2 import FileSystemLoader
 from starlette.templating import pass_context
 
+from starletteapi.types import ASGIApp
 from .environment import Environment
 from ..compatible import locked_cached_property, cached_property
 from .loader import StarletteJinjaLoader
 from ..conf import Config
+from ..static_files import StarletteStaticFiles
+
 if t.TYPE_CHECKING:
     from starletteapi.main import StarletteApp
 
@@ -58,7 +59,7 @@ class ModuleTemplating(JinjaTemplating):
 
 class StarletteAppTemplating:
     config: Config
-
+    _static_app: t.Optional[ASGIApp]
     _debug: bool
     _module_loaders: t.Optional[t.List[ModuleTemplating]] = None
 
@@ -103,6 +104,16 @@ class StarletteAppTemplating:
 
     def create_global_jinja_loader(self) -> StarletteJinjaLoader:
         return StarletteJinjaLoader(t.cast('StarletteApp', self))
+
+    def create_static_app(self) -> ASGIApp:
+        return StarletteStaticFiles(
+            directories=self.static_files, packages=self.config.validate_config.STATIC_FOLDER_PACKAGES
+        )
+
+    def reload_static_app(self) -> None:
+        if self._static_app:
+            del self.__dict__['static_files']
+            self._static_app = self.create_static_app()
 
     @cached_property
     def static_files(self) -> t.List[str]:

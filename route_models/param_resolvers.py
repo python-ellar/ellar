@@ -10,7 +10,7 @@ from pydantic.error_wrappers import ErrorWrapper
 from pydantic.utils import deepcopy, lenient_issubclass
 from starlette.datastructures import FormData, QueryParams, Headers
 from starlette.exceptions import HTTPException
-
+from starletteapi.logger import logger
 from pydantic.fields import (
     ModelField, Undefined,
 )
@@ -283,6 +283,7 @@ class ParameterInjectable(NonFieldRouteParameterResolver):
             value = service_provider.get(self.data)
             return {self.parameter_name: value}, []
         except Exception as ex:
+            logger.error(f"Unable to resolve service {self.data} \nErrorMessage: {ex}")
             return {}, [ex]
 
 
