@@ -1,6 +1,6 @@
 import typing as t
 from starlette.applications import Starlette
-
+from starlette.datastructures import State, URLPath
 from starletteapi.middleware.di import DIRequestServiceProviderMiddleware
 from starletteapi.middleware.exceptions import ExceptionMiddleware
 from starlette.middleware import Middleware
@@ -11,70 +11,49 @@ from starletteapi.static_files import StarletteStaticFiles
 from starletteapi.types import TScope, TReceive, TSend, ASGIApp
 from starletteapi.middleware.errors import ServerErrorMiddleware
 from starletteapi.di.injector import StarletteInjector
-from starletteapi.exception_handlers import api_exception_handler, request_validation_exception_handler
-from starletteapi.exceptions import RequestValidationError, APIException
 from starletteapi.guard import GuardCanActivate
 from starletteapi.module import ApplicationModule
 from starletteapi.routing import APIRouter
-from starletteapi.settings import Config
+from starletteapi.conf import Config
 from starletteapi.templating import StarletteAppTemplating
-from starletteapi.versioning import VERSIONING
 
 if t.TYPE_CHECKING:
     from starletteapi.templating.interface import ModuleTemplating
 
 
-class StarletteApp(Starlette, StarletteAppTemplating):
+class StarletteApp(StarletteAppTemplating):
     def __init__(
             self,
             *,
             root_module: ApplicationModule,
             routes: t.Sequence[BaseRoute] = None,
-            middleware: t.Sequence[Middleware] = None,
-            guards: t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]] = None,
-            exception_handlers: t.Dict[
-                t.Union[int, t.Type[Exception]], t.Callable
-            ] = None,
+            global_guards: t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]] = None,
             on_startup: t.Sequence[t.Callable] = None,
             on_shutdown: t.Sequence[t.Callable] = None,
             lifespan: t.Callable[["Starlette"], t.AsyncContextManager] = None,
-            config: t.Type[Config] = None,
     ):
-        self._injector = StarletteInjector(app=self, root_module=root_module.module)
-        _config = config or Config
-        self._config = self._injector.create_object(_config)
+        self._global_guards = global_guards or []
 
-        super(StarletteApp, self).__init__(
-            self._config.DEBUG,
-            routes=[],
-            middleware=(),
-            exception_handlers={},
-            on_startup=None,
-            on_shutdown=None,
-            lifespan=None
-        )
+        self._config = Config(app_configured=True)
+        self._debug = self.config.validate_config.DEBUG
+        self.state = State()
 
-        exception_handlers = exception_handlers or {}
-        exception_handlers[RequestValidationError] = request_validation_exception_handler
-        exception_handlers[APIException] = api_exception_handler
+        self._module_loaders = [root_module] + root_module.app_modules
 
-        self._template_folder = self._config.TEMPLATE_FOLDER
-        self._root_path = self._config.BASE_DIR
-        self._static_folder = self._config.STATIC_FOLDER
-
-        self._module_loaders = [root_module] + root_module.get_modules()
-
-        self._guards = guards or []
         self.router = APIRouter(
             routes, on_startup=on_startup, on_shutdown=on_shutdown,
-            lifespan=lifespan, redirect_slashes=self._config.REDIRECT_SLASHES
+            lifespan=lifespan, redirect_slashes=self.config.validate_config.REDIRECT_SLASHES
         )
-        self.exception_handlers = exception_handlers
-        self.user_middleware = [] if middleware is None else list(middleware)
+
+        self._injector = StarletteInjector(app=self, auto_bind=False)
         self.middleware_stack = self.build_middleware_stack()
 
-        if self.static_files:
-            self.router.mount('/static', app=StarletteStaticFiles(directories=self.static_files), name='static')
+        if self.static_files or self.config.validate_config.STATIC_FOLDER_PACKAGES:
+            self.router.mount(
+                self.config.validate_config.STATIC_MOUNT_PATH, app=StarletteStaticFiles(
+                    directories=self.static_files, packages=self.config.validate_config.STATIC_FOLDER_PACKAGES
+                ), name='static'
+            )
 
         self.Get = self.router.Get
         self.Post = self.router.Post
@@ -90,6 +69,7 @@ class StarletteApp(Starlette, StarletteAppTemplating):
 
         self.Route = self.router.Route
         self.Websocket = self.router.Websocket
+        self._injector.initialize_root_module(root_module=root_module.module)
 
     def add_module(self, module: 'ModuleTemplating') -> None:
         set_module_loaders = set(self._module_loaders)
@@ -98,7 +78,7 @@ class StarletteApp(Starlette, StarletteAppTemplating):
             self._module_loaders.append(module)
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
-        return self._guards
+        return self._global_guards
 
     @property
     def injector(self) -> StarletteInjector:
@@ -116,7 +96,7 @@ class StarletteApp(Starlette, StarletteAppTemplating):
         error_handler = None
         exception_handlers = {}
 
-        for key, value in self.exception_handlers.items():
+        for key, value in self.config.validate_config.EXCEPTION_HANDLERS.items():
             if key in (500, Exception):
                 error_handler = value
             else:
@@ -124,7 +104,7 @@ class StarletteApp(Starlette, StarletteAppTemplating):
 
         middleware = (
             [Middleware(ServerErrorMiddleware, handler=error_handler, debug=self._debug)]
-            + self.user_middleware
+            + self.config.validate_config.MIDDLEWARE
             + [
                 Middleware(
                     ExceptionMiddleware, handlers=exception_handlers, debug=self._debug
@@ -143,27 +123,30 @@ class StarletteApp(Starlette, StarletteAppTemplating):
         scope["app"] = self
         await self.middleware_stack(scope, receive, send)
 
-    def route(
-        self,
-        path: str,
-        methods: t.List[str] = None,
-        name: str = None,
-        include_in_schema: bool = True,
-    ) -> t.Callable:
-        # TODO
-        """Override with new configuration"""
+    @property
+    def routes(self) -> t.List[BaseRoute]:
+        return self.router.routes
 
-    def websocket_route(self, path: str, name: str = None) -> t.Callable:
-        # TODO
-        """Override with new configuration"""
+    @property
+    def debug(self) -> bool:
+        return self._debug
 
-    def enable_versioning(
-            self, version_type: VERSIONING,
-            version_parameter: str = 'version',
-            default_version: t.Optional[str] = None,
-            **kwargs
-    ):
-        kwargs.setdefault('version_parameter', version_parameter)
-        kwargs.setdefault('default_version', default_version)
-        versioning = version_type.value(**kwargs)
-        self.config.VERSIONING_SCHEME = versioning
+    @debug.setter
+    def debug(self, value: bool) -> None:
+        self._debug = value
+        self.config.validate_config.DEBUG = value
+        self.middleware_stack = self.build_middleware_stack()
+
+    def url_path_for(self, name: str, **path_params: t.Any) -> URLPath:
+        return self.router.url_path_for(name, **path_params)
+
+    # The following usages are now discouraged in favour of configuration
+    #  during Starlette.__init__(...)
+    def on_event(self, event_type: str) -> t.Callable:
+        return self.router.on_event(event_type)
+
+    def mount(self, path: str, app: ASGIApp, name: str = None) -> None:
+        self.router.mount(path, app=app, name=name)
+
+    def host(self, host: str, app: ASGIApp, name: str = None) -> None:
+        self.router.host(host, app=app, name=name)
