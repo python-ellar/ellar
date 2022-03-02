@@ -1,113 +1,125 @@
+import typing as t
 import inspect
 from abc import ABC, abstractmethod
-from typing import List, Type, TYPE_CHECKING, Union, Sequence, Dict, AsyncContextManager, Callable, Any, Optional, cast
 
 from injector import Module as _InjectorModule
 
+from starletteapi.compatible import cached_property
 from starletteapi.di.injector import Container
 from starletteapi.di.scopes import ScopeDecorator, DIScope, SingletonScope
-from starletteapi.middleware import Middleware
-from starletteapi.requests import Request
 from starletteapi.guard import GuardCanActivate
 from starletteapi.controller import Controller
-from starletteapi.types import TRequest
 from starletteapi.templating.interface import ModuleTemplating
 from starletteapi.routing import ModuleRouter
 from pathlib import Path
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from starletteapi.main import StarletteApp
+
+T = t.TypeVar('T')
 
 
 def _configure_module(func):
-    def _configure_module_wrapper(self, container: Container) -> Any:
+    def _configure_module_wrapper(self, container: Container) -> t.Any:
         result = func(self, container=container)
         if hasattr(self, '_module_decorator'):
-            _module_decorator = cast(Module, self._module_decorator)
+            _module_decorator = t.cast(Module, self._module_decorator)
             _module_decorator.configure_module(container=container)
         return result
     return _configure_module_wrapper
 
 
 class StarletteAPIModuleBase(_InjectorModule):
-    _module_decorator: Optional['Module']
+    _module_decorator: t.Optional['Module']
 
-    def configure_module(self, container: Container) -> None:
+    def register_services(self, container: Container) -> None:
         """Register other services manually"""
 
     @_configure_module
     def configure(self, container: Container) -> None:
-        self.configure_module(container=container)
+        self.register_services(container=container)
 
 
 class ApplicationModuleBase(StarletteAPIModuleBase):
     @classmethod
     @abstractmethod
-    def register_custom_exceptions(
-            cls, exception_handlers: Dict
-    ) -> Dict[Union[int, Type[Exception]], Callable[[TRequest, Type[Exception]], Any]]:
-        """
-
-        :param exception_handlers: A dictionary mapping either integer status codes,
-            or exception class types onto callables which handle the exceptions.
-            Exception handler callables should be of the form
-            `handler(request, exc) -> response` and may be be either standard functions, or
-            async functions.
-        :return: Dict
-        """
-        return exception_handlers
-
-    @classmethod
-    @abstractmethod
-    def get_on_startup(cls) -> List[Callable]:
+    def get_on_startup(cls) -> t.List[t.Callable]:
         """run on application startup"""
         return []
 
     @classmethod
     @abstractmethod
-    def get_on_shutdown(cls) -> List[Callable]:
+    def get_on_shutdown(cls) -> t.List[t.Callable]:
         """run on application shutdown"""
         return []
 
     @classmethod
     @abstractmethod
-    def get_lifespan(cls) -> Optional[Callable[["StarletteApp"], AsyncContextManager]]:
+    def get_lifespan(cls) -> t.Optional[t.Callable[["StarletteApp"], t.AsyncContextManager]]:
         return None
+
+    @classmethod
+    @abstractmethod
+    def on_app_ready(cls, app: 'StarletteApp') -> None:
+        """Execute other actions that has to do with app instance"""
 
 
 class BaseModule(ModuleTemplating, ABC):
     @property
     @abstractmethod
-    def module(self) -> Union[Type[StarletteAPIModuleBase], Type[ApplicationModuleBase]]:
+    def module(self) -> t.Union[t.Type[StarletteAPIModuleBase], t.Type[ApplicationModuleBase]]:
         """decorated module class"""
+
+
+class ServiceConfig:
+    def __init__(
+            self,
+            base_type: t.Type[T],
+            *,
+            use_value: t.Optional[T] = None,
+            use_class: t.Optional[t.Type[T]] = None
+    ):
+        self.provider = base_type
+        self.use_value = use_value
+        self.use_class = use_class
+
+    def register(self, container: Container):
+        scope = t.cast(t.Union[t.Type[DIScope], ScopeDecorator], getattr(self.provider, '__di_scope__', SingletonScope))
+        if self.use_class:
+            scope = t.cast(t.Union[t.Type[DIScope], ScopeDecorator], getattr(self.use_class, '__di_scope__', SingletonScope))
+            container.register(base_type=self.provider, concrete_type=self.use_class, scope=scope)
+        elif self.use_value:
+            container.add_singleton(base_type=self.provider, concrete_type=self.use_value)
+        else:
+            container.register(base_type=self.provider, scope=scope)
 
 
 class Module(BaseModule):
     def __init__(
             self,
             *,
-            name: Optional[str] = __name__,
-            controllers: Sequence[Controller] = tuple(),
-            routers: Sequence[ModuleRouter] = tuple(),
-            providers: Sequence[Type] = tuple(),
-            template_folder: Optional[str] = None,
-            base_directory: Optional[str] = None,
+            name: t.Optional[str] = __name__,
+            controllers: t.Sequence[Controller] = tuple(),
+            routers: t.Sequence[ModuleRouter] = tuple(),
+            services: t.Sequence[t.Union[t.Type, ServiceConfig]] = tuple(),
+            template_folder: t.Optional[str] = None,
+            base_directory: t.Optional[str] = None,
             static_folder: str = 'static',
     ):
         self.name = name
         self.controllers = controllers
-        self.providers = providers
+        self.services = services
         self._template_folder = template_folder
         self._static_folder = static_folder
-        self._module_class: Optional[Union[Type[StarletteAPIModuleBase], Type[ApplicationModuleBase]]] = None
+        self._module_class: t.Optional[t.Union[t.Type[StarletteAPIModuleBase], t.Type[ApplicationModuleBase]]] = None
         self._module_base_directory = base_directory
         self.module_routers = routers
 
     @property
-    def module(self) -> Union[Type[StarletteAPIModuleBase], Type[ApplicationModuleBase]]:
+    def module(self) -> t.Union[t.Type[StarletteAPIModuleBase], t.Type[ApplicationModuleBase]]:
         return self._module_class
 
-    def __call__(self, module_class: Type) -> 'Module':
+    def __call__(self, module_class: t.Type) -> 'Module':
         if isinstance(module_class, type) and issubclass(module_class, StarletteAPIModuleBase):
             self._module_class = module_class
         else:
@@ -120,29 +132,33 @@ class Module(BaseModule):
     def resolve_module_base_directory(self, module_class):
         if not self._module_base_directory:
             self._module_base_directory = Path(inspect.getfile(module_class)).resolve().parent
+        module_class._module_decorator = self
 
     def configure_module(self, container: Container) -> None:
-        for _provider in self.get_providers():
-            scope = cast(Union[Type[DIScope], ScopeDecorator], getattr(_provider, '__di_scope__', SingletonScope))
-            container.register(base_type=_provider, scope=scope)
+        for _provider in self.get_services():
+            _provider.register(container)
 
-    def get_controllers(self) -> List[Controller]:
-        if not self.controllers:
-            return []
+    def get_controllers(self) -> t.List[Controller]:
+        if hasattr(self, '_controllers'):
+            return self._controllers
 
         if not isinstance(self.controllers, list):
-            self.controllers = list(self.controllers)
-        return self.controllers
+            self._controllers = list(self.controllers)
+        return self._controllers
 
-    def get_providers(self) -> List[Type]:
-        if not self.providers:
-            return []
+    def get_services(self) -> t.List[ServiceConfig]:
+        if hasattr(self, '_services'):
+            return self._services
 
-        if not isinstance(self.providers, list):
-            self.providers = list(self.providers)
-        return self.providers
+        self._services = []
+        for item in self.services:
+            if not isinstance(item, ServiceConfig):
+                self._services.append(ServiceConfig(t.cast(t.Type[T], item)))
+                continue
+            self._services.append(item)
+        return self._services
 
-    def get_module_routers(self) -> List[ModuleRouter]:
+    def get_module_routers(self) -> t.List[ModuleRouter]:
         if not self.module_routers:
             return []
 
@@ -155,30 +171,28 @@ class ApplicationModule(Module):
     def __init__(
             self,
             *,
-            controllers: Sequence[Controller] = tuple(),
-            routers: Sequence[ModuleRouter] = tuple(),
-            providers: Sequence[Type] = tuple(),
-            middleware: Sequence[Middleware] = (),
-            modules: Union[Sequence[Module], Sequence[Type]] = tuple(),
-            guards: List[Union[Type[GuardCanActivate], GuardCanActivate]] = None,
-            template_folder: Optional[str] = None,
-            base_directory: Optional[str] = None,
+            controllers: t.Sequence[Controller] = tuple(),
+            routers: t.Sequence[ModuleRouter] = tuple(),
+            services: t.Sequence[t.Union[t.Type, ServiceConfig]] = tuple(),
+            modules: t.Union[t.Sequence[Module], t.Sequence[t.Type], t.Sequence[BaseModule]] = tuple(),
+            global_guards: t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]] = None,
+            template_folder: t.Optional[str] = None,
+            base_directory: t.Optional[str] = None,
             static_folder: str = 'static',
     ) -> None:
         super().__init__(
             controllers=controllers,
-            providers=providers,
+            services=services,
             template_folder=template_folder,
             base_directory=base_directory,
             static_folder=static_folder,
             routers=routers
         )
-        self._modules: Union[List[Module], List[Type]] = []
+        self._modules: t.Union[t.List[Module], t.List[t.Type]] = []
         self.registered_modules = modules or ()
-        self.guards: List[Union[Type[GuardCanActivate], GuardCanActivate]] = guards or []
-        self.middleware: Sequence[Middleware] = middleware or ()
+        self.global_guards = global_guards or []
 
-    def get_modules(self) -> Union[List[Module], List[Type]]:
+    def get_modules(self) -> t.Union[t.List[Module], t.List[t.Type]]:
         if self._modules:
             return self._modules
 
@@ -192,7 +206,15 @@ class ApplicationModule(Module):
             self._modules.append(instance)
         return self._modules
 
-    def __call__(self, module_class: Type) -> 'ApplicationModule':
+    @cached_property
+    def app_modules(self) -> t.List[Module]:
+        _app_modules = []
+        for module in self.get_modules():
+            if isinstance(module, BaseModule):
+                _app_modules.append(module)
+        return _app_modules
+
+    def __call__(self, module_class: t.Type) -> 'ApplicationModule':
         if isinstance(module_class, type) and issubclass(module_class, ApplicationModuleBase):
             self._module_class = module_class
         else:
@@ -202,16 +224,16 @@ class ApplicationModule(Module):
         self.resolve_module_base_directory(module_class)
         return self
 
-    def get_controllers(self) -> List[Controller]:
+    def get_controllers(self) -> t.List[Controller]:
         controllers = super(ApplicationModule, self).get_controllers()
-        for module in self.get_modules():
+        for module in self.app_modules:
             controllers.extend(module.get_controllers())
 
         return controllers or []
 
-    def get_module_routers(self) -> List[ModuleRouter]:
+    def get_module_routers(self) -> t.List[ModuleRouter]:
         module_routers = super(ApplicationModule, self).get_module_routers()
-        for module in self.get_modules():
+        for module in self.app_modules:
             module_routers.extend(module.get_module_routers())
 
         return module_routers or []
@@ -220,29 +242,7 @@ class ApplicationModule(Module):
         super().configure_module(container=container)
         modules = self.get_modules()
         for dec_module in modules:
-            container.install(dec_module.module)
-
-    def register_custom_exceptions(
-            self, exception_handlers: Dict
-    ) -> Dict[Union[int, Type[Exception]], Callable[[Request, Type[Exception]], Any]]:
-        """
-
-        :param exception_handlers: A dictionary mapping either integer status codes,
-            or exception class types onto callables which handle the exceptions.
-            Exception handler callables should be of the form
-            `handler(request, exc) -> response` and may be be either standard functions, or
-            async functions.
-        :return: Dict
-        """
-        return self.module.register_custom_exceptions(exception_handlers)
-
-    def get_on_startup(self) -> List[Callable]:
-        """run on application startup"""
-        return self.module.get_on_startup()
-
-    def get_on_shutdown(self) -> List[Callable]:
-        """run on application shutdown"""
-        return self.module.get_on_shutdown()
-
-    def get_lifespan(self) -> Optional[Callable[["StarletteApp"], AsyncContextManager]]:
-        return self.module.get_lifespan()
+            module = dec_module
+            if hasattr(dec_module, 'module'):
+                module = dec_module.module
+            container.install(module)

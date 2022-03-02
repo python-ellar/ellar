@@ -42,9 +42,7 @@ class HTMLResponseModel(ResponseModel):
 
         response_args, headers = self.get_context_response(context=context)
         response_args.update(template=template, context=template_context)
-        response = self.response_type(**response_args)
-        if headers:
-            response.headers.raw.extend(headers)
+        response = self.response_type(**response_args, headers=headers)
         return response
 
     def _get_template_name(self, ctx: ExecutionContext):

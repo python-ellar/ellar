@@ -8,10 +8,9 @@ from jinja2 import FileSystemLoader
 from starlette.templating import pass_context
 
 from .environment import Environment
-from .helper import locked_cached_property
+from ..compatible import locked_cached_property, cached_property
 from .loader import StarletteJinjaLoader
-from ..helper import cached_property
-from ..settings import Config
+from ..conf import Config
 if t.TYPE_CHECKING:
     from starletteapi.main import StarletteApp
 
@@ -57,11 +56,8 @@ class ModuleTemplating(JinjaTemplating):
         return None
 
 
-class StarletteAppTemplating(JinjaTemplating):
+class StarletteAppTemplating:
     config: Config
-    _template_folder: t.Optional[str]
-    _root_path: t.Optional[str]
-    _static_folder: t.Optional[str]
 
     _debug: bool
     _module_loaders: t.Optional[t.List[ModuleTemplating]] = None
@@ -69,22 +65,6 @@ class StarletteAppTemplating(JinjaTemplating):
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
         for loader in self._module_loaders:
             yield loader
-
-    @property
-    def template_folder(self) -> t.Optional[str]:
-        return self._template_folder
-
-    @property
-    def root_path(self) -> t.Optional[str]:
-        return self._root_path
-
-    @cached_property
-    def static_directory(self) -> t.Optional[str]:
-        if self.root_path and self._static_folder:
-            path = os.path.join(str(self.root_path), self._static_folder)
-            if os.path.exists(path):
-                return path
-        return None
 
     @locked_cached_property
     def jinja_environment(self) -> Environment:

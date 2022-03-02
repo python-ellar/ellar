@@ -6,7 +6,7 @@ from starletteapi.versioning import DefaultAPIVersioning
 
 if typing.TYPE_CHECKING:
     from starletteapi.main import StarletteApp
-    from starletteapi.settings import Config
+    from starletteapi.conf import Config
 
 
 class RequestVersioningMiddleware:

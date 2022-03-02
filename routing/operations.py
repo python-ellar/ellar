@@ -41,6 +41,8 @@ class RouteInvalidParameterException(Exception):
 
 
 class ExtraOperationArgs(Generic[T]):
+    __slots__ = ('name', 'annotation', 'default')
+
     empty = inspect.Parameter.empty
 
     def __init__(self, *, name: str, annotation: Type[T], default_value: Any = None):
@@ -150,7 +152,7 @@ class Operation(OperationBase, Route):
         self._meta.update(
             operation_id=route_parameter.operation_id, summary=route_parameter.summary,
             description=route_parameter.description, deprecated=route_parameter.deprecated,
-            tags=route_parameter.tags, route=self
+            tags=route_parameter.tags
         )
 
     def get_operation_unique_id(self, method: str):

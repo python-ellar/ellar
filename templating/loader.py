@@ -33,10 +33,6 @@ class StarletteJinjaLoader(BaseLoader):
         raise TemplateNotFound(template)
 
     def _iter_loaders(self, template: str) -> t.Generator[BaseLoader, None, None]:
-        loader = self.app.jinja_loader
-        if loader is not None:
-            yield loader
-
         for module in self.app.get_module_loaders():
             loader = module.jinja_loader
             if loader is not None:
@@ -44,9 +40,6 @@ class StarletteJinjaLoader(BaseLoader):
 
     def list_templates(self) -> t.List[str]:
         result = set()
-        loader = self.app.jinja_loader
-        if loader is not None:
-            result.update(loader.list_templates())
 
         for module_loader in self.app.get_module_loaders():
             loader = module_loader.jinja_loader

@@ -21,9 +21,9 @@ class ControllerMount(Mount):
             external_doc_url: t.Optional[str] = None,
     ) -> None:
         super(ControllerMount, self).__init__(path=path, routes=routes, name=name)
-        self._meta = OperationMeta()
+        self._meta = OperationMeta() 
         self._meta.update(
-            mount=self, tag=tag, external_doc_description=external_doc_description, description=description,
+            tag=tag, external_doc_description=external_doc_description, description=description,
             external_doc_url=external_doc_url
         )
 

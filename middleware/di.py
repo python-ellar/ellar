@@ -1,7 +1,7 @@
 import typing
 
 from starletteapi.constants import SCOPE_SERVICE_PROVIDER
-from starletteapi.types import TScope, TReceive, TSend
+from starletteapi.types import TScope, TReceive, TSend, ASGIApp
 
 if typing.TYPE_CHECKING:
     from starletteapi.main import StarletteApp
@@ -9,7 +9,7 @@ if typing.TYPE_CHECKING:
 
 
 class DIRequestServiceProviderMiddleware:
-    def __init__(self, app: 'StarletteApp', *, debug: bool, injector: 'StarletteInjector') -> None:
+    def __init__(self, app: ASGIApp, *, debug: bool, injector: 'StarletteInjector') -> None:
         self.app = app
         self.debug = debug
         self.injector = injector

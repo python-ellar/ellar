@@ -1,6 +1,6 @@
 import inspect
+import typing as t
 from abc import ABC
-from typing import Union, Optional, List, Type, Iterable, cast, Dict, TYPE_CHECKING, Tuple, Any, Set
 
 from injector import is_decorated_with_inject, inject
 from starlette.routing import BaseRoute
@@ -11,7 +11,7 @@ from starletteapi.guard import GuardInterface
 from starletteapi.shortcuts import fail_silently
 from .routing import ControllerMount
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from starletteapi.guard.base import GuardCanActivate
     from starletteapi.routing.operations import Operation
 
@@ -20,7 +20,7 @@ class MissingAPIControllerDecoratorException(Exception):
     pass
 
 
-def get_route_functions(cls: Type) -> Iterable['Operation']:
+def get_route_functions(cls: t.Type) -> t.Iterable['Operation']:
     from starletteapi.routing.operations import OperationBase
     for method in cls.__dict__.values():
         if isinstance(method, OperationBase) or (
@@ -30,32 +30,32 @@ def get_route_functions(cls: Type) -> Iterable['Operation']:
 
 
 def compute_api_route_function(
-        base_cls: Type, controller_instance: "Controller"
+        base_cls: t.Type, controller_instance: "Controller"
 ) -> None:
     for cls_route_function in get_route_functions(base_cls):
-        controller_instance.add_route(cast('Operation', cls_route_function))
+        controller_instance.add_route(t.cast('Operation', cls_route_function))
 
 
 class ControllerBase:
     # `context` variable will change based on the route function called on the APIController
     # that way we can get some specific items things that belong the route function during execution
-    context: Optional[ExecutionContext] = None
+    context: t.Optional[ExecutionContext] = None
 
 
 class Controller(GuardInterface):
     def __init__(
             self,
-            prefix: Optional[str] = None,
+            prefix: t.Optional[str] = None,
             *,
-            tag: Optional[str] = None,
-            description: Optional[str] = None,
-            external_doc_description: Optional[str] = None,
-            external_doc_url: Optional[str] = None,
-            name: Optional[str] = None,
-            version: Union[List[str], str] = ()
+            tag: t.Optional[str] = None,
+            description: t.Optional[str] = None,
+            external_doc_description: t.Optional[str] = None,
+            external_doc_url: t.Optional[str] = None,
+            name: t.Optional[str] = None,
+            version: t.Union[t.List[str], str] = ()
     ) -> None:
         _controller_class = None
-        _prefix: Optional[Any] = prefix or NOT_SET
+        _prefix: t.Optional[t.Any] = prefix or NOT_SET
 
         if prefix and isinstance(prefix, type):
             _prefix = NOT_SET
@@ -66,36 +66,38 @@ class Controller(GuardInterface):
 
         self.prefix = _prefix
 
-        self._route_guards: List[Union[Type['GuardCanActivate'], 'GuardCanActivate']] = []
+        self._route_guards: t.List[t.Union[t.Type['GuardCanActivate'], 'GuardCanActivate']] = []
         # `controller_class`
-        self._controller_class: Optional[Type[ControllerBase]] = None
+        self._controller_class: t.Optional[t.Type[ControllerBase]] = None
         # `_path_operations`
-        self._routes: Dict[str, BaseRoute] = {}
-        self._mount: Optional[ControllerMount] = None
+        self._routes: t.Dict[str, BaseRoute] = {}
+        self._mount: t.Optional[ControllerMount] = None
         self.name = name
-        self._version: Set[str] = set([version] if isinstance(version, str) else version)
-        self._meta = dict(tag=tag, description=description, external_doc_description=external_doc_description,
-                          external_doc_url=external_doc_url)
+        self._version: t.Set[str] = set([version] if isinstance(version, str) else version)
         self.tag = tag
+        self._meta = dict(
+            tag=self.tag, description=description, external_doc_description=external_doc_description,
+            external_doc_url=external_doc_url
+        )
 
         if _controller_class:
             self(_controller_class)
 
     @property
-    def version(self) -> Set[str]:
+    def version(self) -> t.Set[str]:
         return self._version
 
     @property
-    def controller_class(self) -> Type[ControllerBase]:
+    def controller_class(self) -> t.Type[ControllerBase]:
         assert self._controller_class, "Controller Class is not available"
         return self._controller_class
 
-    def __call__(self, cls: Type) -> 'Controller':
+    def __call__(self, cls: t.Type) -> 'Controller':
         if not issubclass(cls, ControllerBase):
             # We force the cls to inherit from `ControllerBase` by creating another type.
             cls = type(cls.__name__, (cls, ControllerBase), {})
 
-        self._controller_class = cast(Type[ControllerBase], cls)
+        self._controller_class = t.cast(t.Type[ControllerBase], cls)
 
         tag = self.controller_class_name()
         if not self.tag:
@@ -137,6 +139,7 @@ class Controller(GuardInterface):
 
     def get_route(self) -> ControllerMount:
         if not self._mount:
+            self._meta.update(tag=self.tag)
             self._mount = ControllerMount(
                 self.prefix, routes=list(self._routes.values()), name=self.name, **self._meta
             )
@@ -148,10 +151,10 @@ class Controller(GuardInterface):
     def __str__(self) -> str:  # pragma: no cover
         return f"{self.controller_class.__name__}"
 
-    def get_guards(self) -> List[Union[Type['GuardCanActivate'], 'GuardCanActivate']]:
+    def get_guards(self) -> t.List[t.Union[t.Type['GuardCanActivate'], 'GuardCanActivate']]:
         return self._route_guards
 
-    def add_guards(self, *guards: Tuple[Union[Type['GuardCanActivate'], 'GuardCanActivate']]) -> None:
+    def add_guards(self, *guards: t.Tuple[t.Union[t.Type['GuardCanActivate'], 'GuardCanActivate']]) -> None:
         self._route_guards += list(guards)
 
     def add_route(self, cls_route_function: 'Operation') -> None:

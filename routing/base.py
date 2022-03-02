@@ -38,7 +38,7 @@ class ModuleRouter(Mount):
         self.Websocket = self.app.Websocket
 
         self._meta.update(
-            mount=self, tag=tag, external_doc_description=external_doc_description, description=description,
+            tag=tag, external_doc_description=external_doc_description, description=description,
             external_doc_url=external_doc_url
         )
 
