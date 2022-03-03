@@ -5,11 +5,10 @@ from starletteapi.context import ExecutionContext
 from .scopes import DIScope, ScopeDecorator, TransientScope, SingletonScope, RequestScope
 from .providers import InstanceProvider, Provider
 from starletteapi.logger import logger as log
-from starletteapi.module import StarletteAPIModuleBase, BaseModule
-
 from starletteapi.helper import get_name
 
 if t.TYPE_CHECKING:
+    from starletteapi.module import StarletteAPIModuleBase, BaseModule
     from starletteapi.main import StarletteApp
 
 T = t.TypeVar("T")
@@ -119,6 +118,50 @@ class Container(InjectorBinder):
         assert not isabstract(concrete_type)
         self.register(base_type=concrete_type, scope=RequestScope)
 
+    def install(
+            self, module: t.Union[t.Type['StarletteAPIModuleBase'], 'StarletteAPIModuleBase', 'BaseModule']
+    ) -> t.Union[InjectorModule, 'StarletteAPIModuleBase', 'BaseModule']:
+        """Install a module into this container[binder].
+
+        In this context the module is one of the following:
+
+        * function taking the :class:`Container` as it's only parameter
+
+          ::
+
+            def configure(container):
+                bind(str, to='s')
+
+            container.install(configure)
+
+        * instance of :class:`Module` (instance of it's subclass counts)
+
+          ::
+
+            class MyModule(StarletteAPIModuleBase):
+                def register_services(self, container):
+                    container.bind(str, to='s')
+
+            container.install(MyModule())
+
+        * subclass of :class:`Module` - the subclass needs to be instantiable so if it
+          expects any parameters they need to be injected
+
+          ::
+
+            container.install(MyModule)
+        """
+        installation_module = module
+        if not isinstance(installation_module, type) and hasattr(installation_module, 'module'):
+            installation_module = module.module
+
+        instance = installation_module
+        if isinstance(instance, type) and issubclass(t.cast(type, instance), InjectorModule):
+            instance = t.cast(type, instance)()
+
+        instance(self)
+        return instance
+
 
 class StarletteInjector(Injector):
     __slots__ = ('_stack', 'parent', 'app', 'container',)
@@ -152,20 +195,3 @@ class StarletteInjector(Injector):
 
     def create_di_request_service_provider(self, context: t.Dict) -> DIRequestServiceProvider:
         return DIRequestServiceProvider(self.container, context)
-
-    def install_module(
-            self,
-            *,
-            module: t.Union[t.Type['StarletteAPIModuleBase'], StarletteAPIModuleBase, BaseModule]
-    ) -> t.Union[InjectorModule, StarletteAPIModuleBase, BaseModule]:
-        # Initialise module
-        installation_module = module
-        if isinstance(module, BaseModule):
-            installation_module = module.module
-
-        if isinstance(installation_module, type) and issubclass(t.cast(type, installation_module), InjectorModule):
-            instance = t.cast(type, installation_module)()
-        else:
-            instance = installation_module
-        instance(self.container)
-        return instance

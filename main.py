@@ -16,12 +16,14 @@ from starletteapi.routing import APIRouter
 from starletteapi.conf import Config
 from starletteapi.templating import StarletteAppTemplating
 
+T = t.TypeVar('T')
+
 
 class StarletteApp(StarletteAppTemplating):
     def __init__(
             self,
             *,
-            root_module: ApplicationModule,
+            app_module: ApplicationModule,
             routes: t.Sequence[BaseRoute] = None,
             global_guards: t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]] = None,
             on_startup: t.Sequence[t.Callable] = None,
@@ -34,7 +36,7 @@ class StarletteApp(StarletteAppTemplating):
         self._debug = self.config.validate_config.DEBUG
         self.state = State()
 
-        self._module_loaders = [root_module] + root_module.app_modules
+        self._app_module = app_module
 
         self.router = APIRouter(
             routes, on_startup=on_startup, on_shutdown=on_shutdown,
@@ -70,26 +72,17 @@ class StarletteApp(StarletteAppTemplating):
 
         self.Route = self.router.Route
         self.Websocket = self.router.Websocket
-        self._injector.install_module(module=root_module)
+        self._injector.container.install(module=self._app_module)
 
     def install_module(
-            self, module: t.Union[t.Type[StarletteAPIModuleBase], BaseModule]
-    ) -> t.Union[StarletteAPIModuleBase, BaseModule]:
-        _module_instance = self.injector.install_module(module=module)
-        if self._append_modules(module, _module_instance):
+            self, module: t.Union[t.Type[StarletteAPIModuleBase], BaseModule, t.Type[T]]
+    ) -> t.Union[StarletteAPIModuleBase, BaseModule, T]:
+        _module_instance, installed = self._app_module.add_module(
+            container=self._injector.container, module=module
+        )
+        if installed:
             self.reload_static_app()
         return _module_instance
-
-    def _append_modules(self, *modules: BaseModule) -> bool:
-        has_template_module = False
-        for module in modules:
-            if isinstance(module, BaseModule):
-                set_module_loaders = set(self._module_loaders)
-                set_module_loaders.add(module)
-                if len(set_module_loaders) > len(self._module_loaders):
-                    self._module_loaders.append(module)
-                    has_template_module = True
-        return has_template_module
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         return self._global_guards

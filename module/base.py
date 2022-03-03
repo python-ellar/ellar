@@ -3,24 +3,22 @@ import inspect
 from abc import ABC, abstractmethod
 
 from injector import Module as _InjectorModule
-
-from starletteapi.compatible import cached_property
-from starletteapi.di.scopes import ScopeDecorator, DIScope, SingletonScope
+from starletteapi.di import ServiceConfig
 from starletteapi.guard import GuardCanActivate
 from starletteapi.controller import Controller
 from starletteapi.templating.interface import ModuleTemplating
 from starletteapi.routing import ModuleRouter
 from pathlib import Path
+from starletteapi.di.injector import Container
 
 if t.TYPE_CHECKING:
     from starletteapi.main import StarletteApp
-    from starletteapi.di.injector import Container
 
 T = t.TypeVar('T')
 
 
 def _configure_module(func):
-    def _configure_module_wrapper(self, container: 'Container') -> t.Any:
+    def _configure_module_wrapper(self, container: Container) -> t.Any:
         result = func(self, container=container)
         if hasattr(self, '_module_decorator'):
             _module_decorator = t.cast(Module, self._module_decorator)
@@ -32,11 +30,11 @@ def _configure_module(func):
 class StarletteAPIModuleBase(_InjectorModule):
     _module_decorator: t.Optional['Module']
 
-    def register_services(self, container: 'Container') -> None:
+    def register_services(self, container: Container) -> None:
         """Register other services manually"""
 
     @_configure_module
-    def configure(self, container: 'Container') -> None:
+    def configure(self, container: Container) -> None:
         self.register_services(container=container)
 
 
@@ -69,29 +67,6 @@ class BaseModule(ModuleTemplating, ABC):
     @abstractmethod
     def module(self) -> t.Union[t.Type[StarletteAPIModuleBase], t.Type[ApplicationModuleBase]]:
         """decorated module class"""
-
-
-class ServiceConfig:
-    def __init__(
-            self,
-            base_type: t.Type[T],
-            *,
-            use_value: t.Optional[T] = None,
-            use_class: t.Optional[t.Type[T]] = None
-    ):
-        self.provider = base_type
-        self.use_value = use_value
-        self.use_class = use_class
-
-    def register(self, container: 'Container'):
-        scope = t.cast(t.Union[t.Type[DIScope], ScopeDecorator], getattr(self.provider, '__di_scope__', SingletonScope))
-        if self.use_class:
-            scope = t.cast(t.Union[t.Type[DIScope], ScopeDecorator], getattr(self.use_class, '__di_scope__', SingletonScope))
-            container.register(base_type=self.provider, concrete_type=self.use_class, scope=scope)
-        elif self.use_value:
-            container.add_singleton(base_type=self.provider, concrete_type=self.use_value)
-        else:
-            container.register(base_type=self.provider, scope=scope)
 
 
 class Module(BaseModule):
@@ -134,9 +109,12 @@ class Module(BaseModule):
             self._module_base_directory = Path(inspect.getfile(module_class)).resolve().parent
         module_class._module_decorator = self
 
-    def configure_module(self, container: 'Container') -> None:
+    def configure_module(self, container: Container) -> None:
         for _provider in self.get_services():
             _provider.register(container)
+
+        for controller in self.get_controllers():
+            container.add_exact_transient(concrete_type=controller.controller_class)
 
     def get_controllers(self) -> t.List[Controller]:
         if hasattr(self, '_controllers'):
@@ -167,7 +145,71 @@ class Module(BaseModule):
         return self.module_routers
 
 
-class ApplicationModule(Module):
+TAppModuleKey = t.Type[t.Union[StarletteAPIModuleBase, ApplicationModuleBase]]
+TAppModuleValue = t.Union[StarletteAPIModuleBase, Module]
+TAppModule = t.Dict[TAppModuleKey, TAppModuleValue]
+
+
+class _AppModules(t.Mapping):
+    _modules: TAppModule
+    _app_modules: t.List[t.Union[BaseModule, Module]]
+
+    @classmethod
+    def _process_modules(
+            cls,
+            modules: t.Union[t.Sequence[Module], t.Sequence[t.Type], t.Sequence[BaseModule]]
+    ) -> TAppModule:
+        _result: TAppModule = {}
+        for module in modules:
+            instance = module
+            if isinstance(module, type) and issubclass(module, StarletteAPIModuleBase):
+                instance = module()
+                _result[module] = instance
+                continue
+            _result[instance.module] = instance
+        return _result
+
+    def modules(self, exclude_root: bool = False) -> t.Iterator[t.Union[BaseModule, Module]]:
+        if not self._app_modules:
+            for module in self._modules.values():
+                if isinstance(module, BaseModule):
+                    self._app_modules.append(module)
+
+        for item in self._app_modules:
+            if isinstance(item, ApplicationModule) and exclude_root:
+                continue
+            yield item
+
+    def add_module(
+            self,
+            container: Container,
+            module: t.Union[t.Type[StarletteAPIModuleBase], BaseModule, t.Type[T]]
+    ) -> t.Tuple[t.Union[StarletteAPIModuleBase, BaseModule, T], bool]:
+        if isinstance(module, BaseModule) and module.module in self:
+            return module, False
+
+        if module in self:
+            return self.get(module), False
+
+        _module_instance = container.install(module=module)
+        self._modules.update(self._process_modules([_module_instance]))
+        self._app_modules = []  # clear _app_modules cache
+        return _module_instance, True
+
+    def __getitem__(self, k: TAppModuleKey) -> TAppModuleValue:
+        return self._modules.__getitem__(k)
+
+    def __contains__(self, item: TAppModuleKey) -> bool:
+        return item in self._modules
+
+    def __len__(self) -> int:
+        return len(self._modules)
+
+    def __iter__(self) -> t.Iterator[t.Any]:
+        return iter(self._modules)
+
+
+class ApplicationModule(Module, _AppModules):
     def __init__(
             self,
             *,
@@ -188,31 +230,9 @@ class ApplicationModule(Module):
             static_folder=static_folder,
             routers=routers
         )
-        self._modules: t.Union[t.List[Module], t.List[t.Type]] = []
-        self.registered_modules = modules or ()
+        self._modules: TAppModule = self._process_modules([self] + list(modules))
+        self._app_modules = []
         self.global_guards = global_guards or []
-
-    def get_modules(self) -> t.Union[t.List[Module], t.List[t.Type]]:
-        if self._modules:
-            return self._modules
-
-        if self.registered_modules and not isinstance(self.registered_modules, list):
-            self.registered_modules = list(self.registered_modules)
-
-        for module in self.registered_modules:
-            instance = module
-            if isinstance(module, type) and issubclass(module, StarletteAPIModuleBase):
-                instance = module()
-            self._modules.append(instance)
-        return self._modules
-
-    @cached_property
-    def app_modules(self) -> t.List[Module]:
-        _app_modules = []
-        for module in self.get_modules():
-            if isinstance(module, BaseModule):
-                _app_modules.append(module)
-        return _app_modules
 
     def __call__(self, module_class: t.Type) -> 'ApplicationModule':
         if isinstance(module_class, type) and issubclass(module_class, ApplicationModuleBase):
@@ -226,23 +246,19 @@ class ApplicationModule(Module):
 
     def get_controllers(self) -> t.List[Controller]:
         controllers = super(ApplicationModule, self).get_controllers()
-        for module in self.app_modules:
+        for module in self.modules(exclude_root=True):
             controllers.extend(module.get_controllers())
 
         return controllers or []
 
     def get_module_routers(self) -> t.List[ModuleRouter]:
         module_routers = super(ApplicationModule, self).get_module_routers()
-        for module in self.app_modules:
+        for module in self.modules(exclude_root=True):
             module_routers.extend(module.get_module_routers())
 
         return module_routers or []
 
-    def configure_module(self, container: 'Container') -> None:
+    def configure_module(self, container: Container) -> None:
         super().configure_module(container=container)
-        modules = self.get_modules()
-        for dec_module in modules:
-            module = dec_module
-            if hasattr(dec_module, 'module'):
-                module = dec_module.module
+        for module in self.modules(exclude_root=True):
             container.install(module)
