@@ -8,54 +8,52 @@ from starletteapi.conf import Config
 from starletteapi.templating import Environment
 
 
-class _StarletteAppFactory:
-    def __init__(self, app_module: t.Optional[ApplicationModule] = None):
-        self.application_module = app_module or ApplicationModule()
-
-    def _finalize_app_initialization(self, app: StarletteApp) -> None:
+class StarletteAppFactory:
+    @classmethod
+    def _finalize_app_initialization(cls, app: StarletteApp, app_module: ApplicationModule) -> None:
         app.injector.container.add_instance(app)
         app.injector.container.add_instance(app.config, Config)
         app.injector.container.add_instance(app.jinja_environment, Environment)
-        self.application_module.module.on_app_ready(app)
+        app_module.module.on_app_ready(app)
 
-    def _build_controller_routes(self) -> t.List[BaseRoute]:
-        controllers = self.application_module.get_controllers()
+    @classmethod
+    def _build_controller_routes(cls, app_module: ApplicationModule) -> t.List[BaseRoute]:
+        controllers = app_module.get_controllers()
         routes = []
         for controller in controllers:
             if isinstance(controller, Controller):
                 routes.append(controller.get_route())
         return routes
 
-    def _build_module_routes(self) -> t.List[BaseRoute]:
-        module_routers = self.application_module.get_module_routers()
+    @classmethod
+    def _build_module_routes(cls, app_module: ApplicationModule) -> t.List[BaseRoute]:
+        module_routers = app_module.get_module_routers()
         routes = [module_router for module_router in module_routers]
         return routes
 
-    def _get_application_events(self) -> t.Dict:
+    @classmethod
+    def _get_application_events(cls, app_module: ApplicationModule) -> t.Dict:
         events = dict(lifespan=None, on_startup=None, on_shutdown=None)
-        _lifespan = self.application_module.module.get_lifespan()
+        _lifespan = app_module.module.get_lifespan()
         if _lifespan:
             events['lifespan'] = _lifespan
             return events
 
-        events['on_startup'] = self.application_module.module.get_on_startup()
-        events['on_shutdown'] = self.application_module.module.get_on_shutdown()
+        events['on_startup'] = app_module.module.get_on_startup()
+        events['on_shutdown'] = app_module.module.get_on_shutdown()
         return events
 
+    @classmethod
     def create_app(
-            self, app_module: ApplicationModule
+            cls, app_module: ApplicationModule
     ) -> StarletteApp:
-        self.application_module = app_module
-        routes = self._build_controller_routes() + self._build_module_routes()
-        events = self._get_application_events()
+        routes = cls._build_controller_routes(app_module) + cls._build_module_routes(app_module)
+        events = cls._get_application_events(app_module)
 
         app = StarletteApp(
             routes=routes,
-            root_module=app_module,
+            app_module=app_module,
             **events
         )
-        self._finalize_app_initialization(app=app)
+        cls._finalize_app_initialization(app=app, app_module=app_module)
         return app
-
-
-StarletteAppFactory = _StarletteAppFactory()
