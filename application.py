@@ -10,13 +10,6 @@ from starletteapi.templating import Environment
 
 class StarletteAppFactory:
     @classmethod
-    def _finalize_app_initialization(cls, app: StarletteApp, app_module: ApplicationModule) -> None:
-        app.injector.container.add_instance(app)
-        app.injector.container.add_instance(app.config, Config)
-        app.injector.container.add_instance(app.jinja_environment, Environment)
-        app_module.module.on_app_ready(app)
-
-    @classmethod
     def _build_controller_routes(cls, app_module: ApplicationModule) -> t.List[BaseRoute]:
         controllers = app_module.get_controllers()
         routes = []
@@ -45,7 +38,7 @@ class StarletteAppFactory:
 
     @classmethod
     def create_app(
-            cls, app_module: ApplicationModule
+            cls, app_module: t.Union[ApplicationModule, t.Type]
     ) -> StarletteApp:
         routes = cls._build_controller_routes(app_module) + cls._build_module_routes(app_module)
         events = cls._get_application_events(app_module)
@@ -55,5 +48,4 @@ class StarletteAppFactory:
             app_module=app_module,
             **events
         )
-        cls._finalize_app_initialization(app=app, app_module=app_module)
         return app

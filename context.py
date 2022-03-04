@@ -1,12 +1,12 @@
 import typing as t
 from starlette.background import BackgroundTasks
-from starletteapi.di.providers import CallableProvider
 from starletteapi.requests import Request, HTTPConnection
 from starletteapi.responses import Response
 from starletteapi.types import TScope, TReceive, TSend
 from starletteapi.websockets import WebSocket
 
-from .compatible import cached_property
+from .compatible import cached_property, DataMapper, AttributeDictAccess
+from .shortcuts import fail_silently
 
 if t.TYPE_CHECKING:
     from starletteapi.main import StarletteApp
@@ -18,34 +18,35 @@ class ExecutionContextException(Exception):
     pass
 
 
+class OperationExecutionMeta(DataMapper, AttributeDictAccess):
+    pass
+
+
 class ExecutionContext:
     __slots__ = ('scope', 'receive', 'send', '_operation', '_response', '__dict__')
 
-    def __init__(self, *, scope: TScope, receive: TReceive, send: TSend, operation: 'OperationBase'):
+    def __init__(self, *, scope: TScope, receive: TReceive, send: TSend, operation: t.Optional['OperationBase'] = None):
         self.scope = scope
         self.receive = receive
         self.send = send
-        self._operation = operation
+        self._operation: OperationExecutionMeta = OperationExecutionMeta(
+            **operation.get_meta() if operation else {}
+        )
         self._response: t.Optional[Response] = None
 
     @property
-    def operation(self):
+    def operation(self) -> OperationExecutionMeta:
         return self._operation
+
+    @operation.setter
+    def operation(self, value: 'OperationBase') -> None:
+        self._operation = OperationExecutionMeta(
+            **value.get_meta()
+        )
 
     @property
     def has_response(self) -> bool:
         return self._response is not None
-
-    @cached_property
-    def _service_provider(self) -> t.Optional['DIRequestServiceProvider']:
-        service_provider = self.switch_to_http_connection().service_provider
-        if ExecutionContext not in service_provider.context:
-            service_provider.update_context(ExecutionContext, self)
-            service_provider.update_context(HTTPConnection, CallableProvider(self.switch_to_http_connection))
-            service_provider.update_context(WebSocket, CallableProvider(self.switch_to_websocket))
-            service_provider.update_context(Request, CallableProvider(self.switch_to_request))
-            service_provider.update_context(Response, CallableProvider(self.get_response))
-        return service_provider
 
     @cached_property
     def _http_connection(self) -> HTTPConnection:
@@ -64,7 +65,7 @@ class ExecutionContext:
         return WebSocket(self.scope, receive=self.receive, send=self.send)
 
     def get_service_provider(self) -> "DIRequestServiceProvider":
-        return self._service_provider
+        return self.switch_to_http_connection().service_provider
 
     def switch_to_request(self) -> Request:
         return self._request
@@ -88,3 +89,19 @@ class ExecutionContext:
 
     def get_app(self) -> 'StarletteApp':
         return t.cast('StarletteApp', self.scope["app"])
+
+    @classmethod
+    def create_context(
+            cls,
+            *,
+            scope: TScope,
+            receive: TReceive,
+            send: TSend,
+            operation: t.Optional['OperationBase'] = None
+    ) -> 'ExecutionContext':
+        connection = HTTPConnection(scope=scope)
+        context = fail_silently(connection.service_provider.get, interface=ExecutionContext)
+        if context:
+            context.operation = operation
+            return context
+        return cls(scope=scope, receive=receive, send=send, operation=operation)

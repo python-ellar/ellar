@@ -3,6 +3,8 @@ import inspect
 from abc import ABC, abstractmethod
 
 from injector import Module as _InjectorModule
+from starletteapi.types import T
+from starletteapi.compatible import DataMapper
 from starletteapi.di import ServiceConfig
 from starletteapi.guard import GuardCanActivate
 from starletteapi.controller import Controller
@@ -13,8 +15,6 @@ from starletteapi.di.injector import Container
 
 if t.TYPE_CHECKING:
     from starletteapi.main import StarletteApp
-
-T = t.TypeVar('T')
 
 
 def _configure_module(func):
@@ -81,6 +81,7 @@ class Module(BaseModule):
             base_directory: t.Optional[str] = None,
             static_folder: str = 'static',
     ):
+        super(Module, self).__init__()
         self.name = name
         self.controllers = controllers
         self.services = services
@@ -150,8 +151,8 @@ TAppModuleValue = t.Union[StarletteAPIModuleBase, Module]
 TAppModule = t.Dict[TAppModuleKey, TAppModuleValue]
 
 
-class _AppModules(t.Mapping):
-    _modules: TAppModule
+class _AppModules(DataMapper[TAppModuleKey, TAppModuleValue]):
+    _data: TAppModule
     _app_modules: t.List[t.Union[BaseModule, Module]]
 
     @classmethod
@@ -171,7 +172,7 @@ class _AppModules(t.Mapping):
 
     def modules(self, exclude_root: bool = False) -> t.Iterator[t.Union[BaseModule, Module]]:
         if not self._app_modules:
-            for module in self._modules.values():
+            for module in self.values():
                 if isinstance(module, BaseModule):
                     self._app_modules.append(module)
 
@@ -192,21 +193,9 @@ class _AppModules(t.Mapping):
             return self.get(module), False
 
         _module_instance = container.install(module=module)
-        self._modules.update(self._process_modules([_module_instance]))
+        self._data.update(self._process_modules([_module_instance]))
         self._app_modules = []  # clear _app_modules cache
         return _module_instance, True
-
-    def __getitem__(self, k: TAppModuleKey) -> TAppModuleValue:
-        return self._modules.__getitem__(k)
-
-    def __contains__(self, item: TAppModuleKey) -> bool:
-        return item in self._modules
-
-    def __len__(self) -> int:
-        return len(self._modules)
-
-    def __iter__(self) -> t.Iterator[t.Any]:
-        return iter(self._modules)
 
 
 class ApplicationModule(Module, _AppModules):
@@ -230,7 +219,7 @@ class ApplicationModule(Module, _AppModules):
             static_folder=static_folder,
             routers=routers
         )
-        self._modules: TAppModule = self._process_modules([self] + list(modules))
+        self._data: TAppModule = self._process_modules(modules)
         self._app_modules = []
         self.global_guards = global_guards or []
 
@@ -242,6 +231,7 @@ class ApplicationModule(Module, _AppModules):
                 module_class.__name__, (module_class, ApplicationModuleBase), {'_module_decorator': self}
             )
         self.resolve_module_base_directory(module_class)
+        self._data.update(self._process_modules([self]))
         return self
 
     def get_controllers(self) -> t.List[Controller]:

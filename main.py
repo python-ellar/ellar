@@ -14,7 +14,7 @@ from starletteapi.guard import GuardCanActivate
 from starletteapi.module import ApplicationModule, BaseModule, StarletteAPIModuleBase
 from starletteapi.routing import APIRouter
 from starletteapi.conf import Config
-from starletteapi.templating import StarletteAppTemplating
+from starletteapi.templating import StarletteAppTemplating, Environment
 
 T = t.TypeVar('T')
 
@@ -73,6 +73,7 @@ class StarletteApp(StarletteAppTemplating):
         self.Route = self.router.Route
         self.Websocket = self.router.Websocket
         self._injector.container.install(module=self._app_module)
+        self._finalize_app_initialization()
 
     def install_module(
             self, module: t.Union[t.Type[StarletteAPIModuleBase], BaseModule, t.Type[T]]
@@ -157,3 +158,9 @@ class StarletteApp(StarletteAppTemplating):
 
     def host(self, host: str, app: ASGIApp, name: str = None) -> None:
         self.router.host(host, app=app, name=name)
+
+    def _finalize_app_initialization(self) -> None:
+        self.injector.container.add_instance(self)
+        self.injector.container.add_instance(self.config, Config)
+        self.injector.container.add_instance(self.jinja_environment, Environment)
+        self._app_module.module.on_app_ready(self)

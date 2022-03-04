@@ -1,11 +1,12 @@
 import typing as t
+from starletteapi.compatible import AttributeDictAccess
 
 if t.TYPE_CHECKING:
     from starletteapi.routing.operations import ExtraOperationArgs
     from starletteapi.guard import GuardCanActivate
 
 
-class OperationMeta(dict):
+class OperationMeta(dict, AttributeDictAccess):
     extra_route_args: t.List['ExtraOperationArgs']
     response_override: t.Union[t.Dict[int, t.Union[t.Type, t.Any]], t.Type, None]
     route_versioning: t.Set[t.Union[int, float, str]]
@@ -23,11 +24,3 @@ class OperationMeta(dict):
             return self.__getattr__(name)
         except AttributeError:
             raise KeyError(name)
-
-    def __getattr__(self, name) -> t.Any:
-        if name in self:
-            value = self.get(name)
-            return value
-        raise AttributeError(
-            f"'{self.__class__.__name__}' object has no attribute '{name}'"
-        )

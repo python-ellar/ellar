@@ -93,7 +93,7 @@ class OperationBase(GuardInterface):
                     guard.raise_exception()
 
     async def _run(self, scope: TScope, receive: TReceive, send: TSend) -> None:
-        context = ExecutionContext(scope=scope, receive=receive, send=send, operation=self)
+        context = ExecutionContext.create_context(scope=scope, receive=receive, send=send, operation=self)
         await self.run_route_guards(context=context)
         await self._handle(context=context)
 

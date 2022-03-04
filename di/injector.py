@@ -41,9 +41,10 @@ class DIRequestServiceProvider:
         return result
 
     def update_context(self, interface: t.Type[T], value: T) -> None:
-        if not isinstance(value, Provider):
-            self.context.update({interface: InstanceProvider(value)})
-        self.context.update({interface: value})
+        if isinstance(value, Provider):
+            self.context.update({interface: value})
+            return
+        self.context.update({interface: InstanceProvider(value)})
 
 
 class Container(InjectorBinder):
