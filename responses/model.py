@@ -21,10 +21,16 @@ class ResponseResolver(t.NamedTuple):
 
 
 class ResponseModel(ABC):
-    def __init__(self, response_type: t.Type[Response], description: str = 'Successful Response') -> None:
+    def __init__(
+            self,
+            response_type: t.Type[Response],
+            description: str = 'Successful Response',
+            **kwargs: t.Any
+    ) -> None:
         self.response_type = response_type
-        self.media_type = getattr(response_type or {}, 'media_type', None)
+        self.media_type = getattr(response_type or {}, 'media_type', kwargs.get('media_type'))
         self.description = description
+        self.meta = kwargs
 
     def serialize(self, response_obj: t.Any) -> t.Union[t.List[t.Dict], t.Dict]:
         return response_obj
@@ -52,7 +58,8 @@ class ResponseModel(ABC):
 
 class _JSONResponseModel(ResponseModel):
     def __init__(self, **kwargs: t.Any) -> None:
-        super().__init__(response_type=JSONResponse, **kwargs)
+        kwargs.update(response_type=JSONResponse)
+        super().__init__(**kwargs)
         model_field = create_response_field(
             name="response_model", type_=dict, model_field_class=ResponseModelField
         )
@@ -83,7 +90,7 @@ class APIResponseModel(_JSONResponseModel):
 
 
 class EmptyAPIResponseModel(_JSONResponseModel):
-    def serialize(self, response_obj: t.Any) ->t. Union[t.List[t.Dict], t.Dict]:
+    def serialize(self, response_obj: t.Any) -> t. Union[t.List[t.Dict], t.Dict]:
         try:
             # try an serialize object
             return serialize_object(response_obj)
@@ -138,6 +145,8 @@ class ResponseTypeDefinitionConverter(TypeDefinitionConverter):
 
 
 class RouteResponseModel:
+    __slots__ = ('models', )
+
     def __init__(self, route_responses: t.Union[t.Type, t.Dict[int, t.Type]]) -> None:
         self.models: t.Dict[int, ResponseModel] = {}
         self.convert_route_responses_to_response_models(route_responses)
@@ -146,16 +155,21 @@ class RouteResponseModel:
         _route_responses = self.get_route_responses_as_dict(route_responses)
         for status_code, response_schema in _route_responses.items():
             assert isinstance(status_code, int) or status_code == Ellipsis, 'status_code must be a number'
+            description: str = 'Successful Response'
+            if isinstance(response_schema, (tuple, list)):
+                response_schema, description = response_schema
 
             if isinstance(response_schema, type) and issubclass(response_schema, Response):
-                self.models[status_code] = ResponseModel(response_schema)
+                self.models[status_code] = ResponseModel(response_schema, description=description)
                 continue
 
             if isinstance(response_schema, ResponseModel):
                 self.models[status_code] = response_schema
                 continue
 
-            self.models[status_code] = APIResponseModel(t.cast(t.Type[BaseModel], response_schema))
+            self.models[status_code] = APIResponseModel(
+                t.cast(t.Type[BaseModel], response_schema), description=description
+            )
 
     def response_resolver(
             self, ctx: ExecutionContext, endpoint_response_content: t.Union[t.Any, t.Tuple[int, t.Any]]
