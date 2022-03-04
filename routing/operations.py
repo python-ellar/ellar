@@ -1,6 +1,6 @@
 import inspect
+import typing as t
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, List, Optional, Any, Dict, Sequence, Union, Type, cast, Generic, TypeVar, Set, Tuple
 
 from starlette.concurrency import run_in_threadpool
 from starlette.status import WS_1008_POLICY_VIOLATION
@@ -8,7 +8,7 @@ from starlette.status import WS_1008_POLICY_VIOLATION
 from starletteapi.constants import SCOPE_API_VERSIONING_RESOLVER
 from starletteapi.helper import generate_operation_unique_id
 from starletteapi.operation_meta import OperationMeta
-from starletteapi.types import ASGIApp, TScope, TReceive, TSend
+from starletteapi.types import ASGIApp, TScope, TReceive, TSend, T
 from starletteapi.routing import Route, WebSocketRoute, iscoroutinefunction_or_partial, Match
 from starletteapi.context import ExecutionContext
 from starletteapi.exceptions import RequestValidationError, WebSocketRequestValidationError
@@ -18,10 +18,8 @@ from starletteapi.route_models import EndpointParameterModel, APIEndpointParamet
 from starletteapi.schema import RouteParameters, WsRouteParameters
 from starletteapi.controller.base import Controller, ControllerBase
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from starletteapi.guard.base import GuardCanActivate
-
-T = TypeVar('T')
 
 __all__ = [
     'WebsocketOperationBase',
@@ -40,19 +38,19 @@ class RouteInvalidParameterException(Exception):
     pass
 
 
-class ExtraOperationArgs(Generic[T]):
+class ExtraOperationArgs(t.Generic[T]):
     __slots__ = ('name', 'annotation', 'default')
 
     empty = inspect.Parameter.empty
 
-    def __init__(self, *, name: str, annotation: Type[T], default_value: Any = None):
+    def __init__(self, *, name: str, annotation: t.Type[T], default_value: t.Any = None):
         self.name = name
         self.annotation = annotation
         self.default = default_value or self.empty
 
-    def resolve_args(self, kwargs: Dict) -> T:
+    def resolve_args(self, kwargs: t.Dict) -> T:
         if self.name in kwargs:
-            return cast(Optional[T], kwargs.pop(self.name))
+            return t.cast(t.Optional[T], kwargs.pop(self.name))
         raise AttributeError(f'{self.name} ExtraOperationArgs not found')
 
 
@@ -67,17 +65,17 @@ class OperationBase(GuardInterface):
     def app(self, value):
         ...
 
-    def get_guards(self) -> List[Union[Type['GuardCanActivate'], 'GuardCanActivate']]:
+    def get_guards(self) -> t.List[t.Union[t.Type['GuardCanActivate'], 'GuardCanActivate']]:
         return list(self._meta.route_guards)
 
-    def get_meta(self) -> Dict[str, Any]:
+    def get_meta(self) -> t.Dict[str, t.Any]:
         return self._meta
 
-    def add_guards(self, *guards: Sequence['GuardCanActivate']) -> None:
+    def add_guards(self, *guards: t.Sequence['GuardCanActivate']) -> None:
         if guards:
             self._meta.route_guards += list(guards)
 
-    def update_operation_meta(self, **kwargs: Any) -> None:
+    def update_operation_meta(self, **kwargs: t.Any) -> None:
         self._meta.update(**kwargs)
 
     async def run_route_guards(self, context: ExecutionContext) -> None:
@@ -100,13 +98,13 @@ class OperationBase(GuardInterface):
     async def _handle(self, *, context: ExecutionContext) -> None:
         """return a context"""
 
-    def get_allowed_version(self) -> Set[str]:
+    def get_allowed_version(self) -> t.Set[str]:
         return self._meta.route_versioning
 
-    def matches(self, scope: TScope) -> Tuple[Match, TScope]:
+    def matches(self, scope: TScope) -> t.Tuple[Match, TScope]:
         match = super().matches(scope)
         if match[0] is not Match.NONE:
-            version_scheme_resolver = cast('BaseAPIVersioningResolver', scope[SCOPE_API_VERSIONING_RESOLVER])
+            version_scheme_resolver = t.cast('BaseAPIVersioningResolver', scope[SCOPE_API_VERSIONING_RESOLVER])
             if not version_scheme_resolver.can_activate(route_versions=self.get_allowed_version()):
                 return Match.NONE, {}
         return match
@@ -140,7 +138,7 @@ class Operation(OperationBase, Route):
         if hasattr(self.endpoint, "_meta"):
             _meta = getattr(self.endpoint, "_meta")
 
-        self._meta: OperationMeta = cast(OperationMeta, _meta)
+        self._meta: OperationMeta = t.cast(OperationMeta, _meta)
 
         if self._meta.extra_route_args:
             self.route_parameter_model.add_extra_route_args(*self._meta.extra_route_args)
@@ -188,7 +186,7 @@ class WebsocketOperation(WebsocketOperationBase, WebSocketRoute):
         if hasattr(self.endpoint, "_meta"):
             _meta = getattr(self.endpoint, "_meta")
 
-        self._meta: OperationMeta = cast(OperationMeta, _meta)
+        self._meta: OperationMeta = t.cast(OperationMeta, _meta)
 
         if self._meta.extra_route_args:
             self.route_parameter_model.add_extra_route_args(*self._meta.extra_route_args)
@@ -207,10 +205,10 @@ class ClassBasedOperation:
     _meta: OperationMeta
 
     def __init__(
-            self, *, controller: Optional[Controller] = None, **kwargs: Any
+            self, *, controller: t.Optional[Controller] = None, **kwargs: t.Any
     ) -> None:
         super(ClassBasedOperation, self).__init__(**kwargs)
-        self._controller: Optional[Controller] = controller
+        self._controller: t.Optional[Controller] = controller
 
     @property
     def controller(self) -> Controller:
@@ -232,15 +230,15 @@ class ClassBasedOperation:
         controller_instance.context = ctx
         return controller_instance
 
-    def get_guards(self) -> List[Union[Type['GuardCanActivate'], 'GuardCanActivate']]:
+    def get_guards(self) -> t.List[t.Union[t.Type['GuardCanActivate'], 'GuardCanActivate']]:
         return self._meta.route_guards or self.controller.get_guards()
 
-    def get_allowed_version(self) -> Set[str]:
+    def get_allowed_version(self) -> t.Set[str]:
         return self._meta.route_versioning or self.controller.version
 
 
 class ControllerOperation(ClassBasedOperation, Operation):
-    async def _handle(self, context: ExecutionContext) -> Any:
+    async def _handle(self, context: ExecutionContext) -> t.Any:
         controller_instance = self._get_controller_instance(ctx=context)
         context.get_service_provider().update_context(ControllerBase, controller_instance)
 
