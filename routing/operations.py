@@ -84,10 +84,9 @@ class OperationBase(GuardInterface):
         app = context.get_app()
         _guards = self.get_guards() or app.get_guards()
         if _guards:
-            injector = context.get_service_provider()
             for guard in _guards:
                 if isinstance(guard, type):
-                    guard = injector.get(cast(Type['GuardCanActivate'], guard))
+                    guard = guard()
                 result = await guard.can_activate(context)
                 if not result:
                     guard.raise_exception()

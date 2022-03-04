@@ -5,7 +5,10 @@ from enum import Enum
 from pydantic import BaseModel
 from pydantic.fields import ModelField, Undefined
 from pydantic.schema import field_schema
-from starlette.routing import Mount
+from starlette.convertors import (
+    StringConvertor, FloatConvertor, UUIDConvertor, PathConvertor, IntegerConvertor
+)
+from starlette.routing import Mount, compile_path
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from starletteapi.constants import METHODS_WITH_BODY, REF_PREFIX
@@ -15,9 +18,6 @@ from starletteapi.route_models.param_resolvers import RouteParameterResolver, Bo
 from starletteapi.route_models.params import Param, Body
 from starletteapi.routing.operations import Operation
 from starletteapi.shortcuts import normalize_path
-
-if t.TYPE_CHECKING:
-    from starletteapi.main import StarletteApp
 
 
 class OpenAPIRoute(ABC):
@@ -34,6 +34,14 @@ class OpenAPIRoute(ABC):
 
 
 class OpenAPIMountDocumentation(OpenAPIRoute):
+    CONVERTOR_TYPES = {
+        StringConvertor: dict(title='title', type='string'),
+        PathConvertor: dict(title='title', type='string'),
+        IntegerConvertor: dict(title='title', type='integer'),
+        FloatConvertor: dict(title='title', type='number'),
+        UUIDConvertor: dict(title='title', type='string', format='uuid'),
+    }
+
     def __init__(
             self,
             mount: Mount,
@@ -50,6 +58,21 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
         self.external_doc_description = external_doc_description or meta.get('external_doc_description')
         self.external_doc_url = external_doc_url or meta.get('external_doc_url')
         self.mount = mount
+        self.path_regex, self.path_format, self.param_convertors = compile_path(
+            self.mount.path
+        )
+        self.global_route_parameters = []
+        if self.param_convertors:
+            for name, converter in self.param_convertors.items():
+                schema = self.CONVERTOR_TYPES[converter.__class__]
+                schema.update(title=name)
+                parameter = {
+                    "name": name,
+                    "in": 'path',
+                    "required": True,
+                    "schema": schema,
+                }
+                self.global_route_parameters.append(parameter)
 
     def get_tag(self):
         external_doc = None
@@ -69,7 +92,10 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
         for route in self.mount.routes:
             if isinstance(route, Operation):
                 _routes.append(
-                    OpenAPIRouteDocumentation(route=route, global_tag=self.tag)
+                    OpenAPIRouteDocumentation(
+                        route=route, global_tag=self.tag,
+                        global_route_parameters=self.global_route_parameters
+                    )
                 )
         return _routes
 
@@ -88,7 +114,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             self, model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
             path_prefix: t.Optional[str] = None
     ):
-        path_prefix = f"{path_prefix.rstrip('/')}/{self.mount.path.lstrip('/')}" if path_prefix else self.mount.path
+        path_prefix = f"{path_prefix.rstrip('/')}/{self.mount.path.lstrip('/')}" if path_prefix else self.path_format
         paths = {}
         security_schemes: t.Dict[str, t.Any] = {}
         for route in self.routes:
@@ -110,7 +136,8 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             description: t.Optional[str] = None,
             tags: t.Optional[t.List[str]] = None,
             deprecated: t.Optional[bool] = None,
-            global_tag: t.Optional[str] = None
+            global_tag: t.Optional[str] = None,
+            global_route_parameters: t.List[t.Dict] = None
     ):
 
         self.operation_id = operation_id or route.get_meta().get('operation_id')
@@ -119,6 +146,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         self.tags = tags or route.get_meta().get('tags') or global_tag
         self.deprecated = deprecated or route.get_meta().get('deprecated')
         self.route = route
+        self.global_route_parameters = global_route_parameters
 
         if self.tags and not isinstance(self.tags, list):
             self.tags = [self.tags]
@@ -207,7 +235,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             if field_info.deprecated:
                 parameter["deprecated"] = field_info.deprecated
             parameters.append(parameter)
-        return parameters
+        return parameters + self.global_route_parameters
 
     def get_openapi_operation_request_body(
             self,
