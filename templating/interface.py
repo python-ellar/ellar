@@ -5,7 +5,7 @@ from abc import abstractmethod
 from jinja2 import FileSystemLoader
 from starlette.templating import pass_context
 
-from starletteapi.types import ASGIApp
+from starletteapi.types import ASGIApp, TemplateGlobalCallable, TemplateFilterCallable
 from .environment import Environment
 from ..compatible import locked_cached_property, cached_property
 from .loader import StarletteJinjaLoader
@@ -14,6 +14,7 @@ from ..static_files import StarletteStaticFiles
 
 if t.TYPE_CHECKING:
     from starletteapi.main import StarletteApp
+    from ..module import ApplicationModule
 
 
 class JinjaTemplating:
@@ -61,10 +62,11 @@ class StarletteAppTemplating:
     config: Config
     _static_app: t.Optional[ASGIApp]
     _debug: bool
-    _module_loaders: t.Optional[t.List[ModuleTemplating]] = None
+    _app_module: 'ApplicationModule'
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
-        for loader in self._module_loaders:
+
+        for loader in self._app_module.modules():
             yield loader
 
     @locked_cached_property
@@ -78,7 +80,8 @@ class StarletteAppTemplating:
                 return True
             return filename.endswith((".html", ".htm", ".xml", ".xhtml"))
 
-        options = dict()
+        # TODO: get extensions from configuration
+        options = dict(extensions=[])
 
         _auto_reload = self.config.TEMPLATES_AUTO_RELOAD
         _auto_reload = _auto_reload if _auto_reload is not None else self._debug
@@ -122,3 +125,55 @@ class StarletteAppTemplating:
             if module.static_directory:
                 static_directories.append(module.static_directory)
         return static_directories
+
+    def template_filter(
+            self, name: t.Optional[str] = None
+    ) -> t.Callable[[TemplateFilterCallable], TemplateFilterCallable]:
+        """A decorator that is used to register custom template filter.
+        You can specify a name for the filter, otherwise the function
+        name will be used. Example::
+
+          @app.template_filter()
+          def reverse(s):
+              return s[::-1]
+
+        :param name: the optional name of the filter, otherwise the
+                     function name will be used.
+        """
+
+        def decorator(f: TemplateFilterCallable) -> TemplateFilterCallable:
+            self.add_template_filter(f, name=name)
+            return f
+
+        return decorator
+
+    def add_template_filter(
+            self, f: TemplateFilterCallable, name: t.Optional[str] = None
+    ) -> None:
+        self.jinja_environment.filters[name or f.__name__] = f
+
+    def template_global(
+            self, name: t.Optional[str] = None
+    ) -> t.Callable[[TemplateGlobalCallable], TemplateGlobalCallable]:
+        """A decorator that is used to register a custom template global function.
+        You can specify a name for the global function, otherwise the function
+        name will be used. Example::
+
+            @app.template_global()
+            def double(n):
+                return 2 * n
+
+        :param name: the optional name of the global function, otherwise the
+                     function name will be used.
+        """
+
+        def decorator(f: TemplateGlobalCallable) -> TemplateGlobalCallable:
+            self.add_template_global(f, name=name)
+            return f
+
+        return decorator
+
+    def add_template_global(
+            self, f: TemplateGlobalCallable, name: t.Optional[str] = None
+    ) -> None:
+        self.jinja_environment.globals[name or f.__name__] = f
