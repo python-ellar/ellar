@@ -16,7 +16,7 @@ from starletteapi.context import ExecutionContext
 from .helpers import create_response_field, is_scalar_field
 from .param_resolvers import (
     NonFieldRouteParameterResolver, BaseRouteParameterResolver,
-    BodyParameterResolver, RouteParameterResolver, RequestParameter, WebSocketParameter
+    BodyParameterResolver, RouteParameterResolver, ParameterInjectable
 )
 from . import params
 from ..websockets import WebSocket
@@ -97,11 +97,11 @@ class EndpointParameterModel:
                 # Skipping **kwargs, *args, self
                 continue
             if param_name == 'request' and param.default == inspect.Parameter.empty:
-                self._models.append(RequestParameter()(param_name, Request))
+                self._models.append(ParameterInjectable()(param_name, Request))
                 continue
 
             if param_name == 'websocket' and param.default == inspect.Parameter.empty:
-                self._models.append(WebSocketParameter()(param_name, WebSocket))
+                self._models.append(ParameterInjectable()(param_name, WebSocket))
                 continue
 
             if self.add_non_field_param_to_dependency(param=param):

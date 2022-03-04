@@ -322,7 +322,7 @@ def cxt() -> ExecutionContext:
     return cast(ExecutionContext, ExecutionContextParameter())
 
 
-def inject(service: Optional[Type[T]] = None) -> T:
+def provide(service: Optional[Type[T]] = None) -> T:
     return cast(T, ParameterInjectable(service))
 
 
