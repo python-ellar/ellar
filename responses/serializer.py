@@ -1,13 +1,13 @@
+import typing as t
 from abc import ABC
 from enum import Enum
 from pathlib import PurePath
 from types import GeneratorType
-from typing import Dict, Any, Union, TYPE_CHECKING, Type, Callable, Sequence
 
 from dataclasses import is_dataclass, asdict
 from pydantic import BaseModel, dataclasses as PydanticDataclasses, BaseConfig
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from pydantic.typing import AbstractSetIntStr, MappingIntStrAny
 
 
@@ -15,7 +15,7 @@ class PydanticSerializerConfig(BaseConfig):
     orm_mode = True
 
 
-def serialize_object(obj: Any) -> Any:
+def serialize_object(obj: t.Any) -> t.Any:
     if isinstance(obj, BaseSerializer):
         return obj.serialize()
     if isinstance(obj, BaseModel):
@@ -45,7 +45,7 @@ def serialize_object(obj: Any) -> Any:
     return serialize_object(data)
 
 
-def convert_dataclass_to_pydantic_model(dataclass_type: Type) -> Type[BaseModel]:
+def convert_dataclass_to_pydantic_model(dataclass_type: t.Type) -> t.Type[BaseModel]:
     if is_dataclass(dataclass_type):
         # convert to dataclass
         pydantic_dataclass = PydanticDataclasses.dataclass(dataclass_type, config=PydanticSerializerConfig)
@@ -54,22 +54,22 @@ def convert_dataclass_to_pydantic_model(dataclass_type: Type) -> Type[BaseModel]
 
 
 class BaseSerializer(ABC):
-    _include: Union['AbstractSetIntStr', 'MappingIntStrAny'] = None
-    _exclude: Union['AbstractSetIntStr', 'MappingIntStrAny'] = None
+    _include: t.Union['AbstractSetIntStr', 'MappingIntStrAny'] = None
+    _exclude: t.Union['AbstractSetIntStr', 'MappingIntStrAny'] = None
     _by_alias: bool = True
     _skip_defaults: bool = None
     _exclude_unset: bool = False
     _exclude_defaults: bool = False
     _exclude_none: bool = False
 
-    def serialize(self) -> Dict:
+    def serialize(self) -> t.Dict:
         raise NotImplementedError
 
 
 class PydanticSerializerBase(BaseSerializer):
-    dict: Callable
+    dict: t.Callable
 
-    def serialize(self) -> Dict:
+    def serialize(self) -> t.Dict:
         return self.dict(
             include=self._include, exclude=self._exclude, exclude_none=self._exclude_none,
             exclude_unset=self._exclude_unset, exclude_defaults=self._exclude_defaults,
@@ -82,7 +82,7 @@ class PydanticSerializer(PydanticSerializerBase, BaseModel):
 
 
 class DataClassSerializer(BaseSerializer):
-    _pydantic_model: Any = None
+    _pydantic_model: t.Any = None
 
     @classmethod
     def get_pydantic_model(cls):
@@ -90,7 +90,7 @@ class DataClassSerializer(BaseSerializer):
             cls._pydantic_model = convert_dataclass_to_pydantic_model(cls)
         return cls._pydantic_model
 
-    def serialize(self) -> Dict:
+    def serialize(self) -> t.Dict:
         return self.get_pydantic_model().dict(
             include=self._include, exclude=self._exclude, exclude_none=self._exclude_none,
             exclude_unset=self._exclude_unset, exclude_defaults=self._exclude_defaults,
