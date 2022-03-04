@@ -3,7 +3,7 @@ import typing as t
 from abc import ABC, abstractmethod
 
 from starlette.concurrency import run_in_threadpool
-from starlette.status import WS_1008_POLICY_VIOLATION
+from starletteapi.status import WS_1008_POLICY_VIOLATION
 
 from starletteapi.constants import SCOPE_API_VERSIONING_RESOLVER
 from starletteapi.helper import generate_operation_unique_id
