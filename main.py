@@ -1,7 +1,7 @@
 import typing as t
 from starlette.applications import Starlette
 from starlette.datastructures import State, URLPath
-from starletteapi.middleware.di import DIRequestServiceProviderMiddleware
+from starletteapi.middleware.di import RequestServiceProviderMiddleware
 from starletteapi.middleware.exceptions import ExceptionMiddleware
 from starlette.middleware import Middleware
 from starlette.routing import BaseRoute
@@ -118,7 +118,7 @@ class StarletteApp(StarletteAppTemplating):
                     ExceptionMiddleware, handlers=exception_handlers, debug=self._debug
                 ),
                 Middleware(RequestVersioningMiddleware, debug=self._debug, config=self.config),
-                Middleware(DIRequestServiceProviderMiddleware, debug=self._debug, injector=self.injector),
+                Middleware(RequestServiceProviderMiddleware, debug=self._debug, injector=self.injector),
             ]
         )
 

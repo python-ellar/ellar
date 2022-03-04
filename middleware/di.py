@@ -10,11 +10,10 @@ from starletteapi.types import TScope, TReceive, TSend, ASGIApp
 from starletteapi.websockets import WebSocket
 
 if typing.TYPE_CHECKING:
-    from starletteapi.main import StarletteApp
     from starletteapi.di.injector import StarletteInjector
 
 
-class DIRequestServiceProviderMiddleware:
+class RequestServiceProviderMiddleware:
     def __init__(self, app: ASGIApp, *, debug: bool, injector: 'StarletteInjector') -> None:
         self.app = app
         self.debug = debug
@@ -25,7 +24,7 @@ class DIRequestServiceProviderMiddleware:
             await self.app(scope, receive, send)
             return
 
-        di_request_service_provider = self.injector.create_di_request_service_provider(context={})
+        di_request_service_provider = self.injector.create_request_service_provider()
         execute_context = ExecutionContext(scope=scope, receive=receive, send=send)
         di_request_service_provider.update_context(ExecutionContext, execute_context)
 

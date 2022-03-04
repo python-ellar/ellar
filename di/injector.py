@@ -14,17 +14,18 @@ if t.TYPE_CHECKING:
 T = t.TypeVar("T")
 
 
-class DIRequestServiceProvider:
-    __slots__ = ('injector', 'container', 'context', '_log_prefix')
+class RequestServiceProvider(InjectorBinder):
+    __slots__ = ('_bindings', '_log_prefix', '_context')
 
-    def __init__(self, container: 'Container', context: t.Optional[t.Dict]) -> None:
-        self.injector = container.injector
-        self.container = container
-        self.context = context
-        self._log_prefix = self.injector._log_prefix
+    def __init__(self, container: 'Container') -> None:
+        super(RequestServiceProvider, self).__init__(
+            injector=container.injector, parent=container, auto_bind=False
+        )
+        self._context = {}
+        self._log_prefix = container.injector._log_prefix
 
     def get(self, interface: t.Type[T]) -> T:
-        binding, binder = self.container.get_binding(interface)
+        binding, binder = self.get_binding(interface)
         scope = binding.scope
         if isinstance(scope, ScopeDecorator):
             scope = scope.scope
@@ -36,15 +37,15 @@ class DIRequestServiceProvider:
             '%StarletteInjector.get(%r, scope=%r) using %r', self._log_prefix, interface, scope,
             binding.provider
         )
-        result = scope_instance.get(interface, binding.provider, context=self.context).get(self.injector)
+        result = scope_instance.get(interface, binding.provider, context=self._context).get(self.injector)
         log.debug('%s -> %r', self._log_prefix, result)
         return result
 
     def update_context(self, interface: t.Type[T], value: T) -> None:
         if isinstance(value, Provider):
-            self.context.update({interface: value})
+            self._bindings.update({interface: Binding(interface, value, RequestScope)})
             return
-        self.context.update({interface: InstanceProvider(value)})
+        self._bindings.update({interface: Binding(interface, InstanceProvider(value), RequestScope)})
 
 
 class Container(InjectorBinder):
@@ -194,5 +195,5 @@ class StarletteInjector(Injector):
     def binder(self, value):
         ...
 
-    def create_di_request_service_provider(self, context: t.Dict) -> DIRequestServiceProvider:
-        return DIRequestServiceProvider(self.container, context)
+    def create_request_service_provider(self) -> RequestServiceProvider:
+        return RequestServiceProvider(self.container)

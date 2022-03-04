@@ -4,12 +4,12 @@ from starlette.requests import HTTPConnection as StarletteHTTPConnection, Reques
 from starletteapi.constants import SCOPE_SERVICE_PROVIDER
 
 if typing.TYPE_CHECKING:
-    from starletteapi.di.injector import DIRequestServiceProvider
+    from starletteapi.di.injector import RequestServiceProvider
 
 
 class HTTPConnection(StarletteHTTPConnection):
     @property
-    def service_provider(self) -> 'DIRequestServiceProvider':
+    def service_provider(self) -> 'RequestServiceProvider':
         assert (
                 SCOPE_SERVICE_PROVIDER in self.scope
         ), "DIRequestServiceProviderMiddleware must be installed to access request.service_provider"

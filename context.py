@@ -10,7 +10,7 @@ from .shortcuts import fail_silently
 
 if t.TYPE_CHECKING:
     from starletteapi.main import StarletteApp
-    from starletteapi.di.injector import DIRequestServiceProvider
+    from starletteapi.di.injector import RequestServiceProvider
     from starletteapi.routing.operations import OperationBase
 
 
@@ -64,7 +64,7 @@ class ExecutionContext:
             raise ExecutionContextException(f"Context Switch is not allow for scope[type]={self.scope['type']}")
         return WebSocket(self.scope, receive=self.receive, send=self.send)
 
-    def get_service_provider(self) -> "DIRequestServiceProvider":
+    def get_service_provider(self) -> "RequestServiceProvider":
         return self.switch_to_http_connection().service_provider
 
     def switch_to_request(self) -> Request:

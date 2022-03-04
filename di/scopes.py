@@ -39,13 +39,12 @@ class DIScope(InjectorScope):
 
 class RequestScope(DIScope):
     def get(self, key: Type[T], provider: Provider[T], context: Optional[Dict[type, Provider]] = None) -> Provider[T]:
-        if not context:
+        if context is None:
             # if context is not available then return transient scope
             return provider
         try:
             return context[key]
         except KeyError:
-            provider = InstanceProvider(provider.get(self.injector))
             context[key] = provider
             return provider
 
