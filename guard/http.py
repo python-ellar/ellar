@@ -13,13 +13,6 @@ from ..exceptions import APIException, AuthenticationFailed
 __all__ = ['BaseHttpAuth', 'HttpBearerAuth', 'HttpBasicAuth', 'HttpDigestAuth']
 
 
-def get_authorization_scheme_param(authorization_header_value: str) -> t.Tuple[str, str]:
-    if not authorization_header_value:
-        return "", ""
-    scheme, _, param = authorization_header_value.partition(" ")
-    return scheme, param
-
-
 class HTTPBasicCredentials(BaseModel):
     username: str
     password: str
@@ -76,7 +69,7 @@ class HttpBearerAuth(BaseHttpAuth, ABC):
 
     def _get_credentials(self, connection: HTTPConnection) -> HTTPAuthorizationCredentials:
         authorization: str = connection.headers.get(self.header)
-        scheme, credentials = get_authorization_scheme_param(authorization)
+        scheme, _, credentials = authorization.partition(" ")
         if not (authorization and scheme and credentials):
             raise APIException(
                 status_code=HTTP_403_FORBIDDEN, detail="Not authenticated"
@@ -107,12 +100,12 @@ class HttpBasicAuth(BaseHttpAuth, ABC):
 
     def _get_credentials(self, connection: HTTPConnection) -> HTTPBasicCredentials:
         authorization: str = connection.headers.get(self.header)
-        scheme, param = get_authorization_scheme_param(authorization)
+        scheme, _, credentials = authorization.partition(" ")
 
         if not authorization or scheme.lower() != self.openapi_scheme:
             raise
         try:
-            data = b64decode(param).decode("ascii")
+            data = b64decode(credentials).decode("ascii")
             username, separator, password = data.partition(":")
             if not separator:
                 self._not_unauthorized_exception("Invalid authentication credentials")
@@ -127,7 +120,7 @@ class HttpDigestAuth(BaseHttpAuth, ABC):
 
     def _get_credentials(self, connection: HTTPConnection) -> HTTPAuthorizationCredentials:
         authorization: str = connection.headers.get(self.header)
-        scheme, credentials = get_authorization_scheme_param(authorization)
+        scheme, _, credentials = authorization.partition(" ")
         if not (authorization and scheme and credentials):
             raise APIException(
                 status_code=HTTP_403_FORBIDDEN, detail="Not authenticated"

@@ -1,8 +1,8 @@
+import typing as t
 import email
 import inspect
 import json
 from abc import ABC, abstractmethod
-from typing import Union, Type, Any, Mapping, Tuple, List, Dict, Callable, Coroutine, Optional, cast, TypeVar
 
 import anyio
 from pydantic import MissingError
@@ -14,9 +14,9 @@ from starletteapi.logger import logger
 from pydantic.fields import (
     ModelField, Undefined,
 )
-from starlette.requests import Request
-from starlette.websockets import WebSocket
-
+from starletteapi.requests import Request
+from starletteapi.websockets import WebSocket
+from starletteapi.types import T
 from starletteapi.constants import sequence_shapes, sequence_types, sequence_shape_to_type
 from starletteapi.context import ExecutionContext
 from starletteapi.datastructures import UploadFile
@@ -26,12 +26,12 @@ from starletteapi.route_models.helpers import is_scalar_sequence_field
 
 class BaseRouteParameterResolver(ABC):
     @abstractmethod
-    async def resolve(self, *args: Any, **kwargs: Any) -> Tuple:
+    async def resolve(self, *args: t.Any, **kwargs: t.Any) -> t.Tuple:
         """Resolve handle"""
 
 
 class RouteParameterResolver(BaseRouteParameterResolver, ABC):
-    def __init__(self, model_field: ModelField, *args: Any, **kwargs: Any):
+    def __init__(self, model_field: ModelField, *args: t.Any, **kwargs: t.Any):
         self.model_field = model_field
 
     def assert_field_info(self):
@@ -41,25 +41,25 @@ class RouteParameterResolver(BaseRouteParameterResolver, ABC):
         ), "Params must be subclasses of Param"
 
     @classmethod
-    def create_error(cls, loc: Any) -> ErrorWrapper:
+    def create_error(cls, loc: t.Any) -> ErrorWrapper:
         return ErrorWrapper(MissingError(), loc=loc)
 
-    async def resolve(self, *args: Any, **kwargs: Any) -> Tuple:
+    async def resolve(self, *args: t.Any, **kwargs:t. Any) -> t.Tuple:
         value_ = await self.resolve_handle(*args, **kwargs)
         return value_
 
     @abstractmethod
-    async def resolve_handle(self, *args: Any, **kwargs: Any) -> Tuple:
+    async def resolve_handle(self, *args: t.Any, **kwargs: t.Any) -> t.Tuple:
         ...
 
 
 class HeaderParameterResolver(RouteParameterResolver):
     @classmethod
-    def get_received_parameter(cls, ctx: ExecutionContext) -> Union[QueryParams, Headers]:
+    def get_received_parameter(cls, ctx: ExecutionContext) -> t.Union[QueryParams, Headers]:
         connection = ctx.switch_to_http_connection()
         return connection.headers
 
-    async def resolve_handle(self, ctx: ExecutionContext, *args: Any, **kwargs: Any):
+    async def resolve_handle(self, ctx: ExecutionContext, *args: t.Any, **kwargs: t.Any):
         received_params = self.get_received_parameter(ctx=ctx)
         if is_scalar_sequence_field(self.model_field):
             value = received_params.getlist(self.model_field.alias) or self.model_field.default
@@ -83,18 +83,18 @@ class HeaderParameterResolver(RouteParameterResolver):
 
 class QueryParameterResolver(HeaderParameterResolver):
     @classmethod
-    def get_received_parameter(cls, ctx: ExecutionContext) -> Union[QueryParams, Headers]:
+    def get_received_parameter(cls, ctx: ExecutionContext) -> t.Union[QueryParams, Headers]:
         connection = ctx.switch_to_http_connection()
         return connection.query_params
 
 
 class PathParameterResolver(RouteParameterResolver):
     @classmethod
-    def get_received_parameter(cls, ctx: ExecutionContext) -> Mapping[str, Any]:
+    def get_received_parameter(cls, ctx: ExecutionContext) -> t.Mapping[str, t.Any]:
         connection = ctx.switch_to_http_connection()
         return connection.path_params
 
-    async def resolve_handle(self, ctx: ExecutionContext, **kwargs: Any):
+    async def resolve_handle(self, ctx: ExecutionContext, **kwargs: t.Any):
         received_params = self.get_received_parameter(ctx=ctx)
         value = received_params.get(str(self.model_field.alias))
         self.assert_field_info()
@@ -107,23 +107,23 @@ class PathParameterResolver(RouteParameterResolver):
 
 class CookieParameterResolver(PathParameterResolver):
     @classmethod
-    def get_received_parameter(cls, ctx: ExecutionContext) -> Mapping[str, Any]:
+    def get_received_parameter(cls, ctx: ExecutionContext) -> t.Mapping[str, t.Any]:
         connection = ctx.switch_to_http_connection()
         return connection.cookies
 
 
 class BodyParameterResolver(RouteParameterResolver):
-    def __init__(self, *args: Any, **kwargs: Any):
+    def __init__(self, *args: t.Any, **kwargs: t.Any):
         super().__init__(*args, **kwargs)
         self._body = None
 
-    async def get_request_body(self, ctx: ExecutionContext) -> Any:
+    async def get_request_body(self, ctx: ExecutionContext) -> t.Any:
         if not self._body:
             try:
                 request = ctx.switch_to_request()
                 body_bytes = await request.body()
                 if body_bytes:
-                    json_body: Any = Undefined
+                    json_body: t.Any = Undefined
                     content_type_value = request.headers.get("content-type")
                     if not content_type_value:
                         json_body = await request.json()
@@ -147,7 +147,7 @@ class BodyParameterResolver(RouteParameterResolver):
                 ) from e
         return self._body
 
-    async def resolve_handle(self, ctx: ExecutionContext, *args: Any, **kwargs: Any):
+    async def resolve_handle(self, ctx: ExecutionContext, *args: t.Any, **kwargs: t.Any):
         await self.get_request_body(ctx)
         embed = getattr(self.model_field.field_info, "embed", False)
         received_body = {self.model_field.alias: self._body}
@@ -165,12 +165,12 @@ class BodyParameterResolver(RouteParameterResolver):
 
 
 class FormParameterResolver(BodyParameterResolver):
-    async def process_and_validate(self, *, values: Dict, value: Any, loc: Tuple):
+    async def process_and_validate(self, *, values: t.Dict, value: t.Any, loc: t.Tuple):
         v_, errors_ = self.model_field.validate(value, values, loc=loc)
         values[self.model_field.name] = v_
         return values, errors_
 
-    async def get_request_body(self, ctx: ExecutionContext) -> Any:
+    async def get_request_body(self, ctx: ExecutionContext) -> t.Any:
         if not self._body:
             try:
                 request = ctx.switch_to_request()
@@ -182,7 +182,7 @@ class FormParameterResolver(BodyParameterResolver):
                 ) from e
         return self._body
 
-    async def resolve_handle(self, ctx: ExecutionContext, *args: Any, **kwargs: Any):
+    async def resolve_handle(self, ctx: ExecutionContext, *args: t.Any, **kwargs: t.Any):
         await self.get_request_body(ctx)
         values = {}
         received_body = {self.model_field.alias: self._body}
@@ -211,7 +211,7 @@ class FormParameterResolver(BodyParameterResolver):
 
 
 class FileParameterResolver(FormParameterResolver):
-    async def process_and_validate(self, *, values: Dict, value: Any, loc: Tuple):
+    async def process_and_validate(self, *, values: t.Dict, value: t.Any, loc: t.Tuple):
         if (
                 lenient_issubclass(self.model_field.type_, bytes)
                 and isinstance(value, UploadFile)
@@ -222,10 +222,10 @@ class FileParameterResolver(FormParameterResolver):
                 and lenient_issubclass(self.model_field.type_, bytes)
                 and isinstance(value, sequence_types)
         ):
-            results: List[Union[bytes, str]] = []
+            results: t.List[t.Union[bytes, str]] = []
 
             async def process_fn(
-                    fn: Callable[[], Coroutine[Any, Any, Any]]
+                    fn: t.Callable[[], t.Coroutine[t.Any, t.Any, t.Any]]
             ) -> None:
                 result = await fn()
                 results.append(result)
@@ -240,31 +240,28 @@ class FileParameterResolver(FormParameterResolver):
         return values, errors_
 
 
-T = TypeVar('T')
-
-
 class NonFieldRouteParameterResolver(BaseRouteParameterResolver, ABC):
-    def __init__(self, data: Optional[Any] = None):
+    def __init__(self, data: t.Optional[t.Any] = None):
         self.data = data
         self.parameter_name = None
         self.type_annotation = None
 
-    def __call__(self, parameter_name: str, parameter_annotation: Type[T]) -> Any:
+    def __call__(self, parameter_name: str, parameter_annotation: t.Type[T]) -> t.Any:
         self.parameter_name = parameter_name
         self.type_annotation = parameter_annotation
         return self
 
-    async def resolve(self, ctx: ExecutionContext) -> Any:
+    async def resolve(self, ctx: ExecutionContext) -> t.Any:
         raise NotImplementedError
 
 
 class ParameterInjectable(NonFieldRouteParameterResolver):
-    def __init__(self, service: Optional[Type[T]] = None) -> None:
+    def __init__(self, service: t.Optional[t.Type[T]] = None) -> None:
         if service:
             assert isinstance(service, type), 'Service must be a type'
         super().__init__(data=service)
 
-    def __call__(self, parameter_name: str, parameter_annotation: Type[T]) -> T:
+    def __call__(self, parameter_name: str, parameter_annotation: t.Type[T]) -> T:
         self.parameter_name = parameter_name
         self.type_annotation = parameter_annotation
         if not self.data and isinstance(self.type_annotation, inspect.Parameter.empty):
@@ -277,7 +274,7 @@ class ParameterInjectable(NonFieldRouteParameterResolver):
             self.data = self.type_annotation
         return self
 
-    async def resolve(self, ctx: ExecutionContext) -> Tuple[Dict[str, T], List]:
+    async def resolve(self, ctx: ExecutionContext) -> t.Tuple[t.Dict[str, T], t.List]:
         try:
             service_provider = ctx.get_service_provider()
             value = service_provider.get(self.data)
@@ -288,7 +285,7 @@ class ParameterInjectable(NonFieldRouteParameterResolver):
 
 
 class RequestParameter(NonFieldRouteParameterResolver):
-    async def resolve(self, ctx: ExecutionContext) -> Tuple[Dict, List]:
+    async def resolve(self, ctx: ExecutionContext) -> t.Tuple[t.Dict, t.List]:
         try:
             request = ctx.switch_to_request()
             return {self.parameter_name: request}, []
@@ -297,7 +294,7 @@ class RequestParameter(NonFieldRouteParameterResolver):
 
 
 class WebSocketParameter(NonFieldRouteParameterResolver):
-    async def resolve(self, ctx: ExecutionContext) -> Tuple[Dict, List]:
+    async def resolve(self, ctx: ExecutionContext) -> t.Tuple[t.Dict, t.List]:
         try:
             websocket = ctx.switch_to_request()
             return {self.parameter_name: websocket}, []
@@ -306,24 +303,24 @@ class WebSocketParameter(NonFieldRouteParameterResolver):
 
 
 class ExecutionContextParameter(NonFieldRouteParameterResolver):
-    async def resolve(self, ctx: ExecutionContext) -> Tuple[Dict, List]:
+    async def resolve(self, ctx: ExecutionContext) -> t.Tuple[t.Dict, t.List]:
         return {self.parameter_name: ctx}, []
 
 
 def req() -> Request:
-    return cast(Request, RequestParameter())
+    return t.cast(Request, RequestParameter())
 
 
 def ws() -> WebSocket:
-    return cast(WebSocket, WebSocketParameter())
+    return t.cast(WebSocket, WebSocketParameter())
 
 
 def cxt() -> ExecutionContext:
-    return cast(ExecutionContext, ExecutionContextParameter())
+    return t.cast(ExecutionContext, ExecutionContextParameter())
 
 
-def provide(service: Optional[Type[T]] = None) -> T:
-    return cast(T, ParameterInjectable(service))
+def provide(service: t.Optional[t.Type[T]] = None) -> T:
+    return t.cast(T, ParameterInjectable(service))
 
 
 

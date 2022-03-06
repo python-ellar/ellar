@@ -7,7 +7,7 @@ from starlette.middleware import Middleware
 from starlette.routing import BaseRoute
 
 from starletteapi.middleware.versioning import RequestVersioningMiddleware
-from starletteapi.types import TScope, TReceive, TSend, ASGIApp
+from starletteapi.types import TScope, TReceive, TSend, ASGIApp, T
 from starletteapi.middleware.errors import ServerErrorMiddleware
 from starletteapi.di.injector import StarletteInjector
 from starletteapi.guard import GuardCanActivate
@@ -16,27 +16,28 @@ from starletteapi.routing import APIRouter
 from starletteapi.conf import Config
 from starletteapi.templating import StarletteAppTemplating, Environment
 
-T = t.TypeVar('T')
-
 
 class StarletteApp(StarletteAppTemplating):
     def __init__(
             self,
             *,
-            app_module: ApplicationModule,
+            app_module: ApplicationModule = None,
             routes: t.Sequence[BaseRoute] = None,
             global_guards: t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]] = None,
             on_startup: t.Sequence[t.Callable] = None,
             on_shutdown: t.Sequence[t.Callable] = None,
             lifespan: t.Callable[["Starlette"], t.AsyncContextManager] = None,
     ):
+        if app_module:
+            assert isinstance(app_module, ApplicationModule), "Only ApplicationModule is allowed"
+
         self._global_guards = global_guards or []
 
         self._config = Config(app_configured=True)
         self._debug = self.config.validate_config.DEBUG
         self.state = State()
 
-        self._app_module = app_module
+        self._app_module = app_module or ApplicationModule()(type("StarletteApp", (), {}))
 
         self.router = APIRouter(
             routes, on_startup=on_startup, on_shutdown=on_shutdown,
@@ -48,7 +49,7 @@ class StarletteApp(StarletteAppTemplating):
 
         self._static_app: t.Optional[ASGIApp] = None
 
-        if self.static_files or self.config.validate_config.STATIC_FOLDER_PACKAGES:
+        if self.has_static_files:
             self._static_app = self.create_static_app()
 
             async def _statics(scope: TScope, receive: TReceive, send: TSend):
@@ -91,6 +92,10 @@ class StarletteApp(StarletteAppTemplating):
     @property
     def injector(self) -> StarletteInjector:
         return self._injector
+
+    @property
+    def has_static_files(self) -> bool:
+        return True if self.static_files or self.config.validate_config.STATIC_FOLDER_PACKAGES else False
 
     @property
     def config(self) -> Config:
@@ -138,12 +143,6 @@ class StarletteApp(StarletteAppTemplating):
     @property
     def debug(self) -> bool:
         return self._debug
-
-    @debug.setter
-    def debug(self, value: bool) -> None:
-        self._debug = value
-        self.config.validate_config.DEBUG = value
-        self.middleware_stack = self.build_middleware_stack()
 
     def url_path_for(self, name: str, **path_params: t.Any) -> URLPath:
         return self.router.url_path_for(name, **path_params)

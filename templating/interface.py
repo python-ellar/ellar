@@ -13,7 +13,6 @@ from ..conf import Config
 from ..static_files import StarletteStaticFiles
 
 if t.TYPE_CHECKING:
-    from starletteapi.main import StarletteApp
     from ..module import ApplicationModule
 
 
@@ -63,6 +62,7 @@ class StarletteAppTemplating:
     _static_app: t.Optional[ASGIApp]
     _debug: bool
     _app_module: 'ApplicationModule'
+    has_static_files: bool
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
 
@@ -114,8 +114,8 @@ class StarletteAppTemplating:
         )
 
     def reload_static_app(self) -> None:
-        if self._static_app:
-            del self.__dict__['static_files']
+        del self.__dict__['static_files']
+        if self.has_static_files:
             self._static_app = self.create_static_app()
 
     @cached_property

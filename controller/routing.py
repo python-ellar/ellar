@@ -27,5 +27,5 @@ class ControllerMount(Mount):
             external_doc_url=external_doc_url
         )
 
-    def get_meta(self):
+    def get_meta(self) -> OperationMeta:
         return self._meta

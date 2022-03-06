@@ -78,6 +78,8 @@ def get_parameter_field(
 
 
 class EndpointParameterModel:
+    __slots__ = ('path', '_models', 'path_param_names', 'body_resolver')
+
     def __init__(self, *, path: str, endpoint: Callable,):
         self.path = path
         self._models: List[BaseRouteParameterResolver] = []
@@ -204,6 +206,8 @@ class EndpointParameterModel:
 
 
 class APIEndpointParameterModel(EndpointParameterModel):
+    __slots__ = ('operation_unique_id',)
+
     def __init__(self, *, path: str, endpoint: Callable, operation_unique_id: str):
         super().__init__(path=path, endpoint=endpoint)
         self.operation_unique_id = operation_unique_id

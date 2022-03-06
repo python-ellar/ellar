@@ -3,8 +3,7 @@ import inspect
 from pathlib import Path
 
 from starletteapi.di.injector import Container
-from starletteapi.module import StarletteAPIModuleBase, ApplicationModuleBase
-from starletteapi.module.base import BaseModule, StarletteAPIModuleBase
+from starletteapi.module.base import BaseModule, StarletteAPIModuleBase, ApplicationModuleBase
 from starletteapi.guard import GuardCanActivate, Guards
 from starletteapi.main import StarletteApp
 from starletteapi.openapi.openapi_v3 import OpenAPI
@@ -69,8 +68,6 @@ class OpenAPIDocumentModule(BaseModule, StarletteAPIModuleBase):
             swagger_js_url: str = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-bundle.js",
             swagger_css_url: str = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui.css",
             swagger_favicon_url: str = "https://fastapi.tiangolo.com/img/favicon.png",
-            oauth2_redirect_url: t.Optional[str] = None,
-            init_oauth: t.Optional[t.Dict[str, t.Any]] = None,
             openapi_url: t.Optional[str] = None,
     ):
         self._setup_docs(

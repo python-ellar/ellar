@@ -36,7 +36,6 @@ def is_scalar_field(field: ModelField) -> bool:
             field.shape == SHAPE_SINGLETON
             and not lenient_issubclass(field.type_, BaseModel)
             and not lenient_issubclass(field.type_, sequence_types + (dict,))
-            # and not dataclasses.is_dataclass(field.type_)
             and not isinstance(field_info, Body)
     ):
         return False

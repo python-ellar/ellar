@@ -1,16 +1,14 @@
-from typing import Any, cast, Type, TYPE_CHECKING
+import typing as t
 
 from starlette import status
 from starlette.requests import Request
 from starletteapi.responses import JSONResponse
 
 from starletteapi.exceptions import RequestValidationError, APIException
-if TYPE_CHECKING:
-    from .main import StarletteApp
 
 
 async def api_exception_handler(request: Request, exc: APIException) -> JSONResponse:
-    app = cast('StarletteApp', request.app)
+    app = t.cast('StarletteApp', request.app)
     json_response_type = app.config.DEFAULT_JSON_CLASS
 
     headers = getattr(exc, "headers", {})
@@ -26,7 +24,7 @@ async def api_exception_handler(request: Request, exc: APIException) -> JSONResp
 async def request_validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
-    app = cast('StarletteApp', request.app)
+    app = t.cast('StarletteApp', request.app)
     json_response_type = app.config.DEFAULT_JSON_CLASS
     
     return json_response_type(

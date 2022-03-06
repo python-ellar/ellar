@@ -67,5 +67,5 @@ class APIRouter(Router):
         self.Route = self._route_definitions.route
         self.Websocket = self._route_definitions.websocket
 
-    def get_meta(self):
+    def get_meta(self) -> OperationMeta:
         return self._meta

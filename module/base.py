@@ -3,6 +3,8 @@ import inspect
 from abc import ABC, abstractmethod
 
 from injector import Module as _InjectorModule
+from starlette.routing import BaseRoute
+
 from starletteapi.types import T
 from starletteapi.compatible import DataMapper
 from starletteapi.di import ServiceConfig
@@ -221,7 +223,11 @@ class ApplicationModule(Module, _AppModules):
         )
         self._data: TAppModule = self._process_modules(modules)
         self._app_modules = []
-        self.global_guards = global_guards or []
+        self._global_guards = global_guards or []
+
+    @property
+    def global_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
+        return self._global_guards
 
     def __call__(self, module_class: t.Type) -> 'ApplicationModule':
         if isinstance(module_class, type) and issubclass(module_class, ApplicationModuleBase):
@@ -252,3 +258,27 @@ class ApplicationModule(Module, _AppModules):
         super().configure_module(container=container)
         for module in self.modules(exclude_root=True):
             container.install(module)
+
+    def build_controller_routes(self) -> t.List[BaseRoute]:
+        controllers = self.get_controllers()
+        routes = []
+        for controller in controllers:
+            if isinstance(controller, Controller):
+                routes.append(controller.get_route())
+        return routes
+
+    def build_module_routes(self) -> t.List[BaseRoute]:
+        module_routers = self.get_module_routers()
+        routes = [module_router for module_router in module_routers]
+        return routes
+
+    def get_application_events(self) -> t.Dict:
+        events = dict(lifespan=None, on_startup=None, on_shutdown=None)
+        _lifespan = self.module.get_lifespan()
+        if _lifespan:
+            events['lifespan'] = _lifespan
+            return events
+
+        events['on_startup'] = self.module.get_on_startup()
+        events['on_shutdown'] = self.module.get_on_shutdown()
+        return events

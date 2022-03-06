@@ -3,7 +3,6 @@ from typing import List, TYPE_CHECKING, Type, Optional
 
 from starletteapi.routing.path import PathModifier
 from starletteapi.types import TScope
-from starletteapi.constants import NOT_SET
 from .resolver import (
     BaseAPIVersioningResolver, DefaultAPIVersionResolver,
     UrlPathVersionResolver, HostNameAPIVersionResolver,

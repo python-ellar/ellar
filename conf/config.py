@@ -5,11 +5,8 @@ from starlette.config import environ
 
 from . import default_settings
 from .app_settings_models import StarletteAPIConfig
-
+from starletteapi.types import KT, VT
 from ..constants import STARLETTEAPI_CONFIG_MODULE
-
-KT = t.TypeVar('KT')
-VT = t.TypeVar('VT')
 
 
 class _ConfigState(t.MutableMapping[KT, VT]):

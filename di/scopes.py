@@ -1,7 +1,6 @@
 from abc import abstractmethod
 from typing import Dict, Type, TypeVar, Optional
 
-from .providers import InstanceProvider
 from injector import (  # noqa
     Scope as InjectorScope,
     ScopeDecorator,

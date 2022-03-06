@@ -1,8 +1,4 @@
-from typing import TYPE_CHECKING
 from starlette.routing import compile_path, Route, Mount
-
-if TYPE_CHECKING:
-     from starletteapi.routing.operations import OperationBase
 
 
 class PathModifier:

@@ -6,7 +6,7 @@ from starletteapi.responses import Response
 from starletteapi.responses.model import ResponseModel
 from starlette.templating import _TemplateResponse  # noqa
 from .environment import Environment
-from starletteapi.routing.operations import OperationMeta, ControllerOperation, OperationBase, Operation
+from starletteapi.routing.operations import OperationMeta, ControllerOperation, OperationBase
 from starletteapi.context import ExecutionContext
 from ..constants import NOT_SET
 from ..helper import get_name
