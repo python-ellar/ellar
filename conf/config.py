@@ -5,45 +5,26 @@ from starlette.config import environ
 
 from . import default_settings
 from .app_settings_models import StarletteAPIConfig
-from starletteapi.types import KT, VT
+from starletteapi.types import VT
+from ..compatible.dict import DataMutableMapper, AttributeDictAccess, DataMapper
 from ..constants import STARLETTEAPI_CONFIG_MODULE
 
 
-class _ConfigState(t.MutableMapping[KT, VT]):
-    __slots__ = ('_config', )
-
-    def __init__(self):
-        self._config = dict()
-
-    def __getitem__(self, k: KT) -> VT:
-        return self._config.__getitem__(k)
-
-    def __len__(self) -> int:
-        return len(self._config)
-
-    def __iter__(self) -> t.Iterator[t.Any]:
-        return iter(self._config)
-
-    def __setitem__(self, k: KT, v: VT) -> None:
-        self._config.__setitem__(k, v)
-
-    def __delitem__(self, v: KT) -> None:
-        self._config.__delitem__(v)
+class _ConfigState(DataMutableMapper):
+    pass
 
 
 _config_state = _ConfigState()
 
 
-class Config:
-    __slots__ = ('validate_config', '_config', 'config_module')
-
-    _config: _ConfigState
+class Config(DataMapper, AttributeDictAccess):
+    __slots__ = ('validate_config', 'config_module')
 
     def __init__(self, config_state: _ConfigState = _config_state, **mapping: t.Any, ):
         """
         Creates a new instance of Configuration object with the given values.
         """
-
+        super().__init__()
         self.config_module = environ.get(STARLETTEAPI_CONFIG_MODULE, None)
         if 'app_configured' not in config_state:
             config_state.clear()
@@ -59,32 +40,18 @@ class Config:
 
         config_state.update(**mapping)
 
-        self._config: _ConfigState = config_state
-        self.validate_config: StarletteAPIConfig = StarletteAPIConfig.from_orm(self._config)
+        self._data: _ConfigState = config_state
+        self.validate_config: StarletteAPIConfig = StarletteAPIConfig.from_orm(self._data)
 
     def __contains__(self, item: str) -> bool:
-        return item in self._config
-
-    def __getitem__(self, name):
-        try:
-            return self.__getattr__(name)
-        except AttributeError:
-            raise KeyError(name)
-
-    def __getattr__(self, name) -> t.Any:
-        if name in self:
-            value = self._config.get(name)
-            return value
-        raise AttributeError(
-            f"'{self.__class__.__name__}' object has no attribute '{name}'"
-        )
+        return item in self._data
 
     def set_defaults(self, **kwargs: t.Any):
         for k, v in kwargs.items():
-            self._config.setdefault(k, v)
+            self._data.setdefault(k, v)
 
     def __repr__(self) -> str:
-        hidden_values = {key: "..." for key in self._config.keys()}
+        hidden_values = {key: "..." for key in self._data.keys()}
         return f"<Configuration {repr(hidden_values)}, settings_module: {self.config_module}>"
 
     @property
@@ -92,4 +59,4 @@ class Config:
         """
         Returns a copy of the dictionary of current settings.
         """
-        return self._config.values()
+        return self._data.values()
