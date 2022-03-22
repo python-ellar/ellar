@@ -116,13 +116,15 @@ class RouteResponseExecution(Exception):
 
 
 class ResponseTypeDefinitionConverter(TypeDefinitionConverter):
-    def get_modified_type(self, outer_type_: t.Type) -> t.Type[BaseSerializer]:
+    _registry = {}
+
+    def _get_modified_type(self, outer_type_: t.Type) -> t.Type[BaseSerializer]:
         if not isinstance(outer_type_, type):
             raise Exception(f"{outer_type_} is not a type")
 
         if issubclass(outer_type_, DataClassSerializer):
             schema_model = outer_type_.get_pydantic_model()
-            cls = type(outer_type_.__name__, (schema_model, PydanticSerializerBase, BaseSerializer), {})
+            cls = type(outer_type_.__name__, (schema_model, PydanticSerializerBase), {})
             return t.cast(t.Type[BaseSerializer], cls)
 
         if isinstance(outer_type_, type) and issubclass(outer_type_, (BaseSerializer,)):
@@ -137,11 +139,19 @@ class ResponseTypeDefinitionConverter(TypeDefinitionConverter):
         if is_dataclass(outer_type_):
             if hasattr(outer_type_, '__pydantic_model__'):
                 schema_model = outer_type_.__pydantic_model__
-                return self.get_modified_type(t.cast(type, schema_model))
-            return self.get_modified_type(t.cast(type, convert_dataclass_to_pydantic_model(outer_type_)))
+                return self._get_modified_type(t.cast(type, schema_model))
+            return self._get_modified_type(
+                t.cast(type, convert_dataclass_to_pydantic_model(outer_type_))
+            )
 
         cls = type(outer_type_.__name__, (outer_type_, PydanticSerializer), dict())
+
         return t.cast(t.Type[BaseSerializer], cls)
+
+    def get_modified_type(self, outer_type_: t.Type) -> t.Type[BaseSerializer]:
+        if outer_type_ not in self._registry:
+            self._registry[outer_type_] = self._get_modified_type(outer_type_)
+        return self._registry[outer_type_]
 
 
 class RouteResponseModel:

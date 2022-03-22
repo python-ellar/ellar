@@ -53,7 +53,7 @@ def convert_dataclass_to_pydantic_model(dataclass_type: t.Type) -> t.Type[BaseMo
     raise Exception(f'{dataclass_type} is not a dataclass')
 
 
-class BaseSerializer(ABC):
+class BaseSerializer:
     _include: t.Union['AbstractSetIntStr', 'MappingIntStrAny'] = None
     _exclude: t.Union['AbstractSetIntStr', 'MappingIntStrAny'] = None
     _by_alias: bool = True
@@ -91,7 +91,7 @@ class DataClassSerializer(BaseSerializer):
         return cls._pydantic_model
 
     def serialize(self) -> t.Dict:
-        return self.get_pydantic_model().dict(
+        return self.get_pydantic_model().from_orm(self).dict(
             include=self._include, exclude=self._exclude, exclude_none=self._exclude_none,
             exclude_unset=self._exclude_unset, exclude_defaults=self._exclude_defaults,
             by_alias=self._by_alias
