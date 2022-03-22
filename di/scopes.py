@@ -1,6 +1,7 @@
 from abc import abstractmethod
-from typing import Dict, Type, TypeVar, Optional
-
+import typing as t
+from starletteapi.types import T
+from .providers import InstanceProvider
 from injector import (  # noqa
     Scope as InjectorScope,
     ScopeDecorator,
@@ -20,12 +21,15 @@ __all__ = [
     'SingletonScope'
 ]
 
-T = TypeVar('T')
-
 
 class DIScope(InjectorScope):
     @abstractmethod
-    def get(self, key: Type[T], provider: Provider[T], context: Optional[Dict[type, Provider]] = None) -> Provider[T]:
+    def get(
+            self,
+            key: t.Type[T],
+            provider: Provider[T],
+            context: t.Optional[t.Dict[type, Provider]] = None
+    ) -> Provider[T]:
         """Get a :class:`Provider` for a key.
 
         :param context: Dictionary of cached services resolved during request
@@ -37,24 +41,42 @@ class DIScope(InjectorScope):
 
 
 class RequestScope(DIScope):
-    def get(self, key: Type[T], provider: Provider[T], context: Optional[Dict[type, Provider]] = None) -> Provider[T]:
+    def get(
+            self,
+            key: t.Type[T],
+            provider: Provider[T],
+            context: t.Optional[t.Dict[type, Provider]] = None
+    ) -> Provider[T]:
         if context is None:
             # if context is not available then return transient scope
             return provider
         try:
             return context[key]
         except KeyError:
+            # if context is available and provider is not in context,
+            # we switch to instance provider which will keep the instance alive throughout request lifetime
+            provider = InstanceProvider(provider.get(self.injector))
             context[key] = provider
             return provider
 
 
 class SingletonScope(InjectorSingletonScope, DIScope):
-    def get(self, key: Type[T], provider: Provider[T], context: Optional[Dict[type, Provider]] = None) -> Provider[T]:
+    def get(
+            self,
+            key: t.Type[T],
+            provider: Provider[T],
+            context: t.Optional[t.Dict[type, Provider]] = None
+    ) -> Provider[T]:
         return super().get(key, provider)
 
 
 class TransientScope(InjectorNoScope, DIScope):
-    def get(self, key: Type[T], provider: Provider[T], context: Optional[Dict[type, Provider]] = None) -> Provider[T]:
+    def get(
+            self,
+            key: t.Type[T],
+            provider: Provider[T],
+            context: t.Optional[t.Dict[type, Provider]] = None
+    ) -> Provider[T]:
         return provider
 
 

@@ -47,6 +47,14 @@ class RequestServiceProvider(InjectorBinder):
             return
         self._bindings.update({interface: Binding(interface, InstanceProvider(value), RequestScope)})
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, ex_type, ex_value, ex_traceback):
+        del self._context
+        del self.parent
+        del self.injector
+
 
 class Container(InjectorBinder):
     __slots__ = ('injector', '_auto_bind', '_bindings', 'parent')
@@ -121,7 +129,9 @@ class Container(InjectorBinder):
         self.register(base_type=concrete_type, scope=RequestScope)
 
     def install(
-            self, module: t.Union[t.Type['StarletteAPIModuleBase'], 'StarletteAPIModuleBase', 'BaseModule']
+            self,
+            module: t.Union[t.Type['StarletteAPIModuleBase'], 'StarletteAPIModuleBase', 'BaseModule'],
+            **init_kwargs: t.Any
     ) -> t.Union[InjectorModule, 'StarletteAPIModuleBase', 'BaseModule']:
         """Install a module into this container[binder].
 
@@ -154,12 +164,12 @@ class Container(InjectorBinder):
             container.install(MyModule)
         """
         installation_module = module
-        if not isinstance(installation_module, type) and hasattr(installation_module, 'module'):
-            installation_module = module.module
+        if not isinstance(installation_module, type) and hasattr(installation_module, 'get_module'):
+            installation_module = module.get_module()
 
         instance = installation_module
         if isinstance(instance, type) and issubclass(t.cast(type, instance), InjectorModule):
-            instance = t.cast(type, instance)()
+            instance = t.cast(type, instance)(**init_kwargs)
 
         instance(self)
         return instance
