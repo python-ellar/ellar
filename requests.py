@@ -16,5 +16,5 @@ class HTTPConnection(StarletteHTTPConnection):
         return self.scope[SCOPE_SERVICE_PROVIDER]
 
 
-class Request(StarletteRequest, StarletteHTTPConnection):
+class Request(StarletteRequest, HTTPConnection):
     pass

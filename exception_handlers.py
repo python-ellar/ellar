@@ -1,7 +1,7 @@
 import typing as t
 
 from starlette import status
-from starlette.requests import Request
+from starletteapi.requests import Request
 from starletteapi.responses import JSONResponse
 
 from starletteapi.exceptions import RequestValidationError, APIException

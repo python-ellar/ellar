@@ -1,29 +1,33 @@
-from typing import Type, Sequence, no_type_check, Union, Optional, List, Dict, Any, cast
+import typing as t
 
 from starlette import status
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from pydantic import create_model, BaseModel, ValidationError
 from pydantic.error_wrappers import ErrorList # noqa
 
-RequestErrorModel: Type[BaseModel] = create_model("Request")
-WebSocketErrorModel: Type[BaseModel] = create_model("WebSocket")
+RequestErrorModel: t.Type[BaseModel] = create_model("Request")
+WebSocketErrorModel: t.Type[BaseModel] = create_model("WebSocket")
+
+
+class ImproperConfiguration(Exception):
+    pass
 
 
 class RequestValidationError(ValidationError):
-    def __init__(self, errors: Sequence[ErrorList]) -> None:
+    def __init__(self, errors: t.Sequence[ErrorList]) -> None:
         super().__init__(errors, RequestErrorModel)
 
 
 class WebSocketRequestValidationError(ValidationError):
-    def __init__(self, errors: Sequence[ErrorList]) -> None:
+    def __init__(self, errors: t.Sequence[ErrorList]) -> None:
         super().__init__(errors, WebSocketErrorModel)
 
 
-@no_type_check
+@t.no_type_check
 def _get_error_details(
-    data: Union[List, Dict, "ErrorDetail"],
-    default_code: Optional[Union[str, int]] = None,
-) -> Union[List["ErrorDetail"], "ErrorDetail", Dict[Any, "ErrorDetail"]]:
+    data: t.Union[t.List, t.Dict, "ErrorDetail"],
+    default_code: t.Optional[t.Union[str, int]] = None,
+) -> t.Union[t.List["ErrorDetail"], "ErrorDetail", t.Dict[t.Any, "ErrorDetail"]]:
     """
     Descend into a nested data structure, forcing any
     lazy translation strings or strings into `ErrorDetail`.
@@ -42,8 +46,8 @@ def _get_error_details(
     return ErrorDetail(text, code)
 
 
-@no_type_check
-def _get_codes(detail: Union[List, Dict, "ErrorDetail"]) -> Union[str, Dict, List[Dict]]:
+@t.no_type_check
+def _get_codes(detail:t. Union[t.List, t.Dict, "ErrorDetail"]) -> t.Union[str, t.Dict, t.List[t.Dict]]:
     if isinstance(detail, list):
         return [_get_codes(item) for item in detail]
     elif isinstance(detail, dict):
@@ -51,8 +55,8 @@ def _get_codes(detail: Union[List, Dict, "ErrorDetail"]) -> Union[str, Dict, Lis
     return detail.code
 
 
-@no_type_check
-def _get_full_details(detail: Union[List, Dict, "ErrorDetail"]) -> Union[Dict, List[Dict]]:
+@t.no_type_check
+def _get_full_details(detail: t.Union[t.List, t.Dict, "ErrorDetail"]) -> t.Union[t.Dict, t.List[t.Dict]]:
     if isinstance(detail, list):
         return [_get_full_details(item) for item in detail]
     elif isinstance(detail, dict):
@@ -68,7 +72,7 @@ class ErrorDetail(str):
     code = None
 
     def __new__(
-        cls, string: str, code: Optional[Union[str, int]] = None
+        cls, string: str, code: t.Optional[t.Union[str, int]] = None
     ) -> "ErrorDetail":
         self = super().__new__(cls, string)
         self.code = code
@@ -90,7 +94,7 @@ class ErrorDetail(str):
             self.code,
         )
 
-    def __hash__(self) -> Any:
+    def __hash__(self) -> t.Any:
         return hash(str(self))
 
 
@@ -101,10 +105,10 @@ class APIException(StarletteHTTPException):
 
     def __init__(
             self,
-            detail: Optional[Union[List, Dict, "ErrorDetail", str]] = None,
-            code: Optional[Union[str, int]] = None,
-            status_code: Optional[int] = None,
-            headers: Optional[Dict[str, Any]] = None,
+            detail: t.Optional[t.Union[t.List, t.Dict, "ErrorDetail", str]] = None,
+            code: t.Optional[t.Union[str, int]] = None,
+            status_code: t.Optional[int] = None,
+            headers: t.Optional[t.Dict[str, t.Any]] = None,
     ) -> None:
         if detail is None:
             detail = self.default_detail
@@ -117,19 +121,19 @@ class APIException(StarletteHTTPException):
         self.headers = headers
         super(APIException, self).__init__(status_code=status_code, detail=_get_error_details(detail, code))
 
-    def get_codes(self) -> Union[str, Dict, List[dict]]:
+    def get_codes(self) -> t.Union[str, t.Dict, t.List[dict]]:
         """
         Return only the code part of the error details.
         Eg. {"name": ["required"]}
         """
-        return _get_codes(cast(ErrorDetail, self.detail))
+        return _get_codes(t.cast(ErrorDetail, self.detail))
 
-    def get_full_details(self) -> Union[Dict, List[dict]]:
+    def get_full_details(self) ->t. Union[t.Dict, t.List[dict]]:
         """
         Return both the message & code parts of the error details.
         Eg. {"name": [{"message": "This field is required.", "code": "required"}]}
         """
-        return _get_full_details(cast(ErrorDetail, self.detail))  # type: ignore
+        return _get_full_details(t.cast(ErrorDetail, self.detail))  # type: ignore
 
 
 class AuthenticationFailed(APIException):
@@ -164,8 +168,8 @@ class MethodNotAllowed(APIException):
     def __init__(
         self,
         method: str,
-        detail: Optional[Union[List, Dict, "ErrorDetail", str]] = None,
-        code: Optional[Union[str, int]] = None,
+        detail: t.Optional[t.Union[t.List, t.Dict, "ErrorDetail", str]] = None,
+        code: t.Optional[t.Union[str, int]] = None,
     ):
         if detail is None:
             detail = str(self.default_detail).format(method=method)
@@ -179,9 +183,9 @@ class NotAcceptable(APIException):
 
     def __init__(
         self,
-        detail: Optional[Union[List, Dict, "ErrorDetail", str]] = None,
-        code: Optional[Union[str, int]] = None,
-        available_renderers: Optional[str] = None,
+        detail: t.Optional[t.Union[t.List, t.Dict, "ErrorDetail", str]] = None,
+        code: t.Optional[t.Union[str, int]] = None,
+        available_renderers: t.Optional[str] = None,
     ):
         self.available_renderers = available_renderers
         super().__init__(detail, code)
@@ -195,8 +199,8 @@ class UnsupportedMediaType(APIException):
     def __init__(
         self,
         media_type: str,
-        detail: Optional[Union[List, Dict, "ErrorDetail", str]] = None,
-        code: Optional[Union[str, int]] = None,
+        detail: t.Optional[t.Union[t.List, t.Dict, "ErrorDetail", str]] = None,
+        code: t.Optional[t.Union[str, int]] = None,
     ):
         if detail is None:
             detail = str(self.default_detail).format(media_type=media_type)

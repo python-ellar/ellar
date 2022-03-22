@@ -2,12 +2,12 @@ import typing as t
 from starletteapi.compatible import AttributeDictAccess
 
 if t.TYPE_CHECKING:
-    from starletteapi.routing.operations import ExtraOperationArgs
+    from starletteapi.routing.operations import ExtraOperationArg
     from starletteapi.guard import GuardCanActivate
 
 
 class OperationMeta(dict, AttributeDictAccess):
-    extra_route_args: t.List['ExtraOperationArgs']
+    extra_route_args: t.List['ExtraOperationArg']
     response_override: t.Union[t.Dict[int, t.Union[t.Type, t.Any]], t.Type, None]
     route_versioning: t.Set[t.Union[int, float, str]]
     route_guards: t.List[t.Union[t.Type['GuardCanActivate'], 'GuardCanActivate']]
@@ -24,3 +24,7 @@ class OperationMeta(dict, AttributeDictAccess):
             return self.__getattr__(name)
         except AttributeError:
             raise KeyError(name)
+
+    def set_defaults(self, **kwargs: t.Any) -> None:
+        for k, v in kwargs.items():
+            self.setdefault(k, v)

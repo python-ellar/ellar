@@ -264,3 +264,42 @@ def File(  # noqa: N802
         examples=examples,
         **extra,
     )
+
+
+def WsBody(  # noqa: N802
+    default: Any,
+    *,
+    embed: bool = False,
+    media_type: str = "application/json",
+    alias: Optional[str] = None,
+    title: Optional[str] = None,
+    description: Optional[str] = None,
+    gt: Optional[float] = None,
+    ge: Optional[float] = None,
+    lt: Optional[float] = None,
+    le: Optional[float] = None,
+    min_length: Optional[int] = None,
+    max_length: Optional[int] = None,
+    regex: Optional[str] = None,
+    example: Any = Undefined,
+    examples: Optional[Dict[str, Any]] = None,
+    **extra: Any,
+) -> Any:
+    return params.WsBody(
+        default,
+        embed=embed,
+        media_type=media_type,
+        alias=alias,
+        title=title,
+        description=description,
+        gt=gt,
+        ge=ge,
+        lt=lt,
+        le=le,
+        min_length=min_length,
+        max_length=max_length,
+        regex=regex,
+        example=example,
+        examples=examples,
+        **extra,
+    )

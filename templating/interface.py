@@ -1,13 +1,13 @@
 import json
 import os
 import typing as t
-from abc import abstractmethod
+from abc import abstractmethod, ABC, ABCMeta
 from jinja2 import FileSystemLoader
 from starlette.templating import pass_context
 
 from starletteapi.types import ASGIApp, TemplateGlobalCallable, TemplateFilterCallable
 from .environment import Environment
-from ..compatible import locked_cached_property, cached_property
+from ..compatible import cached_property
 from .loader import StarletteJinjaLoader
 from ..conf import Config
 from ..static_files import StarletteStaticFiles
@@ -16,7 +16,7 @@ if t.TYPE_CHECKING:
     from ..module import ApplicationModule
 
 
-class JinjaTemplating:
+class JinjaTemplating(ABC, metaclass=ABCMeta):
     @property
     @abstractmethod
     def template_folder(self) -> t.Optional[str]:
@@ -27,7 +27,7 @@ class JinjaTemplating:
     def root_path(self) -> t.Optional[str]:
         ...
 
-    @locked_cached_property
+    @cached_property
     def jinja_loader(self) -> t.Optional[FileSystemLoader]:
         if self.template_folder and self.root_path:
             return FileSystemLoader(os.path.join(str(self.root_path), self.template_folder))
@@ -60,7 +60,7 @@ class ModuleTemplating(JinjaTemplating):
 class StarletteAppTemplating:
     config: Config
     _static_app: t.Optional[ASGIApp]
-    _debug: bool
+    debug: bool
     _app_module: 'ApplicationModule'
     has_static_files: bool
 
@@ -69,7 +69,7 @@ class StarletteAppTemplating:
         for loader in self._app_module.modules():
             yield loader
 
-    @locked_cached_property
+    @cached_property
     def jinja_environment(self) -> Environment:
         _jinja_env = self._create_jinja_environment()
         return _jinja_env
@@ -84,7 +84,7 @@ class StarletteAppTemplating:
         options = dict(extensions=[])
 
         _auto_reload = self.config.TEMPLATES_AUTO_RELOAD
-        _auto_reload = _auto_reload if _auto_reload is not None else self._debug
+        _auto_reload = _auto_reload if _auto_reload is not None else self.debug
 
         if "autoescape" not in options:
             options["autoescape"] = select_jinja_auto_escape

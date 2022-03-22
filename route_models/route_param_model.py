@@ -16,14 +16,14 @@ from starletteapi.context import ExecutionContext
 from .helpers import create_response_field, is_scalar_field
 from .param_resolvers import (
     NonFieldRouteParameterResolver, BaseRouteParameterResolver,
-    BodyParameterResolver, RouteParameterResolver, ParameterInjectable
+    BodyParameterResolver, RouteParameterResolver, ParameterInjectable, WsBodyParameterResolver
 )
 from . import params
 from ..websockets import WebSocket
 from ..requests import Request
 
 if TYPE_CHECKING:
-    from starletteapi.routing.operations import ExtraOperationArgs
+    from starletteapi.routing.operations import ExtraOperationArg
 
 
 def get_parameter_field(
@@ -32,6 +32,7 @@ def get_parameter_field(
         param_name: str,
         default_field_info: Type[params.Param] = params.Param,
         ignore_default: bool = False,
+        body_field_class: Type[FieldInfo] = params.Body
 ) -> ModelField:
     default_value = Required
     had_schema = False
@@ -69,7 +70,7 @@ def get_parameter_field(
     field.required = required
 
     if not had_schema and not is_scalar_field(field=field):
-        field.field_info = params.Body(field_info.default)
+        field.field_info = body_field_class(field_info.default)
 
     field_info = cast(params.Param, field.field_info)
     field_info.init_resolver(field)
@@ -78,21 +79,24 @@ def get_parameter_field(
 
 
 class EndpointParameterModel:
-    __slots__ = ('path', '_models', 'path_param_names', 'body_resolver')
+    __slots__ = ('path', '_models', 'path_param_names', 'body_resolver', 'endpoint_signature')
 
     def __init__(self, *, path: str, endpoint: Callable,):
         self.path = path
         self._models: List[BaseRouteParameterResolver] = []
         self.path_param_names = self.get_path_param_names(path)
-        endpoint_signature = self.get_typed_signature(endpoint)
-        self.compute_route_parameter_list(endpoint_signature.parameters)
+        self.endpoint_signature = self.get_typed_signature(endpoint)
+        self.compute_route_parameter_list()
         self.body_resolver: Optional[RouteParameterResolver] = None
 
     def get_models(self) -> List[BaseRouteParameterResolver]:
         return list(self._models)
 
-    def compute_route_parameter_list(self, signature_params: Mapping[str, inspect.Parameter]) -> None:
-        for param_name, param in signature_params.items():
+    def compute_route_parameter_list(
+            self,
+            body_field_class: Type[FieldInfo] = params.Body
+    ) -> None:
+        for param_name, param in self.endpoint_signature.parameters.items():
             if param.kind == param.VAR_KEYWORD or param.kind == param.VAR_POSITIONAL or (
                     param.name == 'self' and param.annotation == inspect.Parameter.empty
             ):
@@ -111,7 +115,8 @@ class EndpointParameterModel:
 
             default_field_info = param.default if isinstance(param.default, FieldInfo) else params.Query
             param_field = get_parameter_field(
-                param=param, default_field_info=default_field_info, param_name=param_name
+                param=param, default_field_info=default_field_info, param_name=param_name,
+                body_field_class=body_field_class
             )
             if param_name in self.path_param_names:
                 assert is_scalar_field(
@@ -188,7 +193,7 @@ class EndpointParameterModel:
                 errors += errors_
         return values, errors
 
-    def add_extra_route_args(self, *extra_operation_args: 'ExtraOperationArgs') -> None:
+    def add_extra_route_args(self, *extra_operation_args: 'ExtraOperationArg') -> None:
         for param in extra_operation_args:
             if isinstance(param.default, NonFieldRouteParameterResolver):
                 _model = cast(NonFieldRouteParameterResolver, param.default)
@@ -224,7 +229,7 @@ class APIEndpointParameterModel(EndpointParameterModel):
                 setattr(resolver.model_field.field_info, 'embed', True)
         return body_resolvers
 
-    def add_extra_route_args(self, *extra_operation_args: 'ExtraOperationArgs') -> None:
+    def add_extra_route_args(self, *extra_operation_args: 'ExtraOperationArg') -> None:
         super(APIEndpointParameterModel, self).add_extra_route_args(*extra_operation_args)
         self.build_endpoint_body_field()
 
@@ -262,3 +267,55 @@ class APIEndpointParameterModel(EndpointParameterModel):
             )
             final_field.field_info.init_resolver(final_field)
             self.body_resolver = final_field.field_info.get_resolver()
+
+
+class WebsocketParameterModel(EndpointParameterModel):
+    def __init__(self, *, path: str, endpoint: Callable):
+        super().__init__(path=path, endpoint=endpoint)
+        self.body_resolver = self._compute_body_resolvers()
+
+    def _compute_body_resolvers(self):
+        body_resolvers = [
+            resolver
+            for resolver in self._models
+            if isinstance(resolver, WsBodyParameterResolver)
+        ]
+
+        if len(body_resolvers) > 1:
+            for resolver in body_resolvers:
+                setattr(resolver.model_field.field_info, 'embed', True)
+                self._models.remove(resolver)
+        else:
+            for item in body_resolvers:
+                self._models.remove(item)
+        return body_resolvers
+
+    def compute_route_parameter_list(
+            self,
+            body_field_class: Type[FieldInfo] = params.Body
+    ) -> None:
+        super().compute_route_parameter_list(body_field_class=params.WsBody)
+
+    def add_extra_route_args(self, *extra_operation_args: 'ExtraOperationArg') -> None:
+        super().add_extra_route_args(*extra_operation_args)
+        self._compute_body_resolvers()
+
+    async def resolve_ws_body_dependencies(
+            self,
+            *,
+            ctx: ExecutionContext,
+            body_data: Any
+    ) -> Tuple[Dict[str, Any], List[ErrorWrapper]]:
+        values: Dict[str, Any] = {}
+        errors: List[ErrorWrapper] = []
+        for parameter_resolver in self.body_resolver:
+            parameter_resolver = cast(WsBodyParameterResolver, parameter_resolver)
+            value_, errors_ = await parameter_resolver.resolve(ctx=ctx, body=body_data)
+            if value_:
+                values.update(value_)
+            if errors_:
+                if isinstance(errors_, list):
+                    errors += errors_
+                else:
+                    errors.append(errors_)
+        return values, errors

@@ -16,7 +16,7 @@ class Param(FieldInfo):
 
     def __init__(
             self,
-            default: Any,
+            default: Any = ...,
             *,
             alias: Optional[str] = None,
             title: Optional[str] = None,
@@ -69,7 +69,7 @@ class Path(Param):
 
     def __init__(
             self,
-            default: Any,
+            default: Any = ...,
             *,
             alias: Optional[str] = None,
             title: Optional[str] = None,
@@ -118,7 +118,7 @@ class Query(Param):
 
     def __init__(
             self,
-            default: Any,
+            default: Any = ...,
             *,
             alias: Optional[str] = None,
             title: Optional[str] = None,
@@ -166,7 +166,7 @@ class Header(Param):
 
     def __init__(
             self,
-            default: Any,
+            default: Any = ...,
             *,
             alias: Optional[str] = None,
             convert_underscores: bool = True,
@@ -217,7 +217,7 @@ class Cookie(Param):
 
     def __init__(
             self,
-            default: Any,
+            default: Any = ...,
             *,
             alias: Optional[str] = None,
             title: Optional[str] = None,
@@ -264,7 +264,7 @@ class Body(FieldInfo):
 
     def __init__(
             self,
-            default: Any,
+            default: Any = ...,
             *,
             embed: bool = False,
             media_type: str = "application/json",
@@ -310,13 +310,18 @@ class Body(FieldInfo):
         return f"{self.__class__.__name__}({self.default})"
 
 
+class WsBody(Body):
+    def init_resolver(self, model_field: ModelField):
+        self._resolver = param_resolvers.WsBodyParameterResolver(model_field)
+
+
 class Form(Body):
     def get_resolver(self):
         return self._resolver
 
     def __init__(
             self,
-            default: Any,
+            default: Any = ...,
             *,
             media_type: str = "application/x-www-form-urlencoded",
             alias: Optional[str] = None,
@@ -364,7 +369,7 @@ class File(Form):
 
     def __init__(
             self,
-            default: Any,
+            default: Any = ...,
             *,
             media_type: str = "multipart/form-data",
             alias: Optional[str] = None,

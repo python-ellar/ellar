@@ -44,7 +44,7 @@ class RouteParameterResolver(BaseRouteParameterResolver, ABC):
     def create_error(cls, loc: t.Any) -> ErrorWrapper:
         return ErrorWrapper(MissingError(), loc=loc)
 
-    async def resolve(self, *args: t.Any, **kwargs:t. Any) -> t.Tuple:
+    async def resolve(self, *args: t.Any, **kwargs: t. Any) -> t.Tuple:
         value_ = await self.resolve_handle(*args, **kwargs)
         return value_
 
@@ -154,6 +154,23 @@ class BodyParameterResolver(RouteParameterResolver):
         loc = ("body",)
         if embed:
             received_body = self._body
+            loc = ("body", self.model_field.alias)
+        try:
+            value = received_body.get(self.model_field.alias)
+            v_, errors_ = self.model_field.validate(value, {}, loc=loc)
+            return {self.model_field.name: v_}, errors_
+        except AttributeError:
+            errors = [self.create_error(loc=loc)]
+            return None, errors
+
+
+class WsBodyParameterResolver(RouteParameterResolver):
+    async def resolve_handle(self, ctx: ExecutionContext, *args: t.Any, body: t.Optional[t.Any], **kwargs: t.Any):
+        embed = getattr(self.model_field.field_info, "embed", False)
+        received_body = {self.model_field.alias: body}
+        loc = ("body",)
+        if embed:
+            received_body = body
             loc = ("body", self.model_field.alias)
         try:
             value = received_body.get(self.model_field.alias)
@@ -281,7 +298,7 @@ class ParameterInjectable(NonFieldRouteParameterResolver):
             return {self.parameter_name: value}, []
         except Exception as ex:
             logger.error(f"Unable to resolve service {self.data} \nErrorMessage: {ex}")
-            return {}, [ex]
+            return {}, [ErrorWrapper(ex)]
 
 
 class RequestParameter(NonFieldRouteParameterResolver):
@@ -289,17 +306,17 @@ class RequestParameter(NonFieldRouteParameterResolver):
         try:
             request = ctx.switch_to_request()
             return {self.parameter_name: request}, []
-        except Exception:
-            return {}, []
+        except Exception as ex:
+            return {}, [ErrorWrapper(ex)]
 
 
 class WebSocketParameter(NonFieldRouteParameterResolver):
     async def resolve(self, ctx: ExecutionContext) -> t.Tuple[t.Dict, t.List]:
         try:
-            websocket = ctx.switch_to_request()
+            websocket = ctx.switch_to_websocket()
             return {self.parameter_name: websocket}, []
-        except Exception:
-            return {}, []
+        except Exception as ex:
+            return {}, [ErrorWrapper(ex)]
 
 
 class ExecutionContextParameter(NonFieldRouteParameterResolver):

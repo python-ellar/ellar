@@ -30,13 +30,14 @@ def is_scalar_sequence_field(field: ModelField) -> bool:
 
 
 def is_scalar_field(field: ModelField) -> bool:
-    from .params import Body
+    from .params import Body, WsBody
     field_info = field.field_info
     if not (
             field.shape == SHAPE_SINGLETON
             and not lenient_issubclass(field.type_, BaseModel)
             and not lenient_issubclass(field.type_, sequence_types + (dict,))
             and not isinstance(field_info, Body)
+            and not isinstance(field_info, WsBody)
     ):
         return False
     if field.sub_fields:
