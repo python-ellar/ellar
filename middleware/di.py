@@ -41,4 +41,5 @@ class RequestServiceProviderMiddleware:
             Response, CallableProvider(execute_context.get_response)
         )
         scope[SCOPE_SERVICE_PROVIDER] = di_request_service_provider
-        await self.app(scope, receive, send)
+        with di_request_service_provider:
+            await self.app(scope, receive, send)
