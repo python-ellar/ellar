@@ -1,13 +1,10 @@
 import typing as t
-from threading import RLock
 from starletteapi.constants import NOT_SET
-
+from starletteapi.types import T
 try:
     from functools import cached_property
-except:
-    T = t.TypeVar('T')
-
-    class cached_property(property, t.Generic[T]):
+except (Exception, ):
+    class _CachedProperty(property, t.Generic[T]):
         def __init__(
                 self,
                 fget: t.Callable[[t.Any], T],
@@ -37,32 +34,4 @@ except:
             del obj.__dict__[self.__name__]
 
 
-class locked_cached_property(cached_property):
-    """A :func:`property` that is only evaluated once. Like
-    :class:`werkzeug.utils.cached_property` except access uses a lock
-    for thread safety.
-    """
-
-    def __init__(
-        self,
-        fget: t.Callable[[t.Any], t.Any],
-        name: t.Optional[str] = None,
-        doc: t.Optional[str] = None,
-    ) -> None:
-        super().__init__(fget, name=name, doc=doc)
-        self.lock = RLock()
-
-    def __get__(self, obj: object, type: type = None) -> t.Any:  # type: ignore
-        if obj is None:
-            return self
-
-        with self.lock:
-            return super().__get__(obj, type=type)
-
-    def __set__(self, obj: object, value: t.Any) -> None:
-        with self.lock:
-            super().__set__(obj, value)
-
-    def __delete__(self, obj: object) -> None:
-        with self.lock:
-            super().__delete__(obj)
+    cached_property = _CachedProperty

@@ -30,3 +30,11 @@ class DataMapper(t.Mapping, t.Generic[KT, VT]):
 
     def __iter__(self) -> t.Iterator[VT]:
         return iter(self._data)
+
+
+class DataMutableMapper(DataMapper, t.MutableMapping[KT, VT]):
+    def __setitem__(self, k: KT, v: VT) -> None:
+        self._data.__setitem__(k, v)
+
+    def __delitem__(self, v: KT) -> None:
+        self._data.__delitem__(v)
