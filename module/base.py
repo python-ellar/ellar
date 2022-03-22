@@ -1,6 +1,6 @@
 import typing as t
 import inspect
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 
 from injector import Module as _InjectorModule
 from starlette.routing import BaseRoute
@@ -11,12 +11,10 @@ from starletteapi.di import ServiceConfig
 from starletteapi.guard import GuardCanActivate
 from starletteapi.controller import Controller
 from starletteapi.templating.interface import ModuleTemplating
-from starletteapi.routing import ModuleRouter
+from starletteapi.routing import ModuleRouter, RouteDefinitions
 from pathlib import Path
 from starletteapi.di.injector import Container
-
-if t.TYPE_CHECKING:
-    from starletteapi.main import StarletteApp
+from .events import ModuleEvent, ApplicationEvent
 
 
 def _configure_module(func):
@@ -26,10 +24,19 @@ def _configure_module(func):
             _module_decorator = t.cast(Module, self._module_decorator)
             _module_decorator.configure_module(container=container)
         return result
+
     return _configure_module_wrapper
 
 
-class StarletteAPIModuleBase(_InjectorModule):
+class StarletteAPIModuleBaseMeta(ABCMeta):
+    @t.no_type_check
+    def __new__(mcls, name, bases, namespace, **kwargs):
+        cls = super().__new__(mcls, name, bases, namespace, **kwargs)  # type: ignore
+        cls._module_decorator = namespace.get('_module_decorator', None)
+        return cls
+
+
+class StarletteAPIModuleBase(_InjectorModule, metaclass=StarletteAPIModuleBaseMeta):
     _module_decorator: t.Optional['Module']
 
     def register_services(self, container: Container) -> None:
@@ -40,35 +47,28 @@ class StarletteAPIModuleBase(_InjectorModule):
         self.register_services(container=container)
 
 
-class ApplicationModuleBase(StarletteAPIModuleBase):
-    @classmethod
-    @abstractmethod
-    def get_on_startup(cls) -> t.List[t.Callable]:
-        """run on application startup"""
-        return []
+class BaseModule(ModuleTemplating, ABC, metaclass=ABCMeta):
+    on_startup: ModuleEvent
+    on_shutdown: ModuleEvent
+    before_initialisation: ApplicationEvent
+    after_initialisation: ApplicationEvent
 
-    @classmethod
-    @abstractmethod
-    def get_on_shutdown(cls) -> t.List[t.Callable]:
-        """run on application shutdown"""
-        return []
+    def __init__(self):
+        self._routes: t.List[BaseRoute] = []
 
-    @classmethod
     @abstractmethod
-    def get_lifespan(cls) -> t.Optional[t.Callable[["StarletteApp"], t.AsyncContextManager]]:
-        return None
-
-    @classmethod
-    @abstractmethod
-    def on_app_ready(cls, app: 'StarletteApp') -> None:
-        """Execute other actions that has to do with app instance"""
-
-
-class BaseModule(ModuleTemplating, ABC):
-    @property
-    @abstractmethod
-    def module(self) -> t.Union[t.Type[StarletteAPIModuleBase], t.Type[ApplicationModuleBase]]:
+    def get_module(self) -> t.Type[StarletteAPIModuleBase]:
         """decorated module class"""
+
+    def get_routes(self, force_build: bool = False) -> t.List[BaseRoute]:
+        if not force_build and self._routes:
+            return self._routes
+        self._routes = self._build_routes()
+        return self._routes
+
+    @abstractmethod
+    def _build_routes(self) -> t.List[BaseRoute]:
+        """build module controller routes"""
 
 
 class Module(BaseModule):
@@ -77,7 +77,7 @@ class Module(BaseModule):
             *,
             name: t.Optional[str] = __name__,
             controllers: t.Sequence[Controller] = tuple(),
-            routers: t.Sequence[ModuleRouter] = tuple(),
+            routers: t.Sequence[t.Union[ModuleRouter, RouteDefinitions]] = tuple(),
             services: t.Sequence[t.Union[t.Type, ServiceConfig]] = tuple(),
             template_folder: t.Optional[str] = None,
             base_directory: t.Optional[str] = None,
@@ -85,16 +85,20 @@ class Module(BaseModule):
     ):
         super(Module, self).__init__()
         self.name = name
-        self.controllers = controllers
-        self.services = services
+        self._controllers = [] if controllers is None else list(controllers)
+        self._services: t.List[ServiceConfig] = []
         self._template_folder = template_folder
         self._static_folder = static_folder
-        self._module_class: t.Optional[t.Union[t.Type[StarletteAPIModuleBase], t.Type[ApplicationModuleBase]]] = None
+        self._module_class: t.Optional[t.Type[StarletteAPIModuleBase]] = None
         self._module_base_directory = base_directory
-        self.module_routers = routers
+        self._module_routers = self._get_module_routers(routers=routers)
+        self._builder_service(services=services)
+        self.on_startup = ModuleEvent()
+        self.on_shutdown = ModuleEvent()
+        self.before_initialisation = ApplicationEvent()
+        self.after_initialisation = ApplicationEvent()
 
-    @property
-    def module(self) -> t.Union[t.Type[StarletteAPIModuleBase], t.Type[ApplicationModuleBase]]:
+    def get_module(self) -> t.Type[StarletteAPIModuleBase]:
         return self._module_class
 
     def __call__(self, module_class: t.Type) -> 'Module':
@@ -113,47 +117,44 @@ class Module(BaseModule):
         module_class._module_decorator = self
 
     def configure_module(self, container: Container) -> None:
-        for _provider in self.get_services():
+        for _provider in self._services:
             _provider.register(container)
 
-        for controller in self.get_controllers():
-            container.add_exact_transient(concrete_type=controller.controller_class)
+        for controller in self._controllers:
+            container.add_exact_scoped(concrete_type=controller.get_controller_class())
 
-    def get_controllers(self) -> t.List[Controller]:
-        if hasattr(self, '_controllers'):
-            return self._controllers
-
-        if not isinstance(self.controllers, list):
-            self._controllers = list(self.controllers)
-        return self._controllers
-
-    def get_services(self) -> t.List[ServiceConfig]:
-        if hasattr(self, '_services'):
-            return self._services
-
-        self._services = []
-        for item in self.services:
+    def _builder_service(self, services: t.Sequence[t.Union[t.Type, ServiceConfig]]):
+        for item in services:
             if not isinstance(item, ServiceConfig):
                 self._services.append(ServiceConfig(t.cast(t.Type[T], item)))
                 continue
             self._services.append(item)
-        return self._services
 
-    def get_module_routers(self) -> t.List[ModuleRouter]:
-        if not self.module_routers:
-            return []
+    def _build_routes(self) -> t.List[BaseRoute]:
+        routes = list(self._module_routers)
+        for controller in self._controllers:
+            if isinstance(controller, Controller):
+                routes.append(controller.get_route())
+        return routes
 
-        if not isinstance(self.module_routers, list):
-            self.module_routers = list(self.module_routers)
-        return self.module_routers
+    @classmethod
+    def _get_module_routers(cls, routers: t.Sequence[t.Union[ModuleRouter, RouteDefinitions]]) -> t.List[BaseRoute]:
+        results = []
+        for item in routers:
+            if isinstance(item, RouteDefinitions):
+                results.extend(item.routes)
+                continue
+            if isinstance(item, ModuleRouter):
+                item.build_routes()
+            results.append(item)
+        return results
 
 
-TAppModuleKey = t.Type[t.Union[StarletteAPIModuleBase, ApplicationModuleBase]]
 TAppModuleValue = t.Union[StarletteAPIModuleBase, Module]
-TAppModule = t.Dict[TAppModuleKey, TAppModuleValue]
+TAppModule = t.Dict[t.Type[StarletteAPIModuleBase], TAppModuleValue]
 
 
-class _AppModules(DataMapper[TAppModuleKey, TAppModuleValue]):
+class _AppModules(DataMapper[t.Type[StarletteAPIModuleBase], TAppModuleValue]):
     _data: TAppModule
     _app_modules: t.List[t.Union[BaseModule, Module]]
 
@@ -165,11 +166,19 @@ class _AppModules(DataMapper[TAppModuleKey, TAppModuleValue]):
         _result: TAppModule = {}
         for module in modules:
             instance = module
+            if isinstance(module, StarletteAPIModuleBase):
+                instance = module._module_decorator
+                _result[instance.get_module()] = instance
+                continue
+
             if isinstance(module, type) and issubclass(module, StarletteAPIModuleBase):
                 instance = module()
                 _result[module] = instance
                 continue
-            _result[instance.module] = instance
+
+            if hasattr(instance, 'get_module'):
+                _result[instance.get_module()] = instance
+
         return _result
 
     def modules(self, exclude_root: bool = False) -> t.Iterator[t.Union[BaseModule, Module]]:
@@ -186,15 +195,16 @@ class _AppModules(DataMapper[TAppModuleKey, TAppModuleValue]):
     def add_module(
             self,
             container: Container,
-            module: t.Union[t.Type[StarletteAPIModuleBase], BaseModule, t.Type[T]]
+            module: t.Union[t.Type[StarletteAPIModuleBase], BaseModule, t.Type[T]],
+            **init_kwargs: t.Any
     ) -> t.Tuple[t.Union[StarletteAPIModuleBase, BaseModule, T], bool]:
-        if isinstance(module, BaseModule) and module.module in self:
+        if isinstance(module, BaseModule) and module.get_module() in self:
             return module, False
 
         if module in self:
             return self.get(module), False
 
-        _module_instance = container.install(module=module)
+        _module_instance = container.install(module=module, **init_kwargs)
         self._data.update(self._process_modules([_module_instance]))
         self._app_modules = []  # clear _app_modules cache
         return _module_instance, True
@@ -205,7 +215,7 @@ class ApplicationModule(Module, _AppModules):
             self,
             *,
             controllers: t.Sequence[Controller] = tuple(),
-            routers: t.Sequence[ModuleRouter] = tuple(),
+            routers: t.Sequence[t.Union[ModuleRouter, RouteDefinitions]] = tuple(),
             services: t.Sequence[t.Union[t.Type, ServiceConfig]] = tuple(),
             modules: t.Union[t.Sequence[Module], t.Sequence[t.Type], t.Sequence[BaseModule]] = tuple(),
             global_guards: t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]] = None,
@@ -230,55 +240,41 @@ class ApplicationModule(Module, _AppModules):
         return self._global_guards
 
     def __call__(self, module_class: t.Type) -> 'ApplicationModule':
-        if isinstance(module_class, type) and issubclass(module_class, ApplicationModuleBase):
-            self._module_class = module_class
-        else:
-            self._module_class = type(
-                module_class.__name__, (module_class, ApplicationModuleBase), {'_module_decorator': self}
-            )
-        self.resolve_module_base_directory(module_class)
+        super().__call__(module_class)
         self._data.update(self._process_modules([self]))
         return self
-
-    def get_controllers(self) -> t.List[Controller]:
-        controllers = super(ApplicationModule, self).get_controllers()
-        for module in self.modules(exclude_root=True):
-            controllers.extend(module.get_controllers())
-
-        return controllers or []
-
-    def get_module_routers(self) -> t.List[ModuleRouter]:
-        module_routers = super(ApplicationModule, self).get_module_routers()
-        for module in self.modules(exclude_root=True):
-            module_routers.extend(module.get_module_routers())
-
-        return module_routers or []
 
     def configure_module(self, container: Container) -> None:
         super().configure_module(container=container)
         for module in self.modules(exclude_root=True):
             container.install(module)
 
-    def build_controller_routes(self) -> t.List[BaseRoute]:
-        controllers = self.get_controllers()
-        routes = []
-        for controller in controllers:
-            if isinstance(controller, Controller):
-                routes.append(controller.get_route())
+    def _build_routes(self) -> t.List[BaseRoute]:
+        routes = super()._build_routes()
+        for module in self.modules(exclude_root=True):
+            routes.extend(module._build_routes())
         return routes
 
-    def build_module_routes(self) -> t.List[BaseRoute]:
-        module_routers = self.get_module_routers()
-        routes = [module_router for module_router in module_routers]
-        return routes
+    def get_startup_events(self) -> t.List[t.Callable]:
+        events = list(self.on_startup)
+        for module in self.modules(exclude_root=True):
+            events.extend(module.on_startup)
+        return events
 
-    def get_application_events(self) -> t.Dict:
-        events = dict(lifespan=None, on_startup=None, on_shutdown=None)
-        _lifespan = self.module.get_lifespan()
-        if _lifespan:
-            events['lifespan'] = _lifespan
-            return events
+    def get_shutdown_events(self) -> t.List[t.Callable]:
+        events = list(self.on_shutdown)
+        for module in self.modules(exclude_root=True):
+            events.extend(module.on_shutdown)
+        return events
 
-        events['on_startup'] = self.module.get_on_startup()
-        events['on_shutdown'] = self.module.get_on_shutdown()
+    def get_before_events(self) -> t.List[t.Callable]:
+        events = list(self.before_initialisation)
+        for module in self.modules(exclude_root=True):
+            events.extend(module.before_initialisation)
+        return events
+
+    def get_after_events(self) -> t.List[t.Callable]:
+        events = list(self.after_initialisation)
+        for module in self.modules(exclude_root=True):
+            events.extend(module.after_initialisation)
         return events

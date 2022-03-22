@@ -1,1 +1,1 @@
-from .base import ApplicationModule, Module, ApplicationModuleBase, StarletteAPIModuleBase, BaseModule
+from .base import ApplicationModule, Module, StarletteAPIModuleBase, BaseModule
