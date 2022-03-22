@@ -1,9 +1,9 @@
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from typing import Sequence, List, Union, Type
 from .base import GuardCanActivate
 
 
-class GuardInterface(ABC):
+class GuardInterface(ABC, metaclass=ABCMeta):
     @abstractmethod
     def add_guards(self, *guards:  Sequence[GuardCanActivate]):
         ...

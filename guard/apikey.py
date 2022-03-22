@@ -1,6 +1,6 @@
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from typing import Optional, Any, Dict
-from starlette.status import HTTP_403_FORBIDDEN
+from starletteapi.status import HTTP_403_FORBIDDEN
 from starletteapi.requests import HTTPConnection
 
 from .base import BaseAuthGuard
@@ -10,7 +10,7 @@ __all__ = ['BaseAPIKey', 'APIKeyQuery', 'APIKeyCookie', 'APIKeyHeader']
 from ..exceptions import APIException
 
 
-class BaseAPIKey(BaseAuthGuard, ABC):
+class BaseAPIKey(BaseAuthGuard, ABC, metaclass=ABCMeta):
     openapi_in: str = None
     parameter_name: str = "key"
     openapi_description: Optional[str] = None

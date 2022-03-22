@@ -1,11 +1,11 @@
 import binascii
 import typing as t
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from base64 import b64decode
 
 from pydantic import BaseModel
-from starlette.requests import HTTPConnection
-from starlette.status import HTTP_403_FORBIDDEN, HTTP_401_UNAUTHORIZED
+from starletteapi.requests import HTTPConnection
+from starletteapi.status import HTTP_403_FORBIDDEN, HTTP_401_UNAUTHORIZED
 
 from .base import BaseAuthGuard
 from ..exceptions import APIException, AuthenticationFailed
@@ -23,7 +23,7 @@ class HTTPAuthorizationCredentials(BaseModel):
     credentials: str
 
 
-class BaseHttpAuth(BaseAuthGuard, ABC):
+class BaseHttpAuth(BaseAuthGuard, ABC, metaclass=ABCMeta):
     openapi_description: t.Optional[str] = None
     openapi_scheme: str = None
     realm: t.Optional[str] = None

@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from typing import Optional, Any, Dict
 
 from starlette.exceptions import HTTPException
@@ -7,7 +7,7 @@ from starletteapi.requests import HTTPConnection
 from starletteapi.context import ExecutionContext
 
 
-class GuardCanActivate(ABC):
+class GuardCanActivate(ABC, metaclass=ABCMeta):
     _exception_class: HTTPException = HTTPException
     _status_code: int = HTTP_403_FORBIDDEN
     _detail: str = "Not authenticated"
@@ -22,7 +22,7 @@ class GuardCanActivate(ABC):
         )
 
 
-class BaseAuthGuard(GuardCanActivate, ABC):
+class BaseAuthGuard(GuardCanActivate, ABC, metaclass=ABCMeta):
     openapi_scope = []
 
     @abstractmethod
