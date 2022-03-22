@@ -9,7 +9,7 @@ from starlette.convertors import (
     StringConvertor, FloatConvertor, UUIDConvertor, PathConvertor, IntegerConvertor
 )
 from starlette.routing import Mount, compile_path
-from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+from starletteapi.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from starletteapi.constants import METHODS_WITH_BODY, REF_PREFIX
 from starletteapi.guard import BaseAuthGuard
@@ -93,7 +93,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             if isinstance(route, Operation):
                 _routes.append(
                     OpenAPIRouteDocumentation(
-                        route=route, global_tag=self.tag,
+                        route=route,
                         global_route_parameters=self.global_route_parameters
                     )
                 )
@@ -136,17 +136,16 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             description: t.Optional[str] = None,
             tags: t.Optional[t.List[str]] = None,
             deprecated: t.Optional[bool] = None,
-            global_tag: t.Optional[str] = None,
             global_route_parameters: t.List[t.Dict] = None
     ):
 
         self.operation_id = operation_id or route.get_meta().get('operation_id')
         self.summary = summary or route.get_meta().get('summary')
         self.description = description or route.get_meta().get('description')
-        self.tags = tags or route.get_meta().get('tags') or global_tag
+        self.tags = tags or route.get_meta().get('tags')
         self.deprecated = deprecated or route.get_meta().get('deprecated')
         self.route = route
-        self.global_route_parameters = global_route_parameters
+        self.global_route_parameters = global_route_parameters or []
 
         if self.tags and not isinstance(self.tags, list):
             self.tags = [self.tags]
