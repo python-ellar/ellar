@@ -1,8 +1,9 @@
-from .base import ControllerBase, Controller
+from .base import ControllerBase, controller, ControllerType
 from .routing import ControllerMount
 
 __all__ = [
     'ControllerBase',
-    'Controller',
-    'ControllerMount'
+    'controller',
+    'ControllerMount',
+    'ControllerType'
 ]
