@@ -28,6 +28,12 @@ class BaseHttpAuth(BaseAuthGuard, ABC, metaclass=ABCMeta):
     openapi_scheme: str = None
     realm: t.Optional[str] = None
 
+    @classmethod
+    def authorization_partitioning(cls, authorization) -> t.Tuple[t.Optional[str], t.Optional[str], t.Optional[str]]:
+        if authorization:
+            return authorization.partition(" ")
+        return None, None, None
+
     @abstractmethod
     async def authenticate(
             self, connection: HTTPConnection,
@@ -69,7 +75,7 @@ class HttpBearerAuth(BaseHttpAuth, ABC):
 
     def _get_credentials(self, connection: HTTPConnection) -> HTTPAuthorizationCredentials:
         authorization: str = connection.headers.get(self.header)
-        scheme, _, credentials = authorization.partition(" ")
+        scheme, _, credentials = self.authorization_partitioning(authorization)
         if not (authorization and scheme and credentials):
             raise APIException(
                 status_code=HTTP_403_FORBIDDEN, detail="Not authenticated"
@@ -100,10 +106,12 @@ class HttpBasicAuth(BaseHttpAuth, ABC):
 
     def _get_credentials(self, connection: HTTPConnection) -> HTTPBasicCredentials:
         authorization: str = connection.headers.get(self.header)
-        scheme, _, credentials = authorization.partition(" ")
+        scheme, _, credentials = self.authorization_partitioning(authorization)
 
         if not authorization or scheme.lower() != self.openapi_scheme:
-            raise
+            raise APIException(
+                status_code=HTTP_403_FORBIDDEN, detail="Not authenticated"
+            )
         try:
             data = b64decode(credentials).decode("ascii")
             username, separator, password = data.partition(":")
@@ -114,20 +122,6 @@ class HttpBasicAuth(BaseHttpAuth, ABC):
             self._not_unauthorized_exception("Invalid authentication credentials")
 
 
-class HttpDigestAuth(BaseHttpAuth, ABC):
+class HttpDigestAuth(HttpBearerAuth, ABC):
     openapi_scheme = "digest"
     header = "Authorization"
-
-    def _get_credentials(self, connection: HTTPConnection) -> HTTPAuthorizationCredentials:
-        authorization: str = connection.headers.get(self.header)
-        scheme, _, credentials = authorization.partition(" ")
-        if not (authorization and scheme and credentials):
-            raise APIException(
-                status_code=HTTP_403_FORBIDDEN, detail="Not authenticated"
-            )
-        if scheme.lower() != self.openapi_scheme:
-            raise APIException(
-                status_code=HTTP_403_FORBIDDEN,
-                detail="Invalid authentication credentials",
-            )
-        return HTTPAuthorizationCredentials(scheme=scheme, credentials=credentials)
