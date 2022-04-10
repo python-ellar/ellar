@@ -12,8 +12,8 @@ from injector import (  # noqa
 
 __all__ = [
     'request_scope',
-    'transient',
-    'singleton',
+    'transient_scope',
+    'singleton_scope',
     'ScopeDecorator',
     'DIScope',
     'TransientScope',
@@ -80,6 +80,6 @@ class TransientScope(InjectorNoScope, DIScope):
         return provider
 
 
-transient = ScopeDecorator(TransientScope)
-singleton = ScopeDecorator(SingletonScope)
+transient_scope = ScopeDecorator(TransientScope)
+singleton_scope = ScopeDecorator(SingletonScope)
 request_scope = ScopeDecorator(RequestScope)

@@ -108,7 +108,7 @@ class Container(InjectorBinder):
 
     def add_transient(self, base_type: t.Type, concrete_type: t.Optional[t.Type] = None) -> None:
         if not concrete_type:
-            self.add_exact_singleton(concrete_type)
+            self.add_exact_transient(base_type)
         self.register(base_type, concrete_type, scope=TransientScope)
 
     def add_scoped(self, base_type: t.Type, concrete_type: t.Optional[t.Type] = None) -> None:
@@ -116,15 +116,15 @@ class Container(InjectorBinder):
             self.add_exact_singleton(concrete_type)
         self.register(base_type, concrete_type, scope=TransientScope)
 
-    def add_exact_singleton(self, concrete_type: t.Type[T]) -> None:
+    def add_exact_singleton(self, concrete_type: t.Type) -> None:
         assert not isabstract(concrete_type)
         self.register(base_type=concrete_type, scope=SingletonScope)
 
-    def add_exact_transient(self, concrete_type: t.Type[T]) -> None:
+    def add_exact_transient(self, concrete_type: t.Type) -> None:
         assert not isabstract(concrete_type)
         self.register(base_type=concrete_type, scope=TransientScope)
 
-    def add_exact_scoped(self, concrete_type: t.Type[T], ) -> None:
+    def add_exact_scoped(self, concrete_type: t.Type) -> None:
         assert not isabstract(concrete_type)
         self.register(base_type=concrete_type, scope=RequestScope)
 
