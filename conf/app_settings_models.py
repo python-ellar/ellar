@@ -1,6 +1,6 @@
 import typing as t
 
-from pydantic import validator
+from pydantic import validator, root_validator
 
 from starletteapi.schema import PydanticSchema
 from starlette.middleware import Middleware
@@ -31,12 +31,13 @@ class StarletteAPIConfig(PydanticSchema):
     EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable] = {}
     STATIC_MOUNT_PATH: str = '/static'
 
-    @validator("EXCEPTION_HANDLERS")
-    def exception_handlers_validator(cls, values: t.Any) -> t.Any:
-        app_exception_handlers = values['APP_EXCEPTION_HANDLERS']
+    @root_validator(pre=True)
+    def pre_root_validate(cls, values: t.Any) -> t.Any:
+        app_exception_handlers = dict(values['APP_EXCEPTION_HANDLERS'])
         user_custom_exception_handlers = values['USER_CUSTOM_EXCEPTION_HANDLERS']
         app_exception_handlers.update(**user_custom_exception_handlers)
-        return app_exception_handlers
+        values['EXCEPTION_HANDLERS'] = app_exception_handlers
+        return values
 
     @validator("MIDDLEWARE", pre=True)
     def pre_middleware_validate(cls, value: t.Any) -> t.Any:

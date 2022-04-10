@@ -4,7 +4,7 @@ from starletteapi.middleware.di import RequestServiceProviderMiddleware
 from starletteapi.middleware.exceptions import ExceptionMiddleware
 from starlette.middleware import Middleware
 from starlette.routing import BaseRoute
-
+from starletteapi.logger import logger
 from starletteapi.middleware.versioning import RequestVersioningMiddleware
 from starletteapi.events import RouterEventManager, ApplicationEventManager
 from starletteapi.types import TScope, TReceive, TSend, ASGIApp, T
@@ -36,7 +36,7 @@ class StarletteApp(StarletteAppTemplating):
 
         self.router = AppRouter(
             routes=AppRoutes(self._app_module),
-            redirect_slashes=self.config.validate_config.REDIRECT_SLASHES,
+            redirect_slashes=self.config.REDIRECT_SLASHES,
             on_startup=[self.on_startup.async_run], on_shutdown=[self.on_shutdown.async_run],
             default=self.config.DEFAULT_NOT_FOUND_HANDLER, lifespan=self.config.DEFAULT_LIFESPAN_HANDLER
         )
@@ -53,7 +53,7 @@ class StarletteApp(StarletteAppTemplating):
                 return await self._static_app(scope, receive, send)
 
             self.router.mount(
-                self.config.validate_config.STATIC_MOUNT_PATH, app=_statics, name='static'
+                self.config.STATIC_MOUNT_PATH, app=_statics, name='static'
             )
 
         self.Get = self.router.Get
@@ -74,6 +74,7 @@ class StarletteApp(StarletteAppTemplating):
         self._injector.container.install(module=self._app_module)
         self._finalize_app_initialization()
         after.run(application=self)
+        logger.info(f'APP SETTINGS: {self._config.config_module}')
 
     def install_module(
             self, module: t.Union[t.Type[StarletteAPIModuleBase], BaseModule, t.Type[T]], **init_kwargs: t.Any
@@ -104,7 +105,7 @@ class StarletteApp(StarletteAppTemplating):
 
     @property
     def has_static_files(self) -> bool:
-        return True if self.static_files or self.config.validate_config.STATIC_FOLDER_PACKAGES else False
+        return True if self.static_files or self.config.STATIC_FOLDER_PACKAGES else False
 
     @property
     def config(self) -> Config:
@@ -118,7 +119,7 @@ class StarletteApp(StarletteAppTemplating):
         error_handler = None
         exception_handlers = {}
 
-        for key, value in self.config.validate_config.EXCEPTION_HANDLERS.items():
+        for key, value in self.config.EXCEPTION_HANDLERS.items():
             if key in (500, Exception):
                 error_handler = value
             else:
@@ -126,7 +127,7 @@ class StarletteApp(StarletteAppTemplating):
 
         middleware = (
             [Middleware(ServerErrorMiddleware, handler=error_handler, debug=self.debug)]
-            + self.config.validate_config.MIDDLEWARE
+            + self.config.MIDDLEWARE
             + [
                 Middleware(
                     ExceptionMiddleware, handlers=exception_handlers, debug=self.debug
@@ -151,11 +152,11 @@ class StarletteApp(StarletteAppTemplating):
 
     @property
     def debug(self) -> bool:
-        return self.config.validate_config.DEBUG
+        return self.config.DEBUG
 
     @debug.setter
     def debug(self, value: bool) -> None:
-        self.config.validate_config.DEBUG = value
+        self.config.DEBUG = value
         self.build_middleware_stack()
 
     def url_path_for(self, name: str, **path_params: t.Any) -> URLPath:

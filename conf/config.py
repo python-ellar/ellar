@@ -18,7 +18,7 @@ _config_state = _ConfigState()
 
 
 class Config(DataMapper, AttributeDictAccess):
-    __slots__ = ('validate_config', 'config_module')
+    __slots__ = ('config_module',)
 
     def __init__(self, config_state: _ConfigState = _config_state, **mapping: t.Any, ):
         """
@@ -41,14 +41,16 @@ class Config(DataMapper, AttributeDictAccess):
         config_state.update(**mapping)
 
         self._data: _ConfigState = config_state
-        self.validate_config: StarletteAPIConfig = StarletteAPIConfig.from_orm(self._data)
+        validate_config = StarletteAPIConfig.parse_obj(self._data)
+        self._data.update(validate_config.dict())
 
     def __contains__(self, item: str) -> bool:
         return item in self._data
 
-    def set_defaults(self, **kwargs: t.Any):
+    def set_defaults(self, **kwargs: t.Any) -> 'Config':
         for k, v in kwargs.items():
             self._data.setdefault(k, v)
+        return self
 
     def __repr__(self) -> str:
         hidden_values = {key: "..." for key in self._data.keys()}
