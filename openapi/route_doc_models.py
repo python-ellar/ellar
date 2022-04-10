@@ -13,7 +13,6 @@ from starletteapi.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from starletteapi.constants import METHODS_WITH_BODY, REF_PREFIX
 from starletteapi.guard import BaseAuthGuard
-from starletteapi.compatible import cached_property
 from starletteapi.route_models.param_resolvers import RouteParameterResolver, BodyParameterResolver
 from starletteapi.route_models.params import Param, Body
 from starletteapi.routing.operations import Operation
@@ -86,7 +85,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             )
         return dict()
 
-    @cached_property
+    @property
     def routes(self) -> t.List['OpenAPIRouteDocumentation']:
         _routes: t.List['OpenAPIRouteDocumentation'] = []
         for route in self.mount.routes:
@@ -99,7 +98,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
                 )
         return _routes
 
-    @cached_property
+    @property
     def _openapi_models(self):
         _models = []
         for route in self.routes:
@@ -150,7 +149,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         if self.tags and not isinstance(self.tags, list):
             self.tags = [self.tags]
 
-    @cached_property
+    @property
     def _openapi_models(self):
         _models = self.input_fields + self.output_fields
         if self.route.route_parameter_model.body_resolver:
@@ -158,7 +157,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             _models.append(model_field)
         return _models
 
-    @cached_property
+    @property
     def input_fields(self) -> t.List[ModelField]:
         _models = []
         for item in self.route.route_parameter_model.get_models():
@@ -168,7 +167,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
                 _models.append(item.model_field)
         return _models
 
-    @cached_property
+    @property
     def output_fields(self) -> t.List[ModelField]:
         _models = []
         for _, model in self.route.response_model.models.items():
