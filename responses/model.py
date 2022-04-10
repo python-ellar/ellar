@@ -55,6 +55,12 @@ class ResponseModel(ABC):
             return response_args, dict(endpoint_response.headers)
         return response_args, {}
 
+    def __deepcopy__(self, memodict={}):
+        return self.__copy__(memodict)
+
+    def __copy__(self, memodict={}):
+        return self
+
 
 class _JSONResponseModel(ResponseModel):
     def __init__(self, **kwargs: t.Any) -> None:

@@ -28,3 +28,9 @@ class OperationMeta(dict, AttributeDictAccess):
     def set_defaults(self, **kwargs: t.Any) -> None:
         for k, v in kwargs.items():
             self.setdefault(k, v)
+
+    def __deepcopy__(self, memodict={}):
+        return self.__copy__(memodict)
+
+    def __copy__(self, memodict={}):
+        return OperationMeta(**self)
