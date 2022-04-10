@@ -110,7 +110,7 @@ class StarletteAppTemplating:
 
     def create_static_app(self) -> ASGIApp:
         return StarletteStaticFiles(
-            directories=self.static_files, packages=self.config.validate_config.STATIC_FOLDER_PACKAGES
+            directories=self.static_files, packages=self.config.STATIC_FOLDER_PACKAGES
         )
 
     def reload_static_app(self) -> None:
