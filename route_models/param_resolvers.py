@@ -112,60 +112,8 @@ class CookieParameterResolver(PathParameterResolver):
         return connection.cookies
 
 
-class BodyParameterResolver(RouteParameterResolver):
-    def __init__(self, *args: t.Any, **kwargs: t.Any):
-        super().__init__(*args, **kwargs)
-        self._body = None
-
-    async def get_request_body(self, ctx: ExecutionContext) -> t.Any:
-        if not self._body:
-            try:
-                request = ctx.switch_to_request()
-                body_bytes = await request.body()
-                if body_bytes:
-                    json_body: t.Any = Undefined
-                    content_type_value = request.headers.get("content-type")
-                    if not content_type_value:
-                        json_body = await request.json()
-                    else:
-                        message = email.message.Message()
-                        message["content-type"] = content_type_value
-                        if message.get_content_maintype() == "application":
-                            subtype = message.get_content_subtype()
-                            if subtype == "json" or subtype.endswith("+json"):
-                                json_body = await request.json()
-                    if json_body != Undefined:
-                        body = json_body
-                    else:
-                        body = body_bytes
-                    self._body = body
-            except json.JSONDecodeError as e:
-                raise RequestValidationError([ErrorWrapper(e, ("body", e.pos))])
-            except Exception as e:
-                raise HTTPException(
-                    status_code=400, detail="There was an error parsing the body"
-                ) from e
-        return self._body
-
-    async def resolve_handle(self, ctx: ExecutionContext, *args: t.Any, **kwargs: t.Any):
-        await self.get_request_body(ctx)
-        embed = getattr(self.model_field.field_info, "embed", False)
-        received_body = {self.model_field.alias: self._body}
-        loc = ("body",)
-        if embed:
-            received_body = self._body
-            loc = ("body", self.model_field.alias)
-        try:
-            value = received_body.get(self.model_field.alias)
-            v_, errors_ = self.model_field.validate(value, {}, loc=loc)
-            return {self.model_field.name: v_}, errors_
-        except AttributeError:
-            errors = [self.create_error(loc=loc)]
-            return None, errors
-
-
 class WsBodyParameterResolver(RouteParameterResolver):
-    async def resolve_handle(self, ctx: ExecutionContext, *args: t.Any, body: t.Optional[t.Any], **kwargs: t.Any):
+    async def resolve_handle(self, ctx: ExecutionContext, *args: t.Any, body: t.Any, **kwargs: t.Any):
         embed = getattr(self.model_field.field_info, "embed", False)
         received_body = {self.model_field.alias: body}
         loc = ("body",)
@@ -181,6 +129,45 @@ class WsBodyParameterResolver(RouteParameterResolver):
             return None, errors
 
 
+class BodyParameterResolver(WsBodyParameterResolver):
+    def __init__(self, *args: t.Any, **kwargs: t.Any):
+        super().__init__(*args, **kwargs)
+
+    async def get_request_body(self, ctx: ExecutionContext) -> t.Any:
+        try:
+            request = ctx.switch_to_request()
+            body_bytes = await request.body()
+            if body_bytes:
+                json_body: t.Any = Undefined
+                content_type_value = request.headers.get("content-type")
+                if not content_type_value:
+                    json_body = await request.json()
+                else:
+                    message = email.message.Message()
+                    message["content-type"] = content_type_value
+                    if message.get_content_maintype() == "application":
+                        subtype = message.get_content_subtype()
+                        if subtype == "json" or subtype.endswith("+json"):
+                            json_body = await request.json()
+                if json_body != Undefined:
+                    body_bytes = json_body
+            return body_bytes
+        except json.JSONDecodeError as e:
+            raise RequestValidationError([ErrorWrapper(e, ("body", e.pos))])
+        except Exception as e:
+            raise HTTPException(
+                status_code=400, detail="There was an error parsing the body"
+            ) from e
+
+    async def resolve_handle(
+            self, ctx: ExecutionContext,
+            *args: t.Any, body: t.Optional[t.Any] = None,
+            **kwargs: t.Any
+    ):
+        body = body or await self.get_request_body(ctx)
+        return await super(BodyParameterResolver, self).resolve_handle(ctx, *args, body=body, **kwargs)
+
+
 class FormParameterResolver(BodyParameterResolver):
     async def process_and_validate(self, *, values: t.Dict, value: t.Any, loc: t.Tuple):
         v_, errors_ = self.model_field.validate(value, values, loc=loc)
@@ -188,28 +175,32 @@ class FormParameterResolver(BodyParameterResolver):
         return values, errors_
 
     async def get_request_body(self, ctx: ExecutionContext) -> t.Any:
-        if not self._body:
-            try:
-                request = ctx.switch_to_request()
-                body_bytes = await request.form()
-                self._body = body_bytes
-            except Exception as e:
-                raise HTTPException(
-                    status_code=400, detail="There was an error parsing the body"
-                ) from e
-        return self._body
+        try:
+            request = ctx.switch_to_request()
+            body_bytes = await request.form()
+            return body_bytes
+        except Exception as e:
+            raise HTTPException(
+                status_code=400, detail="There was an error parsing the body"
+            ) from e
 
-    async def resolve_handle(self, ctx: ExecutionContext, *args: t.Any, **kwargs: t.Any):
-        await self.get_request_body(ctx)
+    async def resolve_handle(
+            self,
+            ctx: ExecutionContext,
+            *args: t.Any,
+            body: t.Optional[t.Any] = None,
+            **kwargs: t.Any
+    ):
+        _body = body or await self.get_request_body(ctx)
         values = {}
-        received_body = {self.model_field.alias: self._body}
+        received_body = {self.model_field.alias: _body}
         loc = ("body",)
 
         if (
                 self.model_field.shape in sequence_shapes or self.model_field.type_ in sequence_types
-        ) and isinstance(self._body, FormData):
+        ) and isinstance(_body, FormData):
             loc = ("body", self.model_field.alias)
-            value = self._body.getlist(self.model_field.alias)
+            value = _body.getlist(self.model_field.alias)
         else:
             try:
                 value = received_body.get(self.model_field.alias)
@@ -219,12 +210,46 @@ class FormParameterResolver(BodyParameterResolver):
 
         if not value or self.model_field.shape in sequence_shapes and len(value) == 0:
             if self.model_field.required:
-                return await self.process_and_validate(values=values, value=self._body, loc=loc)
+                return await self.process_and_validate(values=values, value=_body, loc=loc)
             else:
                 values[self.model_field.name] = deepcopy(self.model_field.default)
             return values, []
 
         return await self.process_and_validate(values=values, value=value, loc=loc)
+
+
+class BulkFormParameterResolver(FormParameterResolver):
+    def __init__(self, *args: t.Any, form_resolvers: t.List[RouteParameterResolver], **kwargs: t.Any):
+        super().__init__(*args, **kwargs)
+        self._form_resolvers = form_resolvers
+
+    async def resolve_handle(self, ctx: ExecutionContext, *args: t.Any, **kwargs: t.Any):
+        _body = await self.get_request_body(ctx)
+        values: t.Dict[str, t.Any] = {}
+        errors: t.List[ErrorWrapper] = []
+        if self._form_resolvers:
+            for parameter_resolver in self._form_resolvers:
+                value_, errors_ = await parameter_resolver.resolve(ctx=ctx, body=_body)
+                if value_:
+                    values.update(value_)
+                if errors_:
+                    errors += errors_
+            return values, errors
+        return super(BulkFormParameterResolver, self).resolve_handle(ctx, *args, **kwargs)
+
+
+class BulkBodyParameterResolver(BodyParameterResolver):
+    def __init__(self, *args: t.Any, resolvers: t.List[RouteParameterResolver], **kwargs: t.Any):
+        super().__init__(*args, **kwargs)
+        self.resolvers = resolvers
+
+    async def resolve_handle(self, ctx: ExecutionContext, *args: t.Any, **kwargs: t.Any):
+        _body = await self.get_request_body(ctx)
+        values, errors = await super(BulkBodyParameterResolver, self).resolve_handle(ctx, *args, body=_body, **kwargs)
+        if not errors:
+            _, body_value = values.popitem()
+            return body_value.dict(), errors
+        return values, errors
 
 
 class FileParameterResolver(FormParameterResolver):
@@ -268,7 +293,7 @@ class NonFieldRouteParameterResolver(BaseRouteParameterResolver, ABC):
         self.type_annotation = parameter_annotation
         return self
 
-    async def resolve(self, ctx: ExecutionContext) -> t.Any:
+    async def resolve(self, ctx: ExecutionContext, **kwargs: t.Any) -> t.Any:
         raise NotImplementedError
 
 
@@ -291,7 +316,7 @@ class ParameterInjectable(NonFieldRouteParameterResolver):
             self.data = self.type_annotation
         return self
 
-    async def resolve(self, ctx: ExecutionContext) -> t.Tuple[t.Dict[str, T], t.List]:
+    async def resolve(self, ctx: ExecutionContext, **kwargs: t.Any) -> t.Tuple[t.Dict[str, T], t.List]:
         try:
             service_provider = ctx.get_service_provider()
             value = service_provider.get(self.data)
@@ -302,7 +327,7 @@ class ParameterInjectable(NonFieldRouteParameterResolver):
 
 
 class RequestParameter(NonFieldRouteParameterResolver):
-    async def resolve(self, ctx: ExecutionContext) -> t.Tuple[t.Dict, t.List]:
+    async def resolve(self, ctx: ExecutionContext, **kwargs: t.Any) -> t.Tuple[t.Dict, t.List]:
         try:
             request = ctx.switch_to_request()
             return {self.parameter_name: request}, []
@@ -311,7 +336,7 @@ class RequestParameter(NonFieldRouteParameterResolver):
 
 
 class WebSocketParameter(NonFieldRouteParameterResolver):
-    async def resolve(self, ctx: ExecutionContext) -> t.Tuple[t.Dict, t.List]:
+    async def resolve(self, ctx: ExecutionContext, **kwargs: t.Any) -> t.Tuple[t.Dict, t.List]:
         try:
             websocket = ctx.switch_to_websocket()
             return {self.parameter_name: websocket}, []
@@ -320,7 +345,7 @@ class WebSocketParameter(NonFieldRouteParameterResolver):
 
 
 class ExecutionContextParameter(NonFieldRouteParameterResolver):
-    async def resolve(self, ctx: ExecutionContext) -> t.Tuple[t.Dict, t.List]:
+    async def resolve(self, ctx: ExecutionContext, **kwargs: t.Any) -> t.Tuple[t.Dict, t.List]:
         return {self.parameter_name: ctx}, []
 
 

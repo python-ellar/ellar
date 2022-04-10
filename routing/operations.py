@@ -183,6 +183,7 @@ class Operation(OperationBase, StarletteRoute):
 
         if self._meta.extra_route_args:
             self.route_parameter_model.add_extra_route_args(*self._meta.extra_route_args)
+        self.route_parameter_model.build_model()
 
         if self._meta.response_override:
             _response_override = self._meta.response_override
@@ -303,6 +304,7 @@ class WebsocketOperation(WebsocketOperationBase, WebSocketRoute):
 
         if self._meta.extra_route_args:
             self.route_parameter_model.add_extra_route_args(*self._meta.extra_route_args)
+        self.route_parameter_model.build_model()
 
         if not self._use_extra_handler and self.route_parameter_model.body_resolver:
             raise ImproperConfiguration('`WsBody` should only be used when '

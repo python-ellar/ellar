@@ -305,6 +305,12 @@ class Body(FieldInfo):
 
     def init_resolver(self, model_field: ModelField):
         self._resolver = param_resolvers.BodyParameterResolver(model_field)
+        body_resolvers = model_field.field_info.extra.get('body_resolvers')
+        if body_resolvers:
+            model_field.field_info.extra.pop('body_resolvers')
+            self._resolver = param_resolvers.BulkBodyParameterResolver(
+                model_field, resolvers=body_resolvers
+            )
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.default})"
@@ -361,6 +367,12 @@ class Form(Body):
 
     def init_resolver(self, model_field: ModelField):
         self._resolver = param_resolvers.FormParameterResolver(model_field)
+        body_resolvers = model_field.field_info.extra.get('body_resolvers')
+        if body_resolvers:
+            model_field.field_info.extra.pop('body_resolvers')
+            self._resolver = param_resolvers.BulkFormParameterResolver(
+                model_field, form_resolvers=body_resolvers
+            )
 
 
 class File(Form):
