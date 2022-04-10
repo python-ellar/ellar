@@ -9,7 +9,7 @@ from starletteapi.types import T
 from starletteapi.compatible import DataMapper
 from starletteapi.di import ServiceConfig
 from starletteapi.guard import GuardCanActivate
-from starletteapi.controller import Controller
+from starletteapi.controller import ControllerBase, ControllerType
 from starletteapi.templating.interface import ModuleTemplating
 from starletteapi.routing import ModuleRouter, RouteDefinitions
 from pathlib import Path
@@ -76,7 +76,7 @@ class Module(BaseModule):
             self,
             *,
             name: t.Optional[str] = __name__,
-            controllers: t.Sequence[Controller] = tuple(),
+            controllers: t.Sequence[t.Type[ControllerBase]] = tuple(),
             routers: t.Sequence[t.Union[ModuleRouter, RouteDefinitions]] = tuple(),
             services: t.Sequence[t.Union[t.Type, ServiceConfig]] = tuple(),
             template_folder: t.Optional[str] = None,
@@ -121,7 +121,7 @@ class Module(BaseModule):
             _provider.register(container)
 
         for controller in self._controllers:
-            container.add_exact_scoped(concrete_type=controller.get_controller_class())
+            container.add_exact_scoped(concrete_type=controller)
 
     def _builder_service(self, services: t.Sequence[t.Union[t.Type, ServiceConfig]]):
         for item in services:
@@ -133,7 +133,7 @@ class Module(BaseModule):
     def _build_routes(self) -> t.List[BaseRoute]:
         routes = list(self._module_routers)
         for controller in self._controllers:
-            if isinstance(controller, Controller):
+            if type(controller) == ControllerType:
                 routes.append(controller.get_route())
         return routes
 
@@ -214,7 +214,7 @@ class ApplicationModule(Module, _AppModules):
     def __init__(
             self,
             *,
-            controllers: t.Sequence[Controller] = tuple(),
+            controllers: t.Sequence[t.Type[ControllerBase]] = tuple(),
             routers: t.Sequence[t.Union[ModuleRouter, RouteDefinitions]] = tuple(),
             services: t.Sequence[t.Union[t.Type, ServiceConfig]] = tuple(),
             modules: t.Union[t.Sequence[Module], t.Sequence[t.Type], t.Sequence[BaseModule]] = tuple(),
