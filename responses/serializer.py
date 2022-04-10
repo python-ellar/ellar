@@ -1,11 +1,11 @@
 import typing as t
-from abc import ABC
 from enum import Enum
 from pathlib import PurePath
 from types import GeneratorType
 
 from dataclasses import is_dataclass, asdict
 from pydantic import BaseModel, dataclasses as PydanticDataclasses, BaseConfig
+from pydantic.json import ENCODERS_BY_TYPE
 
 if t.TYPE_CHECKING:
     from pydantic.typing import AbstractSetIntStr, MappingIntStrAny
@@ -32,6 +32,10 @@ def serialize_object(obj: t.Any) -> t.Any:
         return obj
     if isinstance(obj, (list, set, frozenset, GeneratorType, tuple)):
         return [serialize_object(item) for item in obj]
+
+    if type(obj) in ENCODERS_BY_TYPE:
+        return ENCODERS_BY_TYPE[type(obj)](obj)
+
     errors = []
     try:
         data = dict(obj)
