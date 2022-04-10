@@ -220,6 +220,12 @@ class EndpointParameterModel:
     async def resolve_body(self, ctx: ExecutionContext, values: t.Dict, errors: t.List) -> None:
         ...
 
+    def __deepcopy__(self, memodict={}):
+        return self.__copy__(memodict)
+
+    def __copy__(self, memodict={}):
+        return self
+
     def build_body_field(self):
         raise NotImplementedError
 
