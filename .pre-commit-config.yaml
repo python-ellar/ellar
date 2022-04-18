@@ -1,0 +1,47 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: 'v4.1.0'
+  hooks:
+  - id: check-merge-conflict
+- repo: https://github.com/asottile/yesqa
+  rev: v1.3.0
+  hooks:
+  - id: yesqa
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v0.931
+  hooks:
+    - id: mypy
+      entry: "echo $PWD & ./scripts/mypy-pre-commit"
+      additional_dependencies: ["pydantic"]
+      exclude: (tests)/
+- repo: https://github.com/psf/black
+  rev: "22.1.0"
+  hooks:
+    - id: black
+- repo: https://github.com/PyCQA/flake8
+  rev: "4.0.1"
+  hooks:
+    - id: flake8
+- repo: https://github.com/PyCQA/isort
+  rev: "5.10.1"
+  hooks:
+    - id: isort
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: 'v4.1.0'
+  hooks:
+  - id: end-of-file-fixer
+  - id: requirements-txt-fixer
+  - id: trailing-whitespace
+    types: [python]
+  - id: check-case-conflict
+  - id: check-json
+  - id: check-xml
+  - id: check-executables-have-shebangs
+  - id: check-toml
+  - id: check-xml
+  - id: check-yaml
+  - id: debug-statements
+  - id: check-added-large-files
+  - id: check-symlinks
+  - id: debug-statements
+    exclude: ^tests/
