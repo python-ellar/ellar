@@ -9,9 +9,9 @@ repos:
   - id: yesqa
 - repo: local
   hooks:
-    - id: Code Linting
+    - id: code_linting
       args: []
-      name: mypy
+      name: Code Linting
       entry: "make lint"
       types: [python]
       language_version: python3.6
