@@ -11,7 +11,7 @@ repos:
   rev: v0.931
   hooks:
     - id: mypy
-      entry: "echo $PWD & ./scripts/mypy-pre-commit"
+      entry: "./scripts/mypy-pre-commit"
       additional_dependencies: ["pydantic"]
       exclude: (tests)/
 - repo: https://github.com/psf/black
