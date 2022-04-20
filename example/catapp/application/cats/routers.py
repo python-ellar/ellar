@@ -2,13 +2,12 @@ from typing import List
 from dataclasses import dataclass
 
 from app_module_test.application.cats.services import CatService
-from architek.response.serializer import DataClassSerializer
-from architek.routing import ModuleRouter
-from architek.route_models import provide, req
-from architek.templating import Render
-from architek.templating.renderer import render_template
+from architek.core.response.serializer import DataClassSerializer
+from architek.core.routing import ArchitekRouter
+from architek.common import provide, req, Render
+from architek.core.templating import render_template
 
-cat_router = ModuleRouter("/cats-router", tag='Testing')
+cat_router = ArchitekRouter("/cats-router", tag='Testing')
 
 
 @dataclass

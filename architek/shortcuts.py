@@ -1,6 +1,6 @@
 from typing import Any, Callable, Optional, no_type_check
 
-from architek.logger import logger
+from architek.core.logger import logger
 
 
 @no_type_check

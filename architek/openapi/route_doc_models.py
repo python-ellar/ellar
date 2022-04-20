@@ -16,16 +16,16 @@ from starlette.routing import Mount, compile_path
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from architek.constants import METHODS_WITH_BODY, REF_PREFIX
-from architek.controller import ControllerMount
-from architek.guard import BaseAuthGuard
-from architek.route_models.param_resolvers import (
+from architek.core.compatible import cached_property
+from architek.core.endpoints.params import Body, Param
+from architek.core.endpoints.resolvers import (
     BodyParameterResolver,
     RouteParameterModelField,
     RouteParameterResolver,
 )
-from architek.route_models.params import Body, Param
-from architek.routing import ModuleRouter
-from architek.routing.operations import Operation
+from architek.core.guard import BaseAuthGuard
+from architek.core.routing import ArchitekRouter, Route
+from architek.core.routing.controller.mount import ControllerMount
 from architek.shortcuts import normalize_path
 
 
@@ -54,14 +54,14 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
 
     def __init__(
         self,
-        mount: t.Union[ModuleRouter, ControllerMount, Mount],
+        mount: t.Union[ArchitekRouter, ControllerMount, Mount],
         tag: t.Optional[str] = None,
         description: t.Optional[str] = None,
         external_doc_description: t.Optional[str] = None,
         external_doc_url: t.Optional[str] = None,
     ) -> None:
         meta: t.Dict = dict()
-        if isinstance(mount, (ModuleRouter, ControllerMount)):
+        if isinstance(mount, (ArchitekRouter, ControllerMount)):
             meta = dict(mount.get_meta())
         self.tag = meta.get("tag") or tag
         self.description = description or meta.get("description")
@@ -99,11 +99,11 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             )
         return dict()
 
-    @property
+    @cached_property
     def routes(self) -> t.List["OpenAPIRouteDocumentation"]:
         _routes: t.List["OpenAPIRouteDocumentation"] = []
         for route in self.mount.routes:
-            if isinstance(route, Operation):
+            if isinstance(route, Route):
                 _routes.append(
                     OpenAPIRouteDocumentation(
                         route=route,
@@ -112,7 +112,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
                 )
         return _routes
 
-    @property
+    @cached_property
     def _openapi_models(self) -> t.List[ModelField]:
         _models = []
         for route in self.routes:
@@ -121,7 +121,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
 
     def get_route_models(self) -> t.List[t.Union[ModelField, RouteParameterModelField]]:
         """Should return input fields and output fields"""
-        return self._openapi_models
+        return self._openapi_models  # type:ignore
 
     def get_openapi_path(
         self,
@@ -135,11 +135,17 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
         )
         paths: t.Dict = {}
         security_schemes: t.Dict[str, t.Any] = {}
-        for route in self.routes:
-            path, _security_schemes = route.get_openapi_path(
+        for openapi_route in self.routes:
+            path, _security_schemes = openapi_route.get_openapi_path(
                 model_name_map=model_name_map, path_prefix=path_prefix
             )
-            paths.update(**path)
+            if path:
+                route_path = (
+                    normalize_path(f"{path_prefix}/{openapi_route.route.path_format}")
+                    if path_prefix
+                    else openapi_route.route.path_format
+                )
+                paths.setdefault(route_path, {}).update(path)
             security_schemes.update(_security_schemes)
         return paths, security_schemes
 
@@ -148,7 +154,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
     def __init__(
         self,
         *,
-        route: "Operation",
+        route: "Route",
         operation_id: t.Optional[str] = None,
         summary: t.Optional[str] = None,
         description: t.Optional[str] = None,
@@ -174,25 +180,25 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         if self.tags and not isinstance(self.tags, list):
             self.tags = [self.tags]
 
-    @property
+    @cached_property
     def _openapi_models(self) -> t.List[t.Union[ModelField, RouteParameterModelField]]:
         _models: t.List[ModelField] = self.input_fields + self.output_fields
-        if self.route.route_parameter_model.body_resolver:
-            model_field = self.route.route_parameter_model.body_resolver.model_field
+        if self.route.endpoint_parameter_model.body_resolver:
+            model_field = self.route.endpoint_parameter_model.body_resolver.model_field
             _models.append(model_field)
         return _models
 
-    @property
+    @cached_property
     def input_fields(self) -> t.List[ModelField]:
         _models: t.List[ModelField] = []
-        for item in self.route.route_parameter_model.get_models():
+        for item in self.route.endpoint_parameter_model.get_models():
             if isinstance(item, BodyParameterResolver):
                 continue
             if isinstance(item, RouteParameterResolver):
                 _models.append(item.model_field)
         return _models
 
-    @property
+    @cached_property
     def output_fields(self) -> t.List[ModelField]:
         _models: t.List[ModelField] = []
         for _, model in self.route.response_model.models.items():
@@ -202,7 +208,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
 
     def get_route_models(self) -> t.List[ModelField]:
         """Should return input fields and output fields"""
-        return self._openapi_models
+        return self._openapi_models  # type:ignore
 
     def _get_openapi_security_scheme(
         self,
@@ -269,9 +275,9 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         *,
         model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
     ) -> t.Optional[t.Dict[str, t.Any]]:
-        if not self.route.route_parameter_model.body_resolver:
+        if not self.route.endpoint_parameter_model.body_resolver:
             return None
-        model_field = self.route.route_parameter_model.body_resolver.model_field
+        model_field = self.route.endpoint_parameter_model.body_resolver.model_field
         assert isinstance(model_field, ModelField)
         body_schema, _, _ = field_schema(
             model_field, model_name_map=model_name_map, ref_prefix=REF_PREFIX
@@ -349,7 +355,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
 
                 http422 = str(HTTP_422_UNPROCESSABLE_ENTITY)
                 if (
-                    parameters or self.route.route_parameter_model.body_resolver
+                    parameters or self.route.endpoint_parameter_model.body_resolver
                 ) and not any(
                     [
                         status in operation["responses"]
@@ -373,15 +379,8 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
         path_prefix: t.Optional[str] = None,
     ) -> t.Tuple:
-        paths: t.Dict = {}
+
         _path, _security_schemes = self._get_openapi_path_object(
             model_name_map=model_name_map
         )
-        if _path:
-            route_path = (
-                normalize_path(f"{path_prefix}/{self.route.path_format}")
-                if path_prefix
-                else self.route.path_format
-            )
-            paths.setdefault(route_path, {}).update(_path)
-        return paths, _security_schemes
+        return _path, _security_schemes

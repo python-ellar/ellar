@@ -10,15 +10,14 @@ from pydantic.schema import (
     model_process_schema,
 )
 
-from architek.main import ArchitekApp
+from architek.core.compatible import cached_property
+from architek.core.helper.modelfield import create_model_field
+from architek.core.main import ArchitekApp
+from architek.core.routing import ArchitekRouter, Route
+from architek.core.routing.controller.mount import ControllerMount
+from architek.core.schema import HTTPValidationError, ValidationError
 
-from ..compatible import cached_property
 from ..constants import REF_PREFIX
-from ..controller import ControllerMount
-from ..route_models.helpers import create_response_field
-from ..routing import ModuleRouter
-from ..routing.operations import Operation
-from ..schema import HTTPValidationError, ValidationError
 from .openapi_v3 import OpenAPI
 from .route_doc_models import (
     OpenAPIMountDocumentation,
@@ -110,10 +109,10 @@ class OpenAPIDocumentBuilder:
     ) -> t.List[OpenAPIRoute]:
         openapi_route_models: t.List = []
         for route in app.routes:
-            if isinstance(route, (ControllerMount, ModuleRouter)):
+            if isinstance(route, (ControllerMount, ArchitekRouter)):
                 openapi_route_models.append(OpenAPIMountDocumentation(mount=route))
                 continue
-            if isinstance(route, Operation):
+            if isinstance(route, Route):
                 openapi_route_models.append(OpenAPIRouteDocumentation(route=route))
         return openapi_route_models
 
@@ -148,7 +147,7 @@ class OpenAPIDocumentBuilder:
     ) -> t.List[ModelField]:
         _model_fields = []
         for schema in [ValidationError, HTTPValidationError]:
-            model_field = create_response_field(name=schema.__name__, type_=schema)
+            model_field = create_model_field(name=schema.__name__, type_=schema)
             _model_fields.append(model_field)
         return _model_fields
 

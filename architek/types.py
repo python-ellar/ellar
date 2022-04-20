@@ -8,8 +8,7 @@ from starlette.types import (
     Send as TSend,
 )
 
-from architek.requests import Request
-from architek.websockets import WebSocket
+from architek.core.connection import Request, WebSocket
 
 __all__ = [
     "TScope",
@@ -19,6 +18,7 @@ __all__ = [
     "ASGIApp",
     "TRequest",
     "TemplateFilterCallable",
+    "TemplateGlobalCallable",
     "T",
     "KT",
     "VT",

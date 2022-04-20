@@ -8,9 +8,9 @@ from injector import (
     Module as InjectorModule,
 )
 
-from architek.context import ExecutionContext
-from architek.helper import get_name
-from architek.logger import logger as log
+from architek.core.context import ExecutionContext
+from architek.core.helper import get_name
+from architek.core.logger import logger as log
 from architek.types import T
 
 from .providers import InstanceProvider, Provider
@@ -23,8 +23,8 @@ from .scopes import (
 )
 
 if t.TYPE_CHECKING:
-    from architek.main import ArchitekApp
-    from architek.module import BaseModule, StarletteAPIModuleBase
+    from architek.core.main import ArchitekApp
+    from architek.core.modules import BaseModule, ModuleBase
 
 
 class RequestServiceProvider(InjectorBinder):
@@ -165,11 +165,9 @@ class Container(InjectorBinder):
     @t.no_type_check
     def install(
         self,
-        module: t.Union[
-            t.Type["StarletteAPIModuleBase"], "StarletteAPIModuleBase", "BaseModule"
-        ],
+        module: t.Union[t.Type["ModuleBase"], "ModuleBase", "BaseModule"],
         **init_kwargs: t.Any,
-    ) -> t.Union[InjectorModule, "StarletteAPIModuleBase", "BaseModule"]:
+    ) -> t.Union[InjectorModule, "ModuleBase", "BaseModule"]:
         """Install a module into this container[binder].
 
         In this context the module is one of the following:
@@ -201,9 +199,7 @@ class Container(InjectorBinder):
             container.install(MyModule)
         """
 
-        instance = t.cast(
-            t.Union[t.Type["StarletteAPIModuleBase"], "StarletteAPIModuleBase"], module
-        )
+        instance = t.cast(t.Union[t.Type["ModuleBase"], "ModuleBase"], module)
         if not isinstance(instance, type) and hasattr(instance, "get_module"):
             instance = t.cast("BaseModule", module).get_module()
 

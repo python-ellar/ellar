@@ -1,16 +1,16 @@
 import typing as t
 
-from architek.guard import GuardCanActivate
-from architek.main import ArchitekApp
-from architek.module import Module
-from architek.module.base import StarletteAPIModuleBase
+from architek.common import Module, Render, guards as guards_decorator
+from architek.core.guard import GuardCanActivate
+from architek.core.main import ArchitekApp
+from architek.core.modules import ModuleBase
 from architek.openapi.openapi_v3 import OpenAPI
-from architek.routing import guards as guards_decorator
-from architek.templating import Render
+
+__all__ = ["OpenAPIDocumentModule"]
 
 
 @Module(template_folder="templates")
-class OpenAPIDocumentModule(StarletteAPIModuleBase):
+class OpenAPIDocumentModule(ModuleBase):
     def __init__(
         self,
         app: ArchitekApp,

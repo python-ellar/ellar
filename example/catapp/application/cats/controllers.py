@@ -1,9 +1,5 @@
-from architek.route_models import cxt
-
 from app_module_test.application.cats.services import CatService
-from architek.controller import Controller
-from architek.routing import Get, Put, Post, Delete, version
-from architek.templating import Render
+from architek.common import Controller, Get, Put, Post, Delete, version, Render, cxt
 
 
 @Controller

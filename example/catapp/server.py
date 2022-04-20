@@ -1,11 +1,11 @@
 import os
 
 from app_module_test.application.module import AppModuleTest
-from architek.factory import ArchitekAppFactory
+from architek.core.factory import ArchitekAppFactory
 from architek.openapi.builder import OpenAPIDocumentBuilder
 from architek.openapi.module import OpenAPIDocumentModule
 
-os.environ.setdefault('STARLETTEAPI_CONFIG_MODULE', 'app_module_test.settings')
+os.environ.setdefault('ARCHITEK_CONFIG_MODULE', 'app_module_test.settings')
 
 app = ArchitekAppFactory.create_from_app_module(AppModuleTest)
 
