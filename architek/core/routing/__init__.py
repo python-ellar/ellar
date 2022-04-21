@@ -1,7 +1,7 @@
 from .base import RouteOperationBase
 from .controller import ControllerBase, ControllerDecorator, ControllerType
 from .main import ApplicationRouter, RouteCollection
-from .mount import ArchitekRouter, Mount
+from .mount import ModuleRouter, Mount
 from .operation_definitions import OperationDefinitions
 from .route import RouteOperation
 from .websocket import WebsocketRouteOperation
@@ -12,7 +12,7 @@ __all__ = [
     "ControllerBase",
     "ApplicationRouter",
     "RouteCollection",
-    "ArchitekRouter",
+    "ModuleRouter",
     "Mount",
     "RouteOperation",
     "RouteOperationBase",

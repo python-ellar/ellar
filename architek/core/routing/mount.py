@@ -11,7 +11,7 @@ if t.TYPE_CHECKING:
     from architek.core.guard import GuardCanActivate
 
 
-__all__ = ["Mount", "ArchitekRouter"]
+__all__ = ["Mount", "ModuleRouter"]
 
 
 class Mount(StarletteMount):
@@ -45,7 +45,7 @@ class Mount(StarletteMount):
         return self._meta
 
 
-class ArchitekRouter(Mount):
+class ModuleRouter(Mount):
     operation_definition_class: t.Type[OperationDefinitions] = OperationDefinitions
 
     def __init__(
@@ -61,7 +61,7 @@ class ArchitekRouter(Mount):
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
     ) -> None:
-        super(ArchitekRouter, self).__init__(
+        super(ModuleRouter, self).__init__(
             path=path,
             tag=tag,
             name=name,

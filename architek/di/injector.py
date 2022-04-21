@@ -24,7 +24,7 @@ from .scopes import (
 
 if t.TYPE_CHECKING:
     from architek.core.main import ArchitekApp
-    from architek.core.modules import BaseModule, ModuleBase
+    from architek.core.modules import BaseModuleDecorator, ModuleBase
 
 
 class RequestServiceProvider(InjectorBinder):
@@ -165,9 +165,9 @@ class Container(InjectorBinder):
     @t.no_type_check
     def install(
         self,
-        module: t.Union[t.Type["ModuleBase"], "ModuleBase", "BaseModule"],
+        module: t.Union[t.Type["ModuleBase"], "ModuleBase", "BaseModuleDecorator"],
         **init_kwargs: t.Any,
-    ) -> t.Union[InjectorModule, "ModuleBase", "BaseModule"]:
+    ) -> t.Union[InjectorModule, "ModuleBase", "BaseModuleDecorator"]:
         """Install a module into this container[binder].
 
         In this context the module is one of the following:
@@ -201,7 +201,7 @@ class Container(InjectorBinder):
 
         instance = t.cast(t.Union[t.Type["ModuleBase"], "ModuleBase"], module)
         if not isinstance(instance, type) and hasattr(instance, "get_module"):
-            instance = t.cast("BaseModule", module).get_module()
+            instance = t.cast("BaseModuleDecorator", module).get_module()
 
         if isinstance(instance, type) and issubclass(
             t.cast(type, instance), InjectorModule

@@ -9,7 +9,7 @@ from architek.core.templating.interface import ModuleTemplating
 from architek.di.injector import Container
 
 
-class BaseModule(ModuleTemplating, ABC, metaclass=ABCMeta):
+class BaseModuleDecorator(ModuleTemplating, ABC, metaclass=ABCMeta):
     on_startup: RouterEventManager
     on_shutdown: RouterEventManager
     before_initialisation: ApplicationEventManager
@@ -41,7 +41,7 @@ def _configure_module(func: t.Callable) -> t.Any:
     def _configure_module_wrapper(self: t.Any, container: Container) -> t.Any:
         _module_decorator = getattr(self, "_module_decorator", None)
         if _module_decorator:
-            _module_decorator = t.cast(BaseModule, self._module_decorator)
+            _module_decorator = t.cast(BaseModuleDecorator, self._module_decorator)
             _module_decorator.configure_module(container=container)
         result = func(self, container=container)
         return result
@@ -50,7 +50,7 @@ def _configure_module(func: t.Callable) -> t.Any:
 
 
 class ModuleBaseMeta(ABCMeta):
-    _module_decorator: t.Optional[BaseModule]
+    _module_decorator: t.Optional[BaseModuleDecorator]
 
     @t.no_type_check
     def __new__(mcls, name, bases, namespace, **kwargs):
@@ -58,7 +58,7 @@ class ModuleBaseMeta(ABCMeta):
         cls._module_decorator = namespace.get("_module_decorator", None)
         return cls
 
-    def get_module_decorator(cls) -> t.Optional["BaseModule"]:
+    def get_module_decorator(cls) -> t.Optional["BaseModuleDecorator"]:
         return cls._module_decorator
 
 

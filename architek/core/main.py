@@ -14,7 +14,11 @@ from architek.core.middleware import (
     RequestVersioningMiddleware,
     ServerErrorMiddleware,
 )
-from architek.core.modules import ArchitekApplicationModule, BaseModule, ModuleBase
+from architek.core.modules import (
+    ApplicationModuleDecorator,
+    BaseModuleDecorator,
+    ModuleBase,
+)
 from architek.core.routing import ApplicationRouter, RouteCollection
 from architek.core.templating import ArchitekAppTemplating, Environment
 from architek.di import StarletteInjector
@@ -22,12 +26,12 @@ from architek.types import ASGIApp, T, TReceive, TScope, TSend
 
 
 class ArchitekApp(ArchitekAppTemplating):
-    def __init__(self, module: t.Optional[ArchitekApplicationModule] = None):
+    def __init__(self, module: t.Optional[ApplicationModuleDecorator] = None):
         if module:
             assert isinstance(
-                module, ArchitekApplicationModule
+                module, ApplicationModuleDecorator
             ), "Only ApplicationModule is allowed"
-        self._app_module = module or ArchitekApplicationModule()(
+        self._app_module = module or ApplicationModuleDecorator()(
             type("StarletteApp", (), {})
         )
 
@@ -90,9 +94,9 @@ class ArchitekApp(ArchitekAppTemplating):
 
     def install_module(
         self,
-        module: t.Union[t.Type[T], t.Type[ModuleBase], BaseModule],
+        module: t.Union[t.Type[T], t.Type[ModuleBase], BaseModuleDecorator],
         **init_kwargs: t.Any,
-    ) -> t.Union[T, ModuleBase, BaseModule]:
+    ) -> t.Union[T, ModuleBase, BaseModuleDecorator]:
         _module_instance, installed = self._app_module.add_module(
             container=self._injector.container, module=module, **init_kwargs
         )
@@ -102,7 +106,7 @@ class ArchitekApp(ArchitekAppTemplating):
             self.on_startup.reload(self._app_module.get_startup_events())
             self.on_shutdown.reload(self._app_module.get_startup_events())
 
-            if isinstance(_module_instance, BaseModule):
+            if isinstance(_module_instance, BaseModuleDecorator):
                 after = ApplicationEventManager(
                     list(_module_instance.after_initialisation)
                 )

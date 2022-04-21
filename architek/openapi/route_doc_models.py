@@ -24,7 +24,7 @@ from architek.core.endpoints.resolvers import (
     RouteParameterResolver,
 )
 from architek.core.guard import BaseAuthGuard
-from architek.core.routing import ArchitekRouter, RouteOperation
+from architek.core.routing import ModuleRouter, RouteOperation
 from architek.core.routing.controller.mount import ControllerMount
 from architek.shortcuts import normalize_path
 
@@ -54,14 +54,14 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
 
     def __init__(
         self,
-        mount: t.Union[ArchitekRouter, ControllerMount, Mount],
+        mount: t.Union[ModuleRouter, ControllerMount, Mount],
         tag: t.Optional[str] = None,
         description: t.Optional[str] = None,
         external_doc_description: t.Optional[str] = None,
         external_doc_url: t.Optional[str] = None,
     ) -> None:
         meta: t.Dict = dict()
-        if isinstance(mount, (ArchitekRouter, ControllerMount)):
+        if isinstance(mount, (ModuleRouter, ControllerMount)):
             meta = dict(mount.get_meta())
         self.tag = meta.get("tag") or tag
         self.description = description or meta.get("description")

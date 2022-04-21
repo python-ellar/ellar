@@ -2,14 +2,14 @@ import typing as t
 
 from architek.core.main import ArchitekApp
 from architek.core.modules import (
-    ArchitekApplicationModule,
-    ArchitekModule,
-    BaseModule,
+    ApplicationModuleDecorator,
+    BaseModuleDecorator,
     ModuleBase,
+    ModuleDecorator,
 )
 
 if t.TYPE_CHECKING:
-    from architek.core.routing import ArchitekRouter, OperationDefinitions
+    from architek.core.routing import ModuleRouter, OperationDefinitions
     from architek.core.routing.controller import ControllerDecorator
     from architek.di import ProviderConfig
 
@@ -21,10 +21,10 @@ class AppFactoryModule(ModuleBase):
 class ArchitekAppFactory:
     @classmethod
     def _create_app(
-        cls, app_module: t.Union[ArchitekApplicationModule, t.Type]
+        cls, app_module: t.Union[ApplicationModuleDecorator, t.Type]
     ) -> ArchitekApp:
         assert isinstance(
-            app_module, ArchitekApplicationModule
+            app_module, ApplicationModuleDecorator
         ), "Only ApplicationModule is allowed"
 
         app = ArchitekApp(module=app_module)
@@ -34,18 +34,18 @@ class ArchitekAppFactory:
     def create_app(
         cls,
         controllers: t.Sequence["ControllerDecorator"] = tuple(),
-        routers: t.Sequence[
-            t.Union["ArchitekRouter", "OperationDefinitions"]
-        ] = tuple(),
+        routers: t.Sequence[t.Union["ModuleRouter", "OperationDefinitions"]] = tuple(),
         services: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = tuple(),
         modules: t.Union[
-            t.Sequence[ArchitekModule], t.Sequence[t.Type], t.Sequence[BaseModule]
+            t.Sequence[ModuleDecorator],
+            t.Sequence[t.Type],
+            t.Sequence[BaseModuleDecorator],
         ] = (),
         template_folder: t.Optional[str] = None,
         base_directory: t.Optional[str] = None,
         static_folder: str = "static",
     ) -> ArchitekApp:
-        app_module = ArchitekApplicationModule(
+        app_module = ApplicationModuleDecorator(
             controllers=controllers,
             routers=routers,
             services=services,
@@ -59,6 +59,6 @@ class ArchitekAppFactory:
 
     @classmethod
     def create_from_app_module(
-        cls, app_module: t.Union[ArchitekApplicationModule, t.Type]
+        cls, app_module: t.Union[ApplicationModuleDecorator, t.Type]
     ) -> ArchitekApp:
         return cls._create_app(app_module)

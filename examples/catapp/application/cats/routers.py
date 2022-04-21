@@ -3,11 +3,11 @@ from dataclasses import dataclass
 
 from app_module_test.application.cats.services import CatService
 from architek.core.response.serializer import DataClassSerializer
-from architek.core.routing import ArchitekRouter
+from architek.core.routing import ModuleRouter
 from architek.common import provide, req, Render
 from architek.core.templating import render_template
 
-cat_router = ArchitekRouter("/cats-router", tag='Testing')
+cat_router = ModuleRouter("/cats-router", tag='Testing')
 
 
 @dataclass

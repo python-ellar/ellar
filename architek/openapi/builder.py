@@ -13,7 +13,7 @@ from pydantic.schema import (
 from architek.core.compatible import cached_property
 from architek.core.helper.modelfield import create_model_field
 from architek.core.main import ArchitekApp
-from architek.core.routing import ArchitekRouter, RouteOperation
+from architek.core.routing import ModuleRouter, RouteOperation
 from architek.core.routing.controller.mount import ControllerMount
 from architek.core.schema import HTTPValidationError, ValidationError
 
@@ -109,7 +109,7 @@ class OpenAPIDocumentBuilder:
     ) -> t.List[OpenAPIRoute]:
         openapi_route_models: t.List = []
         for route in app.routes:
-            if isinstance(route, (ControllerMount, ArchitekRouter)):
+            if isinstance(route, (ControllerMount, ModuleRouter)):
                 openapi_route_models.append(OpenAPIMountDocumentation(mount=route))
                 continue
             if isinstance(route, RouteOperation):

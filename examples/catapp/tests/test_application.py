@@ -6,7 +6,7 @@ from app_module_test.application.cats.routers import cat_router
 
 from architek.core.testclient import TestClientFactory
 
-os.environ.setdefault('STARLETTEAPI_CONFIG_MODULE',  'app_module_test.tests.settings')
+os.environ.setdefault('ARCHITEK_CONFIG_MODULE',  'app_module_test.tests.settings')
 
 BASEDIR = Path(__file__).resolve().parent.parent
 

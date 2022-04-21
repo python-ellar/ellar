@@ -11,22 +11,22 @@ from architek.core.events import (
     RouterEventManager,
 )
 from architek.core.guard import GuardCanActivate
-from architek.core.routing import ArchitekRouter, OperationDefinitions
+from architek.core.routing import ModuleRouter, OperationDefinitions
 from architek.core.routing.controller import ControllerDecorator
 from architek.di import ProviderConfig
 from architek.di.injector import Container
 from architek.types import T
 
-from .base import BaseModule, ModuleBase, ModuleBaseMeta
+from .base import BaseModuleDecorator, ModuleBase, ModuleBaseMeta
 
 
-class ArchitekModule(BaseModule):
+class ModuleDecorator(BaseModuleDecorator):
     def __init__(
         self,
         *,
         name: t.Optional[str] = __name__,
         controllers: t.Sequence[ControllerDecorator] = tuple(),
-        routers: t.Sequence[t.Union[ArchitekRouter, OperationDefinitions]] = tuple(),
+        routers: t.Sequence[t.Union[ModuleRouter, OperationDefinitions]] = tuple(),
         services: t.Sequence[t.Union[t.Type, ProviderConfig]] = tuple(),
         template_folder: t.Optional[str] = None,
         base_directory: t.Optional[t.Union[Path, str]] = None,
@@ -51,7 +51,7 @@ class ArchitekModule(BaseModule):
         assert self._module_class, "Module not properly configured"
         return self._module_class
 
-    def __call__(self, module_class: t.Type) -> "ArchitekModule":
+    def __call__(self, module_class: t.Type) -> "ModuleDecorator":
         _module_class = t.cast(t.Type[ModuleBase], module_class)
         if type(_module_class) != ModuleBaseMeta:
             _module_class = type(
@@ -94,31 +94,33 @@ class ArchitekModule(BaseModule):
 
     @classmethod
     def _get_module_routers(
-        cls, routers: t.Sequence[t.Union[ArchitekRouter, OperationDefinitions]]
+        cls, routers: t.Sequence[t.Union[ModuleRouter, OperationDefinitions]]
     ) -> t.List[BaseRoute]:
         results: t.List[BaseRoute] = []
         for item in routers:
             if isinstance(item, OperationDefinitions) and item.routes:
                 results.extend(item.routes)  # type: ignore
                 continue
-            if isinstance(item, ArchitekRouter):
+            if isinstance(item, ModuleRouter):
                 item.build_routes()
                 results.append(item)
         return results
 
 
-TAppModuleValue = t.Union[ModuleBase, BaseModule]
+TAppModuleValue = t.Union[ModuleBase, BaseModuleDecorator]
 TAppModule = t.Dict[t.Type[ModuleBase], TAppModuleValue]
 
 
-class ArchitekApplicationModule(ArchitekModule):
+class ApplicationModuleDecorator(ModuleDecorator):
     def __init__(
         self,
         *,
         controllers: t.Sequence[ControllerDecorator] = tuple(),
-        routers: t.Sequence[t.Union[ArchitekRouter, OperationDefinitions]] = tuple(),
+        routers: t.Sequence[t.Union[ModuleRouter, OperationDefinitions]] = tuple(),
         services: t.Sequence[t.Union[t.Type, ProviderConfig]] = tuple(),
-        modules: t.Sequence[t.Union[t.Type, BaseModule, ArchitekModule]] = tuple(),
+        modules: t.Sequence[
+            t.Union[t.Type, BaseModuleDecorator, ModuleDecorator]
+        ] = tuple(),
         global_guards: t.List[
             t.Union[t.Type[GuardCanActivate], GuardCanActivate]
         ] = None,
@@ -135,7 +137,7 @@ class ArchitekApplicationModule(ArchitekModule):
             routers=routers,
         )
         self._data: TAppModule = self._process_modules(modules)
-        self._app_modules: t.List[t.Union[BaseModule, ArchitekModule]] = []
+        self._app_modules: t.List[t.Union[BaseModuleDecorator, ModuleDecorator]] = []
         self._global_guards = global_guards or []
 
     @property
@@ -144,7 +146,7 @@ class ArchitekApplicationModule(ArchitekModule):
     ) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         return self._global_guards
 
-    def __call__(self, module_class: t.Type) -> "ArchitekApplicationModule":
+    def __call__(self, module_class: t.Type) -> "ApplicationModuleDecorator":
         super().__call__(module_class)
         self._data.update(self._process_modules([self]))
         return self
@@ -190,7 +192,7 @@ class ArchitekApplicationModule(ArchitekModule):
     @classmethod
     def _process_modules(
         cls,
-        modules: t.Sequence[t.Union[t.Type[ModuleBase], t.Type, BaseModule]],
+        modules: t.Sequence[t.Union[t.Type[ModuleBase], t.Type, BaseModuleDecorator]],
     ) -> TAppModule:
         _result: TAppModule = {}
         for module in modules:
@@ -204,31 +206,31 @@ class ArchitekApplicationModule(ArchitekModule):
                 _result[instance.get_module()] = instance
                 continue
 
-            if isinstance(instance, BaseModule):
+            if isinstance(instance, BaseModuleDecorator):
                 _result[instance.get_module()] = instance
 
         return _result
 
     def modules(
         self, exclude_root: bool = False
-    ) -> t.Iterator[t.Union[BaseModule, ArchitekModule]]:
+    ) -> t.Iterator[t.Union[BaseModuleDecorator, ModuleDecorator]]:
         if not self._app_modules:
             for module in self._data.values():
-                if isinstance(module, BaseModule):
+                if isinstance(module, BaseModuleDecorator):
                     self._app_modules.append(module)
 
         for item in self._app_modules:
-            if isinstance(item, ArchitekApplicationModule) and exclude_root:
+            if isinstance(item, ApplicationModuleDecorator) and exclude_root:
                 continue
             yield item
 
     def add_module(
         self,
         container: Container,
-        module: t.Union[t.Type[ModuleBase], BaseModule, t.Type[T]],
+        module: t.Union[t.Type[ModuleBase], BaseModuleDecorator, t.Type[T]],
         **init_kwargs: t.Any,
-    ) -> t.Tuple[t.Union[ModuleBase, BaseModule, T], bool]:
-        if isinstance(module, BaseModule) and module.get_module() in self:
+    ) -> t.Tuple[t.Union[ModuleBase, BaseModuleDecorator, T], bool]:
+        if isinstance(module, BaseModuleDecorator) and module.get_module() in self:
             return module, False
 
         if module in self._data:

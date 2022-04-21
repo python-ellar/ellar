@@ -4,8 +4,12 @@ from starlette.testclient import TestClient as TestClient
 
 from architek.core.factory import ArchitekAppFactory
 from architek.core.main import ArchitekApp
-from architek.core.modules import ArchitekApplicationModule, ArchitekModule, BaseModule
-from architek.core.routing import ArchitekRouter
+from architek.core.modules import (
+    ApplicationModuleDecorator,
+    BaseModuleDecorator,
+    ModuleDecorator,
+)
+from architek.core.routing import ModuleRouter
 from architek.core.routing.controller import ControllerDecorator
 from architek.di import ProviderConfig
 
@@ -37,7 +41,7 @@ class TestClientFactory:
     def create_test_module(
         cls,
         controllers: t.Sequence[t.Union[ControllerDecorator, t.Any]] = tuple(),
-        routers: t.Sequence[ArchitekRouter] = tuple(),
+        routers: t.Sequence[ModuleRouter] = tuple(),
         services: t.Sequence[ProviderConfig] = tuple(),
         template_folder: t.Optional[str] = None,
         base_directory: t.Optional[str] = None,
@@ -56,10 +60,12 @@ class TestClientFactory:
     @classmethod
     def create_test_module_from_module(
         cls,
-        module: t.Union[ArchitekModule, ArchitekApplicationModule, BaseModule],
+        module: t.Union[
+            ModuleDecorator, ApplicationModuleDecorator, BaseModuleDecorator
+        ],
         mock_services: t.Sequence[ProviderConfig] = tuple(),
     ) -> _TestingModule:
-        if isinstance(module, ArchitekApplicationModule):
+        if isinstance(module, ApplicationModuleDecorator):
             if mock_services:
 
                 @module.after_initialisation

@@ -20,6 +20,8 @@ repos:
   rev: v2.3.0
   hooks:
   - id: end-of-file-fixer
+    exclude: >-
+      ^examples/[^/]*\.svg$
   - id: requirements-txt-fixer
   - id: trailing-whitespace
     types: [python]

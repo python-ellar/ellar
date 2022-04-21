@@ -1,4 +1,9 @@
-from .base import BaseModule, ModuleBase
-from .module import ArchitekApplicationModule, ArchitekModule
+from .base import BaseModuleDecorator, ModuleBase
+from .module import ApplicationModuleDecorator, ModuleDecorator
 
-__all__ = ["ArchitekApplicationModule", "BaseModule", "ArchitekModule", "ModuleBase"]
+__all__ = [
+    "ApplicationModuleDecorator",
+    "BaseModuleDecorator",
+    "ModuleDecorator",
+    "ModuleBase",
+]

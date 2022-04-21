@@ -13,13 +13,13 @@ from ..compatible import DataMapper
 from .operation_definitions import OperationDefinitions
 
 if t.TYPE_CHECKING:
-    from architek.core.modules import ArchitekApplicationModule
+    from architek.core.modules import ApplicationModuleDecorator
 
 
 class RouteCollection(t.Sequence[BaseRoute]):
     __slots__ = ("_routes", "_app_module", "_served_routes")
 
-    def __init__(self, app_module: "ArchitekApplicationModule") -> None:
+    def __init__(self, app_module: "ApplicationModuleDecorator") -> None:
         self._routes: t.List[BaseRoute] = []
         self._app_module = app_module
         self._served_routes: t.List[BaseRoute] = []

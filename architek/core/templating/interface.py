@@ -18,7 +18,7 @@ from .loader import ArchitekJinjaLoader
 
 if t.TYPE_CHECKING:
     from architek.core.main import ArchitekApp
-    from architek.core.modules import ArchitekApplicationModule
+    from architek.core.modules import ApplicationModuleDecorator
 
 
 class JinjaTemplating(ABC, metaclass=ABCMeta):
@@ -68,7 +68,7 @@ class ArchitekAppTemplating:
     config: Config
     _static_app: t.Optional[ASGIApp]
     debug: bool
-    _app_module: "ArchitekApplicationModule"
+    _app_module: "ApplicationModuleDecorator"
     has_static_files: bool
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
