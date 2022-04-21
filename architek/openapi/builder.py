@@ -13,7 +13,7 @@ from pydantic.schema import (
 from architek.core.compatible import cached_property
 from architek.core.helper.modelfield import create_model_field
 from architek.core.main import ArchitekApp
-from architek.core.routing import ArchitekRouter, Route
+from architek.core.routing import ArchitekRouter, RouteOperation
 from architek.core.routing.controller.mount import ControllerMount
 from architek.core.schema import HTTPValidationError, ValidationError
 
@@ -32,7 +32,7 @@ class OpenAPIDocumentBuilder:
     def __init__(self) -> None:
         self._build: t.Dict = dict()
         self._build.setdefault("info", {}).update(
-            title="StarletteAPI Docs", version="1.0.0"
+            title="Architek Docs", version="1.0.0"
         )
         self._build.setdefault("tags", [])
         self._build.setdefault("openapi", default_openapi_version)
@@ -112,7 +112,7 @@ class OpenAPIDocumentBuilder:
             if isinstance(route, (ControllerMount, ArchitekRouter)):
                 openapi_route_models.append(OpenAPIMountDocumentation(mount=route))
                 continue
-            if isinstance(route, Route):
+            if isinstance(route, RouteOperation):
                 openapi_route_models.append(OpenAPIRouteDocumentation(route=route))
         return openapi_route_models
 

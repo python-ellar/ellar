@@ -8,7 +8,7 @@ from architek.types import VT
 
 from ..compatible.dict import AttributeDictAccess, DataMapper, DataMutableMapper
 from . import default_settings
-from .app_settings_models import StarletteAPIConfig
+from .app_settings_models import ArchitekConfig
 
 
 class _ConfigState(DataMutableMapper):
@@ -47,7 +47,7 @@ class Config(DataMapper, AttributeDictAccess):
         config_state.update(**mapping)
 
         self._data: _ConfigState = config_state
-        validate_config = StarletteAPIConfig.parse_obj(self._data)
+        validate_config = ArchitekConfig.parse_obj(self._data)
         self._data.update(validate_config.dict())
 
     def set_defaults(self, **kwargs: t.Any) -> "Config":

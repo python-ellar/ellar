@@ -5,12 +5,14 @@ from starlette.status import WS_1008_POLICY_VIOLATION
 from architek.core.context import ExecutionContext
 from architek.core.exceptions import WebSocketRequestValidationError
 
-from ...websocket import WebsocketRoute
-from ..base import ControllerRouteBase
+from ...websocket import WebsocketRouteOperation
+from ..base import ControllerRouteOperationBase
 from .handler import ControllerWebSocketExtraHandler
 
 
-class ControllerWebsocketRoute(ControllerRouteBase, WebsocketRoute):
+class ControllerWebsocketRouteOperation(
+    ControllerRouteOperationBase, WebsocketRouteOperation
+):
     _extra_handler_type: t.Optional[t.Type[ControllerWebSocketExtraHandler]]
 
     @classmethod

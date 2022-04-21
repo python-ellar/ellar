@@ -36,7 +36,7 @@ class TMiddleware(Middleware):
         return v
 
 
-class StarletteAPIConfig(PydanticSchema):
+class ArchitekConfig(PydanticSchema):
     class Config:
         orm_mode = True
         validate_assignment = True

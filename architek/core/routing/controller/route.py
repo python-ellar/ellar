@@ -4,12 +4,12 @@ from starlette.concurrency import run_in_threadpool
 
 from architek.core.context import ExecutionContext
 from architek.core.exceptions import RequestValidationError
-from architek.core.routing.route import Route
+from architek.core.routing.route import RouteOperation
 
-from .base import ControllerRouteBase
+from .base import ControllerRouteOperationBase
 
 
-class ControllerRoute(ControllerRouteBase, Route):
+class ControllerRouteOperation(ControllerRouteOperationBase, RouteOperation):
     async def _handle(self, context: ExecutionContext) -> t.Any:
         controller_instance = self._get_controller_instance(ctx=context)
 

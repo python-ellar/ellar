@@ -7,7 +7,7 @@ from architek.core.context import ExecutionContext
 from architek.core.helper import get_name
 from architek.core.response import Response
 from architek.core.response.model import ResponseModel
-from architek.core.routing import RouteBase
+from architek.core.routing import RouteOperationBase
 from architek.core.templating import Environment, TemplateResponse
 from architek.core.templating.renderer import get_template_name, process_view_model
 
@@ -62,7 +62,7 @@ class Render:
         self.use_mvc = self.template_name is None
 
     def __call__(self, func: t.Union[t.Callable, t.Any]) -> t.Union[t.Callable, t.Any]:
-        if not callable(func) or isinstance(func, RouteBase):
+        if not callable(func) or isinstance(func, RouteOperationBase):
             warnings.warn_explicit(
                 UserWarning(
                     "\n@Render should be used only as a function decorator. "

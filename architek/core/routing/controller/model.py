@@ -3,7 +3,7 @@ import typing as t
 from abc import ABC
 
 from injector import inject, is_decorated_with_inject
-from starlette.routing import Route
+from starlette.routing import BaseRoute, Route
 
 from architek.constants import NOT_SET
 from architek.core.context import ExecutionContext
@@ -12,7 +12,6 @@ from architek.shortcuts import fail_silently
 
 if t.TYPE_CHECKING:
     from architek.core.guard import GuardCanActivate
-    from architek.core.routing.base import RouteBase
     from architek.core.routing.controller.method_decorators import (
         RouteMethodDecoratorBase,
     )
@@ -110,7 +109,7 @@ class ControllerDecorator:
         # `controller_class`
         self._controller_class: t.Optional[t.Type[ControllerBase]] = None
         # `_path_operations`
-        self._routes: t.Dict[str, "RouteBase"] = {}
+        self._routes: t.Dict[str, BaseRoute] = {}
         self._version: t.Set[str] = set(
             [version] if isinstance(version, str) else version
         )
@@ -164,7 +163,7 @@ class ControllerDecorator:
 
         if not self._mount:
             self._mount = ControllerMount(
-                routes=list(self._routes.values()),  # type: ignore
+                routes=list(self._routes.values()),
                 **self._meta,  # type: ignore
                 controller_type=self.get_controller_type(),
             )

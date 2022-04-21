@@ -13,16 +13,12 @@ if t.TYPE_CHECKING:
     from architek.core.versioning.resolver import BaseAPIVersioningResolver
 
 __all__ = [
-    "RouteBase",
-    "WebsocketRouteBase",
+    "RouteOperationBase",
+    "WebsocketRouteOperationBase",
 ]
 
 
-class RouteInvalidParameterException(Exception):
-    pass
-
-
-class RouteBase:
+class RouteOperationBase:
     _meta: OperationMeta
 
     endpoint: t.Callable
@@ -97,5 +93,5 @@ class RouteBase:
         return match  # type: ignore
 
 
-class WebsocketRouteBase(RouteBase, ABC):
+class WebsocketRouteOperationBase(RouteOperationBase, ABC):
     pass

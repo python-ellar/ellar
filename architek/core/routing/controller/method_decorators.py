@@ -2,8 +2,8 @@ import typing as t
 
 from ..websocket import WebSocketExtraHandler, WebSocketOperationMixin
 from .model import ControllerBase
-from .route import ControllerRoute
-from .websocket import ControllerWebsocketRoute
+from .route import ControllerRouteOperation
+from .websocket import ControllerWebsocketRouteOperation
 
 if t.TYPE_CHECKING:
     from architek.core.response.model import ResponseModel
@@ -18,7 +18,7 @@ __all__ = [
 class RouteMethodDecoratorBase:
     def create_operation(
         self, controller_type: t.Type[ControllerBase]
-    ) -> t.Union[ControllerRoute, ControllerWebsocketRoute]:
+    ) -> t.Union[ControllerRouteOperation, ControllerWebsocketRouteOperation]:
         raise NotImplementedError
 
     def __repr__(self) -> str:
@@ -46,13 +46,13 @@ class RouteMethodDecorator(RouteMethodDecoratorBase):
             include_in_schema=include_in_schema,
             response=response,
         )
-        self.operation: t.Optional[ControllerRoute] = None
+        self.operation: t.Optional[ControllerRouteOperation] = None
 
     def create_operation(
         self, controller_type: t.Type["ControllerBase"]
-    ) -> ControllerRoute:
+    ) -> ControllerRouteOperation:
         if not self.operation:
-            self.operation = ControllerRoute(
+            self.operation = ControllerRouteOperation(
                 **self._init_kwargs, controller_type=controller_type
             )
         return self.operation
@@ -84,15 +84,15 @@ class WebsocketMethodDecorator(RouteMethodDecoratorBase, WebSocketOperationMixin
         self._handlers_kwargs: t.Dict[str, t.Any] = dict(
             on_receive=None, on_connect=None, on_disconnect=None, encoding=encoding
         )
-        self.operation: t.Optional[ControllerWebsocketRoute] = None
+        self.operation: t.Optional[ControllerWebsocketRouteOperation] = None
 
     def create_operation(
         self, controller_type: t.Type["ControllerBase"]
-    ) -> ControllerWebsocketRoute:
+    ) -> ControllerWebsocketRouteOperation:
         if not self.operation:
             kwargs = dict(self._init_kwargs)
             kwargs.update(**self._handlers_kwargs)
-            self.operation = ControllerWebsocketRoute(
+            self.operation = ControllerWebsocketRouteOperation(
                 **kwargs,
                 controller_type=controller_type,
             )

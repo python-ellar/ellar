@@ -13,7 +13,7 @@ from architek.core.exceptions import (
 )
 from architek.core.operation_meta import OperationMeta
 
-from ..base import WebsocketRouteBase
+from ..base import WebsocketRouteOperationBase
 from .handler import WebSocketExtraHandler
 
 
@@ -36,8 +36,8 @@ class WebSocketOperationMixin:
         return _wrap
 
 
-class WebsocketRoute(
-    WebsocketRouteBase, StarletteWebSocketRoute, WebSocketOperationMixin
+class WebsocketRouteOperation(
+    WebsocketRouteOperationBase, StarletteWebSocketRoute, WebSocketOperationMixin
 ):
     websocket_endpoint_args_model: t.Type[
         WebsocketEndpointArgsModel

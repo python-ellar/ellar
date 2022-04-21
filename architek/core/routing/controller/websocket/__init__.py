@@ -1,4 +1,4 @@
 from .handler import ControllerWebSocketExtraHandler
-from .route import ControllerWebsocketRoute
+from .route import ControllerWebsocketRouteOperation
 
-__all__ = ["ControllerWebsocketRoute", "ControllerWebSocketExtraHandler"]
+__all__ = ["ControllerWebsocketRouteOperation", "ControllerWebSocketExtraHandler"]

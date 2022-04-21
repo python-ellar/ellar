@@ -11,7 +11,7 @@ from .compatible import AttributeDictAccess, DataMapper, cached_property
 
 if t.TYPE_CHECKING:
     from architek.core.main import ArchitekApp
-    from architek.core.routing import RouteBase
+    from architek.core.routing import RouteOperationBase
     from architek.core.routing.controller import ControllerBase
     from architek.di.injector import RequestServiceProvider
 
@@ -41,7 +41,7 @@ class ExecutionContext:
         scope: TScope,
         receive: TReceive,
         send: TSend,
-        operation: t.Optional["RouteBase"] = None,
+        operation: t.Optional["RouteOperationBase"] = None,
     ) -> None:
         self.scope = scope
         self.receive = receive
@@ -58,7 +58,7 @@ class ExecutionContext:
     def operation(self) -> OperationExecutionMeta:
         return self._operation
 
-    def set_operation(self, operation: t.Optional["RouteBase"] = None) -> None:
+    def set_operation(self, operation: t.Optional["RouteOperationBase"] = None) -> None:
         if operation:
             self._operation = OperationExecutionMeta(**operation.get_meta())
             self.controller_type = getattr(operation, "controller_type", None)
@@ -120,7 +120,7 @@ class ExecutionContext:
         scope: TScope,
         receive: TReceive,
         send: TSend,
-        operation: t.Optional["RouteBase"] = None,
+        operation: t.Optional["RouteOperationBase"] = None,
     ) -> "ExecutionContext":
         connection = HTTPConnection(scope=scope)
         context = t.cast(

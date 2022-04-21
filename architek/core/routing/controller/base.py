@@ -3,15 +3,15 @@ from abc import ABC
 
 from architek.core.context import ExecutionContext
 
-from ..base import RouteBase
+from ..base import RouteOperationBase
 from .model import ControllerBase
 
 
-class ControllerRouteBase(RouteBase, ABC):
+class ControllerRouteOperationBase(RouteOperationBase, ABC):
     def __init__(
         self, controller_type: t.Type[ControllerBase], *args: t.Any, **kwargs: t.Any
     ) -> None:
-        super(ControllerRouteBase, self).__init__(*args, **kwargs)
+        super(ControllerRouteOperationBase, self).__init__(*args, **kwargs)
         self.controller_type: t.Type[ControllerBase] = controller_type
         self._meta.update(controller_type=controller_type)
 

@@ -15,10 +15,10 @@ from architek.core.helper import generate_operation_unique_id, get_name
 from architek.core.operation_meta import OperationMeta
 from architek.core.response.model import RouteResponseModel
 
-from .base import RouteBase
+from .base import RouteOperationBase
 
 
-class Route(RouteBase, StarletteRoute):
+class RouteOperation(RouteOperationBase, StarletteRoute):
     methods: t.Set[str]
     request_endpoint_args_model: t.Type[
         RequestEndpointArgsModel

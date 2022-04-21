@@ -3,7 +3,7 @@ import typing as t
 from starlette.routing import BaseRoute, Mount as StarletteMount, Route
 
 from architek.core.compatible import DataMapper
-from architek.core.routing.base import RouteBase
+from architek.core.routing.base import RouteOperationBase
 
 from .operation_definitions import OperationDefinitions
 
@@ -26,7 +26,7 @@ class Mount(StarletteMount):
         external_doc_url: t.Optional[str] = None,
         version: t.Union[t.Tuple, str] = (),
         guards: t.Optional[
-            t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
     ) -> None:
         super(Mount, self).__init__(path=path, routes=routes or [], name=name)
@@ -58,7 +58,7 @@ class ArchitekRouter(Mount):
         external_doc_url: t.Optional[str] = None,
         version: t.Union[t.Tuple, str] = (),
         guards: t.Optional[
-            t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
     ) -> None:
         super(ArchitekRouter, self).__init__(
@@ -91,7 +91,7 @@ class ArchitekRouter(Mount):
 
     def build_routes(self) -> None:
         for route in self.routes:
-            _route: RouteBase = t.cast("RouteBase", route)
+            _route: RouteOperationBase = t.cast("RouteOperationBase", route)
             operation_meta = _route.get_meta()
 
             if not operation_meta.route_versioning:

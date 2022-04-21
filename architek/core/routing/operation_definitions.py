@@ -6,17 +6,17 @@ from architek.constants import DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, TRA
 from architek.core.schema import RouteParameters, WsRouteParameters
 from architek.types import TCallable
 
-from .base import RouteBase
+from .base import RouteOperationBase
 from .controller.method_decorators import (
     RouteMethodDecorator,
     RouteMethodDecoratorBase,
     WebsocketMethodDecorator,
 )
-from .route import Route
-from .websocket import WebsocketRoute
+from .route import RouteOperation
+from .websocket import WebsocketRouteOperation
 
-TOperation = t.Union[Route, RouteMethodDecorator]
-TWebsocketOperation = t.Union[WebsocketRoute, WebsocketMethodDecorator]
+TOperation = t.Union[RouteOperation, RouteMethodDecorator]
+TWebsocketOperation = t.Union[WebsocketRouteOperation, WebsocketMethodDecorator]
 
 
 class OperationDefinitions:
@@ -24,7 +24,7 @@ class OperationDefinitions:
 
     def __init__(
         self,
-        app_routes: t.List[RouteBase] = None,
+        app_routes: t.List[RouteOperationBase] = None,
     ):
         self._routes = app_routes
         self.class_base_function_regex = re.compile(
@@ -32,18 +32,18 @@ class OperationDefinitions:
         )
 
     @property
-    def routes(self) -> t.List[RouteBase]:
+    def routes(self) -> t.List[RouteOperationBase]:
         return self._routes or []
 
     def _get_http_operations_class(self, func: t.Callable) -> t.Type[TOperation]:
         if self.class_base_function_regex.match(repr(func)):
             return RouteMethodDecorator
-        return Route
+        return RouteOperation
 
     def _get_ws_operations_class(self, func: t.Callable) -> t.Type[TWebsocketOperation]:
         if self.class_base_function_regex.match(repr(func)):
             return WebsocketMethodDecorator
-        return WebsocketRoute
+        return WebsocketRouteOperation
 
     def _get_operation(self, route_parameter: RouteParameters) -> TOperation:
         _operation_class = self._get_http_operations_class(route_parameter.endpoint)
