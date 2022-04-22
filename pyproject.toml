@@ -71,8 +71,12 @@ test = [
     "requests >= 2.24.0",
     "pre-commit",
     "autoflake",
-    "types-dataclasses ==0.1.7; python_version<'3.7'",
     "email_validator >=1.1.1",
+
+    # types
+    "types-ujson ==0.1.1",
+    "types-orjson ==3.6.0",
+    "types-dataclasses ==0.1.7; python_version<'3.7'",
 ]
 dev = [
     "uvicorn[standard] >=0.12.0",
