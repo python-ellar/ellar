@@ -18,10 +18,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install core
-        run: pip install pydantic injector starlette injector
-      - name: Install tests
-        run: pip install pytest pytest-asyncio
+      - name: Install Flit
+        run: pip install flit
+      - name: Install Dependencies
+        run: flit install --symlink
       - name: Test
         run: pytest
 
