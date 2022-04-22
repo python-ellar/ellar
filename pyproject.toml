@@ -70,7 +70,9 @@ test = [
     "anyio[trio] >= 3.2.1",
     "requests >= 2.24.0",
     "pre-commit",
-    "autoflake"
+    "autoflake",
+    "types-dataclasses ==0.1.7; python_version<'3.7'",
+    "email_validator >=1.1.1",
 ]
 dev = [
     "uvicorn[standard] >=0.12.0",
