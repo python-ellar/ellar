@@ -1,6 +1,6 @@
 import os
 
-from app_module_test.application.module import AppModuleTest
+from catapp.application.module import AppModuleTest
 from architek.core.factory import ArchitekAppFactory
 from architek.openapi.builder import OpenAPIDocumentBuilder
 from architek.openapi.module import OpenAPIDocumentModule

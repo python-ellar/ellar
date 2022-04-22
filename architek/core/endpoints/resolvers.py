@@ -96,6 +96,7 @@ class HeaderParameterResolver(RouteParameterResolver):
                 return {}, errors
             else:
                 values[self.model_field.name] = copy.deepcopy(self.model_field.default)
+                return values, []
 
         v_, errors_ = self.model_field.validate(
             value, values, loc=(field_info.in_.value, self.model_field.alias)

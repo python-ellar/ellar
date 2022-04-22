@@ -2,7 +2,7 @@ import os
 import pytest
 
 from pathlib import Path
-from app_module_test.application.cats.routers import cat_router
+from catapp.application.cats.routers import cat_router
 
 from architek.core.testclient import TestClientFactory
 

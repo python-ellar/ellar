@@ -239,11 +239,16 @@ class EndpointArgsModel:
 
         if not errors:
             for parameter_resolver in self._models:
-                value_, errors_ = await parameter_resolver.resolve(ctx=ctx)
+                value_, value_errors = await parameter_resolver.resolve(ctx=ctx)
                 if value_:
                     values.update(value_)
-                if errors_:
-                    errors += errors_
+                if value_errors:
+                    _errors = (
+                        value_errors
+                        if isinstance(value_errors, list)
+                        else [value_errors]
+                    )
+                    errors += _errors
         return values, errors
 
     def add_extra_route_args(self, *extra_operation_args: ExtraEndpointArg) -> None:

@@ -1,4 +1,4 @@
-from app_module_test.application.cats.module import CatModule
+from catapp.application.cats.module import CatModule
 from architek.common import ApplicationModule
 
 

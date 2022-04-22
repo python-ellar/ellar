@@ -25,7 +25,7 @@ fmt format: ## Run code formatters
 	isort architek tests
 
 test: ## Run tests
-	pytest .
+	pytest
 
 test-cov: ## Run tests with coverage
 	pytest --cov=architek --cov-report term-missing tests

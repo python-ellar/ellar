@@ -1,4 +1,5 @@
 from architek.core.endpoints.params import Param, ParamTypes
+from architek.core.routing import ModuleRouter
 
 from .decorators.base import set_meta
 from .decorators.controller import Controller
@@ -35,6 +36,7 @@ from .routing.params import (
 )
 
 __all__ = [
+    "ModuleRouter",
     "Render",
     "Module",
     "guards",

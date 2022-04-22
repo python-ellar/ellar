@@ -1,8 +1,8 @@
 from architek.core.modules import ModuleBase
 
-from app_module_test.application.cats.controllers import CatController
-from app_module_test.application.cats.routers import cat_router
-from app_module_test.application.cats.services import CatService, AnotherService
+from catapp.application.cats.controllers import CatController
+from catapp.application.cats.routers import cat_router
+from catapp.application.cats.services import CatService, AnotherService
 from architek.common import Module
 
 

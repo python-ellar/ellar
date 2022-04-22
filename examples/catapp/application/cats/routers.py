@@ -1,7 +1,7 @@
 from typing import List
 from dataclasses import dataclass
 
-from app_module_test.application.cats.services import CatService
+from catapp.application.cats.services import CatService
 from architek.core.response.serializer import DataClassSerializer
 from architek.core.routing import ModuleRouter
 from architek.common import provide, req, Render

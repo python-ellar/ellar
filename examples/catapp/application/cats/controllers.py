@@ -1,4 +1,4 @@
-from app_module_test.application.cats.services import CatService
+from catapp.application.cats.services import CatService
 from architek.common import Controller, Get, Put, Post, Delete, version, Render, cxt
 
 
