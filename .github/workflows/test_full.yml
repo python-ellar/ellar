@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install core
-        run: pip install pydantic injector starlette injector
+        run: pip install pydantic injector starlette
       - name: Install tests
         run: pip install pytest pytest-asyncio
       - name: Test
