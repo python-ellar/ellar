@@ -8,9 +8,7 @@ from architek.core.context import ExecutionContext
 from architek.core.converters import TypeDefinitionConverter
 from architek.core.exceptions import RequestValidationError
 from architek.core.helper.modelfield import create_model_field
-
-from .responses import JSONResponse, Response
-from .serializer import (
+from architek.serializer import (
     BaseSerializer,
     DataClassSerializer,
     PydanticSerializer,
@@ -18,6 +16,8 @@ from .serializer import (
     convert_dataclass_to_pydantic_model,
     serialize_object,
 )
+
+from .responses import JSONResponse, Response
 
 
 class ResponseResolver(t.NamedTuple):

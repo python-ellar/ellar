@@ -1,3 +1,10 @@
+from architek.serializer import (
+    BaseSerializer,
+    DataClassSerializer,
+    PydanticSerializer,
+    serialize_object,
+)
+
 from .responses import (
     FileResponse,
     HTMLResponse,
@@ -8,12 +15,6 @@ from .responses import (
     Response,
     StreamingResponse,
     UJSONResponse,
-)
-from .serializer import (
-    BaseSerializer,
-    DataClassSerializer,
-    PydanticSerializer,
-    serialize_object,
 )
 
 __all__ = [
