@@ -69,7 +69,6 @@ test = [
     "python-multipart >= 0.0.5",
     "anyio[trio] >= 3.2.1",
     "requests >= 2.24.0",
-    "pre-commit",
     "autoflake",
     "email_validator >=1.1.1",
 
