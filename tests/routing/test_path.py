@@ -1,8 +1,7 @@
 import pytest
 
 from architek.core.testclient import TestClient
-
-from .main import app
+from tests.main import app
 
 client = TestClient(app)
 
@@ -274,7 +273,7 @@ def test_get_path(path, expected_status, expected_response):
         ),
     ],
 )
-def test_get_starlette_django(path, expected_status, expected_response):
+def test_get_path_starlette(path, expected_status, expected_response):
     response = client.get(path)
     assert response.status_code == expected_status
     if isinstance(expected_response, bytes):

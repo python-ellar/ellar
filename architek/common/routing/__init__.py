@@ -1,4 +1,4 @@
-from architek.core.endpoints.params import Param, ParamTypes
+from architek.core.params import Param, ParamTypes
 from architek.core.routing import OperationDefinitions
 
 from .params import (

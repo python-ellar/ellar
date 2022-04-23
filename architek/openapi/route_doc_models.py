@@ -17,13 +17,13 @@ from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from architek.constants import METHODS_WITH_BODY, REF_PREFIX
 from architek.core.compatible import cached_property
-from architek.core.endpoints.params import Body, Param
-from architek.core.endpoints.resolvers import (
+from architek.core.guard import BaseAuthGuard
+from architek.core.params.params import Body, Param
+from architek.core.params.resolvers import (
     BodyParameterResolver,
     RouteParameterModelField,
     RouteParameterResolver,
 )
-from architek.core.guard import BaseAuthGuard
 from architek.core.routing import ModuleRouter, RouteOperation
 from architek.core.routing.controller.mount import ControllerMount
 from architek.shortcuts import normalize_path

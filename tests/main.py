@@ -1,11 +1,8 @@
 from typing import Optional
 from uuid import UUID
 
-from pydantic import Field
-
 from architek.common import Path, Query
 from architek.core.factory import ArchitekAppFactory
-from architek.core.schema import PydanticSchema
 
 app = ArchitekAppFactory.create_app()
 
@@ -194,31 +191,23 @@ def get_query_type_optional_10(query: int = 10):
 
 @app.Get("/query/param-required")
 def get_query_param_required(query=Query(...)):
+    assert isinstance(query, str)
     return f"foo bar {query}"
 
 
 @app.Get("/query/param-required/int")
 def get_query_param_required_type(query: int = Query(...)):
+    assert isinstance(query, int)
     return f"foo bar {query}"
 
 
-class AliasedSchema(PydanticSchema):
-    query: str = Field(..., alias="aliased.-_~name")
-
-
-@app.Get("/query/aliased-name")
-def get_query_aliased_name(query: AliasedSchema = Query(..., alias="aliased.-_~name")):
-    return f"foo bar {query.query}"
-
-
-@app.Get("/query/param-required")
-def get_query_param_required(query=Query(...)):
-    return f"foo bar {query}"
-
-
-@app.Get("/query/param-required/int")
-def get_query_param_required_type(query: int = Query(...)):
-    return f"foo bar {query}"
+# class AliasedSchema(PydanticSchema):
+#     query: str = Field(..., alias="aliased.-_~name")
+#
+#
+# @app.Get("/query/aliased-name")
+# def get_query_aliased_name(query: AliasedSchema = Query(..., alias="aliased.-_~name")):
+#     return f"foo bar {query.query}"
 
 
 # @router.get("/query")

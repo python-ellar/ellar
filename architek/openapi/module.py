@@ -30,7 +30,7 @@ class OpenAPIDocumentModule(ModuleBase):
             @guards_decorator(*self._guards)
             def openapi_schema() -> t.Any:
                 assert document and isinstance(document, OpenAPI), "Invalid Document"
-                return document.dict(by_alias=True, exclude_none=True)
+                return document
 
     def _setup_docs(
         self, *, template_name: str, path: str, **template_context: t.Optional[t.Any]

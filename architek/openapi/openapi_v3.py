@@ -4,6 +4,7 @@ from enum import Enum
 from pydantic import AnyUrl, BaseModel, Field
 
 from architek.core.compatible import EmailStr
+from architek.serializer import PydanticSerializer
 
 
 class Contact(BaseModel):
@@ -371,7 +372,10 @@ class Tag(BaseModel):
         extra = "allow"
 
 
-class OpenAPI(BaseModel):
+class OpenAPI(PydanticSerializer):
+    _by_alias = True
+    _exclude_none = True
+
     openapi: str
     info: Info
     servers: t.Optional[t.List[Server]] = None

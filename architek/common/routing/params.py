@@ -5,8 +5,8 @@ from pydantic.fields import Undefined
 
 from architek.core.connection import Request, WebSocket
 from architek.core.context import ExecutionContext
-from architek.core.endpoints import params
-from architek.core.endpoints.resolvers import (
+from architek.core.params import params
+from architek.core.params.resolvers import (
     NonFieldRouteParameterResolver,
     ParameterInjectable,
 )

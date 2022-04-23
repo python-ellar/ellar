@@ -1,4 +1,4 @@
-from architek.core.endpoints.params import Param, ParamTypes
+from architek.core.params.params import Param, ParamTypes
 from architek.core.routing import ModuleRouter
 
 from .decorators.base import set_meta
