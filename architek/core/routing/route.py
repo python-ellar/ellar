@@ -9,10 +9,10 @@ from starlette.routing import (
 
 from architek.constants import NOT_SET
 from architek.core.context import ExecutionContext
-from architek.core.endpoints import RequestEndpointArgsModel
 from architek.core.exceptions import RequestValidationError
 from architek.core.helper import generate_operation_unique_id, get_name
 from architek.core.operation_meta import OperationMeta
+from architek.core.params import RequestEndpointArgsModel
 from architek.core.response.model import RouteResponseModel
 
 from .base import RouteOperationBase

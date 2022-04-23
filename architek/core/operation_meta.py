@@ -4,8 +4,8 @@ from architek.core.compatible import AttributeDictAccess
 from architek.types import KT, VT
 
 if t.TYPE_CHECKING:
-    from architek.core.endpoints import ExtraEndpointArg
     from architek.core.guard import GuardCanActivate
+    from architek.core.params import ExtraEndpointArg
 
 
 class _AttributeDict(AttributeDictAccess, t.Dict[KT, VT]):

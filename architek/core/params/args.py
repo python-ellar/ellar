@@ -14,7 +14,7 @@ from architek.core.helper.modelfield import create_model_field
 from architek.types import T
 
 from . import params
-from .helpers import is_scalar_field
+from .helpers import is_scalar_field, is_scalar_sequence_field
 from .resolvers import (
     BaseRouteParameterResolver,
     BodyParameterResolver,
@@ -157,20 +157,7 @@ class EndpointArgsModel:
             if self.add_non_field_param_to_dependency(param=param):
                 continue
 
-            default_field_info = t.cast(
-                t.Type[params.Param],
-                param.default if isinstance(param.default, FieldInfo) else params.Query,
-            )
-            param_field = get_parameter_field(
-                param=param,
-                default_field_info=default_field_info,
-                param_name=param_name,
-                body_field_class=body_field_class,
-            )
             if param_name in self.path_param_names:
-                assert is_scalar_field(
-                    field=param_field
-                ), "Path params must be of one of the supported types"
                 if isinstance(param.default, params.Path):
                     ignore_default = False
                 else:
@@ -182,6 +169,30 @@ class EndpointArgsModel:
                     ignore_default=ignore_default,
                     # force_type=params.ParamTypes.path,
                 )
+                assert is_scalar_field(
+                    field=param_field
+                ), "Path params must be of one of the supported types"
+            else:
+                default_field_info = t.cast(
+                    t.Type[params.Param],
+                    param.default
+                    if isinstance(param.default, FieldInfo)
+                    else params.Query,
+                )
+                param_field = get_parameter_field(
+                    param=param,
+                    default_field_info=default_field_info,
+                    param_name=param_name,
+                    body_field_class=body_field_class,
+                )
+                if isinstance(
+                    param.default, (params.Query, params.Header)
+                ) and not is_scalar_field(field=param_field):
+                    if not is_scalar_sequence_field(param_field):
+                        # TODO: add Schema support for Query fields
+                        raise AssertionError(
+                            f"Param: {param_field.name} can only be a request body, using Body()"
+                        )
             self.add_to_model(field=param_field)
 
     def add_non_field_param_to_dependency(
