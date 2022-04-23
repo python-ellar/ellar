@@ -9,7 +9,7 @@ def init(name: str):
 
 
 def main():
-    app(prog_name="Architek Web framework")
+    app(prog_name="Architek Python Web framework")
 
 
 if __name__ == "__main__":

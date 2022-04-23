@@ -45,6 +45,7 @@ class Param(FieldInfo):
         deprecated: t.Optional[bool] = None,
         **extra: t.Any,
     ) -> None:
+        self.in_ = getattr(self, "in_", ParamTypes.query)
         self.deprecated = deprecated
         self.example = example
         self.examples = examples
@@ -97,7 +98,6 @@ class Path(Param):
         deprecated: t.Optional[bool] = None,
         **extra: t.Any,
     ) -> None:
-        self.in_ = self.in_
         super().__init__(
             ...,
             alias=alias,
@@ -123,89 +123,12 @@ class Path(Param):
 class Query(Param):
     in_ = ParamTypes.query
 
-    def __init__(
-        self,
-        default: t.Any = ...,
-        *,
-        alias: t.Optional[str] = None,
-        title: t.Optional[str] = None,
-        description: t.Optional[str] = None,
-        gt: t.Optional[float] = None,
-        ge: t.Optional[float] = None,
-        lt: t.Optional[float] = None,
-        le: t.Optional[float] = None,
-        min_length: t.Optional[int] = None,
-        max_length: t.Optional[int] = None,
-        regex: t.Optional[str] = None,
-        example: t.Any = Undefined,
-        examples: t.Optional[t.Dict[str, t.Any]] = None,
-        deprecated: t.Optional[bool] = None,
-        **extra: t.Any,
-    ) -> None:
-        super().__init__(
-            default,
-            alias=alias,
-            title=title,
-            description=description,
-            gt=gt,
-            ge=ge,
-            lt=lt,
-            le=le,
-            min_length=min_length,
-            max_length=max_length,
-            regex=regex,
-            deprecated=deprecated,
-            example=example,
-            examples=examples,
-            **extra,
-        )
-
     def init_resolver(self, model_field: ModelField) -> None:
         self._resolver = resolvers.QueryParameterResolver(model_field)
 
 
 class Header(Param):
     in_ = ParamTypes.header
-
-    def __init__(
-        self,
-        default: t.Any = ...,
-        *,
-        alias: t.Optional[str] = None,
-        convert_underscores: bool = True,
-        title: t.Optional[str] = None,
-        description: t.Optional[str] = None,
-        gt: t.Optional[float] = None,
-        ge: t.Optional[float] = None,
-        lt: t.Optional[float] = None,
-        le: t.Optional[float] = None,
-        min_length: t.Optional[int] = None,
-        max_length: t.Optional[int] = None,
-        regex: t.Optional[str] = None,
-        example: t.Any = Undefined,
-        examples: t.Optional[t.Dict[str, t.Any]] = None,
-        deprecated: t.Optional[bool] = None,
-        **extra: t.Any,
-    ) -> None:
-        self.convert_underscores = convert_underscores
-
-        super().__init__(
-            default,
-            alias=alias,
-            title=title,
-            description=description,
-            gt=gt,
-            ge=ge,
-            lt=lt,
-            le=le,
-            min_length=min_length,
-            max_length=max_length,
-            regex=regex,
-            deprecated=deprecated,
-            example=example,
-            examples=examples,
-            **extra,
-        )
 
     def init_resolver(self, model_field: ModelField) -> None:
         self._resolver = resolvers.HeaderParameterResolver(model_field)
@@ -214,49 +137,13 @@ class Header(Param):
 class Cookie(Param):
     in_ = ParamTypes.cookie
 
-    def __init__(
-        self,
-        default: t.Any = ...,
-        *,
-        alias: t.Optional[str] = None,
-        title: t.Optional[str] = None,
-        description: t.Optional[str] = None,
-        gt: t.Optional[float] = None,
-        ge: t.Optional[float] = None,
-        lt: t.Optional[float] = None,
-        le: t.Optional[float] = None,
-        min_length: t.Optional[int] = None,
-        max_length: t.Optional[int] = None,
-        regex: t.Optional[str] = None,
-        example: t.Any = Undefined,
-        examples: t.Optional[t.Dict[str, t.Any]] = None,
-        deprecated: t.Optional[bool] = None,
-        **extra: t.Any,
-    ) -> None:
-
-        super().__init__(
-            default,
-            alias=alias,
-            title=title,
-            description=description,
-            gt=gt,
-            ge=ge,
-            lt=lt,
-            le=le,
-            min_length=min_length,
-            max_length=max_length,
-            regex=regex,
-            deprecated=deprecated,
-            example=example,
-            examples=examples,
-            **extra,
-        )
-
     def init_resolver(self, model_field: ModelField) -> None:
         self._resolver = resolvers.CookieParameterResolver(model_field)
 
 
-class Body(FieldInfo):
+class Body(Param):
+    MEDIA_TYPE: str = "application/json"
+
     def get_resolver(self) -> resolvers.RouteParameterResolver:
         assert self._resolver, "Resolver not initialized"
         return self._resolver
@@ -266,7 +153,7 @@ class Body(FieldInfo):
         default: t.Any = ...,
         *,
         embed: bool = False,
-        media_type: str = "application/json",
+        media_type: t.Optional[str] = None,
         alias: t.Optional[str] = None,
         title: t.Optional[str] = None,
         description: t.Optional[str] = None,
@@ -282,10 +169,7 @@ class Body(FieldInfo):
         **extra: t.Any,
     ) -> None:
         self.embed = embed
-        self.media_type = media_type
-        self.example = example
-        self.examples = examples
-        self._resolver: t.Optional[resolvers.RouteParameterResolver] = None
+        self.media_type = media_type or self.MEDIA_TYPE
 
         super().__init__(
             default,
@@ -299,6 +183,8 @@ class Body(FieldInfo):
             min_length=min_length,
             max_length=max_length,
             regex=regex,
+            examples=examples,
+            example=example,
             **extra,
         )
 
@@ -321,44 +207,7 @@ class WsBody(Body):
 
 
 class Form(Body):
-    def __init__(
-        self,
-        default: t.Any = ...,
-        *,
-        media_type: str = "application/x-www-form-urlencoded",
-        alias: t.Optional[str] = None,
-        title: t.Optional[str] = None,
-        description: t.Optional[str] = None,
-        gt: t.Optional[float] = None,
-        ge: t.Optional[float] = None,
-        lt: t.Optional[float] = None,
-        le: t.Optional[float] = None,
-        min_length: t.Optional[int] = None,
-        max_length: t.Optional[int] = None,
-        regex: t.Optional[str] = None,
-        example: t.Any = Undefined,
-        examples: t.Optional[t.Dict[str, t.Any]] = None,
-        **extra: t.Any,
-    ) -> None:
-
-        super().__init__(
-            default,
-            embed=True,
-            media_type=media_type,
-            alias=alias,
-            title=title,
-            description=description,
-            gt=gt,
-            ge=ge,
-            lt=lt,
-            le=le,
-            min_length=min_length,
-            max_length=max_length,
-            regex=regex,
-            example=example,
-            examples=examples,
-            **extra,
-        )
+    MEDIA_TYPE: str = "application/x-www-form-urlencoded"
 
     def init_resolver(self, model_field: ModelField) -> None:
         self._resolver = resolvers.FormParameterResolver(model_field)
@@ -371,43 +220,7 @@ class Form(Body):
 
 
 class File(Form):
-    def __init__(
-        self,
-        default: t.Any = ...,
-        *,
-        media_type: str = "multipart/form-data",
-        alias: t.Optional[str] = None,
-        title: t.Optional[str] = None,
-        description: t.Optional[str] = None,
-        gt: t.Optional[float] = None,
-        ge: t.Optional[float] = None,
-        lt: t.Optional[float] = None,
-        le: t.Optional[float] = None,
-        min_length: t.Optional[int] = None,
-        max_length: t.Optional[int] = None,
-        regex: t.Optional[str] = None,
-        example: t.Any = Undefined,
-        examples: t.Optional[t.Dict[str, t.Any]] = None,
-        **extra: t.Any,
-    ) -> None:
-
-        super().__init__(
-            default,
-            media_type=media_type,
-            alias=alias,
-            title=title,
-            description=description,
-            gt=gt,
-            ge=ge,
-            lt=lt,
-            le=le,
-            min_length=min_length,
-            max_length=max_length,
-            regex=regex,
-            example=example,
-            examples=examples,
-            **extra,
-        )
+    MEDIA_TYPE: str = "multipart/form-data"
 
     def init_resolver(self, model_field: ModelField) -> None:
         self._resolver = resolvers.FileParameterResolver(model_field)
