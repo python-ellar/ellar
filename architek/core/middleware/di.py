@@ -4,7 +4,7 @@ from injector import CallableProvider
 
 from architek.constants import SCOPE_SERVICE_PROVIDER
 from architek.core.connection import HTTPConnection, Request, WebSocket
-from architek.core.context import ExecutionContext
+from architek.core.context import ExecutionContext, IExecutionContext
 from architek.core.response import Response
 from architek.types import ASGIApp, TReceive, TScope, TSend
 
@@ -25,22 +25,22 @@ class RequestServiceProviderMiddleware:
             await self.app(scope, receive, send)
             return
 
-        di_request_service_provider = self.injector.create_request_service_provider()
-        execute_context = ExecutionContext(scope=scope, receive=receive, send=send)
-        di_request_service_provider.update_context(ExecutionContext, execute_context)
+        async with self.injector.create_request_service_provider() as request_provider:
+            execute_context = ExecutionContext(scope=scope, receive=receive, send=send)
+            request_provider.update_context(IExecutionContext, execute_context)  # type: ignore
 
-        di_request_service_provider.update_context(
-            HTTPConnection, CallableProvider(execute_context.switch_to_http_connection)
-        )
-        di_request_service_provider.update_context(
-            WebSocket, CallableProvider(execute_context.switch_to_websocket)
-        )
-        di_request_service_provider.update_context(
-            Request, CallableProvider(execute_context.switch_to_request)
-        )
-        di_request_service_provider.update_context(
-            Response, CallableProvider(execute_context.get_response)
-        )
-        scope[SCOPE_SERVICE_PROVIDER] = di_request_service_provider
-        with di_request_service_provider:
+            request_provider.update_context(
+                HTTPConnection,
+                CallableProvider(execute_context.switch_to_http_connection),
+            )
+            request_provider.update_context(
+                WebSocket, CallableProvider(execute_context.switch_to_websocket)
+            )
+            request_provider.update_context(
+                Request, CallableProvider(execute_context.switch_to_request)
+            )
+            request_provider.update_context(
+                Response, CallableProvider(execute_context.get_response)
+            )
+            scope[SCOPE_SERVICE_PROVIDER] = request_provider
             await self.app(scope, receive, send)

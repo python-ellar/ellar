@@ -4,7 +4,7 @@ from pydantic.error_wrappers import ErrorWrapper
 from pydantic.fields import Undefined
 
 from architek.core.connection import Request, WebSocket
-from architek.core.context import ExecutionContext
+from architek.core.context import IExecutionContext
 from architek.core.params import params
 from architek.core.params.resolvers import (
     NonFieldRouteParameterResolver,
@@ -317,7 +317,7 @@ def WsBody(
 
 class _RequestParameter(NonFieldRouteParameterResolver):
     async def resolve(
-        self, ctx: ExecutionContext, **kwargs: t.Any
+        self, ctx: IExecutionContext, **kwargs: t.Any
     ) -> t.Tuple[t.Dict, t.List]:
         try:
             request = ctx.switch_to_request()
@@ -328,7 +328,7 @@ class _RequestParameter(NonFieldRouteParameterResolver):
 
 class _WebSocketParameter(NonFieldRouteParameterResolver):
     async def resolve(
-        self, ctx: ExecutionContext, **kwargs: t.Any
+        self, ctx: IExecutionContext, **kwargs: t.Any
     ) -> t.Tuple[t.Dict, t.List]:
         try:
             websocket = ctx.switch_to_websocket()
@@ -339,22 +339,22 @@ class _WebSocketParameter(NonFieldRouteParameterResolver):
 
 class _ExecutionContextParameter(NonFieldRouteParameterResolver):
     async def resolve(
-        self, ctx: ExecutionContext, **kwargs: t.Any
+        self, ctx: IExecutionContext, **kwargs: t.Any
     ) -> t.Tuple[t.Dict, t.List]:
         return {self.parameter_name: ctx}, []
 
 
-def req() -> Request:
+def Req() -> Request:
     return t.cast(Request, _RequestParameter())
 
 
-def ws() -> WebSocket:
+def Ws() -> WebSocket:
     return t.cast(WebSocket, _WebSocketParameter())
 
 
-def cxt() -> ExecutionContext:
-    return t.cast(ExecutionContext, _ExecutionContextParameter())
+def Ctx() -> IExecutionContext:
+    return t.cast(IExecutionContext, _ExecutionContextParameter())
 
 
-def provide(service: t.Optional[t.Type[T]] = None) -> T:
+def Provide(service: t.Optional[t.Type[T]] = None) -> T:
     return t.cast(T, ParameterInjectable(service))

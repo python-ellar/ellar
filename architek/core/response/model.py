@@ -4,7 +4,7 @@ from dataclasses import is_dataclass
 from pydantic import BaseModel
 from pydantic.fields import ModelField
 
-from architek.core.context import ExecutionContext
+from architek.core.context import IExecutionContext
 from architek.core.converters import TypeDefinitionConverter
 from architek.core.exceptions import RequestValidationError
 from architek.core.helper.modelfield import create_model_field
@@ -47,7 +47,7 @@ class ResponseModel:
         return None
 
     def create_response(
-        self, context: ExecutionContext, response_obj: t.Any, status_code: int
+        self, context: IExecutionContext, response_obj: t.Any, status_code: int
     ) -> Response:
         """Cant create custom responses, Please override this function to create a custom response"""
         response_args, headers = self.get_context_response(context=context)
@@ -58,7 +58,7 @@ class ResponseModel:
 
     @classmethod
     def get_context_response(
-        cls, context: ExecutionContext, **kwargs: t.Any
+        cls, context: IExecutionContext, **kwargs: t.Any
     ) -> t.Tuple[t.Dict, t.Dict]:
         response_args = dict(kwargs)
         if context.has_response:
@@ -89,7 +89,7 @@ class _JSONResponseModel(ResponseModel):
         return self.response_model_field
 
     def create_response(
-        self, context: ExecutionContext, response_obj: t.Any, status_code: int
+        self, context: IExecutionContext, response_obj: t.Any, status_code: int
     ) -> Response:
         json_response_class = t.cast(
             t.Type[JSONResponse], context.get_app().config.DEFAULT_JSON_CLASS
@@ -228,7 +228,7 @@ class RouteResponseModel:
 
     def response_resolver(
         self,
-        ctx: ExecutionContext,
+        ctx: IExecutionContext,
         endpoint_response_content: t.Union[t.Any, t.Tuple[int, t.Any]],
     ) -> ResponseResolver:
         status_code: int = 200
@@ -256,7 +256,7 @@ class RouteResponseModel:
         return ResponseResolver(status_code, response_model, response_obj)
 
     def process_response(
-        self, ctx: ExecutionContext, response_obj: t.Union[t.Any, t.Tuple[int, t.Any]]
+        self, ctx: IExecutionContext, response_obj: t.Union[t.Any, t.Tuple[int, t.Any]]
     ) -> Response:
         if isinstance(response_obj, Response):
             return response_obj

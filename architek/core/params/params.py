@@ -24,7 +24,7 @@ class ParamTypes(Enum):
 
 
 class Param(FieldInfo):
-    in_: ParamTypes
+    in_: ParamTypes = ParamTypes.query
 
     def __init__(
         self,
@@ -45,7 +45,6 @@ class Param(FieldInfo):
         deprecated: t.Optional[bool] = None,
         **extra: t.Any,
     ) -> None:
-        self.in_ = getattr(self, "in_", ParamTypes.query)
         self.deprecated = deprecated
         self.example = example
         self.examples = examples

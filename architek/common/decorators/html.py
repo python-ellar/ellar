@@ -3,7 +3,7 @@ import typing as t
 import warnings
 
 from architek.constants import NOT_SET
-from architek.core.context import ExecutionContext
+from architek.core.context import ExecutionContext, IExecutionContext
 from architek.core.helper import get_name
 from architek.core.response import Response
 from architek.core.response.model import ResponseModel
@@ -29,7 +29,7 @@ class HTMLResponseModel(ResponseModel):
         self.use_mvc = use_mvc
 
     def create_response(
-        self, context: ExecutionContext, response_obj: t.Any, status_code: int
+        self, context: IExecutionContext, response_obj: t.Any, status_code: int
     ) -> Response:
         self.response_type = t.cast(t.Type[TemplateResponse], self.response_type)
 
@@ -44,10 +44,11 @@ class HTMLResponseModel(ResponseModel):
         response = self.response_type(**response_args, headers=headers)
         return response
 
-    def _get_template_name(self, ctx: ExecutionContext) -> str:
+    def _get_template_name(self, ctx: IExecutionContext) -> str:
         template_name = self.template_name
-        if self.use_mvc and ctx.controller_type:
-            controller_class: t.Type["ControllerBase"] = ctx.controller_type
+        exe_ctx = t.cast(ExecutionContext, ctx)
+        if self.use_mvc and exe_ctx.controller_type:
+            controller_class: t.Type["ControllerBase"] = exe_ctx.controller_type
             template_name = controller_class.full_view_name(self.template_name)
         return get_template_name(template_name)
 

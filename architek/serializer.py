@@ -17,11 +17,11 @@ class PydanticSerializerConfig(BaseConfig):
 
 def serialize_object(obj: t.Any) -> t.Any:
     if isinstance(obj, BaseSerializer):
-        return obj.serialize()
+        return serialize_object(obj.serialize())
     if isinstance(obj, BaseModel):
-        return obj.dict(by_alias=True)
+        return serialize_object(obj.dict(by_alias=True))
     if is_dataclass(obj):
-        return asdict(obj)
+        return serialize_object(asdict(obj))
     if isinstance(obj, dict):
         return {str(k): serialize_object(v) for k, v in obj.items()}
     if isinstance(obj, Enum):

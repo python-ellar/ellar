@@ -9,7 +9,7 @@ from pydantic.schema import get_annotation_from_field_info
 from pydantic.typing import ForwardRef, evaluate_forwardref
 
 from architek.core.connection import Request, WebSocket
-from architek.core.context import ExecutionContext
+from architek.core.context import IExecutionContext
 from architek.core.helper.modelfield import create_model_field
 from architek.types import T
 
@@ -240,7 +240,7 @@ class EndpointArgsModel:
         self._models.append(field_info.get_resolver())
 
     async def resolve_dependencies(
-        self, *, ctx: ExecutionContext
+        self, *, ctx: IExecutionContext
     ) -> t.Tuple[t.Dict[str, t.Any], t.List[ErrorWrapper]]:
         values: t.Dict[str, t.Any] = {}
         errors: t.List[ErrorWrapper] = []
@@ -281,7 +281,7 @@ class EndpointArgsModel:
             self.add_to_model(field=param_field)
 
     async def resolve_body(
-        self, ctx: ExecutionContext, values: t.Dict, errors: t.List
+        self, ctx: IExecutionContext, values: t.Dict, errors: t.List
     ) -> None:
         ...
 
@@ -358,7 +358,7 @@ class RequestEndpointArgsModel(EndpointArgsModel):
             self.body_resolver = final_field.field_info.get_resolver()
 
     async def resolve_body(
-        self, ctx: ExecutionContext, values: t.Dict, errors: t.List
+        self, ctx: IExecutionContext, values: t.Dict, errors: t.List
     ) -> None:
         if not self.body_resolver:
             return
@@ -393,7 +393,7 @@ class WebsocketEndpointArgsModel(EndpointArgsModel):
         super().compute_route_parameter_list(body_field_class=params.WsBody)
 
     async def resolve_ws_body_dependencies(
-        self, *, ctx: ExecutionContext, body_data: t.Any
+        self, *, ctx: IExecutionContext, body_data: t.Any
     ) -> t.Tuple[t.Dict[str, t.Any], t.List[ErrorWrapper]]:
         values: t.Dict[str, t.Any] = {}
         errors: t.List[ErrorWrapper] = []

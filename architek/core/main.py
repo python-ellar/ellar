@@ -3,6 +3,7 @@ import typing as t
 from starlette.routing import BaseRoute
 
 from architek.core.conf import Config
+from architek.core.context import ExecutionContext, IExecutionContext
 from architek.core.datastructures import State, URLPath
 from architek.core.events import ApplicationEventManager, RouterEventManager
 from architek.core.guard import GuardCanActivate
@@ -193,3 +194,4 @@ class ArchitekApp(ArchitekAppTemplating):
         self.injector.container.add_instance(self)
         self.injector.container.add_instance(self.config, Config)
         self.injector.container.add_instance(self.jinja_environment, Environment)
+        self.injector.container.add_scoped(IExecutionContext, ExecutionContext)

@@ -2,12 +2,17 @@ import typing as t
 
 from starlette.background import BackgroundTasks
 
+from architek.core.compatible import cached_property
 from architek.core.connection import HTTPConnection, Request, WebSocket
 from architek.core.response import Response
 from architek.shortcuts import fail_silently
 from architek.types import TReceive, TScope, TSend
 
-from .compatible import AttributeDictAccess, DataMapper, cached_property
+from .interface import (
+    ExecutionContextException,
+    IExecutionContext,
+    OperationExecutionMeta,
+)
 
 if t.TYPE_CHECKING:
     from architek.core.main import ArchitekApp
@@ -15,23 +20,16 @@ if t.TYPE_CHECKING:
     from architek.core.routing.controller import ControllerBase
     from architek.di.injector import RequestServiceProvider
 
-
-class ExecutionContextException(Exception):
-    pass
+__all__ = ["IExecutionContext", "ExecutionContext"]
 
 
-class OperationExecutionMeta(DataMapper, AttributeDictAccess):
-    pass
-
-
-class ExecutionContext:
+class ExecutionContext(IExecutionContext):
     __slots__ = (
         "scope",
         "receive",
         "send",
         "_operation",
         "_response",
-        "__dict__",
         "controller_type",
     )
 

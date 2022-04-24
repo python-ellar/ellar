@@ -8,7 +8,7 @@ from injector import (
     Module as InjectorModule,
 )
 
-from architek.core.context import ExecutionContext
+from architek.core.compatible import asynccontextmanager
 from architek.core.helper import get_name
 from architek.core.logger import logger as log
 from architek.types import T
@@ -60,17 +60,14 @@ class RequestServiceProvider(InjectorBinder):
         return t.cast(T, result)
 
     def update_context(self, interface: t.Type[T], value: T) -> None:
+        _context = {
+            interface: Binding(interface, InstanceProvider(value), RequestScope)
+        }
         if isinstance(value, Provider):
-            self._bindings.update({interface: Binding(interface, value, RequestScope)})
-            return
-        self._bindings.update(
-            {interface: Binding(interface, InstanceProvider(value), RequestScope)}
-        )
+            _context = {interface: Binding(interface, value, RequestScope)}
+        self._bindings.update(_context)
 
-    def __enter__(self) -> "RequestServiceProvider":
-        return self
-
-    def __exit__(self, ex_type: t.Any, ex_value: t.Any, ex_traceback: t.Any) -> None:
+    def dispose(self) -> None:
         del self._context
         del self.parent
         del self.injector
@@ -148,7 +145,7 @@ class Container(InjectorBinder):
     ) -> None:
         if not concrete_type:
             self.add_exact_singleton(base_type)
-        self.register(base_type, concrete_type, scope=TransientScope)
+        self.register(base_type, concrete_type, scope=RequestScope)
 
     def add_exact_singleton(self, concrete_type: t.Type) -> None:
         assert not isabstract(concrete_type)
@@ -239,7 +236,6 @@ class StarletteInjector(Injector):
         # Bind some useful types
         self.container.add_instance(self, StarletteInjector)
         self.container.add_instance(self.binder)
-        self.container.add_exact_scoped(ExecutionContext)
 
     @property  # type: ignore
     def binder(self) -> Container:  # type: ignore
@@ -249,5 +245,12 @@ class StarletteInjector(Injector):
     def binder(self, value: t.Any) -> None:
         ...
 
-    def create_request_service_provider(self) -> RequestServiceProvider:
-        return RequestServiceProvider(self.container)
+    @asynccontextmanager
+    async def create_request_service_provider(
+        self,
+    ) -> t.AsyncGenerator[RequestServiceProvider, None]:
+        request_provider = RequestServiceProvider(self.container)
+        try:
+            yield request_provider
+        finally:
+            request_provider.dispose()

@@ -23,16 +23,16 @@ from .routing import (
 from .routing.params import (
     Body,
     Cookie,
+    Ctx,
     File,
     Form,
     Header,
     Path,
+    Provide,
     Query,
+    Req,
+    Ws,
     WsBody,
-    cxt,
-    provide,
-    req,
-    ws,
 )
 
 __all__ = [
@@ -65,8 +65,8 @@ __all__ = [
     "Path",
     "Query",
     "WsBody",
-    "cxt",
-    "provide",
-    "req",
-    "ws",
+    "Ctx",
+    "Provide",
+    "Req",
+    "Ws",
 ]
