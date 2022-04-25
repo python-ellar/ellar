@@ -1,4 +1,4 @@
-import typing
+import typing as t
 
 from injector import CallableProvider
 
@@ -8,7 +8,7 @@ from architek.core.context import ExecutionContext, IExecutionContext
 from architek.core.response import Response
 from architek.types import ASGIApp, TReceive, TScope, TSend
 
-if typing.TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from architek.di.injector import StarletteInjector
 
 
@@ -27,7 +27,9 @@ class RequestServiceProviderMiddleware:
 
         async with self.injector.create_request_service_provider() as request_provider:
             execute_context = ExecutionContext(scope=scope, receive=receive, send=send)
-            request_provider.update_context(IExecutionContext, execute_context)  # type: ignore
+            request_provider.update_context(
+                t.cast(t.Type, IExecutionContext), execute_context
+            )
 
             request_provider.update_context(
                 HTTPConnection,
