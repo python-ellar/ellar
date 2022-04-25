@@ -4,8 +4,8 @@ import typing as t
 from starlette import status
 from starlette.types import Message
 
-from architek.core.exceptions import WebSocketRequestValidationError
 from architek.core.params import WebsocketEndpointArgsModel
+from architek.exceptions import WebSocketRequestValidationError
 
 if t.TYPE_CHECKING:
     from architek.core.connection import WebSocket

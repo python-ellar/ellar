@@ -7,7 +7,7 @@ from starlette.status import HTTP_403_FORBIDDEN
 
 from architek.core.connection import HTTPConnection
 from architek.core.context import ExecutionContext
-from architek.core.exceptions import APIException
+from architek.exceptions import APIException
 
 
 class GuardCanActivate(ABC, metaclass=ABCMeta):

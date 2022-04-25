@@ -7,7 +7,6 @@ from architek.core.context import ExecutionContext, IExecutionContext
 from architek.core.datastructures import State, URLPath
 from architek.core.events import ApplicationEventManager, RouterEventManager
 from architek.core.guard import GuardCanActivate
-from architek.core.logger import logger
 from architek.core.middleware import (
     ExceptionMiddleware,
     Middleware,
@@ -22,7 +21,8 @@ from architek.core.modules import (
 )
 from architek.core.routing import ApplicationRouter, RouteCollection
 from architek.core.templating import ArchitekAppTemplating, Environment
-from architek.di import StarletteInjector
+from architek.di.injector import StarletteInjector
+from architek.logger import logger
 from architek.types import ASGIApp, T, TReceive, TScope, TSend
 
 
@@ -56,7 +56,7 @@ class ArchitekApp(ArchitekAppTemplating):
             lifespan=self.config.DEFAULT_LIFESPAN_HANDLER,  # type: ignore
         )
         # TODO: read auto_bind from configure
-        self._injector = StarletteInjector(app=self, auto_bind=False)
+        self._injector = StarletteInjector(auto_bind=False)
         self.middleware_stack = self.build_middleware_stack()
 
         self._static_app: t.Optional[ASGIApp] = None

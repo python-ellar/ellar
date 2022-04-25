@@ -6,12 +6,9 @@ from starlette.status import WS_1008_POLICY_VIOLATION
 from architek.constants import NOT_SET
 from architek.core.connection import WebSocket
 from architek.core.context import ExecutionContext
-from architek.core.exceptions import (
-    ImproperConfiguration,
-    WebSocketRequestValidationError,
-)
 from architek.core.operation_meta import OperationMeta
 from architek.core.params import WebsocketEndpointArgsModel
+from architek.exceptions import ImproperConfiguration, WebSocketRequestValidationError
 
 from ..base import WebsocketRouteOperationBase
 from .handler import WebSocketExtraHandler

@@ -75,7 +75,7 @@ class ModuleDecorator(BaseModuleDecorator):
             _provider.register(container)
 
         for controller in self._controllers:
-            container.add_exact_scoped(concrete_type=controller.get_controller_type())
+            ProviderConfig(controller.get_controller_type()).register(container)
 
     def _builder_service(
         self, services: t.Sequence[t.Union[t.Type, ProviderConfig]]

@@ -2,13 +2,12 @@ import inspect
 import typing as t
 from abc import ABC
 
-from injector import inject, is_decorated_with_inject
 from starlette.routing import BaseRoute, Route
 
 from architek.constants import NOT_SET
 from architek.core.context import ExecutionContext
-from architek.core.helper import get_name
-from architek.shortcuts import fail_silently
+from architek.di import RequestScope, injectable
+from architek.helper import get_name
 
 if t.TYPE_CHECKING:
     from architek.core.guard import GuardCanActivate
@@ -147,8 +146,7 @@ class ControllerDecorator:
             if base_cls not in [ABC, ControllerBase, object]:
                 compute_api_route_function(base_cls, self)
 
-        if not is_decorated_with_inject(cls.__init__):
-            fail_silently(inject, constructor_or_class=cls)
+        cls = injectable(RequestScope)(cls)
 
         if not self._meta["name"]:
             self._meta["name"] = str(cls.__name__).lower().replace("controller", "")

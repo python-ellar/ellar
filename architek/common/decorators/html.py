@@ -4,12 +4,12 @@ import warnings
 
 from architek.constants import NOT_SET
 from architek.core.context import ExecutionContext, IExecutionContext
-from architek.core.helper import get_name
 from architek.core.response import Response
 from architek.core.response.model import ResponseModel
 from architek.core.routing import RouteOperationBase
 from architek.core.templating import Environment, TemplateResponse
 from architek.core.templating.renderer import get_template_name, process_view_model
+from architek.helper import get_name
 
 from .base import set_meta
 

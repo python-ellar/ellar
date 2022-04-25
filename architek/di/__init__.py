@@ -7,7 +7,12 @@ from .scopes import (
     singleton_scope,
     transient_scope,
 )
-from .service_config import ProviderConfig, injectable
+from .service_config import (
+    ProviderConfig,
+    get_scope,
+    injectable,
+    is_decorated_with_injectable,
+)
 
 __all__ = [
     "Container",
@@ -21,4 +26,6 @@ __all__ = [
     "transient_scope",
     "ProviderConfig",
     "injectable",
+    "is_decorated_with_injectable",
+    "get_scope",
 ]

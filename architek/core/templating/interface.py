@@ -7,11 +7,11 @@ from pathlib import Path
 from jinja2 import FileSystemLoader
 from starlette.templating import pass_context
 
+from architek.compatible import cached_property
 from architek.core.connection import Request
 from architek.core.staticfiles import StarletteStaticFiles
 from architek.types import ASGIApp, TemplateFilterCallable, TemplateGlobalCallable
 
-from ..compatible import cached_property
 from ..conf import Config
 from .environment import Environment
 from .loader import ArchitekJinjaLoader

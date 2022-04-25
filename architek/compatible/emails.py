@@ -1,6 +1,6 @@
 import typing as t
 
-from architek.core.logger import logger
+from architek.logger import logger
 
 try:
     import email_validator

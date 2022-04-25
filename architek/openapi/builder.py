@@ -10,12 +10,12 @@ from pydantic.schema import (
     model_process_schema,
 )
 
-from architek.core.compatible import cached_property
-from architek.core.helper.modelfield import create_model_field
+from architek.compatible import cached_property
 from architek.core.main import ArchitekApp
 from architek.core.routing import ModuleRouter, RouteOperation
 from architek.core.routing.controller.mount import ControllerMount
 from architek.core.schema import HTTPValidationError, ValidationError
+from architek.helper.modelfield import create_model_field
 
 from ..constants import REF_PREFIX
 from .openapi_v3 import OpenAPI

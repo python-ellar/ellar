@@ -22,6 +22,7 @@ SCOPE_SERVICE_PROVIDER = "service_provider"
 SCOPE_API_VERSIONING_RESOLVER = "api_versioning_resolver"
 SCOPE_API_VERSIONING_SCHEME = "api_versioning_scheme"
 ARCHITEK_CONFIG_MODULE = "ARCHITEK_CONFIG_MODULE"
+INJECTABLE_ATTRIBUTE = "__di_scope__"
 
 sequence_shapes = {
     SHAPE_LIST,

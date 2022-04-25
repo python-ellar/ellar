@@ -4,8 +4,8 @@ import typing as t
 
 from starlette.routing import compile_path
 
+from architek import exceptions
 from architek.constants import NOT_SET
-from architek.core import exceptions
 from architek.core.connection import HTTPConnection
 from architek.types import TScope
 

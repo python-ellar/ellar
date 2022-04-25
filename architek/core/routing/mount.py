@@ -2,7 +2,7 @@ import typing as t
 
 from starlette.routing import BaseRoute, Mount as StarletteMount, Route
 
-from architek.core.compatible import DataMapper
+from architek.compatible import DataMapper
 from architek.core.routing.base import RouteOperationBase
 
 from .operation_definitions import OperationDefinitions

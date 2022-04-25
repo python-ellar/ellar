@@ -6,8 +6,8 @@ from base64 import b64decode
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 
 from architek.core.connection import HTTPConnection
+from architek.exceptions import APIException, AuthenticationFailed
 
-from ..exceptions import APIException, AuthenticationFailed
 from .base import BaseHttpAuth, HTTPAuthorizationCredentials, HTTPBasicCredentials
 
 

@@ -2,7 +2,7 @@ import typing as t
 
 from starlette.background import BackgroundTasks
 
-from architek.core.compatible import cached_property
+from architek.compatible import cached_property
 from architek.core.connection import HTTPConnection, Request, WebSocket
 from architek.core.response import Response
 from architek.shortcuts import fail_silently

@@ -10,7 +10,7 @@ from pydantic.typing import ForwardRef, evaluate_forwardref
 
 from architek.core.connection import Request, WebSocket
 from architek.core.context import IExecutionContext
-from architek.core.helper.modelfield import create_model_field
+from architek.helper.modelfield import create_model_field
 from architek.types import T
 
 from . import params

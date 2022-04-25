@@ -3,7 +3,7 @@ from enum import Enum
 
 from pydantic import AnyUrl, BaseModel, Field
 
-from architek.core.compatible import EmailStr
+from architek.compatible import EmailStr
 from architek.serializer import PydanticSerializer
 
 

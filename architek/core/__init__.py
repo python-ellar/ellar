@@ -1,6 +1,5 @@
 from .conf import Config
 from .context import ExecutionContext
-from .exceptions import APIException
 from .factory import ArchitekAppFactory
 from .guard import BaseAPIKey, BaseAuthGuard, BaseHttpAuth, GuardCanActivate
 from .main import ArchitekApp
@@ -9,7 +8,6 @@ from .routing import ControllerBase
 from .templating import render_template, render_template_string
 
 __all__ = [
-    "APIException",
     "ArchitekApp",
     "ArchitekAppFactory",
     "render_template",

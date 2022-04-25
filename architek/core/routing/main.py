@@ -7,9 +7,9 @@ from starlette.routing import (
     Router as StarletteRouter,
 )
 
+from architek.compatible import DataMapper
 from architek.types import ASGIApp
 
-from ..compatible import DataMapper
 from .operation_definitions import OperationDefinitions
 
 if t.TYPE_CHECKING:

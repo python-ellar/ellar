@@ -3,7 +3,7 @@ import typing as t
 from starlette.status import WS_1008_POLICY_VIOLATION
 
 from architek.core.context import ExecutionContext
-from architek.core.exceptions import WebSocketRequestValidationError
+from architek.exceptions import WebSocketRequestValidationError
 
 from ...websocket import WebsocketRouteOperation
 from ..base import ControllerRouteOperationBase

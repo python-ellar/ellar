@@ -3,8 +3,8 @@ import typing as t
 from starlette import status
 
 from architek.core.connection import Request
-from architek.core.exceptions import APIException, RequestValidationError
 from architek.core.response import JSONResponse
+from architek.exceptions import APIException, RequestValidationError
 
 
 async def api_exception_handler(request: Request, exc: APIException) -> JSONResponse:

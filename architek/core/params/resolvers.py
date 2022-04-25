@@ -16,8 +16,8 @@ from starlette.exceptions import HTTPException
 from architek.constants import sequence_shape_to_type, sequence_shapes, sequence_types
 from architek.core.context import IExecutionContext
 from architek.core.datastructures import UploadFile
-from architek.core.exceptions import RequestValidationError
-from architek.core.logger import logger
+from architek.exceptions import RequestValidationError
+from architek.logger import logger
 from architek.types import T
 
 from .helpers import is_scalar_sequence_field

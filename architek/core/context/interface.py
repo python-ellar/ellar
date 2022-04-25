@@ -1,7 +1,7 @@
 import typing as t
 from abc import ABC, ABCMeta, abstractmethod
 
-from architek.core.compatible import AttributeDictAccess, DataMapper
+from architek.compatible import AttributeDictAccess, DataMapper
 from architek.core.connection import HTTPConnection, Request, WebSocket
 from architek.core.response import Response
 

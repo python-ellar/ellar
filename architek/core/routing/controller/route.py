@@ -3,8 +3,8 @@ import typing as t
 from starlette.concurrency import run_in_threadpool
 
 from architek.core.context import ExecutionContext
-from architek.core.exceptions import RequestValidationError
 from architek.core.routing.route import RouteOperation
+from architek.exceptions import RequestValidationError
 
 from .base import ControllerRouteOperationBase
 

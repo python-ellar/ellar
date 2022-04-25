@@ -10,9 +10,9 @@ from architek.core.exception_handlers import (
     api_exception_handler,
     request_validation_exception_handler,
 )
-from architek.core.exceptions import APIException, RequestValidationError
 from architek.core.response import PlainTextResponse
 from architek.core.versioning import BaseAPIVersioning, DefaultAPIVersioning
+from architek.exceptions import APIException, RequestValidationError
 from architek.types import TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:

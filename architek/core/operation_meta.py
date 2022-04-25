@@ -1,6 +1,6 @@
 import typing as t
 
-from architek.core.compatible import AttributeDictAccess
+from architek.compatible import AttributeDictAccess
 from architek.types import KT, VT
 
 if t.TYPE_CHECKING:

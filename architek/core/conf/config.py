@@ -3,10 +3,10 @@ import typing as t
 
 from starlette.config import environ
 
+from architek.compatible.dict import AttributeDictAccess, DataMapper, DataMutableMapper
 from architek.constants import ARCHITEK_CONFIG_MODULE
 from architek.types import VT
 
-from ..compatible.dict import AttributeDictAccess, DataMapper, DataMutableMapper
 from . import default_settings
 from .app_settings_models import ArchitekConfig
 

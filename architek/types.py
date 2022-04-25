@@ -8,15 +8,12 @@ from starlette.types import (
     Send as TSend,
 )
 
-from architek.core.connection import Request, WebSocket
-
 __all__ = [
     "TScope",
     "TMessage",
     "TReceive",
     "TSend",
     "ASGIApp",
-    "TRequest",
     "TemplateFilterCallable",
     "TemplateGlobalCallable",
     "T",
@@ -25,8 +22,6 @@ __all__ = [
     "TCallable",
 ]
 
-
-TRequest = t.Union[Request, WebSocket]
 TemplateFilterCallable = t.Callable[..., t.Any]
 TemplateGlobalCallable = t.Callable[..., t.Any]
 T = t.TypeVar("T")

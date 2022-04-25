@@ -8,9 +8,9 @@ from injector import (
     Module as InjectorModule,
 )
 
-from architek.core.compatible import asynccontextmanager
-from architek.core.helper import get_name
-from architek.core.logger import logger as log
+from architek.compatible import asynccontextmanager
+from architek.helper import get_name
+from architek.logger import logger as log
 from architek.types import T
 
 from .providers import InstanceProvider, Provider
@@ -23,7 +23,6 @@ from .scopes import (
 )
 
 if t.TYPE_CHECKING:
-    from architek.core.main import ArchitekApp
     from architek.core.modules import BaseModuleDecorator, ModuleBase
 
 
@@ -60,6 +59,7 @@ class RequestServiceProvider(InjectorBinder):
         return t.cast(T, result)
 
     def update_context(self, interface: t.Type[T], value: T) -> None:
+        assert not isinstance(value, type), f"value must be an object of {interface}"
         _context = {
             interface: Binding(interface, InstanceProvider(value), RequestScope)
         }
@@ -122,7 +122,7 @@ class Container(InjectorBinder):
     ) -> None:
         assert not isinstance(instance, type)
         _concrete_type = instance.__class__ if not concrete_type else concrete_type
-        self.register(_concrete_type, instance)
+        self.register(_concrete_type, instance, scope=SingletonScope)
 
     def add_singleton(
         self,
@@ -144,7 +144,7 @@ class Container(InjectorBinder):
         self, base_type: t.Type, concrete_type: t.Optional[t.Type] = None
     ) -> None:
         if not concrete_type:
-            self.add_exact_singleton(base_type)
+            self.add_exact_scoped(base_type)
         self.register(base_type, concrete_type, scope=RequestScope)
 
     def add_exact_singleton(self, concrete_type: t.Type) -> None:
@@ -219,14 +219,12 @@ class StarletteInjector(Injector):
 
     def __init__(
         self,
-        app: "ArchitekApp",
         auto_bind: bool = True,
         parent: "Injector" = None,
     ) -> None:
         self._stack = ()
 
         self.parent = parent
-        self.app = app
         # Binder
         self.container = Container(
             self,
