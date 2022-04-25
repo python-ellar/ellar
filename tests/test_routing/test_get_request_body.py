@@ -32,7 +32,7 @@ openapi_schema = {
                 },
             },
             "responses": {
-                200: {
+                "200": {
                     "description": "Successful Response",
                     "content": {
                         "application/json": {

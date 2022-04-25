@@ -1,7 +1,8 @@
 import pytest
 
 from architek.core.testclient import TestClient
-from tests.main import app
+
+from ..main import app
 
 client = TestClient(app)
 
