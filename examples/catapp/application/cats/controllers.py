@@ -1,5 +1,5 @@
 from catapp.application.cats.services import CatService
-from architek.common import Controller, Get, Put, Post, Delete, version, Render, cxt
+from architek.common import Controller, Get, Put, Post, Delete, version, Render, Ctx
 
 
 @Controller
@@ -21,7 +21,7 @@ class CatController:
 
     @Get("/")
     @Render()
-    async def list(self, ctx=cxt()):
+    async def list(self, ctx=Ctx()):
         return self.cat_service.list_cat()
 
     @Get("/create", name='v2_create')

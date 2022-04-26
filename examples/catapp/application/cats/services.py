@@ -1,4 +1,4 @@
-from architek.di import request_scope, injectable, transient_scope, singleton_scope
+from architek.di import injectable
 
 
 @injectable

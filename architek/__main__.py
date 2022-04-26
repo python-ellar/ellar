@@ -1,3 +1,3 @@
-from architek.core.cli import main
+from architek.cli import main
 
 main()
