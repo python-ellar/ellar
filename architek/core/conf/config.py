@@ -3,7 +3,11 @@ import typing as t
 
 from starlette.config import environ
 
-from architek.compatible.dict import AttributeDictAccess, DataMapper, DataMutableMapper
+from architek.compatible.dict import (
+    AttributeDictAccessMixin,
+    DataMapper,
+    DataMutableMapper,
+)
 from architek.constants import ARCHITEK_CONFIG_MODULE
 from architek.types import VT
 
@@ -18,7 +22,7 @@ class _ConfigState(DataMutableMapper):
 _config_state = _ConfigState()
 
 
-class Config(DataMapper, AttributeDictAccess):
+class Config(DataMapper, AttributeDictAccessMixin):
     _data: _ConfigState
     __slots__ = ("config_module",)
 
@@ -48,12 +52,22 @@ class Config(DataMapper, AttributeDictAccess):
 
         self._data: _ConfigState = config_state
         validate_config = ArchitekConfig.parse_obj(self._data)
-        self._data.update(validate_config.dict())
+        self._data.update(validate_config.serialize())
 
     def set_defaults(self, **kwargs: t.Any) -> "Config":
         for k, v in kwargs.items():
             self._data.setdefault(k, v)
         return self
+
+    @classmethod
+    def add_value(cls, **kwargs: t.Any) -> t.Type["Config"]:
+        for k, v in kwargs.items():
+            setattr(default_settings, k, v)
+        return cls
+
+    @classmethod
+    def get_value(cls, key: t.Any) -> t.Any:
+        return getattr(default_settings, key, None)
 
     def __repr__(self) -> str:
         hidden_values = {key: "..." for key in self._data.keys()}

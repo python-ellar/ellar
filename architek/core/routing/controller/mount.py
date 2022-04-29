@@ -23,6 +23,7 @@ class ControllerMount(Mount):
         guards: t.Optional[
             t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]
         ] = None,
+        include_in_schema: bool = True,
     ) -> None:
         super(ControllerMount, self).__init__(
             path=path,
@@ -34,5 +35,10 @@ class ControllerMount(Mount):
             version=version,
             guards=guards,
             routes=routes,
+            include_in_schema=include_in_schema,
         )
         self.controller_type = controller_type
+
+    def build_routes(self) -> None:
+        # Not necessary. Route Building is done in ControllerDecorator
+        pass

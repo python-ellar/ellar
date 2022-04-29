@@ -9,7 +9,7 @@ from architek.core.modules import (
 )
 
 if t.TYPE_CHECKING:
-    from architek.core.routing import ModuleRouter, OperationDefinitions
+    from architek.core.routing import ModuleRouter, Mount, OperationDefinitions
     from architek.core.routing.controller import ControllerDecorator
     from architek.di import ProviderConfig
 
@@ -34,7 +34,9 @@ class ArchitekAppFactory:
     def create_app(
         cls,
         controllers: t.Sequence["ControllerDecorator"] = tuple(),
-        routers: t.Sequence[t.Union["ModuleRouter", "OperationDefinitions"]] = tuple(),
+        routers: t.Sequence[
+            t.Union["ModuleRouter", "OperationDefinitions", "Mount"]
+        ] = tuple(),
         services: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = tuple(),
         modules: t.Union[
             t.Sequence[ModuleDecorator],

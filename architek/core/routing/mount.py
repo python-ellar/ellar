@@ -1,6 +1,7 @@
 import typing as t
 
 from starlette.routing import BaseRoute, Mount as StarletteMount, Route
+from starlette.types import ASGIApp
 
 from architek.compatible import DataMapper
 from architek.core.routing.base import RouteOperationBase
@@ -18,6 +19,7 @@ class Mount(StarletteMount):
     def __init__(
         self,
         path: str,
+        app: ASGIApp = None,
         routes: t.Sequence[BaseRoute] = None,
         name: str = None,
         tag: t.Optional[str] = None,
@@ -28,8 +30,10 @@ class Mount(StarletteMount):
         guards: t.Optional[
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
+        include_in_schema: bool = False,
     ) -> None:
-        super(Mount, self).__init__(path=path, routes=routes or [], name=name)
+        super(Mount, self).__init__(path=path, routes=routes or [], name=name, app=app)
+        self.include_in_schema = include_in_schema
         self._meta: t.Mapping = DataMapper(
             tag=tag,
             external_doc_description=external_doc_description,
@@ -43,6 +47,22 @@ class Mount(StarletteMount):
 
     def get_meta(self) -> t.Mapping:
         return self._meta
+
+    def build_routes(self) -> None:
+        for route in self.routes:
+            _route: RouteOperationBase = t.cast("RouteOperationBase", route)
+            operation_meta = _route.get_meta()
+
+            if not operation_meta.route_versioning:
+                operation_meta.update(route_versioning=self._version)
+            if not operation_meta.route_guards:
+                operation_meta.update(route_guards=self._route_guards)
+
+            if isinstance(_route, Route) and self._meta.get("tag"):
+                tags = {self._meta["tag"]}
+                if operation_meta.openapi.tags:
+                    tags.update(set(operation_meta.openapi.tags))
+                operation_meta.openapi.update(tags=list(tags))
 
 
 class ModuleRouter(Mount):
@@ -60,6 +80,7 @@ class ModuleRouter(Mount):
         guards: t.Optional[
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
+        include_in_schema: bool = True,
     ) -> None:
         super(ModuleRouter, self).__init__(
             path=path,
@@ -70,6 +91,7 @@ class ModuleRouter(Mount):
             external_doc_url=external_doc_url,
             version=version,
             guards=guards,
+            include_in_schema=include_in_schema,
         )
 
         _route_definitions = self.operation_definition_class(t.cast(list, self.routes))
@@ -88,19 +110,4 @@ class ModuleRouter(Mount):
 
         self.HttpRoute = _route_definitions.http_route
         self.WsRoute = _route_definitions.ws_route
-
-    def build_routes(self) -> None:
-        for route in self.routes:
-            _route: RouteOperationBase = t.cast("RouteOperationBase", route)
-            operation_meta = _route.get_meta()
-
-            if not operation_meta.route_versioning:
-                operation_meta.update(route_versioning=self._version)
-            if not operation_meta.route_guards:
-                operation_meta.update(route_guards=self._route_guards)
-
-            if isinstance(_route, Route) and self._meta.get("tag"):
-                tags = {self._meta["tag"]}
-                if operation_meta.openapi.tags:
-                    tags.update(set(operation_meta.openapi.tags))
-                operation_meta.openapi.update(tags=list(tags))
+        # TODO: Add Mount and Host function

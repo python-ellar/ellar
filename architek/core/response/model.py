@@ -4,6 +4,7 @@ from dataclasses import is_dataclass
 from pydantic import BaseModel
 from pydantic.fields import ModelField
 
+from architek.constants import SERIALIZER_FILTER_KEY
 from architek.core.context import IExecutionContext
 from architek.core.converters import TypeDefinitionConverter
 from architek.exceptions import RequestValidationError
@@ -13,6 +14,7 @@ from architek.serializer import (
     DataClassSerializer,
     PydanticSerializer,
     PydanticSerializerBase,
+    SerializerFilter,
     convert_dataclass_to_pydantic_model,
     serialize_object,
 )
@@ -40,7 +42,11 @@ class ResponseModel:
         self.description = description
         self.meta = kwargs
 
-    def serialize(self, response_obj: t.Any) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
+    def serialize(
+        self,
+        response_obj: t.Any,
+        serializer_filter: t.Optional[SerializerFilter] = None,
+    ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
         return response_obj
 
     def get_model_field(self) -> t.Optional[ModelField]:
@@ -51,8 +57,11 @@ class ResponseModel:
     ) -> Response:
         """Cant create custom responses, Please override this function to create a custom response"""
         response_args, headers = self.get_context_response(context=context)
+        serializer_filter = context.operation.get(SERIALIZER_FILTER_KEY)
         response = self.response_type(
-            **response_args, content=response_obj, headers=headers
+            **response_args,
+            content=self.serialize(response_obj, serializer_filter=serializer_filter),
+            headers=headers,
         )
         return response
 
@@ -95,8 +104,11 @@ class _JSONResponseModel(ResponseModel):
             t.Type[JSONResponse], context.get_app().config.DEFAULT_JSON_CLASS
         )
         response_args, headers = self.get_context_response(context=context)
+        serializer_filter = context.operation.get(SERIALIZER_FILTER_KEY)
         response = json_response_class(
-            **response_args, content=self.serialize(response_obj), headers=headers
+            **response_args,
+            content=self.serialize(response_obj, serializer_filter=serializer_filter),
+            headers=headers,
         )
         return response
 
@@ -121,15 +133,25 @@ class APIResponseModel(_JSONResponseModel):
             ResponseModelField, model_field
         )
 
-    def serialize(self, response_obj: t.Any) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
-        return self.response_model_field.serialize(response_obj)
+    def serialize(
+        self,
+        response_obj: t.Any,
+        serializer_filter: t.Optional[SerializerFilter] = None,
+    ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
+        return self.response_model_field.serialize(
+            response_obj, serializer_filter=serializer_filter
+        )
 
 
 class EmptyAPIResponseModel(_JSONResponseModel):
-    def serialize(self, response_obj: t.Any) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
+    def serialize(
+        self,
+        response_obj: t.Any,
+        serializer_filter: t.Optional[SerializerFilter] = None,
+    ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
         try:
             # try an serialize object
-            return serialize_object(response_obj)
+            return serialize_object(response_obj, serializer_filter=serializer_filter)
         except Exception:
             """Failed to auto serialize object"""
         return response_obj
@@ -143,9 +165,11 @@ class ResponseModelField(ModelField):
             raise RequestValidationError(errors=_errors)  # type: ignore
         return values
 
-    def serialize(self, obj: t.Any) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
+    def serialize(
+        self, obj: t.Any, serializer_filter: t.Optional[SerializerFilter] = None
+    ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
         values = self.validate_object(obj=obj)
-        return serialize_object(values)
+        return serialize_object(values, serializer_filter=serializer_filter)
 
 
 class RouteResponseExecution(Exception):

@@ -66,14 +66,11 @@ class ControllerBase(metaclass=ControllerType):
 
 class ControllerDecorator:
     __slots__ = (
-        "_route_guards",
         "_controller_class",
         "_routes",
         "_mount",
-        "_version",
         "_tag",
         "_meta",
-        "guards",
     )
 
     def __init__(
@@ -89,6 +86,7 @@ class ControllerDecorator:
         guards: t.Optional[
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
+        include_in_schema: bool = True,
     ) -> None:
         _controller_class = None
         _prefix: t.Optional[t.Any] = prefix or NOT_SET
@@ -102,16 +100,11 @@ class ControllerDecorator:
                 "/"
             ), "Controller Prefix must start with '/'"
 
-        self._route_guards: t.List[
-            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
-        ] = (guards or [])
         # `controller_class`
         self._controller_class: t.Optional[t.Type[ControllerBase]] = None
         # `_path_operations`
         self._routes: t.Dict[str, BaseRoute] = {}
-        self._version: t.Set[str] = set(
-            [version] if isinstance(version, str) else version
-        )
+
         self._meta = dict(
             tag=tag,
             description=description,
@@ -119,8 +112,9 @@ class ControllerDecorator:
             external_doc_url=external_doc_url,
             path=_prefix,
             name=name,
-            version=self._version,
-            guards=self._route_guards,
+            version=set([version] if isinstance(version, str) else version),
+            guards=guards or [],
+            include_in_schema=include_in_schema,
         )
         self._mount: t.Optional[ControllerMount] = None
 
@@ -173,9 +167,9 @@ class ControllerDecorator:
 
         operation_meta = operation.get_meta()
         if not operation_meta.route_versioning:
-            operation_meta.update(route_versioning=self._version)
+            operation_meta.update(route_versioning=self._meta["version"])
         if not operation_meta.route_guards:
-            operation_meta.update(route_guards=self._route_guards)
+            operation_meta.update(route_guards=self._meta["guards"])
 
         if isinstance(operation, Route):
             tags = {self._meta["tag"]}

@@ -1,5 +1,6 @@
 import typing as t
 
+from pydantic.json import ENCODERS_BY_TYPE
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware import Middleware
 from starlette.responses import JSONResponse
@@ -67,3 +68,6 @@ DEFAULT_NOT_FOUND_HANDLER: ASGIApp = _not_found
 DEFAULT_LIFESPAN_HANDLER: t.Optional[
     t.Callable[["ArchitekApp"], t.AsyncContextManager]
 ] = None
+
+# Object Serializer custom encoders
+SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]] = ENCODERS_BY_TYPE

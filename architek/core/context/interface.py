@@ -1,7 +1,7 @@
 import typing as t
 from abc import ABC, ABCMeta, abstractmethod
 
-from architek.compatible import AttributeDictAccess, DataMapper
+from architek.compatible import AttributeDictAccessMixin, DataMapper
 from architek.core.connection import HTTPConnection, Request, WebSocket
 from architek.core.response import Response
 
@@ -15,7 +15,7 @@ class ExecutionContextException(Exception):
     pass
 
 
-class OperationExecutionMeta(DataMapper, AttributeDictAccess):
+class OperationExecutionMeta(DataMapper, AttributeDictAccessMixin):
     pass
 
 

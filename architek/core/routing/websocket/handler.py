@@ -28,6 +28,24 @@ class WebSocketExtraHandler:
         self.on_connect = on_connect
         self.route_parameter_model: WebsocketEndpointArgsModel = route_parameter_model
 
+    @classmethod
+    def __get_validators__(
+        cls: t.Type["WebSocketExtraHandler"],
+    ) -> t.Iterable[t.Callable[..., t.Any]]:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls: t.Type["WebSocketExtraHandler"], v: t.Any) -> t.Any:
+        if not isinstance(v, type):
+            raise ValueError(
+                f"Expected Type[WebSocketExtraHandler], received: {type(v)}"
+            )
+        if WebSocketExtraHandler != v or not issubclass(v, WebSocketExtraHandler):
+            raise ValueError(
+                f"Expected Type[WebSocketExtraHandler], received: {type(v)}"
+            )
+        return v
+
     async def dispatch(
         self, context: "ExecutionContext", **receiver_kwargs: t.Any
     ) -> None:

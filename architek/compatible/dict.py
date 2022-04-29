@@ -3,7 +3,7 @@ import typing as t
 from architek.types import KT, VT
 
 
-class AttributeDictAccess:
+class AttributeDictAccessMixin:
     def __getattr__(self, name) -> VT:
         if name in self:
             value = self.get(name)
@@ -11,6 +11,16 @@ class AttributeDictAccess:
         raise AttributeError(
             f"'{self.__class__.__name__}' object has no attribute '{name}'"
         )
+
+
+class AttributeDict(AttributeDictAccessMixin, t.Dict[KT, VT]):
+    def __getattr__(self, name: KT) -> t.Optional[VT]:  # type: ignore
+        value = self.get(name)
+        return value
+
+    def set_defaults(self, **kwargs: t.Any) -> None:
+        for k, v in kwargs.items():
+            self.setdefault(k, v)  # type: ignore
 
 
 class DataMapper(t.Mapping, t.Generic[KT, VT]):

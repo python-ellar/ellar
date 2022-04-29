@@ -11,7 +11,7 @@ from architek.core.events import (
     RouterEventManager,
 )
 from architek.core.guard import GuardCanActivate
-from architek.core.routing import ModuleRouter, OperationDefinitions
+from architek.core.routing import ModuleRouter, Mount, OperationDefinitions
 from architek.core.routing.controller import ControllerDecorator
 from architek.di import ProviderConfig
 from architek.di.injector import Container
@@ -26,7 +26,9 @@ class ModuleDecorator(BaseModuleDecorator):
         *,
         name: t.Optional[str] = __name__,
         controllers: t.Sequence[ControllerDecorator] = tuple(),
-        routers: t.Sequence[t.Union[ModuleRouter, OperationDefinitions]] = tuple(),
+        routers: t.Sequence[
+            t.Union[ModuleRouter, OperationDefinitions, Mount]
+        ] = tuple(),
         services: t.Sequence[t.Union[t.Type, ProviderConfig]] = tuple(),
         template_folder: t.Optional[str] = None,
         base_directory: t.Optional[t.Union[Path, str]] = None,
@@ -94,16 +96,16 @@ class ModuleDecorator(BaseModuleDecorator):
 
     @classmethod
     def _get_module_routers(
-        cls, routers: t.Sequence[t.Union[ModuleRouter, OperationDefinitions]]
+        cls, routers: t.Sequence[t.Union[ModuleRouter, OperationDefinitions, Mount]]
     ) -> t.List[BaseRoute]:
         results: t.List[BaseRoute] = []
         for item in routers:
             if isinstance(item, OperationDefinitions) and item.routes:
                 results.extend(item.routes)  # type: ignore
                 continue
-            if isinstance(item, ModuleRouter):
+            if isinstance(item, (Mount,)):
                 item.build_routes()
-                results.append(item)
+            results.append(item)  # type: ignore
         return results
 
 
@@ -116,7 +118,9 @@ class ApplicationModuleDecorator(ModuleDecorator):
         self,
         *,
         controllers: t.Sequence[ControllerDecorator] = tuple(),
-        routers: t.Sequence[t.Union[ModuleRouter, OperationDefinitions]] = tuple(),
+        routers: t.Sequence[
+            t.Union[ModuleRouter, OperationDefinitions, Mount]
+        ] = tuple(),
         services: t.Sequence[t.Union[t.Type, ProviderConfig]] = tuple(),
         modules: t.Sequence[
             t.Union[t.Type, BaseModuleDecorator, ModuleDecorator]

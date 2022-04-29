@@ -27,7 +27,7 @@ class EventHandler:
 
 
 class ApplicationEventHandler:
-    __slots__ = ("is_coroutine", "handler")
+    __slots__ = ("handler",)
 
     def __init__(self, func: t.Callable) -> None:
         if asyncio.iscoroutinefunction(func):
