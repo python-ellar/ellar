@@ -3,8 +3,10 @@ from architek.core.routing import ModuleRouter
 
 from .decorators.base import set_meta
 from .decorators.controller import Controller
+from .decorators.exception import exception_handler
 from .decorators.guards import guards
 from .decorators.html import Render
+from .decorators.middleware import middleware
 from .decorators.modules import ApplicationModule, Module
 from .decorators.openapi import openapi
 from .decorators.versioning import version
@@ -69,4 +71,6 @@ __all__ = [
     "Provide",
     "Req",
     "Ws",
+    "middleware",
+    "exception_handler",
 ]

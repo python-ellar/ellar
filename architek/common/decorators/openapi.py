@@ -1,5 +1,7 @@
 import typing as t
 
+from architek.constants import OPENAPI_KEY
+
 from .base import set_meta
 
 
@@ -11,7 +13,7 @@ def openapi(
     deprecated: t.Optional[bool] = None,
 ) -> t.Callable:
     return set_meta(
-        "openapi",
+        OPENAPI_KEY,
         dict(
             operation_id=operation_id,
             summary=summary,
