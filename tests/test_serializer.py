@@ -158,15 +158,10 @@ def test_serializer_filter():
         model, serializer_filter=SerializerFilter(exclude_defaults=True)
     ) == {"foo": "foo"}
 
-    assert (
-        serialize_object(
-            model,
-            serializer_filter=SerializerFilter(
-                exclude_unset=True, exclude_defaults=True
-            ),
-        )
-        == {"foo": "foo"}
-    )
+    assert serialize_object(
+        model,
+        serializer_filter=SerializerFilter(exclude_unset=True, exclude_defaults=True),
+    ) == {"foo": "foo"}
 
 
 def test_encode_class():
