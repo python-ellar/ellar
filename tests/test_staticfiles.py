@@ -11,10 +11,10 @@ import pytest
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 
-from architek.common import middleware
-from architek.core import ArchitekAppFactory
-from architek.core.routing import Mount
-from architek.core.staticfiles import StarletteStaticFiles
+from ellar.common import middleware
+from ellar.core import ArchitekAppFactory
+from ellar.core.routing import Mount
+from ellar.core.staticfiles import StarletteStaticFiles
 
 
 def test_staticfiles(tmpdir, test_client_factory):

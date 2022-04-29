@@ -1,6 +1,6 @@
 import pytest
 
-from architek.core.events import (
+from ellar.core.events import (
     ApplicationEventHandler,
     ApplicationEventManager,
     EventHandler,

@@ -1,10 +1,10 @@
 import pytest
 from pydantic import BaseModel
 
-from architek.compatible import AttributeDict
-from architek.core.response.model import EmptyAPIResponseModel
-from architek.core.routing.websocket import WebSocketExtraHandler
-from architek.core.schema import RouteParameters, WsRouteParameters
+from ellar.compatible import AttributeDict
+from ellar.core.response.model import EmptyAPIResponseModel
+from ellar.core.routing.websocket import WebSocketExtraHandler
+from ellar.core.schema import RouteParameters, WsRouteParameters
 
 
 class Item(BaseModel):

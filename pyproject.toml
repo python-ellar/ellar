@@ -3,18 +3,18 @@ requires = ["flit_core >=2,<4"]
 build-backend = "flit_core.buildapi"
 
 [tool.flit.module]
-name = "architek"
+name = "ellar"
 
 
 [project]
-name = "architek"
+name = "ellar"
 authors = [
    {name = "Ezeudoh Tochukwu", email = "tochukwu.ezeudoh@gmail.com"},
 ]
 dynamic = ["version", "description"]
 requires-python = ">=3.6"
 readme = "README.md"
-home-page = "https://github.com/eadwinCode/architek"
+home-page = "https://github.com/eadwinCode/ellar"
 classifiers = [
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",
@@ -48,11 +48,11 @@ dependencies = [
 ]
 
 [project.scripts]
-architek = "architek.cli:main"
+ellar = "ellar.cli:main"
 
 [project.urls]
-Documentation = "https://github.com/eadwinCode/architek"
-Source = "https://github.com/eadwinCode/architek"
+Documentation = "https://github.com/eadwinCode/ellar"
+Source = "https://github.com/eadwinCode/ellar"
 
 [project.optional-dependencies]
 test = [

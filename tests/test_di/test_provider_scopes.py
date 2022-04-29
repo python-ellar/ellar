@@ -1,7 +1,7 @@
 import pytest
 
-from architek.di import ProviderConfig, StarletteInjector
-from architek.di.scopes import RequestScope, SingletonScope, TransientScope
+from ellar.di import ProviderConfig, StarletteInjector
+from ellar.di.scopes import RequestScope, SingletonScope, TransientScope
 
 from .examples import AnyContext, Foo, IContext
 

@@ -5,14 +5,14 @@ from injector import (
     is_decorated_with_inject,
 )
 
-from architek.di import (
+from ellar.di import (
     ProviderConfig,
     StarletteInjector,
     get_scope,
     is_decorated_with_injectable,
 )
-from architek.di.providers import ClassProvider
-from architek.di.scopes import SingletonScope, TransientScope
+from ellar.di.providers import ClassProvider
+from ellar.di.scopes import SingletonScope, TransientScope
 
 from .examples import (
     AnyDBContext,

@@ -1,5 +1,5 @@
 from catapp.application.cats.services import CatService
-from architek.common import Controller, Get, Put, Post, Delete, version, Render, Ctx
+from ellar.common import Controller, Get, Put, Post, Delete, version, Render, Ctx
 
 
 @Controller

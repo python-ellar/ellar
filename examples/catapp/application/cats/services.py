@@ -1,4 +1,4 @@
-from architek.di import injectable
+from ellar.di import injectable
 
 
 @injectable

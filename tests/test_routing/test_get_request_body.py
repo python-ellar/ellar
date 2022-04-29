@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
-from architek.core.factory import ArchitekAppFactory
-from architek.openapi import OpenAPIDocumentBuilder
-from architek.serializer import serialize_object
+from ellar.core.factory import ArchitekAppFactory
+from ellar.openapi import OpenAPIDocumentBuilder
+from ellar.serializer import serialize_object
 
 app = ArchitekAppFactory.create_app()
 

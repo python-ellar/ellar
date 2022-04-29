@@ -3,8 +3,8 @@ from typing import Dict, List, Optional, Tuple
 import pytest
 from pydantic import BaseModel
 
-from architek.common import Query
-from architek.core.factory import ArchitekAppFactory
+from ellar.common import Query
+from ellar.core.factory import ArchitekAppFactory
 
 
 class Item(BaseModel):

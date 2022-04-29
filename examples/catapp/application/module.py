@@ -1,5 +1,5 @@
 from catapp.application.cats.module import CatModule
-from architek.common import ApplicationModule
+from ellar.common import ApplicationModule
 
 
 @ApplicationModule(

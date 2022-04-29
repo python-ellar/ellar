@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple
 import pytest
 from pydantic import BaseModel
 
-from architek.core.factory import ArchitekAppFactory
+from ellar.core.factory import ArchitekAppFactory
 
 
 def test_invalid_sequence():

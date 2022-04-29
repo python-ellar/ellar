@@ -1,11 +1,11 @@
 import os
 
 from catapp.application.module import AppModuleTest
-from architek.core.factory import ArchitekAppFactory
-from architek.openapi.builder import OpenAPIDocumentBuilder
-from architek.openapi.module import OpenAPIDocumentModule
+from ellar.core.factory import ArchitekAppFactory
+from ellar.openapi.builder import OpenAPIDocumentBuilder
+from ellar.openapi.module import OpenAPIDocumentModule
 
-os.environ.setdefault('ARCHITEK_CONFIG_MODULE', 'app_module_test.settings')
+os.environ.setdefault('ELLAR_CONFIG_MODULE', 'app_module_test.settings')
 
 app = ArchitekAppFactory.create_from_app_module(AppModuleTest)
 

@@ -14,18 +14,18 @@ install: ## Install dependencies
 	flit install --deps develop --symlink
 
 lint: ## Run code linters
-	black --check architek tests
-	isort --check architek tests
-	autoflake --remove-unused-variables --remove-unused-variables -r architek tests
-	flake8 architek tests
-	mypy architek
+	black --check ellar tests
+	isort --check ellar tests
+	autoflake --remove-unused-variables --remove-unused-variables -r ellar tests
+	flake8 ellar tests
+	mypy ellar
 
 fmt format: ## Run code formatters
-	black architek tests
-	isort architek tests
+	black ellar tests
+	isort ellar tests
 
 test: ## Run tests
 	pytest tests
 
 test-cov: ## Run tests with coverage
-	pytest --cov=architek --cov-report term-missing tests
+	pytest --cov=ellar --cov-report term-missing tests

@@ -1,5 +1,5 @@
-from architek.compatible import AttributeDict
-from architek.core.operation_meta import OperationMeta
+from ellar.compatible import AttributeDict
+from ellar.core.operation_meta import OperationMeta
 
 
 def test_operation_meta_defaults():

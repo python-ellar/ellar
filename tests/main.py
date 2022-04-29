@@ -1,8 +1,8 @@
 from typing import Optional
 from uuid import UUID
 
-from architek.common import Path, Query
-from architek.core.factory import ArchitekAppFactory
+from ellar.common import Path, Query
+from ellar.core.factory import ArchitekAppFactory
 
 app = ArchitekAppFactory.create_app()
 

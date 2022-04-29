@@ -1,9 +1,9 @@
-from architek.core.modules import ModuleBase
+from ellar.core.modules import ModuleBase
 
 from catapp.application.cats.controllers import CatController
 from catapp.application.cats.routers import cat_router
 from catapp.application.cats.services import CatService, AnotherService
-from architek.common import Module
+from ellar.common import Module
 
 
 @Module(

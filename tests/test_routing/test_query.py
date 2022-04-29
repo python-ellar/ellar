@@ -1,6 +1,6 @@
 import pytest
 
-from architek.core.testclient import TestClient
+from ellar.core.testclient import TestClient
 
 from ..main import app
 

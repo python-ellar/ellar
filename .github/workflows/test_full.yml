@@ -38,10 +38,10 @@ jobs:
       - name: Install Dependencies
         run: flit install --symlink
       - name: Black
-        run: black --check architek tests
+        run: black --check ellar tests
       - name: isort
-        run: isort --check architek tests
+        run: isort --check ellar tests
       - name: Flake8
-        run: flake8 architek tests
+        run: flake8 ellar tests
       - name: mypy
-        run: mypy architek
+        run: mypy ellar

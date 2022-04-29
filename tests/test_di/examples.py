@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from architek.di import injectable
-from architek.di.scopes import RequestScope, TransientScope
+from ellar.di import injectable
+from ellar.di.scopes import RequestScope, TransientScope
 
 
 class Foo:

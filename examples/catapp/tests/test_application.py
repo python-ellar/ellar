@@ -4,9 +4,9 @@ import pytest
 from pathlib import Path
 from catapp.application.cats.routers import cat_router
 
-from architek.core.testclient import TestClientFactory
+from ellar.core.testclient import TestClientFactory
 
-os.environ.setdefault('ARCHITEK_CONFIG_MODULE',  'app_module_test.tests.settings')
+os.environ.setdefault('ELLAR_CONFIG_MODULE',  'app_module_test.tests.settings')
 
 BASEDIR = Path(__file__).resolve().parent.parent
 

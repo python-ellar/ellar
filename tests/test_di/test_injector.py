@@ -1,10 +1,10 @@
 import pytest
 from injector import Binder, Injector, UnsatisfiedRequirement
 
-from architek.common import Module
-from architek.core import ModuleBase
-from architek.di import Container, StarletteInjector
-from architek.di.providers import ClassProvider, InstanceProvider
+from ellar.common import Module
+from ellar.core import ModuleBase
+from ellar.di import Container, StarletteInjector
+from ellar.di.providers import ClassProvider, InstanceProvider
 
 from .examples import Foo, Foo1, Foo2
 
