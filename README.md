@@ -10,6 +10,3 @@ Architek is python web framework for building fast, efficient and scalable web a
 
 ## Status
 Project is still under development
-
-## Project Name
-Project name is subject to change
