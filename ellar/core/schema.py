@@ -3,7 +3,8 @@ import typing as t
 from pydantic import BaseModel, Field, root_validator, validator
 
 from ellar.constants import ROUTE_METHODS
-from ellar.core.response.model import EmptyAPIResponseModel, ResponseModel
+from ellar.core.response.model import EmptyAPIResponseModel, IResponseModel
+from ellar.serializer import BaseSerializer
 
 if t.TYPE_CHECKING:
     from ellar.core.routing.websocket import WebSocketExtraHandler
@@ -17,8 +18,8 @@ class TResponseModel:
         yield cls.validate
 
     @classmethod
-    def validate(cls: t.Type["ResponseModel"], v: t.Any) -> t.Any:
-        if not isinstance(v, ResponseModel):
+    def validate(cls: t.Type["IResponseModel"], v: t.Any) -> t.Any:
+        if not isinstance(v, IResponseModel):
             raise ValueError(f"Expected ResponseModel, received: {type(v)}")
         return v
 
@@ -34,7 +35,13 @@ class RouteParameters(BaseModel):
     name: t.Optional[str] = None
     include_in_schema: bool = True
     response: t.Optional[
-        t.Union[t.Dict[int, t.Union[t.Type, t.Any, TResponseModel]], TResponseModel]
+        t.Union[
+            t.Dict[int, t.Union[t.Type, t.Any, TResponseModel]],
+            TResponseModel,
+            t.Type[BaseModel],
+            t.Type[BaseSerializer],
+            t.Any,
+        ]
     ]
 
     @validator("methods")
@@ -56,12 +63,14 @@ class RouteParameters(BaseModel):
     def validate_root(cls, values: t.Any):
         if "response" not in values:
             raise ValueError(
-                "Expected ResponseModel | Dict[int, Any | BaseModel | ResponseModel]"
+                "Expected "
+                "IResponseModel | Dict[int, Any | Type[BaseModel] | "
+                "Type[BaseSerializer] | IResponseModel]  | Type[BaseModel] | Type[BaseSerializer]"
             )
 
         response = values["response"]
         if not response:
-            values["response"] = {200: EmptyAPIResponseModel()}
+            values["response"] = {200: EmptyAPIResponseModel.create_model()}
         elif not isinstance(response, dict):
             values["response"] = {200: response}
         return values

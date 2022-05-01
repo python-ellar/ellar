@@ -39,12 +39,12 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         path: str,
         methods: t.List[str],
         endpoint: t.Callable,
-        response: t.Union[t.Type, t.Dict[int, t.Type]],
+        response: t.Mapping[int, t.Type],
         name: t.Optional[str] = None,
         include_in_schema: bool = True,
     ) -> None:
         self._is_coroutine = iscoroutinefunction_or_partial(endpoint)
-        self._defined_responses = response
+        self._defined_responses: t.Dict[int, t.Type] = dict(response)
 
         assert path.startswith("/"), "Routed paths must start with '/'"
         self.path = path
@@ -89,7 +89,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
             self._defined_responses.update(_response_override)  # type: ignore
 
         self.response_model = RouteResponseModel(
-            route_responses=self._defined_responses
+            route_responses=self._defined_responses  # type: ignore
         )
 
     def get_operation_unique_id(self, method: str) -> str:

@@ -38,14 +38,6 @@ def test_route_parameter_schema():
             methods=["something_else"], path="/path", endpoint=lambda: "testing"
         )
 
-    with pytest.raises(
-        ValueError,
-        match="Expected ResponseModel | Dict[int, Any | BaseModel | ResponseModel]",
-    ):
-        RouteParameters(
-            methods=["get"], path="/path", endpoint=lambda: "testing", response=Item
-        )
-
     route_parameter = RouteParameters(
         methods=["get"],
         path="/path",

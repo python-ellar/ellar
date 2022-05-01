@@ -18,5 +18,5 @@ __all__ = [
     "EmptyAPIResponseModel",
     "RouteResponseModel",
     "ResponseTypeDefinitionConverter",
-    "IResponseModel"
+    "IResponseModel",
 ]

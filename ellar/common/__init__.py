@@ -9,6 +9,7 @@ from .decorators.html import Render
 from .decorators.middleware import middleware
 from .decorators.modules import ApplicationModule, Module
 from .decorators.openapi import openapi
+from .decorators.serializer import serializer_filter
 from .decorators.versioning import version
 from .routing import (
     Delete,
@@ -73,4 +74,5 @@ __all__ = [
     "Ws",
     "middleware",
     "exception_handler",
+    "serializer_filter",
 ]

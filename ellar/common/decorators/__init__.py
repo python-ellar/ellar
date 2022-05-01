@@ -6,4 +6,5 @@ from .html import Render  # noqa
 from .middleware import middleware  # noqa
 from .modules import ApplicationModule, Module  # noqa
 from .openapi import openapi  # noqa
+from .serializer import serializer_filter  # noqa
 from .versioning import version  # noqa
