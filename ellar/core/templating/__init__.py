@@ -1,8 +1,8 @@
 from starlette.templating import _TemplateResponse as TemplateResponse
 
 from .environment import Environment
-from .interface import ArchitekAppTemplating, JinjaTemplating, ModuleTemplating
-from .loader import ArchitekJinjaLoader
+from .interface import AppTemplating, JinjaTemplating, ModuleTemplating
+from .loader import JinjaLoader
 from .renderer import render_template, render_template_string
 
 __all__ = [
@@ -10,8 +10,8 @@ __all__ = [
     "Environment",
     "JinjaTemplating",
     "ModuleTemplating",
-    "ArchitekAppTemplating",
-    "ArchitekJinjaLoader",
+    "AppTemplating",
+    "JinjaLoader",
     "render_template",
     "render_template_string",
 ]

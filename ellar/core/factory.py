@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.core.main import ArchitekApp
+from ellar.core.main import App
 from ellar.core.modules import (
     ApplicationModuleDecorator,
     BaseModuleDecorator,
@@ -18,16 +18,16 @@ class AppFactoryModule(ModuleBase):
     pass
 
 
-class ArchitekAppFactory:
+class AppFactory:
     @classmethod
     def _create_app(
         cls, app_module: t.Union[ApplicationModuleDecorator, t.Type]
-    ) -> ArchitekApp:
+    ) -> App:
         assert isinstance(
             app_module, ApplicationModuleDecorator
         ), "Only ApplicationModule is allowed"
 
-        app = ArchitekApp(module=app_module)
+        app = App(module=app_module)
         return app
 
     @classmethod
@@ -46,7 +46,7 @@ class ArchitekAppFactory:
         template_folder: t.Optional[str] = None,
         base_directory: t.Optional[str] = None,
         static_folder: str = "static",
-    ) -> ArchitekApp:
+    ) -> App:
         app_module = ApplicationModuleDecorator(
             controllers=controllers,
             routers=routers,
@@ -62,5 +62,5 @@ class ArchitekAppFactory:
     @classmethod
     def create_from_app_module(
         cls, app_module: t.Union[ApplicationModuleDecorator, t.Type]
-    ) -> ArchitekApp:
+    ) -> App:
         return cls._create_app(app_module)

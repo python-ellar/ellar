@@ -11,7 +11,7 @@ from pydantic.schema import (
 )
 
 from ellar.compatible import cached_property
-from ellar.core.main import ArchitekApp
+from ellar.core.main import App
 from ellar.core.routing import ModuleRouter, Mount, RouteOperation
 from ellar.core.routing.controller.mount import ControllerMount
 from ellar.core.schema import HTTPValidationError, ValidationError
@@ -31,9 +31,7 @@ default_openapi_version = "3.0.2"
 class OpenAPIDocumentBuilder:
     def __init__(self) -> None:
         self._build: t.Dict = dict()
-        self._build.setdefault("info", {}).update(
-            title="Architek Docs", version="1.0.0"
-        )
+        self._build.setdefault("info", {}).update(title="Ellar Docs", version="1.0.0")
         self._build.setdefault("tags", [])
         self._build.setdefault("openapi", default_openapi_version)
 
@@ -104,9 +102,7 @@ class OpenAPIDocumentBuilder:
         self._build.setdefault("tags", []).append(data)
         return self
 
-    def _get_openapi_route_document_models(
-        self, app: ArchitekApp
-    ) -> t.List[OpenAPIRoute]:
+    def _get_openapi_route_document_models(self, app: App) -> t.List[OpenAPIRoute]:
         openapi_route_models: t.List = []
         for route in app.routes:
             if isinstance(route, (ControllerMount, ModuleRouter, Mount)) and getattr(
@@ -153,7 +149,7 @@ class OpenAPIDocumentBuilder:
             _model_fields.append(model_field)
         return _model_fields
 
-    def build_document(self, app: ArchitekApp) -> OpenAPI:
+    def build_document(self, app: App) -> OpenAPI:
         openapi_route_models = self._get_openapi_route_document_models(app=app)
         components: t.Dict[str, t.Dict[str, t.Any]] = {}
 

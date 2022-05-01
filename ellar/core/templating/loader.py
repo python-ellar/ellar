@@ -6,16 +6,16 @@ from jinja2.loaders import BaseLoader
 from .environment import Environment
 
 if t.TYPE_CHECKING:
-    from ellar.core.main import ArchitekApp
+    from ellar.core.main import App
 
 
-class ArchitekJinjaLoader(BaseLoader):
+class JinjaLoader(BaseLoader):
     """A loader that looks for templates in the application and all
     the blueprint folders.
     An idea from flask
     """
 
-    def __init__(self, app: "ArchitekApp") -> None:
+    def __init__(self, app: "App") -> None:
         self.app = app
 
     def get_source(  # type: ignore

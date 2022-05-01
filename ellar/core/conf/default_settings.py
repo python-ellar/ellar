@@ -17,7 +17,7 @@ from ellar.exceptions import APIException, RequestValidationError
 from ellar.types import TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:
-    from ellar.core.main import ArchitekApp
+    from ellar.core.main import App
 
 DEBUG: bool = False
 
@@ -65,9 +65,7 @@ async def _not_found(scope: TScope, receive: TReceive, send: TSend) -> None:
 DEFAULT_NOT_FOUND_HANDLER: ASGIApp = _not_found
 # The lifespan context function is a newer style that replaces
 # on_startup / on_shutdown handlers. Use one or the other, not both.
-DEFAULT_LIFESPAN_HANDLER: t.Optional[
-    t.Callable[["ArchitekApp"], t.AsyncContextManager]
-] = None
+DEFAULT_LIFESPAN_HANDLER: t.Optional[t.Callable[["App"], t.AsyncContextManager]] = None
 
 # Object Serializer custom encoders
 SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]] = ENCODERS_BY_TYPE

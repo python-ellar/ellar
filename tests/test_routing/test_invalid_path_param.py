@@ -3,12 +3,12 @@ from typing import Dict, List, Tuple
 import pytest
 from pydantic import BaseModel
 
-from ellar.core.factory import ArchitekAppFactory
+from ellar.core.factory import AppFactory
 
 
 def test_invalid_sequence():
     with pytest.raises(AssertionError):
-        app = ArchitekAppFactory.create_app()
+        app = AppFactory.create_app()
 
         class Item(BaseModel):
             title: str
@@ -20,7 +20,7 @@ def test_invalid_sequence():
 
 def test_invalid_tuple():
     with pytest.raises(AssertionError):
-        app = ArchitekAppFactory.create_app()
+        app = AppFactory.create_app()
 
         class Item(BaseModel):
             title: str
@@ -32,7 +32,7 @@ def test_invalid_tuple():
 
 def test_invalid_dict():
     with pytest.raises(AssertionError):
-        app = ArchitekAppFactory.create_app()
+        app = AppFactory.create_app()
 
         class Item(BaseModel):
             title: str
@@ -44,7 +44,7 @@ def test_invalid_dict():
 
 def test_invalid_simple_list():
     with pytest.raises(AssertionError):
-        app = ArchitekAppFactory.create_app()
+        app = AppFactory.create_app()
 
         @app.Get("/items/{id}")
         def read_items(id: list):
@@ -53,7 +53,7 @@ def test_invalid_simple_list():
 
 def test_invalid_simple_tuple():
     with pytest.raises(AssertionError):
-        app = ArchitekAppFactory.create_app()
+        app = AppFactory.create_app()
 
         @app.Get("/items/{id}")
         def read_items(id: tuple):
@@ -62,7 +62,7 @@ def test_invalid_simple_tuple():
 
 def test_invalid_simple_set():
     with pytest.raises(AssertionError):
-        app = ArchitekAppFactory.create_app()
+        app = AppFactory.create_app()
 
         @app.Get("/items/{id}")
         def read_items(id: set):
@@ -71,7 +71,7 @@ def test_invalid_simple_set():
 
 def test_invalid_simple_dict():
     with pytest.raises(AssertionError):
-        app = ArchitekAppFactory.create_app()
+        app = AppFactory.create_app()
 
         @app.Get("/items/{id}")
         def read_items(id: dict):

@@ -4,7 +4,7 @@ import pytest
 from pydantic import BaseModel
 
 from ellar.common import Query
-from ellar.core.factory import ArchitekAppFactory
+from ellar.core.factory import AppFactory
 
 
 class Item(BaseModel):
@@ -13,7 +13,7 @@ class Item(BaseModel):
 
 def test_invalid_sequence():
     with pytest.raises(AssertionError):
-        app = ArchitekAppFactory.create_app()
+        app = AppFactory.create_app()
 
         @app.Get("/items/")
         def read_items(q: List[Item] = Query(None)):
@@ -22,7 +22,7 @@ def test_invalid_sequence():
 
 def test_invalid_tuple():
     with pytest.raises(AssertionError):
-        app = ArchitekAppFactory.create_app()
+        app = AppFactory.create_app()
 
         @app.Get("/items/")
         def read_items(q: Tuple[Item, Item] = Query(None)):
@@ -31,7 +31,7 @@ def test_invalid_tuple():
 
 def test_invalid_dict():
     with pytest.raises(AssertionError):
-        app = ArchitekAppFactory.create_app()
+        app = AppFactory.create_app()
 
         @app.Get("/items/")
         def read_items(q: Dict[str, Item] = Query(None)):
@@ -40,7 +40,7 @@ def test_invalid_dict():
 
 def test_invalid_simple_dict():
     with pytest.raises(AssertionError):
-        app = ArchitekAppFactory.create_app()
+        app = AppFactory.create_app()
 
         @app.Get("/items/")
         def read_items(q: Optional[dict] = Query(None)):

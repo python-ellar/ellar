@@ -14,10 +14,10 @@ from ellar.types import ASGIApp, TemplateFilterCallable, TemplateGlobalCallable
 
 from ..conf import Config
 from .environment import Environment
-from .loader import ArchitekJinjaLoader
+from .loader import JinjaLoader
 
 if t.TYPE_CHECKING:
-    from ellar.core.main import ArchitekApp
+    from ellar.core.main import App
     from ellar.core.modules import ApplicationModuleDecorator
 
 
@@ -64,7 +64,7 @@ class ModuleTemplating(JinjaTemplating):
         return None
 
 
-class ArchitekAppTemplating:
+class AppTemplating:
     config: Config
     _static_app: t.Optional[ASGIApp]
     debug: bool
@@ -104,7 +104,7 @@ class ArchitekAppTemplating:
             request = t.cast(Request, context["request"])
             return request.url_for(name, **path_params)
 
-        app: ArchitekApp = t.cast("ArchitekApp", self)
+        app: App = t.cast("App", self)
 
         jinja_env = Environment(app, **options)
         jinja_env.globals.update(
@@ -114,8 +114,8 @@ class ArchitekAppTemplating:
         jinja_env.policies["json.dumps_function"] = json.dumps
         return jinja_env
 
-    def create_global_jinja_loader(self) -> ArchitekJinjaLoader:
-        return ArchitekJinjaLoader(t.cast("ArchitekApp", self))
+    def create_global_jinja_loader(self) -> JinjaLoader:
+        return JinjaLoader(t.cast("App", self))
 
     def create_static_app(self) -> ASGIApp:
         return StarletteStaticFiles(

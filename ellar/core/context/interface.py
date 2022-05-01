@@ -6,7 +6,7 @@ from ellar.core.connection import HTTPConnection, Request, WebSocket
 from ellar.core.response import Response
 
 if t.TYPE_CHECKING:
-    from ellar.core.main import ArchitekApp
+    from ellar.core.main import App
     from ellar.core.routing import RouteOperationBase
     from ellar.di.injector import RequestServiceProvider
 
@@ -55,5 +55,5 @@ class IExecutionContext(ABC, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_app(self) -> "ArchitekApp":
+    def get_app(self) -> "App":
         pass

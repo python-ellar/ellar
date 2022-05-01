@@ -12,7 +12,7 @@ from ellar.constants import ELLAR_CONFIG_MODULE
 from ellar.types import VT
 
 from . import default_settings
-from .app_settings_models import ArchitekConfig
+from .app_settings_models import ConfigValidationSchema
 
 
 class _ConfigState(DataMutableMapper):
@@ -51,7 +51,7 @@ class Config(DataMapper, AttributeDictAccessMixin):
         config_state.update(**mapping)
 
         self._data: _ConfigState = config_state
-        validate_config = ArchitekConfig.parse_obj(self._data)
+        validate_config = ConfigValidationSchema.parse_obj(self._data)
         self._data.update(validate_config.serialize())
 
     def set_defaults(self, **kwargs: t.Any) -> "Config":

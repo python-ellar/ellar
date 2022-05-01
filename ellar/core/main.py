@@ -20,13 +20,13 @@ from ellar.core.modules import (
     ModuleBase,
 )
 from ellar.core.routing import ApplicationRouter, RouteCollection
-from ellar.core.templating import ArchitekAppTemplating, Environment
+from ellar.core.templating import AppTemplating, Environment
 from ellar.di.injector import StarletteInjector
 from ellar.logger import logger
 from ellar.types import ASGIApp, T, TReceive, TScope, TSend
 
 
-class ArchitekApp(ArchitekAppTemplating):
+class App(AppTemplating):
     def __init__(self, module: t.Optional[ApplicationModuleDecorator] = None):
         if module:
             assert isinstance(

@@ -3,7 +3,7 @@ import typing as t
 from jinja2 import Environment as BaseEnvironment
 
 if t.TYPE_CHECKING:
-    from ellar.core.main import ArchitekApp
+    from ellar.core.main import App
 
 
 class Environment(BaseEnvironment):
@@ -12,7 +12,7 @@ class Environment(BaseEnvironment):
     name of the blueprint to referenced templates if necessary.
     """
 
-    def __init__(self, app: "ArchitekApp", **options: t.Any) -> None:
+    def __init__(self, app: "App", **options: t.Any) -> None:
         if "loader" not in options:
             options["loader"] = app.create_global_jinja_loader()
         BaseEnvironment.__init__(self, **options)

@@ -1,13 +1,13 @@
 import os
 
 from catapp.application.module import AppModuleTest
-from ellar.core.factory import ArchitekAppFactory
+from ellar.core.factory import AppFactory
 from ellar.openapi.builder import OpenAPIDocumentBuilder
 from ellar.openapi.module import OpenAPIDocumentModule
 
 os.environ.setdefault('ELLAR_CONFIG_MODULE', 'app_module_test.settings')
 
-app = ArchitekAppFactory.create_from_app_module(AppModuleTest)
+app = AppFactory.create_from_app_module(AppModuleTest)
 
 document_builder = OpenAPIDocumentBuilder()
 document_builder.set_title('Mirabel Title')\

@@ -2,8 +2,8 @@ import typing as t
 
 from starlette.testclient import TestClient as TestClient
 
-from ellar.core.factory import ArchitekAppFactory
-from ellar.core.main import ArchitekApp
+from ellar.core.factory import AppFactory
+from ellar.core.main import App
 from ellar.core.modules import (
     ApplicationModuleDecorator,
     BaseModuleDecorator,
@@ -15,7 +15,7 @@ from ellar.di import ProviderConfig
 
 
 class _TestingModule:
-    def __init__(self, app: ArchitekApp) -> None:
+    def __init__(self, app: App) -> None:
         self.app = app
 
     def get_client(
@@ -47,7 +47,7 @@ class TestClientFactory:
         base_directory: t.Optional[str] = None,
         static_folder: str = "static",
     ) -> _TestingModule:
-        app = ArchitekAppFactory.create_app(
+        app = AppFactory.create_app(
             controllers=controllers,
             routers=routers,
             services=services,
@@ -69,11 +69,11 @@ class TestClientFactory:
             if mock_services:
 
                 @module.after_initialisation
-                def _register_services(application: ArchitekApp) -> None:
+                def _register_services(application: App) -> None:
                     for service in mock_services:
                         if isinstance(service, ProviderConfig):
                             service.register(application.injector.container)
 
-            return _TestingModule(app=ArchitekAppFactory.create_from_app_module(module))
-        app = ArchitekAppFactory.create_app(modules=(module,), services=mock_services)
+            return _TestingModule(app=AppFactory.create_from_app_module(module))
+        app = AppFactory.create_app(modules=(module,), services=mock_services)
         return _TestingModule(app=app)

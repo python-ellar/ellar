@@ -44,7 +44,8 @@ dependencies = [
     "injector",
     "starlette >= 0.19.0",
     "pydantic",
-    "jinja2"
+    "jinja2",
+    "typer"
 ]
 
 [project.scripts]

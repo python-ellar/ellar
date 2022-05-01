@@ -2,9 +2,9 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from ellar.core import ArchitekAppFactory
+from ellar.core import AppFactory
 
-app = ArchitekAppFactory.create_app()
+app = AppFactory.create_app()
 
 
 class Item(BaseModel):

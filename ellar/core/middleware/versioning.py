@@ -6,11 +6,11 @@ from ellar.types import TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:
     from ellar.core.conf import Config
-    from ellar.core.main import ArchitekApp
+    from ellar.core.main import App
 
 
 class RequestVersioningMiddleware:
-    def __init__(self, app: "ArchitekApp", *, debug: bool, config: "Config") -> None:
+    def __init__(self, app: "App", *, debug: bool, config: "Config") -> None:
         self.app = app
         self.debug = debug
         self.config = config

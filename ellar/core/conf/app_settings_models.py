@@ -37,7 +37,7 @@ class TMiddleware(Middleware):
         return v
 
 
-class ArchitekConfig(PydanticSerializer):
+class ConfigValidationSchema(PydanticSerializer):
     _filter = SerializerFilter(
         exclude={
             "EXCEPTION_HANDLERS_DECORATOR",

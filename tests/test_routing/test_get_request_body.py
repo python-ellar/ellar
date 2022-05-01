@@ -1,10 +1,10 @@
 from pydantic import BaseModel
 
-from ellar.core.factory import ArchitekAppFactory
+from ellar.core.factory import AppFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
 
-app = ArchitekAppFactory.create_app()
+app = AppFactory.create_app()
 
 
 class Product(BaseModel):
@@ -20,7 +20,7 @@ async def create_item(product: Product):
 
 openapi_schema = {
     "openapi": "3.0.2",
-    "info": {"title": "Architek Docs", "version": "1.0.0"},
+    "info": {"title": "Ellar Docs", "version": "1.0.0"},
     "paths": {
         "get": {
             "requestBody": {

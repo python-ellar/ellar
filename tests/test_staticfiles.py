@@ -12,7 +12,7 @@ from starlette.exceptions import HTTPException
 from starlette.requests import Request
 
 from ellar.common import middleware
-from ellar.core import ArchitekAppFactory
+from ellar.core import AppFactory
 from ellar.core.routing import Mount
 from ellar.core.staticfiles import StarletteStaticFiles
 
@@ -56,7 +56,7 @@ def test_staticfiles_head_with_middleware(tmpdir, test_client_factory):
         response = await call_next(request)
         return response
 
-    app = ArchitekAppFactory.create_app(routers=routers)
+    app = AppFactory.create_app(routers=routers)
     client = test_client_factory(app)
     response = client.head("/static/example.txt")
     assert response.status_code == 200
@@ -85,7 +85,7 @@ def test_staticfiles_post(tmpdir, test_client_factory):
     routers = [
         Mount("/", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
     ]
-    app = ArchitekAppFactory.create_app(routers=routers)
+    app = AppFactory.create_app(routers=routers)
     client = test_client_factory(app)
 
     response = client.post("/example.txt")
@@ -101,7 +101,7 @@ def test_staticfiles_with_directory_returns_404(tmpdir, test_client_factory):
     routers = [
         Mount("/", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
     ]
-    app = ArchitekAppFactory.create_app(routers=routers)
+    app = AppFactory.create_app(routers=routers)
     client = test_client_factory(app)
 
     response = client.get("/")
@@ -117,7 +117,7 @@ def test_staticfiles_with_missing_file_returns_404(tmpdir, test_client_factory):
     routers = [
         Mount("/", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
     ]
-    app = ArchitekAppFactory.create_app(routers=routers)
+    app = AppFactory.create_app(routers=routers)
     client = test_client_factory(app)
 
     response = client.get("/404.txt")
@@ -395,7 +395,7 @@ def test_staticfiles_with_invalid_dir_permissions_returns_401(
     routers = [
         Mount("/", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
     ]
-    app = ArchitekAppFactory.create_app(routers=routers)
+    app = AppFactory.create_app(routers=routers)
     client = test_client_factory(app)
 
     response = client.get("/example.txt")
@@ -411,7 +411,7 @@ def test_staticfiles_with_missing_dir_returns_404(tmpdir, test_client_factory):
     routers = [
         Mount("/", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
     ]
-    app = ArchitekAppFactory.create_app(routers=routers)
+    app = AppFactory.create_app(routers=routers)
     client = test_client_factory(app)
 
     response = client.get("/foo/example.txt")
@@ -427,7 +427,7 @@ def test_staticfiles_access_file_as_dir_returns_404(tmpdir, test_client_factory)
     routers = [
         Mount("/", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
     ]
-    app = ArchitekAppFactory.create_app(routers=routers)
+    app = AppFactory.create_app(routers=routers)
     client = test_client_factory(app)
 
     response = client.get("/example.txt/foo")
@@ -448,7 +448,7 @@ def test_staticfiles_unhandled_os_error_returns_500(
     routers = [
         Mount("/", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
     ]
-    app = ArchitekAppFactory.create_app(routers=routers)
+    app = AppFactory.create_app(routers=routers)
     client = test_client_factory(app, raise_server_exceptions=False)
 
     monkeypatch.setattr("starlette.staticfiles.StaticFiles.lookup_path", mock_timeout)

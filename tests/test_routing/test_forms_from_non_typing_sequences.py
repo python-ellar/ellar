@@ -1,7 +1,7 @@
 from ellar.common import Form
-from ellar.core import ArchitekAppFactory, TestClient
+from ellar.core import AppFactory, TestClient
 
-app = ArchitekAppFactory.create_app()
+app = AppFactory.create_app()
 
 
 @app.Post("/form/python-list")

@@ -15,7 +15,7 @@ from .interface import (
 )
 
 if t.TYPE_CHECKING:
-    from ellar.core.main import ArchitekApp
+    from ellar.core.main import App
     from ellar.core.routing import RouteOperationBase
     from ellar.core.routing.controller import ControllerBase
     from ellar.di.injector import RequestServiceProvider
@@ -108,8 +108,8 @@ class ExecutionContext(IExecutionContext):
             )
         return self._response
 
-    def get_app(self) -> "ArchitekApp":
-        return t.cast("ArchitekApp", self.scope["app"])
+    def get_app(self) -> "App":
+        return t.cast("App", self.scope["app"])
 
     @classmethod
     def create_context(

@@ -2,9 +2,9 @@ from typing import Optional
 from uuid import UUID
 
 from ellar.common import Path, Query
-from ellar.core.factory import ArchitekAppFactory
+from ellar.core.factory import AppFactory
 
-app = ArchitekAppFactory.create_app()
+app = AppFactory.create_app()
 
 
 @app.Get("/root")

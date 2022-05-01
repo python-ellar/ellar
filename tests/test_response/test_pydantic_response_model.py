@@ -3,9 +3,9 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from ellar.common import serializer_filter
-from ellar.core import ArchitekAppFactory
+from ellar.core import AppFactory
 
-app = ArchitekAppFactory.create_app()
+app = AppFactory.create_app()
 
 
 class Item(BaseModel):
