@@ -1,6 +1,6 @@
 ## Abstract
 
-Architek is python web framework for building fast, efficient and scalable web application.
+Ellar is python web framework for building fast, efficient and scalable web application.
 
 #### Requirements
 - Python >= 3.6
