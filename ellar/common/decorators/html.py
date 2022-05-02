@@ -1,56 +1,18 @@
 import inspect
+import re
 import typing as t
 import warnings
 
-from ellar.constants import NOT_SET
-from ellar.core.context import ExecutionContext, IExecutionContext
-from ellar.core.response import Response
-from ellar.core.response.model import ResponseModel
+from ellar.constants import NOT_SET, RESPONSE_OVERRIDE_KEY
+from ellar.core.response.model import HTMLResponseModel
 from ellar.core.routing import RouteOperationBase
-from ellar.core.templating import Environment, TemplateResponse
-from ellar.core.templating.renderer import get_template_name, process_view_model
 from ellar.helper import get_name
 
 from .base import set_meta
 
-if t.TYPE_CHECKING:
-    from ellar.core.routing.controller import ControllerBase
 
-
-class HTMLResponseModel(ResponseModel):
-    def __init__(
-        self,
-        template_name: str,
-        response_type: t.Type[TemplateResponse] = TemplateResponse,
-        use_mvc: bool = False,
-    ) -> None:
-        super().__init__(response_type=response_type)
-        self.template_name = template_name
-        self.use_mvc = use_mvc
-
-    def create_response(
-        self, context: IExecutionContext, response_obj: t.Any, status_code: int
-    ) -> Response:
-        self.response_type = t.cast(t.Type[TemplateResponse], self.response_type)
-
-        jinja_environment = context.get_service_provider().get(Environment)
-        template_name = self._get_template_name(ctx=context)
-        template_context = dict(request=context.switch_to_request())
-        template_context.update(**process_view_model(response_obj))
-        template = jinja_environment.get_template(template_name)
-
-        response_args, headers = self.get_context_response(context=context)
-        response_args.update(template=template, context=template_context)
-        response = self._response_type(**response_args, headers=headers)
-        return response
-
-    def _get_template_name(self, ctx: IExecutionContext) -> str:
-        template_name = self.template_name
-        exe_ctx = t.cast(ExecutionContext, ctx)
-        if self.use_mvc and exe_ctx.controller_type:
-            controller_class: t.Type["ControllerBase"] = exe_ctx.controller_type
-            template_name = controller_class.full_view_name(self.template_name)
-        return get_template_name(template_name)
+class RenderDecoratorException(Exception):
+    pass
 
 
 class Render:
@@ -60,7 +22,9 @@ class Render:
                 template_name, str
             ), "Render Operation must invoked eg. @Render()"
         self.template_name = None if template_name is NOT_SET else template_name
-        self.use_mvc = self.template_name is None
+        self.class_base_function_regex = re.compile(
+            "<\\w+ (\\w+)\\.(\\w+) at \\w+>", re.IGNORECASE
+        )
 
     def __call__(self, func: t.Union[t.Callable, t.Any]) -> t.Union[t.Callable, t.Any]:
         if not callable(func) or isinstance(func, RouteOperationBase):
@@ -77,9 +41,21 @@ class Render:
             return func
 
         endpoint_name = get_name(func)
+        is_class_base_function = use_mvc = False
+
+        if self.class_base_function_regex.match(repr(func)):
+            is_class_base_function = True
+
+        if not self.template_name and is_class_base_function:
+            use_mvc = True
+
+        if not self.template_name and not is_class_base_function:
+            raise RenderDecoratorException(
+                f"template_name is required for function endpoints. {func}"
+            )
 
         response = HTMLResponseModel(
-            template_name=self.template_name or endpoint_name, use_mvc=self.use_mvc
+            template_name=self.template_name or endpoint_name, use_mvc=use_mvc
         )
-        target_decorator = set_meta("response_override", {200: response})
+        target_decorator = set_meta(RESPONSE_OVERRIDE_KEY, {200: response})
         return target_decorator(func)

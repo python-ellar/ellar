@@ -1,8 +1,10 @@
 from typing import List, Optional
 
+import pytest
 from pydantic import BaseModel
 
 from ellar.core import AppFactory
+from ellar.core.response.model import RouteResponseExecution
 
 app = AppFactory.create_app()
 
@@ -32,13 +34,27 @@ def get_validlist():
     ]
 
 
-# TODO: remaining test
-# def test tuple return
-# def test ellip return
-# def test status return
-# def multiple status return
-# def default 200 return
-# test resmodel not found
+@app.Get("/items/valid_tuple_return", response={200: List[Item], 201: Item})
+def get_valid_tuple_return():
+    return 201, {"name": "baz", "price": 2.0, "owner_ids": [1, 2, 3]}
+
+
+@app.Get("/items/not_found_res_model", response={200: List[Item], 201: Item})
+def get_not_found_res_model():
+    return 301, {"name": "baz", "price": 2.0, "owner_ids": [1, 2, 3]}
+
+
+def test_valid_tuple_return(test_client_factory):
+    client = test_client_factory(app)
+    response = client.get("/items/valid_tuple_return")
+    response.raise_for_status()
+    assert response.json() == {"name": "baz", "price": 2.0, "owner_ids": [1, 2, 3]}
+
+
+def test_get_not_found_res_model(test_client_factory):
+    client = test_client_factory(app)
+    with pytest.raises(RouteResponseExecution):
+        client.get("/items/not_found_res_model")
 
 
 def test_valid(test_client_factory):

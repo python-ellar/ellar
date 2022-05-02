@@ -5,6 +5,7 @@ from .base import (
     ResponseTypeDefinitionConverter,
     RouteResponseExecution,
 )
+from .html import HTMLResponseModel
 from .interface import IResponseModel
 from .json import EmptyAPIResponseModel, JSONResponseModel
 from .route import RouteResponseModel
@@ -19,4 +20,5 @@ __all__ = [
     "RouteResponseModel",
     "ResponseTypeDefinitionConverter",
     "IResponseModel",
+    "HTMLResponseModel",
 ]

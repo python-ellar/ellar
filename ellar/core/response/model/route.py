@@ -57,7 +57,6 @@ class RouteResponseModel:
     ) -> ResponseResolver:
         status_code: int = 200
         response_obj: t.Any = endpoint_response_content
-        response_model: t.Optional[IResponseModel] = None
 
         if len(self.models) == 1:
             status_code = list(self.models.keys())[0]
@@ -73,7 +72,7 @@ class RouteResponseModel:
         elif Ellipsis in self.models:
             response_model = self.models[Ellipsis]  # type: ignore
         else:
-            RouteResponseExecution(
+            raise RouteResponseExecution(
                 f"No response Schema with status_code={status_code} in response {self.models.keys()}"
             )
         response_model = t.cast(ResponseModel, response_model)
