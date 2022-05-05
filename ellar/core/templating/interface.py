@@ -4,7 +4,7 @@ import typing as t
 from abc import ABC, ABCMeta, abstractmethod
 from pathlib import Path
 
-from jinja2 import FileSystemLoader
+from jinja2 import Environment as BaseEnvironment, FileSystemLoader
 from starlette.templating import pass_context
 
 from ellar.compatible import cached_property
@@ -18,10 +18,10 @@ from .loader import JinjaLoader
 
 if t.TYPE_CHECKING:
     from ellar.core.main import App
-    from ellar.core.modules import ApplicationModuleDecorator
+    from ellar.core.modules import BaseModuleDecorator, ModuleBase
 
 
-class JinjaTemplating(ABC, metaclass=ABCMeta):
+class IModuleTemplateLoader(ABC):
     @property
     @abstractmethod
     def template_folder(self) -> t.Optional[str]:
@@ -42,98 +42,8 @@ class JinjaTemplating(ABC, metaclass=ABCMeta):
             return None
 
 
-class ModuleTemplating(JinjaTemplating):
-    _template_folder: t.Optional[str]
-    _module_base_directory: t.Optional[t.Union[Path, str]]
-    _static_folder: t.Optional[str]
-
-    @property
-    def template_folder(self) -> t.Optional[str]:
-        return self._template_folder
-
-    @property
-    def root_path(self) -> t.Optional[t.Union[Path, str]]:
-        return self._module_base_directory
-
-    @cached_property
-    def static_directory(self) -> t.Optional[str]:
-        if self.root_path and self._static_folder:
-            path = os.path.join(str(self.root_path), self._static_folder)
-            if os.path.exists(path):
-                return path
-        return None
-
-
-class AppTemplating:
-    config: Config
-    _static_app: t.Optional[ASGIApp]
-    debug: bool
-    _app_module: "ApplicationModuleDecorator"
-    has_static_files: bool
-
-    def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
-
-        for loader in self._app_module.modules():
-            yield loader
-
-    @cached_property
-    def jinja_environment(self) -> Environment:
-        _jinja_env = self._create_jinja_environment()
-        return _jinja_env
-
-    def _create_jinja_environment(self) -> Environment:
-        def select_jinja_auto_escape(filename: str) -> bool:
-            if filename is None:
-                return True
-            return filename.endswith((".html", ".htm", ".xml", ".xhtml"))
-
-        # TODO: get extensions from configuration
-        options: t.Dict = dict(extensions=[])
-
-        _auto_reload = self.config.TEMPLATES_AUTO_RELOAD
-        _auto_reload = _auto_reload if _auto_reload is not None else self.debug
-
-        if "autoescape" not in options:
-            options["autoescape"] = select_jinja_auto_escape
-
-        if "auto_reload" not in options:
-            options["auto_reload"] = _auto_reload
-
-        @pass_context
-        def url_for(context: dict, name: str, **path_params: t.Any) -> str:
-            request = t.cast(Request, context["request"])
-            return request.url_for(name, **path_params)
-
-        app: App = t.cast("App", self)
-
-        jinja_env = Environment(app, **options)
-        jinja_env.globals.update(
-            url_for=url_for,
-            config=self.config,
-        )
-        jinja_env.policies["json.dumps_function"] = json.dumps
-        return jinja_env
-
-    def create_global_jinja_loader(self) -> JinjaLoader:
-        return JinjaLoader(t.cast("App", self))
-
-    def create_static_app(self) -> ASGIApp:
-        return StarletteStaticFiles(
-            directories=self.static_files, packages=self.config.STATIC_FOLDER_PACKAGES  # type: ignore
-        )
-
-    def reload_static_app(self) -> None:
-        del self.__dict__["static_files"]
-        if self.has_static_files:
-            self._static_app = self.create_static_app()
-
-    @cached_property
-    def static_files(self) -> t.List[str]:
-        static_directories = []
-        for module in self.get_module_loaders():
-            if module.static_directory:
-                static_directories.append(module.static_directory)
-        return static_directories
+class JinjaTemplating(ABC, metaclass=ABCMeta):
+    jinja_environment: BaseEnvironment
 
     def template_filter(
         self, name: t.Optional[str] = None
@@ -186,3 +96,108 @@ class AppTemplating:
         self, f: TemplateGlobalCallable, name: t.Optional[str] = None
     ) -> None:
         self.jinja_environment.globals[name or f.__name__] = f
+
+
+class ModuleTemplating(IModuleTemplateLoader, JinjaTemplating):
+    _template_folder: t.Optional[str]
+    _module_base_directory: t.Optional[t.Union[Path, str]]
+    _static_folder: t.Optional[str]
+
+    @cached_property
+    def jinja_environment(self) -> BaseEnvironment:
+        _jinja_env = BaseEnvironment()
+        return _jinja_env
+
+    @property
+    def template_folder(self) -> t.Optional[str]:
+        return self._template_folder
+
+    @property
+    def root_path(self) -> t.Optional[t.Union[Path, str]]:
+        return self._module_base_directory
+
+    @cached_property
+    def static_directory(self) -> t.Optional[str]:
+        if self.root_path and self._static_folder:
+            path = os.path.join(str(self.root_path), self._static_folder)
+            if os.path.exists(path):
+                return path
+        return None
+
+
+class AppTemplating(JinjaTemplating):
+    config: Config
+    _static_app: t.Optional[ASGIApp]
+    _modules: t.Dict[t.Type["ModuleBase"], "BaseModuleDecorator"]
+    debug: bool
+    has_static_files: bool
+
+    def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
+        for loader in self._modules.values():
+            yield loader
+
+    @cached_property
+    def jinja_environment(self) -> BaseEnvironment:
+        _jinja_env = self._create_jinja_environment()
+        self._update_jinja_env_filters(_jinja_env)
+        return _jinja_env
+
+    def _create_jinja_environment(self) -> Environment:
+        def select_jinja_auto_escape(filename: str) -> bool:
+            if filename is None:
+                return True
+            return filename.endswith((".html", ".htm", ".xml", ".xhtml"))
+
+        # TODO: get extensions from configuration
+        options: t.Dict = dict(extensions=[])
+
+        _auto_reload = self.config.TEMPLATES_AUTO_RELOAD
+        _auto_reload = _auto_reload if _auto_reload is not None else self.debug
+
+        if "autoescape" not in options:
+            options["autoescape"] = select_jinja_auto_escape
+
+        if "auto_reload" not in options:
+            options["auto_reload"] = _auto_reload
+
+        @pass_context
+        def url_for(context: dict, name: str, **path_params: t.Any) -> str:
+            request = t.cast(Request, context["request"])
+            return request.url_for(name, **path_params)
+
+        app: App = t.cast("App", self)
+
+        jinja_env = Environment(app, **options)
+        jinja_env.globals.update(
+            url_for=url_for,
+            config=self.config,
+        )
+        jinja_env.policies["json.dumps_function"] = json.dumps
+        return jinja_env
+
+    def create_global_jinja_loader(self) -> JinjaLoader:
+        return JinjaLoader(t.cast("App", self))
+
+    def create_static_app(self) -> ASGIApp:
+        return StarletteStaticFiles(
+            directories=self.static_files, packages=self.config.STATIC_FOLDER_PACKAGES  # type: ignore
+        )
+
+    def reload_static_app(self) -> None:
+        del self.__dict__["static_files"]
+        if self.has_static_files:
+            self._static_app = self.create_static_app()
+        self._update_jinja_env_filters(self.jinja_environment)
+
+    def _update_jinja_env_filters(self, jinja_environment: Environment) -> None:
+        for loader in self.get_module_loaders():
+            jinja_environment.filters.update(loader.jinja_environment.filters)
+            jinja_environment.globals.update(loader.jinja_environment.globals)
+
+    @cached_property
+    def static_files(self) -> t.List[str]:
+        static_directories = []
+        for module in self.get_module_loaders():
+            if module.static_directory:
+                static_directories.append(module.static_directory)
+        return static_directories

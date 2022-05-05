@@ -1,11 +1,13 @@
 import typing as t
 
+from starlette.responses import Response
 from starlette.routing import BaseRoute
 
 from ellar.core.conf import Config
+from ellar.core.connection import Request
 from ellar.core.context import ExecutionContext, IExecutionContext
 from ellar.core.datastructures import State, URLPath
-from ellar.core.events import ApplicationEventManager, RouterEventManager
+from ellar.core.events import EventHandler, RouterEventManager
 from ellar.core.guard import GuardCanActivate
 from ellar.core.middleware import (
     ExceptionMiddleware,
@@ -14,11 +16,8 @@ from ellar.core.middleware import (
     RequestVersioningMiddleware,
     ServerErrorMiddleware,
 )
-from ellar.core.modules import (
-    ApplicationModuleDecorator,
-    BaseModuleDecorator,
-    ModuleBase,
-)
+from ellar.core.modules import BaseModuleDecorator, ModuleBase
+from ellar.core.modules.module import ModuleBuilder
 from ellar.core.routing import ApplicationRouter, RouteCollection
 from ellar.core.templating import AppTemplating, Environment
 from ellar.di.injector import StarletteInjector
@@ -27,36 +26,63 @@ from ellar.types import ASGIApp, T, TReceive, TScope, TSend
 
 
 class App(AppTemplating):
-    def __init__(self, module: t.Optional[ApplicationModuleDecorator] = None):
-        if module:
-            assert isinstance(
-                module, ApplicationModuleDecorator
-            ), "Only ApplicationModule is allowed"
-        self._app_module = module or ApplicationModuleDecorator()(
-            type("StarletteApp", (), {})
+    def __init__(
+        self,
+        config: Config = None,
+        routes: t.Optional[t.Sequence[BaseRoute]] = None,
+        middleware: t.Optional[t.Sequence[Middleware]] = None,
+        exception_handlers: t.Optional[
+            t.Mapping[
+                t.Any,
+                t.Callable[
+                    [Request, Exception],
+                    t.Union[Response, t.Awaitable[Response]],
+                ],
+            ]
+        ] = None,
+        on_startup_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
+        on_shutdown_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
+        lifespan: t.Optional[t.Callable[["App"], t.AsyncContextManager]] = None,
+        modules: t.Dict[t.Type[ModuleBase], BaseModuleDecorator] = None,
+        global_guards: t.List[
+            t.Union[t.Type[GuardCanActivate], GuardCanActivate]
+        ] = None,
+    ):
+        self._config = config or Config(app_configured=True)
+        # TODO: read auto_bind from configure
+        self._injector = StarletteInjector(auto_bind=False)
+
+        self._global_guards = [] if global_guards is None else list(global_guards)
+        _exception_handlers = (
+            {} if exception_handlers is None else dict(exception_handlers)
+        )
+        self._exception_handlers = dict(t.cast(dict, self.config.EXCEPTION_HANDLERS))
+        self._exception_handlers.update(_exception_handlers)
+        self._modules = {} if modules is None else dict(modules)
+
+        _user_middleware = [] if middleware is None else list(middleware)
+        self._user_middleware = list(t.cast(list, self.config.MIDDLEWARE))
+        self._user_middleware.extend(_user_middleware)
+
+        self.on_startup = RouterEventManager(
+            [] if on_startup_event_handlers is None else list(on_startup_event_handlers)
+        )
+        self.on_shutdown = RouterEventManager(
+            []
+            if on_shutdown_event_handlers is None
+            else list(on_shutdown_event_handlers)
         )
 
-        self.on_startup = RouterEventManager(self._app_module.get_startup_events())
-        self.on_shutdown = RouterEventManager(self._app_module.get_shutdown_events())
-
-        self._config = Config(app_configured=True)
         self.state = State()
 
-        before = ApplicationEventManager(self._app_module.get_before_events())
-        before.run(config=self.config)
-
-        after = ApplicationEventManager(self._app_module.get_after_events())
-
         self.router = ApplicationRouter(
-            routes=RouteCollection(self._app_module),
+            routes=RouteCollection(routes),
             redirect_slashes=t.cast(bool, self.config.REDIRECT_SLASHES),
             on_startup=[self.on_startup.async_run],
             on_shutdown=[self.on_shutdown.async_run],
             default=self.config.DEFAULT_NOT_FOUND_HANDLER,  # type: ignore
-            lifespan=self.config.DEFAULT_LIFESPAN_HANDLER,  # type: ignore
+            lifespan=lifespan or self.config.DEFAULT_LIFESPAN_HANDLER,  # type: ignore
         )
-        # TODO: read auto_bind from configure
-        self._injector = StarletteInjector(auto_bind=False)
         self.middleware_stack = self.build_middleware_stack()
 
         self._static_app: t.Optional[ASGIApp] = None
@@ -87,10 +113,8 @@ class App(AppTemplating):
 
         self.HttpRoute = self.router.HttpRoute
         self.WsRoute = self.router.WsRoute
-
-        self._injector.container.install(module=self._app_module)
         self._finalize_app_initialization()
-        after.run(application=self)
+
         logger.info(f"APP SETTINGS: {self._config.config_module}")
 
     def install_module(
@@ -98,27 +122,35 @@ class App(AppTemplating):
         module: t.Union[t.Type[T], t.Type[ModuleBase], BaseModuleDecorator],
         **init_kwargs: t.Any,
     ) -> t.Union[T, ModuleBase, BaseModuleDecorator]:
-        _module_instance, installed = self._app_module.add_module(
-            container=self._injector.container, module=module, **init_kwargs
-        )
-        if installed:
-            self.reload_static_app()
-            self.router.routes.reload_routes()
-            self.on_startup.reload(self._app_module.get_startup_events())
-            self.on_shutdown.reload(self._app_module.get_startup_events())
 
-            if isinstance(_module_instance, BaseModuleDecorator):
-                after = ApplicationEventManager(
-                    list(_module_instance.after_initialisation)
-                )
-                after.run(application=self)
-        return _module_instance
+        if (
+            isinstance(module, BaseModuleDecorator)
+            and module.get_module() in self._modules
+        ):
+            return t.cast(BaseModuleDecorator, self._modules.get(module.get_module()))
+
+        _module_instance = self.injector.container.install(module=module, **init_kwargs)
+        modules_data = ModuleBuilder(_module_instance).data
+
+        if isinstance(module, BaseModuleDecorator):
+            self._modules.update({module.get_module(): module})
+
+        self.reload_static_app()
+        self.router.routes.extend(modules_data.routes)
+        self.on_startup.reload(list(self.on_startup) + modules_data.startup_event)
+        self.on_shutdown.reload(list(self.on_shutdown) + modules_data.shutdown_event)
+
+        self._exception_handlers.update(modules_data.exception_handlers)
+        self._user_middleware.extend(modules_data.middleware)
+
+        self.middleware_stack = self.build_middleware_stack()
+        return t.cast(T, _module_instance)
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
-        return self._app_module.global_guards
+        return self._global_guards
 
     def use_global_guards(self, *guards: "GuardCanActivate") -> None:
-        self._app_module.global_guards.extend(guards)
+        self._global_guards.extend(guards)
 
     @property
     def injector(self) -> StarletteInjector:
@@ -138,28 +170,30 @@ class App(AppTemplating):
         error_handler = None
         exception_handlers = {}
 
-        configured_exception_handlers = t.cast(dict, self.config.EXCEPTION_HANDLERS)
-        for key, value in configured_exception_handlers.items():
+        for key, value in self._exception_handlers.items():
             if key in (500, Exception):
                 error_handler = value
             else:
                 exception_handlers[key] = value
 
-        configured_middleware = t.cast(list, self.config.MIDDLEWARE)
         middleware = (
-            [Middleware(ServerErrorMiddleware, handler=error_handler, debug=self.debug)]
-            + configured_middleware
-            + [
-                Middleware(
-                    ExceptionMiddleware, handlers=exception_handlers, debug=self.debug
-                ),
-                Middleware(
-                    RequestVersioningMiddleware, debug=self.debug, config=self.config
-                ),
+            [
                 Middleware(
                     RequestServiceProviderMiddleware,
                     debug=self.debug,
                     injector=self.injector,
+                ),
+                Middleware(
+                    ServerErrorMiddleware, handler=error_handler, debug=self.debug
+                ),
+                Middleware(
+                    RequestVersioningMiddleware, debug=self.debug, config=self.config
+                ),
+            ]
+            + self._user_middleware
+            + [
+                Middleware(
+                    ExceptionMiddleware, handlers=exception_handlers, debug=self.debug
                 ),
             ]
         )

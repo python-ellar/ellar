@@ -7,10 +7,7 @@ if t.TYPE_CHECKING:
 
 
 class Environment(BaseEnvironment):
-    """Works like a regular Jinja2 environment but has some additional
-    knowledge of how Flask's blueprint works so that it can prepend the
-    name of the blueprint to referenced templates if necessary.
-    """
+    """Works like a regular Jinja2 environment"""
 
     def __init__(self, app: "App", **options: t.Any) -> None:
         if "loader" not in options:

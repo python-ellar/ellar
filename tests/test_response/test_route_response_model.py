@@ -11,7 +11,7 @@ from ellar.core.response.model import (
     RouteResponseModel,
 )
 
-from ..testing_types import BlogObjectDTO, NoteSchemaDC
+from ..schema import BlogObjectDTO, NoteSchemaDC
 
 
 class JsonApiResponse(JSONResponse):

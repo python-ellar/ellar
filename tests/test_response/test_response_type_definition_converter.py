@@ -11,7 +11,7 @@ from ellar.exceptions import RequestValidationError
 from ellar.helper.modelfield import create_model_field
 from ellar.serializer import BaseSerializer
 
-from ..testing_types import BlogObjectDTO, NoteSchemaDC
+from ..schema import BlogObjectDTO, NoteSchemaDC
 
 
 def test_response_type_definition_converter():

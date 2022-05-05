@@ -59,16 +59,6 @@ class Config(DataMapper, AttributeDictAccessMixin):
             self._data.setdefault(k, v)
         return self
 
-    @classmethod
-    def add_value(cls, **kwargs: t.Any) -> t.Type["Config"]:
-        for k, v in kwargs.items():
-            setattr(default_settings, k, v)
-        return cls
-
-    @classmethod
-    def get_value(cls, key: t.Any) -> t.Any:
-        return getattr(default_settings, key, None)
-
     def __repr__(self) -> str:
         hidden_values = {key: "..." for key in self._data.keys()}
         return f"<Configuration {repr(hidden_values)}, settings_module: {self.config_module}>"

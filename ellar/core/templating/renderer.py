@@ -3,9 +3,9 @@ from functools import lru_cache
 
 import jinja2
 from starlette.background import BackgroundTask
-from starlette.templating import _TemplateResponse
+from starlette.templating import _TemplateResponse as TemplateResponse
 
-from ellar.core.connection import Request
+from ellar.core.connection import HTTPConnection, Request
 
 from .environment import Environment
 
@@ -26,7 +26,8 @@ def process_view_model(view_response: t.Any) -> t.Dict:
 def _get_jinja_and_template_context(
     template_name: str, request: Request, **context: t.Any
 ) -> t.Tuple["jinja2.Template", t.Dict]:
-    jinja_environment = request.service_provider.get(Environment)
+    connection = HTTPConnection(scope=request.scope, receive=request.receive)
+    jinja_environment = connection.service_provider.get(Environment)
     jinja_template = jinja_environment.get_template(get_template_name(template_name))
     template_context = dict(context)
     template_context.update(request=request)
@@ -53,7 +54,7 @@ def render_template(
     request: Request,
     context: t.Dict = {},
     background: BackgroundTask = None,
-) -> _TemplateResponse:
+) -> TemplateResponse:
     """Renders a template from the template folder with the given context.
     :param request: current request object
     :param template_name: the name of the template to be rendered
@@ -66,6 +67,6 @@ def render_template(
         request=request,
         **process_view_model(context),
     )
-    return _TemplateResponse(
+    return TemplateResponse(
         template=jinja_template, context=template_context, background=background
     )

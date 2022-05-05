@@ -1,18 +1,21 @@
 import typing as t
 
-from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from ellar.constants import MIDDLEWARE_HANDLERS_KEY
-from ellar.core import Config
+from ellar.core.middleware.schema import MiddlewareSchema
 
 
-def add_middleware(middleware_class: type, **options: t.Any) -> None:
-    user_middleware = Config.get_value(MIDDLEWARE_HANDLERS_KEY) or []
-    if not isinstance(user_middleware, list):
-        user_middleware = []
-    user_middleware.insert(0, Middleware(middleware_class, **options))
-    Config.add_value(**{MIDDLEWARE_HANDLERS_KEY: user_middleware})
+def add_middleware(
+    middleware_class: type, dispatch: t.Callable, **options: t.Any
+) -> None:
+    setattr(
+        dispatch,
+        MIDDLEWARE_HANDLERS_KEY,
+        MiddlewareSchema(
+            middleware_class=middleware_class, dispatch=dispatch, options=options
+        ),
+    )
 
 
 def middleware(middleware_type: str) -> t.Callable:

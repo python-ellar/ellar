@@ -29,9 +29,9 @@ if t.TYPE_CHECKING:
 class RequestServiceProvider(InjectorBinder):
     __slots__ = ("_bindings", "_log_prefix", "_context")
 
-    def __init__(self, container: "Container") -> None:
+    def __init__(self, container: "Container", auto_bind: bool = False) -> None:
         super(RequestServiceProvider, self).__init__(
-            injector=container.injector, parent=container, auto_bind=False
+            injector=container.injector, parent=container, auto_bind=auto_bind
         )
         self._context: t.Dict = {}
         self._log_prefix = container.injector._log_prefix
@@ -165,6 +165,9 @@ class Container(InjectorBinder):
         module: t.Union[t.Type["ModuleBase"], "ModuleBase", "BaseModuleDecorator"],
         **init_kwargs: t.Any,
     ) -> t.Union[InjectorModule, "ModuleBase", "BaseModuleDecorator"]:
+        # TODO: move install core to application module
+        #   create a ModuleWrapper with init_kwargs
+
         """Install a module into this container[binder].
 
         In this context the module is one of the following:

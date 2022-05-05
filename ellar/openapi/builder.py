@@ -31,7 +31,9 @@ default_openapi_version = "3.0.2"
 class OpenAPIDocumentBuilder:
     def __init__(self) -> None:
         self._build: t.Dict = dict()
-        self._build.setdefault("info", {}).update(title="Ellar Docs", version="1.0.0")
+        self._build.setdefault("info", {}).update(
+            title="Ellar API Docs", version="1.0.0"
+        )
         self._build.setdefault("tags", [])
         self._build.setdefault("openapi", default_openapi_version)
 

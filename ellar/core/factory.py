@@ -1,5 +1,7 @@
 import typing as t
 
+from ellar.core import Config
+from ellar.core.events import ApplicationEventManager
 from ellar.core.main import App
 from ellar.core.modules import (
     ApplicationModuleDecorator,
@@ -27,7 +29,25 @@ class AppFactory:
             app_module, ApplicationModuleDecorator
         ), "Only ApplicationModule is allowed"
 
-        app = App(module=app_module)
+        config = Config(app_configured=True)
+        modules_data = app_module.build()
+        before = ApplicationEventManager(modules_data.before_init)
+        before.run(config=config)
+
+        app = App(
+            config=config,
+            routes=modules_data.routes,
+            middleware=modules_data.middleware,
+            exception_handlers=modules_data.exception_handlers,
+            on_shutdown_event_handlers=modules_data.shutdown_event,
+            on_startup_event_handlers=modules_data.startup_event,
+            modules=app_module.get_modules_as_dict(),
+            global_guards=list(app_module.global_guards),
+        )
+        app.injector.container.install(app_module.get_module())
+
+        after = ApplicationEventManager(modules_data.after_init)
+        after.run(application=app)
         return app
 
     @classmethod

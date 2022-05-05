@@ -2,22 +2,27 @@ import inspect
 import typing as t
 from pathlib import Path
 
+from starlette.middleware import Middleware
 from starlette.routing import BaseRoute
 
-from ellar.core.events import (
-    ApplicationEventHandler,
-    ApplicationEventManager,
-    EventHandler,
-    RouterEventManager,
-)
+from ellar.core.events import ApplicationEventHandler, EventHandler
 from ellar.core.guard import GuardCanActivate
 from ellar.core.routing import ModuleRouter, Mount, OperationDefinitions
 from ellar.core.routing.controller import ControllerDecorator
 from ellar.di import ProviderConfig
 from ellar.di.injector import Container
-from ellar.types import T
 
 from .base import BaseModuleDecorator, ModuleBase, ModuleBaseMeta
+
+
+class ModuleData(t.NamedTuple):
+    before_init: t.List[ApplicationEventHandler]
+    after_init: t.List[ApplicationEventHandler]
+    startup_event: t.List[EventHandler]
+    shutdown_event: t.List[EventHandler]
+    exception_handlers: t.Dict
+    middleware: t.List[Middleware]
+    routes: t.List[BaseRoute]
 
 
 class ModuleDecorator(BaseModuleDecorator):
@@ -44,10 +49,6 @@ class ModuleDecorator(BaseModuleDecorator):
         self._module_base_directory = base_directory
         self._module_routers = self._get_module_routers(routers=routers)
         self._builder_service(services=services)
-        self.on_startup = RouterEventManager()
-        self.on_shutdown = RouterEventManager()
-        self.before_initialisation = ApplicationEventManager()
-        self.after_initialisation = ApplicationEventManager()
 
     def get_module(self) -> t.Type[ModuleBase]:
         assert self._module_class, "Module not properly configured"
@@ -108,6 +109,18 @@ class ModuleDecorator(BaseModuleDecorator):
             results.append(item)  # type: ignore
         return results
 
+    # def build_module(self, app: "App", container: Container) -> t.Any:
+    #     startup_event = list(self.get_module().get_on_startup())
+    #     shutdown_event = list(self.get_module().get_on_shutdown())
+    #
+    #     exception_handlers = dict(self.get_module().get_exceptions_handlers())
+    #     middleware = list(self.get_module().get_middleware())
+    #
+    #     routes = list(self._build_routes())
+    #
+    #     instance = container.install(self.get_module())
+    #     return instance
+
 
 TAppModuleValue = t.Union[ModuleBase, BaseModuleDecorator]
 TAppModule = t.Dict[t.Type[ModuleBase], TAppModuleValue]
@@ -123,7 +136,7 @@ class ApplicationModuleDecorator(ModuleDecorator):
         ] = tuple(),
         services: t.Sequence[t.Union[t.Type, ProviderConfig]] = tuple(),
         modules: t.Sequence[
-            t.Union[t.Type, BaseModuleDecorator, ModuleDecorator]
+            t.Union[t.Type, BaseModuleDecorator, ModuleBase, t.Type[ModuleBase]]
         ] = tuple(),
         global_guards: t.List[
             t.Union[t.Type[GuardCanActivate], GuardCanActivate]
@@ -140,8 +153,9 @@ class ApplicationModuleDecorator(ModuleDecorator):
             static_folder=static_folder,
             routers=routers,
         )
-        self._data: TAppModule = self._process_modules(modules)
-        self._app_modules: t.List[t.Union[BaseModuleDecorator, ModuleDecorator]] = []
+        self._app_modules: t.Sequence[
+            t.Union[t.Type, BaseModuleDecorator, ModuleBase, t.Type[ModuleBase]]
+        ] = list(modules)
         self._global_guards = global_guards or []
 
     @property
@@ -150,97 +164,108 @@ class ApplicationModuleDecorator(ModuleDecorator):
     ) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         return self._global_guards
 
-    def __call__(self, module_class: t.Type) -> "ApplicationModuleDecorator":
-        super().__call__(module_class)
-        self._data.update(self._process_modules([self]))
-        return self
-
-    def __contains__(self, item: t.Type[ModuleBase]) -> bool:
-        return item in self._data
-
     def configure_module(self, container: Container) -> None:
         super().configure_module(container=container)
-        for module in self.modules(exclude_root=True):
+        for module in self._app_modules:
             container.install(module)
 
-    def _build_routes(self) -> t.List[BaseRoute]:
-        routes = super()._build_routes()
-        for module in self.modules(exclude_root=True):
-            routes.extend(module._build_routes())
-        return routes
+    def build(self) -> ModuleData:
+        module_builder = ModuleBuilder(self)
 
-    def get_startup_events(self) -> t.List[EventHandler]:
-        events = list(self.on_startup)
-        for module in self.modules(exclude_root=True):
-            events.extend(module.on_startup)
-        return events
+        for module in self._app_modules:
+            module_builder.extend(module)
 
-    def get_shutdown_events(self) -> t.List[EventHandler]:
-        events = list(self.on_shutdown)
-        for module in self.modules(exclude_root=True):
-            events.extend(module.on_shutdown)
-        return events
+        return module_builder.data
 
-    def get_before_events(self) -> t.List[ApplicationEventHandler]:
-        events = list(self.before_initialisation)
-        for module in self.modules(exclude_root=True):
-            events.extend(module.before_initialisation)
-        return events
+    def get_modules_as_dict(self) -> t.Dict[t.Type[ModuleBase], BaseModuleDecorator]:
+        _modules: t.List[
+            t.Union[ModuleBase, BaseModuleDecorator, t.Type[ModuleBase], t.Type]
+        ] = [self]
+        _modules.extend(self._app_modules)
+        return {
+            item.get_module(): item
+            for item in _modules
+            if isinstance(item, BaseModuleDecorator)
+        }
 
-    def get_after_events(self) -> t.List[ApplicationEventHandler]:
-        events = list(self.after_initialisation)
-        for module in self.modules(exclude_root=True):
-            events.extend(module.after_initialisation)
-        return events
+
+class ModuleBuilder:
+    def __init__(
+        self, module: t.Union[t.Type[ModuleBase], ModuleBase, BaseModuleDecorator]
+    ) -> None:
+        self.module = module
+        self._data = self.build()
+
+    @property
+    def data(self) -> ModuleData:
+        return self._data
 
     @classmethod
-    def _process_modules(
-        cls,
-        modules: t.Sequence[t.Union[t.Type[ModuleBase], t.Type, BaseModuleDecorator]],
-    ) -> TAppModule:
-        _result: TAppModule = {}
-        for module in modules:
-            instance = module
-            if type(module) == ModuleBaseMeta:
-                _result[module] = module()
-                continue
+    def default(cls) -> ModuleData:
+        return ModuleData(
+            before_init=[],
+            after_init=[],
+            startup_event=[],
+            shutdown_event=[],
+            exception_handlers=dict(),
+            middleware=[],
+            routes=[],
+        )
 
-            if isinstance(module, ModuleBase):
-                instance = type(module).get_module_decorator()
-                _result[instance.get_module()] = instance
-                continue
+    def _build_module_base(self, module: t.Type[ModuleBase]) -> ModuleData:
+        on_startup_events = list(module.get_on_startup())
+        on_shutdown_events = list(module.get_on_shutdown())
+        before_init_events = list(module.get_before_initialisation())
+        after_init_events = list(module.get_after_initialisation())
+        exception_handlers = dict(module.get_exceptions_handlers())
+        middleware = list(module.get_middleware())
 
-            if isinstance(instance, BaseModuleDecorator):
-                _result[instance.get_module()] = instance
+        return ModuleData(
+            before_init=before_init_events,
+            after_init=after_init_events,
+            startup_event=on_startup_events,
+            shutdown_event=on_shutdown_events,
+            middleware=middleware,
+            exception_handlers=exception_handlers,
+            routes=[],
+        )
 
-        return _result
+    def _build_module_decorator(self, module: BaseModuleDecorator) -> ModuleData:
+        module_data = self._build_module_base(module.get_module())
 
-    def modules(
-        self, exclude_root: bool = False
-    ) -> t.Iterator[t.Union[BaseModuleDecorator, ModuleDecorator]]:
-        if not self._app_modules:
-            for module in self._data.values():
-                if isinstance(module, BaseModuleDecorator):
-                    self._app_modules.append(module)
+        return ModuleData(
+            before_init=module_data.before_init,
+            after_init=module_data.after_init,
+            startup_event=module_data.startup_event,
+            shutdown_event=module_data.shutdown_event,
+            middleware=module_data.middleware,
+            exception_handlers=module_data.exception_handlers,
+            routes=module.get_routes(),
+        )
 
-        for item in self._app_modules:
-            if isinstance(item, ApplicationModuleDecorator) and exclude_root:
-                continue
-            yield item
+    def build(self) -> ModuleData:
+        if type(self.module) == ModuleBaseMeta:
+            return self._build_module_base(type(self.module))
 
-    def add_module(
-        self,
-        container: Container,
-        module: t.Union[t.Type[ModuleBase], BaseModuleDecorator, t.Type[T]],
-        **init_kwargs: t.Any,
-    ) -> t.Tuple[t.Union[ModuleBase, BaseModuleDecorator, T], bool]:
-        if isinstance(module, BaseModuleDecorator) and module.get_module() in self:
-            return module, False
+        if isinstance(self.module, ModuleBase):
+            module_base = type(self.module).get_module_decorator()
+            if module_base:
+                return self._build_module_decorator(module_base)
+            return self._build_module_base(type(self.module))
 
-        if module in self._data:
-            return self._data.get(module), False  # type: ignore
+        if isinstance(self.module, BaseModuleDecorator):
+            return self._build_module_decorator(self.module)
 
-        _module_instance = container.install(module=module, **init_kwargs)
-        self._data.update(self._process_modules([_module_instance]))
-        self._app_modules = []  # clear _app_modules cache
-        return _module_instance, True
+        return self.default()
+
+    def extend(
+        self, module: t.Union[t.Type[ModuleBase], ModuleBase, BaseModuleDecorator]
+    ) -> None:
+        module_data = ModuleBuilder(module)
+        self._data.before_init.extend(module_data.data.before_init)
+        self._data.after_init.extend(module_data.data.after_init)
+        self._data.shutdown_event.extend(module_data.data.shutdown_event)
+        self._data.startup_event.extend(module_data.data.startup_event)
+        self._data.exception_handlers.update(module_data.data.exception_handlers)
+        self._data.middleware.extend(module_data.data.middleware)
+        self._data.routes.extend(module_data.data.routes)

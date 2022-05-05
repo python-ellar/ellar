@@ -61,14 +61,17 @@ class TestClientFactory:
     def create_test_module_from_module(
         cls,
         module: t.Union[
-            ModuleDecorator, ApplicationModuleDecorator, BaseModuleDecorator
+            t.Type[ModuleDecorator],
+            t.Type[ApplicationModuleDecorator],
+            t.Type[BaseModuleDecorator],
         ],
         mock_services: t.Sequence[ProviderConfig] = tuple(),
     ) -> _TestingModule:
         if isinstance(module, ApplicationModuleDecorator):
             if mock_services:
+                after_initialisation = module.get_module().get_after_initialisation()
 
-                @module.after_initialisation
+                @after_initialisation
                 def _register_services(application: App) -> None:
                     for service in mock_services:
                         if isinstance(service, ProviderConfig):

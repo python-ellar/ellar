@@ -26,24 +26,15 @@ class EventHandler:
         return super(EventHandler, self).__eq__(other)
 
 
-class ApplicationEventHandler:
-    __slots__ = ("handler",)
-
+class ApplicationEventHandler(EventHandler):
     def __init__(self, func: t.Callable) -> None:
         if asyncio.iscoroutinefunction(func):
             raise Exception("ApplicationEventHandler must be a non coroutine function")
-        self.handler = func
+        super(ApplicationEventHandler, self).__init__(func)
 
+    @t.no_type_check
     def run(self, **kwargs: t.Any) -> None:
         self.handler(**kwargs)
-
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, ApplicationEventHandler):
-            return self.handler is other.handler
-        if callable(other):
-            _other = self.__class__(other)
-            return self.handler is _other.handler
-        return super(ApplicationEventHandler, self).__eq__(other)
 
 
 class Event(t.Generic[T]):

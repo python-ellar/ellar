@@ -12,47 +12,41 @@ from ellar.types import ASGIApp
 
 from .operation_definitions import OperationDefinitions
 
-if t.TYPE_CHECKING:
-    from ellar.core.modules import ApplicationModuleDecorator
-
 
 class RouteCollection(t.Sequence[BaseRoute]):
-    __slots__ = ("_routes", "_app_module", "_served_routes")
+    __slots__ = ("_routes",)
 
-    def __init__(self, app_module: "ApplicationModuleDecorator") -> None:
-        self._routes: t.List[BaseRoute] = []
-        self._app_module = app_module
-        self._served_routes: t.List[BaseRoute] = []
-        self.reload_routes(force_build=False)
+    def __init__(self, routes: t.Optional[t.Sequence[BaseRoute]] = None) -> None:
+        self._routes: t.List[BaseRoute] = [] if routes is None else list(routes)
+        self.sort_routes()
 
     @t.no_type_check
     def __getitem__(self, i: int) -> BaseRoute:
-        return self._served_routes.__getitem__(i)
+        return self._routes.__getitem__(i)
 
     def __setitem__(self, i: int, o: BaseRoute) -> None:
         self._routes.append(o)
-        self.reload_routes(False)
+        self.sort_routes()
 
     def __len__(self) -> int:
-        return len(self._served_routes)
+        return len(self._routes)
 
     def __iter__(self) -> t.Iterator[BaseRoute]:
-        return iter(self._served_routes)
+        return iter(self._routes)
 
     def append(self, __item: t.Any) -> None:
         self.__setitem__(__item, __item)
 
     def get_routes(self) -> t.List[BaseRoute]:
-        return self._served_routes.copy()
+        return self._routes.copy()
 
-    def reload_routes(self, force_build: bool = True) -> None:
-        self._served_routes = self._routes + self._app_module.get_routes(
-            force_build=force_build
-        )
+    def extend(self, routes: t.Sequence[BaseRoute]) -> "RouteCollection":
+        self._routes.extend(routes)
+        return self
+
+    def sort_routes(self) -> None:
         # TODO: flatten the routes for faster look up
-        self._served_routes.sort(
-            key=lambda e: getattr(e, "path", getattr(e, "host", ""))
-        )
+        self._routes.sort(key=lambda e: getattr(e, "path", getattr(e, "host", "")))
 
 
 class ApplicationRouter(StarletteRouter):
