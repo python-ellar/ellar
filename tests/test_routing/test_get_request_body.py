@@ -20,7 +20,7 @@ async def create_item(product: Product):
 
 openapi_schema = {
     "openapi": "3.0.2",
-    "info": {"title": "Ellar Docs", "version": "1.0.0"},
+    "info": {"title": "Ellar API Docs", "version": "1.0.0"},
     "paths": {
         "get": {
             "requestBody": {
