@@ -19,7 +19,7 @@ class ControllerWebsocketRouteOperation(
     def get_websocket_handler(cls) -> t.Type[ControllerWebSocketExtraHandler]:
         return ControllerWebSocketExtraHandler
 
-    async def _handle(self, context: ExecutionContext) -> None:
+    async def _handle_request(self, context: ExecutionContext) -> None:
         controller_instance = self._get_controller_instance(ctx=context)
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
             ctx=context

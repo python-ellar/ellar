@@ -97,7 +97,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
             name=self.name, path=self.path_format, method=method
         )
 
-    async def _handle(self, context: ExecutionContext) -> None:
+    async def _handle_request(self, context: ExecutionContext) -> None:
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
             ctx=context
         )

@@ -10,7 +10,7 @@ from .base import ControllerRouteOperationBase
 
 
 class ControllerRouteOperation(ControllerRouteOperationBase, RouteOperation):
-    async def _handle(self, context: ExecutionContext) -> t.Any:
+    async def _handle_request(self, context: ExecutionContext) -> t.Any:
         controller_instance = self._get_controller_instance(ctx=context)
 
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
