@@ -15,3 +15,4 @@ class VERSIONING(Enum):
     QUERY = QueryParameterAPIVersioning
     HEADER = HeaderAPIVersioning
     HOST = HostNameAPIVersioning
+    NONE = DefaultAPIVersioning
