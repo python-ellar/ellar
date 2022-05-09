@@ -1,4 +1,5 @@
 import typing as t
+from functools import wraps
 
 from starlette.routing import (
     BaseRoute,
@@ -8,9 +9,13 @@ from starlette.routing import (
 )
 
 from ellar.compatible import DataMapper
-from ellar.types import ASGIApp
+from ellar.constants import SCOPE_API_VERSIONING_RESOLVER
+from ellar.types import ASGIApp, TReceive, TScope, TSend
 
 from .operation_definitions import OperationDefinitions
+
+if t.TYPE_CHECKING:
+    from ellar.core.versioning.resolver import BaseAPIVersioningResolver
 
 
 class RouteCollection(t.Sequence[BaseRoute]):
@@ -49,12 +54,27 @@ class RouteCollection(t.Sequence[BaseRoute]):
         self._routes.sort(key=lambda e: getattr(e, "path", getattr(e, "host", "")))
 
 
+def router_default_decorator(func: ASGIApp) -> ASGIApp:
+    @wraps(func)
+    async def _wrap(scope: TScope, receive: TReceive, send: TSend) -> None:
+        version_scheme_resolver: "BaseAPIVersioningResolver" = t.cast(
+            "BaseAPIVersioningResolver", scope[SCOPE_API_VERSIONING_RESOLVER]
+        )
+        if version_scheme_resolver and version_scheme_resolver.matched_any_route:
+            version_scheme_resolver.raise_exception()
+
+        await func(scope, receive, send)
+
+    return _wrap
+
+
 class ApplicationRouter(StarletteRouter):
+    routes: RouteCollection  # type: ignore
     operation_definition_class: t.Type[OperationDefinitions] = OperationDefinitions
 
     def __init__(
         self,
-        routes: RouteCollection,
+        routes: t.Sequence[BaseRoute],
         redirect_slashes: bool = True,
         default: ASGIApp = None,
         on_startup: t.Sequence[t.Callable] = None,
@@ -69,7 +89,8 @@ class ApplicationRouter(StarletteRouter):
             on_shutdown=on_shutdown,
             lifespan=lifespan,
         )
-        self.routes: RouteCollection = routes  # type: ignore
+        self.default = router_default_decorator(self.default)
+        self.routes: RouteCollection = RouteCollection(routes)
         self._meta: t.Mapping = DataMapper()
         _route_definitions = self.operation_definition_class(t.cast(list, self.routes))
 

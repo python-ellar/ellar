@@ -18,8 +18,9 @@ from ellar.core.middleware import (
 )
 from ellar.core.modules import BaseModuleDecorator, ModuleBase
 from ellar.core.modules.module import ModuleBuilder
-from ellar.core.routing import ApplicationRouter, RouteCollection
+from ellar.core.routing import ApplicationRouter
 from ellar.core.templating import AppTemplating, Environment
+from ellar.core.versioning import VERSIONING, BaseAPIVersioning
 from ellar.di.injector import StarletteInjector
 from ellar.logger import logger
 from ellar.types import ASGIApp, T, TReceive, TScope, TSend
@@ -76,7 +77,7 @@ class App(AppTemplating):
         self.state = State()
 
         self.router = ApplicationRouter(
-            routes=RouteCollection(routes),
+            routes=routes or [],
             redirect_slashes=t.cast(bool, self.config.REDIRECT_SLASHES),
             on_startup=[self.on_startup.async_run],
             on_shutdown=[self.on_shutdown.async_run],
@@ -157,6 +158,10 @@ class App(AppTemplating):
         return self._injector
 
     @property
+    def versioning_scheme(self) -> BaseAPIVersioning:
+        return t.cast(BaseAPIVersioning, self._config.VERSIONING_SCHEME)
+
+    @property
     def has_static_files(self) -> bool:  # type: ignore
         return (
             True if self.static_files or self.config.STATIC_FOLDER_PACKAGES else False
@@ -211,10 +216,6 @@ class App(AppTemplating):
     def routes(self) -> t.List[BaseRoute]:
         return self.router.routes.get_routes()
 
-    @property
-    def debug(self) -> bool:  # type: ignore
-        return t.cast(bool, self.config.DEBUG)
-
     def url_path_for(self, name: str, **path_params: t.Any) -> URLPath:
         return self.router.url_path_for(name, **path_params)
 
@@ -223,6 +224,19 @@ class App(AppTemplating):
 
     def host(self, host: str, app: ASGIApp, name: str = None) -> None:
         self.router.host(host, app=app, name=name)
+
+    def enable_versioning(
+        self,
+        schema: VERSIONING,
+        version_parameter: str = "version",
+        default_version: t.Optional[str] = None,
+        **init_kwargs: t.Any,
+    ) -> None:
+        self.config.VERSIONING_SCHEME = schema.value(
+            version_parameter=version_parameter,
+            default_version=default_version,
+            **init_kwargs,
+        )
 
     def _finalize_app_initialization(self) -> None:
         self.injector.container.add_instance(self)
