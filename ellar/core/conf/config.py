@@ -3,11 +3,7 @@ import typing as t
 
 from starlette.config import environ
 
-from ellar.compatible.dict import (
-    AttributeDictAccessMixin,
-    DataMapper,
-    DataMutableMapper,
-)
+from ellar.compatible.dict import AttributeDictAccessMixin, DataMutableMapper
 from ellar.constants import ELLAR_CONFIG_MODULE
 from ellar.types import VT
 
@@ -15,20 +11,11 @@ from . import default_settings
 from .app_settings_models import ConfigValidationSchema
 
 
-class _ConfigState(DataMutableMapper):
-    pass
-
-
-_config_state = _ConfigState()
-
-
-class Config(DataMapper, AttributeDictAccessMixin):
-    _data: _ConfigState
-    __slots__ = ("config_module",)
+class Config(DataMutableMapper, AttributeDictAccessMixin):
+    __slots__ = ("config_module", "_data")
 
     def __init__(
         self,
-        config_state: _ConfigState = _config_state,
         **mapping: t.Any,
     ):
         """
@@ -36,21 +23,20 @@ class Config(DataMapper, AttributeDictAccessMixin):
         """
         super().__init__()
         self.config_module = environ.get(ELLAR_CONFIG_MODULE, None)
-        if "app_configured" not in config_state:
-            config_state.clear()
-            for setting in dir(default_settings):
+
+        self._data.clear()
+        for setting in dir(default_settings):
+            if setting.isupper():
+                self._data[setting] = getattr(default_settings, setting)
+
+        if self.config_module:
+            mod = importlib.import_module(self.config_module)
+            for setting in dir(mod):
                 if setting.isupper():
-                    config_state[setting] = getattr(default_settings, setting)
+                    self._data[setting] = getattr(mod, setting)
 
-            if self.config_module:
-                mod = importlib.import_module(self.config_module)
-                for setting in dir(mod):
-                    if setting.isupper():
-                        config_state[setting] = getattr(mod, setting)
+        self._data.update(**mapping)
 
-        config_state.update(**mapping)
-
-        self._data: _ConfigState = config_state
         validate_config = ConfigValidationSchema.parse_obj(self._data)
         self._data.update(validate_config.serialize())
 
@@ -62,6 +48,13 @@ class Config(DataMapper, AttributeDictAccessMixin):
     def __repr__(self) -> str:
         hidden_values = {key: "..." for key in self._data.keys()}
         return f"<Configuration {repr(hidden_values)}, settings_module: {self.config_module}>"
+
+    def __setattr__(self, key: t.Any, value: t.Any) -> None:
+        if key in self.__slots__:
+            super(Config, self).__setattr__(key, value)
+            return
+
+        self._data[key] = value
 
     @property
     def values(self) -> t.ValuesView[VT]:
