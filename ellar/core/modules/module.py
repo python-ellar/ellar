@@ -58,6 +58,7 @@ class ModuleDecorator(BaseModuleDecorator):
             self._module_base_directory = (
                 Path(inspect.getfile(module_class)).resolve().parent
             )
+        super(ModuleDecorator, self).__call__(module_class)
         return self
 
     def configure_module(self, container: Container) -> None:
