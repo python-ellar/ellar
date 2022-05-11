@@ -6,6 +6,7 @@ from .interface import (
     IModuleTemplateLoader,
     JinjaTemplating,
     ModuleTemplating,
+    TemplateFunctionData,
 )
 from .loader import JinjaLoader
 from .renderer import render_template, render_template_string
@@ -20,4 +21,5 @@ __all__ = [
     "JinjaLoader",
     "render_template",
     "render_template_string",
+    "TemplateFunctionData",
 ]

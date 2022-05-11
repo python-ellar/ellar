@@ -45,7 +45,6 @@ class ModuleDecorator(BaseModuleDecorator):
         self._services: t.List[ProviderConfig] = []
         self._template_folder = template_folder
         self._static_folder = static_folder
-        self._module_class: t.Optional[t.Type[ModuleBase]] = None
         self._module_base_directory = base_directory
         self._module_routers = routers
         self._builder_service(services=services)
@@ -55,23 +54,11 @@ class ModuleDecorator(BaseModuleDecorator):
         return self._module_class
 
     def __call__(self, module_class: t.Type) -> "ModuleDecorator":
-        _module_class = t.cast(t.Type[ModuleBase], module_class)
-        if type(_module_class) != ModuleBaseMeta:
-            _module_class = type(
-                module_class.__name__,
-                (module_class, ModuleBase),
-                {"_module_decorator": self},
-            )
-        self._module_class = _module_class
-        self.resolve_module_base_directory(_module_class)
-        return self
-
-    def resolve_module_base_directory(self, module_class: t.Type[ModuleBase]) -> None:
         if not self._module_base_directory:
             self._module_base_directory = (
                 Path(inspect.getfile(module_class)).resolve().parent
             )
-        module_class._module_decorator = self
+        return self
 
     def configure_module(self, container: Container) -> None:
         for _provider in self._services:

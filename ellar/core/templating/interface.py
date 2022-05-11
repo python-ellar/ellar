@@ -21,6 +21,11 @@ if t.TYPE_CHECKING:
     from ellar.core.modules import BaseModuleDecorator, ModuleBase
 
 
+class TemplateFunctionData(t.NamedTuple):
+    func: t.Callable
+    name: t.Optional[str]
+
+
 class IModuleTemplateLoader(ABC):
     @property
     @abstractmethod
@@ -98,7 +103,7 @@ class JinjaTemplating(ABC, metaclass=ABCMeta):
         self.jinja_environment.globals[name or f.__name__] = f
 
 
-class ModuleTemplating(IModuleTemplateLoader, JinjaTemplating):
+class ModuleTemplating(IModuleTemplateLoader):
     _template_folder: t.Optional[str]
     _module_base_directory: t.Optional[t.Union[Path, str]]
     _static_folder: t.Optional[str]
@@ -106,6 +111,8 @@ class ModuleTemplating(IModuleTemplateLoader, JinjaTemplating):
     @cached_property
     def jinja_environment(self) -> BaseEnvironment:
         _jinja_env = BaseEnvironment()
+        _jinja_env.filters.clear()
+        _jinja_env.globals.clear()
         return _jinja_env
 
     @property

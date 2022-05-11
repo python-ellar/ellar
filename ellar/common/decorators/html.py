@@ -3,10 +3,17 @@ import re
 import typing as t
 import warnings
 
-from ellar.constants import NOT_SET, RESPONSE_OVERRIDE_KEY
+from ellar.constants import (
+    NOT_SET,
+    RESPONSE_OVERRIDE_KEY,
+    TEMPLATE_FILTER_KEY,
+    TEMPLATE_GLOBAL_KEY,
+)
 from ellar.core.response.model import HTMLResponseModel
 from ellar.core.routing import RouteOperationBase
+from ellar.core.templating import TemplateFunctionData
 from ellar.helper import get_name
+from ellar.types import TemplateFilterCallable, TemplateGlobalCallable
 
 from .base import set_meta
 
@@ -59,3 +66,55 @@ class Render:
         )
         target_decorator = set_meta(RESPONSE_OVERRIDE_KEY, {200: response})
         return target_decorator(func)
+
+
+def template_filter(
+    name: t.Optional[str] = None,
+) -> t.Callable[[TemplateFilterCallable], TemplateFilterCallable]:
+    """A decorator that is used to register custom template filter.
+    You can specify a name for the filter, otherwise the function
+    name will be used. Example::
+
+      @template_filter()
+      def reverse(cls, s):
+          return s[::-1]
+
+    :param name: the optional name of the filter, otherwise the
+                 function name will be used.
+    """
+
+    def decorator(f: TemplateFilterCallable) -> TemplateFilterCallable:
+        setattr(
+            f,
+            TEMPLATE_FILTER_KEY,
+            TemplateFunctionData(func=f, name=name or get_name(f)),
+        )
+        return f
+
+    return decorator
+
+
+def template_global(
+    name: t.Optional[str] = None,
+) -> t.Callable[[TemplateGlobalCallable], TemplateGlobalCallable]:
+    """A decorator that is used to register a custom template global function.
+    You can specify a name for the global function, otherwise the function
+    name will be used. Example::
+
+        @template_global()
+        def double(cls, n):
+            return 2 * n
+
+    :param name: the optional name of the global function, otherwise the
+                 function name will be used.
+    """
+
+    def decorator(f: TemplateGlobalCallable) -> TemplateGlobalCallable:
+        setattr(
+            f,
+            TEMPLATE_GLOBAL_KEY,
+            TemplateFunctionData(func=f, name=name or get_name(f)),
+        )
+        return f
+
+    return decorator

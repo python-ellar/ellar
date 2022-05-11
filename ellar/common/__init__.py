@@ -6,7 +6,7 @@ from .decorators.base import set_meta
 from .decorators.controller import Controller
 from .decorators.exception import exception_handler
 from .decorators.guards import guards
-from .decorators.html import Render
+from .decorators.html import Render, template_filter, template_global
 from .decorators.middleware import middleware
 from .decorators.modules import ApplicationModule, Module
 from .decorators.openapi import openapi
@@ -81,4 +81,6 @@ __all__ = [
     "on_shutdown",
     "on_startup",
     "on_app_started",
+    "template_filter",
+    "template_global",
 ]

@@ -1,5 +1,5 @@
 import typing as t
-from abc import ABC, ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 
 from injector import Module as _InjectorModule
 from starlette.middleware import Middleware
@@ -12,6 +12,8 @@ from ellar.constants import (
     ON_APP_STARTED,
     ON_SHUTDOWN_KEY,
     ON_STARTUP_KEY,
+    TEMPLATE_FILTER_KEY,
+    TEMPLATE_GLOBAL_KEY,
 )
 from ellar.core.events import (
     ApplicationEventHandler,
@@ -27,11 +29,16 @@ from .decorator import class_parameter_executor_wrapper
 
 if t.TYPE_CHECKING:
     from ellar.core.middleware.schema import MiddlewareSchema
+    from ellar.core.templating import TemplateFunctionData
 
 
-class BaseModuleDecorator(ModuleTemplating, ABC, metaclass=ABCMeta):
+class BaseModuleDecorator(ModuleTemplating, ABC):
+    template_filter: t.Callable[[str], t.Any]
+    template_global: t.Callable[[str], t.Any]
+
     def __init__(self) -> None:
         self._routes: t.List[BaseRoute] = []
+        self._module_class: t.Optional[t.Type[ModuleBase]] = None
 
     @abstractmethod
     def get_module(self) -> t.Type["ModuleBase"]:
@@ -58,6 +65,26 @@ class BaseModuleDecorator(ModuleTemplating, ABC, metaclass=ABCMeta):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__} decorates {self.get_module().__name__}"
 
+    def __call__(self, module_class: t.Type) -> "BaseModuleDecorator":
+        _module_class = t.cast(t.Type[ModuleBase], module_class)
+        attr: t.Dict = {
+            item: getattr(_module_class, item)
+            for item in dir(_module_class)
+            if "__" not in item
+        }
+
+        if type(_module_class) != ModuleBaseMeta:
+            attr.update(_module_decorator=self)
+            _module_class = type(
+                module_class.__name__,
+                (module_class, ModuleBase),
+                attr,
+            )
+        _module_class._module_decorator = self
+        self._module_class = _module_class
+        ModuleBaseBuilder(_module_class).build(attr)
+        return self
+
 
 def _configure_module(func: t.Callable) -> t.Any:
     def _configure_module_wrapper(self: t.Any, container: Container) -> t.Any:
@@ -69,6 +96,85 @@ def _configure_module(func: t.Callable) -> t.Any:
         return result
 
     return _configure_module_wrapper
+
+
+class ModuleBaseBuilder:
+    __slots__ = ("_cls", "_actions")
+
+    def __init__(self, cls: t.Union[t.Type["ModuleBase"], "ModuleBaseMeta"]) -> None:
+        self._cls = cls
+        self._actions: t.Dict[str, t.Callable[[t.Any], None]] = dict()
+        self._actions.update(
+            {
+                EXCEPTION_HANDLERS_KEY: self.exception_config,
+                MIDDLEWARE_HANDLERS_KEY: self.middleware_config,
+                ON_APP_INIT: self.on_app_init_config,
+                ON_APP_STARTED: self.on_app_started_config,
+                ON_SHUTDOWN_KEY: self.on_shut_down_config,
+                ON_STARTUP_KEY: self.on_startup_config,
+                TEMPLATE_GLOBAL_KEY: self.template_global_config,
+                TEMPLATE_FILTER_KEY: self.template_filter_config,
+            },
+        )
+
+    def exception_config(self, exception_dict: t.Dict) -> None:
+        for k, v in exception_dict.items():
+            func = class_parameter_executor_wrapper(self._cls, v)
+            self._cls.get_exceptions_handlers().update({k: func})
+
+    @t.no_type_check
+    def middleware_config(self, middleware: "MiddlewareSchema") -> None:
+        middleware.dispatch = class_parameter_executor_wrapper(
+            self._cls, middleware.dispatch
+        )
+        self._cls.get_middleware().append(middleware.create_middleware())
+
+    def on_app_init_config(self, on_app_init_event: ApplicationEventHandler) -> None:
+        on_app_init_event.handler = class_parameter_executor_wrapper(
+            self._cls, on_app_init_event.handler
+        )
+        self._cls.get_before_initialisation()(on_app_init_event.handler)
+
+    def on_app_started_config(
+        self, on_app_started_event: ApplicationEventHandler
+    ) -> None:
+        on_app_started_event.handler = class_parameter_executor_wrapper(
+            self._cls, on_app_started_event.handler
+        )
+        self._cls.get_after_initialisation()(on_app_started_event.handler)
+
+    def on_shut_down_config(self, on_shutdown_event: EventHandler) -> None:
+        on_shutdown_event.handler = class_parameter_executor_wrapper(
+            self._cls, on_shutdown_event.handler
+        )
+        self._cls.get_on_shutdown()(on_shutdown_event.handler)
+
+    def on_startup_config(self, on_startup_event: EventHandler) -> None:
+        on_startup_event.handler = class_parameter_executor_wrapper(
+            self._cls, on_startup_event.handler
+        )
+        self._cls.get_on_startup()(on_startup_event.handler)
+
+    def template_filter_config(self, template_filter: "TemplateFunctionData") -> None:
+        module_decorator = self._cls.get_module_decorator()
+        if module_decorator:
+            module_decorator.jinja_environment.filters[
+                template_filter.name
+            ] = class_parameter_executor_wrapper(self._cls, template_filter.func)
+
+    def template_global_config(self, template_filter: "TemplateFunctionData") -> None:
+        module_decorator = self._cls.get_module_decorator()
+        if module_decorator:
+            module_decorator.jinja_environment.globals[
+                template_filter.name
+            ] = class_parameter_executor_wrapper(self._cls, template_filter.func)
+
+    def build(self, namespace: t.Dict) -> None:
+        for item in namespace.values():
+            for k, func in self._actions.items():
+                if hasattr(item, k):
+                    value = getattr(item, k)
+                    func(value)
 
 
 class ModuleBaseMeta(type):
@@ -96,45 +202,6 @@ class ModuleBaseMeta(type):
 
         cls._exceptions_handlers = dict()
         cls._middleware = []
-
-        for value in namespace.values():
-            if hasattr(value, EXCEPTION_HANDLERS_KEY):
-                exception_dict: dict = getattr(value, EXCEPTION_HANDLERS_KEY)
-                for k, v in exception_dict.items():
-                    func = class_parameter_executor_wrapper(cls, v)
-                    cls._exceptions_handlers.update({k: func})
-            elif hasattr(value, MIDDLEWARE_HANDLERS_KEY):
-                middleware: "MiddlewareSchema" = getattr(value, MIDDLEWARE_HANDLERS_KEY)
-                middleware.dispatch = class_parameter_executor_wrapper(
-                    cls, middleware.dispatch
-                )
-                cls._middleware.append(middleware.create_middleware())
-            elif hasattr(value, ON_APP_INIT):
-                on_app_init_event: ApplicationEventHandler = getattr(value, ON_APP_INIT)
-                on_app_init_event.handler = class_parameter_executor_wrapper(
-                    cls, on_app_init_event.handler
-                )
-                cls._before_initialisation(on_app_init_event.handler)
-            elif hasattr(value, ON_APP_STARTED):
-                on_app_started_event: ApplicationEventHandler = getattr(
-                    value, ON_APP_STARTED
-                )
-                on_app_started_event.handler = class_parameter_executor_wrapper(
-                    cls, on_app_started_event.handler
-                )
-                cls._after_initialisation(on_app_started_event.handler)
-            elif hasattr(value, ON_SHUTDOWN_KEY):
-                on_shutdown_event: EventHandler = getattr(value, ON_SHUTDOWN_KEY)
-                on_shutdown_event.handler = class_parameter_executor_wrapper(
-                    cls, on_shutdown_event.handler
-                )
-                cls._on_shutdown(on_shutdown_event.handler)
-            elif hasattr(value, ON_STARTUP_KEY):
-                on_startup_event: EventHandler = getattr(value, ON_STARTUP_KEY)
-                on_startup_event.handler = class_parameter_executor_wrapper(
-                    cls, on_startup_event.handler
-                )
-                cls._on_startup(on_startup_event.handler)
 
     def get_module_decorator(cls) -> t.Optional["BaseModuleDecorator"]:
         return cls._module_decorator
