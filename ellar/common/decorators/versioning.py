@@ -6,4 +6,4 @@ from .base import set_meta
 
 
 def version(*_version: str) -> t.Callable:
-    return set_meta(VERSIONING_KEY, set(_version))
+    return set_meta(VERSIONING_KEY, set([str(i) for i in _version]))
