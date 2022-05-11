@@ -3,10 +3,11 @@ import typing as t
 from starlette.status import WS_1008_POLICY_VIOLATION
 
 from ellar.core.context import ExecutionContext
-from ellar.exceptions import WebSocketRequestValidationError
+from ellar.exceptions import ImproperConfiguration, WebSocketRequestValidationError
 
 from ...websocket import WebsocketRouteOperation
 from ..base import ControllerRouteOperationBase
+from ..model import ControllerBase
 from .handler import ControllerWebSocketExtraHandler
 
 
@@ -14,6 +15,21 @@ class ControllerWebsocketRouteOperation(
     ControllerRouteOperationBase, WebsocketRouteOperation
 ):
     _extra_handler_type: t.Optional[t.Type[ControllerWebSocketExtraHandler]]
+
+    def build_route_operation(  # type:ignore
+        self,
+        path_prefix: str = "",
+        name: t.Optional[str] = None,
+        controller_type: t.Optional[t.Type[ControllerBase]] = None,
+        **kwargs: t.Any
+    ) -> None:
+        if name and not controller_type:
+            raise ImproperConfiguration(
+                "`controller_type` is required for Controller Route Operation"
+            )
+        self._controller_type = controller_type
+        self._meta.update(controller_type=controller_type)
+        super().build_route_operation(path_prefix=path_prefix, name=name)
 
     @classmethod
     def get_websocket_handler(cls) -> t.Type[ControllerWebSocketExtraHandler]:

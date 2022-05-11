@@ -12,10 +12,12 @@ from ellar.compatible import DataMapper
 from ellar.constants import SCOPE_API_VERSIONING_RESOLVER
 from ellar.types import ASGIApp, TReceive, TScope, TSend
 
-from .operation_definitions import OperationDefinitions
+from ..operation_definitions import OperationDefinitions
 
 if t.TYPE_CHECKING:
     from ellar.core.versioning.resolver import BaseAPIVersioningResolver
+
+__all__ = ["RouteCollection", "ApplicationRouter"]
 
 
 class RouteCollection(t.Sequence[BaseRoute]):
@@ -30,7 +32,7 @@ class RouteCollection(t.Sequence[BaseRoute]):
         return self._routes.__getitem__(i)
 
     def __setitem__(self, i: int, o: BaseRoute) -> None:
-        self._routes.append(o)
+        self._routes.insert(i, o)
         self.sort_routes()
 
     def __len__(self) -> int:
@@ -40,7 +42,7 @@ class RouteCollection(t.Sequence[BaseRoute]):
         return iter(self._routes)
 
     def append(self, __item: t.Any) -> None:
-        self.__setitem__(__item, __item)
+        self._routes.append(__item)
 
     def get_routes(self) -> t.List[BaseRoute]:
         return self._routes.copy()

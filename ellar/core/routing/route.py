@@ -64,16 +64,24 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         )
         self._load_model()
 
-    def _load_model(self) -> None:
+    def build_route_operation(  # type:ignore
+        self,
+        path_prefix: str = "",
+        name: t.Optional[str] = None,
+        include_in_schema: bool = True,
+        **kwargs: t.Any,
+    ) -> None:
         self.path_regex, self.path_format, self.param_convertors = compile_path(
-            self.path
+            f"{path_prefix.rstrip('/')}/{self.path.lstrip('/')}"
         )
+
         self.endpoint_parameter_model = self.request_endpoint_args_model(
             path=self.path_format,
             endpoint=self.endpoint,
             operation_unique_id=self.get_operation_unique_id(
                 method=list(self.methods)[0]
             ),
+            param_converters=self.param_convertors,
         )
 
         if self._meta.extra_route_args:
@@ -81,7 +89,12 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
                 *self._meta.extra_route_args
             )
         self.endpoint_parameter_model.build_model()
+        self.include_in_schema = include_in_schema
+        if name:
+            self.name = f"{name}:{self.name}"
 
+    def _load_model(self) -> None:
+        self.build_route_operation()
         if self._meta.response_override:
             _response_override = self._meta.response_override
             if not isinstance(_response_override, dict):

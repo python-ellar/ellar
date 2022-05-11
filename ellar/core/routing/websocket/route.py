@@ -34,7 +34,7 @@ class WebSocketOperationMixin:
 
 
 class WebsocketRouteOperation(
-    WebsocketRouteOperationBase, StarletteWebSocketRoute, WebSocketOperationMixin
+    WebSocketOperationMixin, WebsocketRouteOperationBase, StarletteWebSocketRoute
 ):
     websocket_endpoint_args_model: t.Type[
         WebsocketEndpointArgsModel
@@ -110,13 +110,20 @@ class WebsocketRouteOperation(
         else:
             await self.endpoint(**func_kwargs)
 
-    def _load_model(self) -> None:
+    def build_route_operation(  # type:ignore
+        self,
+        path_prefix: str = "/",
+        name: t.Optional[str] = None,
+        **kwargs: t.Any,
+    ) -> None:
         self.path_regex, self.path_format, self.param_convertors = compile_path(
-            self.path
+            f"{path_prefix.rstrip('/')}/{self.path.lstrip('/')}"
         )
 
         self.endpoint_parameter_model = self.websocket_endpoint_args_model(
-            path=self.path_format, endpoint=self.endpoint
+            path=self.path_format,
+            endpoint=self.endpoint,
+            param_converters=self.param_convertors,
         )
 
         if self._meta.extra_route_args:
@@ -124,12 +131,17 @@ class WebsocketRouteOperation(
                 *self._meta.extra_route_args
             )
         self.endpoint_parameter_model.build_model()
+        if name:
+            self.name = f"{name}:{self.name}"
 
         if not self._use_extra_handler and self.endpoint_parameter_model.body_resolver:
             raise ImproperConfiguration(
                 "`WsBody` should only be used when "
                 "`use_extra_handler` flag is set to True in WsRoute"
             )
+
+    def _load_model(self) -> None:
+        self.build_route_operation()
 
     def __hash__(self) -> int:
         return hash((self.path, tuple(["ws"])))

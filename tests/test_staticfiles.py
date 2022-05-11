@@ -10,10 +10,10 @@ import anyio
 import pytest
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
+from starlette.routing import Mount
 
 from ellar.common import middleware
 from ellar.core import AppFactory
-from ellar.core.routing import Mount
 from ellar.core.staticfiles import StarletteStaticFiles
 
 

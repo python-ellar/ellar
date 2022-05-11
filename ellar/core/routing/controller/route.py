@@ -4,12 +4,31 @@ from starlette.concurrency import run_in_threadpool
 
 from ellar.core.context import ExecutionContext
 from ellar.core.routing.route import RouteOperation
-from ellar.exceptions import RequestValidationError
+from ellar.exceptions import ImproperConfiguration, RequestValidationError
 
 from .base import ControllerRouteOperationBase
+from .model import ControllerBase
 
 
 class ControllerRouteOperation(ControllerRouteOperationBase, RouteOperation):
+    def build_route_operation(  # type:ignore
+        self,
+        path_prefix: str = "/",
+        name: t.Optional[str] = None,
+        include_in_schema: bool = True,
+        controller_type: t.Optional[t.Type[ControllerBase]] = None,
+        **kwargs: t.Any
+    ) -> None:
+        if name and not controller_type:
+            raise ImproperConfiguration(
+                "`controller_type` is required for Controller Route Operation"
+            )
+        self._controller_type = controller_type
+        self._meta.update(controller_type=controller_type)
+        super().build_route_operation(
+            path_prefix=path_prefix, name=name, include_in_schema=include_in_schema
+        )
+
     async def _handle_request(self, context: ExecutionContext) -> t.Any:
         controller_instance = self._get_controller_instance(ctx=context)
 

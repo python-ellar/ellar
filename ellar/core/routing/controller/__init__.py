@@ -1,3 +1,10 @@
-from .model import ControllerBase, ControllerDecorator, ControllerType
+from .decorator import ControllerDecorator
+from .model import ControllerBase, ControllerType
+from .router import ControllerRouter
 
-__all__ = ["ControllerDecorator", "ControllerBase", "ControllerType"]
+__all__ = [
+    "ControllerDecorator",
+    "ControllerBase",
+    "ControllerType",
+    "ControllerRouter",
+]

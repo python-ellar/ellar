@@ -1,21 +1,12 @@
 import pytest
 
-from ellar.common import ModuleRouter
 from ellar.constants import NOT_SET
 from ellar.core import TestClientFactory
 from ellar.core.versioning import VERSIONING
 
 from .operations import mr
 
-mp = ModuleRouter("")
-
-
-@mp.Get("/version/testing")
-def default_version():
-    return dict(version="default")
-
-
-tm = TestClientFactory.create_test_module(routers=(mp, mr))
+tm = TestClientFactory.create_test_module(routers=(mr,))
 
 tm.app.enable_versioning(
     VERSIONING.HEADER, version_parameter="v", header_parameter="accept"

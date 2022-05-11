@@ -1,16 +1,17 @@
 import typing as t
 
+from starlette.types import ASGIApp
+
 from ellar.constants import SCOPE_API_VERSIONING_RESOLVER
 from ellar.core.versioning import BaseAPIVersioning
 from ellar.types import TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:
     from ellar.core.conf import Config
-    from ellar.core.main import App
 
 
 class RequestVersioningMiddleware:
-    def __init__(self, app: "App", *, debug: bool, config: "Config") -> None:
+    def __init__(self, app: ASGIApp, *, debug: bool, config: "Config") -> None:
         self.app = app
         self.debug = debug
         self.config = config

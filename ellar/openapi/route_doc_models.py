@@ -24,8 +24,8 @@ from ellar.core.params.resolvers import (
     RouteParameterModelField,
     RouteParameterResolver,
 )
-from ellar.core.routing import ModuleRouter, RouteOperation
-from ellar.core.routing.controller.mount import ControllerMount
+from ellar.core.routing import ModuleRouterBase, RouteOperation
+from ellar.core.routing.controller.router import ControllerRouter
 from ellar.shortcuts import normalize_path
 
 
@@ -38,8 +38,10 @@ class OpenAPIRoute(ABC):
     def get_openapi_path(
         self,
         model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
+        paths: t.Dict,
+        security_schemes: t.Dict[str, t.Any],
         path_prefix: t.Optional[str] = None,
-    ) -> t.Tuple:
+    ) -> None:
         pass
 
 
@@ -54,14 +56,14 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
 
     def __init__(
         self,
-        mount: t.Union[ModuleRouter, ControllerMount, Mount],
+        mount: t.Union[ModuleRouterBase, ControllerRouter, Mount],
         tag: t.Optional[str] = None,
         description: t.Optional[str] = None,
         external_doc_description: t.Optional[str] = None,
         external_doc_url: t.Optional[str] = None,
     ) -> None:
         meta: t.Dict = dict()
-        if isinstance(mount, (ModuleRouter, ControllerMount)):
+        if isinstance(mount, (ModuleRouterBase, ControllerRouter)):
             meta = dict(mount.get_meta())
         self.tag = meta.get("tag") or tag
         self.description = description or meta.get("description")
@@ -126,18 +128,18 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
     def get_openapi_path(
         self,
         model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
+        paths: t.Dict,
+        security_schemes: t.Dict[str, t.Any],
         path_prefix: t.Optional[str] = None,
-    ) -> t.Tuple:
+    ) -> None:
         path_prefix = (
             f"{path_prefix.rstrip('/')}/{self.mount.path.lstrip('/')}"
             if path_prefix
             else self.path_format
         )
-        paths: t.Dict = {}
-        security_schemes: t.Dict[str, t.Any] = {}
         for openapi_route in self.routes:
-            path, _security_schemes = openapi_route.get_openapi_path(
-                model_name_map=model_name_map, path_prefix=path_prefix
+            path, _security_schemes = openapi_route.get_child_openapi_path(
+                model_name_map=model_name_map
             )
             if path:
                 route_path = (
@@ -147,7 +149,6 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
                 )
                 paths.setdefault(route_path, {}).update(path)
             security_schemes.update(_security_schemes)
-        return paths, security_schemes
 
 
 class OpenAPIRouteDocumentation(OpenAPIRoute):
@@ -191,7 +192,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
     @cached_property
     def input_fields(self) -> t.List[ModelField]:
         _models: t.List[ModelField] = []
-        for item in self.route.endpoint_parameter_model.get_models():
+        for item in self.route.endpoint_parameter_model.get_all_models():
             if isinstance(item, BodyParameterResolver):
                 continue
             if isinstance(item, RouteParameterResolver):
@@ -374,13 +375,31 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
 
         return path, security_schemes
 
-    def get_openapi_path(
+    def get_child_openapi_path(
         self,
         model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
-        path_prefix: t.Optional[str] = None,
     ) -> t.Tuple:
 
         _path, _security_schemes = self._get_openapi_path_object(
             model_name_map=model_name_map
         )
         return _path, _security_schemes
+
+    def get_openapi_path(
+        self,
+        model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
+        paths: t.Dict,
+        security_schemes: t.Dict[str, t.Any],
+        path_prefix: t.Optional[str] = None,
+    ) -> None:
+        path, _security_schemes = self.get_child_openapi_path(
+            model_name_map=model_name_map
+        )
+        if path:
+            route_path = (
+                normalize_path(f"{path_prefix}/{self.route.path_format}")
+                if path_prefix
+                else self.route.path_format
+            )
+            paths.setdefault(route_path, {}).update(path)
+        security_schemes.update(_security_schemes)

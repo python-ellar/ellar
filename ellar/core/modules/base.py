@@ -19,6 +19,7 @@ from ellar.core.events import (
     EventHandler,
     RouterEventManager,
 )
+from ellar.core.routing import ModuleRouterBase
 from ellar.core.templating.interface import ModuleTemplating
 from ellar.di.injector import Container
 
@@ -49,6 +50,10 @@ class BaseModuleDecorator(ModuleTemplating, ABC, metaclass=ABCMeta):
     @abstractmethod
     def _build_routes(self) -> t.List[BaseRoute]:
         """build module controller routes"""
+
+    @abstractmethod
+    def get_module_routers(self) -> t.List[ModuleRouterBase]:
+        """gets ModuleRouterBase"""
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__} decorates {self.get_module().__name__}"

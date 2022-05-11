@@ -22,36 +22,38 @@ openapi_schema = {
     "openapi": "3.0.2",
     "info": {"title": "Ellar API Docs", "version": "1.0.0"},
     "paths": {
-        "get": {
-            "requestBody": {
-                "required": True,
-                "content": {
-                    "application/json": {
-                        "schema": {"$ref": "#/components/schemas/Product"}
-                    }
-                },
-            },
-            "responses": {
-                "200": {
-                    "description": "Successful Response",
+        "/product": {
+            "get": {
+                "operationId": "create_item_product_get",
+                "requestBody": {
                     "content": {
                         "application/json": {
-                            "schema": {"title": "Response Model", "type": "object"}
+                            "schema": {"$ref": "#/components/schemas/Product"}
                         }
                     },
+                    "required": True,
                 },
-                "422": {
-                    "description": "Validation Error",
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/HTTPValidationError"
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {"title": "Response Model", "type": "object"}
                             }
-                        }
+                        },
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        },
                     },
                 },
-            },
-            "operationId": "create_item_product_get",
+            }
         }
     },
     "components": {

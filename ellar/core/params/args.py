@@ -7,6 +7,7 @@ from pydantic.error_wrappers import ErrorWrapper
 from pydantic.fields import FieldInfo, ModelField, Required
 from pydantic.schema import get_annotation_from_field_info
 from pydantic.typing import ForwardRef, evaluate_forwardref
+from starlette.convertors import Convertor
 
 from ellar.core.connection import Request, WebSocket
 from ellar.core.context import IExecutionContext
@@ -112,6 +113,8 @@ class EndpointArgsModel:
         "path_param_names",
         "body_resolver",
         "endpoint_signature",
+        "_omitted_prefix",
+        "param_converters",
     )
 
     def __init__(
@@ -119,15 +122,46 @@ class EndpointArgsModel:
         *,
         path: str,
         endpoint: t.Callable,
+        param_converters: t.Dict[str, Convertor],
     ) -> None:
         self.path = path
+        self.param_converters = param_converters
         self._models: t.List[BaseRouteParameterResolver] = []
         self.path_param_names = self.get_path_param_names(path)
         self.endpoint_signature = self.get_typed_signature(endpoint)
         self.body_resolver: t.Optional[RouteParameterResolver] = None
+        self._omitted_prefix: t.List[
+            BaseRouteParameterResolver
+        ] = self.get_omitted_prefix()
 
-    def get_models(self) -> t.List[BaseRouteParameterResolver]:
+    def get_route_models(self) -> t.List[BaseRouteParameterResolver]:
         return list(self._models)
+
+    def get_all_models(self) -> t.List[BaseRouteParameterResolver]:
+        return list(self._models) + list(self._omitted_prefix)
+
+    def get_omitted_prefix(self) -> t.List[BaseRouteParameterResolver]:
+        _omitted = []
+        signature_dict = dict(self.endpoint_signature.parameters)
+        for name, _converter in self.param_converters.items():
+            if name in signature_dict:
+                continue
+
+            _converter_signature = inspect.signature(_converter.convert)
+            assert (
+                _converter_signature.return_annotation is not inspect.Parameter.empty
+            ), "Convertor must have return type"
+            _type = _converter_signature.return_annotation
+            _omitted.append(
+                ExtraEndpointArg(
+                    name=name, annotation=_type, default_value=params.Path()
+                )
+            )
+
+        self.add_extra_route_args(*_omitted)
+        results = self._models.copy()
+        self._models = []
+        return results
 
     def build_model(self) -> None:
         self.compute_route_parameter_list()
@@ -299,9 +333,16 @@ class RequestEndpointArgsModel(EndpointArgsModel):
     __slots__ = ("operation_unique_id", "body_resolvers")
 
     def __init__(
-        self, *, path: str, endpoint: t.Callable, operation_unique_id: str
+        self,
+        *,
+        path: str,
+        endpoint: t.Callable,
+        operation_unique_id: str,
+        param_converters: t.Dict[str, Convertor],
     ) -> None:
-        super().__init__(path=path, endpoint=endpoint)
+        super().__init__(
+            path=path, endpoint=endpoint, param_converters=param_converters
+        )
         self.operation_unique_id = operation_unique_id
 
     def _compute_body_resolvers(self) -> t.List[BodyParameterResolver]:
@@ -373,8 +414,16 @@ class RequestEndpointArgsModel(EndpointArgsModel):
 class WebsocketEndpointArgsModel(EndpointArgsModel):
     __slots__ = ("body_resolvers",)
 
-    def __init__(self, *, path: str, endpoint: t.Callable) -> None:
-        super().__init__(path=path, endpoint=endpoint)
+    def __init__(
+        self,
+        *,
+        path: str,
+        endpoint: t.Callable,
+        param_converters: t.Dict[str, Convertor],
+    ) -> None:
+        super().__init__(
+            path=path, endpoint=endpoint, param_converters=param_converters
+        )
         self.body_resolvers: t.List[RouteParameterResolver] = []
 
     def build_body_field(self) -> None:

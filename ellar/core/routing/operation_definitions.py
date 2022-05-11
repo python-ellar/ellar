@@ -7,16 +7,16 @@ from ellar.core.schema import RouteParameters, WsRouteParameters
 from ellar.types import TCallable
 
 from .base import RouteOperationBase
-from .controller.method_decorators import (
-    RouteMethodDecorator,
-    RouteMethodDecoratorBase,
-    WebsocketMethodDecorator,
-)
+from .controller.base import ControllerRouteOperationBase
+from .controller.route import ControllerRouteOperation
+from .controller.websocket.route import ControllerWebsocketRouteOperation
 from .route import RouteOperation
 from .websocket import WebsocketRouteOperation
 
-TOperation = t.Union[RouteOperation, RouteMethodDecorator]
-TWebsocketOperation = t.Union[WebsocketRouteOperation, WebsocketMethodDecorator]
+TOperation = t.Union[RouteOperation, ControllerRouteOperation]
+TWebsocketOperation = t.Union[
+    WebsocketRouteOperation, ControllerWebsocketRouteOperation
+]
 
 
 class OperationDefinitions:
@@ -37,19 +37,19 @@ class OperationDefinitions:
 
     def _get_http_operations_class(self, func: t.Callable) -> t.Type[TOperation]:
         if self.class_base_function_regex.match(repr(func)):
-            return RouteMethodDecorator
+            return ControllerRouteOperation
         return RouteOperation
 
     def _get_ws_operations_class(self, func: t.Callable) -> t.Type[TWebsocketOperation]:
         if self.class_base_function_regex.match(repr(func)):
-            return WebsocketMethodDecorator
+            return ControllerWebsocketRouteOperation
         return WebsocketRouteOperation
 
     def _get_operation(self, route_parameter: RouteParameters) -> TOperation:
         _operation_class = self._get_http_operations_class(route_parameter.endpoint)
         _operation = _operation_class(**route_parameter.dict())
         if self._routes is not None and not isinstance(
-            _operation, RouteMethodDecoratorBase
+            _operation, ControllerRouteOperationBase
         ):
             self._routes.append(_operation)
         return _operation
@@ -62,7 +62,7 @@ class OperationDefinitions:
         )
         _operation = _ws_operation_class(**ws_route_parameters.dict())
         if self._routes is not None and not isinstance(
-            _operation, RouteMethodDecoratorBase
+            _operation, ControllerRouteOperationBase
         ):
             self._routes.append(_operation)
         return _operation
@@ -72,7 +72,7 @@ class OperationDefinitions:
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         if callable(path):
             route_parameter = endpoint_parameter_partial(endpoint=path, path="/")
-            return self._get_operation(route_parameter=route_parameter)  # type: ignore
+            return self._get_operation(route_parameter=route_parameter)
 
         def _decorator(endpoint_handler: t.Callable) -> TOperation:
             _route_parameter = endpoint_parameter_partial(

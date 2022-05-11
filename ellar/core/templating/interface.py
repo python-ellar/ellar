@@ -129,12 +129,19 @@ class AppTemplating(JinjaTemplating):
     config: Config
     _static_app: t.Optional[ASGIApp]
     _modules: t.Dict[t.Type["ModuleBase"], "BaseModuleDecorator"]
-    debug: bool
     has_static_files: bool
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
         for loader in self._modules.values():
             yield loader
+
+    @property
+    def debug(self) -> bool:
+        return t.cast(bool, self.config.DEBUG)
+
+    @debug.setter
+    def debug(self, value: bool) -> None:
+        self.config.DEBUG = value
 
     @cached_property
     def jinja_environment(self) -> BaseEnvironment:

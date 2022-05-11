@@ -4,11 +4,13 @@ from starlette.routing import BaseRoute
 
 from ellar.core.guard import GuardCanActivate
 
-from ..mount import Mount
+from ..router import ModuleRouterBase
 from .model import ControllerBase
+from .route import ControllerRouteOperation
+from .websocket.route import ControllerWebsocketRouteOperation
 
 
-class ControllerMount(Mount):
+class ControllerRouter(ModuleRouterBase):
     def __init__(
         self,
         path: str,
@@ -25,7 +27,7 @@ class ControllerMount(Mount):
         ] = None,
         include_in_schema: bool = True,
     ) -> None:
-        super(ControllerMount, self).__init__(
+        super(ControllerRouter, self).__init__(
             path=path,
             tag=tag,
             name=name,
@@ -39,6 +41,19 @@ class ControllerMount(Mount):
         )
         self.controller_type = controller_type
 
-    def build_routes(self) -> None:
-        # Not necessary. Route Building is done in ControllerDecorator
-        pass
+    def _build_route_operation(  # type:ignore
+        self, route: ControllerRouteOperation
+    ) -> None:
+        route.build_route_operation(
+            path_prefix=self.path,
+            name=self.name,
+            include_in_schema=self.include_in_schema,
+            controller_type=self.controller_type,
+        )
+
+    def _build_ws_route_operation(  # type:ignore
+        self, route: ControllerWebsocketRouteOperation
+    ) -> None:
+        route.build_route_operation(
+            path_prefix=self.path, name=self.name, controller_type=self.controller_type
+        )

@@ -1,5 +1,8 @@
 import typing as t
 
+from starlette.routing import BaseRoute
+
+from ellar.constants import APP_MODULE_KEY
 from ellar.core import Config
 from ellar.core.events import ApplicationEventManager
 from ellar.core.main import App
@@ -11,7 +14,7 @@ from ellar.core.modules import (
 )
 
 if t.TYPE_CHECKING:
-    from ellar.core.routing import ModuleRouter, Mount, OperationDefinitions
+    from ellar.core.routing import ModuleRouter, OperationDefinitions
     from ellar.core.routing.controller import ControllerDecorator
     from ellar.di import ProviderConfig
 
@@ -30,6 +33,8 @@ class AppFactory:
         ), "Only ApplicationModule is allowed"
 
         config = Config(app_configured=True)
+        config.update({APP_MODULE_KEY: app_module})
+
         modules_data = app_module.build()
         before = ApplicationEventManager(modules_data.before_init)
         before.run(config=config)
@@ -55,7 +60,7 @@ class AppFactory:
         cls,
         controllers: t.Sequence["ControllerDecorator"] = tuple(),
         routers: t.Sequence[
-            t.Union["ModuleRouter", "OperationDefinitions", "Mount"]
+            t.Union["ModuleRouter", "OperationDefinitions", BaseRoute]
         ] = tuple(),
         services: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = tuple(),
         modules: t.Union[

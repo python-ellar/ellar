@@ -7,7 +7,7 @@ from starlette.routing import BaseRoute
 
 from ellar.core.events import ApplicationEventHandler, EventHandler
 from ellar.core.guard import GuardCanActivate
-from ellar.core.routing import ModuleRouter, Mount, OperationDefinitions
+from ellar.core.routing import ModuleRouterBase, OperationDefinitions
 from ellar.core.routing.controller import ControllerDecorator
 from ellar.di import ProviderConfig
 from ellar.di.injector import Container
@@ -32,7 +32,7 @@ class ModuleDecorator(BaseModuleDecorator):
         name: t.Optional[str] = __name__,
         controllers: t.Sequence[ControllerDecorator] = tuple(),
         routers: t.Sequence[
-            t.Union[ModuleRouter, OperationDefinitions, Mount]
+            t.Union[ModuleRouterBase, OperationDefinitions, BaseRoute]
         ] = tuple(),
         services: t.Sequence[t.Union[t.Type, ProviderConfig]] = tuple(),
         template_folder: t.Optional[str] = None,
@@ -47,7 +47,7 @@ class ModuleDecorator(BaseModuleDecorator):
         self._static_folder = static_folder
         self._module_class: t.Optional[t.Type[ModuleBase]] = None
         self._module_base_directory = base_directory
-        self._module_routers = self._get_module_routers(routers=routers)
+        self._module_routers = routers
         self._builder_service(services=services)
 
     def get_module(self) -> t.Type[ModuleBase]:
@@ -90,36 +90,37 @@ class ModuleDecorator(BaseModuleDecorator):
             self._services.append(item)
 
     def _build_routes(self) -> t.List[BaseRoute]:
-        routes = list(self._module_routers)
+        routes = self._get_module_routes()
         for controller in self._controllers:
-            routes.append(controller.get_route())
+            routes.extend(controller.build_routes())
         return routes
 
-    @classmethod
-    def _get_module_routers(
-        cls, routers: t.Sequence[t.Union[ModuleRouter, OperationDefinitions, Mount]]
+    def _get_module_routes(
+        self,
     ) -> t.List[BaseRoute]:
         results: t.List[BaseRoute] = []
-        for item in routers:
+        for item in self._module_routers:
             if isinstance(item, OperationDefinitions) and item.routes:
                 results.extend(item.routes)  # type: ignore
                 continue
-            if isinstance(item, (Mount,)):
-                item.build_routes()
-            results.append(item)  # type: ignore
+            if isinstance(item, (ModuleRouterBase,)):
+                results.extend(item.build_routes())
+                continue
+            if isinstance(item, (BaseRoute,)):
+                results.append(item)
         return results
 
-    # def build_module(self, app: "App", container: Container) -> t.Any:
-    #     startup_event = list(self.get_module().get_on_startup())
-    #     shutdown_event = list(self.get_module().get_on_shutdown())
-    #
-    #     exception_handlers = dict(self.get_module().get_exceptions_handlers())
-    #     middleware = list(self.get_module().get_middleware())
-    #
-    #     routes = list(self._build_routes())
-    #
-    #     instance = container.install(self.get_module())
-    #     return instance
+    def get_module_routers(self) -> t.List[ModuleRouterBase]:
+        _module_routers: t.List[ModuleRouterBase] = []
+
+        for controller in self._controllers:
+            _module_routers.append(controller.get_mount())
+
+        for item in self._module_routers:
+            if isinstance(item, (ModuleRouterBase,)):
+                _module_routers.append(item)
+
+        return _module_routers
 
 
 TAppModuleValue = t.Union[ModuleBase, BaseModuleDecorator]
@@ -132,7 +133,7 @@ class ApplicationModuleDecorator(ModuleDecorator):
         *,
         controllers: t.Sequence[ControllerDecorator] = tuple(),
         routers: t.Sequence[
-            t.Union[ModuleRouter, OperationDefinitions, Mount]
+            t.Union[ModuleRouterBase, OperationDefinitions, BaseRoute]
         ] = tuple(),
         services: t.Sequence[t.Union[t.Type, ProviderConfig]] = tuple(),
         modules: t.Sequence[
@@ -176,6 +177,15 @@ class ApplicationModuleDecorator(ModuleDecorator):
             module_builder.extend(module)
 
         return module_builder.data
+
+    def get_module_routers(self) -> t.List[ModuleRouterBase]:
+        _module_routers = super().get_module_routers()
+
+        for module in self._app_modules:
+            if isinstance(module, BaseModuleDecorator):
+                _module_routers.extend(module.get_module_routers())
+
+        return _module_routers
 
     def get_modules_as_dict(self) -> t.Dict[t.Type[ModuleBase], BaseModuleDecorator]:
         _modules: t.List[

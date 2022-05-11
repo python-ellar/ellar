@@ -55,19 +55,20 @@ class RouteOperationBase:
                 if not result:
                     guard.raise_exception()
 
-    async def _run_request(self, scope: TScope, receive: TReceive, send: TSend) -> None:
+    async def app(self, scope: TScope, receive: TReceive, send: TSend) -> None:
         context = ExecutionContext.create_context(
             scope=scope, receive=receive, send=send, operation=self
         )
         await self.run_route_guards(context=context)
         await self._handle_request(context=context)
 
-    async def handle(self, scope: TScope, receive: TReceive, send: TSend) -> None:
-        await self._run_request(scope, receive, send)
-
     @abstractmethod
     async def _handle_request(self, *, context: ExecutionContext) -> None:
         """return a context"""
+
+    @abstractmethod
+    def build_route_operation(self, *args: t.Any, **kwargs: t.Any) -> None:
+        """Full operation initialization"""
 
     def get_allowed_version(self) -> t.Set[t.Union[int, float, str]]:
         return self._meta.route_versioning

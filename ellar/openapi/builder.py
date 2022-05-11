@@ -9,11 +9,14 @@ from pydantic.schema import (
     get_model_name_map,
     model_process_schema,
 )
+from starlette.routing import Mount
 
 from ellar.compatible import cached_property
+from ellar.constants import APP_MODULE_KEY
 from ellar.core.main import App
-from ellar.core.routing import ModuleRouter, Mount, RouteOperation
-from ellar.core.routing.controller.mount import ControllerMount
+from ellar.core.modules import ApplicationModuleDecorator
+from ellar.core.routing import ModuleRouterBase, RouteOperation
+from ellar.core.routing.controller.route import ControllerRouteOperation
 from ellar.core.schema import HTTPValidationError, ValidationError
 from ellar.helper.modelfield import create_model_field
 
@@ -107,12 +110,13 @@ class OpenAPIDocumentBuilder:
     def _get_openapi_route_document_models(self, app: App) -> t.List[OpenAPIRoute]:
         openapi_route_models: t.List = []
         for route in app.routes:
-            if isinstance(route, (ControllerMount, ModuleRouter, Mount)) and getattr(
-                route, "include_in_schema", True
-            ):
+            if isinstance(route, Mount):
                 openapi_route_models.append(OpenAPIMountDocumentation(mount=route))
                 continue
-            if isinstance(route, RouteOperation):
+            if (
+                isinstance(route, (RouteOperation, ControllerRouteOperation))
+                and route.include_in_schema
+            ):
                 openapi_route_models.append(OpenAPIRouteDocumentation(route=route))
         return openapi_route_models
 
@@ -165,22 +169,28 @@ class OpenAPIDocumentBuilder:
         definitions = self._get_model_definitions(
             models=models, model_name_map=model_name_map  # type: ignore
         )
-
+        mounts: t.List[t.Union[OpenAPIMountDocumentation, ModuleRouterBase]] = []
         for route in openapi_route_models:
-            result = route.get_openapi_path(model_name_map=model_name_map)
-            path, security_schemes = result
-            paths.update(path)
+            security_schemes: t.Dict[str, t.Any] = dict()
+            route.get_openapi_path(
+                model_name_map=model_name_map,
+                paths=paths,
+                security_schemes=security_schemes,
+            )
             if security_schemes:
                 components.setdefault("securitySchemes", {}).update(security_schemes)
+
+            if isinstance(route, OpenAPIMountDocumentation):
+                mounts.append(route)
 
         if definitions:
             components["schemas"] = {k: definitions[k] for k in sorted(definitions)}
 
-        mounts = (
-            _route
-            for _route in openapi_route_models
-            if isinstance(_route, OpenAPIMountDocumentation)
+        app_module: t.Optional[ApplicationModuleDecorator] = app.config.get(
+            APP_MODULE_KEY
         )
+        mounts.extend(app_module.get_module_routers() if app_module else [])
+
         for item in mounts:
             data = item.get_tag()
             if data:

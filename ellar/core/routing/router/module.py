@@ -3,19 +3,20 @@ import typing as t
 from starlette.routing import BaseRoute, Mount as StarletteMount, Route
 from starlette.types import ASGIApp
 
-from ellar.compatible import DataMapper
-from ellar.core.routing.base import RouteOperationBase
+from ellar.compatible import AttributeDict
+from ellar.core.routing.route import RouteOperation
+from ellar.core.routing.websocket.route import WebsocketRouteOperation
 
-from .operation_definitions import OperationDefinitions
+from ..operation_definitions import OperationDefinitions
 
 if t.TYPE_CHECKING:
     from ellar.core.guard import GuardCanActivate
 
 
-__all__ = ["Mount", "ModuleRouter"]
+__all__ = ["ModuleRouterBase", "ModuleRouter"]
 
 
-class Mount(StarletteMount):
+class ModuleRouterBase(StarletteMount):
     def __init__(
         self,
         path: str,
@@ -32,10 +33,12 @@ class Mount(StarletteMount):
         ] = None,
         include_in_schema: bool = False,
     ) -> None:
-        super(Mount, self).__init__(path=path, routes=routes or [], name=name, app=app)
+        super(ModuleRouterBase, self).__init__(
+            path=path, routes=routes or [], name=name, app=app
+        )
         self.include_in_schema = include_in_schema
-        self._meta: t.Mapping = DataMapper(
-            tag=tag,
+        self._meta: AttributeDict = AttributeDict(
+            tag=tag or name or "Module Router",
             external_doc_description=external_doc_description,
             description=description,
             external_doc_url=external_doc_url,
@@ -48,9 +51,36 @@ class Mount(StarletteMount):
     def get_meta(self) -> t.Mapping:
         return self._meta
 
-    def build_routes(self) -> None:
+    def get_tag(self) -> t.Dict:
+        external_doc = None
+        if self._meta.external_doc_url:
+            external_doc = dict(
+                url=self._meta.external_doc_url,
+                description=self._meta.external_doc_description,
+            )
+
+        if self._meta.tag:
+            return dict(
+                name=self._meta.tag,
+                description=self._meta.description,
+                externalDocs=external_doc,
+            )
+        return dict()
+
+    def _build_route_operation(self, route: RouteOperation) -> None:
+        route.build_route_operation(
+            path_prefix=self.path,
+            name=self.name,
+            include_in_schema=self.include_in_schema,
+        )
+
+    def _build_ws_route_operation(self, route: WebsocketRouteOperation) -> None:
+        route.build_route_operation(path_prefix=self.path, name=self.name)
+
+    def build_routes(self) -> t.List[BaseRoute]:
+        routes: t.List[BaseRoute] = []
         for route in self.routes:
-            _route: RouteOperationBase = t.cast("RouteOperationBase", route)
+            _route: RouteOperation = t.cast("RouteOperation", route)
             operation_meta = _route.get_meta()
 
             if not operation_meta.route_versioning:
@@ -58,14 +88,20 @@ class Mount(StarletteMount):
             if not operation_meta.route_guards:
                 operation_meta.update(route_guards=self._route_guards)
 
-            if isinstance(_route, Route) and self._meta.get("tag"):
-                tags = {self._meta["tag"]}
-                if operation_meta.openapi.tags:
-                    tags.update(set(operation_meta.openapi.tags))
-                operation_meta.openapi.update(tags=list(tags))
+            if isinstance(_route, Route):
+                if not operation_meta.openapi.tags and self._meta.get("tag"):
+                    tags = {self._meta.get("tag")}
+                    tags.update(set(operation_meta.openapi.tags or []))
+                    operation_meta.openapi.update(tags=list(tags))
+                self._build_route_operation(_route)
+            else:
+                self._build_ws_route_operation(_route)
+            routes.append(_route)
+
+        return routes
 
 
-class ModuleRouter(Mount):
+class ModuleRouter(ModuleRouterBase):
     operation_definition_class: t.Type[OperationDefinitions] = OperationDefinitions
 
     def __init__(
@@ -110,4 +146,3 @@ class ModuleRouter(Mount):
 
         self.HttpRoute = _route_definitions.http_route
         self.WsRoute = _route_definitions.ws_route
-        # TODO: Add Mount and Host function
