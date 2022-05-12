@@ -6,6 +6,7 @@ from starlette.background import BackgroundTask
 from starlette.templating import _TemplateResponse as TemplateResponse
 
 from ellar.core.connection import HTTPConnection, Request
+from ellar.core.context import IExecutionContext
 
 from .environment import Environment
 
@@ -35,15 +36,15 @@ def _get_jinja_and_template_context(
 
 
 def render_template_string(
-    template_name: str, request: Request, **context: t.Any
+    template_name: str, ctx: IExecutionContext, **template_kwargs: t.Any
 ) -> str:
     """Renders a template to string.
-    :param request: current request object
+    :param ctx: current execution context
     :param template_name: the name of the template to be rendered
-    :param context: variables that should be available in the context of the template.
+    :param template_context: variables that should be available in the context of the template.
     """
     jinja_template, template_context = _get_jinja_and_template_context(
-        template_name=template_name, request=request, **context
+        template_name=template_name, request=ctx.switch_to_request(), **template_kwargs
     )
 
     return jinja_template.render(template_context)
@@ -51,21 +52,21 @@ def render_template_string(
 
 def render_template(
     template_name: str,
-    request: Request,
-    context: t.Dict = {},
+    ctx: IExecutionContext,
     background: BackgroundTask = None,
+    **template_kwargs: t.Any
 ) -> TemplateResponse:
     """Renders a template from the template folder with the given context.
-    :param request: current request object
+    :param ctx: current execution context
     :param template_name: the name of the template to be rendered
-    :param context: variables that should be available in the context of the template.
+    :param template_kwargs: variables that should be available in the context of the template.
     :param background: any background task to be executed after render.
     :return TemplateResponse
     """
     jinja_template, template_context = _get_jinja_and_template_context(
         template_name=template_name,
-        request=request,
-        **process_view_model(context),
+        request=ctx.switch_to_request(),
+        **process_view_model(template_kwargs),
     )
     return TemplateResponse(
         template=jinja_template, context=template_context, background=background

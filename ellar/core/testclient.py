@@ -4,11 +4,7 @@ from starlette.testclient import TestClient as TestClient
 
 from ellar.core.factory import AppFactory
 from ellar.core.main import App
-from ellar.core.modules import (
-    ApplicationModuleDecorator,
-    BaseModuleDecorator,
-    ModuleDecorator,
-)
+from ellar.core.modules import ApplicationModuleDecorator, BaseModuleDecorator
 from ellar.core.routing import ModuleRouter
 from ellar.core.routing.controller import ControllerDecorator
 from ellar.di import ProviderConfig
@@ -60,11 +56,7 @@ class TestClientFactory:
     @classmethod
     def create_test_module_from_module(
         cls,
-        module: t.Union[
-            t.Type[ModuleDecorator],
-            t.Type[ApplicationModuleDecorator],
-            t.Type[BaseModuleDecorator],
-        ],
+        module: t.Union[t.Type[BaseModuleDecorator], t.Type],
         mock_services: t.Sequence[ProviderConfig] = tuple(),
     ) -> _TestingModule:
         if isinstance(module, ApplicationModuleDecorator):

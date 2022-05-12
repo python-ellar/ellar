@@ -148,6 +148,7 @@ class AppTemplating(JinjaTemplating):
 
     @debug.setter
     def debug(self, value: bool) -> None:
+        del self.__dict__["jinja_environment"]
         self.config.DEBUG = value
 
     @cached_property
