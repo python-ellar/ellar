@@ -14,7 +14,6 @@ from ellar.core.middleware import (
     Middleware,
     RequestServiceProviderMiddleware,
     RequestVersioningMiddleware,
-    ServerErrorMiddleware,
 )
 from ellar.core.modules import BaseModuleDecorator, ModuleBase
 from ellar.core.modules.module import ModuleBuilder
@@ -187,9 +186,7 @@ class App(AppTemplating):
                     RequestServiceProviderMiddleware,
                     debug=self.debug,
                     injector=self.injector,
-                ),
-                Middleware(
-                    ServerErrorMiddleware, handler=error_handler, debug=self.debug
+                    handler=error_handler,
                 ),
                 Middleware(
                     RequestVersioningMiddleware, debug=self.debug, config=self.config
