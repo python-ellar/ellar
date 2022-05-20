@@ -6,7 +6,7 @@ from ellar.constants import ROUTE_METHODS
 from ellar.core.response.model import EmptyAPIResponseModel, IResponseModel
 from ellar.serializer import BaseSerializer
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.routing.websocket import WebSocketExtraHandler
 
 
@@ -86,8 +86,6 @@ class WsRouteParameters(BaseModel):
 
     @validator("endpoint")
     def validate_endpoint(cls, value: t.Any):
-        if not callable(value):
-            raise ValueError("An endpoint must be a callable")
         return value
 
     @validator("encoding")

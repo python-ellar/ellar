@@ -9,7 +9,7 @@ from ellar.constants import (
     VERSIONING_KEY,
 )
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
     from ellar.core.params import ExtraEndpointArg
 
@@ -29,8 +29,10 @@ class OperationMeta(AttributeDict):
         kwargs.setdefault(OPENAPI_KEY, AttributeDict())
         super(OperationMeta, self).__init__(*args, **kwargs)
 
-    def __deepcopy__(self, memodict: t.Dict = {}) -> "OperationMeta":
+    def __deepcopy__(
+        self, memodict: t.Dict = {}
+    ) -> "OperationMeta":  # pragma: no cover
         return self.__copy__(memodict)
 
-    def __copy__(self, memodict: t.Dict = {}) -> "OperationMeta":
+    def __copy__(self, memodict: t.Dict = {}) -> "OperationMeta":  # pragma: no cover
         return OperationMeta(**self)
