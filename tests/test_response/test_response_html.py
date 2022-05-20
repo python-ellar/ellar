@@ -15,7 +15,8 @@ BASEDIR = Path(__file__).resolve().parent.parent
 @Controller
 class EllarController:
     @Get(
-        "/index", response={200: HTMLResponseModel(template_name="index", use_mvc=True)}
+        "/index",
+        response={200: HTMLResponseModel(template_name="index.html", use_mvc=True)},
     )
     def index2(self):
         """Looks for ellar/index since use_mvc=True"""
@@ -36,7 +37,7 @@ class EllarController:
         return {"index": True, "use_mvc": False}
 
     @Get("/another_index2")
-    @Render(template_name="ellar/index")
+    @Render(template_name="ellar/index.html")
     def another_index2(self):
         """Since a template name is provided, it will looks for template name"""
         return {"index": True, "use_mvc": False}

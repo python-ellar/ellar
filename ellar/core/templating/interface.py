@@ -16,9 +16,9 @@ from ..conf import Config
 from .environment import Environment
 from .loader import JinjaLoader
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
-    from ellar.core.modules import BaseModuleDecorator, ModuleBase
+    from ellar.core.modules import ApplicationModuleDecorator
 
 
 class TemplateFunctionData(t.NamedTuple):
@@ -29,13 +29,13 @@ class TemplateFunctionData(t.NamedTuple):
 class IModuleTemplateLoader(ABC):
     @property
     @abstractmethod
-    def template_folder(self) -> t.Optional[str]:
-        ...
+    def template_folder(self) -> t.Optional[str]:  # pragma: no cover
+        """template folder name or template path"""
 
     @property
     @abstractmethod
     def root_path(self) -> t.Optional[t.Union[Path, str]]:
-        ...
+        """root template path"""
 
     @cached_property
     def jinja_loader(self) -> t.Optional[FileSystemLoader]:
@@ -135,11 +135,11 @@ class ModuleTemplating(IModuleTemplateLoader):
 class AppTemplating(JinjaTemplating):
     config: Config
     _static_app: t.Optional[ASGIApp]
-    _modules: t.Dict[t.Type["ModuleBase"], "BaseModuleDecorator"]
+    root_module: "ApplicationModuleDecorator"
     has_static_files: bool
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
-        for loader in self._modules.values():
+        for loader in self.root_module.templating_modules.values():
             yield loader
 
     @property
@@ -159,7 +159,7 @@ class AppTemplating(JinjaTemplating):
 
     def _create_jinja_environment(self) -> Environment:
         def select_jinja_auto_escape(filename: str) -> bool:
-            if filename is None:
+            if filename is None:  # pragma: no cover
                 return True
             return filename.endswith((".html", ".htm", ".xml", ".xhtml"))
 

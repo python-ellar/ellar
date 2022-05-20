@@ -1,5 +1,6 @@
 import pytest
 
+from ellar.constants import NOT_SET
 from ellar.core.events import (
     ApplicationEventHandler,
     ApplicationEventManager,
@@ -96,7 +97,13 @@ async def test_router_event_manager():
 
     # check callable register
     lambda_function = route_manager(lambda: valid_function_1())
-    assert route_manager._handlers[2] == EventHandler(lambda_function)
+    assert route_manager._handlers[2] == lambda_function
+
+    def another_function():
+        valid_function_1()
+
+    assert route_manager._handlers[2] != another_function
+    assert route_manager._handlers[2] != NOT_SET
 
     await route_manager.async_run()
     assert called == 3

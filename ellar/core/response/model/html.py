@@ -7,7 +7,7 @@ from ellar.core.templating.renderer import get_template_name, process_view_model
 from ..responses import Response
 from .base import ResponseModel
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.routing.controller import ControllerBase
 
 

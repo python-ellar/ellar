@@ -6,7 +6,7 @@ from ellar.constants import SCOPE_API_VERSIONING_RESOLVER
 from ellar.core.versioning import BaseAPIVersioning
 from ellar.types import TReceive, TScope, TSend
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.conf import Config
 
 
@@ -17,7 +17,7 @@ class RequestVersioningMiddleware:
         self.config = config
 
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
-        if scope["type"] not in ["http", "websocket"]:
+        if scope["type"] not in ["http", "websocket"]:  # pragma: no cover
             await self.app(scope, receive, send)
             return
 

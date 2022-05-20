@@ -1,9 +1,13 @@
+import os
+
+import pytest
+
 from ellar.common import Module, template_filter, template_global
 from ellar.core import TestClientFactory
-from ellar.core.modules import ModuleBase
+from ellar.core.modules import ModuleBase, ModuleDecorator
 
 
-@Module()
+@Module(template_folder="views")
 class SomeModule(ModuleBase):
     @template_global("dec_global")
     def double_global_dec(cls, n):
@@ -18,7 +22,9 @@ class SomeModule(ModuleBase):
         return n * 2
 
 
-@Module()
+@Module(
+    static_folder="module_statics",
+)
 class SomeModule2:
     @template_filter()
     def double_filter(cls, n):
@@ -46,3 +52,24 @@ def test_template_globals_and_template_filters_computation():
 
     for item in ["double_global", "dec_global", "double_global_dec_2"]:
         assert item in environment.globals
+
+
+@ModuleDecorator()
+class ModuleTemplatingDefaults:
+    pass
+
+
+@pytest.mark.parametrize(
+    "module, static_folder, template_folder",
+    [
+        (SomeModule, "static", "views"),
+        (ModuleTemplatingDefaults, "static", "templates"),
+        (SomeModule2, "module_static", "templates"),
+    ],
+)
+def test_module_templating_works(module, static_folder, template_folder):
+    assert module.template_folder == template_folder
+    assert os.path.exists(module.jinja_loader.searchpath[0])
+    assert os.path.exists(module.static_directory)
+    assert static_folder in module.static_directory
+    assert os.path.exists(module.root_path)

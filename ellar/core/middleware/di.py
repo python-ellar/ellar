@@ -9,7 +9,7 @@ from ellar.core.context import ExecutionContext, IExecutionContext
 from ellar.core.response import Response
 from ellar.types import ASGIApp, TReceive, TScope, TSend
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.di.injector import StarletteInjector
 
 
@@ -28,7 +28,7 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
         self.injector = injector
 
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
-        if scope["type"] not in ["http", "websocket"]:
+        if scope["type"] not in ["http", "websocket"]:  # pragma: no cover
             await super().__call__(scope, receive, send)
             return
 

@@ -5,7 +5,7 @@ from jinja2.loaders import BaseLoader
 
 from .environment import Environment
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
 
 
@@ -40,6 +40,7 @@ class JinjaLoader(BaseLoader):
                 yield loader
 
     def list_templates(self) -> t.List[str]:
+        # TODO: add test for this
         result = set()
 
         for module_loader in self.app.get_module_loaders():

@@ -2,7 +2,7 @@ import typing as t
 
 from jinja2 import Environment as BaseEnvironment
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
 
 

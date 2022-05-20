@@ -1,6 +1,7 @@
 import email
 import re
 import typing as t
+from abc import abstractmethod
 
 from starlette.routing import compile_path
 
@@ -25,11 +26,13 @@ class BaseAPIVersioningResolver:
             self._resolved_version = self.resolve_version()
         return self._resolved_version
 
+    @abstractmethod
     def resolve_version(self) -> t.Optional[str]:
-        raise NotImplementedError
+        """resolve versions for an incoming request"""
 
+    @abstractmethod
     def raise_exception(self) -> None:
-        raise NotImplementedError
+        """raise exception defined by the resolver"""
 
     def can_activate(self, route_versions: t.Set[t.Union[int, float, str]]) -> bool:
         self.matched_any_route = True
