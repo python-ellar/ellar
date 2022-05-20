@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 import re
 import typing as t
@@ -12,6 +13,7 @@ from ellar.constants import (
 from ellar.core.response.model import HTMLResponseModel
 from ellar.core.routing import RouteOperationBase
 from ellar.core.templating import TemplateFunctionData
+from ellar.exceptions import ImproperConfiguration
 from ellar.helper import get_name
 from ellar.types import TemplateFilterCallable, TemplateGlobalCallable
 
@@ -68,6 +70,13 @@ class Render:
         return target_decorator(func)
 
 
+def _validate_template_function(f: t.Any) -> None:
+    if asyncio.iscoroutinefunction(f):
+        raise ImproperConfiguration(
+            "TemplateGlobalCallable must be a non coroutine function"
+        )
+
+
 def template_filter(
     name: t.Optional[str] = None,
 ) -> t.Callable[[TemplateFilterCallable], TemplateFilterCallable]:
@@ -84,6 +93,7 @@ def template_filter(
     """
 
     def decorator(f: TemplateFilterCallable) -> TemplateFilterCallable:
+        _validate_template_function(f)
         setattr(
             f,
             TEMPLATE_FILTER_KEY,
@@ -110,6 +120,7 @@ def template_global(
     """
 
     def decorator(f: TemplateGlobalCallable) -> TemplateGlobalCallable:
+        _validate_template_function(f)
         setattr(
             f,
             TEMPLATE_GLOBAL_KEY,
