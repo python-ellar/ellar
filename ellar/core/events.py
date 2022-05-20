@@ -1,6 +1,8 @@
 import asyncio
 import typing as t
+from abc import abstractmethod
 
+from ellar.exceptions import ImproperConfiguration
 from ellar.types import T
 
 
@@ -21,15 +23,16 @@ class EventHandler:
         if isinstance(other, EventHandler):
             return self.handler is other.handler
         if callable(other):
-            _other = self.__class__(other)
-            return self.handler is _other.handler
+            return self.handler is other
         return super(EventHandler, self).__eq__(other)
 
 
 class ApplicationEventHandler(EventHandler):
     def __init__(self, func: t.Callable) -> None:
         if asyncio.iscoroutinefunction(func):
-            raise Exception("ApplicationEventHandler must be a non coroutine function")
+            raise ImproperConfiguration(
+                "ApplicationEventHandler must be a non coroutine function"
+            )
         super(ApplicationEventHandler, self).__init__(func)
 
     @t.no_type_check
@@ -44,18 +47,19 @@ class Event(t.Generic[T]):
         self._handlers: t.List[T] = []
 
     def __iadd__(self, handler: t.Callable) -> "Event[T]":
-        event_handler = self._create_handle(handler)
+        event_handler = self.create_handle(handler)
         self._handlers.append(event_handler)
         return self
 
-    def _create_handle(self, handler: t.Callable) -> T:
-        raise NotImplementedError
+    @abstractmethod
+    def create_handle(self, handler: t.Callable) -> T:  # pragma: no cover
+        pass
 
     def __iter__(self) -> t.Iterator[T]:
         return iter(self._handlers)
 
     def __isub__(self, handler: t.Callable) -> "Event[T]":
-        _handler = self._create_handle(handler)
+        _handler = self.create_handle(handler)
         self._handlers.remove(_handler)
         return self
 
@@ -68,7 +72,7 @@ class Event(t.Generic[T]):
 
 
 class ApplicationEventManager(Event[ApplicationEventHandler]):
-    def _create_handle(self, handler: t.Callable) -> ApplicationEventHandler:
+    def create_handle(self, handler: t.Callable) -> ApplicationEventHandler:
         return ApplicationEventHandler(handler)
 
     def __init__(
@@ -83,7 +87,7 @@ class ApplicationEventManager(Event[ApplicationEventHandler]):
 
 
 class RouterEventManager(Event[EventHandler]):
-    def _create_handle(self, handler: t.Callable) -> EventHandler:
+    def create_handle(self, handler: t.Callable) -> EventHandler:
         return EventHandler(handler)
 
     def __init__(self, handlers: t.Optional[t.List[EventHandler]] = None) -> None:
