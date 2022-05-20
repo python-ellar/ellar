@@ -69,8 +69,11 @@ class ModuleTemplatingDefaults:
 )
 def test_module_templating_works(module, static_folder, template_folder):
     assert module.template_folder == template_folder
+
     assert module.jinja_loader.searchpath[0] == os.path.join(
         module.root_path, template_folder
     )
+    assert os.path.exists(module.jinja_loader.searchpath[0])
+    assert os.path.exists(module.static_directory)
     assert module.static_directory == os.path.join(module.root_path, static_folder)
     assert static_folder in module.static_directory
