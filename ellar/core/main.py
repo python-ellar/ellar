@@ -15,8 +15,11 @@ from ellar.core.middleware import (
     RequestServiceProviderMiddleware,
     RequestVersioningMiddleware,
 )
-from ellar.core.modules import BaseModuleDecorator, ModuleBase
-from ellar.core.modules.module import ModuleBuilder
+from ellar.core.modules import (
+    ApplicationModuleDecorator,
+    BaseModuleDecorator,
+    ModuleBase,
+)
 from ellar.core.routing import ApplicationRouter
 from ellar.core.templating import AppTemplating, Environment
 from ellar.core.versioning import VERSIONING, BaseAPIVersioning
@@ -28,7 +31,8 @@ from ellar.types import ASGIApp, T, TReceive, TScope, TSend
 class App(AppTemplating):
     def __init__(
         self,
-        config: Config = None,
+        root_module: ApplicationModuleDecorator,
+        config: Config,
         routes: t.Optional[t.Sequence[BaseRoute]] = None,
         middleware: t.Optional[t.Sequence[Middleware]] = None,
         exception_handlers: t.Optional[
@@ -43,12 +47,16 @@ class App(AppTemplating):
         on_startup_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
         on_shutdown_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
         lifespan: t.Optional[t.Callable[["App"], t.AsyncContextManager]] = None,
-        modules: t.Dict[t.Type[ModuleBase], BaseModuleDecorator] = None,
         global_guards: t.List[
             t.Union[t.Type[GuardCanActivate], GuardCanActivate]
         ] = None,
     ):
-        self._config = config or Config(app_configured=True)
+        assert isinstance(
+            root_module, ApplicationModuleDecorator
+        ), "root_module must instance of ApplicationModuleDecorator"
+
+        assert isinstance(config, Config), "config must instance of Config"
+        self._config = config
         # TODO: read auto_bind from configure
         self._injector = StarletteInjector(auto_bind=False)
 
@@ -58,7 +66,7 @@ class App(AppTemplating):
         )
         self._exception_handlers = dict(t.cast(dict, self.config.EXCEPTION_HANDLERS))
         self._exception_handlers.update(_exception_handlers)
-        self._modules = {} if modules is None else dict(modules)
+        self.root_module = root_module
 
         _user_middleware = [] if middleware is None else list(middleware)
         self._user_middleware = list(t.cast(list, self.config.MIDDLEWARE))
@@ -123,27 +131,20 @@ class App(AppTemplating):
         **init_kwargs: t.Any,
     ) -> t.Union[T, ModuleBase, BaseModuleDecorator]:
 
-        if (
-            isinstance(module, BaseModuleDecorator)
-            and module.get_module() in self._modules
-        ):
-            return t.cast(BaseModuleDecorator, self._modules.get(module.get_module()))
+        _module_instance, modules_data = self.root_module.build_module(
+            self._injector.container, module, **init_kwargs
+        )
 
-        _module_instance = self.injector.container.install(module=module, **init_kwargs)
-        modules_data = ModuleBuilder(_module_instance).data
-
-        if isinstance(module, BaseModuleDecorator):
-            self._modules.update({module.get_module(): module})
-
-        self.reload_static_app()
-        self.router.routes.extend(modules_data.routes)
         self.on_startup.reload(list(self.on_startup) + modules_data.startup_event)
-        self.on_shutdown.reload(list(self.on_shutdown) + modules_data.shutdown_event)
-
         self._exception_handlers.update(modules_data.exception_handlers)
         self._user_middleware.extend(modules_data.middleware)
-
+        self.on_shutdown.reload(list(self.on_shutdown) + modules_data.shutdown_event)
         self.middleware_stack = self.build_middleware_stack()
+
+        if isinstance(module, BaseModuleDecorator):
+            self.router.routes.extend(modules_data.routes)
+            self.reload_static_app()
+
         return t.cast(T, _module_instance)
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:

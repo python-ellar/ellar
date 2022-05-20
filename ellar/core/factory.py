@@ -1,6 +1,6 @@
 import typing as t
 
-from starlette.routing import BaseRoute
+from starlette.routing import Mount
 
 from ellar.constants import APP_MODULE_KEY
 from ellar.core import Config
@@ -13,8 +13,8 @@ from ellar.core.modules import (
     ModuleDecorator,
 )
 
-if t.TYPE_CHECKING:
-    from ellar.core.routing import ModuleRouter, OperationDefinitions
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core.routing import ModuleRouter
     from ellar.core.routing.controller import ControllerDecorator
     from ellar.di import ProviderConfig
 
@@ -46,7 +46,7 @@ class AppFactory:
             exception_handlers=modules_data.exception_handlers,
             on_shutdown_event_handlers=modules_data.shutdown_event,
             on_startup_event_handlers=modules_data.startup_event,
-            modules=app_module.get_modules_as_dict(),
+            root_module=app_module,
             global_guards=list(app_module.global_guards),
         )
         app.injector.container.install(app_module.get_module())
@@ -58,10 +58,8 @@ class AppFactory:
     @classmethod
     def create_app(
         cls,
-        controllers: t.Sequence["ControllerDecorator"] = tuple(),
-        routers: t.Sequence[
-            t.Union["ModuleRouter", "OperationDefinitions", BaseRoute]
-        ] = tuple(),
+        controllers: t.Sequence[t.Union["ControllerDecorator", t.Type]] = tuple(),
+        routers: t.Sequence[t.Union["ModuleRouter", Mount]] = tuple(),
         services: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = tuple(),
         modules: t.Union[
             t.Sequence[ModuleDecorator],
