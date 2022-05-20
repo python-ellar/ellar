@@ -16,13 +16,14 @@ class Config(DataMutableMapper, AttributeDictAccessMixin):
 
     def __init__(
         self,
+        config_module: str = environ.get(ELLAR_CONFIG_MODULE, None),
         **mapping: t.Any,
     ):
         """
         Creates a new instance of Configuration object with the given values.
         """
         super().__init__()
-        self.config_module = environ.get(ELLAR_CONFIG_MODULE, None)
+        self.config_module = config_module
 
         self._data.clear()
         for setting in dir(default_settings):
