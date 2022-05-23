@@ -1,8 +1,11 @@
 from typing import Optional
 from uuid import UUID
 
+from pydantic import Field
+
 from ellar.common import Path, Query
 from ellar.core.factory import AppFactory
+from ellar.core.schema import Schema
 
 app = AppFactory.create_app()
 
@@ -201,39 +204,15 @@ def get_query_param_required_type(query: int = Query(...)):
     return f"foo bar {query}"
 
 
-# class AliasedSchema(PydanticSchema):
-#     query: str = Field(..., alias="aliased.-_~name")
-#
-#
-# @app.Get("/query/aliased-name")
-# def get_query_aliased_name(query: AliasedSchema = Query(..., alias="aliased.-_~name")):
-#     return f"foo bar {query.query}"
+class AliasedSchema(Schema):
+    query: str = Field(..., alias="aliased.-_~name")
 
 
-# @router.get("/query")
-# def get_query(request, query):
-#     return f"foo bar {query}"
-#
-#
-# @router.get("/query/optional")
-# def get_query_optional(request, query=None):
-#     if query is None:
-#         return "foo bar"
-#     return f"foo bar {query}"
-#
-#
-# @router.get("/query/int")
-# def get_query_type(request, query: int):
-#     return f"foo bar {query}"
-#
-#
-# @router.get("/query/int/optional")
-# def get_query_type_optional(request, query: int = None):
-#     if query is None:
-#         return "foo bar"
-#     return f"foo bar {query}"
-#
-#
+@app.Get("/query/aliased-name")
+def get_query_aliased_name(query: AliasedSchema = Query(..., alias="aliased.-_~name")):
+    return f"foo bar {query.query}"
+
+
 @app.Get("/query/param")
 def get_query_param(request, query=Query(None)):
     if query is None:

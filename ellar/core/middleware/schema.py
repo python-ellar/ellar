@@ -3,10 +3,10 @@ import typing as t
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from ellar.core.schema import PydanticSchema
+from ellar.core.schema import Schema
 
 
-class MiddlewareSchema(PydanticSchema):
+class MiddlewareSchema(Schema):
     middleware_class: t.Type[BaseHTTPMiddleware]
     dispatch: t.Callable[[t.Any, t.Callable], t.Any]
     options: t.Dict

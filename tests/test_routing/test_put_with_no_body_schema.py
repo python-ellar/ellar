@@ -1,38 +1,33 @@
-from pydantic import BaseModel
-
-from ellar.core.factory import AppFactory
+from ellar.core import TestClientFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
 
-app = AppFactory.create_app()
+tm = TestClientFactory.create_test_module()
 
 
-class Product(BaseModel):
-    name: str
-    description: str = None  # type: ignore
-    price: float
+@tm.app.Put("/items/{item_id}")
+def save_item_no_body(item_id: str):
+    return {"item_id": item_id}
 
 
-@app.Get("/product")
-async def create_item(product: Product):
-    return product
+client = tm.get_client()
 
 
 openapi_schema = {
     "openapi": "3.0.2",
     "info": {"title": "Ellar API Docs", "version": "1.0.0"},
     "paths": {
-        "/product": {
-            "get": {
-                "operationId": "create_item_product_get",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {"$ref": "#/components/schemas/Product"}
-                        }
-                    },
-                    "required": True,
-                },
+        "/items/{item_id}": {
+            "put": {
+                "operationId": "save_item_no_body_items__item_id__put",
+                "parameters": [
+                    {
+                        "required": True,
+                        "schema": {"title": "Item Id", "type": "string"},
+                        "name": "item_id",
+                        "in": "path",
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful Response",
@@ -70,16 +65,6 @@ openapi_schema = {
                     }
                 },
             },
-            "Product": {
-                "title": "Product",
-                "required": ["name", "price"],
-                "type": "object",
-                "properties": {
-                    "name": {"title": "Name", "type": "string"},
-                    "description": {"title": "Description", "type": "string"},
-                    "price": {"title": "Price", "type": "number"},
-                },
-            },
             "ValidationError": {
                 "title": "ValidationError",
                 "required": ["loc", "msg", "type"],
@@ -101,12 +86,17 @@ openapi_schema = {
 
 
 def test_openapi_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
+    document = serialize_object(OpenAPIDocumentBuilder().build_document(tm.app))
     assert document == openapi_schema
 
 
-def test_get_with_body(test_client_factory):
-    client = test_client_factory(app)
-    body = {"name": "Foo", "description": "Some description", "price": 5.5}
-    response = client.get("/product", json=body)
-    assert response.json() == body
+def test_put_no_body():
+    response = client.put("/items/foo")
+    assert response.status_code == 200, response.text
+    assert response.json() == {"item_id": "foo"}
+
+
+def test_put_no_body_with_body():
+    response = client.put("/items/foo", json={"name": "Foo"})
+    assert response.status_code == 200, response.text
+    assert response.json() == {"item_id": "foo"}
