@@ -107,5 +107,5 @@ class HTTPValidationError(BaseModel):
     detail: t.List[ValidationError] = Field(..., title="Details")
 
 
-class PydanticSchema(BaseModel):
+class Schema(BaseModel):
     pass
