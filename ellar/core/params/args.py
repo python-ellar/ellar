@@ -1,16 +1,20 @@
 import inspect
 import re
 import typing as t
+from collections import defaultdict
 
 from pydantic import BaseModel, create_model
 from pydantic.error_wrappers import ErrorWrapper
 from pydantic.fields import FieldInfo, ModelField, Required
 from pydantic.schema import get_annotation_from_field_info
 from pydantic.typing import ForwardRef, evaluate_forwardref
+from pydantic.utils import lenient_issubclass
 from starlette.convertors import Convertor
 
+from ellar.constants import MULTI_RESOLVER_KEY, OPENAPI_NECESSARY, sequence_types
 from ellar.core.connection import Request, WebSocket
 from ellar.core.context import IExecutionContext
+from ellar.exceptions import ImproperConfiguration
 from ellar.helper.modelfield import create_model_field
 from ellar.types import T
 
@@ -18,7 +22,6 @@ from . import params
 from .helpers import is_scalar_field, is_scalar_sequence_field
 from .resolvers import (
     BaseRouteParameterResolver,
-    BodyParameterResolver,
     NonFieldRouteParameterResolver,
     ParameterInjectable,
     RouteParameterResolver,
@@ -35,16 +38,18 @@ __all__ = [
 
 def get_parameter_field(
     *,
-    param: inspect.Parameter,
+    param_default: t.Any,
+    param_annotation: t.Type,
     param_name: str,
     default_field_info: t.Type[params.Param] = params.Param,
     ignore_default: bool = False,
     body_field_class: t.Type[FieldInfo] = params.Body,
 ) -> ModelField:
+
     default_value = Required
     had_schema = False
-    if param.default is not param.empty and ignore_default is False:
-        default_value = param.default
+    if param_default is not inspect.Parameter.empty and ignore_default is False:
+        default_value = param_default
 
     if isinstance(default_value, FieldInfo):
         had_schema = True
@@ -61,16 +66,20 @@ def get_parameter_field(
     required = default_value == Required
     annotation: t.Any = t.Any
 
-    if not field_info.alias and getattr(field_info, "convert_underscores", None):
-        alias = param.name.replace("_", "-")
+    if not field_info.alias and getattr(
+        field_info,
+        "convert_underscores",
+        getattr(field_info.extra, "convert_underscores", None),
+    ):
+        alias = param_name.replace("_", "-")
     else:
-        alias = field_info.alias or param.name
+        alias = field_info.alias or param_name
 
-    if not param.annotation == param.empty:
-        annotation = param.annotation
+    if not param_annotation == inspect.Parameter.empty:
+        annotation = param_annotation
 
     field = create_model_field(
-        name=param.name,
+        name=param_name,
         type_=get_annotation_from_field_info(annotation, field_info, param_name),
         default=None if required else default_value,
         alias=alias,
@@ -81,9 +90,6 @@ def get_parameter_field(
 
     if not had_schema and not is_scalar_field(field=field):
         field.field_info = body_field_class(field_info.default)
-
-    field_info = t.cast(params.Param, field.field_info)
-    field_info.init_resolver(field)
 
     return field
 
@@ -109,11 +115,11 @@ class ExtraEndpointArg(t.Generic[T]):
 class EndpointArgsModel:
     __slots__ = (
         "path",
-        "_models",
+        "_computation_models",
         "path_param_names",
         "body_resolver",
         "endpoint_signature",
-        "_omitted_prefix",
+        "_route_models",
         "param_converters",
     )
 
@@ -126,21 +132,33 @@ class EndpointArgsModel:
     ) -> None:
         self.path = path
         self.param_converters = param_converters
-        self._models: t.List[BaseRouteParameterResolver] = []
+        self._computation_models: t.DefaultDict[
+            str, t.List[BaseRouteParameterResolver]
+        ] = defaultdict(list)
         self.path_param_names = self.get_path_param_names(path)
         self.endpoint_signature = self.get_typed_signature(endpoint)
-        self.body_resolver: t.Optional[RouteParameterResolver] = None
-        self._omitted_prefix: t.List[
-            BaseRouteParameterResolver
-        ] = self.get_omitted_prefix()
+        self.body_resolver: t.Optional[t.Union[t.Any, RouteParameterResolver]] = None
+        self._route_models: t.List[BaseRouteParameterResolver] = []
 
     def get_route_models(self) -> t.List[BaseRouteParameterResolver]:
-        return list(self._models)
+        """
+        Returns all computed endpoint resolvers required for function execution
+        :return: List[BaseRouteParameterResolver]
+        """
+        return self._route_models
 
     def get_all_models(self) -> t.List[BaseRouteParameterResolver]:
-        return list(self._models) + list(self._omitted_prefix)
+        """
+        Returns all computed endpoint resolvers + omitted resolvers
+        :return: List[BaseRouteParameterResolver]
+        """
+        return self.get_route_models() + self._computation_models[OPENAPI_NECESSARY]
 
-    def get_omitted_prefix(self) -> t.List[BaseRouteParameterResolver]:
+    def get_omitted_prefix(self) -> None:
+        """
+        Tracks for omitted path parameters for OPENAPI purpose
+        :return: None
+        """
         _omitted = []
         signature_dict = dict(self.endpoint_signature.parameters)
         for name, _converter in self.param_converters.items():
@@ -158,14 +176,24 @@ class EndpointArgsModel:
                 )
             )
 
-        self.add_extra_route_args(*_omitted)
-        results = self._models.copy()
-        self._models = []
-        return results
+        self._add_extra_route_args(*_omitted, key=OPENAPI_NECESSARY)
 
     def build_model(self) -> None:
+        """
+        Run all endpoint model resolver computation
+        :return:
+        """
+        self._computation_models = defaultdict(list)
+        self.get_omitted_prefix()
         self.compute_route_parameter_list()
         self.build_body_field()
+        self._route_models = (
+            self._computation_models[params.Header.in_.value]
+            + self._computation_models[params.Path.in_.value]
+            + self._computation_models[params.Query.in_.value]
+            + self._computation_models[params.Cookie.in_.value]
+            + self._computation_models[NonFieldRouteParameterResolver.in_]
+        )
 
     def compute_route_parameter_list(
         self, body_field_class: t.Type[FieldInfo] = params.Body
@@ -180,15 +208,27 @@ class EndpointArgsModel:
             ):
                 # Skipping **kwargs, *args, self
                 continue
-            if param_name == "request" and param.default == inspect.Parameter.empty:
-                self._models.append(ParameterInjectable()(param_name, Request))
+            if (
+                param_name in ("request", "req")
+                and param.default == inspect.Parameter.empty
+            ):
+                request_inject = ParameterInjectable()(param_name, Request)
+                self._computation_models[request_inject.in_].append(request_inject)
                 continue
 
-            if param_name == "websocket" and param.default == inspect.Parameter.empty:
-                self._models.append(ParameterInjectable()(param_name, WebSocket))
+            if (
+                param_name == ("websocket", "ws")
+                and param.default == inspect.Parameter.empty
+            ):
+                websocket_inject = ParameterInjectable()(param_name, WebSocket)
+                self._computation_models[websocket_inject.in_].append(websocket_inject)
                 continue
 
-            if self.add_non_field_param_to_dependency(param=param):
+            if self._add_non_field_param_to_dependency(
+                param_name=param.name,
+                param_default=param.default,
+                param_annotation=param.annotation,
+            ):
                 continue
 
             if param_name in self.path_param_names:
@@ -197,15 +237,16 @@ class EndpointArgsModel:
                 else:
                     ignore_default = True
                 param_field = get_parameter_field(
-                    param=param,
+                    param_default=param.default,
+                    param_annotation=param.annotation,
                     param_name=param_name,
                     default_field_info=params.Path,
                     ignore_default=ignore_default,
-                    # force_type=params.ParamTypes.path,
                 )
                 assert is_scalar_field(
                     field=param_field
                 ), "Path params must be of one of the supported types"
+                self._add_to_model(field=param_field)
             else:
                 default_field_info = t.cast(
                     t.Type[params.Param],
@@ -214,28 +255,92 @@ class EndpointArgsModel:
                     else params.Query,
                 )
                 param_field = get_parameter_field(
-                    param=param,
+                    param_default=param.default,
+                    param_annotation=param.annotation,
                     default_field_info=default_field_info,
                     param_name=param_name,
                     body_field_class=body_field_class,
                 )
                 if isinstance(
-                    param.default, (params.Query, params.Header)
+                    param.default, (params.Query, params.Header, params.Cookie)
                 ) and not is_scalar_field(field=param_field):
                     if not is_scalar_sequence_field(param_field):
-                        # TODO: add Schema support for Query fields
-                        raise AssertionError(
-                            f"Param: {param_field.name} can only be a request body, using Body()"
-                        )
-            self.add_to_model(field=param_field)
+                        if not lenient_issubclass(param_field.outer_type_, BaseModel):
+                            raise ImproperConfiguration(
+                                f"{param_field.outer_type_} type can't be processed as a field"
+                            )
 
-    def add_non_field_param_to_dependency(
-        self, *, param: inspect.Parameter
+                        pydantic_type = t.cast(BaseModel, param_field.outer_type_)
+                        resolvers = []
+                        for k, field in pydantic_type.__fields__.items():
+                            if not is_scalar_field(
+                                field=field
+                            ) and not is_scalar_sequence_field(param_field):
+                                raise ImproperConfiguration(
+                                    f"field: '{k}' with annotation:'{field.type_}' "
+                                    f"can't be processed. Field type should belong to {sequence_types} "
+                                    f"or any primitive type"
+                                )
+                            convert_underscores = getattr(
+                                param_field.field_info,
+                                "convert_underscores",
+                                getattr(
+                                    param_field.field_info.extra,
+                                    "convert_underscores",
+                                    None,
+                                ),
+                            )
+
+                            field_info_type: t.Type[params.Param] = t.cast(
+                                t.Type[params.Param], type(param_field.field_info)
+                            )
+
+                            keys = dict(
+                                default=None,
+                                default_factory=None,
+                                alias=None,
+                                alias_priority=None,
+                                title=None,
+                                description=None,
+                                **field.field_info.__class__.__field_constraints__,
+                                **{"convert_underscores": convert_underscores}
+                                if convert_underscores
+                                else dict(),
+                            )
+
+                            attrs = {
+                                k: getattr(field.field_info, k, v)
+                                for k, v in keys.items()
+                            }
+
+                            field_info = field_info_type(**attrs)  # type:ignore
+
+                            model_field = get_parameter_field(
+                                param_default=field_info,
+                                param_annotation=field.type_,
+                                default_field_info=field_info_type,
+                                param_name=field_info.alias or k,
+                                body_field_class=body_field_class,
+                            )
+                            resolver = field_info.create_resolver(
+                                model_field=model_field
+                            )
+                            resolvers.append(resolver)
+
+                        param_field.field_info.extra[MULTI_RESOLVER_KEY] = resolvers
+                self._add_to_model(field=param_field)
+
+    def _add_non_field_param_to_dependency(
+        self,
+        *,
+        param_default: t.Any,
+        param_name: str,
+        param_annotation: t.Optional[t.Type],
+        key: str = None,
     ) -> t.Optional[bool]:
-        if isinstance(param.default, NonFieldRouteParameterResolver):
-            _model = param.default
-            model = _model(param.name, param.annotation)
-            self._models.append(model)
+        if isinstance(param_default, NonFieldRouteParameterResolver):
+            model = param_default(param_name, param_annotation)  # type:ignore
+            self._computation_models[key or model.in_].append(model)
             return True
         return None
 
@@ -269,9 +374,11 @@ class EndpointArgsModel:
             annotation = evaluate_forwardref(annotation, globalns, globalns)
         return annotation
 
-    def add_to_model(self, *, field: ModelField) -> None:
+    def _add_to_model(self, *, field: ModelField, key: str = None) -> None:
         field_info = t.cast(params.Param, field.field_info)
-        self._models.append(field_info.get_resolver())
+        self._computation_models[str(key or field_info.in_.value)].append(
+            field_info.create_resolver(model_field=field)
+        )
 
     async def resolve_dependencies(
         self, *, ctx: IExecutionContext
@@ -283,7 +390,7 @@ class EndpointArgsModel:
             await self.resolve_body(ctx, values, errors)
 
         if not errors:
-            for parameter_resolver in self._models:
+            for parameter_resolver in self._route_models:
                 value_, value_errors = await parameter_resolver.resolve(ctx=ctx)
                 if value_:
                     values.update(value_)
@@ -297,10 +404,18 @@ class EndpointArgsModel:
         return values, errors
 
     def add_extra_route_args(self, *extra_operation_args: ExtraEndpointArg) -> None:
+        self._add_extra_route_args(*extra_operation_args)
+
+    def _add_extra_route_args(
+        self, *extra_operation_args: ExtraEndpointArg, key: str = None
+    ) -> None:
         for param in extra_operation_args:
-            if isinstance(param.default, NonFieldRouteParameterResolver):
-                model = param.default(param.name, param.annotation)
-                self._models.append(model)
+            if self._add_non_field_param_to_dependency(
+                param_name=param.name,
+                param_default=param.default,
+                param_annotation=param.annotation,
+                key=key,
+            ):
                 continue
 
             default_field_info = t.cast(
@@ -308,16 +423,17 @@ class EndpointArgsModel:
                 param.default if isinstance(param.default, FieldInfo) else params.Query,
             )
             param_field = get_parameter_field(
-                param=t.cast(inspect.Parameter, param),
+                param_default=param.default,
+                param_annotation=param.annotation,
                 default_field_info=default_field_info,
                 param_name=param.name,
             )
-            self.add_to_model(field=param_field)
+            self._add_to_model(field=param_field, key=key)
 
     async def resolve_body(
         self, ctx: IExecutionContext, values: t.Dict, errors: t.List
     ) -> None:
-        ...
+        """Body Resolver Implementation"""
 
     def __deepcopy__(self, memodict: t.Dict = {}) -> "EndpointArgsModel":
         return self.__copy__(memodict)
@@ -330,7 +446,16 @@ class EndpointArgsModel:
 
 
 class RequestEndpointArgsModel(EndpointArgsModel):
-    __slots__ = ("operation_unique_id", "body_resolvers")
+    __slots__ = (
+        "operation_unique_id",
+        "path",
+        "_computation_models",
+        "path_param_names",
+        "body_resolver",
+        "endpoint_signature",
+        "_route_models",
+        "param_converters",
+    )
 
     def __init__(
         self,
@@ -345,35 +470,28 @@ class RequestEndpointArgsModel(EndpointArgsModel):
         )
         self.operation_unique_id = operation_unique_id
 
-    def _compute_body_resolvers(self) -> t.List[BodyParameterResolver]:
-        body_resolvers = []
-        for resolver in list(self._models):
-            if isinstance(resolver, BodyParameterResolver):
-                body_resolvers.append(resolver)
-                self._models.remove(resolver)
-
-        if len(body_resolvers) > 1:
-            for resolver in body_resolvers:
-                setattr(resolver.model_field.field_info, "embed", True)
-        return body_resolvers
-
     def build_body_field(self) -> None:
         self.body_resolver = None
 
-        body_resolvers = self._compute_body_resolvers()
+        body_resolvers = self._computation_models[params.Body.in_.value]
         if body_resolvers and len(body_resolvers) == 1:
             self.body_resolver = body_resolvers[0]
-            return
-
-        if body_resolvers:
-            _body_resolvers_model_fields = [item.model_field for item in body_resolvers]
+        elif body_resolvers:
+            # if body_resolvers is more than one, we create a bulk_body_resolver instead
+            _body_resolvers_model_fields = (
+                t.cast(RouteParameterResolver, item).model_field
+                for item in body_resolvers
+            )
             model_name = "body_" + self.operation_unique_id
             body_model_field: t.Type[BaseModel] = create_model(model_name)
             _fields_required, _body_param_class = [], dict()
             for f in _body_resolvers_model_fields:
-                body_model_field.__fields__[f.name] = f
+                setattr(f.field_info, "embed", True)
+                body_model_field.__fields__[f.alias or f.name] = f
                 _fields_required.append(f.required)
-                _body_param_class[f.field_info.__class__] = f.field_info
+                _body_param_class[
+                    getattr(f.field_info, "media_type", "application/json")
+                ] = (f.field_info.__class__, f.field_info)
 
             required = any(_fields_required)
             body_field_info: t.Union[
@@ -381,7 +499,12 @@ class RequestEndpointArgsModel(EndpointArgsModel):
             ] = params.Body
             media_type = "application/json"
             if len(_body_param_class) == 1:
-                klass, field_info = _body_param_class.popitem()
+                _, (klass, field_info) = _body_param_class.popitem()
+                body_field_info = klass
+                media_type = getattr(field_info, "media_type", media_type)
+            elif len(_body_param_class) > 1:
+                key = list(reversed(sorted(_body_param_class.keys())))[0]
+                klass, field_info = _body_param_class[key]
                 body_field_info = klass
                 media_type = getattr(field_info, "media_type", media_type)
 
@@ -391,12 +514,13 @@ class RequestEndpointArgsModel(EndpointArgsModel):
                 required=required,
                 alias="body",
                 field_info=body_field_info(
-                    media_type=media_type, default=None, body_resolvers=body_resolvers
+                    media_type=media_type,
+                    default=None,
+                    **{MULTI_RESOLVER_KEY: body_resolvers},  # type:ignore
                 ),
             )
             final_field.field_info = t.cast(params.Param, final_field.field_info)
-            final_field.field_info.init_resolver(final_field)
-            self.body_resolver = final_field.field_info.get_resolver()
+            self.body_resolver = final_field.field_info.create_resolver(final_field)
 
     async def resolve_body(
         self, ctx: IExecutionContext, values: t.Dict, errors: t.List
@@ -412,7 +536,7 @@ class RequestEndpointArgsModel(EndpointArgsModel):
 
 
 class WebsocketEndpointArgsModel(EndpointArgsModel):
-    __slots__ = ("body_resolvers",)
+    body_resolver: t.List[RouteParameterResolver]
 
     def __init__(
         self,
@@ -424,17 +548,18 @@ class WebsocketEndpointArgsModel(EndpointArgsModel):
         super().__init__(
             path=path, endpoint=endpoint, param_converters=param_converters
         )
-        self.body_resolvers: t.List[RouteParameterResolver] = []
 
     def build_body_field(self) -> None:
-        for resolver in list(self._models):
+        for resolver in list(self._computation_models):
             if isinstance(resolver, WsBodyParameterResolver):
-                self.body_resolvers.append(resolver)
-                self._models.remove(resolver)
+                self.body_resolver.append(resolver)
+                self._computation_models[
+                    resolver.model_field.field_info.in_.value
+                ].remove(resolver)
 
-        if len(self.body_resolvers) > 1:
-            for resolver in self.body_resolvers:
-                setattr(resolver.model_field.field_info, "embed", True)
+        if self.body_resolver and len(self.body_resolver) > 1:
+            for resolver in self.body_resolver:  # type:ignore
+                setattr(resolver.model_field.field_info, "embed", True)  # type:ignore
 
     def compute_route_parameter_list(
         self, body_field_class: t.Type[FieldInfo] = params.Body
@@ -446,7 +571,7 @@ class WebsocketEndpointArgsModel(EndpointArgsModel):
     ) -> t.Tuple[t.Dict[str, t.Any], t.List[ErrorWrapper]]:
         values: t.Dict[str, t.Any] = {}
         errors: t.List[ErrorWrapper] = []
-        for parameter_resolver in self.body_resolvers:
+        for parameter_resolver in self.body_resolver or []:
             parameter_resolver = t.cast(WsBodyParameterResolver, parameter_resolver)
             value_, errors_ = await parameter_resolver.resolve(ctx=ctx, body=body_data)
             if value_:

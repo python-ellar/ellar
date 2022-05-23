@@ -20,8 +20,6 @@ from ellar.exceptions import RequestValidationError
 from ellar.logger import logger
 from ellar.types import T
 
-from .helpers import is_scalar_sequence_field
-
 if t.TYPE_CHECKING:
     from .params import Param
 
@@ -54,6 +52,12 @@ class RouteParameterResolver(BaseRouteParameterResolver, ABC):
     def create_error(cls, loc: t.Any) -> ErrorWrapper:
         return ErrorWrapper(MissingError(), loc=loc)
 
+    @classmethod
+    def validate_error_sequence(cls, errors: t.Any) -> t.List[ErrorWrapper]:
+        if not errors:
+            return []
+        return list(errors) if isinstance(errors, list) else [errors]
+
     async def resolve(self, *args: t.Any, **kwargs: t.Any) -> t.Tuple:
         value_ = await self.resolve_handle(*args, **kwargs)
         return value_
@@ -76,7 +80,10 @@ class HeaderParameterResolver(RouteParameterResolver):
         self, ctx: IExecutionContext, *args: t.Any, **kwargs: t.Any
     ) -> t.Tuple:
         received_params = self.get_received_parameter(ctx=ctx)
-        if is_scalar_sequence_field(self.model_field):
+        if (
+            self.model_field.shape in sequence_shapes
+            or self.model_field.type_ in sequence_types
+        ):
             value = (
                 received_params.getlist(self.model_field.alias)
                 or self.model_field.default
@@ -101,7 +108,7 @@ class HeaderParameterResolver(RouteParameterResolver):
         v_, errors_ = self.model_field.validate(
             value, values, loc=(field_info.in_.value, self.model_field.alias)
         )
-        return {self.model_field.name: v_}, errors_
+        return {self.model_field.name: v_}, self.validate_error_sequence(errors_)
 
 
 class QueryParameterResolver(HeaderParameterResolver):
@@ -129,7 +136,7 @@ class PathParameterResolver(RouteParameterResolver):
             {},
             loc=(self.model_field.field_info.in_.value, self.model_field.alias),
         )
-        return {self.model_field.name: v_}, errors_
+        return {self.model_field.name: v_}, self.validate_error_sequence(errors_)
 
 
 class CookieParameterResolver(PathParameterResolver):
@@ -152,7 +159,7 @@ class WsBodyParameterResolver(RouteParameterResolver):
         try:
             value = received_body.get(self.model_field.alias)
             v_, errors_ = self.model_field.validate(value, {}, loc=loc)
-            return {self.model_field.name: v_}, errors_
+            return {self.model_field.name: v_}, self.validate_error_sequence(errors_)
         except AttributeError:
             errors = [self.create_error(loc=loc)]
             return None, errors
@@ -227,9 +234,14 @@ class FormParameterResolver(BodyParameterResolver):
         **kwargs: t.Any,
     ) -> t.Tuple:
         _body = body or await self.get_request_body(ctx)
+        embed = getattr(self.model_field.field_info, "embed", False)
         values = {}  # type: ignore
         received_body = {self.model_field.alias: _body}
         loc = ("body",)
+
+        if embed:
+            received_body = _body
+            loc = ("body", self.model_field.alias)  # type:ignore
 
         if (
             self.model_field.shape in sequence_shapes
@@ -254,55 +266,6 @@ class FormParameterResolver(BodyParameterResolver):
             return values, []
 
         return await self.process_and_validate(values=values, value=value, loc=loc)
-
-
-class BulkFormParameterResolver(FormParameterResolver):
-    def __init__(
-        self,
-        *args: t.Any,
-        form_resolvers: t.List[RouteParameterResolver],
-        **kwargs: t.Any,
-    ):
-        super().__init__(*args, **kwargs)
-        self._form_resolvers = form_resolvers
-
-    async def resolve_handle(
-        self, ctx: IExecutionContext, *args: t.Any, **kwargs: t.Any
-    ) -> t.Tuple:
-        _body = await self.get_request_body(ctx)
-        values: t.Dict[str, t.Any] = {}
-        errors: t.List[ErrorWrapper] = []
-        if self._form_resolvers:
-            for parameter_resolver in self._form_resolvers:
-                value_, errors_ = await parameter_resolver.resolve(ctx=ctx, body=_body)
-                if value_:
-                    values.update(value_)
-                if errors_:
-                    errors += errors_
-            return values, errors
-        return await super(BulkFormParameterResolver, self).resolve_handle(
-            ctx, *args, **kwargs
-        )
-
-
-class BulkBodyParameterResolver(BodyParameterResolver):
-    def __init__(
-        self, *args: t.Any, resolvers: t.List[RouteParameterResolver], **kwargs: t.Any
-    ):
-        super().__init__(*args, **kwargs)
-        self.resolvers = resolvers
-
-    async def resolve_handle(
-        self, ctx: IExecutionContext, *args: t.Any, **kwargs: t.Any
-    ) -> t.Tuple:
-        _body = await self.get_request_body(ctx)
-        values, errors = await super(BulkBodyParameterResolver, self).resolve_handle(
-            ctx, *args, body=_body, **kwargs
-        )
-        if not errors:
-            _, body_value = values.popitem()
-            return body_value.dict(), errors
-        return values, errors
 
 
 class FileParameterResolver(FormParameterResolver):
@@ -333,10 +296,86 @@ class FileParameterResolver(FormParameterResolver):
 
         v_, errors_ = self.model_field.validate(value, values, loc=loc)
         values[self.model_field.name] = v_
-        return values, errors_
+        return values, self.validate_error_sequence(errors_)
+
+
+class BulkParameterResolver(RouteParameterResolver):
+    def __init__(
+        self, *args: t.Any, resolvers: t.List[RouteParameterResolver], **kwargs: t.Any
+    ):
+        super().__init__(*args, **kwargs)
+        self._resolvers = resolvers or []
+
+    @property
+    def resolvers(self) -> t.List[RouteParameterResolver]:
+        return self._resolvers
+
+    def get_model_fields(self) -> t.List[ModelField]:
+        return [resolver.model_field for resolver in self._resolvers]
+
+    async def resolve_handle(
+        self, ctx: IExecutionContext, *args: t.Any, **kwargs: t.Any
+    ) -> t.Tuple:
+        values: t.Dict[str, t.Any] = {}
+        errors: t.List[ErrorWrapper] = []
+
+        for parameter_resolver in self._resolvers:
+            value_, errors_ = await parameter_resolver.resolve(ctx=ctx)
+            if value_:
+                values.update(value_)
+            if errors_:
+                errors += self.validate_error_sequence(errors_)
+        if errors:
+            return values, errors
+
+        v_, errors_ = self.model_field.validate(
+            values,
+            {},
+            loc=(self.model_field.field_info.in_.value, self.model_field.alias),
+        )
+        if errors_:
+            errors += self.validate_error_sequence(errors_)
+            return values, errors
+        return {self.model_field.name: v_}, []
+
+
+class BulkFormParameterResolver(FormParameterResolver, BulkParameterResolver):
+    async def resolve_handle(
+        self, ctx: IExecutionContext, *args: t.Any, **kwargs: t.Any
+    ) -> t.Tuple:
+        _body = await self.get_request_body(ctx)
+        values: t.Dict[str, t.Any] = {}
+        errors: t.List[ErrorWrapper] = []
+        if self._resolvers:
+            for parameter_resolver in self._resolvers:
+                value_, errors_ = await parameter_resolver.resolve(ctx=ctx, body=_body)
+                if value_:
+                    values.update(value_)
+                if errors_:
+                    errors += self.validate_error_sequence(errors_)
+            return values, errors
+        return await super(BulkFormParameterResolver, self).resolve_handle(
+            ctx, *args, **kwargs
+        )
+
+
+class BulkBodyParameterResolver(BodyParameterResolver, BulkParameterResolver):
+    async def resolve_handle(
+        self, ctx: IExecutionContext, *args: t.Any, **kwargs: t.Any
+    ) -> t.Tuple:
+        _body = await self.get_request_body(ctx)
+        values, errors = await super(BulkBodyParameterResolver, self).resolve_handle(
+            ctx, *args, body=_body, **kwargs
+        )
+        if not errors:
+            _, body_value = values.popitem()
+            return body_value.dict(), []
+        return values, self.validate_error_sequence(errors)
 
 
 class NonFieldRouteParameterResolver(BaseRouteParameterResolver, ABC):
+    in_: str = "non_field_parameter"
+
     def __init__(self, data: t.Optional[t.Any] = None):
         self.data = data
         self.parameter_name: t.Optional[str] = None

@@ -21,6 +21,7 @@ from ellar.core.guard import BaseAuthGuard
 from ellar.core.params.params import Body, Param
 from ellar.core.params.resolvers import (
     BodyParameterResolver,
+    BulkParameterResolver,
     RouteParameterModelField,
     RouteParameterResolver,
 )
@@ -195,8 +196,14 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         for item in self.route.endpoint_parameter_model.get_all_models():
             if isinstance(item, BodyParameterResolver):
                 continue
+
+            if isinstance(item, BulkParameterResolver):
+                _models.extend(item.get_model_fields())
+                continue
+
             if isinstance(item, RouteParameterResolver):
                 _models.append(item.model_field)
+
         return _models
 
     @cached_property
