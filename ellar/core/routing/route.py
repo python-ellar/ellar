@@ -86,9 +86,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
             self.endpoint_parameter_model = self.request_endpoint_args_model(
                 path=self.path_format,
                 endpoint=self.endpoint,
-                operation_unique_id=self.get_operation_unique_id(
-                    methods=list(self.methods)
-                ),
+                operation_unique_id=self.get_operation_unique_id(methods=self.methods),
                 param_converters=self.param_convertors,
             )
 
@@ -113,7 +111,9 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
             route_responses=self._defined_responses  # type: ignore
         )
 
-    def get_operation_unique_id(self, methods: t.Union[t.Sequence[str], str]) -> str:
+    def get_operation_unique_id(
+        self, methods: t.Union[t.Set[str], t.Sequence[str], str]
+    ) -> str:
         _methods: t.Sequence[str] = (
             list(methods) if isinstance(methods, set) else [t.cast(str, methods)]
         )
