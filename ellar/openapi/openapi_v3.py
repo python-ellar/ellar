@@ -4,7 +4,7 @@ from enum import Enum
 from pydantic import AnyUrl, BaseModel, Field
 
 from ellar.compatible import EmailStr
-from ellar.serializer import PydanticSerializer, SerializerFilter
+from ellar.serializer import Serializer, SerializerFilter
 
 
 class Contact(BaseModel):
@@ -372,7 +372,7 @@ class Tag(BaseModel):
         extra = "allow"
 
 
-class OpenAPI(PydanticSerializer):
+class OpenAPI(Serializer):
     _filter = SerializerFilter(exclude_none=True, by_alias=True)
 
     openapi: str

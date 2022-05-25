@@ -1,6 +1,10 @@
 import typing as t
 
-from injector import ConstructorOrClassT, inject
+from injector import (
+    ConstructorOrClassT,
+    inject,
+    is_decorated_with_inject as injector_is_decorated_with_inject,
+)
 
 from ellar.constants import INJECTABLE_ATTRIBUTE
 from ellar.exceptions import ImproperConfiguration
@@ -10,7 +14,13 @@ from ellar.types import T
 from .injector import Container
 from .scopes import DIScope, ScopeDecorator, SingletonScope
 
-__all__ = ("ProviderConfig", "injectable", "is_decorated_with_injectable", "get_scope")
+__all__ = (
+    "ProviderConfig",
+    "injectable",
+    "is_decorated_with_injectable",
+    "get_scope",
+    "has_binding",
+)
 
 
 class ProviderConfig(t.Generic[T]):
@@ -104,7 +114,20 @@ def is_decorated_with_injectable(func_or_class: ConstructorOrClassT) -> bool:
     >>> is_decorated_with_injectable(InjectableType2)
     True
     """
-    return hasattr(func_or_class, INJECTABLE_ATTRIBUTE)
+    if isinstance(func_or_class, type) and hasattr(func_or_class, "__init__"):
+        return hasattr(
+            func_or_class, INJECTABLE_ATTRIBUTE
+        ) or injector_is_decorated_with_inject(getattr(func_or_class, "__init__"))
+    return hasattr(
+        func_or_class, INJECTABLE_ATTRIBUTE
+    ) or injector_is_decorated_with_inject(func_or_class)
+
+
+def has_binding(func_or_class: ConstructorOrClassT) -> bool:
+    """See if given a Type __init__ or callable has __binding__."""
+    if isinstance(func_or_class, type) and hasattr(func_or_class, "__init__"):
+        return injector_is_decorated_with_inject(getattr(func_or_class, "__init__"))
+    return injector_is_decorated_with_inject(func_or_class)
 
 
 def get_scope(

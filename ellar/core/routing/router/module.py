@@ -1,6 +1,6 @@
 import typing as t
 
-from starlette.routing import BaseRoute, Mount as StarletteMount, Route
+from starlette.routing import BaseRoute, Mount as StarletteMount, Route, Router
 from starlette.types import ASGIApp
 
 from ellar.compatible import AttributeDict
@@ -8,6 +8,7 @@ from ellar.core.routing.route import RouteOperation
 from ellar.core.routing.websocket.route import WebsocketRouteOperation
 
 from ..operation_definitions import OperationDefinitions
+from .route_collections import ModuleRouteCollection
 
 if t.TYPE_CHECKING:
     from ellar.core.guard import GuardCanActivate
@@ -34,7 +35,7 @@ class ModuleRouterBase(StarletteMount):
         include_in_schema: bool = False,
     ) -> None:
         super(ModuleRouterBase, self).__init__(
-            path=path, routes=routes or [], name=name, app=app
+            path=path, routes=routes, name=name, app=app
         )
         self.include_in_schema = include_in_schema
         self._meta: AttributeDict = AttributeDict(
@@ -78,7 +79,6 @@ class ModuleRouterBase(StarletteMount):
         route.build_route_operation(path_prefix=self.path, name=self.name)
 
     def build_routes(self) -> t.List[BaseRoute]:
-        routes: t.List[BaseRoute] = []
         for route in self.routes:
             _route: RouteOperation = t.cast("RouteOperation", route)
             operation_meta = _route.get_meta()
@@ -94,15 +94,15 @@ class ModuleRouterBase(StarletteMount):
                     tags.update(set(operation_meta.openapi.tags or []))
                     operation_meta.openapi.update(tags=list(tags))
                 self._build_route_operation(_route)
-            else:
+            elif isinstance(_route, WebsocketRouteOperation):
                 self._build_ws_route_operation(_route)
-            routes.append(_route)
 
-        return routes
+        return list(self.routes)
 
 
 class ModuleRouter(ModuleRouterBase):
     operation_definition_class: t.Type[OperationDefinitions] = OperationDefinitions
+    routes: ModuleRouteCollection  # type:ignore
 
     def __init__(
         self,
@@ -118,6 +118,9 @@ class ModuleRouter(ModuleRouterBase):
         ] = None,
         include_in_schema: bool = True,
     ) -> None:
+        app = Router()
+        app.routes = ModuleRouteCollection()  # type:ignore
+
         super(ModuleRouter, self).__init__(
             path=path,
             tag=tag,
@@ -128,8 +131,8 @@ class ModuleRouter(ModuleRouterBase):
             version=version,
             guards=guards,
             include_in_schema=include_in_schema,
+            app=app,
         )
-
         _route_definitions = self.operation_definition_class(t.cast(list, self.routes))
 
         self.Get = _route_definitions.get

@@ -11,9 +11,9 @@ from ellar.core.converters import TypeDefinitionConverter
 from ellar.exceptions import RequestValidationError
 from ellar.serializer import (
     BaseSerializer,
-    DataClassSerializer,
-    PydanticSerializer,
-    PydanticSerializerBase,
+    DataclassSerializer,
+    Serializer,
+    SerializerBase,
     SerializerFilter,
     convert_dataclass_to_pydantic_model,
     serialize_object,
@@ -156,16 +156,16 @@ class ResponseTypeDefinitionConverter(TypeDefinitionConverter):
         if not isinstance(outer_type_, type):
             raise Exception(f"{outer_type_} is not a type")
 
-        if issubclass(outer_type_, DataClassSerializer):
+        if issubclass(outer_type_, DataclassSerializer):
             schema_model = outer_type_.get_pydantic_model()
-            cls = type(outer_type_.__name__, (schema_model, PydanticSerializerBase), {})
+            cls = type(outer_type_.__name__, (schema_model, SerializerBase), {})
             return t.cast(t.Type[BaseSerializer], cls)
 
         if isinstance(outer_type_, type) and issubclass(outer_type_, (BaseSerializer,)):
             return outer_type_
 
         if issubclass(outer_type_, BaseModel):
-            cls = type(outer_type_.__name__, (outer_type_, PydanticSerializer), dict())
+            cls = type(outer_type_.__name__, (outer_type_, Serializer), dict())
             return t.cast(t.Type[BaseSerializer], cls)
 
         if is_dataclass(outer_type_):
@@ -180,7 +180,7 @@ class ResponseTypeDefinitionConverter(TypeDefinitionConverter):
             return outer_type_
 
         attrs = {"__annotations__": getattr(outer_type_, "__annotations__", ())}
-        cls = type(outer_type_.__name__, (outer_type_, PydanticSerializer), attrs)
+        cls = type(outer_type_.__name__, (outer_type_, Serializer), attrs)
 
         return t.cast(t.Type[BaseSerializer], cls)
 

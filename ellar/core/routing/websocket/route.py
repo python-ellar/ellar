@@ -116,21 +116,26 @@ class WebsocketRouteOperation(
         name: t.Optional[str] = None,
         **kwargs: t.Any,
     ) -> None:
-        self.path_regex, self.path_format, self.param_convertors = compile_path(
-            f"{path_prefix.rstrip('/')}/{self.path.lstrip('/')}"
-        )
-
-        self.endpoint_parameter_model = self.websocket_endpoint_args_model(
-            path=self.path_format,
-            endpoint=self.endpoint,
-            param_converters=self.param_convertors,
-        )
-
-        if self._meta.extra_route_args:
-            self.endpoint_parameter_model.add_extra_route_args(
-                *self._meta.extra_route_args
+        _path_changed = False
+        if path_prefix not in ("", "/") and path_prefix not in self.path:
+            self.path = f"{path_prefix.rstrip('/')}/{self.path.lstrip('/')}"
+            self.path_regex, self.path_format, self.param_convertors = compile_path(
+                self.path
             )
-        self.endpoint_parameter_model.build_model()
+            _path_changed = True
+
+        if self.endpoint_parameter_model is NOT_SET or _path_changed:
+            self.endpoint_parameter_model = self.websocket_endpoint_args_model(
+                path=self.path_format,
+                endpoint=self.endpoint,
+                param_converters=self.param_convertors,
+            )
+
+            if self._meta.extra_route_args:
+                self.endpoint_parameter_model.add_extra_route_args(
+                    *self._meta.extra_route_args
+                )
+            self.endpoint_parameter_model.build_model()
         if name:
             self.name = f"{name}:{self.name}"
 

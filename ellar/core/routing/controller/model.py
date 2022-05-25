@@ -2,29 +2,6 @@ import typing as t
 
 from ellar.core.context import ExecutionContext
 
-if t.TYPE_CHECKING:
-    from ellar.core.routing.base import RouteOperationBase
-    from ellar.core.routing.controller.decorator import ControllerDecorator
-
-
-class MissingAPIControllerDecoratorException(Exception):
-    pass
-
-
-def get_route_functions(cls: t.Type) -> t.Iterable["RouteOperationBase"]:
-    from ellar.core.routing.base import RouteOperationBase
-
-    for method in cls.__dict__.values():
-        if isinstance(method, RouteOperationBase):
-            yield method
-
-
-def compute_api_route_function(
-    base_cls: t.Type, controller_instance: "ControllerDecorator"
-) -> None:
-    for cls_route_function in get_route_functions(base_cls):
-        controller_instance.add_route(cls_route_function)
-
 
 class ControllerType(type):
     _controller_name: t.Optional[str]

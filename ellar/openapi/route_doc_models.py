@@ -244,7 +244,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
 
         operation[
             "operationId"
-        ] = self.operation_id or self.route.get_operation_unique_id(method=method)
+        ] = self.operation_id or self.route.get_operation_unique_id(methods=method)
         if self.deprecated:
             operation["deprecated"] = self.deprecated
 

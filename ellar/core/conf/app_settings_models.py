@@ -6,7 +6,7 @@ from starlette.middleware import Middleware
 from starlette.responses import JSONResponse
 
 from ellar.core.versioning import BaseAPIVersioning, DefaultAPIVersioning
-from ellar.serializer import PydanticSerializer, SerializerFilter
+from ellar.serializer import Serializer, SerializerFilter
 
 
 class TVersioning(BaseAPIVersioning):
@@ -37,7 +37,7 @@ class TMiddleware(Middleware):
         return v
 
 
-class ConfigValidationSchema(PydanticSerializer):
+class ConfigValidationSchema(Serializer):
     _filter = SerializerFilter(
         exclude={
             "EXCEPTION_HANDLERS_DECORATOR",

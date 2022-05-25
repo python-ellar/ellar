@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, root_validator, validator
 
 from ellar.constants import ROUTE_METHODS
 from ellar.core.response.model import EmptyAPIResponseModel, IResponseModel
-from ellar.serializer import BaseSerializer
+from ellar.serializer import BaseSerializer, Serializer
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.routing.websocket import WebSocketExtraHandler
@@ -107,5 +107,5 @@ class HTTPValidationError(BaseModel):
     detail: t.List[ValidationError] = Field(..., title="Details")
 
 
-class Schema(BaseModel):
+class Schema(Serializer):
     pass

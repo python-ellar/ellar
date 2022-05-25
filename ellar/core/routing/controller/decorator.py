@@ -6,18 +6,13 @@ from starlette.routing import BaseRoute
 
 from ellar.constants import NOT_SET
 from ellar.di import RequestScope, injectable
-from ellar.helper import get_name
 
 from .model import ControllerBase, ControllerType
 from .router import ControllerRouter
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
     from ellar.core.routing.base import RouteOperationBase
-
-
-class MissingAPIControllerDecoratorException(Exception):
-    pass
 
 
 def get_route_functions(cls: t.Type) -> t.Iterable["RouteOperationBase"]:
@@ -28,20 +23,11 @@ def get_route_functions(cls: t.Type) -> t.Iterable["RouteOperationBase"]:
             yield method
 
 
-def compute_api_route_function(
-    base_cls: t.Type, controller_instance: "ControllerDecorator"
-) -> None:
-    for cls_route_function in get_route_functions(base_cls):
-        controller_instance.add_route(cls_route_function)
-
-
 class ControllerDecorator:
     __slots__ = (
         "_controller_class",
-        "_routes",
-        "_mount",
-        "_tag",
         "_meta",
+        "_router",
     )
 
     def __init__(
@@ -73,8 +59,6 @@ class ControllerDecorator:
 
         # `controller_class`
         self._controller_class: t.Optional[t.Type[ControllerBase]] = None
-        # `_path_operations`
-        self._routes: t.Dict[str, BaseRoute] = {}
 
         self._meta = dict(
             tag=tag,
@@ -87,10 +71,13 @@ class ControllerDecorator:
             guards=guards or [],
             include_in_schema=include_in_schema,
         )
-        self._mount: t.Optional[ControllerRouter] = None
+        self._router: t.Optional["ControllerRouter"] = None
 
         if _controller_class:
             self(_controller_class)
+
+    def get_meta(self) -> t.Dict:
+        return self._meta
 
     def __call__(self, cls: t.Type) -> "ControllerDecorator":
         if type(cls) is not ControllerType:
@@ -106,35 +93,38 @@ class ControllerDecorator:
         if self._meta["path"] is NOT_SET:
             self._meta["path"] = f"/{tag}"
 
+        if not self._meta["name"]:
+            self._meta["name"] = (
+                str(self._controller_class.controller_class_name())
+                .lower()
+                .replace("controller", "")
+            )
+
+        self._router = ControllerRouter(
+            **self._meta,  # type: ignore
+            controller_type=self.get_controller_type(),
+        )
         bases = inspect.getmro(cls)
         for base_cls in reversed(bases):
             if base_cls not in [ABC, ControllerBase, object]:
-                compute_api_route_function(base_cls, self)
+                self.compute_api_route_function(base_cls)
 
-        cls = injectable(RequestScope)(cls)
+        injectable(RequestScope)(cls)
 
-        if not self._meta["name"]:
-            self._meta["name"] = str(cls.__name__).lower().replace("controller", "")
         return self
+
+    def compute_api_route_function(self, base_cls: t.Type) -> None:
+        for cls_route_function in get_route_functions(base_cls):
+            self.get_router().routes.append(cls_route_function)
 
     def get_controller_type(self) -> t.Type[ControllerBase]:
         assert self._controller_class, "Controller not properly initialised"
         return self._controller_class
 
-    def get_mount(self) -> "ControllerRouter":
-        if not self._mount:
-            self._mount = ControllerRouter(
-                routes=list(self._routes.values()),
-                **self._meta,  # type: ignore
-                controller_type=self.get_controller_type(),
-            )
-        return self._mount
-
-    def add_route(self, cls_route_function: "RouteOperationBase") -> None:
-        self._routes[get_name(cls_route_function.endpoint)] = t.cast(
-            BaseRoute, cls_route_function
-        )
+    def get_router(self) -> "ControllerRouter":
+        assert self._router, "Controller not properly initialised"
+        return self._router
 
     def build_routes(self) -> t.List[BaseRoute]:
-        mount = self.get_mount()
-        return mount.build_routes()
+        router = self.get_router()
+        return router.build_routes()

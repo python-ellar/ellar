@@ -1,7 +1,7 @@
 from ellar.serializer import (
     BaseSerializer,
-    DataClassSerializer,
-    PydanticSerializer,
+    DataclassSerializer,
+    Serializer,
     serialize_object,
 )
 
@@ -27,8 +27,8 @@ __all__ = [
     "PlainTextResponse",
     "RedirectResponse",
     "Response",
-    "PydanticSerializer",
+    "Serializer",
     "BaseSerializer",
-    "DataClassSerializer",
+    "DataclassSerializer",
     "serialize_object",
 ]

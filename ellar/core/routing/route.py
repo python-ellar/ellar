@@ -48,6 +48,9 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
 
         assert path.startswith("/"), "Routed paths must start with '/'"
         self.path = path
+        self.path_regex, self.path_format, self.param_convertors = compile_path(
+            self.path
+        )
         self.endpoint = endpoint  # type: ignore
 
         self.name = get_name(endpoint) if name is None else name
@@ -71,24 +74,29 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         include_in_schema: bool = True,
         **kwargs: t.Any,
     ) -> None:
-        self.path_regex, self.path_format, self.param_convertors = compile_path(
-            f"{path_prefix.rstrip('/')}/{self.path.lstrip('/')}"
-        )
-
-        self.endpoint_parameter_model = self.request_endpoint_args_model(
-            path=self.path_format,
-            endpoint=self.endpoint,
-            operation_unique_id=self.get_operation_unique_id(
-                method=list(self.methods)[0]
-            ),
-            param_converters=self.param_convertors,
-        )
-
-        if self._meta.extra_route_args:
-            self.endpoint_parameter_model.add_extra_route_args(
-                *self._meta.extra_route_args
+        _path_changed = False
+        if path_prefix not in ("", "/") and path_prefix not in self.path:
+            self.path = f"{path_prefix.rstrip('/')}/{self.path.lstrip('/')}"
+            self.path_regex, self.path_format, self.param_convertors = compile_path(
+                self.path
             )
-        self.endpoint_parameter_model.build_model()
+            _path_changed = True
+
+        if self.endpoint_parameter_model is NOT_SET or _path_changed:
+            self.endpoint_parameter_model = self.request_endpoint_args_model(
+                path=self.path_format,
+                endpoint=self.endpoint,
+                operation_unique_id=self.get_operation_unique_id(
+                    methods=list(self.methods)
+                ),
+                param_converters=self.param_convertors,
+            )
+
+            if self._meta.extra_route_args:
+                self.endpoint_parameter_model.add_extra_route_args(
+                    *self._meta.extra_route_args
+                )
+            self.endpoint_parameter_model.build_model()
         self.include_in_schema = include_in_schema
         if name:
             self.name = f"{name}:{self.name}"
@@ -105,9 +113,12 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
             route_responses=self._defined_responses  # type: ignore
         )
 
-    def get_operation_unique_id(self, method: str) -> str:
+    def get_operation_unique_id(self, methods: t.Union[t.Sequence[str], str]) -> str:
+        _methods: t.Sequence[str] = (
+            list(methods) if isinstance(methods, set) else [t.cast(str, methods)]
+        )
         return generate_operation_unique_id(
-            name=self.name, path=self.path_format, method=method
+            name=self.name, path=self.path_format, methods=_methods
         )
 
     async def _handle_request(self, context: ExecutionContext) -> None:

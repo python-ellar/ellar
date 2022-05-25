@@ -20,8 +20,9 @@ __all__ = [
 
 class RouteOperationBase:
     _meta: OperationMeta
-
+    path: str
     endpoint: t.Callable
+    methods: t.Set[str]
 
     @t.no_type_check
     def __call__(
@@ -98,4 +99,4 @@ class RouteOperationBase:
 
 
 class WebsocketRouteOperationBase(RouteOperationBase, ABC):
-    pass
+    methods: t.Set[str] = {"WS"}  # just to avoid attribute error

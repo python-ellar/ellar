@@ -10,6 +10,7 @@ from .scopes import (
 from .service_config import (
     ProviderConfig,
     get_scope,
+    has_binding,
     injectable,
     is_decorated_with_injectable,
 )
@@ -27,5 +28,6 @@ __all__ = [
     "ProviderConfig",
     "injectable",
     "is_decorated_with_injectable",
+    "has_binding",
     "get_scope",
 ]

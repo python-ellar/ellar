@@ -17,7 +17,7 @@ def get_dataclass_pydantic_model(
     )
 
 
-class PydanticSerializerConfig(BaseConfig):
+class SerializerConfig(BaseConfig):
     orm_mode = True
 
 
@@ -54,7 +54,7 @@ class BaseSerializer:
         raise NotImplementedError
 
 
-class PydanticSerializerBase(BaseSerializer):
+class SerializerBase(BaseSerializer):
     dict: t.Callable
 
     def serialize(
@@ -67,13 +67,13 @@ class PydanticSerializerBase(BaseSerializer):
         )
 
 
-class PydanticSerializer(PydanticSerializerBase, BaseModel):
-    Config = PydanticSerializerConfig
+class Serializer(SerializerBase, BaseModel):
+    Config = SerializerConfig
 
 
-class DataClassSerializer(BaseSerializer):
+class DataclassSerializer(BaseSerializer):
     _pydantic_model: t.Optional[t.Type[BaseModel]] = None
-    __config__: t.Type[BaseConfig] = PydanticSerializerConfig
+    __config__: t.Type[BaseConfig] = SerializerConfig
 
     @classmethod
     def get_pydantic_model(cls) -> t.Type[BaseModel]:
@@ -96,7 +96,7 @@ def convert_dataclass_to_pydantic_model(dataclass_type: t.Type) -> t.Type[BaseMo
         # convert to dataclass
         pydantic_dataclass = PydanticDataclasses.dataclass(
             dataclass_type,
-            config=getattr(dataclass_type, "__config__", PydanticSerializerConfig),
+            config=getattr(dataclass_type, "__config__", SerializerConfig),
         )
         return pydantic_dataclass.__pydantic_model__
     raise Exception(f"{dataclass_type} is not a dataclass")

@@ -13,47 +13,12 @@ from ellar.constants import SCOPE_API_VERSIONING_RESOLVER
 from ellar.types import ASGIApp, TReceive, TScope, TSend
 
 from ..operation_definitions import OperationDefinitions
+from .route_collections import RouteCollection
 
 if t.TYPE_CHECKING:
     from ellar.core.versioning.resolver import BaseAPIVersioningResolver
 
-__all__ = ["RouteCollection", "ApplicationRouter"]
-
-
-class RouteCollection(t.Sequence[BaseRoute]):
-    __slots__ = ("_routes",)
-
-    def __init__(self, routes: t.Optional[t.Sequence[BaseRoute]] = None) -> None:
-        self._routes: t.List[BaseRoute] = [] if routes is None else list(routes)
-        self.sort_routes()
-
-    @t.no_type_check
-    def __getitem__(self, i: int) -> BaseRoute:
-        return self._routes.__getitem__(i)
-
-    def __setitem__(self, i: int, o: BaseRoute) -> None:
-        self._routes.insert(i, o)
-        self.sort_routes()
-
-    def __len__(self) -> int:
-        return len(self._routes)
-
-    def __iter__(self) -> t.Iterator[BaseRoute]:
-        return iter(self._routes)
-
-    def append(self, __item: t.Any) -> None:
-        self._routes.append(__item)
-
-    def get_routes(self) -> t.List[BaseRoute]:
-        return self._routes.copy()
-
-    def extend(self, routes: t.Sequence[BaseRoute]) -> "RouteCollection":
-        self._routes.extend(routes)
-        return self
-
-    def sort_routes(self) -> None:
-        # TODO: flatten the routes for faster look up
-        self._routes.sort(key=lambda e: getattr(e, "path", getattr(e, "host", "")))
+__all__ = ["ApplicationRouter"]
 
 
 def router_default_decorator(func: ASGIApp) -> ASGIApp:

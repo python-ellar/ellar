@@ -11,6 +11,8 @@ from .model import ControllerBase
 
 
 class ControllerRouteOperation(ControllerRouteOperationBase, RouteOperation):
+    methods: t.Set[str]
+
     def build_route_operation(  # type:ignore
         self,
         path_prefix: str = "/",
