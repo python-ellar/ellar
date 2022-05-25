@@ -224,6 +224,16 @@ class EndpointArgsModel:
                 self._computation_models[websocket_inject.in_].append(websocket_inject)
                 continue
 
+            if (
+                param_name == ("context", "ctx")
+                and param.default == inspect.Parameter.empty
+            ):
+                context_inject = ParameterInjectable()(
+                    param_name, t.cast(t.Type, IExecutionContext)
+                )
+                self._computation_models[context_inject.in_].append(context_inject)
+                continue
+
             if self._add_non_field_param_to_dependency(
                 param_name=param.name,
                 param_default=param.default,
