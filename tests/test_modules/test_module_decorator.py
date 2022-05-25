@@ -61,8 +61,6 @@ def test_module_get_routes_works():
     ), "SampleModule is not an instance of ModuleDecorator | BaseModuleDecorator"
     routes = SampleModule.get_routes()
     assert len(routes) == 4
-    assert routes == SampleModule.get_routes(force_build=True)
-    assert routes is not SampleModule.get_routes(force_build=True)
 
     @ModuleDecorator()
     class AnotherSampleModuleGetRoute:
@@ -70,8 +68,6 @@ def test_module_get_routes_works():
 
     routes = AnotherSampleModuleGetRoute.get_routes()
     assert len(routes) == 0
-    assert routes == AnotherSampleModuleGetRoute.get_routes(force_build=True)
-    assert routes is not AnotherSampleModuleGetRoute.get_routes(force_build=True)
 
 
 def test_module_get_module_routers_works():

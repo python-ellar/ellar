@@ -2,7 +2,7 @@ from typing import List
 from dataclasses import dataclass
 
 from catapp.application.cats.services import CatService
-from ellar.serializer import DataClassSerializer
+from ellar.serializer import DataclassSerializer
 from ellar.core.routing import ModuleRouter
 from ellar.common import Provide, Req, Render
 from ellar.core.templating import render_template
@@ -11,7 +11,7 @@ cat_router = ModuleRouter("/cats-router", tag='Testing')
 
 
 @dataclass
-class CatObject(DataClassSerializer):
+class CatObject(DataclassSerializer):
     name: str
 
 

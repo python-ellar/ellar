@@ -60,17 +60,12 @@ def test_module_get_routes_works():
     routes = SampleApplicationModule.get_routes()
     assert len(routes) == 0
 
-    assert routes == SampleApplicationModule.get_routes(force_build=True)
-    assert routes is not SampleApplicationModule.get_routes(force_build=True)
-
     @ApplicationModuleDecorator(routers=(mr,), controllers=(SampleController,))
     class AnotherSampleAppModuleGetRoute:
         pass
 
     routes = AnotherSampleAppModuleGetRoute.get_routes()
     assert len(routes) == 4
-    assert routes == AnotherSampleAppModuleGetRoute.get_routes(force_build=True)
-    assert routes is not AnotherSampleAppModuleGetRoute.get_routes(force_build=True)
 
 
 def test_module_get_module_routers_works():

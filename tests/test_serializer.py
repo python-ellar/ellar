@@ -8,8 +8,8 @@ import pytest
 from pydantic import BaseModel, Field, dataclasses as pydantic_dataclasses
 
 from ellar.serializer import (
-    DataClassSerializer,
-    PydanticSerializer,
+    DataclassSerializer,
+    Serializer,
     SerializerFilter,
     convert_dataclass_to_pydantic_model,
     get_dataclass_pydantic_model,
@@ -23,7 +23,7 @@ class Person:
 
 
 @dataclass
-class DataclassPerson(DataClassSerializer):
+class DataclassPerson(DataclassSerializer):
     name: str
     first_name: str
     last_name: t.Optional[str] = None
@@ -86,7 +86,7 @@ class ModelWithAlias(BaseModel):
     foo: str = Field(..., alias="Foo")
 
 
-class ModelWithDefault(PydanticSerializer):
+class ModelWithDefault(Serializer):
     foo: str = ...  # type: ignore
     bar: str = "bar"
     bla: str = "bla"
