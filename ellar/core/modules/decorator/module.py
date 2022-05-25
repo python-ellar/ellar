@@ -128,10 +128,9 @@ class ModuleDecorator(BaseModuleDecorator):
                 provider = ProviderConfig(item)
             self._services.append(t.cast(ProviderConfig, provider))
 
-    def get_routes(self, force_build: bool = False) -> t.List[BaseRoute]:
-        if not force_build and self._routes:
-            return self._routes
-        self._routes = self._build_routes()
+    def get_routes(self) -> t.List[BaseRoute]:
+        if not self._routes:
+            self._routes = self._build_routes()
         return self._routes
 
     def _build_routes(self) -> t.List[BaseRoute]:
@@ -156,7 +155,7 @@ class ModuleDecorator(BaseModuleDecorator):
         _module_routers: t.List[ModuleRouterBase] = []
 
         for controller in self._controllers:
-            _module_routers.append(controller.get_mount())
+            _module_routers.append(controller.get_router())
 
         for item in self._module_routers:
             if isinstance(item, (ModuleRouterBase,)):

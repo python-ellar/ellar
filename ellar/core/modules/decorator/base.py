@@ -27,7 +27,7 @@ class BaseModuleDecorator(ModuleTemplating, ABC):
         """Runs module decorator validations"""
 
     @abstractmethod
-    def get_routes(self, force_build: bool = False) -> t.List[BaseRoute]:
+    def get_routes(self) -> t.List[BaseRoute]:
         """Runs flattened routes from registered controllers and routers"""
 
     @abstractmethod
