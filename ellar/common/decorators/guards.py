@@ -4,7 +4,7 @@ from ellar.constants import GUARDS_KEY
 
 from .base import set_meta
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
 
 

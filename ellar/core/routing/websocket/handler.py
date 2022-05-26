@@ -7,7 +7,7 @@ from starlette.types import Message
 from ellar.core.params import WebsocketEndpointArgsModel
 from ellar.exceptions import WebSocketRequestValidationError
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.connection import WebSocket
     from ellar.core.context import ExecutionContext
 

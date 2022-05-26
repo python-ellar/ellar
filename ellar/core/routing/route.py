@@ -88,12 +88,8 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
                 endpoint=self.endpoint,
                 operation_unique_id=self.get_operation_unique_id(methods=self.methods),
                 param_converters=self.param_convertors,
+                extra_endpoint_args=self._meta.extra_route_args,
             )
-
-            if self._meta.extra_route_args:
-                self.endpoint_parameter_model.add_extra_route_args(
-                    *self._meta.extra_route_args
-                )
             self.endpoint_parameter_model.build_model()
         self.include_in_schema = include_in_schema
         if name:
@@ -136,5 +132,5 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         )
         await response(context.scope, context.receive, context.send)
 
-    def __hash__(self) -> int:
+    def __hash__(self) -> int:  # pragma: no cover
         return hash((self.path, tuple(self.methods)))

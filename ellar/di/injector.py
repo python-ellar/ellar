@@ -22,7 +22,7 @@ from .scopes import (
     TransientScope,
 )
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.modules import BaseModuleDecorator, ModuleBase
 
 

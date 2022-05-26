@@ -10,7 +10,7 @@ from ellar.core.routing.websocket.route import WebsocketRouteOperation
 from ..operation_definitions import OperationDefinitions
 from .route_collections import ModuleRouteCollection
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
 
 

@@ -114,13 +114,10 @@ def is_decorated_with_injectable(func_or_class: ConstructorOrClassT) -> bool:
     >>> is_decorated_with_injectable(InjectableType2)
     True
     """
-    if isinstance(func_or_class, type) and hasattr(func_or_class, "__init__"):
-        return hasattr(
-            func_or_class, INJECTABLE_ATTRIBUTE
-        ) or injector_is_decorated_with_inject(getattr(func_or_class, "__init__"))
+
     return hasattr(
         func_or_class, INJECTABLE_ATTRIBUTE
-    ) or injector_is_decorated_with_inject(func_or_class)
+    )
 
 
 def has_binding(func_or_class: ConstructorOrClassT) -> bool:

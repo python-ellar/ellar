@@ -16,7 +16,7 @@ from ellar.core.versioning import BaseAPIVersioning, DefaultAPIVersioning
 from ellar.exceptions import APIException, RequestValidationError
 from ellar.types import TReceive, TScope, TSend
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
 
 DEBUG: bool = False

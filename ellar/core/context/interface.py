@@ -5,7 +5,7 @@ from ellar.compatible import AttributeDictAccessMixin, DataMapper
 from ellar.core.connection import HTTPConnection, Request, WebSocket
 from ellar.core.response import Response
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
     from ellar.core.routing import RouteOperationBase
     from ellar.di.injector import RequestServiceProvider

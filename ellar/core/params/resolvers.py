@@ -20,7 +20,7 @@ from ellar.exceptions import RequestValidationError
 from ellar.logger import logger
 from ellar.types import T
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from .params import Param
 
 
@@ -65,7 +65,7 @@ class RouteParameterResolver(BaseRouteParameterResolver, ABC):
     @abstractmethod
     @t.no_type_check
     async def resolve_handle(self, *args: t.Any, **kwargs: t.Any) -> t.Tuple:
-        ...
+        """resolver action"""
 
 
 class HeaderParameterResolver(RouteParameterResolver):

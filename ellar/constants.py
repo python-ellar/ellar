@@ -64,10 +64,10 @@ REF_PREFIX = "#/components/schemas/"
 
 
 class _NOT_SET:
-    def __copy__(self) -> Any:
+    def __copy__(self) -> Any:  # pragma: no cover
         return NOT_SET
 
-    def __deepcopy__(self, memodict: Dict = {}) -> Any:
+    def __deepcopy__(self, memodict: Dict = {}) -> Any:  # pragma: no cover
         return NOT_SET
 
 

@@ -2,7 +2,7 @@ import typing as t
 
 from ellar.core.routing.controller import ControllerDecorator
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
 
 

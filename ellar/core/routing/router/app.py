@@ -3,8 +3,6 @@ from functools import wraps
 
 from starlette.routing import (
     BaseRoute,
-    Host as StarletteHost,
-    Mount as StarletteMount,
     Router as StarletteRouter,
 )
 
@@ -15,7 +13,7 @@ from ellar.types import ASGIApp, TReceive, TScope, TSend
 from ..operation_definitions import OperationDefinitions
 from .route_collections import RouteCollection
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.versioning.resolver import BaseAPIVersioningResolver
 
 __all__ = ["ApplicationRouter"]
@@ -76,14 +74,6 @@ class ApplicationRouter(StarletteRouter):
         self.HttpRoute = _route_definitions.http_route
         self.WsRoute = _route_definitions.ws_route
 
-    def mount(self, path: str, app: ASGIApp, name: str = None) -> None:
-        route = StarletteMount(path, app=app, name=name)
-        self.routes.append(route)
-
-    def host(self, host: str, app: ASGIApp, name: str = None) -> None:
-        route = StarletteHost(host, app=app, name=name)
-        self.routes.append(route)
-
     def add_route(
         self,
         path: str,
@@ -91,12 +81,12 @@ class ApplicationRouter(StarletteRouter):
         methods: t.List[str] = None,
         name: str = None,
         include_in_schema: bool = True,
-    ) -> None:
+    ) -> None:  # pragma: no cover
         """Not supported"""
 
     def add_websocket_route(
         self, path: str, endpoint: t.Callable, name: str = None
-    ) -> None:
+    ) -> None:  # pragma: no cover
         """Not supported"""
 
     def route(
@@ -105,24 +95,24 @@ class ApplicationRouter(StarletteRouter):
         methods: t.List[str] = None,
         name: str = None,
         include_in_schema: bool = True,
-    ) -> t.Callable:
+    ) -> t.Callable:  # pragma: no cover
         def decorator(func: t.Callable) -> t.Callable:
             """Not supported"""
             return func
 
         return decorator
 
-    def websocket_route(self, path: str, name: str = None) -> t.Callable:
+    def websocket_route(self, path: str, name: str = None) -> t.Callable:  # pragma: no cover
         def decorator(func: t.Callable) -> t.Callable:
             """Not supported"""
             return func
 
         return decorator
 
-    def add_event_handler(self, event_type: str, func: t.Callable) -> None:
+    def add_event_handler(self, event_type: str, func: t.Callable) -> None:  # pragma: no cover
         """Not supported"""
 
-    def on_event(self, event_type: str) -> t.Callable:
+    def on_event(self, event_type: str) -> t.Callable:  # pragma: no cover
         def decorator(func: t.Callable) -> t.Callable:
             """Not supported"""
             return func

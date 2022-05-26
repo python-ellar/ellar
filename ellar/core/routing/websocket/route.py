@@ -148,5 +148,5 @@ class WebsocketRouteOperation(
     def _load_model(self) -> None:
         self.build_route_operation()
 
-    def __hash__(self) -> int:
+    def __hash__(self) -> int:  # pragma: no cover
         return hash((self.path, tuple(["ws"])))

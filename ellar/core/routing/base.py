@@ -8,7 +8,7 @@ from ellar.core.context import ExecutionContext
 from ellar.core.operation_meta import OperationMeta
 from ellar.types import TReceive, TScope, TSend
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
     from ellar.core.versioning.resolver import BaseAPIVersioningResolver
 
@@ -32,7 +32,7 @@ class RouteOperationBase:
 
     @abstractmethod
     def _load_model(self) -> None:
-        pass
+        """compute route models"""
 
     def get_guards(
         self,

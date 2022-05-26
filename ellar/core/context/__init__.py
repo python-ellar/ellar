@@ -14,7 +14,7 @@ from .interface import (
     OperationExecutionMeta,
 )
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
     from ellar.core.routing import RouteOperationBase
     from ellar.core.routing.controller import ControllerBase
