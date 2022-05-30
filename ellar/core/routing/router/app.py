@@ -1,10 +1,7 @@
 import typing as t
 from functools import wraps
 
-from starlette.routing import (
-    BaseRoute,
-    Router as StarletteRouter,
-)
+from starlette.routing import BaseRoute, Router as StarletteRouter
 
 from ellar.compatible import DataMapper
 from ellar.constants import SCOPE_API_VERSIONING_RESOLVER
@@ -102,14 +99,18 @@ class ApplicationRouter(StarletteRouter):
 
         return decorator
 
-    def websocket_route(self, path: str, name: str = None) -> t.Callable:  # pragma: no cover
+    def websocket_route(
+        self, path: str, name: str = None
+    ) -> t.Callable:  # pragma: no cover
         def decorator(func: t.Callable) -> t.Callable:
             """Not supported"""
             return func
 
         return decorator
 
-    def add_event_handler(self, event_type: str, func: t.Callable) -> None:  # pragma: no cover
+    def add_event_handler(
+        self, event_type: str, func: t.Callable
+    ) -> None:  # pragma: no cover
         """Not supported"""
 
     def on_event(self, event_type: str) -> t.Callable:  # pragma: no cover

@@ -4,8 +4,17 @@ from starlette.routing import BaseRoute, Mount as StarletteMount, Route, Router
 from starlette.types import ASGIApp
 
 from ellar.compatible import AttributeDict
+from ellar.constants import (
+    GUARDS_KEY,
+    OPENAPI_KEY,
+    OPERATION_HANDLER_KEY,
+    VERSIONING_KEY,
+    Controller_METADATA,
+)
+from ellar.core.controller import ControllerBase
 from ellar.core.routing.route import RouteOperation
 from ellar.core.routing.websocket.route import WebsocketRouteOperation
+from ellar.reflect import reflect
 
 from ..operation_definitions import OperationDefinitions
 from .route_collections import ModuleRouteCollection
@@ -14,7 +23,27 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
 
 
-__all__ = ["ModuleRouterBase", "ModuleRouter"]
+__all__ = ["ModuleRouterBase", "ModuleRouter", "controller_router_factory"]
+
+
+def controller_router_factory(controller: t.Type[ControllerBase]) -> "ModuleRouterBase":
+    openapi = reflect.get_metadata(Controller_METADATA.OPENAPI, controller) or dict()
+    routes = reflect.get_metadata(OPERATION_HANDLER_KEY, controller) or []
+    app = Router()
+    app.routes = ModuleRouteCollection(routes)  # type:ignore
+
+    router = ModuleRouterBase(
+        app=app,
+        path=reflect.get_metadata(Controller_METADATA.PATH, controller),
+        name=reflect.get_metadata(Controller_METADATA.NAME, controller),
+        version=reflect.get_metadata(Controller_METADATA.VERSION, controller),
+        guards=reflect.get_metadata(Controller_METADATA.GUARDS, controller),
+        include_in_schema=reflect.get_metadata(
+            Controller_METADATA.INCLUDE_IN_SCHEMA, controller
+        ),
+        **openapi
+    )
+    return router
 
 
 class ModuleRouterBase(StarletteMount):
@@ -48,6 +77,7 @@ class ModuleRouterBase(StarletteMount):
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate", t.Any]
         ] = (guards or [])
         self._version = set(version or [])
+        reflect.define_metadata(OPENAPI_KEY, self._meta, ModuleRouterBase)
 
     def get_meta(self) -> t.Mapping:
         return self._meta
@@ -81,22 +111,31 @@ class ModuleRouterBase(StarletteMount):
     def build_routes(self) -> t.List[BaseRoute]:
         for route in self.routes:
             _route: RouteOperation = t.cast("RouteOperation", route)
-            operation_meta = _route.get_meta()
 
-            if not operation_meta.route_versioning:
-                operation_meta.update(route_versioning=self._version)
-            if not operation_meta.route_guards:
-                operation_meta.update(route_guards=self._route_guards)
+            route_versioning = reflect.get_metadata(VERSIONING_KEY, _route.endpoint)
+            route_guards = reflect.get_metadata(GUARDS_KEY, _route.endpoint)
+            openapi = (
+                reflect.get_metadata(OPENAPI_KEY, _route.endpoint) or AttributeDict()
+            )
+
+            if not route_versioning:
+                reflect.define_metadata(
+                    VERSIONING_KEY, self._version, _route.endpoint, default_value=set()
+                )
+            if not route_guards:
+                reflect.define_metadata(
+                    GUARDS_KEY, self._route_guards, _route.endpoint, default_value=[]
+                )
 
             if isinstance(_route, Route):
-                if not operation_meta.openapi.tags and self._meta.get("tag"):
+                if not openapi.tags and self._meta.get("tag"):
                     tags = {self._meta.get("tag")}
-                    tags.update(set(operation_meta.openapi.tags or []))
-                    operation_meta.openapi.update(tags=list(tags))
+                    tags.update(set(openapi.tags or []))
+                    openapi.update(tags=list(tags))
+                    reflect.define_metadata(OPENAPI_KEY, openapi, _route.endpoint)
                 self._build_route_operation(_route)
             elif isinstance(_route, WebsocketRouteOperation):
                 self._build_ws_route_operation(_route)
-
         return list(self.routes)
 
 
