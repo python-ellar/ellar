@@ -11,7 +11,7 @@ from pydantic.typing import ForwardRef, evaluate_forwardref
 from pydantic.utils import lenient_issubclass
 from starlette.convertors import Convertor
 
-from ellar.constants import MULTI_RESOLVER_KEY, OPENAPI_NECESSARY, sequence_types
+from ellar.constants import MULTI_RESOLVER_KEY, ROUTE_OPENAPI_PARAMETERS, sequence_types
 from ellar.core.connection import Request, WebSocket
 from ellar.core.context import IExecutionContext
 from ellar.exceptions import ImproperConfiguration
@@ -121,6 +121,7 @@ class EndpointArgsModel:
         "endpoint_signature",
         "_route_models",
         "param_converters",
+        "_extra_endpoint_args",
     )
 
     def __init__(
@@ -129,6 +130,7 @@ class EndpointArgsModel:
         path: str,
         endpoint: t.Callable,
         param_converters: t.Dict[str, Convertor],
+        extra_endpoint_args: t.Sequence[ExtraEndpointArg] = None,
     ) -> None:
         self.path = path
         self.param_converters = param_converters
@@ -139,6 +141,9 @@ class EndpointArgsModel:
         self.endpoint_signature = self.get_typed_signature(endpoint)
         self.body_resolver: t.Optional[t.Union[t.Any, RouteParameterResolver]] = None
         self._route_models: t.List[BaseRouteParameterResolver] = []
+        self._extra_endpoint_args: t.List[ExtraEndpointArg] = (
+            list(extra_endpoint_args) if extra_endpoint_args else []
+        )
 
     def get_route_models(self) -> t.List[BaseRouteParameterResolver]:
         """
@@ -152,7 +157,9 @@ class EndpointArgsModel:
         Returns all computed endpoint resolvers + omitted resolvers
         :return: List[BaseRouteParameterResolver]
         """
-        return self.get_route_models() + self._computation_models[OPENAPI_NECESSARY]
+        return (
+            self.get_route_models() + self._computation_models[ROUTE_OPENAPI_PARAMETERS]
+        )
 
     def get_omitted_prefix(self) -> None:
         """
@@ -176,7 +183,7 @@ class EndpointArgsModel:
                 )
             )
 
-        self._add_extra_route_args(*_omitted, key=OPENAPI_NECESSARY)
+        self._add_extra_route_args(*_omitted, key=ROUTE_OPENAPI_PARAMETERS)
 
     def build_model(self) -> None:
         """
@@ -186,6 +193,7 @@ class EndpointArgsModel:
         self._computation_models = defaultdict(list)
         self.get_omitted_prefix()
         self.compute_route_parameter_list()
+        self.compute_extra_route_args()
         self.build_body_field()
         self._route_models = (
             self._computation_models[params.Header.in_.value]
@@ -413,8 +421,8 @@ class EndpointArgsModel:
                     errors += _errors
         return values, errors
 
-    def add_extra_route_args(self, *extra_operation_args: ExtraEndpointArg) -> None:
-        self._add_extra_route_args(*extra_operation_args)
+    def compute_extra_route_args(self) -> None:
+        self._add_extra_route_args(*self._extra_endpoint_args)
 
     def _add_extra_route_args(
         self, *extra_operation_args: ExtraEndpointArg, key: str = None
@@ -445,10 +453,14 @@ class EndpointArgsModel:
     ) -> None:
         """Body Resolver Implementation"""
 
-    def __deepcopy__(self, memodict: t.Dict = {}) -> "EndpointArgsModel":
+    def __deepcopy__(
+        self, memodict: t.Dict = {}
+    ) -> "EndpointArgsModel":  # pragma: no cover
         return self.__copy__(memodict)
 
-    def __copy__(self, memodict: t.Dict = {}) -> "EndpointArgsModel":
+    def __copy__(
+        self, memodict: t.Dict = {}
+    ) -> "EndpointArgsModel":  # pragma: no cover
         return self
 
     def build_body_field(self) -> None:
@@ -465,6 +477,7 @@ class RequestEndpointArgsModel(EndpointArgsModel):
         "endpoint_signature",
         "_route_models",
         "param_converters",
+        "_extra_endpoint_args",
     )
 
     def __init__(
@@ -474,9 +487,13 @@ class RequestEndpointArgsModel(EndpointArgsModel):
         endpoint: t.Callable,
         operation_unique_id: str,
         param_converters: t.Dict[str, Convertor],
+        extra_endpoint_args: t.Sequence[ExtraEndpointArg] = None,
     ) -> None:
         super().__init__(
-            path=path, endpoint=endpoint, param_converters=param_converters
+            path=path,
+            endpoint=endpoint,
+            param_converters=param_converters,
+            extra_endpoint_args=extra_endpoint_args,
         )
         self.operation_unique_id = operation_unique_id
 
@@ -554,9 +571,13 @@ class WebsocketEndpointArgsModel(EndpointArgsModel):
         path: str,
         endpoint: t.Callable,
         param_converters: t.Dict[str, Convertor],
+        extra_endpoint_args: t.Sequence[ExtraEndpointArg] = None,
     ) -> None:
         super().__init__(
-            path=path, endpoint=endpoint, param_converters=param_converters
+            path=path,
+            endpoint=endpoint,
+            param_converters=param_converters,
+            extra_endpoint_args=extra_endpoint_args,
         )
 
     def build_body_field(self) -> None:
