@@ -1,4 +1,5 @@
 import typing as t
+from collections import OrderedDict, defaultdict
 from inspect import isabstract
 
 from injector import (
@@ -9,6 +10,7 @@ from injector import (
 )
 
 from ellar.compatible import asynccontextmanager
+from ellar.constants import MODULE_REF_TYPES
 from ellar.helper import get_name
 from ellar.logger import logger as log
 from ellar.types import T
@@ -23,7 +25,7 @@ from .scopes import (
 )
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.modules import BaseModuleDecorator, ModuleBase
+    from ellar.core.modules import ModuleBase, ModulePlainRef, ModuleTemplateRef
 
 
 class RequestServiceProvider(InjectorBinder):
@@ -211,12 +213,7 @@ class Container(InjectorBinder):
 
 
 class StarletteInjector(Injector):
-    __slots__ = (
-        "_stack",
-        "parent",
-        "app",
-        "container",
-    )
+    __slots__ = ("_stack", "parent", "app", "container", "_modules")
 
     def __init__(
         self,
@@ -233,8 +230,38 @@ class StarletteInjector(Injector):
             parent=parent.binder if parent is not None else None,
         )
         # Bind some useful types
-        self.container.add_instance(self, StarletteInjector)
-        self.container.add_instance(self.binder)
+        self.container.register_instance(self, StarletteInjector)
+        self.container.register_instance(self.binder)
+        self._modules = defaultdict(OrderedDict)
+        self._modules[MODULE_REF_TYPES.TEMPLATE] = OrderedDict()
+        self._modules[MODULE_REF_TYPES.PLAIN] = OrderedDict()
+
+    def get_modules(
+        self,
+    ) -> t.Dict[t.Type["ModuleBase"], t.Union["ModuleTemplateRef", "ModulePlainRef"]]:
+        modules = dict(
+            self._modules[MODULE_REF_TYPES.TEMPLATE],
+        )
+        modules.update(self._modules[MODULE_REF_TYPES.PLAIN])
+        return modules
+
+    def get_module(
+        self, module: t.Type
+    ) -> t.Optional[t.Union["ModulePlainRef", "ModuleTemplateRef"]]:
+        if module in self._modules[MODULE_REF_TYPES.TEMPLATE]:
+            return self._modules[MODULE_REF_TYPES.TEMPLATE][module]
+
+        if module in self._modules[MODULE_REF_TYPES.PLAIN]:
+            return self._modules[MODULE_REF_TYPES.PLAIN][module]
+        return None
+
+    def get_templating_modules(
+        self,
+    ) -> t.Dict[t.Type["ModuleBase"], "ModuleTemplateRef"]:
+        return self._modules.get(MODULE_REF_TYPES.TEMPLATE, {})
+
+    def add_module(self, module_ref: t.Union["ModulePlainRef"]) -> None:
+        self._modules[module_ref.ref_type].update({module_ref.module: module_ref})
 
     @property  # type: ignore
     def binder(self) -> Container:  # type: ignore
