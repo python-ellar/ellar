@@ -1,16 +1,26 @@
 import typing as t
 
-from starlette.middleware import Middleware
 from starlette.routing import BaseRoute
 
-from ellar.core.events import ApplicationEventHandler, EventHandler
+from ellar.core.events import EventHandler
 
 
 class ModuleData(t.NamedTuple):
-    before_init: t.List[ApplicationEventHandler]
-    after_init: t.List[ApplicationEventHandler]
     startup_event: t.List[EventHandler]
     shutdown_event: t.List[EventHandler]
-    exception_handlers: t.Dict
-    middleware: t.List[Middleware]
-    routes: t.List[BaseRoute]
+    flattened_routes: t.List[BaseRoute]
+
+    @classmethod
+    def default(cls) -> "ModuleData":
+        return ModuleData(
+            startup_event=[],
+            shutdown_event=[],
+            flattened_routes=[],
+        )
+
+    def extend(self, other: "ModuleData") -> "ModuleData":
+        return ModuleData(
+            shutdown_event=self.shutdown_event + other.shutdown_event,
+            startup_event=self.startup_event + other.startup_event,
+            flattened_routes=self.flattened_routes + other.flattened_routes,
+        )

@@ -1,12 +1,4 @@
 from .base import ModuleBase
-from .decorator.base import BaseModuleDecorator
-from .decorator.builder import ModuleDecoratorBuilder
-from .decorator.module import ApplicationModuleDecorator, ModuleDecorator
+from .ref import ModulePlainRef, ModuleTemplateRef
 
-__all__ = [
-    "ApplicationModuleDecorator",
-    "BaseModuleDecorator",
-    "ModuleDecorator",
-    "ModuleBase",
-    "ModuleDecoratorBuilder",
-]
+__all__ = ["ModuleBase", "ModulePlainRef", "ModuleTemplateRef"]
