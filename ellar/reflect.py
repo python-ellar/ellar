@@ -7,7 +7,7 @@ from ellar.constants import REFLECT_TYPE
 
 
 def _get_actual_target(
-    target: t.Union[t.Type, t.Callable], search: bool = False
+    target: t.Union[t.Type, t.Callable]
 ) -> t.Union[t.Type, t.Callable]:
     try:
         reflect_type = target.__dict__[REFLECT_TYPE]
@@ -86,7 +86,7 @@ class _Reflect:
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
     ) -> t.Optional[t.Any]:
         target_metadata = (
-            self._get_or_create_metadata(target, search_actual_target=False) or {}
+            self._get_or_create_metadata(target) or {}
         )
         value = target_metadata.get(metadata_key)
         if isinstance(value, (list, set, tuple, dict)):
@@ -98,7 +98,7 @@ class _Reflect:
         self, target: t.Union[t.Type, t.Callable]
     ) -> t.KeysView[t.Any]:
         target_metadata = (
-            self._get_or_create_metadata(target, search_actual_target=False) or {}
+            self._get_or_create_metadata(target) or {}
         )
         return target_metadata.keys()
 
@@ -106,7 +106,7 @@ class _Reflect:
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
     ) -> None:
         target_metadata = self._get_or_create_metadata(
-            target, search_actual_target=False
+            target
         )
         if target_metadata and metadata_key in target_metadata:
             target_metadata.pop(metadata_key)
@@ -114,10 +114,9 @@ class _Reflect:
     def _get_or_create_metadata(
         self,
         target: t.Union[t.Type, t.Callable],
-        create: bool = False,
-        search_actual_target: bool = True,
+        create: bool = False
     ) -> t.Optional[AttributeDict]:
-        _target = _get_actual_target(target, search=search_actual_target)
+        _target = _get_actual_target(target)
         if _target in self._meta_data:
             return self._meta_data[_target]
 
