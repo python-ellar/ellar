@@ -7,8 +7,8 @@ class ControllerType(type):
     _controller_name: t.Optional[str]
 
     @t.no_type_check
-    def __new__(mcls, name, bases, namespace, **kwargs):
-        cls = super().__new__(mcls, name, bases, namespace, **kwargs)
+    def __new__(mcls, name, bases, namespace):
+        cls = super().__new__(mcls, name, bases, namespace)
         cls._controller_name = None
         return cls
 
