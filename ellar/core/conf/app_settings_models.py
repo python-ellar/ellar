@@ -5,6 +5,7 @@ from pydantic.json import ENCODERS_BY_TYPE
 from starlette.middleware import Middleware
 from starlette.responses import JSONResponse
 
+from ellar.core.events import EventHandler
 from ellar.core.versioning import BaseAPIVersioning, DefaultAPIVersioning
 from ellar.serializer import Serializer, SerializerFilter
 
@@ -34,6 +35,20 @@ class TMiddleware(Middleware):
     def validate(cls: t.Type["Middleware"], v: t.Any) -> t.Any:
         if not isinstance(v, Middleware):
             raise ValueError(f"Expected Middleware, received: {type(v)}")
+        return v
+
+
+class TEventHandler(EventHandler):
+    @classmethod
+    def __get_validators__(
+        cls: t.Type["TEventHandler"],
+    ) -> t.Iterable[t.Callable[..., t.Any]]:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls: t.Type["EventHandler"], v: t.Any) -> t.Any:
+        if not isinstance(v, EventHandler):
+            raise ValueError(f"Expected EventHandler, received: {type(v)}")
         return v
 
 
@@ -71,10 +86,9 @@ class ConfigValidationSchema(Serializer):
 
     SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]] = {}
 
-    EXCEPTION_HANDLERS_DECORATOR: t.Dict[
-        t.Union[int, t.Type[Exception]], t.Callable
-    ] = {}
     MIDDLEWARE_DECORATOR: t.List[TMiddleware] = []
+    ON_REQUEST_STARTUP: t.List[TEventHandler] = []
+    ON_REQUEST_SHUTDOWN: t.List[TEventHandler] = []
 
     @root_validator(pre=True)
     def pre_root_validate(cls, values: t.Any) -> t.Any:
@@ -82,12 +96,8 @@ class ConfigValidationSchema(Serializer):
         user_custom_exception_handlers = values.get(
             "USER_CUSTOM_EXCEPTION_HANDLERS", {}
         )
-        user_exception_decorator_handlers = values.get(
-            "EXCEPTION_HANDLERS_DECORATOR", {}
-        )
 
         app_exception_handlers.update(**user_custom_exception_handlers)
-        app_exception_handlers.update(**user_exception_decorator_handlers)
 
         values["EXCEPTION_HANDLERS"] = app_exception_handlers
         middleware_decorator_handlers = list(values.get("MIDDLEWARE_DECORATOR", []))
