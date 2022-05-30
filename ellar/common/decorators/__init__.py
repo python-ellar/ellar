@@ -1,4 +1,4 @@
-from .application import on_app_init, on_app_started  # noqa
+# from .application import on_app_init, on_app_started  # noqa
 from .base import set_meta  # noqa
 from .controller import Controller  # noqa
 from .exception import exception_handler  # noqa
