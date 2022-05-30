@@ -12,13 +12,13 @@ from pydantic.schema import (
 from starlette.routing import Mount
 
 from ellar.compatible import cached_property
-from ellar.constants import APP_MODULE_KEY
+from ellar.constants import GUARDS_KEY, OPENAPI_KEY
 from ellar.core.main import App
-from ellar.core.modules import ApplicationModuleDecorator
 from ellar.core.routing import ModuleRouterBase, RouteOperation
 from ellar.core.routing.controller.route import ControllerRouteOperation
 from ellar.core.schema import HTTPValidationError, ValidationError
 from ellar.helper.modelfield import create_model_field
+from ellar.services.reflector import Reflector
 
 from ..constants import REF_PREFIX
 from .openapi_v3 import OpenAPI
@@ -109,15 +109,26 @@ class OpenAPIDocumentBuilder:
 
     def _get_openapi_route_document_models(self, app: App) -> t.List[OpenAPIRoute]:
         openapi_route_models: t.List = []
+        reflector = app.injector.get(Reflector)
         for route in app.routes:
             if isinstance(route, Mount):
-                openapi_route_models.append(OpenAPIMountDocumentation(mount=route))
+                openapi = dict()
+                guards = app.get_guards()
+                openapi_route_models.append(
+                    OpenAPIMountDocumentation(
+                        mount=route, global_guards=guards, **openapi
+                    )
+                )
                 continue
             if (
                 isinstance(route, (RouteOperation, ControllerRouteOperation))
                 and route.include_in_schema
             ):
-                openapi_route_models.append(OpenAPIRouteDocumentation(route=route))
+                openapi = reflector.get(OPENAPI_KEY, route.endpoint) or dict()
+                guards = reflector.get(GUARDS_KEY, route.endpoint) or app.get_guards()
+                openapi_route_models.append(
+                    OpenAPIRouteDocumentation(route=route, guards=guards, **openapi)
+                )
         return openapi_route_models
 
     def _get_operations_models(
@@ -169,7 +180,10 @@ class OpenAPIDocumentBuilder:
         definitions = self._get_model_definitions(
             models=models, model_name_map=model_name_map  # type: ignore
         )
-        mounts: t.List[t.Union[OpenAPIMountDocumentation, ModuleRouterBase]] = []
+        mounts: t.List[t.Union[ModuleRouterBase]] = []
+        for _, item in app.injector.get_templating_modules().items():
+            mounts.extend(item.routers)
+
         for route in openapi_route_models:
             security_schemes: t.Dict[str, t.Any] = dict()
             route.get_openapi_path(
@@ -180,16 +194,8 @@ class OpenAPIDocumentBuilder:
             if security_schemes:
                 components.setdefault("securitySchemes", {}).update(security_schemes)
 
-            if isinstance(route, OpenAPIMountDocumentation):
-                mounts.append(route)
-
         if definitions:
             components["schemas"] = {k: definitions[k] for k in sorted(definitions)}
-
-        app_module: t.Optional[ApplicationModuleDecorator] = app.config.get(
-            APP_MODULE_KEY
-        )
-        mounts.extend(app_module.get_module_routers() if app_module else [])
 
         for item in mounts:
             data = item.get_tag()

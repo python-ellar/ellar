@@ -12,11 +12,11 @@ from starlette.convertors import (
     StringConvertor,
     UUIDConvertor,
 )
-from starlette.routing import Mount, compile_path
+from starlette.routing import compile_path
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from ellar.compatible import cached_property
-from ellar.constants import METHODS_WITH_BODY, REF_PREFIX
+from ellar.constants import GUARDS_KEY, METHODS_WITH_BODY, OPENAPI_KEY, REF_PREFIX
 from ellar.core.guard import BaseAuthGuard
 from ellar.core.params.params import Body, Param
 from ellar.core.params.resolvers import (
@@ -26,8 +26,11 @@ from ellar.core.params.resolvers import (
     RouteParameterResolver,
 )
 from ellar.core.routing import ModuleRouterBase, RouteOperation
-from ellar.core.routing.controller.router import ControllerRouter
+from ellar.services.reflector import Reflector
 from ellar.shortcuts import normalize_path
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core.guard import GuardCanActivate
 
 
 class OpenAPIRoute(ABC):
@@ -57,26 +60,24 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
 
     def __init__(
         self,
-        mount: t.Union[ModuleRouterBase, ControllerRouter, Mount],
+        mount: t.Union[ModuleRouterBase],
         tag: t.Optional[str] = None,
         description: t.Optional[str] = None,
         external_doc_description: t.Optional[str] = None,
         external_doc_url: t.Optional[str] = None,
+        global_guards: t.List[t.Union["GuardCanActivate", "GuardCanActivate"]] = None,
     ) -> None:
-        meta: t.Dict = dict()
-        if isinstance(mount, (ModuleRouterBase, ControllerRouter)):
-            meta = dict(mount.get_meta())
-        self.tag = meta.get("tag") or tag
-        self.description = description or meta.get("description")
-        self.external_doc_description = external_doc_description or meta.get(
-            "external_doc_description"
-        )
-        self.external_doc_url = external_doc_url or meta.get("external_doc_url")
+        self.tag = tag
+        self.description = description
+        self.external_doc_description = external_doc_description
+        self.external_doc_url = external_doc_url
         self.mount = mount
         self.path_regex, self.path_format, self.param_convertors = compile_path(
             self.mount.path
         )
         self.global_route_parameters = []
+        self.global_guards = global_guards or []
+        self._routes: t.List["OpenAPIRouteDocumentation"] = []
         if self.param_convertors:
             for name, converter in self.param_convertors.items():
                 schema = self.CONVERTOR_TYPES[converter.__class__]
@@ -102,23 +103,25 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             )
         return dict()
 
-    @cached_property
-    def routes(self) -> t.List["OpenAPIRouteDocumentation"]:
-        _routes: t.List["OpenAPIRouteDocumentation"] = []
+    def build_routes(self, reflector: Reflector) -> None:
+        self._routes = []
         for route in self.mount.routes:
-            if isinstance(route, RouteOperation):
-                _routes.append(
+            if isinstance(route, RouteOperation) and route.include_in_schema:
+                openapi = reflector.get(OPENAPI_KEY, route.endpoint) or dict()
+                guards = reflector.get(GUARDS_KEY, route.endpoint)
+                self._routes.append(
                     OpenAPIRouteDocumentation(
                         route=route,
                         global_route_parameters=self.global_route_parameters,
+                        guards=guards or self.global_guards,
+                        **openapi,
                     )
                 )
-        return _routes
 
     @cached_property
     def _openapi_models(self) -> t.List[ModelField]:
         _models = []
-        for route in self.routes:
+        for route in self._routes:
             _models.extend(route.get_route_models())
         return _models
 
@@ -138,7 +141,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             if path_prefix
             else self.path_format
         )
-        for openapi_route in self.routes:
+        for openapi_route in self._routes:
             path, _security_schemes = openapi_route.get_child_openapi_path(
                 model_name_map=model_name_map
             )
@@ -163,21 +166,16 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         tags: t.Optional[t.List[str]] = None,
         deprecated: t.Optional[bool] = None,
         global_route_parameters: t.List[t.Dict] = None,
+        guards: t.List[t.Union["GuardCanActivate", "GuardCanActivate"]] = None,
     ) -> None:
-
-        self.operation_id = operation_id or route.get_meta().get("openapi", {}).get(
-            "operation_id"
-        )
-        self.summary = summary or route.get_meta().get("openapi", {}).get("summary")
-        self.description = description or route.get_meta().get("openapi", {}).get(
-            "description"
-        )
-        self.tags = tags or route.get_meta().get("openapi", {}).get("tags")
-        self.deprecated = deprecated or route.get_meta().get("openapi", {}).get(
-            "deprecated"
-        )
+        self.operation_id = operation_id
+        self.summary = summary
+        self.description = description
+        self.tags = tags
+        self.deprecated = deprecated
         self.route = route
         self.global_route_parameters = global_route_parameters or []
+        self.guards = guards or []
 
         if self.tags and not isinstance(self.tags, list):
             self.tags = [self.tags]
@@ -223,7 +221,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
     ) -> t.Tuple[t.Dict[str, t.Any], t.List[t.Dict[str, t.Any]]]:
         security_definitions: t.Dict = {}
         operation_security: t.List = []
-        for item in self.route.get_guards():
+        for item in self.guards:
             if isinstance(item, type) and not issubclass(item, BaseAuthGuard):
                 continue
             security_scheme = item.get_guard_scheme()  # type: ignore
@@ -309,76 +307,73 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         path: t.Dict = {}
         security_schemes: t.Dict[str, t.Any] = {}
 
-        if self.route.include_in_schema:
-            for method in self.route.methods:
-                operation = self.get_openapi_operation_metadata(method=method)
-                parameters: t.List[t.Dict[str, t.Any]] = []
-                operation_parameters = self.get_openapi_operation_parameters(
+        for method in self.route.methods:
+            operation = self.get_openapi_operation_metadata(method=method)
+            parameters: t.List[t.Dict[str, t.Any]] = []
+            operation_parameters = self.get_openapi_operation_parameters(
+                model_name_map=model_name_map
+            )
+            parameters.extend(operation_parameters)
+            if parameters:
+                operation["parameters"] = list(
+                    {param["name"]: param for param in parameters}.values()
+                )
+            if method in METHODS_WITH_BODY:
+                request_body_oai = self.get_openapi_operation_request_body(
                     model_name_map=model_name_map
                 )
-                parameters.extend(operation_parameters)
-                if parameters:
-                    operation["parameters"] = list(
-                        {param["name"]: param for param in parameters}.values()
-                    )
-                if method in METHODS_WITH_BODY:
-                    request_body_oai = self.get_openapi_operation_request_body(
-                        model_name_map=model_name_map
-                    )
-                    if request_body_oai:
-                        operation["requestBody"] = request_body_oai
+                if request_body_oai:
+                    operation["requestBody"] = request_body_oai
 
-                (
-                    security_definitions,
-                    operation_security,
-                ) = self._get_openapi_security_scheme()
-                if operation_security:
-                    operation.setdefault("security", []).extend(operation_security)
-                if security_definitions:
-                    security_schemes.update(security_definitions)
+            (
+                security_definitions,
+                operation_security,
+            ) = self._get_openapi_security_scheme()
+            if operation_security:
+                operation.setdefault("security", []).extend(operation_security)
+            if security_definitions:
+                security_schemes.update(security_definitions)
 
-                operation_responses = operation.setdefault("responses", {})
-                for status, response_model in self.route.response_model.models.items():
-                    operation_responses_status = operation_responses.setdefault(
-                        status, {}
+            operation_responses = operation.setdefault("responses", {})
+            for status, response_model in self.route.response_model.models.items():
+                operation_responses_status = operation_responses.setdefault(status, {})
+                operation_responses_status["description"] = getattr(
+                    response_model, "description", ""
+                )
+
+                content = operation_responses_status.setdefault("content", {})
+                media_type = content.setdefault(
+                    getattr(response_model, "media_type", "text/plain"), {}
+                )
+                media_type.setdefault("schema", {"type": "string"})
+
+                model_field = response_model.get_model_field()
+                if model_field:
+                    model_field_schema, _, _ = field_schema(
+                        model_field,
+                        model_name_map=model_name_map,
+                        ref_prefix=REF_PREFIX,
                     )
-                    operation_responses_status["description"] = getattr(
-                        response_model, "description", ""
-                    )
+                    media_type["schema"] = model_field_schema
 
-                    content = operation_responses_status.setdefault("content", {})
-                    media_type = content.setdefault(
-                        getattr(response_model, "media_type", "text/plain"), {}
-                    )
-                    media_type.setdefault("schema", {"type": "string"})
-
-                    model_field = response_model.get_model_field()
-                    if model_field:
-                        model_field_schema, _, _ = field_schema(
-                            model_field,
-                            model_name_map=model_name_map,
-                            ref_prefix=REF_PREFIX,
-                        )
-                        media_type["schema"] = model_field_schema
-
-                http422 = str(HTTP_422_UNPROCESSABLE_ENTITY)
-                if (
-                    parameters or self.route.endpoint_parameter_model.body_resolver
-                ) and not any(
-                    [
-                        status in operation["responses"]
-                        for status in [http422, "4XX", "default"]
-                    ]
-                ):
-                    operation["responses"][http422] = {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {"$ref": REF_PREFIX + "HTTPValidationError"}
-                            }
-                        },
-                    }
-                path[method.lower()] = operation
+            http422 = str(HTTP_422_UNPROCESSABLE_ENTITY)
+            if (
+                parameters or self.route.endpoint_parameter_model.body_resolver
+            ) and not any(
+                [
+                    status in operation["responses"]
+                    for status in [http422, "4XX", "default"]
+                ]
+            ):
+                operation["responses"][http422] = {
+                    "description": "Validation Error",
+                    "content": {
+                        "application/json": {
+                            "schema": {"$ref": REF_PREFIX + "HTTPValidationError"}
+                        }
+                    },
+                }
+            path[method.lower()] = operation
 
         return path, security_schemes
 
