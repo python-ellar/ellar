@@ -91,7 +91,7 @@ class Container(InjectorBinder):
             scope = scope.scope
         return Binding(interface, provider, scope)
 
-    def add_binding(self, interface: t.Type, binding: Binding) -> None:
+    def register_binding(self, interface: t.Type, binding: Binding) -> None:
         self._bindings[interface] = binding
 
     @t.no_type_check
@@ -115,56 +115,56 @@ class Container(InjectorBinder):
         _scope: t.Any = scope
         if isinstance(scope, ScopeDecorator):
             _scope = scope.scope
-        self.add_binding(base_type, Binding(base_type, provider, _scope))
+        self.register_binding(base_type, Binding(base_type, provider, _scope))
 
-    def add_instance(
+    def register_instance(
         self, instance: T, concrete_type: t.Optional[t.Type[T]] = None
     ) -> None:
         assert not isinstance(instance, type)
         _concrete_type = instance.__class__ if not concrete_type else concrete_type
         self.register(_concrete_type, instance, scope=SingletonScope)
 
-    def add_singleton(
+    def register_singleton(
         self,
         base_type: t.Type[T],
         concrete_type: t.Optional[t.Union[t.Type[T], T]] = None,
     ) -> None:
         if not concrete_type:
-            self.add_exact_singleton(base_type)
+            self.register_exact_singleton(base_type)
         self.register(base_type, concrete_type, scope=SingletonScope)
 
-    def add_transient(
+    def register_transient(
         self, base_type: t.Type, concrete_type: t.Optional[t.Type] = None
     ) -> None:
         if not concrete_type:
-            self.add_exact_transient(base_type)
+            self.register_exact_transient(base_type)
         self.register(base_type, concrete_type, scope=TransientScope)
 
-    def add_scoped(
+    def register_scoped(
         self, base_type: t.Type, concrete_type: t.Optional[t.Type] = None
     ) -> None:
         if not concrete_type:
-            self.add_exact_scoped(base_type)
+            self.register_exact_scoped(base_type)
         self.register(base_type, concrete_type, scope=RequestScope)
 
-    def add_exact_singleton(self, concrete_type: t.Type) -> None:
+    def register_exact_singleton(self, concrete_type: t.Type) -> None:
         assert not isabstract(concrete_type)
         self.register(base_type=concrete_type, scope=SingletonScope)
 
-    def add_exact_transient(self, concrete_type: t.Type) -> None:
+    def register_exact_transient(self, concrete_type: t.Type) -> None:
         assert not isabstract(concrete_type)
         self.register(base_type=concrete_type, scope=TransientScope)
 
-    def add_exact_scoped(self, concrete_type: t.Type) -> None:
+    def register_exact_scoped(self, concrete_type: t.Type) -> None:
         assert not isabstract(concrete_type)
         self.register(base_type=concrete_type, scope=RequestScope)
 
     @t.no_type_check
     def install(
         self,
-        module: t.Union[t.Type["ModuleBase"], "ModuleBase", "BaseModuleDecorator"],
+        module: t.Union[t.Type["ModuleBase"], "ModuleBase"],
         **init_kwargs: t.Any,
-    ) -> t.Union[InjectorModule, "ModuleBase", "BaseModuleDecorator"]:
+    ) -> t.Union[InjectorModule, "ModuleBase"]:
         # TODO: move install core to application module
         #   create a ModuleWrapper with init_kwargs
 
@@ -200,8 +200,6 @@ class Container(InjectorBinder):
         """
 
         instance = t.cast(t.Union[t.Type["ModuleBase"], "ModuleBase"], module)
-        if not isinstance(instance, type) and hasattr(instance, "get_module"):
-            instance = t.cast("BaseModuleDecorator", module).get_module()
 
         if isinstance(instance, type) and issubclass(
             t.cast(type, instance), InjectorModule
@@ -244,7 +242,7 @@ class StarletteInjector(Injector):
 
     @binder.setter
     def binder(self, value: t.Any) -> None:
-        ...
+        """Nothing happens"""
 
     @asynccontextmanager
     async def create_request_service_provider(
