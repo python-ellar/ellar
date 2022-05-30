@@ -2,7 +2,6 @@ import asyncio
 import typing as t
 from abc import abstractmethod
 
-from ellar.exceptions import ImproperConfiguration
 from ellar.types import T
 
 
@@ -25,19 +24,6 @@ class EventHandler:
         if callable(other):
             return self.handler is other
         return super(EventHandler, self).__eq__(other)
-
-
-class ApplicationEventHandler(EventHandler):
-    def __init__(self, func: t.Callable) -> None:
-        if asyncio.iscoroutinefunction(func):
-            raise ImproperConfiguration(
-                "ApplicationEventHandler must be a non coroutine function"
-            )
-        super(ApplicationEventHandler, self).__init__(func)
-
-    @t.no_type_check
-    def run(self, **kwargs: t.Any) -> None:
-        self.handler(**kwargs)
 
 
 class Event(t.Generic[T]):
@@ -69,21 +55,6 @@ class Event(t.Generic[T]):
     def __call__(self, handler: t.Callable) -> t.Callable:
         self.__iadd__(handler)
         return handler
-
-
-class ApplicationEventManager(Event[ApplicationEventHandler]):
-    def create_handle(self, handler: t.Callable) -> ApplicationEventHandler:
-        return ApplicationEventHandler(handler)
-
-    def __init__(
-        self, handlers: t.Optional[t.List[ApplicationEventHandler]] = None
-    ) -> None:
-        super().__init__()
-        self._handlers = handlers or []
-
-    def run(self, **kwargs: t.Any) -> None:
-        for handler in self:
-            handler.run(**kwargs)
 
 
 class RouterEventManager(Event[EventHandler]):
