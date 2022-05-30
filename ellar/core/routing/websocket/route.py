@@ -3,15 +3,18 @@ import typing as t
 from starlette.routing import WebSocketRoute as StarletteWebSocketRoute, compile_path
 from starlette.status import WS_1008_POLICY_VIOLATION
 
-from ellar.constants import NOT_SET
+from ellar.constants import EXTRA_ROUTE_ARGS_KEY, NOT_SET, OPERATION_HANDLER_KEY
 from ellar.core.connection import WebSocket
 from ellar.core.context import ExecutionContext
-from ellar.core.operation_meta import OperationMeta
 from ellar.core.params import WebsocketEndpointArgsModel
 from ellar.exceptions import ImproperConfiguration, WebSocketRequestValidationError
+from ellar.reflect import reflect
 
 from ..base import WebsocketRouteOperationBase
 from .handler import WebSocketExtraHandler
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core.params import ExtraEndpointArg
 
 
 class WebSocketOperationMixin:
@@ -44,7 +47,6 @@ class WebsocketRouteOperation(
         "endpoint",
         "_handlers_kwargs",
         "endpoint_parameter_model",
-        "_meta",
         "_extra_handler_type",
     )
 
@@ -74,8 +76,7 @@ class WebsocketRouteOperation(
         super().__init__(path=path, endpoint=endpoint, name=name)
         self.endpoint_parameter_model: WebsocketEndpointArgsModel = NOT_SET
 
-        _meta = getattr(self.endpoint, "_meta", {})
-        self._meta: OperationMeta = OperationMeta(**_meta)
+        reflect.define_metadata(OPERATION_HANDLER_KEY, self.endpoint, self.endpoint)
 
         if self._use_extra_handler:
             self._handlers_kwargs.update(on_receive=self.endpoint)
@@ -124,17 +125,17 @@ class WebsocketRouteOperation(
             )
             _path_changed = True
 
+        extra_route_args: t.List["ExtraEndpointArg"] = (
+            reflect.get_metadata(EXTRA_ROUTE_ARGS_KEY, self.endpoint) or []
+        )
+
         if self.endpoint_parameter_model is NOT_SET or _path_changed:
             self.endpoint_parameter_model = self.websocket_endpoint_args_model(
                 path=self.path_format,
                 endpoint=self.endpoint,
                 param_converters=self.param_convertors,
+                extra_endpoint_args=extra_route_args,
             )
-
-            if self._meta.extra_route_args:
-                self.endpoint_parameter_model.add_extra_route_args(
-                    *self._meta.extra_route_args
-                )
             self.endpoint_parameter_model.build_model()
         if name:
             self.name = f"{name}:{self.name}"
@@ -147,6 +148,3 @@ class WebsocketRouteOperation(
 
     def _load_model(self) -> None:
         self.build_route_operation()
-
-    def __hash__(self) -> int:  # pragma: no cover
-        return hash((self.path, tuple(["ws"])))

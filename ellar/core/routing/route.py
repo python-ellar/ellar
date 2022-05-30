@@ -7,15 +7,23 @@ from starlette.routing import (
     iscoroutinefunction_or_partial,
 )
 
-from ellar.constants import NOT_SET
+from ellar.constants import (
+    EXTRA_ROUTE_ARGS_KEY,
+    NOT_SET,
+    OPERATION_HANDLER_KEY,
+    RESPONSE_OVERRIDE_KEY,
+)
 from ellar.core.context import ExecutionContext
-from ellar.core.operation_meta import OperationMeta
 from ellar.core.params import RequestEndpointArgsModel
 from ellar.core.response.model import RouteResponseModel
-from ellar.exceptions import RequestValidationError
+from ellar.exceptions import ImproperConfiguration, RequestValidationError
 from ellar.helper import generate_operation_unique_id, get_name
+from ellar.reflect import reflect
 
 from .base import RouteOperationBase
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core.params import ExtraEndpointArg
 
 
 class RouteOperation(RouteOperationBase, StarletteRoute):
@@ -28,7 +36,6 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         "endpoint",
         "_is_coroutine",
         "endpoint_parameter_model",
-        "_meta",
         "response_model",
         "_defined_responses",
     )
@@ -59,12 +66,8 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
 
         self.endpoint_parameter_model: RequestEndpointArgsModel = NOT_SET
         self.response_model: RouteResponseModel = NOT_SET
-        _meta = getattr(self.endpoint, "_meta", {})
-        self._meta: OperationMeta = OperationMeta(**_meta)
 
-        self._meta.update(
-            operation_handler=self.endpoint,
-        )
+        reflect.define_metadata(OPERATION_HANDLER_KEY, self, self.endpoint)
         self._load_model()
 
     def build_route_operation(  # type:ignore
@@ -82,13 +85,17 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
             )
             _path_changed = True
 
+        extra_route_args: t.List["ExtraEndpointArg"] = (
+            reflect.get_metadata(EXTRA_ROUTE_ARGS_KEY, self.endpoint) or []
+        )
+
         if self.endpoint_parameter_model is NOT_SET or _path_changed:
             self.endpoint_parameter_model = self.request_endpoint_args_model(
                 path=self.path_format,
                 endpoint=self.endpoint,
                 operation_unique_id=self.get_operation_unique_id(methods=self.methods),
                 param_converters=self.param_convertors,
-                extra_endpoint_args=self._meta.extra_route_args,
+                extra_endpoint_args=extra_route_args,
             )
             self.endpoint_parameter_model.build_model()
         self.include_in_schema = include_in_schema
@@ -97,10 +104,15 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
 
     def _load_model(self) -> None:
         self.build_route_operation()
-        if self._meta.response_override:
-            _response_override = self._meta.response_override
+        response_override: t.Union[t.Dict, t.Any] = reflect.get_metadata(
+            RESPONSE_OVERRIDE_KEY, self.endpoint
+        )
+        if response_override:
+            _response_override = response_override
             if not isinstance(_response_override, dict):
-                _response_override = {200: _response_override}  # type: ignore
+                raise ImproperConfiguration(
+                    f"`RESPONSE_OVERRIDE` is must be of type `Dict` - {_response_override}"
+                )
             self._defined_responses.update(_response_override)  # type: ignore
 
         self.response_model = RouteResponseModel(
@@ -131,6 +143,3 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
             ctx=context, response_obj=response_obj
         )
         await response(context.scope, context.receive, context.send)
-
-    def __hash__(self) -> int:  # pragma: no cover
-        return hash((self.path, tuple(self.methods)))

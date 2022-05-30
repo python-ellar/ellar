@@ -2,7 +2,17 @@ import re
 import typing as t
 from functools import partial
 
-from ellar.constants import DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, TRACE
+from ellar.constants import (
+    DELETE,
+    GET,
+    HEAD,
+    OPERATION_ENDPOINT_KEY,
+    OPTIONS,
+    PATCH,
+    POST,
+    PUT,
+    TRACE,
+)
 from ellar.core.schema import RouteParameters, WsRouteParameters
 from ellar.types import TCallable
 
@@ -48,6 +58,8 @@ class OperationDefinitions:
     def _get_operation(self, route_parameter: RouteParameters) -> TOperation:
         _operation_class = self._get_http_operations_class(route_parameter.endpoint)
         _operation = _operation_class(**route_parameter.dict())
+        setattr(route_parameter.endpoint, OPERATION_ENDPOINT_KEY, True)
+
         if self._routes is not None and not isinstance(
             _operation, ControllerRouteOperationBase
         ):
@@ -72,13 +84,15 @@ class OperationDefinitions:
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         if callable(path):
             route_parameter = endpoint_parameter_partial(endpoint=path, path="/")
-            return self._get_operation(route_parameter=route_parameter)
+            self._get_operation(route_parameter=route_parameter)
+            return path
 
-        def _decorator(endpoint_handler: t.Callable) -> TOperation:
+        def _decorator(endpoint_handler: t.Callable) -> TCallable:
             _route_parameter = endpoint_parameter_partial(
                 endpoint=endpoint_handler, path=path
             )
-            return self._get_operation(route_parameter=_route_parameter)
+            self._get_operation(route_parameter=_route_parameter)
+            return endpoint_handler
 
         return _decorator
 
@@ -253,7 +267,7 @@ class OperationDefinitions:
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
-        def _decorator(endpoint_handler: t.Callable) -> TOperation:
+        def _decorator(endpoint_handler: t.Callable) -> TCallable:
             endpoint_parameter = RouteParameters(
                 name=name,
                 path=path,
@@ -262,7 +276,8 @@ class OperationDefinitions:
                 response=response,
                 endpoint=endpoint_handler,
             )
-            return self._get_operation(route_parameter=endpoint_parameter)
+            self._get_operation(route_parameter=endpoint_parameter)
+            return endpoint_handler
 
         return _decorator
 
@@ -284,6 +299,8 @@ class OperationDefinitions:
                 use_extra_handler=use_extra_handler,
                 extra_handler_type=extra_handler_type,
             )
-            return self._get_ws_operation(ws_route_parameters=endpoint_parameter)
+            if use_extra_handler:
+                return self._get_ws_operation(ws_route_parameters=endpoint_parameter)
+            return endpoint_handler
 
         return _decorator
