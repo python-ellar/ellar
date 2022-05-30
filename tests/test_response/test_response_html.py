@@ -5,9 +5,11 @@ import pytest
 from jinja2 import TemplateNotFound
 
 from ellar.common import Controller, Get, Render
+from ellar.constants import OPERATION_HANDLER_KEY
 from ellar.core import TestClientFactory
-from ellar.core.response.model import EmptyAPIResponseModel, HTMLResponseModel
+from ellar.core.response.model import HTMLResponseModel
 from ellar.core.response.model.html import HTMLResponseModelRuntimeError
+from ellar.reflect import reflect
 
 BASEDIR = Path(__file__).resolve().parent.parent
 
@@ -113,14 +115,14 @@ def test_render_exception_works():
         def render_template3():
             pass
 
-    @Render()
-    @test_module.app.Get("/render_template4")
-    def render_template4():
-        pass
+    with pytest.raises(
+        Exception, match="template_name is required for function endpoints"
+    ):
 
-    assert isinstance(
-        render_template4.response_model.models[200], EmptyAPIResponseModel
-    )
+        @Render()
+        @test_module.app.Get("/render_template4")
+        def render_template4():
+            pass
 
 
 def test_runtime_exception_works():
@@ -142,8 +144,19 @@ def test_runtime_exception_works():
     def runtime_controller_error_1():
         pass
 
-    assert isinstance(runtime_error_1.response_model.models[200], HTMLResponseModel)
-    assert isinstance(runtime_error_2.response_model.models[200], HTMLResponseModel)
+    runtime_error_1_handler = reflect.get_metadata(
+        OPERATION_HANDLER_KEY, runtime_error_1
+    )
+    runtime_error_2_handler = reflect.get_metadata(
+        OPERATION_HANDLER_KEY, runtime_error_2
+    )
+
+    assert isinstance(
+        runtime_error_1_handler.response_model.models[200], HTMLResponseModel
+    )
+    assert isinstance(
+        runtime_error_2_handler.response_model.models[200], HTMLResponseModel
+    )
     client = test_module.get_client()
 
     with pytest.raises(TemplateNotFound):

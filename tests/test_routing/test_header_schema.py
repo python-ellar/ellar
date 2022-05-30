@@ -11,7 +11,7 @@ tm = TestClientFactory.create_test_module()
 @tm.app.Get("/test/header")
 def header_params_schema(
     request,
-    filters: Filter = Header(..., alias="well_not_work_for_schema_with_many_field"),
+    filters: Filter = Header(..., alias="will_not_work_for_schema_with_many_field"),
 ):
     return filters.dict()
 
