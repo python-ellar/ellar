@@ -3,21 +3,19 @@ import typing as t
 from starlette.background import BackgroundTasks
 
 from ellar.compatible import cached_property
+from ellar.constants import CONTROLLER_CLASS_KEY
 from ellar.core.connection import HTTPConnection, Request, WebSocket
 from ellar.core.response import Response
+from ellar.services.reflector import Reflector
 from ellar.shortcuts import fail_silently
 from ellar.types import TReceive, TScope, TSend
 
-from .interface import (
-    ExecutionContextException,
-    IExecutionContext,
-    OperationExecutionMeta,
-)
+from .interface import ExecutionContextException, IExecutionContext
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core.controller import ControllerBase
     from ellar.core.main import App
     from ellar.core.routing import RouteOperationBase
-    from ellar.core.routing.controller import ControllerBase
     from ellar.di.injector import RequestServiceProvider
 
 __all__ = ["IExecutionContext", "ExecutionContext"]
@@ -30,7 +28,7 @@ class ExecutionContext(IExecutionContext):
         "send",
         "_operation",
         "_response",
-        "controller_type",
+        "_operation_handler",
     )
 
     def __init__(
@@ -39,27 +37,25 @@ class ExecutionContext(IExecutionContext):
         scope: TScope,
         receive: TReceive,
         send: TSend,
-        operation: t.Optional["RouteOperationBase"] = None,
+        operation_handler: t.Callable = None,
     ) -> None:
         self.scope = scope
         self.receive = receive
         self.send = send
-        self._operation: OperationExecutionMeta = OperationExecutionMeta(
-            **operation.get_meta() if operation else {}
-        )
+        self._operation_handler = operation_handler
         self._response: t.Optional[Response] = None
-        self.controller_type: t.Optional[t.Type["ControllerBase"]] = getattr(
-            operation or {}, "controller_type", None
-        )
-
-    @property
-    def operation(self) -> OperationExecutionMeta:
-        return self._operation
 
     def set_operation(self, operation: t.Optional["RouteOperationBase"] = None) -> None:
         if operation:
-            self._operation = OperationExecutionMeta(**operation.get_meta())
-            self.controller_type = getattr(operation, "controller_type", None)
+            self._operation_handler = operation.endpoint
+
+    def get_handler(self) -> t.Callable:
+        assert self._operation_handler, "Operation is not available yet."
+        return self._operation_handler
+
+    def get_class(self) -> t.Optional[t.Type["ControllerBase"]]:
+        reflector = self.get_service_provider().get(Reflector)
+        return reflector.get(CONTROLLER_CLASS_KEY, self.get_handler())
 
     @property
     def has_response(self) -> bool:
@@ -128,4 +124,9 @@ class ExecutionContext(IExecutionContext):
         if context:
             context.set_operation(operation)
             return context
-        return cls(scope=scope, receive=receive, send=send, operation=operation)
+        return cls(
+            scope=scope,
+            receive=receive,
+            send=send,
+            operation_handler=operation.endpoint if operation else None,
+        )
