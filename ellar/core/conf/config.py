@@ -23,7 +23,7 @@ class Config(DataMutableMapper, AttributeDictAccessMixin):
         Creates a new instance of Configuration object with the given values.
         """
         super().__init__()
-        self.config_module = config_module
+        self.config_module = config_module or environ.get(ELLAR_CONFIG_MODULE, None)
 
         self._data.clear()
         for setting in dir(default_settings):
