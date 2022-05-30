@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from ellar.constants import SERIALIZER_FILTER_KEY
 from ellar.core.context import IExecutionContext
 from ellar.helper.modelfield import create_model_field
+from ellar.reflect import reflect
 from ellar.serializer import SerializerFilter, serialize_object
 
 from ..responses import JSONResponse, Response
@@ -48,7 +49,9 @@ class JSONResponseModel(BaseResponseModel):
             context.get_app().config.DEFAULT_JSON_CLASS or self._response_type,
         )
         response_args, headers = self.get_context_response(context=context)
-        serializer_filter = context.operation.get(SERIALIZER_FILTER_KEY)
+        serializer_filter = reflect.get_metadata(
+            SERIALIZER_FILTER_KEY, context.get_handler()
+        )
         response = json_response_class(
             **response_args,
             content=self.serialize(response_obj, serializer_filter=serializer_filter),

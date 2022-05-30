@@ -7,9 +7,6 @@ from ellar.core.templating.renderer import get_template_name, process_view_model
 from ..responses import Response
 from .base import ResponseModel
 
-if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.routing.controller import ControllerBase
-
 
 class HTMLResponseModelRuntimeError(RuntimeError):
     pass
@@ -46,10 +43,10 @@ class HTMLResponseModel(ResponseModel):
         template_name = self.template_name
         exe_ctx = t.cast(ExecutionContext, ctx)
         if self.use_mvc:
-            if not exe_ctx.controller_type:
+            if not exe_ctx.get_class():
                 raise HTMLResponseModelRuntimeError(
                     "cannot find Controller in request context"
                 )
-            controller_class: t.Type["ControllerBase"] = exe_ctx.controller_type
+            controller_class = exe_ctx.get_class()
             template_name = controller_class.full_view_name(self.template_name)
         return get_template_name(template_name)
