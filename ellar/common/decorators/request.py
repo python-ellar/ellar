@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.constants import ON_SHUTDOWN_KEY, ON_STARTUP_KEY
+from ellar.constants import ON_REQUEST_SHUTDOWN_KEY, ON_REQUEST_STARTUP_KEY
 from ellar.core.events import EventHandler
 
 
@@ -10,11 +10,11 @@ def set_attr_key(handle: t.Callable, key: str, value: t.Any) -> None:
 
 def on_startup(func: t.Optional[t.Callable] = None) -> t.Callable:
     if func and callable(func):
-        set_attr_key(func, ON_STARTUP_KEY, EventHandler(func))
+        set_attr_key(func, ON_REQUEST_STARTUP_KEY, EventHandler(func))
         return func
 
     def decorator(func_: t.Callable) -> t.Callable:
-        set_attr_key(func_, ON_STARTUP_KEY, EventHandler(func_))
+        set_attr_key(func_, ON_REQUEST_STARTUP_KEY, EventHandler(func_))
         return func_
 
     return decorator
@@ -22,11 +22,11 @@ def on_startup(func: t.Optional[t.Callable] = None) -> t.Callable:
 
 def on_shutdown(func: t.Optional[t.Callable] = None) -> t.Callable:
     if func and callable(func):
-        set_attr_key(func, ON_SHUTDOWN_KEY, EventHandler(func))
+        set_attr_key(func, ON_REQUEST_SHUTDOWN_KEY, EventHandler(func))
         return func
 
     def decorator(func_: t.Callable) -> t.Callable:
-        set_attr_key(func_, ON_SHUTDOWN_KEY, EventHandler(func_))
+        set_attr_key(func_, ON_REQUEST_SHUTDOWN_KEY, EventHandler(func_))
         return func_
 
     return decorator

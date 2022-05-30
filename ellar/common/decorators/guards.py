@@ -11,4 +11,4 @@ if t.TYPE_CHECKING:  # pragma: no cover
 def guards(
     *_guards: t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
 ) -> t.Callable:
-    return set_meta(GUARDS_KEY, _guards)
+    return set_meta(GUARDS_KEY, _guards, default_value=[])

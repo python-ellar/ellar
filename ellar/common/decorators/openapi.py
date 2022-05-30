@@ -1,5 +1,6 @@
 import typing as t
 
+from ellar.compatible import AttributeDict
 from ellar.constants import OPENAPI_KEY
 
 from .base import set_meta
@@ -21,4 +22,5 @@ def openapi(
             deprecated=deprecated,
             tags=tags,
         ),
+        default_value=AttributeDict(),
     )
