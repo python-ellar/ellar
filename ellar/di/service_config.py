@@ -115,9 +115,7 @@ def is_decorated_with_injectable(func_or_class: ConstructorOrClassT) -> bool:
     True
     """
 
-    return hasattr(
-        func_or_class, INJECTABLE_ATTRIBUTE
-    )
+    return hasattr(func_or_class, INJECTABLE_ATTRIBUTE)
 
 
 def has_binding(func_or_class: ConstructorOrClassT) -> bool:
