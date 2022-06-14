@@ -25,7 +25,7 @@ from .scopes import (
 )
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.modules import ModuleBase, ModulePlainRef, ModuleTemplateRef
+    from ellar.core.modules import ModuleBase, ModuleRefBase, ModuleTemplateRef
 
 
 class RequestServiceProvider(InjectorBinder):
@@ -238,16 +238,14 @@ class StarletteInjector(Injector):
 
     def get_modules(
         self,
-    ) -> t.Dict[t.Type["ModuleBase"], t.Union["ModuleTemplateRef", "ModulePlainRef"]]:
+    ) -> t.Dict[t.Type["ModuleBase"], "ModuleRefBase"]:
         modules = dict(
             self._modules[MODULE_REF_TYPES.TEMPLATE],
         )
         modules.update(self._modules[MODULE_REF_TYPES.PLAIN])
         return modules
 
-    def get_module(
-        self, module: t.Type
-    ) -> t.Optional[t.Union["ModulePlainRef", "ModuleTemplateRef"]]:
+    def get_module(self, module: t.Type) -> t.Optional["ModuleRefBase"]:
         if module in self._modules[MODULE_REF_TYPES.TEMPLATE]:
             return self._modules[MODULE_REF_TYPES.TEMPLATE][module]
 
@@ -260,7 +258,7 @@ class StarletteInjector(Injector):
     ) -> t.Dict[t.Type["ModuleBase"], "ModuleTemplateRef"]:
         return self._modules.get(MODULE_REF_TYPES.TEMPLATE, {})
 
-    def add_module(self, module_ref: t.Union["ModulePlainRef"]) -> None:
+    def add_module(self, module_ref: "ModuleRefBase") -> None:
         self._modules[module_ref.ref_type].update({module_ref.module: module_ref})
 
     @property  # type: ignore

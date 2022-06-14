@@ -5,11 +5,11 @@ from starlette.types import ASGIApp
 
 from ellar.compatible import AttributeDict
 from ellar.constants import (
+    CONTROLLER_METADATA,
     GUARDS_KEY,
     OPENAPI_KEY,
     OPERATION_HANDLER_KEY,
     VERSIONING_KEY,
-    Controller_METADATA,
 )
 from ellar.core.controller import ControllerBase
 from ellar.core.routing.route import RouteOperation
@@ -23,30 +23,30 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
 
 
-__all__ = ["ModuleRouterBase", "ModuleRouter", "controller_router_factory"]
+__all__ = ["ModuleMount", "ModuleRouter", "controller_router_factory"]
 
 
-def controller_router_factory(controller: t.Type[ControllerBase]) -> "ModuleRouterBase":
-    openapi = reflect.get_metadata(Controller_METADATA.OPENAPI, controller) or dict()
+def controller_router_factory(controller: t.Union[t.Type[ControllerBase], t.Any]) -> "ModuleMount":
+    openapi = reflect.get_metadata(CONTROLLER_METADATA.OPENAPI, controller) or dict()
     routes = reflect.get_metadata(OPERATION_HANDLER_KEY, controller) or []
     app = Router()
     app.routes = ModuleRouteCollection(routes)  # type:ignore
-
-    router = ModuleRouterBase(
+    ss = reflect.get_metadata(CONTROLLER_METADATA.PATH, controller)
+    router = ModuleMount(
         app=app,
-        path=reflect.get_metadata(Controller_METADATA.PATH, controller),
-        name=reflect.get_metadata(Controller_METADATA.NAME, controller),
-        version=reflect.get_metadata(Controller_METADATA.VERSION, controller),
-        guards=reflect.get_metadata(Controller_METADATA.GUARDS, controller),
+        path=reflect.get_metadata(CONTROLLER_METADATA.PATH, controller),
+        name=reflect.get_metadata(CONTROLLER_METADATA.NAME, controller),
+        version=reflect.get_metadata(CONTROLLER_METADATA.VERSION, controller),
+        guards=reflect.get_metadata(CONTROLLER_METADATA.GUARDS, controller),
         include_in_schema=reflect.get_metadata(
-            Controller_METADATA.INCLUDE_IN_SCHEMA, controller
+            CONTROLLER_METADATA.INCLUDE_IN_SCHEMA, controller
         ),
         **openapi
     )
     return router
 
 
-class ModuleRouterBase(StarletteMount):
+class ModuleMount(StarletteMount):
     def __init__(
         self,
         path: str,
@@ -63,9 +63,7 @@ class ModuleRouterBase(StarletteMount):
         ] = None,
         include_in_schema: bool = False,
     ) -> None:
-        super(ModuleRouterBase, self).__init__(
-            path=path, routes=routes, name=name, app=app
-        )
+        super(ModuleMount, self).__init__(path=path, routes=routes, name=name, app=app)
         self.include_in_schema = include_in_schema
         self._meta: AttributeDict = AttributeDict(
             tag=tag or name or "Module Router",
@@ -77,7 +75,6 @@ class ModuleRouterBase(StarletteMount):
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate", t.Any]
         ] = (guards or [])
         self._version = set(version or [])
-        reflect.define_metadata(OPENAPI_KEY, self._meta, ModuleRouterBase)
 
     def get_meta(self) -> t.Mapping:
         return self._meta
@@ -139,7 +136,7 @@ class ModuleRouterBase(StarletteMount):
         return list(self.routes)
 
 
-class ModuleRouter(ModuleRouterBase):
+class ModuleRouter(ModuleMount):
     operation_definition_class: t.Type[OperationDefinitions] = OperationDefinitions
     routes: ModuleRouteCollection  # type:ignore
 

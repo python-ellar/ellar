@@ -39,6 +39,7 @@ TRACE = "TRACE"
 ROUTE_METHODS = [POST, PUT, PATCH, DELETE, GET, HEAD, OPTIONS, TRACE]
 
 SCOPE_SERVICE_PROVIDER = "service_provider"
+SCOPE_EXECUTION_CONTEXT_PROVIDER = "service_execution_context_provider"
 SCOPE_API_VERSIONING_RESOLVER = "api_versioning_resolver"
 SCOPE_API_VERSIONING_SCHEME = "api_versioning_scheme"
 ELLAR_CONFIG_MODULE = "ELLAR_CONFIG_MODULE"
@@ -96,7 +97,7 @@ class APP_MODULE_METADATA(MODULE_METADATA):
     MODULES: str
 
 
-class Controller_METADATA(metaclass=_AnnotationToValue):
+class CONTROLLER_METADATA(metaclass=_AnnotationToValue):
     OPENAPI: str
     PATH: str
     NAME: str

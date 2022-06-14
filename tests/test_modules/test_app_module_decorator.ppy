@@ -1,15 +1,9 @@
 import pytest
-
-from ellar.core.factory import AppFactoryModule
 from ellar.core.modules import (
-    ApplicationModuleDecorator,
-    BaseModuleDecorator,
-    ModuleBase,
-    ModuleDecorator,
-    ModuleDecoratorBuilder,
+    ModuleBase, ModuleTemplateRef, ModulePlainRef
 )
 from ellar.core.modules.schema import ModuleData
-from ellar.core.routing import ModuleRouterBase
+from ellar.core.routing import ModuleMount
 from ellar.di import StarletteInjector
 from ellar.exceptions import ImproperConfiguration
 

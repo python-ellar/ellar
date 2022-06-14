@@ -1,24 +1,27 @@
 import typing as t
 from uuid import uuid4
 
-from starlette.routing import BaseRoute, Mount
+from starlette.routing import Host, Mount
 
 from ellar.constants import (
     APP_MODULE_METADATA,
     APP_MODULE_WATERMARK,
-    MODULE_WATERMARK,
     ON_REQUEST_SHUTDOWN_KEY,
     ON_REQUEST_STARTUP_KEY,
 )
 from ellar.core import Config
 from ellar.core.main import App
 from ellar.core.modules import ModuleBase
-from ellar.core.modules.ref import ModulePlainRef, ModuleTemplateRef
+from ellar.core.modules.ref import (
+    ModulePlainRef,
+    ModuleTemplateRef,
+    create_module_ref_factor,
+)
 from ellar.di import ProviderConfig, StarletteInjector
 from ellar.reflect import reflect
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.routing import ModuleRouter
+    from ellar.core.routing import ModuleMount, ModuleRouter
 
 
 class AppFactory:
@@ -36,28 +39,12 @@ class AppFactory:
             if injector.get_module(module):
                 continue
 
-            if reflect.get_metadata(MODULE_WATERMARK, module) or reflect.get_metadata(
-                APP_MODULE_WATERMARK, module
-            ):
-                module_ref = ModuleTemplateRef(
-                    module, container=injector.container, config=config
-                )
-            else:
-                module_ref = ModulePlainRef(
-                    module, container=injector.container, config=config
-                )
+            module_ref = create_module_ref_factor(
+                module,
+                container=injector.container,
+                config=config,
+            )
             injector.add_module(module_ref)
-
-    @classmethod
-    def _register_modules_services_and_get_routes(
-        cls,
-        modules: t.Dict[t.Type[ModuleBase], t.Union[ModulePlainRef, ModuleTemplateRef]],
-    ) -> t.List[BaseRoute]:
-        module_ref_routes = []
-        for _, module_ref in modules.items():
-            module_ref.run_module_register_services()
-            module_ref_routes.extend(module_ref.routes)
-        return module_ref_routes
 
     @classmethod
     def _run_module_application_ready(
@@ -77,16 +64,13 @@ class AppFactory:
         config = Config(app_configured=True, config_module=config_module)
         injector = StarletteInjector()
         cls._build_modules(app_module=module, injector=injector, config=config)
-        routes = cls._register_modules_services_and_get_routes(
-            modules=injector.get_modules()
-        )
+
         shutdown_event = config[ON_REQUEST_STARTUP_KEY]
         startup_event = config[ON_REQUEST_SHUTDOWN_KEY]
 
         app = App(
             config=config,
             injector=injector,
-            routes=routes,
             on_shutdown_event_handlers=shutdown_event if shutdown_event else None,
             on_startup_event_handlers=startup_event if startup_event else None,
             lifespan=config.DEFAULT_LIFESPAN_HANDLER,
@@ -99,7 +83,9 @@ class AppFactory:
     def create_app(
         cls,
         controllers: t.Sequence[t.Union[t.Type]] = tuple(),
-        routers: t.Sequence[t.Union["ModuleRouter", Mount]] = tuple(),
+        routers: t.Sequence[
+            t.Union["ModuleRouter", "ModuleMount", Mount, Host]
+        ] = tuple(),
         providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = tuple(),
         modules: t.Sequence[t.Type] = (),
         template_folder: t.Optional[str] = None,

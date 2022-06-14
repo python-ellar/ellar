@@ -1,6 +1,6 @@
 from ellar.core import AppFactory
-from ellar.core.modules import BaseModuleDecorator, ModuleBase, ModuleDecorator
-from ellar.core.routing import ModuleRouterBase
+from ellar.core.modules import ModuleBase
+from ellar.core.routing import ModuleMount
 
 from .sample import SampleModule
 

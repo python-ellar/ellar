@@ -50,7 +50,7 @@ class ProviderConfig(t.Generic[T]):
                 base_type=self.base_type, concrete_type=self.use_class, scope=scope
             )
         elif self.use_value:
-            container.add_singleton(
+            container.register_singleton(
                 base_type=self.base_type, concrete_type=self.use_value
             )
         else:

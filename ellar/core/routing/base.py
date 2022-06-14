@@ -6,7 +6,6 @@ from starlette.routing import Match
 from ellar.constants import GUARDS_KEY, SCOPE_API_VERSIONING_RESOLVER, VERSIONING_KEY
 from ellar.core.context import ExecutionContext
 from ellar.reflect import reflect
-from ellar.services.reflector import Reflector
 from ellar.types import TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -36,9 +35,9 @@ class RouteOperationBase:
 
     async def run_route_guards(self, context: ExecutionContext) -> None:
         app = context.get_app()
-        _guards: t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]] = (
-            reflect.get_metadata(GUARDS_KEY, self.endpoint)
-        )
+        _guards: t.List[
+            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        ] = reflect.get_metadata(GUARDS_KEY, self.endpoint)
         if not _guards:
             _guards = app.get_guards()
 
@@ -91,6 +90,9 @@ class RouteOperationBase:
             ):
                 return Match.NONE, {}
         return match  # type: ignore
+
+    def __hash__(self) -> int:  # pragma: no cover
+        return hash(self.endpoint)
 
 
 class WebsocketRouteOperationBase(RouteOperationBase, ABC):

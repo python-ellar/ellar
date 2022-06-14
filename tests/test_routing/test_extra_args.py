@@ -2,7 +2,7 @@ from functools import wraps
 
 from starlette.responses import Response
 
-from ellar.common import Provide, Query, set_meta
+from ellar.common import Get, Provide, Query, set_meta
 from ellar.constants import EXTRA_ROUTE_ARGS_KEY
 from ellar.core import TestClientFactory
 from ellar.core.context import IExecutionContext
@@ -62,7 +62,7 @@ def add_extra_non_field_extra_args(func):
     return _wrapper
 
 
-@tm.app.Get("/test")
+@Get("/test")
 @add_extra_non_field_extra_args
 @add_additional_signature_to_endpoint
 def query_params_extra(
@@ -71,6 +71,8 @@ def query_params_extra(
 ):
     return filters.dict()
 
+
+tm.app.router.append(query_params_extra)
 
 openapi_schema = {
     "openapi": "3.0.2",

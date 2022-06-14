@@ -25,12 +25,21 @@ from ellar.core.params.resolvers import (
     RouteParameterModelField,
     RouteParameterResolver,
 )
-from ellar.core.routing import ModuleRouterBase, RouteOperation
+from ellar.core.routing import ModuleMount, RouteOperation
 from ellar.services.reflector import Reflector
 from ellar.shortcuts import normalize_path
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
+
+
+CONVERTOR_TYPES = {
+    StringConvertor: dict(title="title", type="string"),
+    PathConvertor: dict(title="title", type="string"),
+    IntegerConvertor: dict(title="title", type="integer"),
+    FloatConvertor: dict(title="title", type="number"),
+    UUIDConvertor: dict(title="title", type="string", format="uuid"),
+}
 
 
 class OpenAPIRoute(ABC):
@@ -50,17 +59,9 @@ class OpenAPIRoute(ABC):
 
 
 class OpenAPIMountDocumentation(OpenAPIRoute):
-    CONVERTOR_TYPES = {
-        StringConvertor: dict(title="title", type="string"),
-        PathConvertor: dict(title="title", type="string"),
-        IntegerConvertor: dict(title="title", type="integer"),
-        FloatConvertor: dict(title="title", type="number"),
-        UUIDConvertor: dict(title="title", type="string", format="uuid"),
-    }
-
     def __init__(
         self,
-        mount: t.Union[ModuleRouterBase],
+        mount: t.Union[ModuleMount],
         tag: t.Optional[str] = None,
         description: t.Optional[str] = None,
         external_doc_description: t.Optional[str] = None,
@@ -77,10 +78,10 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
         )
         self.global_route_parameters = []
         self.global_guards = global_guards or []
-        self._routes: t.List["OpenAPIRouteDocumentation"] = []
+
         if self.param_convertors:
             for name, converter in self.param_convertors.items():
-                schema = self.CONVERTOR_TYPES[converter.__class__]
+                schema = CONVERTOR_TYPES[converter.__class__]
                 schema.update(title=name)
                 parameter = {
                     "name": name,
@@ -89,6 +90,8 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
                     "schema": schema,
                 }
                 self.global_route_parameters.append(parameter)
+
+        self._routes: t.List["OpenAPIRouteDocumentation"] = self._build_routes()
 
     def get_tag(self) -> t.Dict:
         external_doc = None
@@ -103,8 +106,10 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             )
         return dict()
 
-    def build_routes(self, reflector: Reflector) -> None:
-        self._routes = []
+    def _build_routes(self) -> t.List["OpenAPIRouteDocumentation"]:
+        reflector: Reflector = Reflector()
+        _routes: t.List[OpenAPIRouteDocumentation] = []
+
         for route in self.mount.routes:
             if isinstance(route, RouteOperation) and route.include_in_schema:
                 openapi = reflector.get(OPENAPI_KEY, route.endpoint) or dict()
@@ -117,6 +122,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
                         **openapi,
                     )
                 )
+        return _routes
 
     @cached_property
     def _openapi_models(self) -> t.List[ModelField]:

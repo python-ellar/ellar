@@ -3,7 +3,7 @@ import typing as t
 from functools import partial
 from pathlib import Path
 
-from starlette.routing import Mount
+from starlette.routing import Host, Mount
 
 from ellar.compatible import AttributeDict
 from ellar.constants import (
@@ -14,7 +14,7 @@ from ellar.constants import (
 )
 from ellar.core import ControllerBase
 from ellar.core.modules.base import ModuleBase, ModuleBaseMeta
-from ellar.core.routing import ModuleRouter
+from ellar.core.routing import ModuleMount, ModuleRouter
 from ellar.di import ProviderConfig
 from ellar.exceptions import ImproperConfiguration
 from ellar.reflect import reflect
@@ -53,7 +53,7 @@ def Module(
     *,
     name: t.Optional[str] = None,
     controllers: t.Sequence[t.Union[t.Type[ControllerBase], t.Type]] = tuple(),
-    routers: t.Sequence[t.Union[ModuleRouter, Mount]] = tuple(),
+    routers: t.Sequence[t.Union[ModuleRouter, ModuleMount, Mount, Host]] = tuple(),
     providers: t.Sequence[t.Union[t.Type, ProviderConfig]] = tuple(),
     template_folder: t.Optional[str] = "templates",
     base_directory: t.Optional[t.Union[Path, str]] = None,
@@ -83,7 +83,7 @@ def ApplicationModule(
     modules: t.Sequence[t.Type] = tuple(),
     name: t.Optional[str] = None,
     controllers: t.Sequence[t.Union[t.Type, t.Type[ControllerBase]]] = tuple(),
-    routers: t.Sequence[t.Union[ModuleRouter, Mount]] = tuple(),
+    routers: t.Sequence[t.Union[ModuleRouter, ModuleMount, Mount, Host]] = tuple(),
     providers: t.Sequence[t.Union[t.Type, ProviderConfig]] = tuple(),
     template_folder: t.Optional[str] = "templates",
     base_directory: t.Optional[t.Union[Path, str]] = None,

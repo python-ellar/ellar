@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.common import Module, Render, guards as guards_decorator
+from ellar.common import Get, Module, Render, guards as guards_decorator
 from ellar.core.guard import GuardCanActivate
 from ellar.core.main import App
 from ellar.core.modules import ModuleBase
@@ -17,31 +17,35 @@ class OpenAPIDocumentModule(ModuleBase):
         document: t.Optional[OpenAPI] = None,
         openapi_url: t.Optional[str] = None,
         guards: t.Optional[
-            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
+            t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]
         ] = None,
     ):
+        self.app = app
         self._guards = guards or []
-        self.app: App = app
         self._openapi_url = openapi_url
         if not openapi_url and document:
             self._openapi_url = "/openapi.json"
 
-            @self.app.Get(self._openapi_url, include_in_schema=False)
+            @Get(self._openapi_url, include_in_schema=False)
             @guards_decorator(*self._guards)
             def openapi_schema() -> t.Any:
                 assert document and isinstance(document, OpenAPI), "Invalid Document"
                 return document
+
+            app.router.append(openapi_schema)
 
     def _setup_docs(
         self, *, template_name: str, path: str, **template_context: t.Optional[t.Any]
     ) -> None:
         _path = path.lstrip("/").rstrip("/")
 
-        @self.app.Get(f"/{_path}", include_in_schema=False)
+        @Get(f"/{_path}", include_in_schema=False)
         @Render(template_name)
         @guards_decorator(*self._guards)
         def _doc() -> t.Any:
             return template_context
+
+        self.app.router.append(_doc)
 
     def setup_swagger_doc(
         self,

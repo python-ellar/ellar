@@ -11,8 +11,6 @@ from ellar.common import (
     WsRoute,
     exception_handler,
     middleware,
-    on_app_init,
-    on_app_started,
     on_shutdown,
     on_startup,
     template_filter,
@@ -43,6 +41,9 @@ class AnotherUserService(UserService):
     external_doc_description="Find out more here",
 )
 class SampleController:
+    def __init__(self, user_service: UserService):
+        self._user_service = user_service
+
     @Put("/{item_id:uuid}")
     async def update_item(
         self,
@@ -61,6 +62,7 @@ class SampleController:
         }
         if q:
             results.update({"q": q})
+        results.update(self._user_service.user)
         return results
 
     @WsRoute("/websocket")
@@ -84,6 +86,9 @@ def post_mr():
 
 
 class ModuleBaseExample(ModuleBase):
+    _before_init_called = False
+    _app_ready_called = False
+
     @exception_handler(404)
     async def exception_404(cls, request, exc):
         pass
@@ -101,13 +106,12 @@ class ModuleBaseExample(ModuleBase):
     def some_template_filter(cls, n):
         pass
 
-    @on_app_init
-    def on_app_init_handler(cls, config: Config):
-        pass
+    @classmethod
+    def before_init(cls, config: Config) -> None:
+        cls._before_init_called = True
 
-    @on_app_started
-    def on_app_started_handler(cls, app: App):
-        pass
+    def application_ready(self, app: "App") -> None:
+        self._app_ready_called = True
 
     @on_startup
     async def on_startup_handler(cls):

@@ -1,11 +1,11 @@
 from .app import ApplicationRouter
-from .module import ModuleRouter, ModuleRouterBase
+from .module import ModuleMount, ModuleRouter
 from .route_collections import ModuleRouteCollection, RouteCollection
 
 __all__ = [
     "ApplicationRouter",
     "RouteCollection",
     "ModuleRouter",
-    "ModuleRouterBase",
+    "ModuleMount",
     "ModuleRouteCollection",
 ]

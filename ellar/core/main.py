@@ -1,6 +1,6 @@
 import typing as t
 
-from starlette.routing import BaseRoute
+from starlette.routing import BaseRoute, Mount
 
 from ellar.constants import APP_MODULE_WATERMARK, MODULE_WATERMARK
 from ellar.core.conf import Config
@@ -9,20 +9,30 @@ from ellar.core.datastructures import State, URLPath
 from ellar.core.events import EventHandler, RouterEventManager
 from ellar.core.guard import GuardCanActivate
 from ellar.core.middleware import (
+    BaseHTTPMiddleware,
     ExceptionMiddleware,
     Middleware,
     RequestServiceProviderMiddleware,
     RequestVersioningMiddleware,
 )
-from ellar.core.modules import ModuleBase, ModulePlainRef, ModuleTemplateRef
+from ellar.core.modules import ModuleBase, ModuleTemplateRef
+from ellar.core.modules.ref import create_module_ref_factor
 from ellar.core.routing import ApplicationRouter
 from ellar.core.templating import AppTemplating, Environment
 from ellar.core.versioning import VERSIONING, BaseAPIVersioning
 from ellar.di.injector import StarletteInjector
 from ellar.logger import logger
-from ellar.reflect import reflect
 from ellar.services.reflector import Reflector
 from ellar.types import ASGIApp, T, TReceive, TScope, TSend
+
+
+def statics_wrapper(static_func: t.Optional[ASGIApp]) -> t.Callable:
+    async def _statics_func_wrapper(
+        scope: TScope, receive: TReceive, send: TSend
+    ) -> t.Any:
+        return await static_func(scope, receive, send)  # type: ignore
+
+    return _statics_func_wrapper
 
 
 class App(AppTemplating):
@@ -30,7 +40,6 @@ class App(AppTemplating):
         self,
         config: Config,
         injector: StarletteInjector,
-        routes: t.Optional[t.Sequence[BaseRoute]] = None,
         on_startup_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
         on_shutdown_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
         lifespan: t.Optional[t.Callable[["App"], t.AsyncContextManager]] = None,
@@ -67,48 +76,42 @@ class App(AppTemplating):
         )
 
         self.state = State()
-
+        self.config.DEFAULT_LIFESPAN_HANDLER = (
+            lifespan or self.config.DEFAULT_LIFESPAN_HANDLER
+        )
         self.router = ApplicationRouter(
-            routes=routes or [],
+            routes=self._get_module_routes(),
             redirect_slashes=t.cast(bool, self.config.REDIRECT_SLASHES),
             on_startup=[self.on_startup.async_run],
             on_shutdown=[self.on_shutdown.async_run],
             default=self.config.DEFAULT_NOT_FOUND_HANDLER,  # type: ignore
-            lifespan=lifespan or self.config.DEFAULT_LIFESPAN_HANDLER,  # type: ignore
+            lifespan=self.config.DEFAULT_LIFESPAN_HANDLER,  # type: ignore
         )
         self.middleware_stack = self.build_middleware_stack()
 
         self._static_app: t.Optional[ASGIApp] = None
 
-        if self.has_static_files:
-            self._static_app = self.create_static_app()
-
-            async def _statics(scope: TScope, receive: TReceive, send: TSend) -> t.Any:
-                return await self._static_app(scope, receive, send)  # type: ignore
-
-            self.router.mount(
-                self.config.STATIC_MOUNT_PATH,  # type: ignore
-                app=_statics,
-                name="static",
-            )
-
-        self.Get = self.router.Get
-        self.Post = self.router.Post
-
-        self.Delete = self.router.Delete
-        self.Patch = self.router.Patch
-
-        self.Put = self.router.Put
-        self.Options = self.router.Options
-
-        self.Trace = self.router.Trace
-        self.Head = self.router.Head
-
-        self.HttpRoute = self.router.HttpRoute
-        self.WsRoute = self.router.WsRoute
         self._finalize_app_initialization()
 
         logger.info(f"APP SETTINGS: {self._config.config_module}")
+
+    def _get_module_routes(self) -> t.List[BaseRoute]:
+        _routes: t.List[BaseRoute] = []
+        if self.has_static_files:
+            self._static_app = self.create_static_app()
+            _routes.append(
+                Mount(
+                    self.config.STATIC_MOUNT_PATH,
+                    app=statics_wrapper(self._static_app),
+                    name="static",
+                )
+            )
+
+        for _, module_ref in self._injector.get_modules().items():
+            module_ref.run_module_register_services()
+            _routes.extend(module_ref.routes)
+
+        return _routes
 
     def install_module(
         self,
@@ -119,27 +122,14 @@ class App(AppTemplating):
         if module_ref:
             return module_ref.get_module_instance()
 
-        if reflect.get_metadata(MODULE_WATERMARK, module) or reflect.get_metadata(
-            APP_MODULE_WATERMARK, module
-        ):
-            module_ref = ModuleTemplateRef(
-                module,
-                container=self.injector.container,
-                config=self.config,
-                **init_kwargs,
-            )
-        else:
-            module_ref = ModulePlainRef(
-                module,
-                container=self.injector.container,
-                config=self.config,
-                **init_kwargs,
-            )
+        module_ref = create_module_ref_factor(
+            module, container=self.injector.container, config=self.config, **init_kwargs
+        )
         self.injector.add_module(module_ref)
         self.middleware_stack = self.build_middleware_stack()
 
         if isinstance(module_ref, ModuleTemplateRef):
-            self.router.routes.extend(module_ref.routes)
+            self.router.extend(module_ref.routes)
             self.reload_static_app()
 
         return t.cast(T, module_ref.get_module_instance())
@@ -239,3 +229,20 @@ class App(AppTemplating):
         self.injector.container.register_instance(self.config, Config)
         self.injector.container.register_instance(self.jinja_environment, Environment)
         self.injector.container.register_scoped(IExecutionContext, ExecutionContext)
+
+    def add_exception_handler(
+        self,
+        exc_class_or_status_code: t.Union[int, t.Type[Exception]],
+        handler: t.Callable,
+    ) -> None:  # pragma: no cover
+        self._exception_handlers[exc_class_or_status_code] = handler
+        self.middleware_stack = self.build_middleware_stack()
+
+    def exception_handler(
+        self, exc_class_or_status_code: t.Union[int, t.Type[Exception]]
+    ) -> t.Callable:  # pragma: nocover
+        def decorator(func: t.Callable) -> t.Callable:
+            self.add_exception_handler(exc_class_or_status_code, func)
+            return func
+
+        return decorator

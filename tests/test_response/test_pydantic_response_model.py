@@ -4,8 +4,9 @@ from pydantic import BaseModel, Field
 
 from ellar.common import serializer_filter
 from ellar.core import AppFactory
+from ellar.core.routing import ModuleRouter
 
-app = AppFactory.create_app()
+mr = ModuleRouter("")
 
 
 class Item(BaseModel):
@@ -14,17 +15,17 @@ class Item(BaseModel):
     owner_ids: Optional[List[int]] = None
 
 
-@app.Get("/items/valid")
+@mr.Get("/items/valid")
 def get_valid():
     return Item(aliased_name="valid", price=1.0)
 
 
-@app.Get("/items/coerce")
+@mr.Get("/items/coerce")
 def get_coerce():
     return Item(aliased_name="coerce", price="1.0")
 
 
-@app.Get("/items/validlist")
+@mr.Get("/items/validlist")
 def get_validlist():
     return [
         Item(aliased_name="foo"),
@@ -33,7 +34,7 @@ def get_validlist():
     ]
 
 
-@app.Get("/items/validdict", response=Dict[str, Item])
+@mr.Get("/items/validdict", response=Dict[str, Item])
 def get_validdict():
     return {
         "k1": Item(aliased_name="foo"),
@@ -42,19 +43,19 @@ def get_validdict():
     }
 
 
-@app.Get("/items/valid-exclude-unset")
+@mr.Get("/items/valid-exclude-unset")
 @serializer_filter(exclude_unset=True)
 def get_valid_exclude_unset():
     return Item(aliased_name="valid", price=1.0)
 
 
-@app.Get("/items/coerce-exclude-unset")
+@mr.Get("/items/coerce-exclude-unset")
 @serializer_filter(exclude_unset=True)
 def get_coerce_exclude_unset():
     return Item(aliased_name="coerce", price="1.0")
 
 
-@app.Get("/items/validlist-exclude-unset")
+@mr.Get("/items/validlist-exclude-unset")
 @serializer_filter(exclude_unset=True)
 def get_validlist_exclude_unset():
     return [
@@ -64,7 +65,7 @@ def get_validlist_exclude_unset():
     ]
 
 
-@app.Get("/items/validdict-exclude-unset")
+@mr.Get("/items/validdict-exclude-unset")
 @serializer_filter(exclude_unset=True)
 def get_validdict_exclude_unset():
     return {
@@ -72,6 +73,9 @@ def get_validdict_exclude_unset():
         "k2": Item(aliased_name="bar", price=1.0),
         "k3": Item(aliased_name="baz", price=2.0, owner_ids=[1, 2, 3]),
     }
+
+
+app = AppFactory.create_app(routers=(mr,))
 
 
 def test_valid(test_client_factory):

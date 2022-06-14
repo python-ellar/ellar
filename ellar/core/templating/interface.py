@@ -40,7 +40,11 @@ class IModuleTemplateLoader:
 
     @cached_property
     def jinja_loader(self) -> t.Optional[FileSystemLoader]:
-        if self.template_folder and self.root_path:
+        if (
+            self.template_folder
+            and self.root_path
+            and os.path.exists(os.path.join(str(self.root_path), self.template_folder))
+        ):
             return FileSystemLoader(
                 os.path.join(str(self.root_path), self.template_folder)
             )
@@ -108,13 +112,6 @@ class ModuleTemplating(IModuleTemplateLoader):
     _template_folder: t.Optional[str]
     _base_directory: t.Optional[t.Union[Path, str]]
     _static_folder: t.Optional[str]
-
-    @cached_property
-    def jinja_environment(self) -> BaseEnvironment:
-        _jinja_env = BaseEnvironment()
-        _jinja_env.filters.clear()
-        _jinja_env.globals.clear()
-        return _jinja_env
 
     @property
     def template_folder(self) -> t.Optional[str]:

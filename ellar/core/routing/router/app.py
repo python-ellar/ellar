@@ -1,13 +1,13 @@
 import typing as t
 from functools import wraps
+from types import FunctionType
 
 from starlette.routing import BaseRoute, Router as StarletteRouter
 
-from ellar.compatible import DataMapper
-from ellar.constants import SCOPE_API_VERSIONING_RESOLVER
+from ellar.constants import OPERATION_HANDLER_KEY, SCOPE_API_VERSIONING_RESOLVER
+from ellar.reflect import reflect
 from ellar.types import ASGIApp, TReceive, TScope, TSend
 
-from ..operation_definitions import OperationDefinitions
 from .route_collections import RouteCollection
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -32,7 +32,6 @@ def router_default_decorator(func: ASGIApp) -> ASGIApp:
 
 class ApplicationRouter(StarletteRouter):
     routes: RouteCollection  # type: ignore
-    operation_definition_class: t.Type[OperationDefinitions] = OperationDefinitions
 
     def __init__(
         self,
@@ -53,23 +52,15 @@ class ApplicationRouter(StarletteRouter):
         )
         self.default = router_default_decorator(self.default)
         self.routes: RouteCollection = RouteCollection(routes)
-        self._meta: t.Mapping = DataMapper()
-        _route_definitions = self.operation_definition_class(t.cast(list, self.routes))
 
-        self.Get = _route_definitions.get
-        self.Post = _route_definitions.post
+    def append(self, item: t.Union[BaseRoute, t.Callable]) -> None:
+        if callable(item) and type(item) == FunctionType:
+            item = reflect.get_metadata(OPERATION_HANDLER_KEY, item)
+        self.routes.append(item)
 
-        self.Delete = _route_definitions.delete
-        self.Patch = _route_definitions.patch
-
-        self.Put = _route_definitions.put
-        self.Options = _route_definitions.options
-
-        self.Trace = _route_definitions.trace
-        self.Head = _route_definitions.head
-
-        self.HttpRoute = _route_definitions.http_route
-        self.WsRoute = _route_definitions.ws_route
+    def extend(self, routes: t.Sequence[t.Union[BaseRoute, t.Callable]]) -> None:
+        for route in routes:
+            self.append(route)
 
     def add_route(
         self,
@@ -120,5 +111,12 @@ class ApplicationRouter(StarletteRouter):
 
         return decorator
 
-    def get_meta(self) -> t.Mapping:
-        return self._meta
+    def mount(
+        self, path: str, app: ASGIApp, name: str = None
+    ) -> None:  # pragma: nocover
+        """Not supported"""
+
+    def host(
+        self, host: str, app: ASGIApp, name: str = None
+    ) -> None:  # pragma: no cover
+        """Not supported"""

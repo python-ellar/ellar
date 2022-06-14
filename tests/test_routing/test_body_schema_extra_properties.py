@@ -2,6 +2,7 @@ from typing import Dict
 
 from pydantic import BaseModel
 
+from ellar.common import Post
 from ellar.core import TestClientFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
@@ -13,11 +14,12 @@ class Items_(BaseModel):
     items: Dict[str, int]
 
 
-@tm.app.Post("/foo")
+@Post("/foo")
 def foo(items: Items_):
     return items.items
 
 
+tm.app.router.append(foo)
 client = tm.get_client()
 
 

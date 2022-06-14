@@ -73,6 +73,7 @@ class OperationDefinitions:
             ws_route_parameters.endpoint
         )
         _operation = _ws_operation_class(**ws_route_parameters.dict())
+        setattr(ws_route_parameters.endpoint, OPERATION_ENDPOINT_KEY, True)
         if self._routes is not None and not isinstance(
             _operation, ControllerRouteOperationBase
         ):
@@ -299,8 +300,9 @@ class OperationDefinitions:
                 use_extra_handler=use_extra_handler,
                 extra_handler_type=extra_handler_type,
             )
+            operation = self._get_ws_operation(ws_route_parameters=endpoint_parameter)
             if use_extra_handler:
-                return self._get_ws_operation(ws_route_parameters=endpoint_parameter)
+                return operation
             return endpoint_handler
 
         return _decorator

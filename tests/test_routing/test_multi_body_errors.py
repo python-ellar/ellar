@@ -3,6 +3,7 @@ from typing import List
 
 from pydantic import BaseModel, condecimal
 
+from ellar.common import Post
 from ellar.core import TestClientFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
@@ -15,11 +16,12 @@ class Item2(BaseModel):
     age: condecimal(gt=Decimal(0.0))  # type: ignore
 
 
-@tm.app.Post("/items/")
+@Post("/items/")
 def save_item_no_body(item: List[Item2]):
     return {"item": item}
 
 
+tm.app.router.append(save_item_no_body)
 client = tm.get_client()
 
 

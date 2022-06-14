@@ -5,14 +5,15 @@ from abc import ABC
 from ellar.compatible import AttributeDict
 from ellar.constants import (
     CONTROLLER_CLASS_KEY,
+    CONTROLLER_METADATA,
     CONTROLLER_WATERMARK,
     NOT_SET,
     OPERATION_ENDPOINT_KEY,
     OPERATION_HANDLER_KEY,
-    Controller_METADATA,
 )
 from ellar.core import ControllerBase
 from ellar.core.controller import ControllerType
+from ellar.di import RequestScope, injectable
 from ellar.exceptions import ImproperConfiguration
 from ellar.reflect import reflect
 
@@ -26,10 +27,28 @@ def get_route_functions(cls: t.Type) -> t.Iterable[t.Callable]:
             yield method
 
 
+def reflect_all_controller_type_routes(cls: t.Type[ControllerBase]) -> None:
+    bases = inspect.getmro(cls)
+
+    for base_cls in reversed(bases):
+        if base_cls not in [ABC, ControllerBase, object]:
+            for item in get_route_functions(base_cls):
+                operation = reflect.get_metadata(OPERATION_HANDLER_KEY, item)
+                reflect.define_metadata(
+                    CONTROLLER_CLASS_KEY, cls, item
+                )
+                reflect.define_metadata(
+                    OPERATION_HANDLER_KEY,
+                    operation,
+                    cls,
+                    default_value=[],
+                )
+
+
 @t.overload
 def Controller(
     prefix: t.Optional[str] = None,
-) -> t.Type[ControllerBase]:  # pragma: no cover
+) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:  # pragma: no cover
     ...
 
 
@@ -47,7 +66,7 @@ def Controller(
         t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
     ] = None,
     include_in_schema: bool = True,
-) -> t.Type[ControllerBase]:  # pragma: no cover
+) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:  # pragma: no cover
     ...
 
 
@@ -64,7 +83,7 @@ def Controller(
         t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
     ] = None,
     include_in_schema: bool = True,
-) -> t.Union[t.Type[ControllerBase], t.Callable]:
+) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:
     _prefix: t.Optional[t.Any] = prefix or NOT_SET
     if prefix and isinstance(prefix, type):
         _prefix = NOT_SET
@@ -113,21 +132,13 @@ def Controller(
                 .replace("controller", "")
             )
 
-        reflect.define_metadata(CONTROLLER_WATERMARK, True, _controller_type)
-        bases = inspect.getmro(cls)
-        for base_cls in reversed(bases):
-            if base_cls not in [ABC, ControllerBase, object]:
-                for item in get_route_functions(base_cls):
-                    operation = reflect.get_metadata(OPERATION_HANDLER_KEY, item)
-                    reflect.define_metadata(
-                        CONTROLLER_CLASS_KEY, _controller_type, item
-                    )
-                    reflect.define_metadata(
-                        OPERATION_HANDLER_KEY, operation, _controller_type
-                    )
+        if not reflect.get_metadata(CONTROLLER_WATERMARK, _controller_type):
+            reflect.define_metadata(CONTROLLER_WATERMARK, True, _controller_type)
+            reflect_all_controller_type_routes(_controller_type)
+            injectable(RequestScope)(cls)
 
-        for key in Controller_METADATA.keys:
-            reflect.define_metadata(key, kwargs[key], _controller_type)
+            for key in CONTROLLER_METADATA.keys:
+                reflect.define_metadata(key, kwargs[key], _controller_type)
 
         return _controller_type
 

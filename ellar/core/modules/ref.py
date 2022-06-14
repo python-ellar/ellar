@@ -1,47 +1,129 @@
+import inspect
 import typing as t
+from abc import ABC, abstractmethod
 from pathlib import Path
 
-from injector import AssistedBuilder, singleton
-from starlette.routing import BaseRoute
+from injector import AssistedBuilder
+from starlette.routing import BaseRoute, Mount
 
 from ellar.constants import (
+    APP_MODULE_WATERMARK,
     CONTROLLER_WATERMARK,
     EXCEPTION_HANDLERS_KEY,
     MIDDLEWARE_HANDLERS_KEY,
     MODULE_METADATA,
     MODULE_REF_TYPES,
+    MODULE_WATERMARK,
     ON_REQUEST_SHUTDOWN_KEY,
     ON_REQUEST_STARTUP_KEY,
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
 from ellar.core.controller import ControllerType
-from ellar.core.routing import ModuleRouterBase
+from ellar.core.routing import ModuleMount
 from ellar.core.routing.router.module import controller_router_factory
 from ellar.core.templating import ModuleTemplating
-from ellar.di import Container, ProviderConfig
+from ellar.di import Container, ProviderConfig, injectable
 from ellar.reflect import reflect
 
 from .. import Config
-from .base import ModuleBase
+from .base import ModuleBase, ModuleBaseMeta
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import App, ControllerBase
 
 
-class ModulePlainRef:
+def create_module_ref_factor(
+    module_type: t.Union[t.Type, t.Type[ModuleBase]],
+    config: Config,
+    container: Container,
+    **init_kwargs: t.Any,
+) -> "ModuleRefBase":
+    if reflect.get_metadata(MODULE_WATERMARK, module_type) or reflect.get_metadata(
+        APP_MODULE_WATERMARK, module_type
+    ):
+        module_ref = ModuleTemplateRef(
+            module_type,
+            container=container,
+            config=config,
+            **init_kwargs,
+        )
+    else:
+        module_ref = ModulePlainRef(
+            module_type,
+            container=container,
+            config=config,
+            **init_kwargs,
+        )
+    return module_ref
+
+
+class ModuleRefBase(ABC):
+    ref_type: str = MODULE_REF_TYPES.PLAIN
+
+    @property
+    @abstractmethod
+    def container(self) -> Container:
+        """gets module ref container"""
+
+    @property
+    @abstractmethod
+    def config(self) -> Config:
+        """gets module ref config"""
+
+    @property
+    @abstractmethod
+    def module(self) -> t.Union[t.Type[ModuleBase], t.Type]:
+        """gets module ref container"""
+
+    @property
+    def routes(self) -> t.List[BaseRoute]:
+        return []
+
+    def run_module_register_services(self) -> None:
+        self.module.before_init(config=self.config)
+        _module_type_instance = self.get_module_instance()
+        self.container.install(_module_type_instance)  # support for injector module
+        _module_type_instance.register_services(self.container)
+
+    def _build_init_kwargs(self, kwargs: t.Dict) -> t.Dict:
+        _result = dict()
+        if hasattr(self.module, "__init__"):
+            signature = inspect.signature(self.module.__init__)
+            for k, v in signature.parameters.items():
+                if (
+                    v.kind == inspect.Parameter.KEYWORD_ONLY
+                    or v.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+                ) and v.default != inspect.Parameter.empty:
+                    _result[k] = v.default
+        _result.update(kwargs)
+        return _result
+
+    def _register_module(self) -> None:
+        injectable()(self.module)
+        self.container.register(AssistedBuilder[self.module])
+
+    @abstractmethod
+    def get_module_instance(self) -> ModuleBase:
+        """Gets module instance"""
+
+
+class ModulePlainRef(ModuleRefBase):
     ref_type: str = MODULE_REF_TYPES.PLAIN
 
     def __init__(
         self,
-        module_type: t.Type[ModuleBase],
+        module_type: t.Union[t.Type[ModuleBase], t.Type],
         *,
         container: Container,
         config: Config,
-        **kwargs: t.Any
+        **kwargs: t.Any,
     ) -> None:
+        assert (
+            type(module_type) == ModuleBaseMeta
+        ), f"Module Type must be a subclass of ModuleBase;\n Invalid Type[{module_type}]"
         self._module_type = module_type
-        self._init_kwargs = kwargs
+        self._init_kwargs = self._build_init_kwargs(kwargs)
         self._container = container
         self._config = config
         self._register_module()
@@ -51,37 +133,40 @@ class ModulePlainRef:
     def module(self) -> t.Type[ModuleBase]:
         return self._module_type
 
+    @property
+    def container(self) -> Container:
+        return self._container
+
+    @property
+    def config(self) -> Config:
+        return self._config
+
     def get_module_instance(self) -> ModuleBase:
-        builder: AssistedBuilder = self._container.injector.get(
-            AssistedBuilder[self._module_type]
+        builder: AssistedBuilder = self.container.injector.get(
+            AssistedBuilder[self.module]
         )
         return builder.build(**self._init_kwargs)
 
-    def run_module_register_services(self) -> None:
-        self._module_type.before_init(config=self._config)
-        _module_type_instance = self.get_module_instance()
-        self._container.install(_module_type_instance)  # support for injector module
-        _module_type_instance.register_services(self._container)
 
-    def _register_module(self) -> None:
-        self._container.register(AssistedBuilder[self._module_type], scope=singleton)
-
-
-class ModuleTemplateRef(ModulePlainRef, ModuleTemplating):
+class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
     ref_type: str = MODULE_REF_TYPES.TEMPLATE
 
     def __init__(
         self,
-        module_type: t.Type[ModuleBase],
+        module_type: t.Union[t.Type[ModuleBase], t.Type],
         *,
         container: Container,
         config: Config,
-        **kwargs: t.Any
+        **kwargs: t.Any,
     ) -> None:
+        assert (
+            type(module_type) == ModuleBaseMeta
+        ), f"Module Type must be a subclass of ModuleBase;\n Invalid Type[{module_type}]"
+
         self._module_type = module_type
         self._container = container
         self._config = config
-        self._init_kwargs = kwargs
+        self._init_kwargs = self._build_init_kwargs(kwargs)
         self._register_module()
 
         self._template_folder: t.Optional[str] = reflect.get_metadata(
@@ -97,7 +182,7 @@ class ModuleTemplateRef(ModulePlainRef, ModuleTemplating):
             reflect.get_metadata(MODULE_METADATA.CONTROLLERS, self._module_type) or []
         )
 
-        self._routers = self._get_routers()
+        self._routers = self._get_all_routers()
         self._flatten_routes: t.List[BaseRoute] = []
 
         self.scan_templating_filters()
@@ -105,32 +190,61 @@ class ModuleTemplateRef(ModulePlainRef, ModuleTemplating):
         self.scan_exceptions_handlers()
         self.scan_middle_ware()
 
-    def run_module_register_services(self) -> None:
-        self.register_providers()
-        self.register_controllers()
-        super(ModuleTemplateRef, self).run_module_register_services()
+    @property
+    def module(self) -> t.Type[ModuleBase]:
+        return self._module_type
 
     @property
-    def routers(self) -> t.List[ModuleRouterBase]:
+    def container(self) -> Container:
+        return self._container
+
+    @property
+    def config(self) -> Config:
+        return self._config
+
+    @property
+    def routers(self) -> t.List[t.Union[BaseRoute, ModuleMount, Mount]]:
         return self._routers
 
     @property
     def routes(self) -> t.List[BaseRoute]:
         if not self._flatten_routes:
             for router in self._routers:
-                self._flatten_routes.extend(router.build_routes())
+                if isinstance(router, ModuleMount):
+                    self._flatten_routes.extend(router.build_routes())
+                    continue
+                self._flatten_routes.append(router)
         return self._flatten_routes
+
+    def run_module_register_services(self) -> None:
+        self.register_providers()
+        self.register_controllers()
+        super(ModuleTemplateRef, self).run_module_register_services()
+
+    def get_module_instance(self) -> ModuleBase:
+        builder: AssistedBuilder = self.container.injector.get(
+            AssistedBuilder[self.module]
+        )
+        return builder.build(**self._init_kwargs)
 
     def scan_templating_filters(self) -> None:
         templating_filter = (
             reflect.get_metadata(TEMPLATE_FILTER_KEY, self._module_type) or {}
         )
-        self.jinja_environment.filters.update(templating_filter)
+        if not self._config.get(TEMPLATE_FILTER_KEY) or not isinstance(
+            self._config[TEMPLATE_FILTER_KEY], dict
+        ):
+            self._config[TEMPLATE_FILTER_KEY] = dict()
+        self._config[TEMPLATE_FILTER_KEY].update(templating_filter)
 
         templating_global_filter = (
             reflect.get_metadata(TEMPLATE_GLOBAL_KEY, self._module_type) or {}
         )
-        self.jinja_environment.globals.update(templating_global_filter)
+        if not self._config.get(TEMPLATE_GLOBAL_KEY) or not isinstance(
+            self._config[TEMPLATE_GLOBAL_KEY], dict
+        ):
+            self._config[TEMPLATE_GLOBAL_KEY] = dict()
+        self._config[TEMPLATE_GLOBAL_KEY].update(templating_global_filter)
 
     def scan_exceptions_handlers(self) -> None:
         exception_handlers = (
@@ -142,7 +256,7 @@ class ModuleTemplateRef(ModulePlainRef, ModuleTemplating):
         middleware = (
             reflect.get_metadata(MIDDLEWARE_HANDLERS_KEY, self._module_type) or []
         )
-        if not self._config[MIDDLEWARE_HANDLERS_KEY] or not isinstance(
+        if not self._config.get(MIDDLEWARE_HANDLERS_KEY) or not isinstance(
             self._config[MIDDLEWARE_HANDLERS_KEY], list
         ):
             self._config[MIDDLEWARE_HANDLERS_KEY] = []
@@ -166,7 +280,7 @@ class ModuleTemplateRef(ModulePlainRef, ModuleTemplating):
         _module_type_instance = self._container.injector.get(self._module_type)
         _module_type_instance.application_ready(app)
 
-    def _get_routers(self) -> t.List[ModuleRouterBase]:
+    def _get_all_routers(self) -> t.List[ModuleMount]:
         _routers = list(
             reflect.get_metadata(MODULE_METADATA.ROUTERS, self._module_type) or []
         )
@@ -181,7 +295,7 @@ class ModuleTemplateRef(ModulePlainRef, ModuleTemplating):
         request_startup = (
             reflect.get_metadata(ON_REQUEST_STARTUP_KEY, self._module_type) or []
         )
-        if not self._config[ON_REQUEST_STARTUP_KEY] or not isinstance(
+        if not self._config.get(ON_REQUEST_STARTUP_KEY) or not isinstance(
             self._config[ON_REQUEST_STARTUP_KEY], list
         ):
             self._config[ON_REQUEST_STARTUP_KEY] = []
@@ -190,7 +304,7 @@ class ModuleTemplateRef(ModulePlainRef, ModuleTemplating):
         request_shutdown = (
             reflect.get_metadata(ON_REQUEST_SHUTDOWN_KEY, self._module_type) or []
         )
-        if not self._config[ON_REQUEST_SHUTDOWN_KEY] or not isinstance(
+        if not self._config.get(ON_REQUEST_SHUTDOWN_KEY) or not isinstance(
             self._config[ON_REQUEST_SHUTDOWN_KEY], list
         ):
             self._config[ON_REQUEST_SHUTDOWN_KEY] = []

@@ -1,6 +1,8 @@
 import pytest
 
+from ellar.constants import OPENAPI_KEY
 from ellar.core.routing import ModuleRouter
+from ellar.reflect import reflect
 
 from .sample import router
 
@@ -56,7 +58,8 @@ def test_build_routes(router_instance, prefix, tag, name):
         assert name in route.name
         assert prefix in route.path
         if "WS" not in route.methods:
-            assert tag in route.get_meta().openapi.tags
+            openapi = reflect.get_metadata(OPENAPI_KEY, route.endpoint)
+            assert tag in openapi.tags
 
 
 def test_tag_configuration_module_router():

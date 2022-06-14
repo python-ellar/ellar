@@ -63,8 +63,7 @@ class _Reflect:
                 _meta_values = dict(existing)
             else:
                 # if existing item is not a Collection, And we are trying to set same key again,
-                # then it has to be change to a collection
-                _meta_values = [existing] + _meta_values
+                _meta_values = metadata_value
         else:
             _meta_values = metadata_value
         target_metadata[metadata_key] = _meta_values
@@ -85,9 +84,7 @@ class _Reflect:
     def get_metadata(
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
     ) -> t.Optional[t.Any]:
-        target_metadata = (
-            self._get_or_create_metadata(target) or {}
-        )
+        target_metadata = self._get_or_create_metadata(target) or {}
         value = target_metadata.get(metadata_key)
         if isinstance(value, (list, set, tuple, dict)):
             # return immutable value
@@ -97,24 +94,18 @@ class _Reflect:
     def get_metadata_keys(
         self, target: t.Union[t.Type, t.Callable]
     ) -> t.KeysView[t.Any]:
-        target_metadata = (
-            self._get_or_create_metadata(target) or {}
-        )
+        target_metadata = self._get_or_create_metadata(target) or {}
         return target_metadata.keys()
 
     def delete_metadata(
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
     ) -> None:
-        target_metadata = self._get_or_create_metadata(
-            target
-        )
+        target_metadata = self._get_or_create_metadata(target)
         if target_metadata and metadata_key in target_metadata:
             target_metadata.pop(metadata_key)
 
     def _get_or_create_metadata(
-        self,
-        target: t.Union[t.Type, t.Callable],
-        create: bool = False
+        self, target: t.Union[t.Type, t.Callable], create: bool = False
     ) -> t.Optional[AttributeDict]:
         _target = _get_actual_target(target)
         if _target in self._meta_data:

@@ -76,7 +76,7 @@ class WebsocketRouteOperation(
         super().__init__(path=path, endpoint=endpoint, name=name)
         self.endpoint_parameter_model: WebsocketEndpointArgsModel = NOT_SET
 
-        reflect.define_metadata(OPERATION_HANDLER_KEY, self.endpoint, self.endpoint)
+        reflect.define_metadata(OPERATION_HANDLER_KEY, self, self.endpoint)
 
         if self._use_extra_handler:
             self._handlers_kwargs.update(on_receive=self.endpoint)
@@ -148,3 +148,6 @@ class WebsocketRouteOperation(
 
     def _load_model(self) -> None:
         self.build_route_operation()
+
+    def __hash__(self) -> t.Any:
+        return self.endpoint

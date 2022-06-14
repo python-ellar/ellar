@@ -14,7 +14,7 @@ from starlette.routing import Mount
 from ellar.compatible import cached_property
 from ellar.constants import GUARDS_KEY, OPENAPI_KEY
 from ellar.core.main import App
-from ellar.core.routing import ModuleRouterBase, RouteOperation
+from ellar.core.routing import ModuleMount, RouteOperation
 from ellar.core.routing.controller.route import ControllerRouteOperation
 from ellar.core.schema import HTTPValidationError, ValidationError
 from ellar.helper.modelfield import create_model_field
@@ -111,7 +111,7 @@ class OpenAPIDocumentBuilder:
         openapi_route_models: t.List = []
         reflector = app.injector.get(Reflector)
         for route in app.routes:
-            if isinstance(route, Mount):
+            if isinstance(route, Mount) and len(route.routes) > 0:
                 openapi = dict()
                 guards = app.get_guards()
                 openapi_route_models.append(
@@ -120,7 +120,7 @@ class OpenAPIDocumentBuilder:
                     )
                 )
                 continue
-            if (
+            elif (
                 isinstance(route, (RouteOperation, ControllerRouteOperation))
                 and route.include_in_schema
             ):
@@ -180,7 +180,7 @@ class OpenAPIDocumentBuilder:
         definitions = self._get_model_definitions(
             models=models, model_name_map=model_name_map  # type: ignore
         )
-        mounts: t.List[t.Union[ModuleRouterBase]] = []
+        mounts: t.List[t.Union[ModuleMount]] = []
         for _, item in app.injector.get_templating_modules().items():
             mounts.extend(item.routers)
 
