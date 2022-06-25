@@ -1,5 +1,6 @@
 import functools
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
+from uuid import uuid4
 
 import pytest
 from pydantic import create_model
@@ -28,3 +29,8 @@ def fixture_model_with_path(request):
         "ModelWithPath", path=(request.param, ...), __config__=Config  # type: ignore
     )
     return model_with_path(path=request.param("/foo", "bar"))
+
+
+@pytest.fixture
+def random_type():
+    return type(f"Random{uuid4().hex[:6]}", (), {})

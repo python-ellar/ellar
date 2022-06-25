@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from inspect import ismethod
 from weakref import WeakKeyDictionary
 
-from ellar.compatible import AttributeDict
+from ellar.compatible import AttributeDict, asynccontextmanager
 from ellar.constants import REFLECT_TYPE
 
 
@@ -134,6 +134,16 @@ class _Reflect:
         for k, v in self._meta_data.items():
             _meta_data[k] = AttributeDict(v)
         return _meta_data
+
+    @asynccontextmanager
+    async def async_context(self) -> t.AsyncGenerator[None, None]:
+        cached_meta_data = self._meta_data
+        try:
+            self._meta_data = self._clone_meta_data()
+            yield
+        finally:
+            self._meta_data.clear()
+            self._meta_data = cached_meta_data
 
     @contextmanager
     def context(
