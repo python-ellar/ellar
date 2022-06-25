@@ -54,15 +54,13 @@ def Controller(
 def Controller(
     prefix: t.Optional[str] = None,
     *,
-    tag: t.Optional[str] = None,
-    description: t.Optional[str] = None,
-    external_doc_description: t.Optional[str] = None,
-    external_doc_url: t.Optional[str] = None,
-    name: t.Optional[str] = None,
+    tag: str = NOT_SET,
+    description: str = None,
+    external_doc_description: str = None,
+    external_doc_url: str = None,
+    name: str = None,
     version: t.Union[t.Tuple, str] = (),
-    guards: t.Optional[
-        t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
-    ] = None,
+    guards: t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]] = None,
     include_in_schema: bool = True,
 ) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:  # pragma: no cover
     ...
@@ -71,15 +69,13 @@ def Controller(
 def Controller(
     prefix: t.Optional[str] = None,
     *,
-    tag: t.Optional[str] = None,
-    description: t.Optional[str] = None,
-    external_doc_description: t.Optional[str] = None,
-    external_doc_url: t.Optional[str] = None,
-    name: t.Optional[str] = None,
+    tag: str = NOT_SET,
+    description: str = None,
+    external_doc_description: str = None,
+    external_doc_url: str = None,
+    name: str = None,
     version: t.Union[t.Tuple, str] = (),
-    guards: t.Optional[
-        t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
-    ] = None,
+    guards: t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]] = None,
     include_in_schema: bool = True,
 ) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:
     _prefix: t.Optional[t.Any] = prefix if prefix is not None else NOT_SET

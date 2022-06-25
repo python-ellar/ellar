@@ -7,6 +7,7 @@ from ellar.compatible import AttributeDict
 from ellar.constants import (
     CONTROLLER_METADATA,
     GUARDS_KEY,
+    NOT_SET,
     OPENAPI_KEY,
     OPERATION_HANDLER_KEY,
     VERSIONING_KEY,
@@ -63,20 +64,18 @@ class ModuleMount(StarletteMount):
         app: ASGIApp = None,
         routes: t.Sequence[BaseRoute] = None,
         name: str = None,
-        tag: t.Optional[str] = None,
-        description: t.Optional[str] = None,
-        external_doc_description: t.Optional[str] = None,
-        external_doc_url: t.Optional[str] = None,
+        tag: str = NOT_SET,
+        description: str = None,
+        external_doc_description: str = None,
+        external_doc_url: str = None,
         version: t.Union[t.Tuple, str] = (),
-        guards: t.Optional[
-            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
-        ] = None,
+        guards: t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]] = None,
         include_in_schema: bool = False,
     ) -> None:
         super(ModuleMount, self).__init__(path=path, routes=routes, name=name, app=app)
         self.include_in_schema = include_in_schema
         self._meta: AttributeDict = AttributeDict(
-            tag=tag or name or "Module Router",
+            tag=name or "Module Router" if tag is NOT_SET else tag,
             external_doc_description=external_doc_description,
             description=description,
             external_doc_url=external_doc_url,
@@ -164,14 +163,12 @@ class ModuleRouter(ModuleMount):
         self,
         path: str,
         name: str = None,
-        tag: t.Optional[str] = None,
-        description: t.Optional[str] = None,
-        external_doc_description: t.Optional[str] = None,
-        external_doc_url: t.Optional[str] = None,
+        tag: str = NOT_SET,
+        description: str = None,
+        external_doc_description: str = None,
+        external_doc_url: str = None,
         version: t.Union[t.Tuple, str] = (),
-        guards: t.Optional[
-            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
-        ] = None,
+        guards: t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]] = None,
         include_in_schema: bool = True,
     ) -> None:
         app = Router()
