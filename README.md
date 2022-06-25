@@ -30,7 +30,7 @@
 ## Installation
 
 ```
-pip install django-ninja-extra
+pip install ellar
 ```
 
 ## Status
