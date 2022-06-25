@@ -1,4 +1,5 @@
 import typing as t
+from contextlib import contextmanager
 from inspect import ismethod
 from weakref import WeakKeyDictionary
 
@@ -13,7 +14,7 @@ def _get_actual_target(
         reflect_type = target.__dict__[REFLECT_TYPE]
     except KeyError:
         setattr(target, REFLECT_TYPE, target)
-        return t.cast(t.Union[t.Type, t.Callable], target)
+        return target
     else:
         return t.cast(t.Union[t.Type, t.Callable], reflect_type)
 
@@ -41,32 +42,32 @@ class _Reflect:
             raise Exception("`target` is not a valid type")
 
         target_metadata = self._get_or_create_metadata(target, create=True)
-        target_metadata.setdefault(metadata_key, default_value)
+        if target_metadata is not None:
+            target_metadata.setdefault(metadata_key, default_value)
 
-        _meta_values: t.Any = (
-            list(metadata_value)
-            if isinstance(metadata_value, (list, tuple, set))
-            else [metadata_value]
-        )
-        existing = target_metadata.get(metadata_key)
-        if existing is not None:
-            if isinstance(existing, (list, tuple)):
-                _meta_values.extend(existing)
-                if isinstance(existing, tuple):
-                    _meta_values = tuple(_meta_values)
-            elif isinstance(existing, set):
-                _meta_values.extend(existing)
-                _meta_values = set(_meta_values)
-            elif isinstance(existing, dict):
-                existing = t.cast(dict, existing)
-                existing.update(dict(metadata_value))
-                _meta_values = dict(existing)
+            _meta_values: t.Any = (
+                list(metadata_value)
+                if isinstance(metadata_value, (list, tuple, set))
+                else [metadata_value]
+            )
+            existing = target_metadata.get(metadata_key)
+            if existing is not None:
+                if isinstance(existing, (list, tuple)):
+                    _meta_values.extend(existing)
+                    if isinstance(existing, tuple):
+                        _meta_values = tuple(_meta_values)
+                elif isinstance(existing, set):
+                    _meta_values.extend(existing)
+                    _meta_values = set(_meta_values)
+                elif isinstance(existing, dict):
+                    existing.update(dict(metadata_value))
+                    _meta_values = dict(existing)
+                else:
+                    # if existing item is not a Collection, And we are trying to set same key again,
+                    _meta_values = metadata_value
             else:
-                # if existing item is not a Collection, And we are trying to set same key again,
                 _meta_values = metadata_value
-        else:
-            _meta_values = metadata_value
-        target_metadata[metadata_key] = _meta_values
+            target_metadata[metadata_key] = _meta_values
 
     def metadata(self, metadata_key: str, metadata_value: t.Any) -> t.Any:
         def _wrapper(target: t.Union[t.Type, t.Callable]) -> t.Any:
@@ -78,23 +79,31 @@ class _Reflect:
     def has_metadata(
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
     ) -> bool:
-        target_metadata = self._get_or_create_metadata(target) or {}
+        target_metadata: t.Dict = self._get_or_create_metadata(target) or {}
         return metadata_key in target_metadata
 
     def get_metadata(
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
     ) -> t.Optional[t.Any]:
-        target_metadata = self._get_or_create_metadata(target) or {}
+        target_metadata: t.Dict = self._get_or_create_metadata(target) or {}
         value = target_metadata.get(metadata_key)
         if isinstance(value, (list, set, tuple, dict)):
             # return immutable value
             return type(value)(value)
         return value
 
+    def get_metadata_or_raise_exception(
+        self, metadata_key: str, target: t.Union[t.Type, t.Callable]
+    ) -> t.Any:
+        value = self.get_metadata(metadata_key=metadata_key, target=target)
+        if value is not None:
+            return value
+        raise Exception("MetaData Key not Found")
+
     def get_metadata_keys(
         self, target: t.Union[t.Type, t.Callable]
     ) -> t.KeysView[t.Any]:
-        target_metadata = self._get_or_create_metadata(target) or {}
+        target_metadata: t.Dict = self._get_or_create_metadata(target) or {}
         return target_metadata.keys()
 
     def delete_metadata(
@@ -115,6 +124,28 @@ class _Reflect:
             self._meta_data[_target] = AttributeDict()
             return self._meta_data[_target]
         return None
+
+    def _clone_meta_data(
+        self,
+    ) -> t.MutableMapping[t.Union[t.Type, t.Callable], AttributeDict]:
+        _meta_data: t.MutableMapping[
+            t.Union[t.Type, t.Callable], AttributeDict
+        ] = WeakKeyDictionary()
+        for k, v in self._meta_data.items():
+            _meta_data[k] = AttributeDict(v)
+        return _meta_data
+
+    @contextmanager
+    def context(
+        self,
+    ) -> t.Generator:
+        cached_meta_data = self._meta_data
+        try:
+            self._meta_data = self._clone_meta_data()
+            yield
+        finally:
+            self._meta_data.clear()
+            self._meta_data = cached_meta_data
 
 
 reflect = _Reflect()

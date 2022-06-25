@@ -87,8 +87,13 @@ class ConfigValidationSchema(Serializer):
     SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]] = {}
 
     MIDDLEWARE_DECORATOR: t.List[TMiddleware] = []
+
     ON_REQUEST_STARTUP: t.List[TEventHandler] = []
     ON_REQUEST_SHUTDOWN: t.List[TEventHandler] = []
+
+    TEMPLATE_FILTERS: t.Dict[str, t.Callable[..., t.Any]] = {}
+    TEMPLATE_GLOBAL_FILTERS: t.Dict[str, t.Callable[..., t.Any]] = {}
+    INJECTOR_AUTO_BIND: bool = False
 
     @root_validator(pre=True)
     def pre_root_validate(cls, values: t.Any) -> t.Any:

@@ -3,6 +3,7 @@ import typing as t
 from ellar.constants import (
     EXCEPTION_HANDLERS_KEY,
     MIDDLEWARE_HANDLERS_KEY,
+    MODULE_FIELDS,
     ON_REQUEST_SHUTDOWN_KEY,
     ON_REQUEST_STARTUP_KEY,
     TEMPLATE_FILTER_KEY,
@@ -24,6 +25,9 @@ class ModuleBaseBuilder:
 
     def __init__(self, cls: t.Union[t.Type["ModuleBase"], "ModuleBaseMeta"]) -> None:
         self._cls = cls
+        self._cls.__MODULE_FIELDS__ = t.cast(
+            t.Dict, getattr(self._cls, MODULE_FIELDS, None) or dict()
+        )
         self._actions: t.Dict[str, t.Callable[[t.Any], None]] = dict()
         self._actions.update(
             {
@@ -100,8 +104,9 @@ class ModuleBaseBuilder:
         )
 
     def build(self, namespace: t.Dict) -> None:
-        for item in namespace.values():
+        for name, item in namespace.items():
             for k, func in self._actions.items():
                 if hasattr(item, k):
                     value = getattr(item, k)
                     func(value)
+                    self._cls.__MODULE_FIELDS__[name] = item

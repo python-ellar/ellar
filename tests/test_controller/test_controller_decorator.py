@@ -1,7 +1,7 @@
 import pytest
 
 from ellar.common import Controller, Get, HttpRoute, WsRoute
-from ellar.constants import CONTROLLER_CLASS_KEY, OPERATION_HANDLER_KEY, OPENAPI_KEY
+from ellar.constants import CONTROLLER_CLASS_KEY, OPENAPI_KEY, OPERATION_HANDLER_KEY
 from ellar.core import ControllerBase
 from ellar.core.routing.router.module import controller_router_factory
 from ellar.di import has_binding, is_decorated_with_injectable
@@ -99,8 +99,8 @@ def test_tag_configuration_controller_decorator():
         prefix="/items/{orgID:int}",
     )(SomeController)
     router = controller_router_factory(new_controller)
-    assert router.get_meta()["tag"] == 'some'
-    assert router.name == 'some'
+    assert router.get_meta()["tag"] == "some"
+    assert router.name == "some"
 
     new_controller = Controller(prefix="/items/{orgID:int}", tag="new_tag")(
         SomeController
@@ -126,8 +126,8 @@ def test_tag_configuration_controller_decorator():
 )
 def test_build_routes(controller_type, tag, prefix, name):
     router = controller_router_factory(controller_type)
-
-    for route in router.build_routes():
+    router.get_flatten_routes()
+    for route in router.get_flatten_routes():
         assert name in route.name
         assert prefix in route.path
         if "WS" not in route.methods:

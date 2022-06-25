@@ -23,6 +23,7 @@ from .scopes import (
     SingletonScope,
     TransientScope,
 )
+from .service_config import get_scope
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.modules import ModuleBase, ModuleRefBase, ModuleTemplateRef
@@ -100,8 +101,8 @@ class Container(InjectorBinder):
     def register(
         self,
         base_type: t.Type,
-        concrete_type: t.Optional[t.Union[t.Type[T], T]] = None,
-        scope: t.Union[t.Type[DIScope], ScopeDecorator] = TransientScope,
+        concrete_type: t.Union[t.Type[T], t.Type, T] = None,
+        scope: t.Union[t.Type[DIScope], ScopeDecorator] = None,
     ) -> None:
         try:
             if concrete_type and isinstance(concrete_type, type):
@@ -114,14 +115,12 @@ class Container(InjectorBinder):
             pass
 
         provider = self.provider_for(base_type, concrete_type)
-        _scope: t.Any = scope
+        _scope: t.Any = scope or get_scope(base_type) or TransientScope
         if isinstance(scope, ScopeDecorator):
             _scope = scope.scope
         self.register_binding(base_type, Binding(base_type, provider, _scope))
 
-    def register_instance(
-        self, instance: T, concrete_type: t.Optional[t.Type[T]] = None
-    ) -> None:
+    def register_instance(self, instance: T, concrete_type: t.Type[T] = None) -> None:
         assert not isinstance(instance, type)
         _concrete_type = instance.__class__ if not concrete_type else concrete_type
         self.register(_concrete_type, instance, scope=SingletonScope)
@@ -232,7 +231,7 @@ class StarletteInjector(Injector):
         # Bind some useful types
         self.container.register_instance(self, StarletteInjector)
         self.container.register_instance(self.binder)
-        self._modules = defaultdict(OrderedDict)
+        self._modules: t.DefaultDict = defaultdict(OrderedDict)
         self._modules[MODULE_REF_TYPES.TEMPLATE] = OrderedDict()
         self._modules[MODULE_REF_TYPES.PLAIN] = OrderedDict()
 
@@ -246,12 +245,15 @@ class StarletteInjector(Injector):
         return modules
 
     def get_module(self, module: t.Type) -> t.Optional["ModuleRefBase"]:
+        result: t.Optional["ModuleRefBase"] = None
         if module in self._modules[MODULE_REF_TYPES.TEMPLATE]:
-            return self._modules[MODULE_REF_TYPES.TEMPLATE][module]
+            result = self._modules[MODULE_REF_TYPES.TEMPLATE][module]
+            return result
 
         if module in self._modules[MODULE_REF_TYPES.PLAIN]:
-            return self._modules[MODULE_REF_TYPES.PLAIN][module]
-        return None
+            result = self._modules[MODULE_REF_TYPES.PLAIN][module]
+            return result
+        return result
 
     def get_templating_modules(
         self,

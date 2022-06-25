@@ -113,7 +113,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
                 raise ImproperConfiguration(
                     f"`RESPONSE_OVERRIDE` is must be of type `Dict` - {_response_override}"
                 )
-            self._defined_responses.update(_response_override)  # type: ignore
+            self._defined_responses.update(_response_override)
 
         self.response_model = RouteResponseModel(
             route_responses=self._defined_responses  # type: ignore

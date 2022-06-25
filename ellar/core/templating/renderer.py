@@ -6,7 +6,7 @@ from starlette.background import BackgroundTask
 from starlette.templating import _TemplateResponse as TemplateResponse
 
 from ellar.constants import SCOPE_EXECUTION_CONTEXT_PROVIDER
-from ellar.core.connection import HTTPConnection, Request
+from ellar.core.connection import Request
 from ellar.core.context import IExecutionContext
 
 from .environment import Environment
@@ -28,7 +28,9 @@ def process_view_model(view_response: t.Any) -> t.Dict:
 def _get_jinja_and_template_context(
     template_name: str, request: Request, **context: t.Any
 ) -> t.Tuple["jinja2.Template", t.Dict]:
-    ctx: IExecutionContext = request.scope.get(SCOPE_EXECUTION_CONTEXT_PROVIDER)
+    ctx: t.Optional[IExecutionContext] = request.scope.get(
+        SCOPE_EXECUTION_CONTEXT_PROVIDER
+    )
     if not ctx:
         raise RuntimeError("Execution Context not defined in request Scope")
 

@@ -133,11 +133,11 @@ class ModuleTemplating(IModuleTemplateLoader):
 class AppTemplating(JinjaTemplating):
     config: Config
     _static_app: t.Optional[ASGIApp]
-    injector: "StarletteInjector"
+    _injector: "StarletteInjector"
     has_static_files: bool
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
-        for loader in self.injector.get_templating_modules().values():
+        for loader in self._injector.get_templating_modules().values():
             yield loader
 
     @property

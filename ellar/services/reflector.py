@@ -1,6 +1,6 @@
 import typing as t
 
-from ..reflect import reflect
+from ellar.reflect import reflect
 
 
 class Reflector:

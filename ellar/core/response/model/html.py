@@ -43,10 +43,10 @@ class HTMLResponseModel(ResponseModel):
         template_name = self.template_name
         exe_ctx = t.cast(ExecutionContext, ctx)
         if self.use_mvc:
-            if not exe_ctx.get_class():
+            controller_class = exe_ctx.get_class()
+            if not controller_class:
                 raise HTMLResponseModelRuntimeError(
                     "cannot find Controller in request context"
                 )
-            controller_class = exe_ctx.get_class()
             template_name = controller_class.full_view_name(self.template_name)
         return get_template_name(template_name)

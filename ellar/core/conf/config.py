@@ -16,7 +16,7 @@ class Config(DataMutableMapper, AttributeDictAccessMixin):
 
     def __init__(
         self,
-        config_module: str = environ.get(ELLAR_CONFIG_MODULE, None),
+        config_module: str = None,
         **mapping: t.Any,
     ):
         """

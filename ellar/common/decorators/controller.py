@@ -34,9 +34,7 @@ def reflect_all_controller_type_routes(cls: t.Type[ControllerBase]) -> None:
         if base_cls not in [ABC, ControllerBase, object]:
             for item in get_route_functions(base_cls):
                 operation = reflect.get_metadata(OPERATION_HANDLER_KEY, item)
-                reflect.define_metadata(
-                    CONTROLLER_CLASS_KEY, cls, item
-                )
+                reflect.define_metadata(CONTROLLER_CLASS_KEY, cls, item)
                 reflect.define_metadata(
                     OPERATION_HANDLER_KEY,
                     operation,
@@ -119,14 +117,14 @@ def Controller(
 
         _tag = _controller_type.controller_class_name()
 
-        if not kwargs.openapi.tag:
-            kwargs.openapi.tag = _tag
+        if not kwargs.openapi.tag:  # type: ignore
+            kwargs.openapi.tag = _tag  # type: ignore
 
-        if kwargs.path is NOT_SET:
-            kwargs.path = f"/{_tag}"
+        if kwargs["path"] is NOT_SET:
+            kwargs["path"] = f"/{_tag}"
 
-        if not kwargs.name:
-            kwargs.name = (
+        if not kwargs["name"]:
+            kwargs["name"] = (
                 str(_controller_type.controller_class_name())
                 .lower()
                 .replace("controller", "")

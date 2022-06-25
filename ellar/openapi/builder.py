@@ -9,7 +9,7 @@ from pydantic.schema import (
     get_model_name_map,
     model_process_schema,
 )
-from starlette.routing import Mount
+from starlette.routing import BaseRoute, Mount
 
 from ellar.compatible import cached_property
 from ellar.constants import GUARDS_KEY, OPENAPI_KEY
@@ -112,7 +112,7 @@ class OpenAPIDocumentBuilder:
         reflector = app.injector.get(Reflector)
         for route in app.routes:
             if isinstance(route, Mount) and len(route.routes) > 0:
-                openapi = dict()
+                openapi: t.Dict = dict()
                 guards = app.get_guards()
                 openapi_route_models.append(
                     OpenAPIMountDocumentation(
@@ -180,7 +180,7 @@ class OpenAPIDocumentBuilder:
         definitions = self._get_model_definitions(
             models=models, model_name_map=model_name_map  # type: ignore
         )
-        mounts: t.List[t.Union[ModuleMount]] = []
+        mounts: t.List[t.Union[BaseRoute, ModuleMount, Mount]] = []
         for _, item in app.injector.get_templating_modules().items():
             mounts.extend(item.routers)
 
@@ -197,10 +197,11 @@ class OpenAPIDocumentBuilder:
         if definitions:
             components["schemas"] = {k: definitions[k] for k in sorted(definitions)}
 
-        for item in mounts:
-            data = item.get_tag()
-            if data:
-                self._build.setdefault("tags", []).append(data)
+        for mount in mounts:
+            if isinstance(mount, ModuleMount):
+                data = mount.get_tag()
+                if data:
+                    self._build.setdefault("tags", []).append(data)
         if components:
             self._build.setdefault("components", {}).update(components)
         return OpenAPI(**self._build)

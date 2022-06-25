@@ -2,14 +2,12 @@ import typing as t
 
 from starlette.routing import BaseRoute, Mount
 
-from ellar.constants import APP_MODULE_WATERMARK, MODULE_WATERMARK
 from ellar.core.conf import Config
 from ellar.core.context import ExecutionContext, IExecutionContext
 from ellar.core.datastructures import State, URLPath
 from ellar.core.events import EventHandler, RouterEventManager
 from ellar.core.guard import GuardCanActivate
 from ellar.core.middleware import (
-    BaseHTTPMiddleware,
     ExceptionMiddleware,
     Middleware,
     RequestServiceProviderMiddleware,
@@ -24,15 +22,6 @@ from ellar.di.injector import StarletteInjector
 from ellar.logger import logger
 from ellar.services.reflector import Reflector
 from ellar.types import ASGIApp, T, TReceive, TScope, TSend
-
-
-def statics_wrapper(static_func: t.Optional[ASGIApp]) -> t.Callable:
-    async def _statics_func_wrapper(
-        scope: TScope, receive: TReceive, send: TSend
-    ) -> t.Any:
-        return await static_func(scope, receive, send)  # type: ignore
-
-    return _statics_func_wrapper
 
 
 class App(AppTemplating):
@@ -95,14 +84,23 @@ class App(AppTemplating):
 
         logger.info(f"APP SETTINGS: {self._config.config_module}")
 
+    def statics_wrapper(self) -> t.Callable:
+        async def _statics_func_wrapper(
+            scope: TScope, receive: TReceive, send: TSend
+        ) -> t.Any:
+            assert self._static_app, 'app static ASGIApp can not be "None"'
+            return await self._static_app(scope, receive, send)
+
+        return _statics_func_wrapper
+
     def _get_module_routes(self) -> t.List[BaseRoute]:
         _routes: t.List[BaseRoute] = []
         if self.has_static_files:
             self._static_app = self.create_static_app()
             _routes.append(
                 Mount(
-                    self.config.STATIC_MOUNT_PATH,
-                    app=statics_wrapper(self._static_app),
+                    str(self.config.STATIC_MOUNT_PATH),
+                    app=self.statics_wrapper(),
                     name="static",
                 )
             )
@@ -129,8 +127,10 @@ class App(AppTemplating):
         self.middleware_stack = self.build_middleware_stack()
 
         if isinstance(module_ref, ModuleTemplateRef):
+            module_ref.run_module_register_services()
             self.router.extend(module_ref.routes)
             self.reload_static_app()
+            module_ref.run_application_ready(self)
 
         return t.cast(T, module_ref.get_module_instance())
 

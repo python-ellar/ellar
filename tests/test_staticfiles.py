@@ -9,7 +9,6 @@ import time
 import anyio
 import pytest
 from starlette.exceptions import HTTPException
-from starlette.requests import Request
 from starlette.routing import Mount
 
 from ellar.core import AppFactory, TestClient

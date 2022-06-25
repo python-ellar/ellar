@@ -54,9 +54,10 @@ class ApplicationRouter(StarletteRouter):
         self.routes: RouteCollection = RouteCollection(routes)
 
     def append(self, item: t.Union[BaseRoute, t.Callable]) -> None:
-        if callable(item) and type(item) == FunctionType:
-            item = reflect.get_metadata(OPERATION_HANDLER_KEY, item)
-        self.routes.append(item)
+        _item: t.Any = item
+        if callable(_item) and type(_item) == FunctionType:
+            _item = reflect.get_metadata(OPERATION_HANDLER_KEY, _item)
+        self.routes.append(_item)
 
     def extend(self, routes: t.Sequence[t.Union[BaseRoute, t.Callable]]) -> None:
         for route in routes:

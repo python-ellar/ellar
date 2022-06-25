@@ -26,21 +26,31 @@ if t.TYPE_CHECKING:  # pragma: no cover
 __all__ = ["ModuleMount", "ModuleRouter", "controller_router_factory"]
 
 
-def controller_router_factory(controller: t.Union[t.Type[ControllerBase], t.Any]) -> "ModuleMount":
+def controller_router_factory(
+    controller: t.Union[t.Type[ControllerBase], t.Any]
+) -> "ModuleMount":
     openapi = reflect.get_metadata(CONTROLLER_METADATA.OPENAPI, controller) or dict()
     routes = reflect.get_metadata(OPERATION_HANDLER_KEY, controller) or []
     app = Router()
     app.routes = ModuleRouteCollection(routes)  # type:ignore
-    ss = reflect.get_metadata(CONTROLLER_METADATA.PATH, controller)
     router = ModuleMount(
         app=app,
-        path=reflect.get_metadata(CONTROLLER_METADATA.PATH, controller),
-        name=reflect.get_metadata(CONTROLLER_METADATA.NAME, controller),
-        version=reflect.get_metadata(CONTROLLER_METADATA.VERSION, controller),
-        guards=reflect.get_metadata(CONTROLLER_METADATA.GUARDS, controller),
-        include_in_schema=reflect.get_metadata(
-            CONTROLLER_METADATA.INCLUDE_IN_SCHEMA, controller
+        path=reflect.get_metadata_or_raise_exception(
+            CONTROLLER_METADATA.PATH, controller
         ),
+        name=reflect.get_metadata_or_raise_exception(
+            CONTROLLER_METADATA.NAME, controller
+        ),
+        version=reflect.get_metadata_or_raise_exception(
+            CONTROLLER_METADATA.VERSION, controller
+        ),
+        guards=reflect.get_metadata_or_raise_exception(
+            CONTROLLER_METADATA.GUARDS, controller
+        ),
+        include_in_schema=reflect.get_metadata_or_raise_exception(
+            CONTROLLER_METADATA.INCLUDE_IN_SCHEMA, controller
+        )
+        or True,
         **openapi
     )
     return router
@@ -75,6 +85,7 @@ class ModuleMount(StarletteMount):
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate", t.Any]
         ] = (guards or [])
         self._version = set(version or [])
+        self._build: bool = False
 
     def get_meta(self) -> t.Mapping:
         return self._meta
@@ -105,34 +116,43 @@ class ModuleMount(StarletteMount):
     def _build_ws_route_operation(self, route: WebsocketRouteOperation) -> None:
         route.build_route_operation(path_prefix=self.path, name=self.name)
 
-    def build_routes(self) -> t.List[BaseRoute]:
-        for route in self.routes:
-            _route: RouteOperation = t.cast("RouteOperation", route)
+    def get_flatten_routes(self) -> t.List[BaseRoute]:
+        if not self._build:
+            for route in self.routes:
+                _route: RouteOperation = t.cast("RouteOperation", route)
 
-            route_versioning = reflect.get_metadata(VERSIONING_KEY, _route.endpoint)
-            route_guards = reflect.get_metadata(GUARDS_KEY, _route.endpoint)
-            openapi = (
-                reflect.get_metadata(OPENAPI_KEY, _route.endpoint) or AttributeDict()
-            )
-
-            if not route_versioning:
-                reflect.define_metadata(
-                    VERSIONING_KEY, self._version, _route.endpoint, default_value=set()
-                )
-            if not route_guards:
-                reflect.define_metadata(
-                    GUARDS_KEY, self._route_guards, _route.endpoint, default_value=[]
+                route_versioning = reflect.get_metadata(VERSIONING_KEY, _route.endpoint)
+                route_guards = reflect.get_metadata(GUARDS_KEY, _route.endpoint)
+                openapi = (
+                    reflect.get_metadata(OPENAPI_KEY, _route.endpoint)
+                    or AttributeDict()
                 )
 
-            if isinstance(_route, Route):
-                if not openapi.tags and self._meta.get("tag"):
-                    tags = {self._meta.get("tag")}
-                    tags.update(set(openapi.tags or []))
-                    openapi.update(tags=list(tags))
-                    reflect.define_metadata(OPENAPI_KEY, openapi, _route.endpoint)
-                self._build_route_operation(_route)
-            elif isinstance(_route, WebsocketRouteOperation):
-                self._build_ws_route_operation(_route)
+                if not route_versioning:
+                    reflect.define_metadata(
+                        VERSIONING_KEY,
+                        self._version,
+                        _route.endpoint,
+                        default_value=set(),
+                    )
+                if not route_guards:
+                    reflect.define_metadata(
+                        GUARDS_KEY,
+                        self._route_guards,
+                        _route.endpoint,
+                        default_value=[],
+                    )
+
+                if isinstance(_route, Route):
+                    if not openapi.tags and self._meta.get("tag"):
+                        tags = {self._meta.get("tag")}
+                        tags.update(set(openapi.tags or []))
+                        openapi.update(tags=list(tags))
+                        reflect.define_metadata(OPENAPI_KEY, openapi, _route.endpoint)
+                    self._build_route_operation(_route)
+                elif isinstance(_route, WebsocketRouteOperation):
+                    self._build_ws_route_operation(_route)
+            self._build = True
         return list(self.routes)
 
 

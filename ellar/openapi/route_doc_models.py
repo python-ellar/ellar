@@ -12,7 +12,7 @@ from starlette.convertors import (
     StringConvertor,
     UUIDConvertor,
 )
-from starlette.routing import compile_path
+from starlette.routing import Mount, compile_path
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 from ellar.compatible import cached_property
@@ -61,12 +61,14 @@ class OpenAPIRoute(ABC):
 class OpenAPIMountDocumentation(OpenAPIRoute):
     def __init__(
         self,
-        mount: t.Union[ModuleMount],
+        mount: t.Union[ModuleMount, Mount],
         tag: t.Optional[str] = None,
         description: t.Optional[str] = None,
         external_doc_description: t.Optional[str] = None,
         external_doc_url: t.Optional[str] = None,
-        global_guards: t.List[t.Union["GuardCanActivate", "GuardCanActivate"]] = None,
+        global_guards: t.List[
+            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        ] = None,
     ) -> None:
         self.tag = tag
         self.description = description
@@ -172,7 +174,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         tags: t.Optional[t.List[str]] = None,
         deprecated: t.Optional[bool] = None,
         global_route_parameters: t.List[t.Dict] = None,
-        guards: t.List[t.Union["GuardCanActivate", "GuardCanActivate"]] = None,
+        guards: t.List[t.Union["GuardCanActivate", t.Type["GuardCanActivate"]]] = None,
     ) -> None:
         self.operation_id = operation_id
         self.summary = summary

@@ -35,8 +35,8 @@ class RouteOperationBase:
 
     async def run_route_guards(self, context: ExecutionContext) -> None:
         app = context.get_app()
-        _guards: t.List[
-            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        _guards: t.Optional[
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = reflect.get_metadata(GUARDS_KEY, self.endpoint)
         if not _guards:
             _guards = app.get_guards()

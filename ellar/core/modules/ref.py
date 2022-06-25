@@ -3,11 +3,9 @@ import typing as t
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from injector import AssistedBuilder
 from starlette.routing import BaseRoute, Mount
 
 from ellar.constants import (
-    APP_MODULE_WATERMARK,
     CONTROLLER_WATERMARK,
     EXCEPTION_HANDLERS_KEY,
     MIDDLEWARE_HANDLERS_KEY,
@@ -23,7 +21,8 @@ from ellar.core.controller import ControllerType
 from ellar.core.routing import ModuleMount
 from ellar.core.routing.router.module import controller_router_factory
 from ellar.core.templating import ModuleTemplating
-from ellar.di import Container, ProviderConfig, injectable
+from ellar.di import Container, ProviderConfig, injectable, is_decorated_with_injectable
+from ellar.di.providers import ModuleProvider
 from ellar.reflect import reflect
 
 from .. import Config
@@ -38,10 +37,9 @@ def create_module_ref_factor(
     config: Config,
     container: Container,
     **init_kwargs: t.Any,
-) -> "ModuleRefBase":
-    if reflect.get_metadata(MODULE_WATERMARK, module_type) or reflect.get_metadata(
-        APP_MODULE_WATERMARK, module_type
-    ):
+) -> t.Union["ModuleRefBase", "ModuleTemplateRef"]:
+    module_ref: t.Union["ModuleRefBase", "ModuleTemplateRef"]
+    if reflect.get_metadata(MODULE_WATERMARK, module_type):
         module_ref = ModuleTemplateRef(
             module_type,
             container=container,
@@ -84,7 +82,7 @@ class ModuleRefBase(ABC):
         self.module.before_init(config=self.config)
         _module_type_instance = self.get_module_instance()
         self.container.install(_module_type_instance)  # support for injector module
-        _module_type_instance.register_services(self.container)
+        # _module_type_instance.register_services(self.container)
 
     def _build_init_kwargs(self, kwargs: t.Dict) -> t.Dict:
         _result = dict()
@@ -99,13 +97,12 @@ class ModuleRefBase(ABC):
         _result.update(kwargs)
         return _result
 
-    def _register_module(self) -> None:
-        injectable()(self.module)
-        self.container.register(AssistedBuilder[self.module])
-
     @abstractmethod
+    def _register_module(self) -> None:
+        """Register Module"""
+
     def get_module_instance(self) -> ModuleBase:
-        """Gets module instance"""
+        return self.container.injector.get(t.cast(t.Type[ModuleBase], self.module))
 
 
 class ModulePlainRef(ModuleRefBase):
@@ -122,12 +119,11 @@ class ModulePlainRef(ModuleRefBase):
         assert (
             type(module_type) == ModuleBaseMeta
         ), f"Module Type must be a subclass of ModuleBase;\n Invalid Type[{module_type}]"
-        self._module_type = module_type
+        self._module_type: t.Type[ModuleBase] = module_type
         self._init_kwargs = self._build_init_kwargs(kwargs)
         self._container = container
         self._config = config
         self._register_module()
-        self.run_module_register_services()
 
     @property
     def module(self) -> t.Type[ModuleBase]:
@@ -141,11 +137,13 @@ class ModulePlainRef(ModuleRefBase):
     def config(self) -> Config:
         return self._config
 
-    def get_module_instance(self) -> ModuleBase:
-        builder: AssistedBuilder = self.container.injector.get(
-            AssistedBuilder[self.module]
+    def _register_module(self) -> None:
+        _module = self.module
+        if not is_decorated_with_injectable(self.module):
+            _module = injectable()(self.module)
+        self.container.register(
+            _module, ModuleProvider(self.module, **self._init_kwargs)
         )
-        return builder.build(**self._init_kwargs)
 
 
 class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
@@ -163,7 +161,7 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
             type(module_type) == ModuleBaseMeta
         ), f"Module Type must be a subclass of ModuleBase;\n Invalid Type[{module_type}]"
 
-        self._module_type = module_type
+        self._module_type: t.Type[ModuleBase] = module_type
         self._container = container
         self._config = config
         self._init_kwargs = self._build_init_kwargs(kwargs)
@@ -182,7 +180,9 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
             reflect.get_metadata(MODULE_METADATA.CONTROLLERS, self._module_type) or []
         )
 
-        self._routers = self._get_all_routers()
+        self._routers: t.Sequence[
+            t.Union[BaseRoute, ModuleMount, Mount]
+        ] = self._get_all_routers()
         self._flatten_routes: t.List[BaseRoute] = []
 
         self.scan_templating_filters()
@@ -203,7 +203,7 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         return self._config
 
     @property
-    def routers(self) -> t.List[t.Union[BaseRoute, ModuleMount, Mount]]:
+    def routers(self) -> t.Sequence[t.Union[BaseRoute, ModuleMount, Mount]]:
         return self._routers
 
     @property
@@ -211,9 +211,10 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         if not self._flatten_routes:
             for router in self._routers:
                 if isinstance(router, ModuleMount):
-                    self._flatten_routes.extend(router.build_routes())
+                    self._flatten_routes.extend(router.get_flatten_routes())
                     continue
-                self._flatten_routes.append(router)
+                if isinstance(router, BaseRoute):
+                    self._flatten_routes.append(router)
         return self._flatten_routes
 
     def run_module_register_services(self) -> None:
@@ -221,11 +222,13 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         self.register_controllers()
         super(ModuleTemplateRef, self).run_module_register_services()
 
-    def get_module_instance(self) -> ModuleBase:
-        builder: AssistedBuilder = self.container.injector.get(
-            AssistedBuilder[self.module]
+    def _register_module(self) -> None:
+        _module = self.module
+        if not is_decorated_with_injectable(self.module):
+            _module = injectable()(self.module)
+        self.container.register(
+            _module, ModuleProvider(self.module, **self._init_kwargs)
         )
-        return builder.build(**self._init_kwargs)
 
     def scan_templating_filters(self) -> None:
         templating_filter = (
@@ -272,7 +275,7 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
                 provider = ProviderConfig(item)
             provider.register(self._container)
 
-    def register_controllers(self):
+    def register_controllers(self) -> None:
         for controller in self._controllers:
             ProviderConfig(controller).register(self._container)
 
@@ -280,7 +283,7 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         _module_type_instance = self._container.injector.get(self._module_type)
         _module_type_instance.application_ready(app)
 
-    def _get_all_routers(self) -> t.List[ModuleMount]:
+    def _get_all_routers(self) -> t.Sequence[t.Union[ModuleMount, Mount, BaseRoute]]:
         _routers = list(
             reflect.get_metadata(MODULE_METADATA.ROUTERS, self._module_type) or []
         )

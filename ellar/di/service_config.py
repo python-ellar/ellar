@@ -11,8 +11,10 @@ from ellar.exceptions import ImproperConfiguration
 from ellar.shortcuts import fail_silently
 from ellar.types import T
 
-from .injector import Container
 from .scopes import DIScope, ScopeDecorator, SingletonScope
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from .injector import Container
 
 __all__ = (
     "ProviderConfig",
@@ -30,8 +32,8 @@ class ProviderConfig(t.Generic[T]):
         self,
         base_type: t.Union[t.Type[T], t.Type],
         *,
-        use_value: t.Optional[T] = None,
-        use_class: t.Optional[t.Type[T]] = None
+        use_value: T = None,
+        use_class: t.Type[T] = None
     ):
         if use_value and use_class:
             raise ImproperConfiguration(
@@ -42,7 +44,7 @@ class ProviderConfig(t.Generic[T]):
         self.use_value = use_value
         self.use_class = use_class
 
-    def register(self, container: Container) -> None:
+    def register(self, container: "Container") -> None:
         scope = get_scope(self.base_type) or SingletonScope
         if self.use_class:
             scope = get_scope(self.use_class) or SingletonScope

@@ -1,7 +1,6 @@
 from typing import Optional
 
 from ellar.common import (
-    ApplicationModule,
     Body,
     Controller,
     Module,
@@ -111,7 +110,7 @@ class ModuleBaseExample(ModuleBase):
         cls._before_init_called = True
 
     def application_ready(self, app: "App") -> None:
-        self._app_ready_called = True
+        self.__class__._app_ready_called = True
 
     @on_startup
     async def on_startup_handler(cls):
@@ -132,12 +131,3 @@ SampleModule = Module(
         ProviderConfig(AnotherUserService, use_value=AnotherUserService()),
     ),
 )(ModuleBaseExample2)
-
-
-@ApplicationModule(
-    modules=(SampleModule,),
-)
-class SampleApplicationModule(ModuleBase):
-    @exception_handler(404)
-    async def exception_404_override(cls, request, exc):
-        pass

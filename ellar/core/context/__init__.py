@@ -55,7 +55,10 @@ class ExecutionContext(IExecutionContext):
 
     def get_class(self) -> t.Optional[t.Type["ControllerBase"]]:
         reflector = self.get_service_provider().get(Reflector)
-        return reflector.get(CONTROLLER_CLASS_KEY, self.get_handler())
+        result: t.Optional[t.Type["ControllerBase"]] = reflector.get(
+            CONTROLLER_CLASS_KEY, self.get_handler()
+        )
+        return result
 
     @property
     def has_response(self) -> bool:

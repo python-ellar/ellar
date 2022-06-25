@@ -7,7 +7,7 @@ from .decorators.exception import exception_handler
 from .decorators.guards import guards
 from .decorators.html import Render, template_filter, template_global
 from .decorators.middleware import middleware
-from .decorators.modules import ApplicationModule, Module
+from .decorators.modules import Module
 from .decorators.openapi import openapi
 from .decorators.request import on_shutdown, on_startup
 from .decorators.serializer import serializer_filter
@@ -48,7 +48,6 @@ __all__ = [
     "ParamTypes",
     "set_meta",
     "Controller",
-    "ApplicationModule",
     "openapi",
     "version",
     "Delete",

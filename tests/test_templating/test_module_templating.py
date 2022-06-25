@@ -3,7 +3,6 @@ import os
 import pytest
 
 from ellar.common import Module, template_filter, template_global
-from ellar.constants import MODULE_METADATA
 from ellar.core import Config, TestClientFactory
 from ellar.core.modules import ModuleBase, ModuleTemplateRef
 from ellar.di import StarletteInjector

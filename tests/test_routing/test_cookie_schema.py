@@ -1,4 +1,4 @@
-from ellar.common import Cookie, Get
+from ellar.common import Cookie
 from ellar.core import TestClientFactory
 from ellar.core.routing import ModuleRouter
 from ellar.openapi import OpenAPIDocumentBuilder

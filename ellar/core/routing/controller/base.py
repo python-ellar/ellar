@@ -10,13 +10,15 @@ class ControllerRouteOperationBase:
     endpoint: t.Callable
 
     def _get_controller_instance(self, ctx: ExecutionContext) -> ControllerBase:
-        controller_type = reflect.get_metadata(CONTROLLER_CLASS_KEY, self.endpoint)
+        controller_type: t.Optional[t.Type[ControllerBase]] = reflect.get_metadata(
+            CONTROLLER_CLASS_KEY, self.endpoint
+        )
         if not controller_type:
             raise RuntimeError("Controller Type was not found")
 
         service_provider = ctx.get_service_provider()
 
-        controller_instance = service_provider.get(controller_type)
+        controller_instance: ControllerBase = service_provider.get(controller_type)
         controller_instance.context = ctx
         return controller_instance
 

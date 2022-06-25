@@ -88,7 +88,7 @@ class OperationDefinitions:
             self._get_operation(route_parameter=route_parameter)
             return path
 
-        def _decorator(endpoint_handler: t.Callable) -> TCallable:
+        def _decorator(endpoint_handler: TCallable) -> TCallable:
             _route_parameter = endpoint_parameter_partial(
                 endpoint=endpoint_handler, path=path
             )
@@ -268,7 +268,7 @@ class OperationDefinitions:
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
-        def _decorator(endpoint_handler: t.Callable) -> TCallable:
+        def _decorator(endpoint_handler: TCallable) -> TCallable:
             endpoint_parameter = RouteParameters(
                 name=name,
                 path=path,
@@ -291,7 +291,9 @@ class OperationDefinitions:
         use_extra_handler: bool = False,
         extra_handler_type: t.Optional[t.Type] = None,
     ) -> t.Callable[[TCallable], t.Union[TCallable, TWebsocketOperation]]:
-        def _decorator(endpoint_handler: t.Callable) -> TWebsocketOperation:
+        def _decorator(
+            endpoint_handler: TCallable,
+        ) -> t.Union[TCallable, TWebsocketOperation]:
             endpoint_parameter = WsRouteParameters(
                 name=name,
                 path=path,

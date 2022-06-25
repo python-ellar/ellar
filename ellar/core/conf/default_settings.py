@@ -24,6 +24,10 @@ DEBUG: bool = False
 DEFAULT_JSON_CLASS: t.Type[JSONResponse] = JSONResponse
 SECRET_KEY: str = "your-secret-key"
 
+# injector auto_bind = True allows you to resolve types that are not registered on the container
+# For more info, read: https://injector.readthedocs.io/en/latest/index.html
+INJECTOR_AUTO_BIND = False
+
 TEMPLATES_AUTO_RELOAD: t.Optional[bool] = None
 
 VERSIONING_SCHEME: BaseAPIVersioning = DefaultAPIVersioning()

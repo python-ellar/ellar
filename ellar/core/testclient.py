@@ -2,7 +2,7 @@ import typing as t
 
 from starlette.testclient import TestClient as TestClient
 
-from ellar.constants import APP_MODULE_WATERMARK, MODULE_METADATA
+from ellar.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.core import ModuleBase
 from ellar.core.factory import AppFactory
 from ellar.core.main import App
@@ -60,7 +60,7 @@ class TestClientFactory:
         module: t.Union[t.Type, t.Type[ModuleBase]],
         mock_services: t.Sequence[ProviderConfig] = tuple(),
     ) -> _TestingModule:
-        app_module_watermark = reflect.get_metadata(APP_MODULE_WATERMARK, module)
+        app_module_watermark = reflect.get_metadata(MODULE_WATERMARK, module)
         if mock_services:
             reflect.define_metadata(
                 MODULE_METADATA.PROVIDERS, list(mock_services), module, default_value=[]
