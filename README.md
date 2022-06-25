@@ -90,6 +90,11 @@ module = app.install_module(OpenAPIDocumentModule, document=document)
 module.setup_swagger_doc()
 ```
 
+### Start up Server
+```bash
+uvicorn server:app --reload
+```
+
 ### Interactive API docs
 
 Now go to <a href="http://localhost:8000/docs/" target="_blank">http://localhost:8000/docs/</a>
