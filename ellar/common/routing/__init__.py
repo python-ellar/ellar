@@ -18,20 +18,20 @@ from .params import (
 
 _route_definitions = OperationDefinitions()
 
-Get = _route_definitions.get
-Post = _route_definitions.post
+get = _route_definitions.get
+post = _route_definitions.post
 
-Delete = _route_definitions.delete
-Patch = _route_definitions.patch
+delete = _route_definitions.delete
+patch = _route_definitions.patch
 
-Put = _route_definitions.put
-Options = _route_definitions.options
+put = _route_definitions.put
+options = _route_definitions.options
 
-Trace = _route_definitions.trace
-Head = _route_definitions.head
+trace = _route_definitions.trace
+head = _route_definitions.head
 
-HttpRoute = _route_definitions.http_route
-WsRoute = _route_definitions.ws_route
+http_route = _route_definitions.http_route
+ws_route = _route_definitions.ws_route
 
 __all__ = [
     "Ctx",
@@ -48,14 +48,14 @@ __all__ = [
     "Query",
     "Param",
     "ParamTypes",
-    "Get",
-    "Post",
-    "Delete",
-    "Patch",
-    "Put",
-    "Options",
-    "Trace",
-    "Head",
-    "HttpRoute",
-    "WsRoute",
+    "get",
+    "post",
+    "delete",
+    "patch",
+    "put",
+    "options",
+    "trace",
+    "head",
+    "http_route",
+    "ws_route",
 ]

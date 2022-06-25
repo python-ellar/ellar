@@ -118,7 +118,7 @@ def Controller(
         _tag = _controller_type.controller_class_name()
 
         if not kwargs.openapi.tag:  # type: ignore
-            kwargs.openapi.tag = _tag  # type: ignore
+            kwargs["openapi"]["tag"] = _tag  # type: ignore
 
         if kwargs["path"] is NOT_SET:
             kwargs["path"] = f"/{_tag}"
