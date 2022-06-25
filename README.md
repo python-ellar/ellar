@@ -27,5 +27,11 @@
 - Pydantic
 - Injector
 
+## Installation
+
+```
+pip install django-ninja-extra
+```
+
 ## Status
 Project is still in development
