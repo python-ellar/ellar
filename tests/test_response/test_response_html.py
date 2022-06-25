@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from jinja2 import TemplateNotFound
 
-from ellar.common import Controller, Get, Render
+from ellar.common import Controller, get, render
 from ellar.constants import OPERATION_HANDLER_KEY
 from ellar.core import TestClientFactory
 from ellar.core.response.model import HTMLResponseModel
@@ -17,7 +17,7 @@ BASEDIR = Path(__file__).resolve().parent.parent
 
 @Controller
 class EllarController:
-    @Get(
+    @get(
         "/index",
         response={200: HTMLResponseModel(template_name="index.html", use_mvc=True)},
     )
@@ -25,13 +25,13 @@ class EllarController:
         """Looks for ellar/index since use_mvc=True"""
         return {"index": True, "use_mvc": True}
 
-    @Get("/index2")
-    @Render()
+    @get("/index2")
+    @render()
     def index(self):
         """detest its mvc and Looks for ellar/index"""
         return {"index": True, "use_mvc": True}
 
-    @Get(
+    @get(
         "/another_index",
         response={200: HTMLResponseModel(template_name="ellar/index", use_mvc=False)},
     )
@@ -39,8 +39,8 @@ class EllarController:
         """Looks for ellar/index, since use_mvc=False"""
         return {"index": True, "use_mvc": False}
 
-    @Get("/another_index2")
-    @Render(template_name="ellar/index.html")
+    @get("/another_index2")
+    @render(template_name="ellar/index.html")
     def another_index2(self):
         """Since a template name is provided, it will looks for template name"""
         return {"index": True, "use_mvc": False}
@@ -49,15 +49,15 @@ class EllarController:
 mr = ModuleRouter("")
 
 
-@mr.Get(
+@mr.get(
     "/render_template", response=HTMLResponseModel(template_name="index", use_mvc=False)
 )
 def render_template():
     return {}
 
 
-@mr.Get("/render_template2")
-@Render(template_name="index")
+@mr.get("/render_template2")
+@render(template_name="index")
 def render_template():
     return {}
 
@@ -117,8 +117,8 @@ def test_render_exception_works():
         Exception, match="template_name is required for function endpoints"
     ):
 
-        @Get("/render_template3")
-        @Render()
+        @get("/render_template3")
+        @render()
         def render_template3():
             pass
 
@@ -126,23 +126,23 @@ def test_render_exception_works():
         Exception, match="template_name is required for function endpoints"
     ):
 
-        @Render()
-        @Get("/render_template4")
+        @render()
+        @get("/render_template4")
         def render_template4():
             pass
 
 
 def test_runtime_exception_works():
-    @Get("/runtime_error_1", response=HTMLResponseModel(template_name="index2"))
+    @get("/runtime_error_1", response=HTMLResponseModel(template_name="index2"))
     def runtime_error_1():
         pass
 
-    @Get("/runtime_error_2")
-    @Render(template_name="index2")
+    @get("/runtime_error_2")
+    @render(template_name="index2")
     def runtime_error_2():
         pass
 
-    @Get(
+    @get(
         "/runtime_controller_error_1",
         response=HTMLResponseModel(template_name="index2", use_mvc=True),
     )

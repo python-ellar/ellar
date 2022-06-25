@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-from ellar.common import Controller, Get
+from ellar.common import Controller, get
 from ellar.core import ControllerBase, TestClientFactory
 from ellar.core.templating import (
     TemplateResponse,
@@ -14,12 +14,12 @@ BASEDIR = Path(__file__).resolve().parent.parent
 
 @Controller
 class EllarController(ControllerBase):
-    @Get("/index", response={200: TemplateResponse})
+    @get("/index", response={200: TemplateResponse})
     def index_render_template(self):
         """Looks for ellar/index since use_mvc=True"""
         return render_template("index", request=self.context.switch_to_request())
 
-    @Get("/another_index2")
+    @get("/another_index2")
     def another_index2(self, first_name: str, last_name: str):
         """Since a template name is provided, it will looks for template name"""
         return render_template_string(

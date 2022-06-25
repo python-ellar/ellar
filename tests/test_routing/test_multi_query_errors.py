@@ -1,6 +1,6 @@
 from typing import List
 
-from ellar.common import Get, Query
+from ellar.common import Query, get
 from ellar.core import TestClientFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
@@ -8,7 +8,7 @@ from ellar.serializer import serialize_object
 tm = TestClientFactory.create_test_module()
 
 
-@Get("/items/")
+@get("/items/")
 def read_items(q: List[int] = Query(None)):
     return {"q": q}
 

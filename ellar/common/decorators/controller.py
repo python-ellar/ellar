@@ -82,7 +82,7 @@ def Controller(
     ] = None,
     include_in_schema: bool = True,
 ) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:
-    _prefix: t.Optional[t.Any] = prefix or NOT_SET
+    _prefix: t.Optional[t.Any] = prefix if prefix is not None else NOT_SET
     if prefix and isinstance(prefix, type):
         _prefix = NOT_SET
 
@@ -118,7 +118,7 @@ def Controller(
         _tag = _controller_type.controller_class_name()
 
         if not kwargs.openapi.tag:  # type: ignore
-            kwargs.openapi.tag = _tag  # type: ignore
+            kwargs["openapi"]["tag"] = _tag  # type: ignore
 
         if kwargs["path"] is NOT_SET:
             kwargs["path"] = f"/{_tag}"

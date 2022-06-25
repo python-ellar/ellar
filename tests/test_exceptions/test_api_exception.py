@@ -1,6 +1,6 @@
 import pytest
 
-from ellar.common import Get
+from ellar.common import get
 from ellar.core import TestClientFactory
 from ellar.exceptions import (
     APIException,
@@ -21,7 +21,7 @@ test_module = TestClientFactory.create_test_module()
 _exception_runner = ExceptionRunner(APIException)
 
 
-@Get("/exception")
+@get("/exception")
 def exception_():
     _exception_runner.run()
 

@@ -1,6 +1,6 @@
 import pytest
 
-from ellar.common import Controller, Get, HttpRoute, WsRoute
+from ellar.common import Controller, get, http_route, ws_route
 from ellar.constants import CONTROLLER_CLASS_KEY, OPENAPI_KEY, OPERATION_HANDLER_KEY
 from ellar.core import ControllerBase
 from ellar.core.routing.router.module import controller_router_factory
@@ -14,31 +14,31 @@ class SomeController:
     def __init__(self, a: str):
         self.a = a
 
-    @Get("/sample")
+    @get("/sample")
     def some_example(self):
         pass
 
-    @Get("/sample")
+    @get("/sample")
     def some_example_3(self):
         # some_example_3 overrides `sample_example` OPERATION since its the same 'path' and 'method'
         pass
 
-    @HttpRoute("/sample", methods=["get"])
+    @http_route("/sample", methods=["get"])
     def some_example_4(self):
         # some_example_4 overrides `sample_example_3` OPERATION since its the same 'path' and 'method'
         pass
 
-    @HttpRoute("/sample", methods=["get", "post"])
+    @http_route("/sample", methods=["get", "post"])
     def some_example_5(self):
-        # `sample_example_4 - Get` overrides `sample_example_5 - Get` RUNTIME CALL in that order
+        # `sample_example_4 - get` overrides `sample_example_5 - get` RUNTIME CALL in that order
         # And '/sample' POST call will be handled here
         pass
 
-    @WsRoute("/sample")
+    @ws_route("/sample")
     def some_example_ws(self):
         pass
 
-    @WsRoute("/sample")
+    @ws_route("/sample")
     def some_example_ws_2(self):
         # `some_example_ws_2` overrides `some_example_ws` OPERATION
         pass

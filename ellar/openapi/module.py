@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.common import Get, Module, Render, guards as guards_decorator
+from ellar.common import Module, get, guards as guards_decorator, render
 from ellar.core.guard import GuardCanActivate
 from ellar.core.main import App
 from ellar.core.modules import ModuleBase
@@ -26,7 +26,7 @@ class OpenAPIDocumentModule(ModuleBase):
         if not openapi_url and document:
             self._openapi_url = "/openapi.json"
 
-            @Get(self._openapi_url, include_in_schema=False)
+            @get(self._openapi_url, include_in_schema=False)
             @guards_decorator(*self._guards)
             def openapi_schema() -> t.Any:
                 assert document and isinstance(document, OpenAPI), "Invalid Document"
@@ -39,8 +39,8 @@ class OpenAPIDocumentModule(ModuleBase):
     ) -> None:
         _path = path.lstrip("/").rstrip("/")
 
-        @Get(f"/{_path}", include_in_schema=False)
-        @Render(template_name)
+        @get(f"/{_path}", include_in_schema=False)
+        @render(template_name)
         @guards_decorator(*self._guards)
         def _doc() -> t.Any:
             return template_context

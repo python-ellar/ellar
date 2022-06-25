@@ -191,17 +191,17 @@ class ModuleRouter(ModuleMount):
         )
         _route_definitions = self.operation_definition_class(t.cast(list, self.routes))
 
-        self.Get = _route_definitions.get
-        self.Post = _route_definitions.post
+        self.get = _route_definitions.get
+        self.post = _route_definitions.post
 
-        self.Delete = _route_definitions.delete
-        self.Patch = _route_definitions.patch
+        self.delete = _route_definitions.delete
+        self.patch = _route_definitions.patch
 
-        self.Put = _route_definitions.put
-        self.Options = _route_definitions.options
+        self.put = _route_definitions.put
+        self.options = _route_definitions.options
 
-        self.Trace = _route_definitions.trace
-        self.Head = _route_definitions.head
+        self.trace = _route_definitions.trace
+        self.head = _route_definitions.head
 
-        self.HttpRoute = _route_definitions.http_route
-        self.WsRoute = _route_definitions.ws_route
+        self.http_route = _route_definitions.http_route
+        self.ws_route = _route_definitions.ws_route

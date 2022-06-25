@@ -1,15 +1,15 @@
-from ellar.common import Controller, Get, WsRoute
+from ellar.common import Controller, get, ws_route
 from ellar.core import ControllerBase
 from ellar.core.routing import ModuleRouter
 
 
 @Controller("/prefix")
 class SampleController(ControllerBase):
-    @Get("/sample")
+    @get("/sample")
     def sample_example(self):
         pass
 
-    @WsRoute("/sample")
+    @ws_route("/sample")
     def sample_example_ws(self):
         pass
 
@@ -17,6 +17,6 @@ class SampleController(ControllerBase):
 router = ModuleRouter("/prefix/router", name="mr")
 
 
-@router.Get("/example")
+@router.get("/example")
 def example(ctx):
     pass

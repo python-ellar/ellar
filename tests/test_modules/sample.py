@@ -5,15 +5,15 @@ from ellar.common import (
     Controller,
     Module,
     ModuleRouter,
-    Put,
     Ws,
-    WsRoute,
     exception_handler,
     middleware,
     on_shutdown,
     on_startup,
+    put,
     template_filter,
     template_global,
+    ws_route,
 )
 from ellar.core import App, Config
 from ellar.core.connection import WebSocket
@@ -43,7 +43,7 @@ class SampleController:
     def __init__(self, user_service: UserService):
         self._user_service = user_service
 
-    @Put("/{item_id:uuid}")
+    @put("/{item_id:uuid}")
     async def update_item(
         self,
         *,
@@ -64,7 +64,7 @@ class SampleController:
         results.update(self._user_service.user)
         return results
 
-    @WsRoute("/websocket")
+    @ws_route("/websocket")
     async def websocket_test(self, *, web_socket: WebSocket = Ws()):
         await web_socket.accept()
         await web_socket.send_json({"message": "Websocket okay"})
@@ -74,12 +74,12 @@ class SampleController:
 mr = ModuleRouter("/mr")
 
 
-@mr.Get("/get")
+@mr.get("/get")
 def get_mr():
     return {"get_mr", "OK"}
 
 
-@mr.Post("/post")
+@mr.post("/post")
 def post_mr():
     return {"post_mr", "OK"}
 

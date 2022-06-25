@@ -1,6 +1,6 @@
 from typing import Union
 
-from ellar.common import Post
+from ellar.common import post
 from ellar.core import TestClientFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
@@ -10,7 +10,7 @@ from .sample import Item, OtherItem
 tm = TestClientFactory.create_test_module()
 
 
-@Post("/items/")
+@post("/items/")
 def save_union_body(item: Union[OtherItem, Item]):
     return {"item": item}
 

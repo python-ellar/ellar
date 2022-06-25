@@ -5,7 +5,7 @@ from .decorators.base import set_meta
 from .decorators.controller import Controller
 from .decorators.exception import exception_handler
 from .decorators.guards import guards
-from .decorators.html import Render, template_filter, template_global
+from .decorators.html import render, template_filter, template_global
 from .decorators.middleware import middleware
 from .decorators.modules import Module
 from .decorators.openapi import openapi
@@ -13,16 +13,16 @@ from .decorators.request import on_shutdown, on_startup
 from .decorators.serializer import serializer_filter
 from .decorators.versioning import version
 from .routing import (
-    Delete,
-    Get,
-    Head,
-    HttpRoute,
-    Options,
-    Patch,
-    Post,
-    Put,
-    Trace,
-    WsRoute,
+    delete,
+    get,
+    head,
+    http_route,
+    options,
+    patch,
+    post,
+    put,
+    trace,
+    ws_route,
 )
 from .routing.params import (
     Body,
@@ -41,7 +41,7 @@ from .routing.params import (
 
 __all__ = [
     "ModuleRouter",
-    "Render",
+    "render",
     "Module",
     "guards",
     "Param",
@@ -50,16 +50,16 @@ __all__ = [
     "Controller",
     "openapi",
     "version",
-    "Delete",
-    "Get",
-    "Head",
-    "HttpRoute",
-    "Options",
-    "Patch",
-    "Post",
-    "Put",
-    "Trace",
-    "WsRoute",
+    "delete",
+    "get",
+    "head",
+    "http_route",
+    "options",
+    "patch",
+    "post",
+    "put",
+    "trace",
+    "ws_route",
     "Body",
     "Cookie",
     "File",

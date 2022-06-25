@@ -1,4 +1,4 @@
-from ellar.common import Put
+from ellar.common import put
 from ellar.core import TestClientFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
@@ -6,7 +6,7 @@ from ellar.serializer import serialize_object
 tm = TestClientFactory.create_test_module()
 
 
-@Put("/items/{item_id}")
+@put("/items/{item_id}")
 def save_item_no_body(item_id: str):
     return {"item_id": item_id}
 

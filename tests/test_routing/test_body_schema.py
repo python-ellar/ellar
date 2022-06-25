@@ -1,4 +1,4 @@
-from ellar.common import Get
+from ellar.common import get
 from ellar.core.factory import AppFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
@@ -8,7 +8,7 @@ from .sample import Product
 app = AppFactory.create_app()
 
 
-@Get("/product")
+@get("/product")
 async def create_item(product: Product):
     return product
 

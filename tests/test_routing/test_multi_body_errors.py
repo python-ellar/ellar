@@ -3,7 +3,7 @@ from typing import List
 
 from pydantic import BaseModel, condecimal
 
-from ellar.common import Post
+from ellar.common import post
 from ellar.core import TestClientFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
@@ -16,7 +16,7 @@ class Item2(BaseModel):
     age: condecimal(gt=Decimal(0.0))  # type: ignore
 
 
-@Post("/items/")
+@post("/items/")
 def save_item_no_body(item: List[Item2]):
     return {"item": item}
 

@@ -1,9 +1,9 @@
+from ellar.common import Module
 from ellar.core.modules import ModuleBase
 
-from catapp.application.cats.controllers import CatController
-from catapp.application.cats.routers import cat_router
-from catapp.application.cats.services import CatService, AnotherService
-from ellar.common import Module
+from .controllers import CatController
+from .routers import cat_router
+from .services import AnotherService, CatService
 
 
 @Module(

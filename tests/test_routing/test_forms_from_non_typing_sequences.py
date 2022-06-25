@@ -5,17 +5,17 @@ from ellar.core.routing import ModuleRouter
 mr = ModuleRouter("")
 
 
-@mr.Post("/form/python-list")
+@mr.post("/form/python-list")
 def post_form_param_list(items: list = Form(...)):
     return items
 
 
-@mr.Post("/form/python-set")
+@mr.post("/form/python-set")
 def post_form_param_set(items: set = Form(...)):
     return items
 
 
-@mr.Post("/form/python-tuple")
+@mr.post("/form/python-tuple")
 def post_form_param_tuple(items: tuple = Form(...)):
     return items
 

@@ -9,7 +9,7 @@ from .sample import Data, Filter
 mr = ModuleRouter("")
 
 
-@mr.Get("/test/header")
+@mr.get("/test/header")
 def header_params_schema(
     request,
     filters: Filter = Header(..., alias="will_not_work_for_schema_with_many_field"),
@@ -17,7 +17,7 @@ def header_params_schema(
     return filters.dict()
 
 
-@mr.Get("/test-mixed/header")
+@mr.get("/test-mixed/header")
 def header_params_mixed_schema(
     request,
     filters: Filter = Header(...),

@@ -15,17 +15,17 @@ class Item(BaseModel):
     owner_ids: Optional[List[int]] = None
 
 
-@mr.Get("/items/valid")
+@mr.get("/items/valid")
 def get_valid():
     return Item(aliased_name="valid", price=1.0)
 
 
-@mr.Get("/items/coerce")
+@mr.get("/items/coerce")
 def get_coerce():
     return Item(aliased_name="coerce", price="1.0")
 
 
-@mr.Get("/items/validlist")
+@mr.get("/items/validlist")
 def get_validlist():
     return [
         Item(aliased_name="foo"),
@@ -34,7 +34,7 @@ def get_validlist():
     ]
 
 
-@mr.Get("/items/validdict", response=Dict[str, Item])
+@mr.get("/items/validdict", response=Dict[str, Item])
 def get_validdict():
     return {
         "k1": Item(aliased_name="foo"),
@@ -43,19 +43,19 @@ def get_validdict():
     }
 
 
-@mr.Get("/items/valid-exclude-unset")
+@mr.get("/items/valid-exclude-unset")
 @serializer_filter(exclude_unset=True)
 def get_valid_exclude_unset():
     return Item(aliased_name="valid", price=1.0)
 
 
-@mr.Get("/items/coerce-exclude-unset")
+@mr.get("/items/coerce-exclude-unset")
 @serializer_filter(exclude_unset=True)
 def get_coerce_exclude_unset():
     return Item(aliased_name="coerce", price="1.0")
 
 
-@mr.Get("/items/validlist-exclude-unset")
+@mr.get("/items/validlist-exclude-unset")
 @serializer_filter(exclude_unset=True)
 def get_validlist_exclude_unset():
     return [
@@ -65,7 +65,7 @@ def get_validlist_exclude_unset():
     ]
 
 
-@mr.Get("/items/validdict-exclude-unset")
+@mr.get("/items/validdict-exclude-unset")
 @serializer_filter(exclude_unset=True)
 def get_validdict_exclude_unset():
     return {
