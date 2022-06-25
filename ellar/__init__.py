@@ -1,3 +1,3 @@
-"""Ellar, a python Web Framework, blazing fast, simple and easy to learn"""
+"""Ellar is python web framework for building fast, efficient and scalable server-side applications."""
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"
