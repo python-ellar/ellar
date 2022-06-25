@@ -15,7 +15,7 @@ def openapi(
 ) -> t.Callable:
     return set_meta(
         OPENAPI_KEY,
-        dict(
+        AttributeDict(
             operation_id=operation_id,
             summary=summary,
             description=description,

@@ -55,13 +55,13 @@ class _Reflect:
                 if isinstance(existing, (list, tuple)):
                     _meta_values.extend(existing)
                     if isinstance(existing, tuple):
-                        _meta_values = tuple(_meta_values)
+                        _meta_values = type(existing)(_meta_values)
                 elif isinstance(existing, set):
                     _meta_values.extend(existing)
-                    _meta_values = set(_meta_values)
+                    _meta_values = type(existing)(_meta_values)
                 elif isinstance(existing, dict):
                     existing.update(dict(metadata_value))
-                    _meta_values = dict(existing)
+                    _meta_values = type(existing)(existing)
                 else:
                     # if existing item is not a Collection, And we are trying to set same key again,
                     _meta_values = metadata_value
