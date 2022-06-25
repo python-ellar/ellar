@@ -1,8 +1,9 @@
-from catapp.application.cats.module import CatModule
-from ellar.common import ApplicationModule
+from ellar.common import Module
+
+from ..application.cats.module import CatModule
 
 
-@ApplicationModule(
+@Module(
     modules=(CatModule, )
 )
 class AppModuleTest:

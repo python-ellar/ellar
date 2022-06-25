@@ -9,36 +9,36 @@ from .sample import router
 another_router = ModuleRouter("/prefix/another", tag="another_router", name="arouter")
 
 
-@another_router.Get("/sample")
+@another_router.get("/sample")
 def some_example(self):
     pass
 
 
-@another_router.Get("/sample")
+@another_router.get("/sample")
 def some_example_3():
     # some_example_3 overrides `sample_example` OPERATION since its the same 'path' and 'method'
     pass
 
 
-@another_router.HttpRoute("/sample", methods=["get"])
+@another_router.http_route("/sample", methods=["get"])
 def some_example_4():
     # some_example_4 overrides `sample_example_3` OPERATION since its the same 'path' and 'method'
     pass
 
 
-@another_router.HttpRoute("/sample", methods=["get", "post"])
+@another_router.http_route("/sample", methods=["get", "post"])
 def some_example_5():
-    # `sample_example_4 - Get` overrides `sample_example_5 - Get` RUNTIME CALL in that order
+    # `sample_example_4 - get` overrides `sample_example_5 - get` RUNTIME CALL in that order
     # And '/sample' POST call will be handled here
     pass
 
 
-@another_router.WsRoute("/sample")
+@another_router.ws_route("/sample")
 def some_example_ws():
     pass
 
 
-@another_router.WsRoute("/sample")
+@another_router.ws_route("/sample")
 def some_example_ws_2():
     # `some_example_ws_2` overrides `some_example_ws` OPERATION
     pass
@@ -81,7 +81,7 @@ def test_tag_configuration_module_router():
 def test_flatten_name_module_route_build():
     new_router = ModuleRouter("/items/{orgID:int}", name="has_name")
 
-    @new_router.Get
+    @new_router.get
     def some_route():
         pass
 
@@ -90,7 +90,7 @@ def test_flatten_name_module_route_build():
 
     new_router = ModuleRouter("/items/{orgID:int}")
 
-    @new_router.Get
+    @new_router.get
     def some_route():
         pass
 

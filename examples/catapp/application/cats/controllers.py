@@ -1,5 +1,6 @@
-from catapp.application.cats.services import CatService
-from ellar.common import Controller, Get, Put, Post, Delete, version, Render, Ctx
+from ellar.common import Controller, Ctx, delete, get, put, render, version
+
+from .services import CatService
 
 
 @Controller
@@ -7,24 +8,24 @@ class CatController:
     def __init__(self, cat_service: CatService) -> None:
         self.cat_service = cat_service
 
-    @Get("/create")
+    @get("/create")
     async def create_cat(self):
         return self.cat_service.create_cat()
 
-    @Put("/{cat_id:int}")
+    @put("/{cat_id:int}")
     async def update_cat(self, cat_id: int):
         return self.cat_service.update_cat(cat_id)
 
-    @Delete("/{cat_id:int}")
+    @delete("/{cat_id:int}")
     async def deleted_cat(self, cat_id: int):
         return self.cat_service.deleted_cat(cat_id)
 
-    @Get("/")
-    @Render()
+    @get("/")
+    @render()
     async def list(self, ctx=Ctx()):
         return self.cat_service.list_cat()
 
-    @Get("/create", name='v2_create')
+    @get("/create", name='v2_create')
     @version('v2')
     async def create_cat_v2(self):
         return self.cat_service.create_cat()

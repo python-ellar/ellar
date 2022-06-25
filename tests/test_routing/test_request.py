@@ -7,37 +7,37 @@ from ellar.core.routing import ModuleRouter
 mr = ModuleRouter("")
 
 
-@mr.Get("/headers1")
+@mr.get("/headers1")
 def headers1(request, user_agent: str = Header(...)):
     return user_agent
 
 
-@mr.Get("/headers2")
+@mr.get("/headers2")
 def headers2(request, ua: str = Header(..., alias="User-Agent")):
     return ua
 
 
-@mr.Get("/headers3")
+@mr.get("/headers3")
 def headers3(request, content_length: int = Header(...)):
     return content_length
 
 
-@mr.Get("/headers4")
+@mr.get("/headers4")
 def headers4(request, c_len: int = Header(..., alias="Content-length")):
     return c_len
 
 
-@mr.Get("/headers5")
+@mr.get("/headers5")
 def headers5(request, missing: int = Header(...)):
     return missing
 
 
-@mr.Get("/cookies1")
+@mr.get("/cookies1")
 def cookies1(request, weapon: str = Cookie(...)):
     return weapon
 
 
-@mr.Get("/cookies2")
+@mr.get("/cookies2")
 def cookies2(request, wpn: str = Cookie(..., alias="weapon")):
     return wpn
 

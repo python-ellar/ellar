@@ -1,7 +1,7 @@
 import pytest
 from pydantic.error_wrappers import ErrorWrapper
 
-from ellar.common import Get, Ws, WsRoute
+from ellar.common import Ws, get, ws_route
 from ellar.core import TestClientFactory
 from ellar.exceptions.validation import (
     RequestValidationError,
@@ -15,12 +15,12 @@ test_module = TestClientFactory.create_test_module()
 _exception_runner = ExceptionRunner(RequestValidationError)
 
 
-@Get("/exception-validation")
+@get("/exception-validation")
 def exception_http():
     _exception_runner.run()
 
 
-@WsRoute("/exception-ws", use_extra_handler=True)
+@ws_route("/exception-Ws", use_extra_handler=True)
 async def exception_ws(websocket=Ws()):
     _exception_runner.run()
 
@@ -74,7 +74,7 @@ def test_websocket_validation_error():
         ],
     )
     with pytest.raises(WebSocketRequestValidationError) as wex:
-        with client.websocket_connect("/exception-ws") as websocket:
+        with client.websocket_connect("/exception-Ws") as websocket:
             websocket.send_json({"hello": "world"})
     assert wex.value.errors() == [
         {"loc": ("body",), "msg": "Invalid Request", "type": "value_error.exception"},

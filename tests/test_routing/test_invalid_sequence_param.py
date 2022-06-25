@@ -22,7 +22,7 @@ class Item2(BaseModel):
 def test_invalid_sequence(field_parameter):
     with pytest.raises(ImproperConfiguration):
 
-        @mr.Get("/items/")
+        @mr.get("/items/")
         def read_items(q: List[Item] = field_parameter):
             pass  # pragma: no cover
 
@@ -31,7 +31,7 @@ def test_invalid_sequence(field_parameter):
 def test_invalid_tuple(field_parameter):
     with pytest.raises(ImproperConfiguration):
 
-        @mr.Get("/items/")
+        @mr.get("/items/")
         def read_items(q: Tuple[Item, Item] = field_parameter):
             pass  # pragma: no cover
 
@@ -40,7 +40,7 @@ def test_invalid_tuple(field_parameter):
 def test_invalid_dict(field_parameter):
     with pytest.raises(ImproperConfiguration):
 
-        @mr.Get("/items/")
+        @mr.get("/items/")
         def read_items(q: Dict[str, Item] = field_parameter):
             pass  # pragma: no cover
 
@@ -49,7 +49,7 @@ def test_invalid_dict(field_parameter):
 def test_invalid_simple_dict(field_parameter):
     with pytest.raises(ImproperConfiguration):
 
-        @mr.Get("/items/")
+        @mr.get("/items/")
         def read_items(q: Optional[dict] = field_parameter):
             pass  # pragma: no cover
 
@@ -58,6 +58,6 @@ def test_invalid_simple_dict(field_parameter):
 def test_invalid_group_type(field_parameter):
     with pytest.raises(ImproperConfiguration):
 
-        @mr.Get("/items/")
+        @mr.get("/items/")
         def read_items(q: Item2 = field_parameter):
             pass  # pragma: no cover

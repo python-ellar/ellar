@@ -2,7 +2,7 @@ from typing import Dict
 
 from pydantic import BaseModel
 
-from ellar.common import Post
+from ellar.common import post
 from ellar.core import TestClientFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
@@ -14,7 +14,7 @@ class Items_(BaseModel):
     items: Dict[str, int]
 
 
-@Post("/foo")
+@post("/foo")
 def foo(items: Items_):
     return items.items
 

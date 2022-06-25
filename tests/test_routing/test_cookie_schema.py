@@ -9,7 +9,7 @@ from .sample import Data, Filter
 router = ModuleRouter("")
 
 
-@router.Get("/test/cookie")
+@router.get("/test/cookie")
 def cookie_params_schema(
     request,
     filters: Filter = Cookie(..., alias="will_not_work_for_schema_with_many_field"),
@@ -17,7 +17,7 @@ def cookie_params_schema(
     return filters.dict()
 
 
-@router.Get("/test-mixed/cookie")
+@router.get("/test-mixed/cookie")
 def cookie_params_mixed_schema(
     request,
     filters: Filter = Cookie(...),

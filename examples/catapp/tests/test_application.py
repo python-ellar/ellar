@@ -1,10 +1,10 @@
 import os
-import pytest
-
 from pathlib import Path
-from catapp.application.cats.routers import cat_router
 
+import pytest
 from ellar.core.testclient import TestClientFactory
+
+from catapp.application.cats.routers import cat_router
 
 os.environ.setdefault('ELLAR_CONFIG_MODULE',  'app_module_test.tests.settings')
 

@@ -9,7 +9,7 @@ from .sample import Data, Filter
 mr = ModuleRouter("")
 
 
-@mr.Get("/test")
+@mr.get("/test")
 def query_params_schema(
     request,
     filters: Filter = Query(..., alias="will_not_work_for_schema_with_many_field"),
@@ -17,7 +17,7 @@ def query_params_schema(
     return filters.dict()
 
 
-@mr.Get("/test-mixed")
+@mr.get("/test-mixed")
 def query_params_mixed_schema(
     request,
     query1: int,

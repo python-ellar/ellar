@@ -20,7 +20,7 @@ class ForceMultipartDict(dict):
 FORCE_MULTIPART = ForceMultipartDict()
 
 
-@router.Post
+@router.post
 async def form_upload_single(test: UploadFile = File()):
     content = await test.read()
     return dict(
@@ -32,7 +32,7 @@ async def form_upload_single(test: UploadFile = File()):
     )
 
 
-@router.Post("/mixed")
+@router.post("/mixed")
 async def form_upload_single(test1: UploadFile = File(), test2: UploadFile = File()):
     content1 = await test1.read()
     content2 = await test2.read()
@@ -51,7 +51,7 @@ async def form_upload_single(test1: UploadFile = File(), test2: UploadFile = Fil
     )
 
 
-@router.Post("/multiple")
+@router.post("/multiple")
 async def form_upload_multiple(test1: List[Union[UploadFile, str]] = File()):
     results = []
     for item in test1:
@@ -70,7 +70,7 @@ async def form_upload_multiple(test1: List[Union[UploadFile, str]] = File()):
     return dict(test1=results)
 
 
-@router.Post("/mixed-optional")
+@router.post("/mixed-optional")
 async def form_upload_multiple(
     file: UploadFile = File(None),
     field: str = Form("", alias="field0"),
