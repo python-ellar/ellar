@@ -111,6 +111,7 @@ Project is still in development
     - guard
     - openapi
 - Project CLI scaffolding
+- Documentation
 - Database Plugin with [Encode/ORM](https://github.com/encode/orm)
 - Caching 
 - API Throttling
