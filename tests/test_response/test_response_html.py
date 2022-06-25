@@ -5,9 +5,12 @@ import pytest
 from jinja2 import TemplateNotFound
 
 from ellar.common import Controller, Get, Render
+from ellar.constants import OPERATION_HANDLER_KEY
 from ellar.core import TestClientFactory
-from ellar.core.response.model import EmptyAPIResponseModel, HTMLResponseModel
+from ellar.core.response.model import HTMLResponseModel
 from ellar.core.response.model.html import HTMLResponseModelRuntimeError
+from ellar.core.routing import ModuleRouter
+from ellar.reflect import reflect
 
 BASEDIR = Path(__file__).resolve().parent.parent
 
@@ -43,22 +46,28 @@ class EllarController:
         return {"index": True, "use_mvc": False}
 
 
-test_module = TestClientFactory.create_test_module(
-    template_folder="templates", base_directory=BASEDIR, controllers=(EllarController,)
-)
+mr = ModuleRouter("")
 
 
-@test_module.app.Get(
+@mr.Get(
     "/render_template", response=HTMLResponseModel(template_name="index", use_mvc=False)
 )
 def render_template():
     return {}
 
 
-@test_module.app.Get("/render_template2")
+@mr.Get("/render_template2")
 @Render(template_name="index")
 def render_template():
     return {}
+
+
+test_module = TestClientFactory.create_test_module(
+    template_folder="templates",
+    base_directory=BASEDIR,
+    controllers=(EllarController,),
+    routers=(mr,),
+)
 
 
 @pytest.mark.parametrize(
@@ -108,42 +117,54 @@ def test_render_exception_works():
         Exception, match="template_name is required for function endpoints"
     ):
 
-        @test_module.app.Get("/render_template3")
+        @Get("/render_template3")
         @Render()
         def render_template3():
             pass
 
-    @Render()
-    @test_module.app.Get("/render_template4")
-    def render_template4():
-        pass
+    with pytest.raises(
+        Exception, match="template_name is required for function endpoints"
+    ):
 
-    assert isinstance(
-        render_template4.response_model.models[200], EmptyAPIResponseModel
-    )
+        @Render()
+        @Get("/render_template4")
+        def render_template4():
+            pass
 
 
 def test_runtime_exception_works():
-    @test_module.app.Get(
-        "/runtime_error_1", response=HTMLResponseModel(template_name="index2")
-    )
+    @Get("/runtime_error_1", response=HTMLResponseModel(template_name="index2"))
     def runtime_error_1():
         pass
 
-    @test_module.app.Get("/runtime_error_2")
+    @Get("/runtime_error_2")
     @Render(template_name="index2")
     def runtime_error_2():
         pass
 
-    @test_module.app.Get(
+    @Get(
         "/runtime_controller_error_1",
         response=HTMLResponseModel(template_name="index2", use_mvc=True),
     )
     def runtime_controller_error_1():
         pass
 
-    assert isinstance(runtime_error_1.response_model.models[200], HTMLResponseModel)
-    assert isinstance(runtime_error_2.response_model.models[200], HTMLResponseModel)
+    test_module.app.router.extend(
+        [runtime_error_1, runtime_error_2, runtime_controller_error_1]
+    )
+    runtime_error_1_handler = reflect.get_metadata(
+        OPERATION_HANDLER_KEY, runtime_error_1
+    )
+    runtime_error_2_handler = reflect.get_metadata(
+        OPERATION_HANDLER_KEY, runtime_error_2
+    )
+
+    assert isinstance(
+        runtime_error_1_handler.response_model.models[200], HTMLResponseModel
+    )
+    assert isinstance(
+        runtime_error_2_handler.response_model.models[200], HTMLResponseModel
+    )
     client = test_module.get_client()
 
     with pytest.raises(TemplateNotFound):

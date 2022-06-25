@@ -1,28 +1,32 @@
 from ellar.common import Header
 from ellar.core import TestClientFactory
+from ellar.core.routing import ModuleRouter
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
 
 from .sample import Data, Filter
 
-tm = TestClientFactory.create_test_module()
+mr = ModuleRouter("")
 
 
-@tm.app.Get("/test/header")
+@mr.Get("/test/header")
 def header_params_schema(
     request,
-    filters: Filter = Header(..., alias="well_not_work_for_schema_with_many_field"),
+    filters: Filter = Header(..., alias="will_not_work_for_schema_with_many_field"),
 ):
     return filters.dict()
 
 
-@tm.app.Get("/test-mixed/header")
+@mr.Get("/test-mixed/header")
 def header_params_mixed_schema(
     request,
     filters: Filter = Header(...),
     data: Data = Header(...),
 ):
     return dict(filters=filters.dict(), data=data.dict())
+
+
+tm = TestClientFactory.create_test_module(routers=(mr,))
 
 
 def test_header_request():

@@ -1,3 +1,4 @@
+from ellar.common import Get
 from ellar.core.factory import AppFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
@@ -7,10 +8,12 @@ from .sample import Product
 app = AppFactory.create_app()
 
 
-@app.Get("/product")
+@Get("/product")
 async def create_item(product: Product):
     return product
 
+
+app.router.append(create_item)
 
 openapi_schema = {
     "openapi": "3.0.2",

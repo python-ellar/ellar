@@ -11,8 +11,9 @@ from ellar.helper import generate_controller_operation_unique_id
 class ModuleRouteCollection(t.Sequence[BaseRoute]):
     __slots__ = ("_routes",)
 
-    def __init__(self) -> None:
+    def __init__(self, routes: t.Optional[t.Sequence[BaseRoute]] = None) -> None:
         self._routes: t.Dict[int, BaseRoute] = OrderedDict()
+        self.extend([] if routes is None else list(routes))
 
     @t.no_type_check
     def __getitem__(self, i: int) -> BaseRoute:
@@ -71,8 +72,7 @@ class RouteCollection(ModuleRouteCollection):
     __slots__ = ("_routes", "_served_routes")
 
     def __init__(self, routes: t.Optional[t.Sequence[BaseRoute]] = None) -> None:
-        super().__init__()
-        self.extend([] if routes is None else list(routes))
+        super().__init__(routes)
         self._served_routes: t.List[BaseRoute] = []
         self.sort_routes()
 

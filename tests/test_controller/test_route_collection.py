@@ -159,6 +159,9 @@ def test_module_route_collection_setitem_and_getitem(collection_model, expected_
     routes[1] = MockRouteOperation("/sample", methods=["post"], versions=["1"])
     routes[2] = MockRouteOperation("/sample/2", methods=["post"], versions=[])
 
+    # add unknown type
+    routes[3] = type("MockRouteOperation", (), {})  # this will be ignored
+
     assert len(routes) == 3
     assert routes[0].path == expected_result
 

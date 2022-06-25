@@ -1,9 +1,9 @@
 import typing as t
 
 from ellar.core.context import ExecutionContext
+from ellar.core.controller import ControllerBase
 
 from ...websocket import WebSocketExtraHandler
-from ..model import ControllerBase
 
 
 class ControllerWebSocketExtraHandler(WebSocketExtraHandler):

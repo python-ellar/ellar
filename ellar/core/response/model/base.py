@@ -9,6 +9,7 @@ from ellar.constants import SERIALIZER_FILTER_KEY, primitive_types
 from ellar.core.context import IExecutionContext
 from ellar.core.converters import TypeDefinitionConverter
 from ellar.exceptions import RequestValidationError
+from ellar.reflect import reflect
 from ellar.serializer import (
     BaseSerializer,
     DataclassSerializer,
@@ -96,10 +97,15 @@ class BaseResponseModel(IResponseModel, ABC):
     ) -> Response:
         """Cant create custom responses, Please override this function to create a custom response"""
         response_args, headers = self.get_context_response(context=context)
-        serializer_filter = context.operation.get(SERIALIZER_FILTER_KEY)
+        serializer_filter: t.Optional[SerializerFilter] = reflect.get_metadata(
+            SERIALIZER_FILTER_KEY, context.get_handler()
+        )
+
         response = self._response_type(
             **response_args,
-            content=self.serialize(response_obj, serializer_filter=serializer_filter),
+            content=self.serialize(
+                response_obj, serializer_filter=serializer_filter or SerializerFilter()
+            ),
             headers=headers,
         )
         return response

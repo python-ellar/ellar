@@ -50,7 +50,7 @@ class BaseSerializer:
 
     def serialize(
         self, serializer_filter: t.Optional[SerializerFilter] = None
-    ) -> t.Dict:
+    ) -> t.Dict:  # pragma: no cover
         raise NotImplementedError
 
 

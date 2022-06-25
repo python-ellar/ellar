@@ -16,13 +16,17 @@ from ellar.core.versioning import BaseAPIVersioning, DefaultAPIVersioning
 from ellar.exceptions import APIException, RequestValidationError
 from ellar.types import TReceive, TScope, TSend
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
 
 DEBUG: bool = False
 
 DEFAULT_JSON_CLASS: t.Type[JSONResponse] = JSONResponse
 SECRET_KEY: str = "your-secret-key"
+
+# injector auto_bind = True allows you to resolve types that are not registered on the container
+# For more info, read: https://injector.readthedocs.io/en/latest/index.html
+INJECTOR_AUTO_BIND = False
 
 TEMPLATES_AUTO_RELOAD: t.Optional[bool] = None
 

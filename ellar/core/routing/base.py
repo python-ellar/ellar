@@ -3,12 +3,12 @@ from abc import ABC, abstractmethod
 
 from starlette.routing import Match
 
-from ellar.constants import SCOPE_API_VERSIONING_RESOLVER
+from ellar.constants import GUARDS_KEY, SCOPE_API_VERSIONING_RESOLVER, VERSIONING_KEY
 from ellar.core.context import ExecutionContext
-from ellar.core.operation_meta import OperationMeta
+from ellar.reflect import reflect
 from ellar.types import TReceive, TScope, TSend
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
     from ellar.core.versioning.resolver import BaseAPIVersioningResolver
 
@@ -19,7 +19,6 @@ __all__ = [
 
 
 class RouteOperationBase:
-    _meta: OperationMeta
     path: str
     endpoint: t.Callable
     methods: t.Set[str]
@@ -32,22 +31,16 @@ class RouteOperationBase:
 
     @abstractmethod
     def _load_model(self) -> None:
-        pass
-
-    def get_guards(
-        self,
-    ) -> t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]:
-        return list(self._meta.route_guards)
-
-    def get_meta(self) -> OperationMeta:
-        return self._meta
-
-    def update_operation_meta(self, **kwargs: t.Any) -> None:
-        self._meta.update(**kwargs)
+        """compute route models"""
 
     async def run_route_guards(self, context: ExecutionContext) -> None:
         app = context.get_app()
-        _guards = self.get_guards() or app.get_guards()
+        _guards: t.Optional[
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
+        ] = reflect.get_metadata(GUARDS_KEY, self.endpoint)
+        if not _guards:
+            _guards = app.get_guards()
+
         if _guards:
             for guard in _guards:
                 if isinstance(guard, type):
@@ -72,7 +65,8 @@ class RouteOperationBase:
         """Full operation initialization"""
 
     def get_allowed_version(self) -> t.Set[t.Union[int, float, str]]:
-        return self._meta.route_versioning
+        versions = reflect.get_metadata(VERSIONING_KEY, self.endpoint) or set()
+        return t.cast(t.Set[t.Union[int, float, str]], versions)
 
     @classmethod
     def get_methods(cls, methods: t.Optional[t.List[str]] = None) -> t.Set[str]:
@@ -96,6 +90,9 @@ class RouteOperationBase:
             ):
                 return Match.NONE, {}
         return match  # type: ignore
+
+    def __hash__(self) -> int:  # pragma: no cover
+        return hash(self.endpoint)
 
 
 class WebsocketRouteOperationBase(RouteOperationBase, ABC):

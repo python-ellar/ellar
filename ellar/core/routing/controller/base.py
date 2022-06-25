@@ -1,30 +1,24 @@
 import typing as t
 
+from ellar.constants import CONTROLLER_CLASS_KEY
 from ellar.core.context import ExecutionContext
-from ellar.core.operation_meta import OperationMeta
-
-from .model import ControllerBase
+from ellar.core.controller import ControllerBase
+from ellar.reflect import reflect
 
 
 class ControllerRouteOperationBase:
-    _meta: OperationMeta
-
     endpoint: t.Callable
 
-    def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
-        super(ControllerRouteOperationBase, self).__init__(*args, **kwargs)
-        self._controller_type: t.Optional[t.Type[ControllerBase]] = None
-
-    @property
-    def controller_type(self) -> t.Type[ControllerBase]:
-        if self._controller_type:
-            return self._controller_type
-        raise Exception("Controller Type found")
-
     def _get_controller_instance(self, ctx: ExecutionContext) -> ControllerBase:
+        controller_type: t.Optional[t.Type[ControllerBase]] = reflect.get_metadata(
+            CONTROLLER_CLASS_KEY, self.endpoint
+        )
+        if not controller_type:
+            raise RuntimeError("Controller Type was not found")
+
         service_provider = ctx.get_service_provider()
 
-        controller_instance = service_provider.get(self.controller_type)
+        controller_instance: ControllerBase = service_provider.get(controller_type)
         controller_instance.context = ctx
         return controller_instance
 

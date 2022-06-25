@@ -3,7 +3,7 @@ import typing as t
 from injector import CallableProvider
 from starlette.middleware.errors import ServerErrorMiddleware
 
-from ellar.constants import SCOPE_SERVICE_PROVIDER
+from ellar.constants import SCOPE_EXECUTION_CONTEXT_PROVIDER, SCOPE_SERVICE_PROVIDER
 from ellar.core.connection import HTTPConnection, Request, WebSocket
 from ellar.core.context import ExecutionContext, IExecutionContext
 from ellar.core.response import Response
@@ -52,4 +52,5 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
                 Response, CallableProvider(execute_context.get_response)
             )
             scope[SCOPE_SERVICE_PROVIDER] = request_provider
+            scope[SCOPE_EXECUTION_CONTEXT_PROVIDER] = execute_context
             await super().__call__(scope, receive, send)

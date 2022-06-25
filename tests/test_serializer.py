@@ -29,6 +29,13 @@ class DataclassPerson(DataclassSerializer):
     last_name: t.Optional[str] = None
 
 
+@dataclass
+class PlainDataclassPerson:
+    name: str
+    first_name: str
+    last_name: t.Optional[str] = None
+
+
 class Pet:
     def __init__(self, owner: Person, name: str):
         self.owner = owner
@@ -137,6 +144,20 @@ def test_dataclass_serializer():
     ) == {
         "name": "Eadwin",
         "first_name": "Eadwin",
+    }
+
+    plain_dataclass = PlainDataclassPerson(name="Eadwin", first_name="Eadwin")
+    assert serialize_object(dataclass_person) == {
+        "name": "Eadwin",
+        "first_name": "Eadwin",
+        "last_name": None,
+    }
+    assert serialize_object(
+        plain_dataclass, serializer_filter=SerializerFilter(exclude_none=True)
+    ) == {
+        "name": "Eadwin",
+        "first_name": "Eadwin",
+        "last_name": None,
     }
     assert dataclass_person.get_pydantic_model()
     assert issubclass(dataclass_person.get_pydantic_model(), BaseModel)

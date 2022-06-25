@@ -4,8 +4,10 @@ import pytest
 from pydantic import BaseModel
 
 from ellar.common import Header, Query
-from ellar.core.factory import AppFactory
+from ellar.core.routing import ModuleRouter
 from ellar.exceptions import ImproperConfiguration
+
+mr = ModuleRouter("")
 
 
 class Item(BaseModel):
@@ -19,9 +21,8 @@ class Item2(BaseModel):
 @pytest.mark.parametrize("field_parameter", [Query(None), Header(None)])
 def test_invalid_sequence(field_parameter):
     with pytest.raises(ImproperConfiguration):
-        app = AppFactory.create_app()
 
-        @app.Get("/items/")
+        @mr.Get("/items/")
         def read_items(q: List[Item] = field_parameter):
             pass  # pragma: no cover
 
@@ -29,9 +30,8 @@ def test_invalid_sequence(field_parameter):
 @pytest.mark.parametrize("field_parameter", [Query(None), Header(None)])
 def test_invalid_tuple(field_parameter):
     with pytest.raises(ImproperConfiguration):
-        app = AppFactory.create_app()
 
-        @app.Get("/items/")
+        @mr.Get("/items/")
         def read_items(q: Tuple[Item, Item] = field_parameter):
             pass  # pragma: no cover
 
@@ -39,9 +39,8 @@ def test_invalid_tuple(field_parameter):
 @pytest.mark.parametrize("field_parameter", [Query(None), Header(None)])
 def test_invalid_dict(field_parameter):
     with pytest.raises(ImproperConfiguration):
-        app = AppFactory.create_app()
 
-        @app.Get("/items/")
+        @mr.Get("/items/")
         def read_items(q: Dict[str, Item] = field_parameter):
             pass  # pragma: no cover
 
@@ -49,9 +48,8 @@ def test_invalid_dict(field_parameter):
 @pytest.mark.parametrize("field_parameter", [Query(None), Header(None)])
 def test_invalid_simple_dict(field_parameter):
     with pytest.raises(ImproperConfiguration):
-        app = AppFactory.create_app()
 
-        @app.Get("/items/")
+        @mr.Get("/items/")
         def read_items(q: Optional[dict] = field_parameter):
             pass  # pragma: no cover
 
@@ -59,8 +57,7 @@ def test_invalid_simple_dict(field_parameter):
 @pytest.mark.parametrize("field_parameter", [Query(None), Header(None)])
 def test_invalid_group_type(field_parameter):
     with pytest.raises(ImproperConfiguration):
-        app = AppFactory.create_app()
 
-        @app.Get("/items/")
+        @mr.Get("/items/")
         def read_items(q: Item2 = field_parameter):
             pass  # pragma: no cover

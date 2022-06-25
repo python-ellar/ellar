@@ -2,12 +2,13 @@ import typing as t
 
 from starlette.testclient import TestClient as TestClient
 
+from ellar.constants import MODULE_METADATA, MODULE_WATERMARK
+from ellar.core import ModuleBase
 from ellar.core.factory import AppFactory
 from ellar.core.main import App
-from ellar.core.modules import ApplicationModuleDecorator, BaseModuleDecorator
 from ellar.core.routing import ModuleRouter
-from ellar.core.routing.controller import ControllerDecorator
 from ellar.di import ProviderConfig
+from ellar.reflect import reflect
 
 
 class _TestingModule:
@@ -36,7 +37,7 @@ class TestClientFactory:
     @classmethod
     def create_test_module(
         cls,
-        controllers: t.Sequence[t.Union[ControllerDecorator, t.Any]] = tuple(),
+        controllers: t.Sequence[t.Union[t.Any]] = tuple(),
         routers: t.Sequence[ModuleRouter] = tuple(),
         services: t.Sequence[ProviderConfig] = tuple(),
         template_folder: t.Optional[str] = None,
@@ -46,7 +47,7 @@ class TestClientFactory:
         app = AppFactory.create_app(
             controllers=controllers,
             routers=routers,
-            services=services,
+            providers=services,
             template_folder=template_folder,
             base_directory=base_directory,
             static_folder=static_folder,
@@ -56,19 +57,16 @@ class TestClientFactory:
     @classmethod
     def create_test_module_from_module(
         cls,
-        module: t.Union[t.Type[BaseModuleDecorator], t.Type],
+        module: t.Union[t.Type, t.Type[ModuleBase]],
         mock_services: t.Sequence[ProviderConfig] = tuple(),
     ) -> _TestingModule:
-        if isinstance(module, ApplicationModuleDecorator):
-            if mock_services:
-                after_initialisation = module.get_module().get_after_initialisation()
+        app_module_watermark = reflect.get_metadata(MODULE_WATERMARK, module)
+        if mock_services:
+            reflect.define_metadata(
+                MODULE_METADATA.PROVIDERS, list(mock_services), module, default_value=[]
+            )
 
-                @after_initialisation
-                def _register_services(application: App) -> None:
-                    for service in mock_services:
-                        if isinstance(service, ProviderConfig):
-                            service.register(application.injector.container)
-
+        if app_module_watermark:
             return _TestingModule(app=AppFactory.create_from_app_module(module))
-        app = AppFactory.create_app(modules=(module,), services=mock_services)
+        app = AppFactory.create_app(modules=(module,), providers=mock_services)
         return _TestingModule(app=app)

@@ -6,8 +6,9 @@ from starlette.formparsers import UploadFile as StarletteUploadFile
 from ellar.common import File, Form
 from ellar.core import TestClientFactory
 from ellar.core.datastructures import UploadFile
+from ellar.core.routing import ModuleRouter
 
-tm = TestClientFactory.create_test_module()
+router = ModuleRouter("")
 
 
 class ForceMultipartDict(dict):
@@ -19,7 +20,7 @@ class ForceMultipartDict(dict):
 FORCE_MULTIPART = ForceMultipartDict()
 
 
-@tm.app.Post
+@router.Post
 async def form_upload_single(test: UploadFile = File()):
     content = await test.read()
     return dict(
@@ -31,7 +32,7 @@ async def form_upload_single(test: UploadFile = File()):
     )
 
 
-@tm.app.Post("/mixed")
+@router.Post("/mixed")
 async def form_upload_single(test1: UploadFile = File(), test2: UploadFile = File()):
     content1 = await test1.read()
     content2 = await test2.read()
@@ -50,7 +51,7 @@ async def form_upload_single(test1: UploadFile = File(), test2: UploadFile = Fil
     )
 
 
-@tm.app.Post("/multiple")
+@router.Post("/multiple")
 async def form_upload_multiple(test1: List[Union[UploadFile, str]] = File()):
     results = []
     for item in test1:
@@ -69,7 +70,7 @@ async def form_upload_multiple(test1: List[Union[UploadFile, str]] = File()):
     return dict(test1=results)
 
 
-@tm.app.Post("/mixed-optional")
+@router.Post("/mixed-optional")
 async def form_upload_multiple(
     file: UploadFile = File(None),
     field: str = Form("", alias="field0"),
@@ -88,6 +89,9 @@ async def form_upload_multiple(
         field0=field,
         field1=field_2,
     )
+
+
+tm = TestClientFactory.create_test_module(routers=(router,))
 
 
 def test_multipart_request_files(tmpdir):

@@ -8,6 +8,7 @@ from jinja2 import Environment as BaseEnvironment, FileSystemLoader
 from starlette.templating import pass_context
 
 from ellar.compatible import cached_property
+from ellar.constants import TEMPLATE_FILTER_KEY, TEMPLATE_GLOBAL_KEY
 from ellar.core.connection import Request
 from ellar.core.staticfiles import StarletteStaticFiles
 from ellar.types import ASGIApp, TemplateFilterCallable, TemplateGlobalCallable
@@ -18,7 +19,7 @@ from .loader import JinjaLoader
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
-    from ellar.core.modules import ApplicationModuleDecorator
+    from ellar.di import StarletteInjector
 
 
 class TemplateFunctionData(t.NamedTuple):
@@ -26,7 +27,7 @@ class TemplateFunctionData(t.NamedTuple):
     name: t.Optional[str]
 
 
-class IModuleTemplateLoader(ABC):
+class IModuleTemplateLoader:
     @property
     @abstractmethod
     def template_folder(self) -> t.Optional[str]:  # pragma: no cover
@@ -39,7 +40,11 @@ class IModuleTemplateLoader(ABC):
 
     @cached_property
     def jinja_loader(self) -> t.Optional[FileSystemLoader]:
-        if self.template_folder and self.root_path:
+        if (
+            self.template_folder
+            and self.root_path
+            and os.path.exists(os.path.join(str(self.root_path), self.template_folder))
+        ):
             return FileSystemLoader(
                 os.path.join(str(self.root_path), self.template_folder)
             )
@@ -105,15 +110,8 @@ class JinjaTemplating(ABC, metaclass=ABCMeta):
 
 class ModuleTemplating(IModuleTemplateLoader):
     _template_folder: t.Optional[str]
-    _module_base_directory: t.Optional[t.Union[Path, str]]
+    _base_directory: t.Optional[t.Union[Path, str]]
     _static_folder: t.Optional[str]
-
-    @cached_property
-    def jinja_environment(self) -> BaseEnvironment:
-        _jinja_env = BaseEnvironment()
-        _jinja_env.filters.clear()
-        _jinja_env.globals.clear()
-        return _jinja_env
 
     @property
     def template_folder(self) -> t.Optional[str]:
@@ -121,7 +119,7 @@ class ModuleTemplating(IModuleTemplateLoader):
 
     @property
     def root_path(self) -> t.Optional[t.Union[Path, str]]:
-        return self._module_base_directory
+        return self._base_directory
 
     @cached_property
     def static_directory(self) -> t.Optional[str]:
@@ -135,11 +133,11 @@ class ModuleTemplating(IModuleTemplateLoader):
 class AppTemplating(JinjaTemplating):
     config: Config
     _static_app: t.Optional[ASGIApp]
-    root_module: "ApplicationModuleDecorator"
+    _injector: "StarletteInjector"
     has_static_files: bool
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
-        for loader in self.root_module.templating_modules.values():
+        for loader in self._injector.get_templating_modules().values():
             yield loader
 
     @property
@@ -205,9 +203,8 @@ class AppTemplating(JinjaTemplating):
         self._update_jinja_env_filters(self.jinja_environment)
 
     def _update_jinja_env_filters(self, jinja_environment: Environment) -> None:
-        for loader in self.get_module_loaders():
-            jinja_environment.filters.update(loader.jinja_environment.filters)
-            jinja_environment.globals.update(loader.jinja_environment.globals)
+        jinja_environment.globals.update(self.config.get(TEMPLATE_GLOBAL_KEY, {}))
+        jinja_environment.filters.update(self.config.get(TEMPLATE_FILTER_KEY, {}))
 
     @cached_property
     def static_files(self) -> t.List[str]:

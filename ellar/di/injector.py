@@ -1,4 +1,5 @@
 import typing as t
+from collections import OrderedDict, defaultdict
 from inspect import isabstract
 
 from injector import (
@@ -9,6 +10,7 @@ from injector import (
 )
 
 from ellar.compatible import asynccontextmanager
+from ellar.constants import MODULE_REF_TYPES
 from ellar.helper import get_name
 from ellar.logger import logger as log
 from ellar.types import T
@@ -21,9 +23,10 @@ from .scopes import (
     SingletonScope,
     TransientScope,
 )
+from .service_config import get_scope
 
-if t.TYPE_CHECKING:
-    from ellar.core.modules import BaseModuleDecorator, ModuleBase
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core.modules import ModuleBase, ModuleRefBase, ModuleTemplateRef
 
 
 class RequestServiceProvider(InjectorBinder):
@@ -91,15 +94,15 @@ class Container(InjectorBinder):
             scope = scope.scope
         return Binding(interface, provider, scope)
 
-    def add_binding(self, interface: t.Type, binding: Binding) -> None:
+    def register_binding(self, interface: t.Type, binding: Binding) -> None:
         self._bindings[interface] = binding
 
     @t.no_type_check
     def register(
         self,
         base_type: t.Type,
-        concrete_type: t.Optional[t.Union[t.Type[T], T]] = None,
-        scope: t.Union[t.Type[DIScope], ScopeDecorator] = TransientScope,
+        concrete_type: t.Union[t.Type[T], t.Type, T] = None,
+        scope: t.Union[t.Type[DIScope], ScopeDecorator] = None,
     ) -> None:
         try:
             if concrete_type and isinstance(concrete_type, type):
@@ -112,59 +115,57 @@ class Container(InjectorBinder):
             pass
 
         provider = self.provider_for(base_type, concrete_type)
-        _scope: t.Any = scope
+        _scope: t.Any = scope or get_scope(base_type) or TransientScope
         if isinstance(scope, ScopeDecorator):
             _scope = scope.scope
-        self.add_binding(base_type, Binding(base_type, provider, _scope))
+        self.register_binding(base_type, Binding(base_type, provider, _scope))
 
-    def add_instance(
-        self, instance: T, concrete_type: t.Optional[t.Type[T]] = None
-    ) -> None:
+    def register_instance(self, instance: T, concrete_type: t.Type[T] = None) -> None:
         assert not isinstance(instance, type)
         _concrete_type = instance.__class__ if not concrete_type else concrete_type
         self.register(_concrete_type, instance, scope=SingletonScope)
 
-    def add_singleton(
+    def register_singleton(
         self,
         base_type: t.Type[T],
         concrete_type: t.Optional[t.Union[t.Type[T], T]] = None,
     ) -> None:
         if not concrete_type:
-            self.add_exact_singleton(base_type)
+            self.register_exact_singleton(base_type)
         self.register(base_type, concrete_type, scope=SingletonScope)
 
-    def add_transient(
+    def register_transient(
         self, base_type: t.Type, concrete_type: t.Optional[t.Type] = None
     ) -> None:
         if not concrete_type:
-            self.add_exact_transient(base_type)
+            self.register_exact_transient(base_type)
         self.register(base_type, concrete_type, scope=TransientScope)
 
-    def add_scoped(
+    def register_scoped(
         self, base_type: t.Type, concrete_type: t.Optional[t.Type] = None
     ) -> None:
         if not concrete_type:
-            self.add_exact_scoped(base_type)
+            self.register_exact_scoped(base_type)
         self.register(base_type, concrete_type, scope=RequestScope)
 
-    def add_exact_singleton(self, concrete_type: t.Type) -> None:
+    def register_exact_singleton(self, concrete_type: t.Type) -> None:
         assert not isabstract(concrete_type)
         self.register(base_type=concrete_type, scope=SingletonScope)
 
-    def add_exact_transient(self, concrete_type: t.Type) -> None:
+    def register_exact_transient(self, concrete_type: t.Type) -> None:
         assert not isabstract(concrete_type)
         self.register(base_type=concrete_type, scope=TransientScope)
 
-    def add_exact_scoped(self, concrete_type: t.Type) -> None:
+    def register_exact_scoped(self, concrete_type: t.Type) -> None:
         assert not isabstract(concrete_type)
         self.register(base_type=concrete_type, scope=RequestScope)
 
     @t.no_type_check
     def install(
         self,
-        module: t.Union[t.Type["ModuleBase"], "ModuleBase", "BaseModuleDecorator"],
+        module: t.Union[t.Type["ModuleBase"], "ModuleBase"],
         **init_kwargs: t.Any,
-    ) -> t.Union[InjectorModule, "ModuleBase", "BaseModuleDecorator"]:
+    ) -> t.Union[InjectorModule, "ModuleBase"]:
         # TODO: move install core to application module
         #   create a ModuleWrapper with init_kwargs
 
@@ -200,8 +201,6 @@ class Container(InjectorBinder):
         """
 
         instance = t.cast(t.Union[t.Type["ModuleBase"], "ModuleBase"], module)
-        if not isinstance(instance, type) and hasattr(instance, "get_module"):
-            instance = t.cast("BaseModuleDecorator", module).get_module()
 
         if isinstance(instance, type) and issubclass(
             t.cast(type, instance), InjectorModule
@@ -213,12 +212,7 @@ class Container(InjectorBinder):
 
 
 class StarletteInjector(Injector):
-    __slots__ = (
-        "_stack",
-        "parent",
-        "app",
-        "container",
-    )
+    __slots__ = ("_stack", "parent", "app", "container", "_modules")
 
     def __init__(
         self,
@@ -235,8 +229,39 @@ class StarletteInjector(Injector):
             parent=parent.binder if parent is not None else None,
         )
         # Bind some useful types
-        self.container.add_instance(self, StarletteInjector)
-        self.container.add_instance(self.binder)
+        self.container.register_instance(self, StarletteInjector)
+        self.container.register_instance(self.binder)
+        self._modules: t.DefaultDict = defaultdict(OrderedDict)
+        self._modules[MODULE_REF_TYPES.TEMPLATE] = OrderedDict()
+        self._modules[MODULE_REF_TYPES.PLAIN] = OrderedDict()
+
+    def get_modules(
+        self,
+    ) -> t.Dict[t.Type["ModuleBase"], "ModuleRefBase"]:
+        modules = dict(
+            self._modules[MODULE_REF_TYPES.TEMPLATE],
+        )
+        modules.update(self._modules[MODULE_REF_TYPES.PLAIN])
+        return modules
+
+    def get_module(self, module: t.Type) -> t.Optional["ModuleRefBase"]:
+        result: t.Optional["ModuleRefBase"] = None
+        if module in self._modules[MODULE_REF_TYPES.TEMPLATE]:
+            result = self._modules[MODULE_REF_TYPES.TEMPLATE][module]
+            return result
+
+        if module in self._modules[MODULE_REF_TYPES.PLAIN]:
+            result = self._modules[MODULE_REF_TYPES.PLAIN][module]
+            return result
+        return result
+
+    def get_templating_modules(
+        self,
+    ) -> t.Dict[t.Type["ModuleBase"], "ModuleTemplateRef"]:
+        return self._modules.get(MODULE_REF_TYPES.TEMPLATE, {})
+
+    def add_module(self, module_ref: "ModuleRefBase") -> None:
+        self._modules[module_ref.ref_type].update({module_ref.module: module_ref})
 
     @property  # type: ignore
     def binder(self) -> Container:  # type: ignore
@@ -244,7 +269,7 @@ class StarletteInjector(Injector):
 
     @binder.setter
     def binder(self, value: t.Any) -> None:
-        ...
+        """Nothing happens"""
 
     @asynccontextmanager
     async def create_request_service_provider(

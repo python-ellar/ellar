@@ -1,6 +1,8 @@
 import pytest
 
+from ellar.constants import OPENAPI_KEY
 from ellar.core.routing import ModuleRouter
+from ellar.reflect import reflect
 
 from .sample import router
 
@@ -50,13 +52,12 @@ def some_example_ws_2():
     ],
 )
 def test_build_routes(router_instance, prefix, tag, name):
-    router_instance.build_routes()
-
-    for route in router_instance.routes:
+    for route in router_instance.get_flatten_routes():
         assert name in route.name
         assert prefix in route.path
         if "WS" not in route.methods:
-            assert tag in route.get_meta().openapi.tags
+            openapi = reflect.get_metadata(OPENAPI_KEY, route.endpoint)
+            assert tag in openapi.tags
 
 
 def test_tag_configuration_module_router():
@@ -84,7 +85,7 @@ def test_flatten_name_module_route_build():
     def some_route():
         pass
 
-    new_router.build_routes()
+    new_router.get_flatten_routes()
     assert "has_name" in new_router.routes[0].name
 
     new_router = ModuleRouter("/items/{orgID:int}")
@@ -93,5 +94,5 @@ def test_flatten_name_module_route_build():
     def some_route():
         pass
 
-    new_router.build_routes()
+    new_router.get_flatten_routes()
     assert "has_name" not in new_router.routes[0].name

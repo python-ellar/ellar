@@ -9,9 +9,10 @@ from ellar.di import (
     ProviderConfig,
     StarletteInjector,
     get_scope,
+    injectable,
     is_decorated_with_injectable,
 )
-from ellar.di.providers import ClassProvider
+from ellar.di.providers import ClassProvider, ModuleProvider
 from ellar.di.scopes import SingletonScope, TransientScope
 
 from .examples import (
@@ -117,3 +118,24 @@ def test_provider_advance_use_case():
 
     assert isinstance(injector.get(IRepository), FooDBCatsRepository)
     assert isinstance(injector.get(IDBContext), AnyDBContext)
+
+
+def test_module_provider_works():
+    injector = StarletteInjector(auto_bind=False)
+    ProviderConfig(Foo1, use_value=Foo1()).register(injector.container)
+
+    @injectable
+    class ModuleMockSingleton:
+        def __init__(self, foo1: Foo1, a: str, b: str) -> None:
+            self.foo = foo1
+            self.a = a
+            self.b = b
+
+    injector.container.register(
+        ModuleMockSingleton, ModuleProvider(ModuleMockSingleton, a="A", b="B")
+    )
+    module_mock_instance = injector.get(ModuleMockSingleton)
+    assert module_mock_instance.foo
+    assert module_mock_instance.a == "A"
+    assert module_mock_instance.b == "B"
+    assert module_mock_instance is injector.get(ModuleMockSingleton)

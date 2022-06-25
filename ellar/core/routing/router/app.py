@@ -1,21 +1,16 @@
 import typing as t
 from functools import wraps
+from types import FunctionType
 
-from starlette.routing import (
-    BaseRoute,
-    Host as StarletteHost,
-    Mount as StarletteMount,
-    Router as StarletteRouter,
-)
+from starlette.routing import BaseRoute, Router as StarletteRouter
 
-from ellar.compatible import DataMapper
-from ellar.constants import SCOPE_API_VERSIONING_RESOLVER
+from ellar.constants import OPERATION_HANDLER_KEY, SCOPE_API_VERSIONING_RESOLVER
+from ellar.reflect import reflect
 from ellar.types import ASGIApp, TReceive, TScope, TSend
 
-from ..operation_definitions import OperationDefinitions
 from .route_collections import RouteCollection
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.versioning.resolver import BaseAPIVersioningResolver
 
 __all__ = ["ApplicationRouter"]
@@ -37,7 +32,6 @@ def router_default_decorator(func: ASGIApp) -> ASGIApp:
 
 class ApplicationRouter(StarletteRouter):
     routes: RouteCollection  # type: ignore
-    operation_definition_class: t.Type[OperationDefinitions] = OperationDefinitions
 
     def __init__(
         self,
@@ -58,31 +52,16 @@ class ApplicationRouter(StarletteRouter):
         )
         self.default = router_default_decorator(self.default)
         self.routes: RouteCollection = RouteCollection(routes)
-        self._meta: t.Mapping = DataMapper()
-        _route_definitions = self.operation_definition_class(t.cast(list, self.routes))
 
-        self.Get = _route_definitions.get
-        self.Post = _route_definitions.post
+    def append(self, item: t.Union[BaseRoute, t.Callable]) -> None:
+        _item: t.Any = item
+        if callable(_item) and type(_item) == FunctionType:
+            _item = reflect.get_metadata(OPERATION_HANDLER_KEY, _item)
+        self.routes.append(_item)
 
-        self.Delete = _route_definitions.delete
-        self.Patch = _route_definitions.patch
-
-        self.Put = _route_definitions.put
-        self.Options = _route_definitions.options
-
-        self.Trace = _route_definitions.trace
-        self.Head = _route_definitions.head
-
-        self.HttpRoute = _route_definitions.http_route
-        self.WsRoute = _route_definitions.ws_route
-
-    def mount(self, path: str, app: ASGIApp, name: str = None) -> None:
-        route = StarletteMount(path, app=app, name=name)
-        self.routes.append(route)
-
-    def host(self, host: str, app: ASGIApp, name: str = None) -> None:
-        route = StarletteHost(host, app=app, name=name)
-        self.routes.append(route)
+    def extend(self, routes: t.Sequence[t.Union[BaseRoute, t.Callable]]) -> None:
+        for route in routes:
+            self.append(route)
 
     def add_route(
         self,
@@ -91,12 +70,12 @@ class ApplicationRouter(StarletteRouter):
         methods: t.List[str] = None,
         name: str = None,
         include_in_schema: bool = True,
-    ) -> None:
+    ) -> None:  # pragma: no cover
         """Not supported"""
 
     def add_websocket_route(
         self, path: str, endpoint: t.Callable, name: str = None
-    ) -> None:
+    ) -> None:  # pragma: no cover
         """Not supported"""
 
     def route(
@@ -105,29 +84,40 @@ class ApplicationRouter(StarletteRouter):
         methods: t.List[str] = None,
         name: str = None,
         include_in_schema: bool = True,
-    ) -> t.Callable:
+    ) -> t.Callable:  # pragma: no cover
         def decorator(func: t.Callable) -> t.Callable:
             """Not supported"""
             return func
 
         return decorator
 
-    def websocket_route(self, path: str, name: str = None) -> t.Callable:
+    def websocket_route(
+        self, path: str, name: str = None
+    ) -> t.Callable:  # pragma: no cover
         def decorator(func: t.Callable) -> t.Callable:
             """Not supported"""
             return func
 
         return decorator
 
-    def add_event_handler(self, event_type: str, func: t.Callable) -> None:
+    def add_event_handler(
+        self, event_type: str, func: t.Callable
+    ) -> None:  # pragma: no cover
         """Not supported"""
 
-    def on_event(self, event_type: str) -> t.Callable:
+    def on_event(self, event_type: str) -> t.Callable:  # pragma: no cover
         def decorator(func: t.Callable) -> t.Callable:
             """Not supported"""
             return func
 
         return decorator
 
-    def get_meta(self) -> t.Mapping:
-        return self._meta
+    def mount(
+        self, path: str, app: ASGIApp, name: str = None
+    ) -> None:  # pragma: nocover
+        """Not supported"""
+
+    def host(
+        self, host: str, app: ASGIApp, name: str = None
+    ) -> None:  # pragma: no cover
+        """Not supported"""

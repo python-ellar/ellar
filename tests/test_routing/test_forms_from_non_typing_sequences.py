@@ -1,24 +1,26 @@
 from ellar.common import Form
 from ellar.core import AppFactory, TestClient
+from ellar.core.routing import ModuleRouter
 
-app = AppFactory.create_app()
+mr = ModuleRouter("")
 
 
-@app.Post("/form/python-list")
+@mr.Post("/form/python-list")
 def post_form_param_list(items: list = Form(...)):
     return items
 
 
-@app.Post("/form/python-set")
+@mr.Post("/form/python-set")
 def post_form_param_set(items: set = Form(...)):
     return items
 
 
-@app.Post("/form/python-tuple")
+@mr.Post("/form/python-tuple")
 def post_form_param_tuple(items: tuple = Form(...)):
     return items
 
 
+app = AppFactory.create_app(routers=(mr,))
 client = TestClient(app)
 
 

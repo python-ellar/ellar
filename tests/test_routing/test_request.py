@@ -2,45 +2,47 @@ import pytest
 
 from ellar.common import Cookie, Header
 from ellar.core import TestClientFactory
+from ellar.core.routing import ModuleRouter
 
-tm = TestClientFactory.create_test_module()
+mr = ModuleRouter("")
 
 
-@tm.app.Get("/headers1")
+@mr.Get("/headers1")
 def headers1(request, user_agent: str = Header(...)):
     return user_agent
 
 
-@tm.app.Get("/headers2")
+@mr.Get("/headers2")
 def headers2(request, ua: str = Header(..., alias="User-Agent")):
     return ua
 
 
-@tm.app.Get("/headers3")
+@mr.Get("/headers3")
 def headers3(request, content_length: int = Header(...)):
     return content_length
 
 
-@tm.app.Get("/headers4")
+@mr.Get("/headers4")
 def headers4(request, c_len: int = Header(..., alias="Content-length")):
     return c_len
 
 
-@tm.app.Get("/headers5")
+@mr.Get("/headers5")
 def headers5(request, missing: int = Header(...)):
     return missing
 
 
-@tm.app.Get("/cookies1")
+@mr.Get("/cookies1")
 def cookies1(request, weapon: str = Cookie(...)):
     return weapon
 
 
-@tm.app.Get("/cookies2")
+@mr.Get("/cookies2")
 def cookies2(request, wpn: str = Cookie(..., alias="weapon")):
     return wpn
 
 
+tm = TestClientFactory.create_test_module(routers=(mr,))
 client = tm.get_client()
 
 

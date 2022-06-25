@@ -1,10 +1,8 @@
 import typing as t
 
-from starlette.responses import Response
-from starlette.routing import BaseRoute
+from starlette.routing import BaseRoute, Mount
 
 from ellar.core.conf import Config
-from ellar.core.connection import Request
 from ellar.core.context import ExecutionContext, IExecutionContext
 from ellar.core.datastructures import State, URLPath
 from ellar.core.events import EventHandler, RouterEventManager
@@ -15,35 +13,22 @@ from ellar.core.middleware import (
     RequestServiceProviderMiddleware,
     RequestVersioningMiddleware,
 )
-from ellar.core.modules import (
-    ApplicationModuleDecorator,
-    BaseModuleDecorator,
-    ModuleBase,
-)
+from ellar.core.modules import ModuleBase, ModuleTemplateRef
+from ellar.core.modules.ref import create_module_ref_factor
 from ellar.core.routing import ApplicationRouter
 from ellar.core.templating import AppTemplating, Environment
 from ellar.core.versioning import VERSIONING, BaseAPIVersioning
 from ellar.di.injector import StarletteInjector
 from ellar.logger import logger
+from ellar.services.reflector import Reflector
 from ellar.types import ASGIApp, T, TReceive, TScope, TSend
 
 
 class App(AppTemplating):
     def __init__(
         self,
-        root_module: ApplicationModuleDecorator,
         config: Config,
-        routes: t.Optional[t.Sequence[BaseRoute]] = None,
-        middleware: t.Optional[t.Sequence[Middleware]] = None,
-        exception_handlers: t.Optional[
-            t.Mapping[
-                t.Any,
-                t.Callable[
-                    [Request, Exception],
-                    t.Union[Response, t.Awaitable[Response]],
-                ],
-            ]
-        ] = None,
+        injector: StarletteInjector,
         on_startup_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
         on_shutdown_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
         lifespan: t.Optional[t.Callable[["App"], t.AsyncContextManager]] = None,
@@ -51,26 +36,24 @@ class App(AppTemplating):
             t.Union[t.Type[GuardCanActivate], GuardCanActivate]
         ] = None,
     ):
-        assert isinstance(
-            root_module, ApplicationModuleDecorator
-        ), "root_module must instance of ApplicationModuleDecorator"
-
         assert isinstance(config, Config), "config must instance of Config"
+        assert isinstance(
+            injector, StarletteInjector
+        ), "injector must instance of StarletteInjector"
+
+        # The lifespan context function is a newer style that replaces
+        # on_startup / on_shutdown handlers. Use one or the other, not both.
+        assert lifespan is None or (
+            on_startup_event_handlers is None and on_shutdown_event_handlers is None
+        ), "Use either 'lifespan' or 'on_startup'/'on_shutdown', not both."
+
         self._config = config
         # TODO: read auto_bind from configure
-        self._injector = StarletteInjector(auto_bind=False)
+        self._injector: StarletteInjector = injector
 
         self._global_guards = [] if global_guards is None else list(global_guards)
-        _exception_handlers = (
-            {} if exception_handlers is None else dict(exception_handlers)
-        )
         self._exception_handlers = dict(t.cast(dict, self.config.EXCEPTION_HANDLERS))
-        self._exception_handlers.update(_exception_handlers)
-        self.root_module = root_module
-
-        _user_middleware = [] if middleware is None else list(middleware)
         self._user_middleware = list(t.cast(list, self.config.MIDDLEWARE))
-        self._user_middleware.extend(_user_middleware)
 
         self.on_startup = RouterEventManager(
             [] if on_startup_event_handlers is None else list(on_startup_event_handlers)
@@ -82,70 +65,74 @@ class App(AppTemplating):
         )
 
         self.state = State()
-
+        self.config.DEFAULT_LIFESPAN_HANDLER = (
+            lifespan or self.config.DEFAULT_LIFESPAN_HANDLER
+        )
         self.router = ApplicationRouter(
-            routes=routes or [],
+            routes=self._get_module_routes(),
             redirect_slashes=t.cast(bool, self.config.REDIRECT_SLASHES),
             on_startup=[self.on_startup.async_run],
             on_shutdown=[self.on_shutdown.async_run],
             default=self.config.DEFAULT_NOT_FOUND_HANDLER,  # type: ignore
-            lifespan=lifespan or self.config.DEFAULT_LIFESPAN_HANDLER,  # type: ignore
+            lifespan=self.config.DEFAULT_LIFESPAN_HANDLER,  # type: ignore
         )
         self.middleware_stack = self.build_middleware_stack()
 
         self._static_app: t.Optional[ASGIApp] = None
 
-        if self.has_static_files:
-            self._static_app = self.create_static_app()
-
-            async def _statics(scope: TScope, receive: TReceive, send: TSend) -> t.Any:
-                return await self._static_app(scope, receive, send)  # type: ignore
-
-            self.router.mount(
-                self.config.STATIC_MOUNT_PATH,  # type: ignore
-                app=_statics,
-                name="static",
-            )
-
-        self.Get = self.router.Get
-        self.Post = self.router.Post
-
-        self.Delete = self.router.Delete
-        self.Patch = self.router.Patch
-
-        self.Put = self.router.Put
-        self.Options = self.router.Options
-
-        self.Trace = self.router.Trace
-        self.Head = self.router.Head
-
-        self.HttpRoute = self.router.HttpRoute
-        self.WsRoute = self.router.WsRoute
         self._finalize_app_initialization()
 
         logger.info(f"APP SETTINGS: {self._config.config_module}")
 
+    def statics_wrapper(self) -> t.Callable:
+        async def _statics_func_wrapper(
+            scope: TScope, receive: TReceive, send: TSend
+        ) -> t.Any:
+            assert self._static_app, 'app static ASGIApp can not be "None"'
+            return await self._static_app(scope, receive, send)
+
+        return _statics_func_wrapper
+
+    def _get_module_routes(self) -> t.List[BaseRoute]:
+        _routes: t.List[BaseRoute] = []
+        if self.has_static_files:
+            self._static_app = self.create_static_app()
+            _routes.append(
+                Mount(
+                    str(self.config.STATIC_MOUNT_PATH),
+                    app=self.statics_wrapper(),
+                    name="static",
+                )
+            )
+
+        for _, module_ref in self._injector.get_modules().items():
+            module_ref.run_module_register_services()
+            _routes.extend(module_ref.routes)
+
+        return _routes
+
     def install_module(
         self,
-        module: t.Union[t.Type[T], t.Type[ModuleBase], BaseModuleDecorator],
+        module: t.Union[t.Type[T], t.Type[ModuleBase]],
         **init_kwargs: t.Any,
-    ) -> t.Union[T, ModuleBase, BaseModuleDecorator]:
+    ) -> t.Union[T, ModuleBase]:
+        module_ref = self.injector.get_module(module)
+        if module_ref:
+            return module_ref.get_module_instance()
 
-        _module_instance, modules_data = self.root_module.build_module(
-            self._injector.container, module, **init_kwargs
+        module_ref = create_module_ref_factor(
+            module, container=self.injector.container, config=self.config, **init_kwargs
         )
-
-        self.on_startup.reload(list(self.on_startup) + modules_data.startup_event)
-        self._exception_handlers.update(modules_data.exception_handlers)
-        self._user_middleware.extend(modules_data.middleware)
-        self.on_shutdown.reload(list(self.on_shutdown) + modules_data.shutdown_event)
+        self.injector.add_module(module_ref)
         self.middleware_stack = self.build_middleware_stack()
 
-        if isinstance(module, BaseModuleDecorator):
-            self.router.routes.extend(modules_data.routes)
+        if isinstance(module_ref, ModuleTemplateRef):
+            module_ref.run_module_register_services()
+            self.router.extend(module_ref.routes)
             self.reload_static_app()
+            module_ref.run_application_ready(self)
 
-        return t.cast(T, _module_instance)
+        return t.cast(T, module_ref.get_module_instance())
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         return self._global_guards
@@ -237,7 +224,25 @@ class App(AppTemplating):
         )
 
     def _finalize_app_initialization(self) -> None:
-        self.injector.container.add_instance(self)
-        self.injector.container.add_instance(self.config, Config)
-        self.injector.container.add_instance(self.jinja_environment, Environment)
-        self.injector.container.add_scoped(IExecutionContext, ExecutionContext)
+        self.injector.container.register_instance(self)
+        self.injector.container.register_instance(Reflector())
+        self.injector.container.register_instance(self.config, Config)
+        self.injector.container.register_instance(self.jinja_environment, Environment)
+        self.injector.container.register_scoped(IExecutionContext, ExecutionContext)
+
+    def add_exception_handler(
+        self,
+        exc_class_or_status_code: t.Union[int, t.Type[Exception]],
+        handler: t.Callable,
+    ) -> None:  # pragma: no cover
+        self._exception_handlers[exc_class_or_status_code] = handler
+        self.middleware_stack = self.build_middleware_stack()
+
+    def exception_handler(
+        self, exc_class_or_status_code: t.Union[int, t.Type[Exception]]
+    ) -> t.Callable:  # pragma: nocover
+        def decorator(func: t.Callable) -> t.Callable:
+            self.add_exception_handler(exc_class_or_status_code, func)
+            return func
+
+        return decorator

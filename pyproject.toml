@@ -42,7 +42,10 @@ classifiers = [
 
 dependencies = [
     "injector",
-    "starlette >= 0.19.0",
+    "injector; python_version >= '3.7'",
+    "injector <= 0.19.0; python_version < '3.7'",
+    "starlette >= 0.20.0; python_version >= '3.7'",
+    "starlette == 0.19.1; python_version < '3.7'",
     "pydantic",
     "jinja2",
     "typer"

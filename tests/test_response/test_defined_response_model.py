@@ -5,8 +5,9 @@ from pydantic import BaseModel
 
 from ellar.core import AppFactory
 from ellar.core.response.model import RouteResponseExecution
+from ellar.core.routing import ModuleRouter
 
-app = AppFactory.create_app()
+mr = ModuleRouter("")
 
 
 class Item(BaseModel):
@@ -15,17 +16,17 @@ class Item(BaseModel):
     owner_ids: Optional[List[int]] = None
 
 
-@app.Get("/items/valid", response=Item)
+@mr.Get("/items/valid", response=Item)
 def get_valid():
     return {"name": "valid", "price": 1.0}
 
 
-@app.Get("/items/coerce", response=Item)
+@mr.Get("/items/coerce", response=Item)
 def get_coerce():
     return {"name": "coerce", "price": "1.0"}
 
 
-@app.Get("/items/validlist", response=List[Item])
+@mr.Get("/items/validlist", response=List[Item])
 def get_validlist():
     return [
         {"name": "foo"},
@@ -34,14 +35,17 @@ def get_validlist():
     ]
 
 
-@app.Get("/items/valid_tuple_return", response={200: List[Item], 201: Item})
+@mr.Get("/items/valid_tuple_return", response={200: List[Item], 201: Item})
 def get_valid_tuple_return():
     return 201, {"name": "baz", "price": 2.0, "owner_ids": [1, 2, 3]}
 
 
-@app.Get("/items/not_found_res_model", response={200: List[Item], 201: Item})
+@mr.Get("/items/not_found_res_model", response={200: List[Item], 201: Item})
 def get_not_found_res_model():
     return 301, {"name": "baz", "price": 2.0, "owner_ids": [1, 2, 3]}
+
+
+app = AppFactory.create_app(routers=(mr,))
 
 
 def test_valid_tuple_return(test_client_factory):

@@ -20,4 +20,4 @@ class DummyModule(ModuleBase):
 
     def register_services(self, container: Container) -> None:
         configuration = Configuration(":memory:")
-        container.add_instance(configuration)
+        container.register_instance(configuration)

@@ -32,7 +32,7 @@ def test_container_install_module():
 
     decorated_module = app_container.install(DecoratedModule)
     assert called
-    assert isinstance(decorated_module, DecoratedModule.get_module())
+    assert isinstance(decorated_module, DecoratedModule)
 
 
 def test_default_container_registration():
@@ -51,8 +51,8 @@ def test_default_container_registration():
 @pytest.mark.asyncio
 async def test_request_service_provider():
     injector = StarletteInjector(auto_bind=False)
-    injector.container.add_scoped(Foo1)
-    injector.container.add_exact_transient(Foo2)
+    injector.container.register_scoped(Foo1)
+    injector.container.register_exact_transient(Foo2)
 
     def assert_attributes(provider, expected):
         assert hasattr(provider, "parent") is expected

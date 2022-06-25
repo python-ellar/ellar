@@ -18,6 +18,9 @@ class AttributeDict(AttributeDictAccessMixin, t.Dict[KT, VT]):
         value = self.get(name)
         return value
 
+    def __setattr__(self, name: KT, value: VT) -> None:  # type: ignore
+        self.update({name: value})
+
     def set_defaults(self, **kwargs: t.Any) -> None:
         for k, v in kwargs.items():
             self.setdefault(k, v)  # type: ignore

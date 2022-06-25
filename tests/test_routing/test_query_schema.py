@@ -1,22 +1,23 @@
 from ellar.common import Query
 from ellar.core import TestClientFactory
+from ellar.core.routing import ModuleRouter
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
 
 from .sample import Data, Filter
 
-tm = TestClientFactory.create_test_module()
+mr = ModuleRouter("")
 
 
-@tm.app.Get("/test")
+@mr.Get("/test")
 def query_params_schema(
     request,
-    filters: Filter = Query(..., alias="well_not_work_for_schema_with_many_field"),
+    filters: Filter = Query(..., alias="will_not_work_for_schema_with_many_field"),
 ):
     return filters.dict()
 
 
-@tm.app.Get("/test-mixed")
+@mr.Get("/test-mixed")
 def query_params_mixed_schema(
     request,
     query1: int,
@@ -25,6 +26,9 @@ def query_params_mixed_schema(
     data: Data = Query(...),
 ):
     return dict(query1=query1, query2=query2, filters=filters.dict(), data=data.dict())
+
+
+tm = TestClientFactory.create_test_module(routers=(mr,))
 
 
 def test_request():
