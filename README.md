@@ -28,4 +28,4 @@
 - Injector
 
 ## Status
-Project is still under development
+Project is still in development
