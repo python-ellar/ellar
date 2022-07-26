@@ -3,10 +3,10 @@ import stat
 import typing as t
 
 import anyio
-from starlette.staticfiles import PathLike, StaticFiles
+from starlette.staticfiles import PathLike, StaticFiles as StarletteStaticFiles
 
 
-class StarletteStaticFiles(StaticFiles):
+class StaticFiles(StarletteStaticFiles):
     def __init__(
         self,
         *,
@@ -15,7 +15,7 @@ class StarletteStaticFiles(StaticFiles):
         html: bool = False,  # TODO: expose to config
         check_dir: bool = True,  # TODO: expose to config
     ):
-        super(StarletteStaticFiles, self).__init__(
+        super(StaticFiles, self).__init__(
             html=html, packages=packages, check_dir=check_dir
         )
         self._directories = [] if directories is None else list(directories)

@@ -10,7 +10,7 @@ from starlette.templating import pass_context
 from ellar.compatible import cached_property
 from ellar.constants import TEMPLATE_FILTER_KEY, TEMPLATE_GLOBAL_KEY
 from ellar.core.connection import Request
-from ellar.core.staticfiles import StarletteStaticFiles
+from ellar.core.staticfiles import StaticFiles
 from ellar.types import ASGIApp, TemplateFilterCallable, TemplateGlobalCallable
 
 from ..conf import Config
@@ -192,7 +192,7 @@ class AppTemplating(JinjaTemplating):
         return JinjaLoader(t.cast("App", self))
 
     def create_static_app(self) -> ASGIApp:
-        return StarletteStaticFiles(
+        return StaticFiles(
             directories=self.static_files, packages=self.config.STATIC_FOLDER_PACKAGES  # type: ignore
         )
 

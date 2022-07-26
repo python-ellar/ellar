@@ -12,7 +12,7 @@ from starlette.exceptions import HTTPException
 from starlette.routing import Mount
 
 from ellar.core import AppFactory, TestClient
-from ellar.core.staticfiles import StarletteStaticFiles
+from ellar.core.staticfiles import StaticFiles
 
 
 def test_staticfiles(tmpdir):
@@ -20,7 +20,7 @@ def test_staticfiles(tmpdir):
     with open(path, "w") as file:
         file.write("<file content>")
 
-    app = StarletteStaticFiles(directories=[tmpdir])
+    app = StaticFiles(directories=[tmpdir])
     client = TestClient(app)
     response = client.get("/example.txt")
     assert response.status_code == 200
@@ -33,7 +33,7 @@ def test_staticfiles_with_pathlib(tmpdir):
     with open(path, "w") as file:
         file.write("<file content>")
 
-    app = StarletteStaticFiles(directories=[base_dir])
+    app = StaticFiles(directories=[base_dir])
     client = TestClient(app)
     response = client.get("/example.txt")
     assert response.status_code == 200
@@ -45,9 +45,7 @@ def test_staticfiles_head_with_middleware(tmpdir):
     with open(path, "w") as file:
         file.write("x" * 100)
 
-    routers = [
-        Mount("/static", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
-    ]
+    routers = [Mount("/static", app=StaticFiles(directories=[tmpdir]), name="static")]
     app = AppFactory.create_app(routers=routers)
 
     client = TestClient(app)
@@ -57,13 +55,13 @@ def test_staticfiles_head_with_middleware(tmpdir):
 
 
 def test_staticfiles_with_package():
-    app = StarletteStaticFiles(packages=["tests"])
+    app = StaticFiles(packages=["tests"])
     client = TestClient(app)
     response = client.get("/example.txt")
     assert response.status_code == 200
     assert response.text == "123\n"
 
-    app = StarletteStaticFiles(packages=[("tests", "statics")])
+    app = StaticFiles(packages=[("tests", "statics")])
     client = TestClient(app)
     response = client.get("/example.txt")
     assert response.status_code == 200
@@ -75,9 +73,7 @@ def test_staticfiles_post(tmpdir):
     with open(path, "w") as file:
         file.write("<file content>")
 
-    routers = [
-        Mount("/", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
-    ]
+    routers = [Mount("/", app=StaticFiles(directories=[tmpdir]), name="static")]
     app = AppFactory.create_app(routers=routers)
     client = TestClient(app)
 
@@ -91,9 +87,7 @@ def test_staticfiles_with_directory_returns_404(tmpdir):
     with open(path, "w") as file:
         file.write("<file content>")
 
-    routers = [
-        Mount("/", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
-    ]
+    routers = [Mount("/", app=StaticFiles(directories=[tmpdir]), name="static")]
     app = AppFactory.create_app(routers=routers)
     client = TestClient(app)
 
@@ -107,9 +101,7 @@ def test_staticfiles_with_missing_file_returns_404(tmpdir):
     with open(path, "w") as file:
         file.write("<file content>")
 
-    routers = [
-        Mount("/", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
-    ]
+    routers = [Mount("/", app=StaticFiles(directories=[tmpdir]), name="static")]
     app = AppFactory.create_app(routers=routers)
     client = TestClient(app)
 
@@ -121,13 +113,13 @@ def test_staticfiles_with_missing_file_returns_404(tmpdir):
 def test_staticfiles_instantiated_with_missing_directory(tmpdir):
     with pytest.raises(RuntimeError) as exc_info:
         path = os.path.join(tmpdir, "no_such_directory")
-        StarletteStaticFiles(directories=[path])
+        StaticFiles(directories=[path])
     assert "does not exist" in str(exc_info.value)
 
 
 def test_staticfiles_configured_with_missing_directory(tmpdir):
     path = os.path.join(tmpdir, "no_such_directory")
-    app = StarletteStaticFiles(directories=[path], check_dir=False)
+    app = StaticFiles(directories=[path], check_dir=False)
     client = TestClient(app)
     with pytest.raises(RuntimeError) as exc_info:
         client.get("/example.txt")
@@ -139,7 +131,7 @@ def test_staticfiles_configured_with_file_instead_of_directory(tmpdir):
     with open(path, "w") as file:
         file.write("<file content>")
 
-    app = StarletteStaticFiles(directories=[path], check_dir=False)
+    app = StaticFiles(directories=[path], check_dir=False)
     client = TestClient(app)
     with pytest.raises(RuntimeError) as exc_info:
         client.get("/example.txt")
@@ -147,7 +139,7 @@ def test_staticfiles_configured_with_file_instead_of_directory(tmpdir):
 
 
 def test_staticfiles_config_check_occurs_only_once(tmpdir):
-    app = StarletteStaticFiles(directories=[tmpdir])
+    app = StaticFiles(directories=[tmpdir])
     client = TestClient(app)
     assert not app.config_checked
 
@@ -168,7 +160,7 @@ def test_staticfiles_prevents_breaking_out_of_directory(tmpdir):
     with open(path, "w") as file:
         file.write("outside root dir")
 
-    app = StarletteStaticFiles(directories=[directory])
+    app = StaticFiles(directories=[directory])
     # We can't test this with 'requests', so we test the app directly here.
     path = app.get_path({"path": "/../example.txt"})
     scope = {"method": "GET"}
@@ -185,7 +177,7 @@ def test_staticfiles_never_read_file_for_head_method(tmpdir):
     with open(path, "w") as file:
         file.write("<file content>")
 
-    app = StarletteStaticFiles(directories=[tmpdir])
+    app = StaticFiles(directories=[tmpdir])
     client = TestClient(app)
     response = client.head("/example.txt")
     assert response.status_code == 200
@@ -198,7 +190,7 @@ def test_staticfiles_304_with_etag_match(tmpdir):
     with open(path, "w") as file:
         file.write("<file content>")
 
-    app = StarletteStaticFiles(directories=[tmpdir])
+    app = StaticFiles(directories=[tmpdir])
     client = TestClient(app)
     first_resp = client.get("/example.txt")
     assert first_resp.status_code == 200
@@ -217,7 +209,7 @@ def test_staticfiles_304_with_last_modified_compare_last_req(tmpdir):
         file.write("<file content>")
     os.utime(path, (file_last_modified_time, file_last_modified_time))
 
-    app = StarletteStaticFiles(directories=[tmpdir])
+    app = StaticFiles(directories=[tmpdir])
     client = TestClient(app)
     # last modified less than last request, 304
     response = client.get(
@@ -243,7 +235,7 @@ def test_staticfiles_html_normal(tmpdir):
     with open(path, "w") as file:
         file.write("<h1>Hello</h1>")
 
-    app = StarletteStaticFiles(directories=[tmpdir], html=True)
+    app = StaticFiles(directories=[tmpdir], html=True)
     client = TestClient(app)
 
     response = client.get("/dir/")
@@ -273,7 +265,7 @@ def test_staticfiles_html_without_index(tmpdir):
     path = os.path.join(tmpdir, "dir")
     os.mkdir(path)
 
-    app = StarletteStaticFiles(directories=[tmpdir], html=True)
+    app = StaticFiles(directories=[tmpdir], html=True)
     client = TestClient(app)
 
     response = client.get("/dir/")
@@ -298,7 +290,7 @@ def test_staticfiles_html_without_404(tmpdir):
     with open(path, "w") as file:
         file.write("<h1>Hello</h1>")
 
-    app = StarletteStaticFiles(directories=[tmpdir], html=True)
+    app = StaticFiles(directories=[tmpdir], html=True)
     client = TestClient(app)
 
     response = client.get("/dir/")
@@ -321,7 +313,7 @@ def test_staticfiles_html_only_files(tmpdir):
     with open(path, "w") as file:
         file.write("<h1>Hello</h1>")
 
-    app = StarletteStaticFiles(directories=[tmpdir], html=True)
+    app = StaticFiles(directories=[tmpdir], html=True)
     client = TestClient(app)
 
     with pytest.raises(HTTPException) as exc_info:
@@ -347,7 +339,7 @@ def test_staticfiles_cache_invalidation_for_deleted_file_html_mode(tmpdir):
     os.utime(path_404, (common_modified_time, common_modified_time))
     os.utime(path_some, (common_modified_time, common_modified_time))
 
-    app = StarletteStaticFiles(directories=[tmpdir], html=True)
+    app = StaticFiles(directories=[tmpdir], html=True)
     client = TestClient(app)
 
     resp_exists = client.get("/some.html")
@@ -377,9 +369,7 @@ def test_staticfiles_with_invalid_dir_permissions_returns_401(tmpdir):
 
     os.chmod(tmpdir, stat.S_IRWXO)
 
-    routers = [
-        Mount("/", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
-    ]
+    routers = [Mount("/", app=StaticFiles(directories=[tmpdir]), name="static")]
     app = AppFactory.create_app(routers=routers)
     client = TestClient(app)
 
@@ -393,9 +383,7 @@ def test_staticfiles_with_missing_dir_returns_404(tmpdir):
     with open(path, "w") as file:
         file.write("<file content>")
 
-    routers = [
-        Mount("/", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
-    ]
+    routers = [Mount("/", app=StaticFiles(directories=[tmpdir]), name="static")]
     app = AppFactory.create_app(routers=routers)
     client = TestClient(app)
 
@@ -409,9 +397,7 @@ def test_staticfiles_access_file_as_dir_returns_404(tmpdir):
     with open(path, "w") as file:
         file.write("<file content>")
 
-    routers = [
-        Mount("/", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
-    ]
+    routers = [Mount("/", app=StaticFiles(directories=[tmpdir]), name="static")]
     app = AppFactory.create_app(routers=routers)
     client = TestClient(app)
 
@@ -428,9 +414,7 @@ def test_staticfiles_unhandled_os_error_returns_500(tmpdir, monkeypatch):
     with open(path, "w") as file:
         file.write("<file content>")
 
-    routers = [
-        Mount("/", app=StarletteStaticFiles(directories=[tmpdir]), name="static")
-    ]
+    routers = [Mount("/", app=StaticFiles(directories=[tmpdir]), name="static")]
     app = AppFactory.create_app(routers=routers)
     client = TestClient(app, raise_server_exceptions=False)
 
