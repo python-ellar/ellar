@@ -18,7 +18,7 @@ from ellar.core.modules.ref import create_module_ref_factor
 from ellar.core.routing import ApplicationRouter
 from ellar.core.templating import AppTemplating, Environment
 from ellar.core.versioning import VERSIONING, BaseAPIVersioning
-from ellar.di.injector import StarletteInjector
+from ellar.di.injector import EllarInjector
 from ellar.logger import logger
 from ellar.services.reflector import Reflector
 from ellar.types import ASGIApp, T, TReceive, TScope, TSend
@@ -28,7 +28,7 @@ class App(AppTemplating):
     def __init__(
         self,
         config: Config,
-        injector: StarletteInjector,
+        injector: EllarInjector,
         on_startup_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
         on_shutdown_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
         lifespan: t.Optional[t.Callable[["App"], t.AsyncContextManager]] = None,
@@ -38,8 +38,8 @@ class App(AppTemplating):
     ):
         assert isinstance(config, Config), "config must instance of Config"
         assert isinstance(
-            injector, StarletteInjector
-        ), "injector must instance of StarletteInjector"
+            injector, EllarInjector
+        ), "injector must instance of EllarInjector"
 
         # The lifespan context function is a newer style that replaces
         # on_startup / on_shutdown handlers. Use one or the other, not both.
@@ -49,7 +49,7 @@ class App(AppTemplating):
 
         self._config = config
         # TODO: read auto_bind from configure
-        self._injector: StarletteInjector = injector
+        self._injector: EllarInjector = injector
 
         self._global_guards = [] if global_guards is None else list(global_guards)
         self._exception_handlers = dict(t.cast(dict, self.config.EXCEPTION_HANDLERS))
@@ -141,7 +141,7 @@ class App(AppTemplating):
         self._global_guards.extend(guards)
 
     @property
-    def injector(self) -> StarletteInjector:
+    def injector(self) -> EllarInjector:
         return self._injector
 
     @property

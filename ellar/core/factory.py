@@ -14,7 +14,7 @@ from ellar.core import Config
 from ellar.core.main import App
 from ellar.core.modules import ModuleBase
 from ellar.core.modules.ref import ModuleTemplateRef, create_module_ref_factor
-from ellar.di import ProviderConfig, StarletteInjector
+from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -35,7 +35,7 @@ class AppFactory:
 
     @classmethod
     def _build_modules(
-        cls, app_module: t.Type[ModuleBase], config: Config, injector: StarletteInjector
+        cls, app_module: t.Type[ModuleBase], config: Config, injector: EllarInjector
     ) -> None:
         assert reflect.get_metadata(
             MODULE_WATERMARK, app_module
@@ -69,7 +69,7 @@ class AppFactory:
         assert reflect.get_metadata(MODULE_WATERMARK, module), "Only Module is allowed"
 
         config = Config(app_configured=True, config_module=config_module)
-        injector = StarletteInjector(auto_bind=t.cast(bool, config.INJECTOR_AUTO_BIND))
+        injector = EllarInjector(auto_bind=t.cast(bool, config.INJECTOR_AUTO_BIND))
         cls._build_modules(app_module=module, injector=injector, config=config)
 
         shutdown_event = config[ON_REQUEST_STARTUP_KEY]

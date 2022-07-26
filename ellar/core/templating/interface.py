@@ -19,7 +19,7 @@ from .loader import JinjaLoader
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
-    from ellar.di import StarletteInjector
+    from ellar.di import EllarInjector
 
 
 class TemplateFunctionData(t.NamedTuple):
@@ -133,7 +133,7 @@ class ModuleTemplating(IModuleTemplateLoader):
 class AppTemplating(JinjaTemplating):
     config: Config
     _static_app: t.Optional[ASGIApp]
-    _injector: "StarletteInjector"
+    _injector: "EllarInjector"
     has_static_files: bool
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:

@@ -6,8 +6,8 @@ from injector import (
 )
 
 from ellar.di import (
+    EllarInjector,
     ProviderConfig,
-    StarletteInjector,
     get_scope,
     injectable,
     is_decorated_with_injectable,
@@ -29,7 +29,7 @@ from .examples import (
 
 
 def test_circle_dependency():
-    injector = StarletteInjector()
+    injector = EllarInjector()
     ProviderConfig(CircularDependencyType).register(injector.container)
 
     with pytest.raises(CircularDependency):
@@ -55,7 +55,7 @@ def test_injectable_and_scopes():
 
 
 def test_provider_config_registers_correctly():
-    injector = StarletteInjector(auto_bind=False)
+    injector = EllarInjector(auto_bind=False)
     providers = [
         ProviderConfig(Foo2),
         ProviderConfig(InjectType2),
@@ -78,7 +78,7 @@ def test_provider_config_registers_correctly():
 
 
 def test_provider_advance_use_case():
-    injector = StarletteInjector(auto_bind=False)
+    injector = EllarInjector(auto_bind=False)
 
     providers_advance = [
         ProviderConfig(
@@ -108,7 +108,7 @@ def test_provider_advance_use_case():
     providers_advance.append(ProviderConfig(AnyDBContext))
     providers_advance.append(ProviderConfig(FooDBCatsRepository))
 
-    injector = StarletteInjector(auto_bind=False)
+    injector = EllarInjector(auto_bind=False)
 
     for provider in providers_advance:
         provider.register(injector.container)
@@ -121,7 +121,7 @@ def test_provider_advance_use_case():
 
 
 def test_module_provider_works():
-    injector = StarletteInjector(auto_bind=False)
+    injector = EllarInjector(auto_bind=False)
     ProviderConfig(Foo1, use_value=Foo1()).register(injector.container)
 
     @injectable

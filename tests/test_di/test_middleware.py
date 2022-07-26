@@ -7,7 +7,7 @@ from ellar.core.connection import HTTPConnection, Request, WebSocket
 from ellar.core.context import IExecutionContext
 from ellar.core.middleware import RequestServiceProviderMiddleware
 from ellar.core.response import Response
-from ellar.di import StarletteInjector
+from ellar.di import EllarInjector
 
 from ..injector_module import Configuration, DummyModule
 
@@ -70,7 +70,7 @@ async def assert_iexecute_context_app(scope, receive, send):
 
 
 def test_di_middleware(test_client_factory):
-    injector_ = StarletteInjector()
+    injector_ = EllarInjector()
     injector_.container.install(DummyModule)
     asgi_app = RequestServiceProviderMiddleware(
         assert_service_provider_app, debug=False, injector=injector_
@@ -87,7 +87,7 @@ def test_di_middleware(test_client_factory):
 
 def test_di_middleware_execution_context_initialization(test_client_factory):
     asgi_app = RequestServiceProviderMiddleware(
-        assert_iexecute_context_app, debug=False, injector=StarletteInjector()
+        assert_iexecute_context_app, debug=False, injector=EllarInjector()
     )
 
     client = test_client_factory(asgi_app)

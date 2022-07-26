@@ -10,7 +10,7 @@ from ellar.core.response import Response
 from ellar.types import ASGIApp, TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.di.injector import StarletteInjector
+    from ellar.di.injector import EllarInjector
 
 
 class RequestServiceProviderMiddleware(ServerErrorMiddleware):
@@ -19,7 +19,7 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
         app: ASGIApp,
         *,
         debug: bool,
-        injector: "StarletteInjector",
+        injector: "EllarInjector",
         handler: t.Callable = None
     ) -> None:
         super(RequestServiceProviderMiddleware, self).__init__(
