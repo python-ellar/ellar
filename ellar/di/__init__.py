@@ -1,4 +1,4 @@
-from .injector import Container, RequestServiceProvider, StarletteInjector
+from .injector import Container, EllarInjector, RequestServiceProvider
 from .scopes import (
     RequestScope,
     SingletonScope,
@@ -18,7 +18,7 @@ from .service_config import (
 __all__ = [
     "Container",
     "RequestServiceProvider",
-    "StarletteInjector",
+    "EllarInjector",
     "RequestScope",
     "SingletonScope",
     "TransientScope",

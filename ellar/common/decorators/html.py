@@ -28,7 +28,7 @@ def render(template_name: t.Optional[str] = NOT_SET) -> t.Callable:
     if template_name is not NOT_SET:
         assert isinstance(
             template_name, str
-        ), "Render Operation must invoked eg. @Render()"
+        ), "Render Operation must invoked eg. @render()"
     template_name = None if template_name is NOT_SET else template_name
     class_base_function_regex = re.compile(
         "<\\w+ (\\w+)\\.(\\w+) at \\w+>", re.IGNORECASE

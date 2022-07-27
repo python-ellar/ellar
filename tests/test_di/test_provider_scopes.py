@@ -1,6 +1,6 @@
 import pytest
 
-from ellar.di import ProviderConfig, StarletteInjector
+from ellar.di import EllarInjector, ProviderConfig
 from ellar.di.scopes import RequestScope, SingletonScope, TransientScope
 
 from .examples import AnyContext, Foo, IContext
@@ -23,7 +23,7 @@ from .examples import AnyContext, Foo, IContext
     ],
 )
 def test_container_scopes(action, base_type, concrete_type, ref_type, expected_scope):
-    container = StarletteInjector().container
+    container = EllarInjector().container
     container_action = getattr(container, action)
     if concrete_type:
         container_action(base_type, concrete_type)
@@ -35,7 +35,7 @@ def test_container_scopes(action, base_type, concrete_type, ref_type, expected_s
 
 @pytest.mark.asyncio
 async def test_request_scope_instance():
-    injector = StarletteInjector(auto_bind=False)
+    injector = EllarInjector(auto_bind=False)
     ProviderConfig(IContext, use_class=AnyContext).register(injector.container)
 
     # resolving RequestScope Providers outside RequestServiceProvider will behaves like TransientScope

@@ -18,7 +18,7 @@ from ellar.core.modules.ref import (
     ModuleTemplateRef,
     create_module_ref_factor,
 )
-from ellar.di import StarletteInjector, TransientScope, injectable
+from ellar.di import EllarInjector, TransientScope, injectable
 from ellar.helper import get_name
 from ellar.reflect import reflect
 
@@ -50,7 +50,7 @@ class InitKwargsModule(ModuleBase):
 
 def test_create_module_ref_factor_creates_right_module_ref():
     config = Config()
-    container = StarletteInjector(auto_bind=False).container
+    container = EllarInjector(auto_bind=False).container
 
     module_ref = create_module_ref_factor(
         ModuleBaseExample, config=config, container=container, a="a", b="b"
@@ -67,7 +67,7 @@ def test_create_module_ref_factor_creates_right_module_ref():
 
 def test_module_init_kwargs_build_correctly():
     config = Config()
-    container = StarletteInjector(auto_bind=False).container
+    container = EllarInjector(auto_bind=False).container
     module_ref = create_module_ref_factor(
         InitKwargsModule, config=config, container=container
     )
@@ -77,7 +77,7 @@ def test_module_init_kwargs_build_correctly():
 
 def test_module_ref_registers_module_type():
     config = Config()
-    container = StarletteInjector(auto_bind=False).container
+    container = EllarInjector(auto_bind=False).container
 
     with pytest.raises(Exception):
         container.injector.get(ModuleBaseExample)
@@ -102,7 +102,7 @@ def test_module_ref_registers_module_type():
 
 def test_module_template_ref_template_filters():
     config = Config(**{TEMPLATE_GLOBAL_KEY: []})
-    container = StarletteInjector(auto_bind=False).container
+    container = EllarInjector(auto_bind=False).container
 
     template_filter = config[TEMPLATE_FILTER_KEY]
     template_global_filter = config[TEMPLATE_GLOBAL_KEY]
@@ -134,7 +134,7 @@ def test_module_template_ref_template_filters():
 
 def test_module_template_ref_scan_request_events():
     config = Config()
-    container = StarletteInjector(auto_bind=False).container
+    container = EllarInjector(auto_bind=False).container
 
     request_startup = config[ON_REQUEST_STARTUP_KEY]
     request_shutdown = config[ON_REQUEST_SHUTDOWN_KEY]
@@ -161,7 +161,7 @@ def test_module_template_ref_scan_request_events():
 
 def test_module_template_ref_scan_exceptions_handlers():
     config = Config(**{EXCEPTION_HANDLERS_KEY: []})
-    container = StarletteInjector(auto_bind=False).container
+    container = EllarInjector(auto_bind=False).container
     assert 404 not in config[EXCEPTION_HANDLERS_KEY]
 
     create_module_ref_factor(ModuleBaseExample2, config=config, container=container)
@@ -173,7 +173,7 @@ def test_module_template_ref_scan_exceptions_handlers():
 
 def test_module_template_ref_scan_middle_ware():
     config = Config(**{MIDDLEWARE_HANDLERS_KEY: ()})
-    container = StarletteInjector(auto_bind=False).container
+    container = EllarInjector(auto_bind=False).container
     assert len(config[MIDDLEWARE_HANDLERS_KEY]) == 0
 
     create_module_ref_factor(ModuleBaseExample2, config=config, container=container)
@@ -193,7 +193,7 @@ def test_module_template_ref_scan_middle_ware():
 def test_module_template_ref_get_all_routers():
     some_invalid_router = type("SomeInvalidRouter", (), {})
     config = Config()
-    container = StarletteInjector(auto_bind=False).container
+    container = EllarInjector(auto_bind=False).container
     with reflect.context():
         reflect.define_metadata(
             MODULE_METADATA.ROUTERS,
@@ -217,7 +217,7 @@ def test_module_template_ref_get_all_routers_fails_for_invalid_controller():
             MODULE_METADATA.CONTROLLERS, some_invalid_controller, ModuleBaseExample2
         )
         config = Config()
-        container = StarletteInjector(auto_bind=False).container
+        container = EllarInjector(auto_bind=False).container
 
         with pytest.raises(AssertionError, match="Invalid Controller Type."):
             create_module_ref_factor(
@@ -227,7 +227,7 @@ def test_module_template_ref_get_all_routers_fails_for_invalid_controller():
 
 def test_module_plain_ref_routes_return_empty_list():
     config = Config()
-    container = StarletteInjector(auto_bind=False).container
+    container = EllarInjector(auto_bind=False).container
 
     module_ref = create_module_ref_factor(
         ModuleBaseExample, config=config, container=container
@@ -238,7 +238,7 @@ def test_module_plain_ref_routes_return_empty_list():
 def test_module_template_ref_routes_returns_valid_routes():
     some_invalid_router = type("SomeInvalidRouter2", (), {})
     config = Config()
-    container = StarletteInjector(auto_bind=False).container
+    container = EllarInjector(auto_bind=False).container
     with reflect.context():
         reflect.define_metadata(
             MODULE_METADATA.ROUTERS,
@@ -254,7 +254,7 @@ def test_module_template_ref_routes_returns_valid_routes():
 
 def test_module_template_ref_routes():
     config = Config()
-    container = StarletteInjector(auto_bind=False).container
+    container = EllarInjector(auto_bind=False).container
 
     module_ref = create_module_ref_factor(
         ModuleBaseExample2, config=config, container=container
@@ -266,7 +266,7 @@ def test_module_template_ref_routes():
 
 def test_module_template_registers_providers_and_controllers():
     config = Config()
-    container = StarletteInjector(auto_bind=False).container
+    container = EllarInjector(auto_bind=False).container
 
     with pytest.raises(Exception):
         container.injector.get(UserService)

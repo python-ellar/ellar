@@ -10,7 +10,7 @@ from starlette.templating import pass_context
 from ellar.compatible import cached_property
 from ellar.constants import TEMPLATE_FILTER_KEY, TEMPLATE_GLOBAL_KEY
 from ellar.core.connection import Request
-from ellar.core.staticfiles import StarletteStaticFiles
+from ellar.core.staticfiles import StaticFiles
 from ellar.types import ASGIApp, TemplateFilterCallable, TemplateGlobalCallable
 
 from ..conf import Config
@@ -19,7 +19,7 @@ from .loader import JinjaLoader
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
-    from ellar.di import StarletteInjector
+    from ellar.di import EllarInjector
 
 
 class TemplateFunctionData(t.NamedTuple):
@@ -133,7 +133,7 @@ class ModuleTemplating(IModuleTemplateLoader):
 class AppTemplating(JinjaTemplating):
     config: Config
     _static_app: t.Optional[ASGIApp]
-    _injector: "StarletteInjector"
+    _injector: "EllarInjector"
     has_static_files: bool
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
@@ -192,7 +192,7 @@ class AppTemplating(JinjaTemplating):
         return JinjaLoader(t.cast("App", self))
 
     def create_static_app(self) -> ASGIApp:
-        return StarletteStaticFiles(
+        return StaticFiles(
             directories=self.static_files, packages=self.config.STATIC_FOLDER_PACKAGES  # type: ignore
         )
 

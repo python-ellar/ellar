@@ -3,7 +3,7 @@ from injector import Binder, Injector, UnsatisfiedRequirement
 
 from ellar.common import Module
 from ellar.core import ModuleBase
-from ellar.di import Container, StarletteInjector
+from ellar.di import Container, EllarInjector
 from ellar.di.providers import ClassProvider, InstanceProvider
 
 from .examples import Foo, Foo1, Foo2
@@ -11,7 +11,7 @@ from .examples import Foo, Foo1, Foo2
 
 def test_container_install_module():
     called = False
-    app_container = StarletteInjector().container
+    app_container = EllarInjector().container
 
     class FakeModule(ModuleBase):
         def register_services(self, container: Container) -> None:
@@ -36,10 +36,10 @@ def test_container_install_module():
 
 
 def test_default_container_registration():
-    injector = StarletteInjector(auto_bind=False)
+    injector = EllarInjector(auto_bind=False)
     assert isinstance(injector.get(Container), Container)
-    assert isinstance(injector.get(StarletteInjector), StarletteInjector)
-    assert isinstance(injector.get(StarletteInjector), StarletteInjector)
+    assert isinstance(injector.get(EllarInjector), EllarInjector)
+    assert isinstance(injector.get(EllarInjector), EllarInjector)
 
     with pytest.raises(UnsatisfiedRequirement):
         injector.get(Injector)
@@ -50,7 +50,7 @@ def test_default_container_registration():
 
 @pytest.mark.asyncio
 async def test_request_service_provider():
-    injector = StarletteInjector(auto_bind=False)
+    injector = EllarInjector(auto_bind=False)
     injector.container.register_scoped(Foo1)
     injector.container.register_exact_transient(Foo2)
 

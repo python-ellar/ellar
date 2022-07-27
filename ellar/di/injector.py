@@ -49,7 +49,7 @@ class RequestServiceProvider(InjectorBinder):
         scope_instance = t.cast(DIScope, scope_binding.provider.get(self))
 
         log.debug(
-            "%StarletteInjector.get(%r, scope=%r) using %r",
+            "%EllarInjector.get(%r, scope=%r) using %r",
             self._log_prefix,
             interface,
             scope,
@@ -79,7 +79,7 @@ class RequestServiceProvider(InjectorBinder):
 class Container(InjectorBinder):
     __slots__ = ("injector", "_auto_bind", "_bindings", "parent")
 
-    injector: "StarletteInjector"
+    injector: "EllarInjector"
 
     @t.no_type_check
     def create_binding(
@@ -211,7 +211,7 @@ class Container(InjectorBinder):
         return instance
 
 
-class StarletteInjector(Injector):
+class EllarInjector(Injector):
     __slots__ = ("_stack", "parent", "app", "container", "_modules")
 
     def __init__(
@@ -229,7 +229,7 @@ class StarletteInjector(Injector):
             parent=parent.binder if parent is not None else None,
         )
         # Bind some useful types
-        self.container.register_instance(self, StarletteInjector)
+        self.container.register_instance(self, EllarInjector)
         self.container.register_instance(self.binder)
         self._modules: t.DefaultDict = defaultdict(OrderedDict)
         self._modules[MODULE_REF_TYPES.TEMPLATE] = OrderedDict()

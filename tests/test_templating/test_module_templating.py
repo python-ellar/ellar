@@ -5,7 +5,7 @@ import pytest
 from ellar.common import Module, template_filter, template_global
 from ellar.core import Config, TestClientFactory
 from ellar.core.modules import ModuleBase, ModuleTemplateRef
-from ellar.di import StarletteInjector
+from ellar.di import EllarInjector
 
 
 @Module(template_folder="views")
@@ -75,7 +75,7 @@ class NoneJinjaLoaderTemplating:
 )
 def test_module_templating_works(module, static_folder, template_folder):
     config = Config()
-    container = StarletteInjector().container
+    container = EllarInjector().container
     module_ref = ModuleTemplateRef(
         module_type=module, container=container, config=config
     )
@@ -94,7 +94,7 @@ def test_module_templating_works(module, static_folder, template_folder):
 
 def test_none_jinja_loader_module():
     config = Config()
-    container = StarletteInjector().container
+    container = EllarInjector().container
     module_ref = ModuleTemplateRef(
         module_type=NoneJinjaLoaderTemplating, container=container, config=config
     )
