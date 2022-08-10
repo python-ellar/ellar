@@ -2,6 +2,10 @@ import inspect
 import re
 import typing as t
 
+class_base_function_regex: t.Pattern[t.Any] = re.compile(
+    "<\\w+ ((\\w+\\.(<\\w+>)\\.)+)?(\\w+)\\.(\\w+) at \\w+>", re.IGNORECASE
+)
+
 
 def generate_operation_unique_id(
     *, name: str, path: str, methods: t.Sequence[str]

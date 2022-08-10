@@ -6,10 +6,10 @@ from ellar.compatible import AttributeDict
 from ellar.constants import (
     CONTROLLER_CLASS_KEY,
     CONTROLLER_METADATA,
+    CONTROLLER_OPERATION_HANDLER_KEY,
     CONTROLLER_WATERMARK,
     NOT_SET,
     OPERATION_ENDPOINT_KEY,
-    OPERATION_HANDLER_KEY,
 )
 from ellar.core import ControllerBase
 from ellar.core.controller import ControllerType
@@ -33,10 +33,10 @@ def reflect_all_controller_type_routes(cls: t.Type[ControllerBase]) -> None:
     for base_cls in reversed(bases):
         if base_cls not in [ABC, ControllerBase, object]:
             for item in get_route_functions(base_cls):
-                operation = reflect.get_metadata(OPERATION_HANDLER_KEY, item)
+                operation = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, item)
                 reflect.define_metadata(CONTROLLER_CLASS_KEY, cls, item)
                 reflect.define_metadata(
-                    OPERATION_HANDLER_KEY,
+                    CONTROLLER_OPERATION_HANDLER_KEY,
                     operation,
                     cls,
                     default_value=[],

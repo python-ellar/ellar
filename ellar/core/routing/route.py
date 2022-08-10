@@ -8,9 +8,9 @@ from starlette.routing import (
 )
 
 from ellar.constants import (
+    CONTROLLER_OPERATION_HANDLER_KEY,
     EXTRA_ROUTE_ARGS_KEY,
     NOT_SET,
-    OPERATION_HANDLER_KEY,
     RESPONSE_OVERRIDE_KEY,
 )
 from ellar.core.context import ExecutionContext
@@ -67,7 +67,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         self.endpoint_parameter_model: RequestEndpointArgsModel = NOT_SET
         self.response_model: RouteResponseModel = NOT_SET
 
-        reflect.define_metadata(OPERATION_HANDLER_KEY, self, self.endpoint)
+        reflect.define_metadata(CONTROLLER_OPERATION_HANDLER_KEY, self, self.endpoint)
         self._load_model()
 
     def build_route_operation(  # type:ignore

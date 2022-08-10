@@ -1,7 +1,11 @@
 import pytest
 
 from ellar.common import Controller, get, http_route, ws_route
-from ellar.constants import CONTROLLER_CLASS_KEY, OPENAPI_KEY, OPERATION_HANDLER_KEY
+from ellar.constants import (
+    CONTROLLER_CLASS_KEY,
+    CONTROLLER_OPERATION_HANDLER_KEY,
+    OPENAPI_KEY,
+)
 from ellar.core import ControllerBase
 from ellar.core.routing.router.module import controller_router_factory
 from ellar.di import has_binding, is_decorated_with_injectable
@@ -45,7 +49,7 @@ class SomeController:
 
 
 def test_controller_routes_has_controller_type():
-    routes = reflect.get_metadata(OPERATION_HANDLER_KEY, SampleController)
+    routes = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, SampleController)
     assert routes
 
     for route in routes:

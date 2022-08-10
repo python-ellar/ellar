@@ -6,10 +6,10 @@ from starlette.types import ASGIApp
 from ellar.compatible import AttributeDict
 from ellar.constants import (
     CONTROLLER_METADATA,
+    CONTROLLER_OPERATION_HANDLER_KEY,
     GUARDS_KEY,
     NOT_SET,
     OPENAPI_KEY,
-    OPERATION_HANDLER_KEY,
     VERSIONING_KEY,
 )
 from ellar.core.controller import ControllerBase
@@ -31,7 +31,7 @@ def controller_router_factory(
     controller: t.Union[t.Type[ControllerBase], t.Any]
 ) -> "ModuleMount":
     openapi = reflect.get_metadata(CONTROLLER_METADATA.OPENAPI, controller) or dict()
-    routes = reflect.get_metadata(OPERATION_HANDLER_KEY, controller) or []
+    routes = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, controller) or []
     app = Router()
     app.routes = ModuleRouteCollection(routes)  # type:ignore
     router = ModuleMount(

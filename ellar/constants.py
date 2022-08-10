@@ -69,7 +69,7 @@ MULTI_RESOLVER_KEY = "MULTI_RESOLVER_KEY"
 ROUTE_OPENAPI_PARAMETERS = "ROUTE_OPENAPI_PARAMETERS"
 
 OPERATION_ENDPOINT_KEY = "OPERATION_ENDPOINT"
-OPERATION_HANDLER_KEY = "OPERATION_HANDLER"
+CONTROLLER_OPERATION_HANDLER_KEY = "CONTROLLER_OPERATION_HANDLER"
 CONTROLLER_CLASS_KEY = "CONTROLLER_CLASS_KEY"
 REFLECT_TYPE = "__REFLECT_TYPE__"
 GROUP_METADATA = "GROUP_METADATA"
@@ -121,7 +121,10 @@ STATUS_CODES_WITH_NO_BODY = {100, 101, 102, 103, 204, 304}
 REF_PREFIX = "#/components/schemas/"
 
 
-class _NOT_SET:
+class NOT_SET_TYPE:
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"{__name__}.{self.__class__.__name__}"
+
     def __copy__(self) -> Any:  # pragma: no cover
         return NOT_SET
 
@@ -129,4 +132,4 @@ class _NOT_SET:
         return NOT_SET
 
 
-NOT_SET: Any = _NOT_SET()
+NOT_SET: Any = NOT_SET_TYPE()
