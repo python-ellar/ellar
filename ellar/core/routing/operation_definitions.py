@@ -1,4 +1,3 @@
-import re
 import typing as t
 from functools import partial
 
@@ -14,6 +13,7 @@ from ellar.constants import (
     TRACE,
 )
 from ellar.core.schema import RouteParameters, WsRouteParameters
+from ellar.helper import class_base_function_regex
 from ellar.types import TCallable
 
 from .base import RouteOperationBase
@@ -30,28 +30,25 @@ TWebsocketOperation = t.Union[
 
 
 class OperationDefinitions:
-    __slots__ = ("_routes", "class_base_function_regex")
+    __slots__ = ("_routes",)
 
     def __init__(
         self,
         app_routes: t.List[RouteOperationBase] = None,
     ):
         self._routes = app_routes
-        self.class_base_function_regex = re.compile(
-            "<\\w+ (\\w+)\\.(\\w+) at \\w+>", re.IGNORECASE
-        )
 
     @property
     def routes(self) -> t.List[RouteOperationBase]:
         return self._routes or []
 
     def _get_http_operations_class(self, func: t.Callable) -> t.Type[TOperation]:
-        if self.class_base_function_regex.match(repr(func)):
+        if class_base_function_regex.match(repr(func)):
             return ControllerRouteOperation
         return RouteOperation
 
     def _get_ws_operations_class(self, func: t.Callable) -> t.Type[TWebsocketOperation]:
-        if self.class_base_function_regex.match(repr(func)):
+        if class_base_function_regex.match(repr(func)):
             return ControllerWebsocketRouteOperation
         return WebsocketRouteOperation
 

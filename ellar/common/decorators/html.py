@@ -1,6 +1,5 @@
 import asyncio
 import inspect
-import re
 import typing as t
 import warnings
 
@@ -14,7 +13,7 @@ from ellar.core.response.model import HTMLResponseModel
 from ellar.core.routing import RouteOperationBase
 from ellar.core.templating import TemplateFunctionData
 from ellar.exceptions import ImproperConfiguration
-from ellar.helper import get_name
+from ellar.helper import class_base_function_regex, get_name
 from ellar.types import TemplateFilterCallable, TemplateGlobalCallable
 
 from .base import set_meta
@@ -30,9 +29,6 @@ def render(template_name: t.Optional[str] = NOT_SET) -> t.Callable:
             template_name, str
         ), "Render Operation must invoked eg. @render()"
     template_name = None if template_name is NOT_SET else template_name
-    class_base_function_regex = re.compile(
-        "<\\w+ (\\w+)\\.(\\w+) at \\w+>", re.IGNORECASE
-    )
 
     def _decorator(func: t.Union[t.Callable, t.Any]) -> t.Union[t.Callable, t.Any]:
         if not callable(func) or isinstance(func, RouteOperationBase):

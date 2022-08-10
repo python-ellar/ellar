@@ -4,7 +4,10 @@ from types import FunctionType
 
 from starlette.routing import BaseRoute, Router as StarletteRouter
 
-from ellar.constants import OPERATION_HANDLER_KEY, SCOPE_API_VERSIONING_RESOLVER
+from ellar.constants import (
+    CONTROLLER_OPERATION_HANDLER_KEY,
+    SCOPE_API_VERSIONING_RESOLVER,
+)
 from ellar.reflect import reflect
 from ellar.types import ASGIApp, TReceive, TScope, TSend
 
@@ -56,7 +59,7 @@ class ApplicationRouter(StarletteRouter):
     def append(self, item: t.Union[BaseRoute, t.Callable]) -> None:
         _item: t.Any = item
         if callable(_item) and type(_item) == FunctionType:
-            _item = reflect.get_metadata(OPERATION_HANDLER_KEY, _item)
+            _item = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, _item)
         self.routes.append(_item)
 
     def extend(self, routes: t.Sequence[t.Union[BaseRoute, t.Callable]]) -> None:

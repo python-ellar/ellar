@@ -5,7 +5,7 @@ import pytest
 from jinja2 import TemplateNotFound
 
 from ellar.common import Controller, get, render
-from ellar.constants import OPERATION_HANDLER_KEY
+from ellar.constants import CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.core import TestClientFactory
 from ellar.core.response.model import HTMLResponseModel
 from ellar.core.response.model.html import HTMLResponseModelRuntimeError
@@ -153,10 +153,10 @@ def test_runtime_exception_works():
         [runtime_error_1, runtime_error_2, runtime_controller_error_1]
     )
     runtime_error_1_handler = reflect.get_metadata(
-        OPERATION_HANDLER_KEY, runtime_error_1
+        CONTROLLER_OPERATION_HANDLER_KEY, runtime_error_1
     )
     runtime_error_2_handler = reflect.get_metadata(
-        OPERATION_HANDLER_KEY, runtime_error_2
+        CONTROLLER_OPERATION_HANDLER_KEY, runtime_error_2
     )
 
     assert isinstance(

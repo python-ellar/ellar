@@ -3,7 +3,11 @@ import typing as t
 from starlette.routing import WebSocketRoute as StarletteWebSocketRoute, compile_path
 from starlette.status import WS_1008_POLICY_VIOLATION
 
-from ellar.constants import EXTRA_ROUTE_ARGS_KEY, NOT_SET, OPERATION_HANDLER_KEY
+from ellar.constants import (
+    CONTROLLER_OPERATION_HANDLER_KEY,
+    EXTRA_ROUTE_ARGS_KEY,
+    NOT_SET,
+)
 from ellar.core.connection import WebSocket
 from ellar.core.context import ExecutionContext
 from ellar.core.params import WebsocketEndpointArgsModel
@@ -76,7 +80,7 @@ class WebsocketRouteOperation(
         super().__init__(path=path, endpoint=endpoint, name=name)
         self.endpoint_parameter_model: WebsocketEndpointArgsModel = NOT_SET
 
-        reflect.define_metadata(OPERATION_HANDLER_KEY, self, self.endpoint)
+        reflect.define_metadata(CONTROLLER_OPERATION_HANDLER_KEY, self, self.endpoint)
 
         if self._use_extra_handler:
             self._handlers_kwargs.update(on_receive=self.endpoint)

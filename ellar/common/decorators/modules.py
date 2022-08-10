@@ -22,28 +22,30 @@ def _wrapper(
     name: str,
     kwargs: AttributeDict,
 ) -> t.Type:
-    if not reflect.get_metadata(watermark_key, target):
-        if not isinstance(target, type):
-            raise ImproperConfiguration(f"{name} is a class decorator - {target}")
+    if reflect.get_metadata(watermark_key, target):
+        raise ImproperConfiguration(f"{target} is already identified as a Module")
 
-        if not kwargs.base_directory:
-            kwargs.update(base_directory=Path(inspect.getfile(target)).resolve().parent)
+    if not isinstance(target, type):
+        raise ImproperConfiguration(f"{name} is a class decorator - {target}")
 
-        if type(target) != ModuleBaseMeta:
-            attr: t.Dict = {
-                item: getattr(target, item) for item in dir(target) if "__" not in item
-            }
-            target = type(
-                target.__name__,
-                (target, ModuleBase),
-                attr,
-            )
+    if not kwargs.base_directory:
+        kwargs.update(base_directory=Path(inspect.getfile(target)).resolve().parent)
 
-        reflect.define_metadata(watermark_key, True, target)
-        for key in metadata_keys:
-            reflect.define_metadata(key, kwargs[key], target)
-        injectable(SingletonScope)(target)
-    return target
+    if type(target) != ModuleBaseMeta:
+        attr: t.Dict = {
+            item: getattr(target, item) for item in dir(target) if "__" not in item
+        }
+        target = type(
+            target.__name__,
+            (target, ModuleBase),
+            attr,
+        )
+
+    reflect.define_metadata(watermark_key, True, target)
+    for key in metadata_keys:
+        reflect.define_metadata(key, kwargs[key], target)
+    injectable(SingletonScope)(target)
+    return t.cast(t.Type, target)
 
 
 def Module(
