@@ -106,7 +106,6 @@ You will see the automatic interactive API documentation (provided by <a href="h
 ## Status
 Project is still in development
 - Remaining testing modules:
-    - common
     - configuration
     - guard
     - openapi
