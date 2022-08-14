@@ -1,7 +1,5 @@
 import typing as t
 
-from pydantic import BaseModel
-
 from ellar.constants import SERIALIZER_FILTER_KEY
 from ellar.core.context import IExecutionContext
 from ellar.helper.modelfield import create_model_field
@@ -9,37 +7,20 @@ from ellar.reflect import reflect
 from ellar.serializer import SerializerFilter, serialize_object
 
 from ..responses import JSONResponse, Response
-from .base import BaseResponseModel, ResponseModelField, ResponseTypeDefinitionConverter
+from .base import ResponseModel, ResponseModelField
+
+DictSchema: ResponseModelField = t.cast(
+    ResponseModelField,
+    create_model_field(
+        name="response_model",
+        type_=dict,
+        model_field_class=ResponseModelField,
+    ),
+)
 
 
-class JSONResponseModel(BaseResponseModel):
+class JSONResponseModel(ResponseModel):
     response_type: t.Type[Response] = JSONResponse
-    schema: ResponseModelField
-
-    @classmethod
-    def create_model(  # type: ignore
-        cls,
-        schema: t.Union[t.Type[BaseModel], t.Any],
-        description: str = "Successful Response",
-        **kwargs: t.Any,
-    ) -> "JSONResponseModel":
-        new_response_schema = ResponseTypeDefinitionConverter(
-            schema
-        ).re_group_outer_type()
-
-        _schema = t.cast(
-            ResponseModelField,
-            create_model_field(
-                name="response_model",
-                type_=new_response_schema,
-                model_field_class=ResponseModelField,
-            ),
-        )
-        return cls(
-            description=description,
-            schema=_schema,
-            **kwargs,
-        )
 
     def create_response(
         self, context: IExecutionContext, response_obj: t.Any, status_code: int
@@ -64,32 +45,12 @@ class JSONResponseModel(BaseResponseModel):
         response_obj: t.Any,
         serializer_filter: t.Optional[SerializerFilter] = None,
     ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
+        assert self.schema, "schema must exist for JSONResponseModel"
         return self.schema.serialize(response_obj, serializer_filter=serializer_filter)
 
 
 class EmptyAPIResponseModel(JSONResponseModel):
-    @classmethod
-    def create_model(  # type: ignore
-        cls,
-        description: str = "Successful Response",
-        **kwargs: t.Any,
-    ) -> "EmptyAPIResponseModel":
-        new_response_schema = dict
-
-        _schema = t.cast(
-            ResponseModelField,
-            create_model_field(
-                name="response_model",
-                type_=new_response_schema,
-                model_field_class=ResponseModelField,
-            ),
-        )
-        return cls(
-            response_type=JSONResponse,
-            description=description,
-            schema=_schema,
-            **kwargs,
-        )
+    model_schema = DictSchema
 
     def serialize(
         self,

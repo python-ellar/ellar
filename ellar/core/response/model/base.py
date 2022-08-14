@@ -1,5 +1,5 @@
 import typing as t
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import is_dataclass
 
 from pydantic import BaseModel
@@ -9,6 +9,7 @@ from ellar.constants import SERIALIZER_FILTER_KEY, primitive_types
 from ellar.core.context import IExecutionContext
 from ellar.core.converters import TypeDefinitionConverter
 from ellar.exceptions import RequestValidationError
+from ellar.helper.modelfield import create_model_field
 from ellar.reflect import reflect
 from ellar.serializer import (
     BaseSerializer,
@@ -64,7 +65,9 @@ class ResponseModelField(ModelField):
 
 class BaseResponseModel(IResponseModel, ABC):
     __slots__ = ("_response_type", "media_type", "description", "meta", "schema")
+
     response_type: t.Type[Response] = Response
+    model_schema: t.Union[ResponseModelField, t.Any] = None
 
     def __init__(
         self,
@@ -80,17 +83,38 @@ class BaseResponseModel(IResponseModel, ABC):
         )
         self.description = description
         self.meta = kwargs
-        self.schema = schema
 
+        _schema: t.Optional[ResponseModelField] = None
+        if (
+            schema
+            or self.model_schema
+            and not isinstance(schema or self.model_schema, ResponseModelField)
+        ):
+            new_response_schema = ResponseTypeDefinitionConverter(
+                schema or self.model_schema
+            ).re_group_outer_type()
+
+            _schema = t.cast(
+                ResponseModelField,
+                create_model_field(
+                    name="response_model",
+                    type_=new_response_schema,
+                    model_field_class=ResponseModelField,
+                ),
+            )
+        self.schema: t.Optional[ResponseModelField] = _schema
+
+    @abstractmethod
     def get_model_field(self) -> t.Optional[t.Union[ResponseModelField, t.Any]]:
-        return self.schema
+        pass
 
+    @abstractmethod
     def serialize(
         self,
         response_obj: t.Any,
         serializer_filter: t.Optional[SerializerFilter] = None,
     ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
-        return response_obj
+        pass
 
     def create_response(
         self, context: IExecutionContext, response_obj: t.Any, status_code: int
@@ -131,22 +155,15 @@ class BaseResponseModel(IResponseModel, ABC):
 
 
 class ResponseModel(BaseResponseModel):
-    @classmethod
-    def create_model(
-        cls,
-        *args: t.Any,
-        response_type: t.Type[Response] = None,
-        description: str = "Successful Response",
-        schema: t.Union[t.Type[ResponseModelField], t.Any] = None,
-        **kwargs: t.Any,
-    ) -> "ResponseModel":
+    def get_model_field(self) -> t.Optional[t.Union[ResponseModelField, t.Any]]:
+        return self.schema
 
-        return cls(
-            response_type=response_type,
-            description=description,
-            schema=schema,
-            **kwargs,
-        )
+    def serialize(
+        self,
+        response_obj: t.Any,
+        serializer_filter: t.Optional[SerializerFilter] = None,
+    ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
+        return response_obj
 
 
 class RouteResponseExecution(Exception):
