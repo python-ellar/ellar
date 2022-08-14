@@ -33,7 +33,7 @@ class JsonApiResponseModel(ResponseModel):
             "application/json",
         ),
         (
-            {200: EmptyAPIResponseModel.create_model()},
+            {200: EmptyAPIResponseModel()},
             EmptyAPIResponseModel,
             200,
             "Successful Response",
@@ -42,7 +42,7 @@ class JsonApiResponseModel(ResponseModel):
         (
             {
                 201: (Union[NoteSchemaDC, BlogObjectDTO], "Create Note"),
-                200: EmptyAPIResponseModel.create_model(),
+                200: EmptyAPIResponseModel(),
             },
             JSONResponseModel,
             201,
@@ -52,7 +52,7 @@ class JsonApiResponseModel(ResponseModel):
         (
             {
                 201: (Union[NoteSchemaDC, BlogObjectDTO], "Create Note"),
-                200: EmptyAPIResponseModel.create_model(),
+                200: EmptyAPIResponseModel(),
             },
             JSONResponseModel,
             200,
@@ -60,7 +60,7 @@ class JsonApiResponseModel(ResponseModel):
             "application/json",
         ),
         (
-            {200: JsonApiResponseModel.create_model()},
+            {200: JsonApiResponseModel()},
             JsonApiResponseModel,
             200,
             "Successful Response",

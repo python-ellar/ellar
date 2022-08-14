@@ -84,14 +84,10 @@ class BaseResponseModel(IResponseModel, ABC):
         self.description = description
         self.meta = kwargs
 
-        _schema: t.Optional[ResponseModelField] = None
-        if (
-            schema
-            or self.model_schema
-            and not isinstance(schema or self.model_schema, ResponseModelField)
-        ):
+        _schema: t.Optional[ResponseModelField] = schema or self.model_schema
+        if _schema and not isinstance(_schema, ResponseModelField):
             new_response_schema = ResponseTypeDefinitionConverter(
-                schema or self.model_schema
+                _schema
             ).re_group_outer_type()
 
             _schema = t.cast(
