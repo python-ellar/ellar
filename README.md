@@ -108,7 +108,6 @@ Project is still in development
 - Remaining testing modules:
     - configuration
     - guard
-    - openapi
 - Project CLI scaffolding
 - Documentation
 - Database Plugin with [Encode/ORM](https://github.com/encode/orm)
