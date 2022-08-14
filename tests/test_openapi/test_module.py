@@ -13,7 +13,7 @@ from ellar.openapi import OpenAPIDocumentBuilder, OpenAPIDocumentModule
 
 
 class CustomDocsGuard(GuardCanActivate):
-    _detail: str = "Not Allowed"
+    detail: str = "Not Allowed"
 
     async def can_activate(self, context: ExecutionContext) -> bool:
         return False

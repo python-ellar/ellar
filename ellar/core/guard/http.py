@@ -3,8 +3,6 @@ import typing as t
 from abc import ABC
 from base64 import b64decode
 
-from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
-
 from ellar.core.connection import HTTPConnection
 from ellar.exceptions import APIException, AuthenticationFailed
 
@@ -12,6 +10,7 @@ from .base import BaseHttpAuth, HTTPAuthorizationCredentials, HTTPBasicCredentia
 
 
 class HttpBearerAuth(BaseHttpAuth, ABC):
+    exception_class = APIException
     openapi_scheme: str = "bearer"
     openapi_bearer_format: t.Optional[str] = None
     header: str = "Authorization"
@@ -28,18 +27,17 @@ class HttpBearerAuth(BaseHttpAuth, ABC):
         authorization: str = connection.headers.get(self.header)
         scheme, _, credentials = self.authorization_partitioning(authorization)
         if not (authorization and scheme and credentials):
-            raise APIException(
-                status_code=HTTP_403_FORBIDDEN, detail="Not authenticated"
-            )
-        if scheme.lower() != self.openapi_scheme:
-            raise APIException(
-                status_code=HTTP_403_FORBIDDEN,
+            self.raise_exception()
+        if scheme and str(scheme).lower() != self.openapi_scheme:
+            raise self.exception_class(
+                status_code=self.status_code,
                 detail="Invalid authentication credentials",
             )
         return HTTPAuthorizationCredentials(scheme=scheme, credentials=credentials)
 
 
 class HttpBasicAuth(BaseHttpAuth, ABC):
+    exception_class = APIException
     openapi_scheme: str = "basic"
     realm: t.Optional[str] = None
     header = "Authorization"
@@ -50,22 +48,29 @@ class HttpBasicAuth(BaseHttpAuth, ABC):
         else:
             unauthorized_headers = {"WWW-Authenticate": "Basic"}
         raise AuthenticationFailed(
-            status_code=HTTP_401_UNAUTHORIZED,
+            status_code=self.status_code,
             detail=message,
             headers=unauthorized_headers,
         )
 
     def _get_credentials(self, connection: HTTPConnection) -> HTTPBasicCredentials:
         authorization: str = connection.headers.get(self.header)
-        scheme, _, credentials = self.authorization_partitioning(authorization)
+        parts = authorization.split(" ") if authorization else []
+        scheme, credentials = str(), str()
+
+        if len(parts) == 1:
+            credentials = parts[0]
+            scheme = "basic"
+        elif len(parts) == 2:
+            credentials = parts[1]
+            scheme = parts[0].lower()
 
         if (
             not (authorization and scheme and credentials)
             or scheme.lower() != self.openapi_scheme
         ):
-            raise APIException(
-                status_code=HTTP_403_FORBIDDEN, detail="Not authenticated"
-            )
+            self.raise_exception()
+
         data: t.Optional[t.Union[str, bytes]] = None
         try:
             data = b64decode(credentials).decode("ascii")
@@ -73,10 +78,9 @@ class HttpBasicAuth(BaseHttpAuth, ABC):
             self._not_unauthorized_exception("Invalid authentication credentials")
 
         username, separator, password = (
-            str(data).partition(":") if data else None,
-            None,
-            None,
+            str(data).partition(":") if data else (None, None, None)
         )
+
         if not separator:
             self._not_unauthorized_exception("Invalid authentication credentials")
         return HTTPBasicCredentials(username=username, password=password)

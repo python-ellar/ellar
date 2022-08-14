@@ -3,7 +3,7 @@ from abc import ABC, ABCMeta, abstractmethod
 
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException
-from starlette.status import HTTP_403_FORBIDDEN
+from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 
 from ellar.core.connection import HTTPConnection
 from ellar.core.context import ExecutionContext
@@ -11,20 +11,24 @@ from ellar.exceptions import APIException
 
 
 class GuardCanActivate(ABC, metaclass=ABCMeta):
-    _exception_class: t.Type[HTTPException] = HTTPException
-    _status_code: int = HTTP_403_FORBIDDEN
-    _detail: str = "Not authenticated"
+    exception_class: t.Type[HTTPException] = HTTPException
+    status_code: int = HTTP_403_FORBIDDEN
+    detail: str = "Not authenticated"
 
     @abstractmethod
     async def can_activate(self, context: ExecutionContext) -> bool:
         pass
 
     def raise_exception(self) -> None:
-        raise self._exception_class(status_code=self._status_code, detail=self._detail)
+        raise self.exception_class(status_code=self.status_code, detail=self.detail)
 
 
 class BaseAuthGuard(GuardCanActivate, ABC, metaclass=ABCMeta):
+    status_code = HTTP_401_UNAUTHORIZED
     openapi_scope: t.List = []
+    openapi_in: t.Optional[str] = None
+    openapi_description: t.Optional[str] = None
+    openapi_name: t.Optional[str] = None
 
     @abstractmethod
     async def handle_request(self, *, connection: HTTPConnection) -> t.Optional[t.Any]:
@@ -40,6 +44,7 @@ class BaseAuthGuard(GuardCanActivate, ABC, metaclass=ABCMeta):
         result = await self.handle_request(connection=connection)
         if result:
             # auth parameter on request
+            connection.scope["user"] = result
             return True
         return False
 
@@ -55,9 +60,8 @@ class HTTPAuthorizationCredentials(BaseModel):
 
 
 class BaseAPIKey(BaseAuthGuard, ABC, metaclass=ABCMeta):
-    openapi_in: t.Optional[str] = None
+    exception_class = APIException
     parameter_name: str = "key"
-    openapi_description: t.Optional[str] = None
 
     def __init__(self) -> None:
         self.name = self.parameter_name
@@ -66,9 +70,7 @@ class BaseAPIKey(BaseAuthGuard, ABC, metaclass=ABCMeta):
     async def handle_request(self, connection: HTTPConnection) -> t.Optional[t.Any]:
         key = self._get_key(connection)
         if not key:
-            raise APIException(
-                status_code=HTTP_403_FORBIDDEN, detail="Not authenticated"
-            )
+            self.raise_exception()
         return await self.authenticate(connection, key)
 
     @abstractmethod
@@ -88,12 +90,11 @@ class BaseAPIKey(BaseAuthGuard, ABC, metaclass=ABCMeta):
             "type": "apiKey",
             "description": cls.openapi_description,
             "in": cls.openapi_in,
-            "name": cls.__name__,
+            "name": cls.openapi_name or cls.__name__,
         }
 
 
 class BaseHttpAuth(BaseAuthGuard, ABC, metaclass=ABCMeta):
-    openapi_description: t.Optional[str] = None
     openapi_scheme: t.Optional[str] = None
     realm: t.Optional[str] = None
 
@@ -130,5 +131,5 @@ class BaseHttpAuth(BaseAuthGuard, ABC, metaclass=ABCMeta):
             "type": "http",
             "description": cls.openapi_description,
             "scheme": cls.openapi_scheme,
-            "name": cls.__name__,
+            "name": cls.openapi_name or cls.__name__,
         }
