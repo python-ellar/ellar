@@ -1,10 +1,10 @@
-from ellar.common import openapi
+from ellar.common import openapi_info
 from ellar.compatible import AttributeDict
 from ellar.constants import OPENAPI_KEY
 from ellar.reflect import reflect
 
 
-@openapi(
+@openapi_info(
     summary="Endpoint Summary",
     description="Endpoint Description",
     deprecated=False,

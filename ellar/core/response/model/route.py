@@ -6,6 +6,7 @@ from ellar.core.context import IExecutionContext
 
 from ..responses import Response
 from .base import ResponseModel, ResponseResolver, RouteResponseExecution
+from .factory import create_response_model
 from .interface import IResponseModel
 from .json import JSONResponseModel
 
@@ -36,8 +37,10 @@ class RouteResponseModel:
             if isinstance(response_schema, type) and issubclass(
                 response_schema, Response
             ):
-                self.models[status_code] = ResponseModel.create_model(
-                    response_type=response_schema, description=description
+                self.models[status_code] = create_response_model(
+                    ResponseModel,
+                    response_type=response_schema,
+                    description=description,
                 )
                 continue
 
@@ -45,7 +48,8 @@ class RouteResponseModel:
                 self.models[status_code] = response_schema
                 continue
 
-            self.models[status_code] = JSONResponseModel.create_model(
+            self.models[status_code] = create_response_model(
+                JSONResponseModel,
                 schema=t.cast(t.Type[BaseModel], response_schema),
                 description=description,
             )

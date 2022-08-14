@@ -118,7 +118,7 @@ class ModuleMount(StarletteMount):
     def get_flatten_routes(self) -> t.List[BaseRoute]:
         if not self._build:
             for route in self.routes:
-                _route: RouteOperation = t.cast("RouteOperation", route)
+                _route: RouteOperation = t.cast(RouteOperation, route)
 
                 route_versioning = reflect.get_metadata(VERSIONING_KEY, _route.endpoint)
                 route_guards = reflect.get_metadata(GUARDS_KEY, _route.endpoint)
@@ -161,7 +161,7 @@ class ModuleRouter(ModuleMount):
 
     def __init__(
         self,
-        path: str,
+        path: str = "",
         name: str = None,
         tag: str = NOT_SET,
         description: str = None,

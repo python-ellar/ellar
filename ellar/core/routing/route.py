@@ -1,11 +1,8 @@
+import inspect
 import typing as t
 
 from starlette.concurrency import run_in_threadpool
-from starlette.routing import (
-    Route as StarletteRoute,
-    compile_path,
-    iscoroutinefunction_or_partial,
-)
+from starlette.routing import Route as StarletteRoute, compile_path
 
 from ellar.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,
@@ -50,7 +47,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         name: t.Optional[str] = None,
         include_in_schema: bool = True,
     ) -> None:
-        self._is_coroutine = iscoroutinefunction_or_partial(endpoint)
+        self._is_coroutine = inspect.iscoroutinefunction(endpoint)
         self._defined_responses: t.Dict[int, t.Type] = dict(response)
 
         assert path.startswith("/"), "Routed paths must start with '/'"

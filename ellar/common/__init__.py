@@ -8,7 +8,7 @@ from .decorators.guards import guards
 from .decorators.html import render, template_filter, template_global
 from .decorators.middleware import middleware
 from .decorators.modules import Module
-from .decorators.openapi import openapi
+from .decorators.openapi import openapi_info
 from .decorators.request import on_shutdown, on_startup
 from .decorators.serializer import serializer_filter
 from .decorators.versioning import version
@@ -48,7 +48,7 @@ __all__ = [
     "ParamTypes",
     "set_meta",
     "Controller",
-    "openapi",
+    "openapi_info",
     "version",
     "delete",
     "get",

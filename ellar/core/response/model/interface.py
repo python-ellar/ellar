@@ -14,15 +14,6 @@ class IResponseModel(ABC):
     media_type: str
     description: str
 
-    @classmethod
-    @abstractmethod
-    def create_model(
-        cls,
-        *args: t.Any,
-        **kwargs: t.Any,
-    ) -> "IResponseModel":
-        """Creates ResponseModel Object"""
-
     @abstractmethod
     def get_model_field(self) -> t.Optional[t.Union[ModelField, t.Any]]:
         """Gets Model Fields"""

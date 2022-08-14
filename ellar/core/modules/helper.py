@@ -1,7 +1,6 @@
+import inspect
 import typing as t
 from functools import wraps
-
-from starlette.routing import iscoroutinefunction_or_partial
 
 
 def _executor_wrapper_async(
@@ -25,7 +24,7 @@ def _executor_wrapper(cls: t.Type, func: t.Callable) -> t.Callable:
 def class_parameter_executor_wrapper(
     cls: t.Type, func: t.Callable
 ) -> t.Union[t.Callable, t.Callable[..., t.Coroutine]]:
-    if iscoroutinefunction_or_partial(func):
+    if inspect.iscoroutinefunction(func):
         return _executor_wrapper_async(cls, func)
 
     return _executor_wrapper(cls, func)
