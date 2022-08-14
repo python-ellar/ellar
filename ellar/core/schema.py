@@ -3,7 +3,11 @@ import typing as t
 from pydantic import BaseModel, Field, root_validator, validator
 
 from ellar.constants import ROUTE_METHODS
-from ellar.core.response.model import EmptyAPIResponseModel, IResponseModel
+from ellar.core.response.model import (
+    EmptyAPIResponseModel,
+    IResponseModel,
+    create_response_model,
+)
 from ellar.serializer import BaseSerializer, Serializer
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -70,7 +74,7 @@ class RouteParameters(BaseModel):
 
         response = values["response"]
         if not response:
-            values["response"] = {200: EmptyAPIResponseModel.create_model()}
+            values["response"] = {200: create_response_model(EmptyAPIResponseModel)}
         elif not isinstance(response, dict):
             values["response"] = {200: response}
         return values

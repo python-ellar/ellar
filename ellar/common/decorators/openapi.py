@@ -6,7 +6,7 @@ from ellar.constants import OPENAPI_KEY
 from .base import set_meta
 
 
-def openapi(
+def openapi_info(
     operation_id: t.Optional[str] = None,
     summary: t.Optional[str] = None,
     description: t.Optional[str] = None,

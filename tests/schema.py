@@ -1,7 +1,10 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from ellar.core.schema import Schema
 
 
 class BlogObjectDTO:
@@ -26,3 +29,15 @@ class Item(BaseModel):
 class User(BaseModel):
     username: str
     full_name: Optional[str] = None
+
+
+class Filter(Schema):
+    to_datetime: datetime = Field(alias="to")
+    from_datetime: datetime = Field(alias="from")
+
+
+class CreateCarSchema(Schema):
+    name: str
+    model: str
+    brand: str
+    author: User

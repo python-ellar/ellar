@@ -41,6 +41,12 @@ class OpenAPIDocumentBuilder:
         self._build.setdefault("openapi", default_openapi_version)
 
     def set_openapi_version(self, openapi_version: str) -> "OpenAPIDocumentBuilder":
+        """
+        Sets OpenAPI version
+        This is not fully supported yet
+        :param openapi_version:
+        :return: "OpenAPIDocumentBuilder"
+        """
         self._build["openapi"] = openapi_version
         return self
 
