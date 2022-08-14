@@ -10,7 +10,7 @@ T = t.TypeVar("T")
 
 def create_response_model(
     response_model: t.Union[t.Type["ResponseModel"], t.Type[T]],
-    /,
+    *,
     response_type: t.Type[Response] = None,
     description: str = "Successful Response",
     schema: t.Union[t.Type["ResponseModelField"], t.Any] = None,
