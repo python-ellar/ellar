@@ -1,0 +1,127 @@
+import os
+
+import pytest
+from pydantic.json import ENCODERS_BY_TYPE
+from starlette.responses import JSONResponse
+
+from ellar.constants import ELLAR_CONFIG_MODULE
+from ellar.core.conf import Config
+from ellar.core.conf.config import ConfigRuntimeError
+from ellar.core.versioning import DefaultAPIVersioning, UrlPathAPIVersioning
+from ellar.exceptions import APIException, RequestValidationError
+
+overriding_settings_path = "tests.test_conf.settings"
+
+
+def test_default_configurations():
+    config = Config()
+
+    assert config.DEBUG is False
+    assert config.DEFAULT_JSON_CLASS == JSONResponse
+    assert config.SECRET_KEY == "your-secret-key"
+    assert config.INJECTOR_AUTO_BIND is False
+
+    assert config.TEMPLATES_AUTO_RELOAD is None
+
+    assert isinstance(config.VERSIONING_SCHEME, DefaultAPIVersioning)
+    assert config.REDIRECT_SLASHES is False
+
+    assert config.STATIC_FOLDER_PACKAGES == []
+    assert config.STATIC_MOUNT_PATH == "/static"
+
+    assert config.MIDDLEWARE == []
+
+    assert RequestValidationError in config.APP_EXCEPTION_HANDLERS
+    assert APIException in config.APP_EXCEPTION_HANDLERS
+
+    assert config.USER_CUSTOM_EXCEPTION_HANDLERS == {}
+
+    assert callable(config.DEFAULT_NOT_FOUND_HANDLER)
+    assert config.DEFAULT_LIFESPAN_HANDLER is None
+
+    assert config.SERIALIZER_CUSTOM_ENCODER == ENCODERS_BY_TYPE
+
+
+def test_configuration_export_to_os_environment():
+    os.environ.setdefault(ELLAR_CONFIG_MODULE, overriding_settings_path)
+    config = Config()
+
+    assert config.DEBUG
+    assert config.SECRET_KEY == "your-secret-key-changed"
+    assert config.INJECTOR_AUTO_BIND is True
+    assert config.TEMPLATES_AUTO_RELOAD is True
+    assert isinstance(config.VERSIONING_SCHEME, UrlPathAPIVersioning)
+    assert config.REDIRECT_SLASHES is True
+    assert config.STATIC_MOUNT_PATH == "/static-changed"
+
+    os.environ.setdefault(ELLAR_CONFIG_MODULE, None)
+
+
+def test_configuration_raise_runtime_error_for_invalid_settings_module_path():
+    os.environ.setdefault(ELLAR_CONFIG_MODULE, "tests.somewrongpath.settings")
+    with pytest.raises(ConfigRuntimeError):
+        Config()
+
+    os.environ.setdefault(ELLAR_CONFIG_MODULE, None)
+
+    with pytest.raises(ConfigRuntimeError):
+        Config(config_module="tests.somewrongpath.settings")
+
+
+def test_configuration_settings_can_be_loaded_through_constructor():
+    config = Config(config_module=overriding_settings_path)
+    assert config.DEBUG
+    assert config.SECRET_KEY == "your-secret-key-changed"
+    assert config.INJECTOR_AUTO_BIND is True
+    assert config.TEMPLATES_AUTO_RELOAD is True
+    assert isinstance(config.VERSIONING_SCHEME, UrlPathAPIVersioning)
+    assert config.REDIRECT_SLASHES is True
+    assert config.STATIC_MOUNT_PATH == "/static-changed"
+
+
+def test_configuration_can_be_changed_during_instantiation():
+    config = Config(
+        config_module=overriding_settings_path,
+        DEBUG=False,
+        SOME_NEW_CONFIGS="some new configuration values",
+        TEMPLATES_AUTO_RELOAD=False,
+    )
+
+    assert config.DEBUG is False
+    assert config.TEMPLATES_AUTO_RELOAD is False
+    assert config.SOME_NEW_CONFIGS == "some new configuration values"
+
+
+def test_can_set_defaults_a_configuration_instance_once():
+    config = Config(config_module=overriding_settings_path)
+    with pytest.raises(Exception):
+        config.SOME_NEW_CONFIGS
+    config.setdefault("SOME_NEW_CONFIGS", "some new configuration values")
+    assert config.SOME_NEW_CONFIGS == "some new configuration values"
+
+    config.setdefault("SOME_NEW_CONFIGS", "some new configuration values changed")
+    assert config.SOME_NEW_CONFIGS == "some new configuration values"
+
+
+def test_can_change_configuration_values_after_instantiation():
+    config = Config(config_module=overriding_settings_path)
+    assert config.DEBUG
+
+    config["DEBUG"] = False
+    assert config.DEBUG is False
+
+    config["SOME_NEW_CONFIGS"] = "some new configuration values"
+    assert config.SOME_NEW_CONFIGS == "some new configuration values"
+
+    config["SOME_NEW_CONFIGS"] = "some new configuration values changed"
+    assert config.SOME_NEW_CONFIGS == "some new configuration values changed"
+
+    config.config_module = "somethings"
+    assert config.config_module == "somethings"
+
+
+def test_can_export_configuration_values():
+    config = Config()
+    values = list(config.values)
+
+    assert len(values) > 7
