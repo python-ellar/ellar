@@ -54,7 +54,7 @@ def test_configuration_export_to_os_environment():
     assert config.REDIRECT_SLASHES is True
     assert config.STATIC_MOUNT_PATH == "/static-changed"
 
-    os.environ.setdefault(ELLAR_CONFIG_MODULE, None)
+    del os.environ[ELLAR_CONFIG_MODULE]
 
 
 def test_configuration_raise_runtime_error_for_invalid_settings_module_path():
@@ -62,7 +62,7 @@ def test_configuration_raise_runtime_error_for_invalid_settings_module_path():
     with pytest.raises(ConfigRuntimeError):
         Config()
 
-    os.environ.setdefault(ELLAR_CONFIG_MODULE, None)
+    del os.environ[ELLAR_CONFIG_MODULE]
 
     with pytest.raises(ConfigRuntimeError):
         Config(config_module="tests.somewrongpath.settings")
