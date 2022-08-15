@@ -11,6 +11,10 @@ from . import default_settings
 from .app_settings_models import ConfigValidationSchema
 
 
+class ConfigRuntimeError(RuntimeError):
+    pass
+
+
 class Config(DataMutableMapper, AttributeDictAccessMixin):
     __slots__ = ("config_module", "_data")
 
@@ -31,10 +35,13 @@ class Config(DataMutableMapper, AttributeDictAccessMixin):
                 self._data[setting] = getattr(default_settings, setting)
 
         if self.config_module:
-            mod = importlib.import_module(self.config_module)
-            for setting in dir(mod):
-                if setting.isupper():
-                    self._data[setting] = getattr(mod, setting)
+            try:
+                mod = importlib.import_module(self.config_module)
+                for setting in dir(mod):
+                    if setting.isupper():
+                        self._data[setting] = getattr(mod, setting)
+            except Exception as ex:
+                raise ConfigRuntimeError(str(ex))
 
         self._data.update(**mapping)
 
