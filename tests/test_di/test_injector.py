@@ -1,12 +1,25 @@
+from collections import OrderedDict
+
 import pytest
 from injector import Binder, Injector, UnsatisfiedRequirement
 
 from ellar.common import Module
-from ellar.core import ModuleBase
+from ellar.constants import MODULE_REF_TYPES
+from ellar.core import Config, ModuleBase
+from ellar.core.modules.ref import create_module_ref_factor
 from ellar.di import Container, EllarInjector
 from ellar.di.providers import ClassProvider, InstanceProvider
 
 from .examples import Foo, Foo1, Foo2
+
+
+class EllarTestPlainModule(ModuleBase):
+    pass
+
+
+@Module(template_folder="some_template")
+class EllarTestTemplateModule(ModuleBase):
+    pass
 
 
 def test_container_install_module():
@@ -83,3 +96,74 @@ async def test_request_service_provider():
             injector.get(Foo)
 
     assert_attributes(request_provider, False)
+
+
+class TestInjectorModuleFunctions:
+    def setup(self):
+        self.injector = EllarInjector()
+        config = Config()
+
+        assert isinstance(
+            self.injector._modules[MODULE_REF_TYPES.TEMPLATE], OrderedDict
+        )
+        assert isinstance(self.injector._modules[MODULE_REF_TYPES.PLAIN], OrderedDict)
+
+        self.module_plain_ref = create_module_ref_factor(
+            EllarTestPlainModule, config=config, container=self.injector.container
+        )
+        self.module_template_ref = create_module_ref_factor(
+            EllarTestTemplateModule, config=config, container=self.injector.container
+        )
+
+    def test_injector_add_module(self):
+        self.injector.add_module(self.module_plain_ref)
+        self.injector.add_module(self.module_template_ref)
+
+        assert len(self.injector._modules[MODULE_REF_TYPES.TEMPLATE]) == 1
+        assert len(self.injector._modules[MODULE_REF_TYPES.PLAIN]) == 1
+
+        assert (
+            list(self.injector._modules[MODULE_REF_TYPES.PLAIN].values())[0]
+            is self.module_plain_ref
+        )
+        assert (
+            list(self.injector._modules[MODULE_REF_TYPES.TEMPLATE].values())[0]
+            is self.module_template_ref
+        )
+
+    def test_injector_get_module_works(self):
+        self.injector.add_module(self.module_plain_ref)
+
+        module_ref = self.injector.get_module(EllarTestPlainModule)
+        assert module_ref is self.module_plain_ref
+
+        module_ref = self.injector.get_module(EllarTestTemplateModule)
+        assert module_ref is None
+
+        self.injector.add_module(self.module_template_ref)
+        module_ref = self.injector.get_module(EllarTestTemplateModule)
+        assert module_ref is self.module_template_ref
+
+    def test_injector_get_templating_modules_works(self):
+        modules = self.injector.get_templating_modules()
+        assert len(modules) == 0
+
+        self.injector.add_module(self.module_plain_ref)
+        modules = self.injector.get_templating_modules()
+        assert len(modules) == 0
+
+        self.injector.add_module(self.module_template_ref)
+        modules = self.injector.get_templating_modules()
+        assert len(modules) == 1
+
+    def test_injector_get_modules_works(self):
+        modules = self.injector.get_modules()
+        assert len(modules) == 0
+
+        self.injector.add_module(self.module_plain_ref)
+        modules = self.injector.get_modules()
+        assert len(modules) == 1
+
+        self.injector.add_module(self.module_template_ref)
+        modules = self.injector.get_modules()
+        assert len(modules) == 2
