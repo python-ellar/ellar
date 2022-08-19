@@ -28,12 +28,13 @@ SECRET_KEY: str = "your-secret-key"
 # For more info, read: https://injector.readthedocs.io/en/latest/index.html
 INJECTOR_AUTO_BIND = False
 
-TEMPLATES_AUTO_RELOAD: t.Optional[bool] = None
+JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any] = {}
 
 VERSIONING_SCHEME: BaseAPIVersioning = DefaultAPIVersioning()
 REDIRECT_SLASHES: bool = False
 
 STATIC_FOLDER_PACKAGES: t.Optional[t.List[t.Union[str, t.Tuple[str]]]] = []
+STATIC_DIRECTORIES: t.Optional[t.List[t.Union[str, t.Any]]] = []
 STATIC_MOUNT_PATH: str = "/static"
 
 MIDDLEWARE: t.Sequence[Middleware] = []
