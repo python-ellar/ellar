@@ -19,6 +19,7 @@ from ellar.core.routing import ApplicationRouter
 from ellar.core.templating import AppTemplating, Environment
 from ellar.core.versioning import VERSIONING, BaseAPIVersioning
 from ellar.di.injector import EllarInjector
+from ellar.di.providers import ModuleProvider
 from ellar.logger import logger
 from ellar.services.reflector import Reflector
 from ellar.types import ASGIApp, T, TReceive, TScope, TSend
@@ -64,6 +65,8 @@ class App(AppTemplating):
             else list(on_shutdown_event_handlers)
         )
 
+        self._static_app: t.Optional[ASGIApp] = None
+
         self.state = State()
         self.config.DEFAULT_LIFESPAN_HANDLER = (
             lifespan or self.config.DEFAULT_LIFESPAN_HANDLER
@@ -77,14 +80,11 @@ class App(AppTemplating):
             lifespan=self.config.DEFAULT_LIFESPAN_HANDLER,  # type: ignore
         )
         self.middleware_stack = self.build_middleware_stack()
-
-        self._static_app: t.Optional[ASGIApp] = None
-
         self._finalize_app_initialization()
 
         logger.info(f"APP SETTINGS: {self._config.config_module}")
 
-    def statics_wrapper(self) -> t.Callable:
+    def _statics_wrapper(self) -> t.Callable:
         async def _statics_func_wrapper(
             scope: TScope, receive: TReceive, send: TSend
         ) -> t.Any:
@@ -100,7 +100,7 @@ class App(AppTemplating):
             _routes.append(
                 Mount(
                     str(self.config.STATIC_MOUNT_PATH),
-                    app=self.statics_wrapper(),
+                    app=self._statics_wrapper(),
                     name="static",
                 )
             )
@@ -137,7 +137,9 @@ class App(AppTemplating):
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         return self._global_guards
 
-    def use_global_guards(self, *guards: "GuardCanActivate") -> None:
+    def use_global_guards(
+        self, *guards: t.Union["GuardCanActivate", t.Type["GuardCanActivate"]]
+    ) -> None:
         self._global_guards.extend(guards)
 
     @property
@@ -204,12 +206,6 @@ class App(AppTemplating):
     def url_path_for(self, name: str, **path_params: t.Any) -> URLPath:
         return self.router.url_path_for(name, **path_params)
 
-    def mount(self, path: str, app: ASGIApp, name: str = None) -> None:
-        self.router.mount(path, app=app, name=name)
-
-    def host(self, host: str, app: ASGIApp, name: str = None) -> None:
-        self.router.host(host, app=app, name=name)
-
     def enable_versioning(
         self,
         schema: VERSIONING,
@@ -228,7 +224,10 @@ class App(AppTemplating):
         self.injector.container.register_instance(Reflector())
         self.injector.container.register_instance(self.config, Config)
         self.injector.container.register_instance(self.jinja_environment, Environment)
-        self.injector.container.register_scoped(IExecutionContext, ExecutionContext)
+        self.injector.container.register_scoped(
+            IExecutionContext,
+            ModuleProvider(ExecutionContext, scope={}, receive=None, send=None),
+        )
 
     def add_exception_handler(
         self,

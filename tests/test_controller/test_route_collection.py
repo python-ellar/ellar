@@ -60,15 +60,19 @@ class MockWebsocketRouteOperation(WebsocketRouteOperation):
 
 
 class MockHostRouteOperation(Host):
-    def __init__(self, path: str, name: str = None):
-        self.path = path
-        self.name = name
+    def asgi_app(self, scope, receive, send):
+        pass
+
+    def __init__(self, host: str, name: str = None):
+        super().__init__(host=host, name=name, app=self.asgi_app)
 
 
 class MockMountRouteOperation(Mount):
+    def asgi_app(self, scope, receive, send):
+        pass
+
     def __init__(self, path: str, name: str = None):
-        self.path = path
-        self.name = name
+        super().__init__(path=path, name=name, app=self.asgi_app)
 
 
 @pytest.mark.parametrize("collection_model", [ModuleRouteCollection, RouteCollection])
@@ -114,16 +118,16 @@ def test_module_route_collection_extend(collection_model):
 def test_module_route_collection_host(collection_model):
 
     routes = collection_model()
-    routes.append(MockHostRouteOperation("/host"))
+    routes.append(MockHostRouteOperation("{subdomain}.example.org"))
     _hash = generate_controller_operation_unique_id(
-        path="/host",
+        path="{subdomain}.example.org",
         methods=["MockHostRouteOperation"],
         versioning=["no_versioning"],
     )
     assert _hash in routes._routes
-    routes.append(MockHostRouteOperation("/host", name="mock_host"))
+    routes.append(MockHostRouteOperation("{subdomain}.example.org", name="mock_host"))
     _hash = generate_controller_operation_unique_id(
-        path="/host",
+        path="{subdomain}.example.org",
         methods=["MockHostRouteOperation", "mock_host"],
         versioning=["no_versioning"],
     )

@@ -21,7 +21,7 @@ def test_default_configurations():
     assert config.SECRET_KEY == "your-secret-key"
     assert config.INJECTOR_AUTO_BIND is False
 
-    assert config.TEMPLATES_AUTO_RELOAD is None
+    assert config.JINJA_TEMPLATES_OPTIONS == {}
 
     assert isinstance(config.VERSIONING_SCHEME, DefaultAPIVersioning)
     assert config.REDIRECT_SLASHES is False
@@ -49,7 +49,7 @@ def test_configuration_export_to_os_environment():
     assert config.DEBUG
     assert config.SECRET_KEY == "your-secret-key-changed"
     assert config.INJECTOR_AUTO_BIND is True
-    assert config.TEMPLATES_AUTO_RELOAD is True
+    assert config.JINJA_TEMPLATES_OPTIONS == {"auto_reload": True}
     assert isinstance(config.VERSIONING_SCHEME, UrlPathAPIVersioning)
     assert config.REDIRECT_SLASHES is True
     assert config.STATIC_MOUNT_PATH == "/static-changed"
@@ -73,7 +73,7 @@ def test_configuration_settings_can_be_loaded_through_constructor():
     assert config.DEBUG
     assert config.SECRET_KEY == "your-secret-key-changed"
     assert config.INJECTOR_AUTO_BIND is True
-    assert config.TEMPLATES_AUTO_RELOAD is True
+    assert config.JINJA_TEMPLATES_OPTIONS == {"auto_reload": True}
     assert isinstance(config.VERSIONING_SCHEME, UrlPathAPIVersioning)
     assert config.REDIRECT_SLASHES is True
     assert config.STATIC_MOUNT_PATH == "/static-changed"
@@ -84,11 +84,11 @@ def test_configuration_can_be_changed_during_instantiation():
         config_module=overriding_settings_path,
         DEBUG=False,
         SOME_NEW_CONFIGS="some new configuration values",
-        TEMPLATES_AUTO_RELOAD=False,
+        JINJA_TEMPLATES_OPTIONS={"auto_reload": False},
     )
 
     assert config.DEBUG is False
-    assert config.TEMPLATES_AUTO_RELOAD is False
+    assert config.JINJA_TEMPLATES_OPTIONS == {"auto_reload": False}
     assert config.SOME_NEW_CONFIGS == "some new configuration values"
 
 

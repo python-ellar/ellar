@@ -18,6 +18,7 @@ from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core import GuardCanActivate
     from ellar.core.routing import ModuleMount, ModuleRouter
 
 
@@ -65,7 +66,14 @@ class AppFactory:
             module_ref.run_application_ready(app)
 
     @classmethod
-    def _create_app(cls, module: t.Type[ModuleBase], config_module: str = None) -> App:
+    def _create_app(
+        cls,
+        module: t.Type[ModuleBase],
+        global_guards: t.List[
+            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        ] = None,
+        config_module: str = None,
+    ) -> App:
         assert reflect.get_metadata(MODULE_WATERMARK, module), "Only Module is allowed"
 
         config = Config(app_configured=True, config_module=config_module)
@@ -84,6 +92,7 @@ class AppFactory:
                 t.Optional[t.Callable[[App], t.AsyncContextManager[t.Any]]],
                 config.DEFAULT_LIFESPAN_HANDLER,
             ),
+            global_guards=global_guards,
         )
 
         cls._run_module_application_ready(
@@ -103,6 +112,9 @@ class AppFactory:
         template_folder: t.Optional[str] = None,
         base_directory: t.Optional[str] = None,
         static_folder: str = "static",
+        global_guards: t.List[
+            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        ] = None,
         config_module: str = None,
     ) -> App:
         from ellar.common import Module
@@ -119,11 +131,20 @@ class AppFactory:
         app_factory_module = type(f"Module{uuid4().hex[:6]}", (ModuleBase,), {})
         module(app_factory_module)
         return cls._create_app(
-            t.cast(t.Type[ModuleBase], app_factory_module), config_module
+            t.cast(t.Type[ModuleBase], app_factory_module),
+            config_module=config_module,
+            global_guards=global_guards,
         )
 
     @classmethod
     def create_from_app_module(
-        cls, module: t.Type[ModuleBase], config_module: str = None
+        cls,
+        module: t.Type[t.Union[ModuleBase, t.Any]],
+        global_guards: t.List[
+            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        ] = None,
+        config_module: str = None,
     ) -> App:
-        return cls._create_app(module, config_module)
+        return cls._create_app(
+            module, config_module=config_module, global_guards=global_guards
+        )
