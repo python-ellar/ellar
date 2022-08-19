@@ -105,8 +105,6 @@ You will see the automatic interactive API documentation (provided by <a href="h
 
 ## Status
 Project is still in development
-- Remaining testing modules:
-    - configuration
 - Project CLI scaffolding
 - Documentation
 - Database Plugin with [Encode/ORM](https://github.com/encode/orm)

@@ -33,6 +33,7 @@ class ModuleRouteCollection(t.Sequence[BaseRoute]):
             if hasattr(operation, "get_allowed_version")
             else {}
         )
+        path = operation.host if isinstance(operation, Host) else operation.path  # type: ignore
 
         if isinstance(operation, (Mount, Host)):
             _methods = {
@@ -41,7 +42,7 @@ class ModuleRouteCollection(t.Sequence[BaseRoute]):
             }
 
         _hash = generate_controller_operation_unique_id(
-            path=operation.path,  # type: ignore
+            path=path,
             methods=list(_methods),
             versioning=_versioning or ["no_versioning"],
         )

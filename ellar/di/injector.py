@@ -120,7 +120,9 @@ class Container(InjectorBinder):
             _scope = scope.scope
         self.register_binding(base_type, Binding(base_type, provider, _scope))
 
-    def register_instance(self, instance: T, concrete_type: t.Type[T] = None) -> None:
+    def register_instance(
+        self, instance: T, concrete_type: t.Union[t.Type[T], Provider] = None
+    ) -> None:
         assert not isinstance(instance, type)
         _concrete_type = instance.__class__ if not concrete_type else concrete_type
         self.register(_concrete_type, instance, scope=SingletonScope)
@@ -128,21 +130,25 @@ class Container(InjectorBinder):
     def register_singleton(
         self,
         base_type: t.Type[T],
-        concrete_type: t.Optional[t.Union[t.Type[T], T]] = None,
+        concrete_type: t.Union[t.Type[T], T, Provider] = None,
     ) -> None:
         if not concrete_type:
             self.register_exact_singleton(base_type)
         self.register(base_type, concrete_type, scope=SingletonScope)
 
     def register_transient(
-        self, base_type: t.Type, concrete_type: t.Optional[t.Type] = None
+        self,
+        base_type: t.Type,
+        concrete_type: t.Union[t.Type, Provider] = None,
     ) -> None:
         if not concrete_type:
             self.register_exact_transient(base_type)
         self.register(base_type, concrete_type, scope=TransientScope)
 
     def register_scoped(
-        self, base_type: t.Type, concrete_type: t.Optional[t.Type] = None
+        self,
+        base_type: t.Type,
+        concrete_type: t.Union[t.Type, Provider] = None,
     ) -> None:
         if not concrete_type:
             self.register_exact_scoped(base_type)

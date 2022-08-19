@@ -135,6 +135,7 @@ class AppTemplating(JinjaTemplating):
     _static_app: t.Optional[ASGIApp]
     _injector: "EllarInjector"
     has_static_files: bool
+    build_middleware_stack: t.Callable
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
         for loader in self._injector.get_templating_modules().values():
@@ -148,6 +149,7 @@ class AppTemplating(JinjaTemplating):
     def debug(self, value: bool) -> None:
         del self.__dict__["jinja_environment"]
         self.config.DEBUG = value
+        self.build_middleware_stack()
 
     @cached_property
     def jinja_environment(self) -> BaseEnvironment:
@@ -161,17 +163,15 @@ class AppTemplating(JinjaTemplating):
                 return True
             return filename.endswith((".html", ".htm", ".xml", ".xhtml"))
 
-        # TODO: get extensions from configuration
-        options: t.Dict = dict(extensions=[])
+        options_defaults: t.Dict = dict(
+            extensions=[], auto_reload=self.debug, autoescape=select_jinja_auto_escape
+        )
+        jinja_options: t.Dict = t.cast(
+            t.Dict, self.config.JINJA_TEMPLATES_OPTIONS or {}
+        )
 
-        _auto_reload = self.config.TEMPLATES_AUTO_RELOAD
-        _auto_reload = _auto_reload if _auto_reload is not None else self.debug
-
-        if "autoescape" not in options:
-            options["autoescape"] = select_jinja_auto_escape
-
-        if "auto_reload" not in options:
-            options["auto_reload"] = _auto_reload
+        for k, v in options_defaults.items():
+            jinja_options.setdefault(k, v)
 
         @pass_context
         def url_for(context: dict, name: str, **path_params: t.Any) -> str:
@@ -180,7 +180,7 @@ class AppTemplating(JinjaTemplating):
 
         app: App = t.cast("App", self)
 
-        jinja_env = Environment(app, **options)
+        jinja_env = Environment(app, **jinja_options)
         jinja_env.globals.update(
             url_for=url_for,
             config=self.config,
@@ -208,7 +208,7 @@ class AppTemplating(JinjaTemplating):
 
     @cached_property
     def static_files(self) -> t.List[str]:
-        static_directories = []
+        static_directories = t.cast(t.List, self.config.STATIC_DIRECTORIES or [])
         for module in self.get_module_loaders():
             if module.static_directory:
                 static_directories.append(module.static_directory)

@@ -43,6 +43,7 @@ class TestClientFactory:
         template_folder: t.Optional[str] = None,
         base_directory: t.Optional[str] = None,
         static_folder: str = "static",
+        config_module: str = None,
     ) -> _TestingModule:
         app = AppFactory.create_app(
             controllers=controllers,
@@ -51,6 +52,7 @@ class TestClientFactory:
             template_folder=template_folder,
             base_directory=base_directory,
             static_folder=static_folder,
+            config_module=config_module,
         )
         return _TestingModule(app=app)
 
@@ -59,6 +61,7 @@ class TestClientFactory:
         cls,
         module: t.Union[t.Type, t.Type[ModuleBase]],
         mock_services: t.Sequence[ProviderConfig] = tuple(),
+        config_module: str = None,
     ) -> _TestingModule:
         app_module_watermark = reflect.get_metadata(MODULE_WATERMARK, module)
         if mock_services:
@@ -67,6 +70,12 @@ class TestClientFactory:
             )
 
         if app_module_watermark:
-            return _TestingModule(app=AppFactory.create_from_app_module(module))
-        app = AppFactory.create_app(modules=(module,), providers=mock_services)
+            return _TestingModule(
+                app=AppFactory.create_from_app_module(
+                    module, config_module=config_module
+                )
+            )
+        app = AppFactory.create_app(
+            modules=(module,), providers=mock_services, config_module=config_module
+        )
         return _TestingModule(app=app)
