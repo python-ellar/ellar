@@ -13,7 +13,7 @@ from ellar.constants import (
 from ellar.core import Config
 from ellar.core.main import App
 from ellar.core.modules import ModuleBase
-from ellar.core.modules.ref import ModuleTemplateRef, create_module_ref_factor
+from ellar.core.modules.ref import create_module_ref_factor
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
 
@@ -25,7 +25,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
 class AppFactory:
     @classmethod
     def _read_all_module(
-        cls, module: t.Type[ModuleBase]
+        cls, module: t.Type[t.Union[ModuleBase, t.Any]]
     ) -> t.Dict[t.Type, t.Type[ModuleBase]]:
         modules = reflect.get_metadata(MODULE_METADATA.MODULES, module) or []
         module_dependency = OrderedDict()
@@ -36,11 +36,14 @@ class AppFactory:
 
     @classmethod
     def _build_modules(
-        cls, app_module: t.Type[ModuleBase], config: Config, injector: EllarInjector
+        cls,
+        app_module: t.Type[t.Union[ModuleBase, t.Any]],
+        config: Config,
+        injector: EllarInjector,
     ) -> None:
         assert reflect.get_metadata(
             MODULE_WATERMARK, app_module
-        ), "Only ApplicationModule is allowed"
+        ), "Only Module is allowed"
 
         module_dependency = [app_module] + list(
             cls._read_all_module(app_module).values()
@@ -57,18 +60,9 @@ class AppFactory:
             injector.add_module(module_ref)
 
     @classmethod
-    def _run_module_application_ready(
-        cls,
-        modules: t.Dict[t.Type[ModuleBase], ModuleTemplateRef],
-        app: App,
-    ) -> None:
-        for _, module_ref in modules.items():
-            module_ref.run_application_ready(app)
-
-    @classmethod
     def _create_app(
         cls,
-        module: t.Type[ModuleBase],
+        module: t.Type[t.Union[ModuleBase, t.Any]],
         global_guards: t.List[
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
         ] = None,
@@ -95,9 +89,6 @@ class AppFactory:
             global_guards=global_guards,
         )
 
-        cls._run_module_application_ready(
-            modules=injector.get_templating_modules(), app=app
-        )
         return app
 
     @classmethod
@@ -108,7 +99,7 @@ class AppFactory:
             t.Union["ModuleRouter", "ModuleMount", Mount, Host]
         ] = tuple(),
         providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = tuple(),
-        modules: t.Sequence[t.Type] = (),
+        modules: t.Sequence[t.Type[t.Union[ModuleBase, t.Any]]] = (),
         template_folder: t.Optional[str] = None,
         base_directory: t.Optional[str] = None,
         static_folder: str = "static",
@@ -131,7 +122,7 @@ class AppFactory:
         app_factory_module = type(f"Module{uuid4().hex[:6]}", (ModuleBase,), {})
         module(app_factory_module)
         return cls._create_app(
-            t.cast(t.Type[ModuleBase], app_factory_module),
+            module=app_factory_module,
             config_module=config_module,
             global_guards=global_guards,
         )
