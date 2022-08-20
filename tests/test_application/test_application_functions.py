@@ -1,18 +1,8 @@
 import os
 
-from starlette.exceptions import HTTPException
-from starlette.responses import JSONResponse, PlainTextResponse
-from starlette.routing import Host, Mount, Route, Router
+from starlette.responses import JSONResponse
 
-from ellar.common import (
-    Controller,
-    Module,
-    ModuleRouter,
-    exception_handler,
-    get,
-    template_filter,
-    template_global,
-)
+from ellar.common import Module, get, template_filter, template_global
 from ellar.compatible import asynccontextmanager
 from ellar.core import (
     App,
@@ -24,7 +14,6 @@ from ellar.core import (
 )
 from ellar.core.context import IExecutionContext
 from ellar.core.events import EventHandler
-from ellar.core.guard import APIKeyQuery
 from ellar.core.modules import ModuleTemplateRef
 from ellar.core.staticfiles import StaticFiles
 from ellar.core.templating import Environment
@@ -33,91 +22,7 @@ from ellar.di import EllarInjector
 from ellar.openapi import OpenAPIDocumentModule
 from ellar.services.reflector import Reflector
 
-
-class AppAPIKey(APIKeyQuery):
-    async def authenticate(self, connection, key):
-        return key
-
-
-def custom_sub_domain(request):
-    return PlainTextResponse("Subdomain: " + request.path_params["subdomain"])
-
-
-def all_users_page(request):
-    return PlainTextResponse("Hello, everyone!")
-
-
-def user_page(request):
-    username = request.path_params["username"]
-    return PlainTextResponse(f"Hello, {username}!")
-
-
-sub_domain = Router(
-    routes=[
-        Route("/", custom_sub_domain),
-    ]
-)
-
-users = Router(
-    routes=[
-        Route("/", endpoint=all_users_page),
-        Route("/{username}", endpoint=user_page),
-    ]
-)
-
-router = ModuleRouter()
-
-
-@router.get("/func")
-@router.head("/func")
-def func_homepage(request):
-    return PlainTextResponse("Hello, world!")
-
-
-@router.get("/async")
-async def async_homepage(request):
-    return PlainTextResponse("Hello, world!")
-
-
-@router.ws_route("/ws")
-async def websocket_endpoint(session):
-    await session.accept()
-    await session.send_text("Hello, world!")
-    await session.close()
-
-
-@Controller
-class ClassBaseController:
-    @get("/class")
-    def class_function(self):
-        return PlainTextResponse("Hello, world!")
-
-    @get("/500")
-    def runtime_error(self, request):
-        raise RuntimeError()
-
-
-@Module(
-    routers=[
-        Host("{subdomain}.example.org", app=sub_domain),
-        Mount("/users", app=users),
-        router,
-    ],
-    controllers=[ClassBaseController],
-)
-class ApplicationModule:
-    @exception_handler(405)
-    async def method_not_allow_exception(self, request, exec):
-        return JSONResponse({"detail": "Custom message"}, status_code=405)
-
-    @exception_handler(500)
-    async def error_500(self, request, exec):
-        return JSONResponse({"detail": "Server Error"}, status_code=500)
-
-    @exception_handler(HTTPException)
-    async def http_exception(self, request, exc):
-        return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
-
+from .sample import AppAPIKey, ApplicationModule
 
 test_module = TestClientFactory.create_test_module_from_module(
     module=ApplicationModule, config_module="tests.test_application.settings"

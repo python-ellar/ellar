@@ -2,13 +2,11 @@ import typing as t
 
 from starlette.testclient import TestClient as TestClient
 
-from ellar.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.core import ModuleBase
 from ellar.core.factory import AppFactory
 from ellar.core.main import App
 from ellar.core.routing import ModuleRouter
 from ellar.di import ProviderConfig
-from ellar.reflect import reflect
 
 
 class _TestingModule:
@@ -39,7 +37,7 @@ class TestClientFactory:
         cls,
         controllers: t.Sequence[t.Union[t.Any]] = tuple(),
         routers: t.Sequence[ModuleRouter] = tuple(),
-        services: t.Sequence[ProviderConfig] = tuple(),
+        providers: t.Sequence[ProviderConfig] = tuple(),
         template_folder: t.Optional[str] = None,
         base_directory: t.Optional[str] = None,
         static_folder: str = "static",
@@ -48,7 +46,7 @@ class TestClientFactory:
         app = AppFactory.create_app(
             controllers=controllers,
             routers=routers,
-            providers=services,
+            providers=providers,
             template_folder=template_folder,
             base_directory=base_directory,
             static_folder=static_folder,
@@ -60,22 +58,10 @@ class TestClientFactory:
     def create_test_module_from_module(
         cls,
         module: t.Union[t.Type, t.Type[ModuleBase]],
-        mock_services: t.Sequence[ProviderConfig] = tuple(),
+        mock_providers: t.Sequence[ProviderConfig] = tuple(),
         config_module: str = None,
     ) -> _TestingModule:
-        app_module_watermark = reflect.get_metadata(MODULE_WATERMARK, module)
-        if mock_services:
-            reflect.define_metadata(
-                MODULE_METADATA.PROVIDERS, list(mock_services), module, default_value=[]
-            )
-
-        if app_module_watermark:
-            return _TestingModule(
-                app=AppFactory.create_from_app_module(
-                    module, config_module=config_module
-                )
-            )
         app = AppFactory.create_app(
-            modules=(module,), providers=mock_services, config_module=config_module
+            modules=(module,), providers=mock_providers, config_module=config_module
         )
         return _TestingModule(app=app)

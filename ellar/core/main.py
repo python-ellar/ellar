@@ -219,6 +219,12 @@ class App(AppTemplating):
             **init_kwargs,
         )
 
+    def _run_module_application_ready(
+        self,
+    ) -> None:
+        for _, module_ref in self.injector.get_templating_modules().items():
+            module_ref.run_application_ready(self)
+
     def _finalize_app_initialization(self) -> None:
         self.injector.container.register_instance(self)
         self.injector.container.register_instance(Reflector())
@@ -228,6 +234,7 @@ class App(AppTemplating):
             IExecutionContext,
             ModuleProvider(ExecutionContext, scope={}, receive=None, send=None),
         )
+        self._run_module_application_ready()
 
     def add_exception_handler(
         self,
