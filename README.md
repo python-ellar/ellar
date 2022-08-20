@@ -4,6 +4,11 @@
 
 <p align="center"> Ellar is python web framework for building fast, efficient and scalable server-side applications. </p>
 
+![Test](https://github.com/eadwinCode/ellar/workflows/Test/badge.svg)
+[![PyPI version](https://badge.fury.io/py/ellar.svg)](https://badge.fury.io/py/ellar)
+[![PyPI version](https://img.shields.io/pypi/v/ellar.svg)](https://pypi.python.org/pypi/ellar)
+[![PyPI version](https://img.shields.io/pypi/pyversions/ellar.svg)](https://pypi.python.org/pypi/ellar)
+
 ## Features
 - Pydantic integration
 - DI Container
