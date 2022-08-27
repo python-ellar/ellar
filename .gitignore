@@ -122,3 +122,8 @@ docs/site
 .DS_Store
 .idea
 local_install.sh
+dist
+test.py
+
+docs/site
+site/
