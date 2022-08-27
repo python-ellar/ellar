@@ -2,9 +2,9 @@
   <a href="#" target="blank"><img src="docs/img/EllarLogoIconOnly.png" width="200" alt="Ellar Logo" /></a>
 </p>
 
-<p align="center"> Ellar is python web framework for building fast, efficient and scalable server-side applications. </p>
+<p align="center"> Ellar - Python ASGI web framework for building fast, efficient and scalable RESTAPIs and server-side application. </p>
 
-![Test](https://github.com/eadwinCode/ellar/workflows/Test/badge.svg)
+![Test](https://github.com/eadwinCode/ellar/actions/workflows/test_full.yml/badge.svg)
 [![PyPI version](https://badge.fury.io/py/ellar.svg)](https://badge.fury.io/py/ellar)
 [![PyPI version](https://img.shields.io/pypi/v/ellar.svg)](https://pypi.python.org/pypi/ellar)
 [![PyPI version](https://img.shields.io/pypi/pyversions/ellar.svg)](https://pypi.python.org/pypi/ellar)
