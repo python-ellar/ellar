@@ -25,6 +25,8 @@ theme:
         name: Switch to light mode
 
   language: en
+  logo: img/Icon.svg
+  favicon: img/Icon.svg
   icon:
     repo: fontawesome/brands/git-alt
 
@@ -72,3 +74,5 @@ markdown_extensions:
 - codehilite
 - admonition
 - pymdownx.superfences
+extra_css:
+  - stylesheets/extra.css
