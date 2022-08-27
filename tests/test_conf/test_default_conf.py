@@ -67,6 +67,12 @@ def test_configuration_raise_runtime_error_for_invalid_settings_module_path():
     with pytest.raises(ConfigRuntimeError):
         Config(config_module="tests.somewrongpath.settings")
 
+    with pytest.raises(Exception):
+        Config(STATIC_FOLDER_PACKAGES=[("package",)])
+
+    with pytest.raises(Exception):
+        Config(STATIC_FOLDER_PACKAGES=[("package", "static", "some_whatever")])
+
 
 def test_configuration_settings_can_be_loaded_through_constructor():
     config = Config(config_module=overriding_settings_path)

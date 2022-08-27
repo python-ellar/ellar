@@ -73,7 +73,7 @@ class ConfigValidationSchema(Serializer):
     VERSIONING_SCHEME: TVersioning = Field(DefaultAPIVersioning())
 
     REDIRECT_SLASHES: bool = False
-    STATIC_FOLDER_PACKAGES: t.Optional[t.List[t.Union[str, t.Tuple[str]]]] = []
+    STATIC_FOLDER_PACKAGES: t.Optional[t.List[t.Union[str, t.Tuple[str, str]]]] = []
     STATIC_DIRECTORIES: t.Optional[t.List[t.Union[str, t.Any]]] = []
 
     MIDDLEWARE: t.List[TMiddleware] = []
