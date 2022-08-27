@@ -29,3 +29,7 @@ test: ## Run tests
 
 test-cov: ## Run tests with coverage
 	pytest --cov=ellar --cov-report term-missing tests
+
+doc-deploy: ## Run Deploy Documentation
+	make clean
+	mkdocs gh-deploy --force

@@ -1,0 +1,74 @@
+site_name: Ellar
+site_description: Ellar - Python ASGI web framework for building fast, efficient and scalable RESTAPIs and server-side application.
+site_url: https://github.com/eadwinCode/ellar
+repo_name: eadwinCode/ellar
+repo_url: https://github.com/eadwinCode/ellar
+edit_uri: ''
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: pink
+      accent: pink
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: pink
+      accent: pink
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to light mode
+
+  language: en
+  icon:
+    repo: fontawesome/brands/git-alt
+
+plugins:
+- search
+
+nav:
+  - Introduction: index.md
+  - Quick Start: quick-start.md
+  - Controller:
+      - Index: controller/index.md
+      - Requests:
+          - Path Params: controller/path-params.md
+          - Query Params: controller/query-params.md
+          - Body: controller/body.md
+          - Form Params: controller/form-params.md
+          - File Params: controller/file-params.md
+          - Response Schema: controller/response-schema.md
+      - Module Router: controller/module-router.md
+      - Responses: controller/responses.md
+  - Providers:
+      - Index: providers/index.md
+      - Injection Scope: providers/scope.md
+      - Provider Config: providers/provider-config.md
+      - Circular Dependency: providers/circular-dep.md
+  - Modules: module.md
+  - Middleware: middleware.md
+  - Exceptions: exception.md
+  - Guards: guard.md
+  - Decorators:
+      - Index: decorators/index.md
+      - Versioning: decorators/versioning.md
+  - OpenAPI: openapi.md
+  - Application Settings: settings.md
+  - WebSockets: websockets.md
+  - Mount: mount.md
+  - Static Files: staticfiles.md
+  - Templates: templates.md
+  - Events: events.md
+  - Background Tasks: background-task.md
+  - Test Client: testclient.md
+  - Release Notes: release-notes.md
+
+markdown_extensions:
+- codehilite
+- admonition
+- pymdownx.superfences
