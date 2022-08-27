@@ -106,7 +106,7 @@ Now go to <a href="http://localhost:8000/docs/" target="_blank">http://localhost
 
 You will see the automatic interactive API documentation (provided by <a href="https://github.com/swagger-api/swagger-ui" target="_blank">Swagger UI</a>):
 
-![Swagger UI](docs/img/ellar_demo.gif)
+![Swagger UI](img/ellar_demo.gif)
 
 ## Status
 Project is still in development
