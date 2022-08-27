@@ -109,7 +109,9 @@ You will see the automatic interactive API documentation (provided by <a href="h
 ![Swagger UI](img/ellar_demo.gif)
 
 ## Status
+
 Project is still in development
+
 - Project CLI scaffolding
 - Documentation
 - Database Plugin with [Encode/ORM](https://github.com/encode/orm)
