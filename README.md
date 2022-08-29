@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="#" target="blank"><img src="docs/img/EllarLogoIconOnly.png" width="200" alt="Ellar Logo" /></a>
+  <a href="#" target="blank"><img src="img/EllarLogoIconOnly.png" width="200" alt="Ellar Logo" /></a>
 </p>
 
 <p align="center"> Ellar - Python ASGI web framework for building fast, efficient and scalable RESTAPIs and server-side application. </p>
@@ -77,8 +77,7 @@ Create another file `server.py`:
 
 ```Python
 from ellar.core import AppFactory
-from ellar.openapi.builder import OpenAPIDocumentBuilder
-from ellar.openapi.module import OpenAPIDocumentModule
+from ellar.openapi import OpenAPIDocumentBuilder, OpenAPIDocumentModule
 from .controller import router, MathAPI
 
 
@@ -106,7 +105,7 @@ Now go to <a href="http://localhost:8000/docs/" target="_blank">http://localhost
 
 You will see the automatic interactive API documentation (provided by <a href="https://github.com/swagger-api/swagger-ui" target="_blank">Swagger UI</a>):
 
-![Swagger UI](docs/img/ellar_demo.gif)
+![Swagger UI](img/ellar_demo.gif)
 
 ## Status
 Project is still in development

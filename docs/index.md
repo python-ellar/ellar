@@ -2,7 +2,7 @@
   <a href="#" target="blank"><img src="img/EllarLogoIconOnly.png" width="200" alt="Ellar Logo" /></a>
 </p>
 
-<p align="center"> Ellar is python web framework for building fast, efficient and scalable server-side applications. </p>
+<p align="center"> Ellar - Python ASGI web framework for building fast, efficient and scalable RESTAPIs and server-side application. </p>
 
 ![Test](https://github.com/eadwinCode/ellar/actions/workflows/test_full.yml/badge.svg)
 [![PyPI version](https://badge.fury.io/py/ellar.svg)](https://badge.fury.io/py/ellar)
@@ -77,8 +77,7 @@ Create another file `server.py`:
 
 ```Python
 from ellar.core import AppFactory
-from ellar.openapi.builder import OpenAPIDocumentBuilder
-from ellar.openapi.module import OpenAPIDocumentModule
+from ellar.openapi import OpenAPIDocumentBuilder, OpenAPIDocumentModule
 from .controller import router, MathAPI
 
 
