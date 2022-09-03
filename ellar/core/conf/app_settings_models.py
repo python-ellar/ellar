@@ -5,8 +5,14 @@ from pydantic.json import ENCODERS_BY_TYPE
 from starlette.middleware import Middleware
 from starlette.responses import JSONResponse
 
+from ellar.constants import LOG_LEVELS
 from ellar.core.events import EventHandler
+from ellar.core.exception_handlers import (
+    api_exception_handler,
+    request_validation_exception_handler,
+)
 from ellar.core.versioning import BaseAPIVersioning, DefaultAPIVersioning
+from ellar.exceptions import APIException, RequestValidationError
 from ellar.serializer import Serializer, SerializerFilter
 
 
@@ -52,7 +58,42 @@ class TEventHandler(EventHandler):
         return v
 
 
-class ConfigValidationSchema(Serializer):
+class ConfigFieldTypes:
+    DEBUG: bool
+    INJECTOR_AUTO_BIND: bool
+    DEFAULT_JSON_CLASS: t.Type[JSONResponse]
+
+    JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any]
+    VERSIONING_SCHEME: TVersioning
+
+    REDIRECT_SLASHES: bool
+    STATIC_FOLDER_PACKAGES: t.Optional[t.List[t.Union[str, t.Tuple[str, str]]]]
+    STATIC_DIRECTORIES: t.Optional[t.List[t.Union[str, t.Any]]]
+
+    MIDDLEWARE: t.List[TMiddleware]
+    APP_EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable]
+
+    USER_CUSTOM_EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable]
+    EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable]
+    STATIC_MOUNT_PATH: str
+
+    SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]]
+
+    MIDDLEWARE_DECORATOR: t.List[TMiddleware]
+
+    ON_REQUEST_STARTUP: t.List[TEventHandler]
+    ON_REQUEST_SHUTDOWN: t.List[TEventHandler]
+
+    TEMPLATE_FILTERS: t.Dict[str, t.Callable[..., t.Any]]
+    TEMPLATE_GLOBAL_FILTERS: t.Dict[str, t.Callable[..., t.Any]]
+
+    LOGGING_CONFIG: t.Optional[t.Dict[str, t.Any]]
+    LOG_LEVEL: t.Optional[LOG_LEVELS]
+    ASGI_APPLICATION: t.Optional[str]
+    APPLICATION_MODULE: t.Optional[str]
+
+
+class ConfigValidationSchema(Serializer, ConfigFieldTypes):
     _filter = SerializerFilter(
         exclude={
             "EXCEPTION_HANDLERS_DECORATOR",
@@ -67,17 +108,19 @@ class ConfigValidationSchema(Serializer):
         validate_assignment = True
 
     DEBUG: bool = False
+    INJECTOR_AUTO_BIND: bool = False
     DEFAULT_JSON_CLASS: t.Type[JSONResponse] = JSONResponse
-
-    JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any] = {}
     VERSIONING_SCHEME: TVersioning = Field(DefaultAPIVersioning())
-
+    JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any] = {}
     REDIRECT_SLASHES: bool = False
     STATIC_FOLDER_PACKAGES: t.Optional[t.List[t.Union[str, t.Tuple[str, str]]]] = []
     STATIC_DIRECTORIES: t.Optional[t.List[t.Union[str, t.Any]]] = []
 
     MIDDLEWARE: t.List[TMiddleware] = []
-    APP_EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable] = {}
+    APP_EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable] = {
+        RequestValidationError: request_validation_exception_handler,
+        APIException: api_exception_handler,
+    }
 
     USER_CUSTOM_EXCEPTION_HANDLERS: t.Dict[
         t.Union[int, t.Type[Exception]], t.Callable
@@ -94,9 +137,13 @@ class ConfigValidationSchema(Serializer):
 
     TEMPLATE_FILTERS: t.Dict[str, t.Callable[..., t.Any]] = {}
     TEMPLATE_GLOBAL_FILTERS: t.Dict[str, t.Callable[..., t.Any]] = {}
-    INJECTOR_AUTO_BIND: bool = False
 
-    @root_validator(pre=True)
+    LOGGING: t.Optional[t.Dict[str, t.Any]] = None
+    LOG_LEVEL: t.Optional[LOG_LEVELS] = LOG_LEVELS.info
+    ASGI_APPLICATION: t.Optional[str] = None
+    APPLICATION_MODULE: t.Optional[str] = None
+
+    @root_validator(pre=False)
     def pre_root_validate(cls, values: t.Any) -> t.Any:
         app_exception_handlers = dict(values["APP_EXCEPTION_HANDLERS"])
         user_custom_exception_handlers = values.get(
