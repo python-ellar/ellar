@@ -4,12 +4,7 @@ from uuid import uuid4
 
 from starlette.routing import Host, Mount
 
-from ellar.constants import (
-    MODULE_METADATA,
-    MODULE_WATERMARK,
-    ON_REQUEST_SHUTDOWN_KEY,
-    ON_REQUEST_STARTUP_KEY,
-)
+from ellar.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.core import Config
 from ellar.core.main import App
 from ellar.core.modules import ModuleBase
@@ -18,6 +13,7 @@ from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.commands import EllarTyper
     from ellar.core import GuardCanActivate
     from ellar.core.routing import ModuleMount, ModuleRouter
 
@@ -31,7 +27,7 @@ class AppFactory:
         module_dependency = OrderedDict()
         for module in modules:
             module_dependency[module] = module
-            module_dependency.update(cls._read_all_module(module))
+            module_dependency.update(cls.read_all_module(module))
         return module_dependency
 
     @classmethod
@@ -46,7 +42,7 @@ class AppFactory:
         ), "Only Module is allowed"
 
         module_dependency = [app_module] + list(
-            cls._read_all_module(app_module).values()
+            cls.read_all_module(app_module).values()
         )
         for module in reversed(module_dependency):
             if injector.get_module(module):
@@ -99,13 +95,14 @@ class AppFactory:
             t.Union["ModuleRouter", "ModuleMount", Mount, Host]
         ] = tuple(),
         providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = tuple(),
-        modules: t.Sequence[t.Type[t.Union[ModuleBase, t.Any]]] = (),
+        modules: t.Sequence[t.Type[t.Union[ModuleBase, t.Any]]] = tuple(),
         template_folder: t.Optional[str] = None,
         base_directory: t.Optional[str] = None,
         static_folder: str = "static",
         global_guards: t.List[
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
         ] = None,
+        commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = tuple(),
         config_module: str = None,
     ) -> App:
         from ellar.common import Module
@@ -118,6 +115,7 @@ class AppFactory:
             base_directory=base_directory,
             static_folder=static_folder,
             modules=modules,
+            commands=commands,
         )
         app_factory_module = type(f"Module{uuid4().hex[:6]}", (ModuleBase,), {})
         module(app_factory_module)

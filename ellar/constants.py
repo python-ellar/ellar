@@ -92,6 +92,7 @@ class MODULE_METADATA(metaclass=_AnnotationToValue):
     PROVIDERS: str
     TEMPLATE_FOLDER: str
     MODULES: str
+    COMMANDS: str
 
 
 class CONTROLLER_METADATA(metaclass=_AnnotationToValue):
