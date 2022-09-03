@@ -20,7 +20,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 class AppFactory:
     @classmethod
-    def _read_all_module(
+    def read_all_module(
         cls, module: t.Type[t.Union[ModuleBase, t.Any]]
     ) -> t.Dict[t.Type, t.Type[ModuleBase]]:
         modules = reflect.get_metadata(MODULE_METADATA.MODULES, module) or []
@@ -67,11 +67,11 @@ class AppFactory:
         assert reflect.get_metadata(MODULE_WATERMARK, module), "Only Module is allowed"
 
         config = Config(app_configured=True, config_module=config_module)
-        injector = EllarInjector(auto_bind=t.cast(bool, config.INJECTOR_AUTO_BIND))
+        injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND)
         cls._build_modules(app_module=module, injector=injector, config=config)
 
-        shutdown_event = config[ON_REQUEST_STARTUP_KEY]
-        startup_event = config[ON_REQUEST_SHUTDOWN_KEY]
+        shutdown_event = config.ON_REQUEST_STARTUP
+        startup_event = config.ON_REQUEST_SHUTDOWN
 
         app = App(
             config=config,
