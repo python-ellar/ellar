@@ -143,7 +143,7 @@ class AppTemplating(JinjaTemplating):
 
     @property
     def debug(self) -> bool:
-        return t.cast(bool, self.config.DEBUG)
+        return self.config.DEBUG
 
     @debug.setter
     def debug(self, value: bool) -> None:
@@ -193,7 +193,7 @@ class AppTemplating(JinjaTemplating):
 
     def create_static_app(self) -> ASGIApp:
         return StaticFiles(
-            directories=self.static_files, packages=self.config.STATIC_FOLDER_PACKAGES  # type: ignore
+            directories=self.static_files, packages=self.config.STATIC_FOLDER_PACKAGES
         )
 
     def reload_static_app(self) -> None:

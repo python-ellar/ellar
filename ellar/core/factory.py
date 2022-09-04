@@ -4,12 +4,7 @@ from uuid import uuid4
 
 from starlette.routing import Host, Mount
 
-from ellar.constants import (
-    MODULE_METADATA,
-    MODULE_WATERMARK,
-    ON_REQUEST_SHUTDOWN_KEY,
-    ON_REQUEST_STARTUP_KEY,
-)
+from ellar.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.core import Config
 from ellar.core.main import App
 from ellar.core.modules import ModuleBase
@@ -71,11 +66,11 @@ class AppFactory:
         assert reflect.get_metadata(MODULE_WATERMARK, module), "Only Module is allowed"
 
         config = Config(app_configured=True, config_module=config_module)
-        injector = EllarInjector(auto_bind=t.cast(bool, config.INJECTOR_AUTO_BIND))
+        injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND)
         cls._build_modules(app_module=module, injector=injector, config=config)
 
-        shutdown_event = config[ON_REQUEST_STARTUP_KEY]
-        startup_event = config[ON_REQUEST_SHUTDOWN_KEY]
+        shutdown_event = config.ON_REQUEST_STARTUP
+        startup_event = config.ON_REQUEST_SHUTDOWN
 
         app = App(
             config=config,
