@@ -7,7 +7,7 @@ from pydantic import BaseModel, create_model
 from pydantic.error_wrappers import ErrorWrapper
 from pydantic.fields import FieldInfo, ModelField, Required
 from pydantic.schema import get_annotation_from_field_info
-from pydantic.typing import ForwardRef, evaluate_forwardref
+from pydantic.typing import ForwardRef, evaluate_forwardref  # type: ignore
 from pydantic.utils import lenient_issubclass
 from starlette.convertors import Convertor
 
