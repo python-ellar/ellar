@@ -5,12 +5,27 @@ from pydantic.json import ENCODERS_BY_TYPE
 from starlette.responses import JSONResponse
 
 from ellar.constants import ELLAR_CONFIG_MODULE
-from ellar.core.conf import Config
+from ellar.core.conf import Config, ConfigDefaultTypesMixin
 from ellar.core.conf.config import ConfigRuntimeError
 from ellar.core.versioning import DefaultAPIVersioning, UrlPathAPIVersioning
 from ellar.exceptions import APIException, RequestValidationError
 
-overriding_settings_path = "tests.test_conf.settings"
+
+class ConfigTesting(ConfigDefaultTypesMixin):
+    DEBUG: bool = True
+
+    SECRET_KEY: str = "your-secret-key-changed"
+
+    INJECTOR_AUTO_BIND = True
+
+    JINJA_TEMPLATES_OPTIONS = {"auto_reload": DEBUG}
+
+    VERSIONING_SCHEME = UrlPathAPIVersioning()
+    REDIRECT_SLASHES: bool = True
+    STATIC_MOUNT_PATH: str = "/static-changed"
+
+
+overriding_settings_path = "tests.test_conf.test_default_conf:ConfigTesting"
 
 
 def test_default_configurations():

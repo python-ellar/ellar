@@ -25,7 +25,7 @@ from ellar.services.reflector import Reflector
 from .sample import AppAPIKey, ApplicationModule
 
 test_module = TestClientFactory.create_test_module_from_module(
-    module=ApplicationModule, config_module="tests.test_application.settings"
+    module=ApplicationModule, config_module="tests.test_application.config:Config"
 )
 
 

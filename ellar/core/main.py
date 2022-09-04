@@ -79,7 +79,7 @@ class App(AppTemplating):
             on_startup=[self.on_startup.async_run],
             on_shutdown=[self.on_shutdown.async_run],
             default=self.config.DEFAULT_NOT_FOUND_HANDLER,  # type: ignore
-            lifespan=self.config.DEFAULT_LIFESPAN_HANDLER,  # type: ignore
+            lifespan=self.config.DEFAULT_LIFESPAN_HANDLER,
         )
         self.middleware_stack = self.build_middleware_stack()
         self._config_logging()

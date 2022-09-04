@@ -1,0 +1,122 @@
+import typing as t
+
+from starlette.middleware import Middleware
+from starlette.responses import JSONResponse
+from starlette.types import ASGIApp
+
+from ellar.constants import LOG_LEVELS as log_levels
+from ellar.core.events import EventHandler
+from ellar.core.versioning import BaseAPIVersioning
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core import App
+
+__all__ = ["ConfigDefaultTypesMixin", "TVersioning", "TMiddleware", "TEventHandler"]
+
+
+class TVersioning(BaseAPIVersioning):
+    @classmethod
+    def __get_validators__(
+        cls: t.Type["TVersioning"],
+    ) -> t.Iterable[t.Callable[..., t.Any]]:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls: t.Type["BaseAPIVersioning"], v: t.Any) -> t.Any:
+        if not isinstance(v, BaseAPIVersioning):
+            raise ValueError(f"Expected BaseAPIVersioning, received: {type(v)}")
+        return v
+
+
+class TMiddleware(Middleware):
+    @classmethod
+    def __get_validators__(
+        cls: t.Type["TMiddleware"],
+    ) -> t.Iterable[t.Callable[..., t.Any]]:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls: t.Type["Middleware"], v: t.Any) -> t.Any:
+        if not isinstance(v, Middleware):
+            raise ValueError(f"Expected Middleware, received: {type(v)}")
+        return v
+
+
+class TEventHandler(EventHandler):
+    @classmethod
+    def __get_validators__(
+        cls: t.Type["TEventHandler"],
+    ) -> t.Iterable[t.Callable[..., t.Any]]:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls: t.Type["EventHandler"], v: t.Any) -> t.Any:
+        if not isinstance(v, EventHandler):
+            raise ValueError(f"Expected EventHandler, received: {type(v)}")
+        return v
+
+
+class ConfigDefaultTypesMixin:
+    DEBUG: bool
+    # injector auto_bind = True allows you to resolve types that are not registered on the container
+    # For more info, read: https://injector.readthedocs.io/en/latest/index.html
+    INJECTOR_AUTO_BIND: bool
+
+    # Default JSON response class
+    DEFAULT_JSON_CLASS: t.Type[JSONResponse]
+
+    # jinja Environment options
+    # https://jinja.palletsprojects.com/en/3.0.x/api/#high-level-api
+    JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any]
+
+    # Application route versioning scheme
+    VERSIONING_SCHEME: TVersioning
+
+    # Enable or Disable Application Router route searching by appending backslash
+    REDIRECT_SLASHES: bool
+
+    # Define references to static folders in python packages.
+    # eg STATIC_FOLDER_PACKAGES = [('boostrap4', 'statics')]
+    STATIC_FOLDER_PACKAGES: t.Optional[t.List[t.Union[str, t.Tuple[str, str]]]]
+
+    # Define references to static folders defined within the project
+    STATIC_DIRECTORIES: t.Optional[t.List[t.Union[str, t.Any]]]
+
+    # Application user defined middlewares
+    MIDDLEWARE: t.List[TMiddleware]
+    APP_EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable]
+
+    # A dictionary mapping either integer status codes,
+    # or exception class types onto callables which handle the exceptions.
+    # Exception handler callables should be of the form
+    # `handler(request, exc) -> response` and may be be either standard functions, or async functions.
+    USER_CUSTOM_EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable]
+
+    # other custom exception handlers
+    EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable]
+
+    # static route
+    STATIC_MOUNT_PATH: str
+
+    # defines other custom json encoders
+    SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]]
+
+    MIDDLEWARE_DECORATOR: t.List[TMiddleware]
+
+    ON_REQUEST_STARTUP: t.List[TEventHandler]
+    ON_REQUEST_SHUTDOWN: t.List[TEventHandler]
+
+    TEMPLATE_FILTERS: t.Dict[str, t.Callable[..., t.Any]]
+    TEMPLATE_GLOBAL_FILTERS: t.Dict[str, t.Callable[..., t.Any]]
+
+    # Default not found handler
+    DEFAULT_NOT_FOUND_HANDLER: ASGIApp
+
+    # The lifespan context function is a newer style that replaces
+    # on_startup / on_shutdown handlers. Use one or the other, not both.
+    DEFAULT_LIFESPAN_HANDLER: t.Optional[t.Callable[["App"], t.AsyncContextManager]]
+
+    # logging configuration
+    LOGGING_CONFIG: t.Optional[t.Dict[str, t.Any]]
+    # logging Level
+    LOG_LEVEL: t.Optional[log_levels]

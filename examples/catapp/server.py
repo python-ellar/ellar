@@ -6,7 +6,7 @@ from ellar.openapi.module import OpenAPIDocumentModule
 
 from .application.module import AppModuleTest
 
-os.environ.setdefault('ELLAR_CONFIG_MODULE', 'catapp.settings')
+os.environ.setdefault('ELLAR_CONFIG_MODULE', 'catapp.config:DevelopmentConfig')
 
 app = AppFactory.create_from_app_module(AppModuleTest)
 

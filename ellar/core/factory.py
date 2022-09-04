@@ -78,10 +78,7 @@ class AppFactory:
             injector=injector,
             on_shutdown_event_handlers=shutdown_event if shutdown_event else None,
             on_startup_event_handlers=startup_event if startup_event else None,
-            lifespan=t.cast(
-                t.Optional[t.Callable[[App], t.AsyncContextManager[t.Any]]],
-                config.DEFAULT_LIFESPAN_HANDLER,
-            ),
+            lifespan=config.DEFAULT_LIFESPAN_HANDLER,
             global_guards=global_guards,
         )
 
