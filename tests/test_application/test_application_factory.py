@@ -57,10 +57,10 @@ def test_factory_create_from_app_module():
     app = AppFactory.create_from_app_module(
         module=BModule,
         global_guards=[AppAPIKey],
-        config_module="tests.test_application.settings",
+        config_module="tests.test_application.config:Config",
     )
     assert app.get_guards() == [AppAPIKey]
-    assert app.config.config_module == "tests.test_application.settings"
+    assert app.config.config_module == "tests.test_application.config:Config"
 
 
 def test_factory_create_app_dynamically_creates_module():
@@ -81,7 +81,7 @@ def test_factory_create_app_works(tmpdir):
     app = AppFactory.create_app(
         modules=(CModule,),
         global_guards=[AppAPIKey],
-        config_module="tests.test_application.settings",
+        config_module="tests.test_application.config:Config",
         controllers=(ClassBaseController,),
         routers=[
             Host("{subdomain}.example.org", app=sub_domain),
