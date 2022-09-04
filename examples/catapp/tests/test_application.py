@@ -6,7 +6,7 @@ from ellar.core.testclient import TestClientFactory
 
 from catapp.application.cats.routers import cat_router
 
-os.environ.setdefault('ELLAR_CONFIG_MODULE',  'app_module_test.tests.settings')
+os.environ.setdefault('ELLAR_CONFIG_MODULE',  'catapp.config:TestingConfig')
 
 BASEDIR = Path(__file__).resolve().parent.parent
 

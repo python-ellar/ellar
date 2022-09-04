@@ -73,7 +73,7 @@ class App(AppTemplating):
         )
         self.router = ApplicationRouter(
             routes=self._get_module_routes(),
-            redirect_slashes=t.cast(bool, self.config.REDIRECT_SLASHES),
+            redirect_slashes=self.config.REDIRECT_SLASHES,
             on_startup=[self.on_startup.async_run],
             on_shutdown=[self.on_shutdown.async_run],
             default=self.config.DEFAULT_NOT_FOUND_HANDLER,  # type: ignore
