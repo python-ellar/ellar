@@ -2,57 +2,15 @@ import typing as t
 
 from pydantic import Field, root_validator, validator
 from pydantic.json import ENCODERS_BY_TYPE
-from starlette.middleware import Middleware
 from starlette.responses import JSONResponse
 
-from ellar.core.events import EventHandler
-from ellar.core.versioning import BaseAPIVersioning, DefaultAPIVersioning
+from ellar.core.versioning import DefaultAPIVersioning
 from ellar.serializer import Serializer, SerializerFilter
 
-
-class TVersioning(BaseAPIVersioning):
-    @classmethod
-    def __get_validators__(
-        cls: t.Type["TVersioning"],
-    ) -> t.Iterable[t.Callable[..., t.Any]]:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls: t.Type["BaseAPIVersioning"], v: t.Any) -> t.Any:
-        if not isinstance(v, BaseAPIVersioning):
-            raise ValueError(f"Expected BaseAPIVersioning, received: {type(v)}")
-        return v
+from .mixins import ConfigDefaultTypesMixin, TEventHandler, TMiddleware, TVersioning
 
 
-class TMiddleware(Middleware):
-    @classmethod
-    def __get_validators__(
-        cls: t.Type["TMiddleware"],
-    ) -> t.Iterable[t.Callable[..., t.Any]]:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls: t.Type["Middleware"], v: t.Any) -> t.Any:
-        if not isinstance(v, Middleware):
-            raise ValueError(f"Expected Middleware, received: {type(v)}")
-        return v
-
-
-class TEventHandler(EventHandler):
-    @classmethod
-    def __get_validators__(
-        cls: t.Type["TEventHandler"],
-    ) -> t.Iterable[t.Callable[..., t.Any]]:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls: t.Type["EventHandler"], v: t.Any) -> t.Any:
-        if not isinstance(v, EventHandler):
-            raise ValueError(f"Expected EventHandler, received: {type(v)}")
-        return v
-
-
-class ConfigValidationSchema(Serializer):
+class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     _filter = SerializerFilter(
         exclude={
             "EXCEPTION_HANDLERS_DECORATOR",
