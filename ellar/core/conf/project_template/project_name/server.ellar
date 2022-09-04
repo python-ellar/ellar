@@ -1,0 +1,9 @@
+import os
+
+from ellar.constants import ELLAR_CONFIG_MODULE
+from ellar.core.factory import AppFactory
+from ..application.module import {{project_name}}Module
+
+application = AppFactory.create_from_app_module(
+    {{project_name}}Module, config_module=os.environ.get(ELLAR_CONFIG_MODULE)
+)
