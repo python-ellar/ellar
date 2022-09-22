@@ -11,7 +11,7 @@
 
 ## Features
 - Pydantic integration
-- DI Container
+- Dependency Injection (DI)
 - Templating with Jinja2
 - OpenAPI Documentation (Swagger and ReDoc)
 - Controller (MVC)
