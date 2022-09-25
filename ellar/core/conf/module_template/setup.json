@@ -1,0 +1,61 @@
+{
+  "context": ["module_name"],
+  "files": [
+    {
+      "name": "module_name",
+      "is_directory": "true",
+      "files": [
+        {
+          "name": "__init__.ellar",
+          "is_directory": "false",
+          "files": []
+        },
+        {
+          "name": "controllers.ellar",
+          "is_directory": "false",
+          "files": []
+        },
+        {
+          "name": "module.ellar",
+          "is_directory": "false",
+          "files": []
+        },
+        {
+          "name": "routers.ellar",
+          "is_directory": "false",
+          "files": []
+        },
+        {
+          "name": "schemas.ellar",
+          "is_directory": "false"
+        },
+        {
+          "name": "services.ellar",
+          "is_directory": "false",
+          "files": []
+        },
+        {
+          "name": "tests",
+          "is_directory": "true",
+          "files": [
+            {
+              "name": "test_controllers.ellar",
+              "is_directory": "false",
+              "files": []
+            },
+            {
+              "name": "test_routers.ellar",
+              "is_directory": "false",
+              "files": []
+            },
+            {
+              "name": "test_services.ellar",
+              "is_directory": "false",
+              "files": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

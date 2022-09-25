@@ -1,0 +1,20 @@
+"""
+Define endpoints routes in python class-based fashion
+example:
+
+@Controller("/dogs", tag="Dogs", description="Dogs Resources")
+class MyController(ControllerBase):
+    @get('/')
+    def index(self):
+        return {'detail': "Welcome Dog's Resources"}
+"""
+from ellar.common import Controller, get
+from ellar.core import ControllerBase
+
+
+@Controller
+class {{module_name | capitalize}}Controller(ControllerBase):
+    @get("/")
+    def index(self):
+        return {"detail": "Welcome {{module_name | capitalize}} Resource"}
+

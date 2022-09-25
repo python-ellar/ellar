@@ -1,53 +1,81 @@
 {
-  "files": [{
-    "name": "project_name",
-    "is_directory": "true",
-    "context": ["project_name"],
-    "files": [
-      {
-        "name": "apps",
-        "is_directory": "true",
-        "context": [],
-        "files": [
-          {
-            "name": "__init__.ellar",
-            "is_directory": "false"
-          },
-          {
-            "name": "module.ellar",
-            "is_directory": "false"
-          }
-        ]
-      },
-      {
-        "name": "project_name",
-        "is_directory": "true",
-        "context": ["secret_key"],
-        "files": [
-          {
-            "name": "__init__.ellar",
-            "is_directory": "false"
-          },
-          {
-            "name": "server.ellar",
-            "is_directory": "false"
-          },
-          {
-            "name": "settings.ellar",
-            "is_directory": "false"
-          }
-        ]
-      },
-      {
-        "name": "core",
-        "is_directory": "true",
-        "files": []
-      },
-      {
-        "name": "tests",
-        "is_directory": "true",
-        "files": []
-      }
-    ]
-  }]
+  "context": ["project_name", "secret_key"],
+  "files": [
+    {
+      "name": "project_name",
+      "is_directory": "true",
+      "files": [
+        {
+          "name": "apps",
+          "is_directory": "true",
+          "files": [
+            {
+              "name": "__init__.ellar",
+              "is_directory": "false"
+            }
+          ]
+        },
+        {
+          "name": "core",
+          "is_directory": "true",
+          "files": [
+            {
+              "name": "__init__.ellar",
+              "is_directory": "false"
+            }
+          ]
+        },
+        {
+          "name": "core",
+          "is_directory": "true",
+          "files": [
+            {
+              "name": "__init__.ellar",
+              "is_directory": "false"
+            }
+          ]
+        },
+        {
+          "name": "domain",
+          "is_directory": "true",
+          "files": [
+            {
+              "name": "__init__.ellar",
+              "is_directory": "false"
+            }
+          ]
+        },
+        {
+          "name": "tests",
+          "is_directory": "true"
+        },
+        {
+          "name": "__init__.ellar",
+          "is_directory": "false"
+        },
+        {
+          "name": "server.ellar",
+          "is_directory": "false"
+        },
+        {
+          "name": "root_module.ellar",
+          "is_directory": "false"
+        },
+        {
+          "name": "config.ellar",
+          "is_directory": "false"
+        }
+      ]
+    },
+    {
+      "name": "tests",
+      "is_directory": "true",
+      "files": [
+        {
+          "name": "conftest.ellar",
+          "is_directory": "false"
+        }
+      ]
+    }
+  ]
 }

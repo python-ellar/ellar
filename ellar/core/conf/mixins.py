@@ -57,6 +57,7 @@ class TEventHandler(EventHandler):
 
 
 class ConfigDefaultTypesMixin:
+    SECRET_KEY: str
     DEBUG: bool
     # injector auto_bind = True allows you to resolve types that are not registered on the container
     # For more info, read: https://injector.readthedocs.io/en/latest/index.html
@@ -84,7 +85,6 @@ class ConfigDefaultTypesMixin:
 
     # Application user defined middlewares
     MIDDLEWARE: t.List[TMiddleware]
-    APP_EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable]
 
     # A dictionary mapping either integer status codes,
     # or exception class types onto callables which handle the exceptions.
@@ -101,12 +101,19 @@ class ConfigDefaultTypesMixin:
     # defines other custom json encoders
     SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]]
 
+    # will be set automatically when @middleware is found in a Module class
     MIDDLEWARE_DECORATOR: t.List[TMiddleware]
 
+    # will be set automatically when @on_startup is found in a Module class
     ON_REQUEST_STARTUP: t.List[TEventHandler]
+
+    # will be set automatically when @on_shutdown is found in a Module class
     ON_REQUEST_SHUTDOWN: t.List[TEventHandler]
 
+    # will be set automatically when @template_filter is found in a Module class
     TEMPLATE_FILTERS: t.Dict[str, t.Callable[..., t.Any]]
+
+    # will be set automatically when @template_global is found in a Module class
     TEMPLATE_GLOBAL_FILTERS: t.Dict[str, t.Callable[..., t.Any]]
 
     # Default not found handler
@@ -118,5 +125,6 @@ class ConfigDefaultTypesMixin:
 
     # logging configuration
     LOGGING_CONFIG: t.Optional[t.Dict[str, t.Any]]
+
     # logging Level
     LOG_LEVEL: t.Optional[log_levels]
