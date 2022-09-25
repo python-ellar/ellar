@@ -20,7 +20,7 @@ from .versioning import RequestVersioningMiddleware
 if sys.version_info >= (3, 7):  # pragma: no cover
     from starlette.middleware.exceptions import ExceptionMiddleware
 else:
-    from starlette.exceptions import ExceptionMiddleware  # type: ignore
+    from starlette.exceptions import ExceptionMiddleware
 
 
 __all__ = [

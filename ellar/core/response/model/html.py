@@ -4,7 +4,7 @@ from ellar.core.context import ExecutionContext, IExecutionContext
 from ellar.core.templating import Environment, TemplateResponse
 from ellar.core.templating.renderer import get_template_name, process_view_model
 
-from ..responses import Response
+from ..response_types import Response
 from .base import ResponseModel
 
 

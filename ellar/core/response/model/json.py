@@ -6,10 +6,10 @@ from ellar.helper.modelfield import create_model_field
 from ellar.reflect import reflect
 from ellar.serializer import SerializerFilter, serialize_object
 
-from ..responses import JSONResponse, Response
+from ..response_types import JSONResponse, Response
 from .base import ResponseModel, ResponseModelField
 
-DictSchema: ResponseModelField = t.cast(
+DictModelField: ResponseModelField = t.cast(
     ResponseModelField,
     create_model_field(
         name="response_model",
@@ -45,12 +45,14 @@ class JSONResponseModel(ResponseModel):
         response_obj: t.Any,
         serializer_filter: t.Optional[SerializerFilter] = None,
     ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
-        assert self.schema, "schema must exist for JSONResponseModel"
-        return self.schema.serialize(response_obj, serializer_filter=serializer_filter)
+        assert self.model_field_or_schema, "schema must exist for JSONResponseModel"
+        return self.model_field_or_schema.serialize(
+            response_obj, serializer_filter=serializer_filter
+        )
 
 
 class EmptyAPIResponseModel(JSONResponseModel):
-    model_schema = DictSchema
+    model_field_or_schema = DictModelField
 
     def serialize(
         self,

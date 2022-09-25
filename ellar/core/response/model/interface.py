@@ -5,7 +5,7 @@ from pydantic.fields import ModelField
 
 from ellar.core.context import IExecutionContext
 
-from ..responses import Response
+from ..response_types import Response
 
 
 class IResponseModel(ABC):

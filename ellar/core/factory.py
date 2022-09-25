@@ -20,6 +20,11 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 class AppFactory:
     @classmethod
+    def get_all_modules(cls, module: t.Type[ModuleBase]) -> t.List[t.Type[ModuleBase]]:
+        module_dependency = [module] + list(cls.read_all_module(module).values())
+        return module_dependency
+
+    @classmethod
     def read_all_module(
         cls, module: t.Type[t.Union[ModuleBase, t.Any]]
     ) -> t.Dict[t.Type, t.Type[ModuleBase]]:
@@ -41,9 +46,7 @@ class AppFactory:
             MODULE_WATERMARK, app_module
         ), "Only Module is allowed"
 
-        module_dependency = [app_module] + list(
-            cls.read_all_module(app_module).values()
-        )
+        module_dependency = cls.get_all_modules(app_module)
         for module in reversed(module_dependency):
             if injector.get_module(module):
                 continue
@@ -68,6 +71,7 @@ class AppFactory:
 
         config = Config(app_configured=True, config_module=config_module)
         injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND)
+        injector.container.register_instance(config, concrete_type=Config)
         cls._build_modules(app_module=module, injector=injector, config=config)
 
         shutdown_event = config.ON_REQUEST_STARTUP

@@ -82,10 +82,8 @@ class App(AppTemplating):
             lifespan=self.config.DEFAULT_LIFESPAN_HANDLER,
         )
         self.middleware_stack = self.build_middleware_stack()
-        self._config_logging()
         self._finalize_app_initialization()
-
-        logger.info(f"APP SETTINGS MODULE: {self.config.config_module}")
+        self._config_logging()
 
     def _config_logging(self) -> None:
         log_level = (
@@ -94,6 +92,7 @@ class App(AppTemplating):
             else LOG_LEVELS.info.value
         )
         logging.getLogger("ellar").setLevel(log_level)
+        logger.info(f"APP SETTINGS MODULE: {self.config.config_module}")
 
     def _statics_wrapper(self) -> t.Callable:
         async def _statics_func_wrapper(

@@ -1,4 +1,4 @@
-from .conf import Config
+from .conf import Config, ConfigDefaultTypesMixin
 from .connection import Request, WebSocket
 from .context import ExecutionContext
 from .controller import ControllerBase
@@ -27,6 +27,7 @@ __all__ = [
     "render_template_string",
     "ExecutionContext",
     "ControllerBase",
+    "ConfigDefaultTypesMixin",
     "ModuleBase",
     "BaseAPIKey",
     "BaseAuthGuard",
