@@ -12,7 +12,7 @@ repos:
     - id: code_linting
       args: []
       name: Code Linting
-      entry: "make lint"
+      entry: "make fmt && make lint"
       types: [python]
       language_version: python3.6
       language: python
