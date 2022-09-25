@@ -20,7 +20,9 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 class AppFactory:
     @classmethod
-    def get_all_modules(cls, module: t.Type[ModuleBase]) -> t.List[t.Type[ModuleBase]]:
+    def get_all_modules(
+        cls, module: t.Type[t.Union[ModuleBase, t.Any]]
+    ) -> t.List[t.Type[ModuleBase]]:
         module_dependency = [module] + list(cls.read_all_module(module).values())
         return module_dependency
 

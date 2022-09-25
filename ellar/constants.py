@@ -76,6 +76,8 @@ CONTROLLER_CLASS_KEY = "CONTROLLER_CLASS_KEY"
 REFLECT_TYPE = "__REFLECT_TYPE__"
 CALLABLE_COMMAND_INFO = "__CALLABLE_COMMAND_INFO__"
 GROUP_METADATA = "GROUP_METADATA"
+ELLAR_META = "ELLAR_META"
+ELLAR_PY_PROJECT = "ellar"
 
 
 class MODULE_REF_TYPES(metaclass=_AnnotationToValue):
@@ -160,7 +162,7 @@ DEFAULT_LOGGING = {
         },
         "access": {
             "()": "uvicorn.logging.AccessFormatter",
-            "fmt": '%(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s',  # noqa: E501
+            "fmt": '%(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s',
         },
     },
     "handlers": {
