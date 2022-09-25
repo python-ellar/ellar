@@ -33,3 +33,9 @@ test-cov: ## Run tests with coverage
 doc-deploy: ## Run Deploy Documentation
 	make clean
 	mkdocs gh-deploy --force
+
+
+pre-commit-lint: ## Runs Requires commands during pre-commit
+	make clean
+	make fmt
+	make lint
