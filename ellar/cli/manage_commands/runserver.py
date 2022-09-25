@@ -17,11 +17,11 @@ from uvicorn.config import (
 )
 from uvicorn.main import run as uvicorn_run
 
-from ellar.constants import ELLAR_CONFIG_MODULE, LOG_LEVELS
+from ellar.constants import ELLAR_CONFIG_MODULE, ELLAR_META, LOG_LEVELS
 from ellar.core import Config
 from ellar.helper.enums import create_enums_from_list
 
-from .utils import import_project_module
+from ..service import EllarCLIService
 
 __all__ = ["runserver"]
 
@@ -36,7 +36,7 @@ INTERFACE_CHOICES = create_enums_from_list("INTERFACES", *INTERFACES)
 
 
 def runserver(
-    project: str = typer.Argument(..., help="ASGI Project Module"),
+    ctx: typer.Context,
     host: str = typer.Option(
         "127.0.0.1", help="Bind socket to this host.", show_default=True
     ),
@@ -240,10 +240,13 @@ def runserver(
     ),
 ):
     """- Starts Uvicorn Server -"""
-    import_project_module("exports")
+    ellar_project_meta = t.cast(t.Optional[EllarCLIService], ctx.meta.get(ELLAR_META))
+    if not ellar_project_meta.has_meta:
+        print("No pyproject.toml file found.")
+        raise typer.Abort()
 
-    _possible_config_module = f"{project}.settings"
-    _possible_asgi_application = f"{project}.server:application"
+    _possible_config_module = ellar_project_meta.project_meta.config
+    application = None if factory else ellar_project_meta.project_meta.application
 
     config_module_global = (
         os.environ.get(ELLAR_CONFIG_MODULE) or _possible_config_module
@@ -252,7 +255,6 @@ def runserver(
 
     log_config = config.LOGGING_CONFIG
     _log_level = config.LOG_LEVEL
-    application = config.ASGI_APPLICATION or _possible_asgi_application
 
     _log_level = log_level if log_level else _log_level or LOG_LEVELS.info
 
