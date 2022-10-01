@@ -45,8 +45,9 @@ class JSONResponseModel(ResponseModel):
         response_obj: t.Any,
         serializer_filter: t.Optional[SerializerFilter] = None,
     ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
-        assert self.model_field_or_schema, "schema must exist for JSONResponseModel"
-        return self.model_field_or_schema.serialize(
+        _response_model_field = self.get_model_field()
+        assert _response_model_field, "schema must exist for JSONResponseModel"
+        return _response_model_field.serialize(
             response_obj, serializer_filter=serializer_filter
         )
 

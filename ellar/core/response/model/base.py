@@ -64,7 +64,7 @@ class ResponseModelField(ModelField):
 
 
 class BaseResponseModel(IResponseModel, ABC):
-    __slots__ = ("_response_type", "media_type", "description", "meta", "model_field")
+    __slots__ = ("_response_type", "media_type", "description", "meta", "_model_field")
 
     response_type: t.Type[Response] = Response
     model_field_or_schema: t.Union[ResponseModelField, t.Any] = None
@@ -83,7 +83,7 @@ class BaseResponseModel(IResponseModel, ABC):
         )
         self.description = description
         self.meta = kwargs
-        self.model_field = self._get_model_field_from_schema(model_field_or_schema)
+        self._model_field = self._get_model_field_from_schema(model_field_or_schema)
 
     def _get_model_field_from_schema(
         self, model_field_or_schema: t.Optional[t.Union[ResponseModelField, t.Any]]
@@ -102,7 +102,7 @@ class BaseResponseModel(IResponseModel, ABC):
             _model_field_or_schema = t.cast(
                 ResponseModelField,
                 create_model_field(
-                    name="response_model",
+                    name="response_model",  # TODO: find a good name for the field
                     type_=new_response_schema,
                     model_field_class=ResponseModelField,
                 ),
@@ -110,7 +110,7 @@ class BaseResponseModel(IResponseModel, ABC):
         return _model_field_or_schema
 
     def get_model_field(self) -> t.Optional[t.Union[ResponseModelField, t.Any]]:
-        return self.model_field
+        return self._model_field
 
     @abstractmethod
     def serialize(

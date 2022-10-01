@@ -12,6 +12,7 @@ clean: ## Removing cached python compiled files
 
 install: ## Install dependencies
 	flit install --deps develop --symlink
+	pre-commit install -f
 
 lint: ## Run code linters
 	black --check ellar tests

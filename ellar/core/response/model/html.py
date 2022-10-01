@@ -13,6 +13,8 @@ class HTMLResponseModelRuntimeError(RuntimeError):
 
 
 class HTMLResponseModel(ResponseModel):
+    response_type: t.Type[Response] = TemplateResponse
+
     def __init__(
         self,
         template_name: str,
