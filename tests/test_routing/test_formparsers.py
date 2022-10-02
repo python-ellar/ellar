@@ -1,6 +1,8 @@
 import os
+import sys
 from typing import List, Union
 
+import pytest
 from starlette.formparsers import UploadFile as StarletteUploadFile
 
 from ellar.common import File, Form
@@ -94,6 +96,7 @@ async def form_upload_multiple(
 tm = TestClientFactory.create_test_module(routers=(router,))
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python >= 3.7")
 def test_multipart_request_files(tmpdir):
     path = os.path.join(tmpdir, "test.txt")
     with open(path, "wb") as file:
@@ -128,6 +131,7 @@ def test_multipart_request_files_with_content_type(tmpdir):
         }
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python >= 3.7")
 def test_multipart_request_multiple_files(tmpdir):
     path1 = os.path.join(tmpdir, "test1.txt")
     with open(path1, "wb") as file:
@@ -156,6 +160,7 @@ def test_multipart_request_multiple_files(tmpdir):
         }
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python >= 3.7")
 def test_multi_items(tmpdir):
     path1 = os.path.join(tmpdir, "test1.txt")
     with open(path1, "wb") as file:
