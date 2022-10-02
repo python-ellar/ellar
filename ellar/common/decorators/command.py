@@ -26,7 +26,7 @@ def command(
     def decorator(f: CommandFunctionType) -> CommandFunctionType:
         command_info = CommandInfo(
             name=name,
-            cls=cls,
+            cls=t.cast(t.Type[click.Command], cls),
             context_settings=context_settings,
             callback=f,
             help=help,
