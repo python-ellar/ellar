@@ -7,6 +7,7 @@ from typer.models import CommandFunctionType, CommandInfo
 from ellar.constants import CALLABLE_COMMAND_INFO
 
 
+@t.no_type_check
 def command(
     name: t.Optional[str] = None,
     cls: t.Optional[t.Type[click.Command]] = None,

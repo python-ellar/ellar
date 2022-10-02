@@ -6,6 +6,7 @@ from typer.models import Default
 
 
 class EllarTyper(Typer):
+    @t.no_type_check
     def __init__(
         self,
         name: str,
