@@ -41,7 +41,6 @@ classifiers = [
 ]
 
 dependencies = [
-    "injector",
     "injector; python_version >= '3.7'",
     "injector <= 0.19.0; python_version < '3.7'",
     "starlette >= 0.20.0; python_version >= '3.7'",
@@ -72,7 +71,8 @@ test = [
     "ujson >= 4.0.1",
     "python-multipart >= 0.0.5",
     "anyio[trio] >= 3.2.1",
-    "requests >= 2.24.0",
+    "requests >= 2.24.0; python_version < '3.7'",
+    "httpx >= 0.22.0; python_version >= '3.7'",
     "autoflake",
     "email_validator >=1.1.1",
 
