@@ -1,4 +1,4 @@
-from ellar.common import get
+from ellar.common import post
 from ellar.core.factory import AppFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
@@ -8,7 +8,7 @@ from .sample import Product
 app = AppFactory.create_app()
 
 
-@get("/product")
+@post("/product")
 async def create_item(product: Product):
     return product
 
@@ -20,8 +20,8 @@ openapi_schema = {
     "info": {"title": "Ellar API Docs", "version": "1.0.0"},
     "paths": {
         "/product": {
-            "get": {
-                "operationId": "create_item_product_get",
+            "post": {
+                "operationId": "create_item_product_post",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -105,5 +105,5 @@ def test_openapi_schema():
 def test_get_with_body(test_client_factory):
     client = test_client_factory(app)
     body = {"name": "Foo", "description": "Some description", "price": 5.5}
-    response = client.get("/product", json=body)
+    response = client.post("/product", json=body)
     assert response.json() == body
