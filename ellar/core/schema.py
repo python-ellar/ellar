@@ -113,3 +113,44 @@ class HTTPValidationError(BaseModel):
 
 class Schema(Serializer):
     pass
+
+
+class EllarPyProjectSerializer(Serializer):
+    project_name: str = Field(alias="project-name")
+    application: str = Field(alias="application")
+    config: str = Field(alias="config")
+    root_module: str = Field(alias="root-module")
+    apps_module: str = Field(alias="apps-module")
+
+
+class EllarScaffoldList(Serializer):
+    name: str
+    is_directory: bool
+    name_in_context: t.Optional[bool] = Field(default=None, alias="name-context")
+    files: t.Optional[t.List["EllarScaffoldList"]]
+
+
+EllarScaffoldList.update_forward_refs()
+
+
+class EllarScaffoldSchema(Serializer):
+    context: t.List[str]
+    files: t.List[EllarScaffoldList]
+
+    @classmethod
+    def schema_example(cls) -> "EllarScaffoldSchema":
+        return cls(
+            context=["project_name"],
+            files=[
+                dict(name="sample.ellar", is_directory=False),
+                dict(
+                    name="sample",
+                    is_directory=False,
+                    files=[
+                        dict(
+                            dict(name="sample.ellar", is_directory=False),
+                        )
+                    ],
+                ),
+            ],
+        )

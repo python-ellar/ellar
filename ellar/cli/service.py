@@ -1,25 +1,30 @@
 import os
 import typing as t
 
-import typer
+from click import ClickException
 from tomlkit import dumps as tomlkit_dumps, parse as tomlkit_parse, table
 from tomlkit.items import Table
 
 from ellar.constants import ELLAR_PY_PROJECT
 from ellar.core import App, Config, ModuleBase, schema
+from ellar.core.schema import EllarPyProjectSerializer
 from ellar.helper.importer import import_from_string, module_import
 from ellar.helper.module_loading import module_dir
 
-from .schema import EllarPyProjectSerializer
-
 PY_PROJECT_TOML = "pyproject.toml"
+ELLAR_DEFAULT_KEY = "default"
+ELLAR_PROJECTS_KEY = "projects"
+
+
+class EllarCLIException(ClickException):
+    pass
 
 
 class EllarPyProject:
     def __init__(self, ellar: Table = None) -> None:
         self._ellar = ellar if ellar is not None else table()
-        self._projects = self._ellar.setdefault("projects", table())
-        self._default_project = self._ellar.get("default", None)
+        self._projects = self._ellar.setdefault(ELLAR_PROJECTS_KEY, table())
+        self._default_project = self._ellar.get(ELLAR_DEFAULT_KEY, None)
 
     @classmethod
     def get_or_create_ellar_py_project(
@@ -30,15 +35,14 @@ class EllarPyProject:
 
     @property
     def has_default_project(self) -> bool:
-        return self._default_project is not None
+        return self._ellar.get(ELLAR_DEFAULT_KEY, None) is not None
 
     @property
     def default_project(self) -> str:
-        return self._default_project
+        return self._ellar.get(ELLAR_DEFAULT_KEY, None)
 
     @default_project.setter
     def default_project(self, value: str) -> None:
-        self._default_project = value
         self._ellar.update(default=value)
 
     def get_projects(self) -> Table:
@@ -65,7 +69,8 @@ class EllarCLIService:
 
     def __init__(
         self,
-        meta: t.Optional[EllarPyProjectSerializer],
+        *,
+        meta: t.Optional[EllarPyProjectSerializer] = None,
         py_project_path: str,
         cwd: str,
         app_name: str = "ellar",
@@ -109,11 +114,14 @@ class EllarCLIService:
                 ellar_py_projects = EllarPyProject(
                     pyproject_table.get(ELLAR_PY_PROJECT)
                 )
-                if (
-                    ellar_py_projects.has_default_project
-                    or ellar_py_projects.has_project(project)
-                ):
-                    project_to_load = project or ellar_py_projects.default_project
+                if ellar_py_projects.has_project(
+                    project
+                ) or ellar_py_projects.has_project(ellar_py_projects.default_project):
+                    project_to_load = (
+                        project
+                        if ellar_py_projects.has_project(project)
+                        else ellar_py_projects.default_project
+                    )
 
                     _ellar_pyproject_serializer = t.cast(
                         EllarPyProjectSerializer,
@@ -133,16 +141,16 @@ class EllarCLIService:
     def create_ellar_project_meta(self, project_name: str) -> None:
         pyproject_table = EllarCLIService.read_py_project(self.py_project_path)
         if pyproject_table is None:
-            print("Could not locate `pyproject.toml`")
-            raise typer.Abort()
+            raise EllarCLIException("Could not locate `pyproject.toml`")
 
-        ellar_py_project = EllarPyProject.get_or_create_ellar_py_project(
+        ellar_py_project = self.ellar_py_projects.get_or_create_ellar_py_project(
             pyproject_table
         )
 
         if ellar_py_project.has_project(project_name.lower()):
-            print(f"project -> `{project_name}` already exist in ellar projects")
-            raise typer.Abort()
+            raise EllarCLIException(
+                f"project -> `{project_name}` already exist in ellar projects"
+            )
 
         if not ellar_py_project.has_default_project:
             ellar_py_project.default_project = project_name.lower()
@@ -161,9 +169,10 @@ class EllarCLIService:
 
     @staticmethod
     def read_py_project(path: str) -> t.Optional[Table]:
-        with open(path, mode="r") as fp:
-            table_content = tomlkit_parse(fp.read())
-            return table_content
+        if os.path.exists(path):
+            with open(path, mode="r") as fp:
+                table_content = tomlkit_parse(fp.read())
+                return table_content
 
     @staticmethod
     def write_py_project(path: str, content: Table) -> None:
@@ -174,11 +183,15 @@ class EllarCLIService:
         application_module = import_from_string(self._meta.application)
         return application_module
 
-    def import_configuration(self) -> "Config":
+    def import_configuration(self) -> t.Type["Config"]:
         config = import_from_string(self._meta.config)
         return config
 
-    def import_root_module(self) -> "ModuleBase":
+    def get_application_config(self) -> "Config":
+        config = Config(self._meta.config)
+        return config
+
+    def import_root_module(self) -> t.Type["ModuleBase"]:
         root_module = import_from_string(self._meta.root_module)
         return root_module
 

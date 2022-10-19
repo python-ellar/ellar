@@ -14,7 +14,7 @@ from ellar.services import Reflector
 from .manage_commands import create_module, create_project, runserver
 from .service import EllarCLIService
 
-__all__ = ["build_typers", "_typer"]
+__all__ = ["build_typers", "_typer", "typer_callback"]
 
 _typer = Typer(name="ellar")
 
@@ -24,7 +24,7 @@ _typer.command(name="create-module")(create_module)
 
 
 @_typer.callback()
-def _typer_callback(
+def typer_callback(
     ctx: typer.Context,
     project: t.Optional[str] = typer.Option(
         None,
@@ -32,7 +32,7 @@ def _typer_callback(
         "--project",
         show_default=True,
         exists=True,
-        help="Run Specific Command Using Project rather than default",
+        help="Run Specific Command on a specific project",
     ),
 ) -> None:
     meta_: EllarCLIService = EllarCLIService.import_project_meta(project)

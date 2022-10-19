@@ -26,16 +26,6 @@
           ]
         },
         {
-          "name": "core",
-          "is_directory": "true",
-          "files": [
-            {
-              "name": "__init__.ellar",
-              "is_directory": "false"
-            }
-          ]
-        },
-        {
           "name": "domain",
           "is_directory": "true",
           "files": [
@@ -44,10 +34,6 @@
               "is_directory": "false"
             }
           ]
-        },
-        {
-          "name": "tests",
-          "is_directory": "true"
         },
         {
           "name": "__init__.ellar",

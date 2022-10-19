@@ -1,11 +1,11 @@
 import os
 import typing as t
-from importlib import import_module
+from abc import abstractmethod
 
-import typer
 from jinja2 import Environment
 
-from .schema import EllarScaffoldList, EllarScaffoldSchema
+from ellar.core.schema import EllarScaffoldList, EllarScaffoldSchema
+
 from .service import EllarCLIService
 
 __all__ = ["FileTemplateScaffold"]
@@ -26,7 +26,7 @@ class FileTemplateScaffold:
         working_project_name: str,
         working_directory: str,
         scaffold_ellar_template_root_path: str,
-        ellar_project_meta: EllarCLIService,
+        ellar_cli_service: EllarCLIService,
     ):
         self._schema = schema
         self._working_project_name = working_project_name
@@ -35,7 +35,7 @@ class FileTemplateScaffold:
         )
         self._working_directory = working_directory
         self._scaffold_ellar_template_root_path = scaffold_ellar_template_root_path
-        self.ellar_project_meta = ellar_project_meta
+        self.ellar_cli_service = ellar_cli_service
         self.validate_project_name()
 
     def get_scaffolding_context(self, working_project_name: str) -> t.Dict:
@@ -53,8 +53,10 @@ class FileTemplateScaffold:
         os.mkdir(root_dir)
         return root_dir
 
-    def create_file(self, path: str, content: t.Any) -> None:
-        with open(path.replace("ellar", "py"), mode="w") as fw:
+    def create_file(self, base_path: str, file_name: str, content: t.Any) -> None:
+        with open(
+            os.path.join(base_path, file_name.replace("ellar", "py")), mode="w"
+        ) as fw:
             refined_content = self._ctx.environment.from_string(content).render()
             fw.writelines(refined_content)
 
@@ -82,47 +84,24 @@ class FileTemplateScaffold:
         if name in self._ctx:
             name = self._ctx.get(file.name, file.name)
 
-        new_scaffold_dir_or_file = os.path.join(working_directory, name)
         scaffold_template_path = os.path.join(scaffold_ellar_template_path, file.name)
 
         if file.is_directory:
-            os.makedirs(new_scaffold_dir_or_file, exist_ok=True)
+            new_scaffold_dir = os.path.join(working_directory, name)
+            os.makedirs(new_scaffold_dir, exist_ok=True)
             for file in file.files or []:
                 self.create_directory(
                     file=file,
-                    working_directory=new_scaffold_dir_or_file,
+                    working_directory=new_scaffold_dir,
                     scaffold_ellar_template_path=scaffold_template_path,
                 )
         else:
             content = self.read_file_content(scaffold_template_path)
-            self.create_file(new_scaffold_dir_or_file, content=content)
+            self.create_file(
+                base_path=working_directory, file_name=name, content=content
+            )
 
+    @abstractmethod
     def validate_project_name(self) -> None:
         # Check it's a valid directory name.
-        if not self._working_project_name.isidentifier():
-            print(
-                "'{name}' is not a valid {app} {type}. Please make sure the "
-                "{type} is a valid identifier.".format(
-                    name=self._working_project_name,
-                    app="project",
-                    type="name",
-                )
-            )
-            raise typer.Abort()
-        # Check it cannot be imported.
-        try:
-            import_module(self._working_project_name)
-        except ImportError:
-            pass
-        else:
-            print(
-                "'{name}' conflicts with the name of an existing Python "
-                "module and cannot be used as {an} {app} {type}. Please try "
-                "another {type}.".format(
-                    name=self._working_project_name,
-                    an="a",
-                    app="project",
-                    type="name",
-                )
-            )
-            raise typer.Abort()
+        pass

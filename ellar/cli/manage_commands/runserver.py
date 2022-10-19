@@ -21,7 +21,7 @@ from ellar.constants import ELLAR_CONFIG_MODULE, ELLAR_META, LOG_LEVELS
 from ellar.core import Config
 from ellar.helper.enums import create_enums_from_list
 
-from ..service import EllarCLIService
+from ..service import EllarCLIException, EllarCLIService
 
 __all__ = ["runserver"]
 
@@ -241,9 +241,14 @@ def runserver(
 ):
     """- Starts Uvicorn Server -"""
     ellar_project_meta = t.cast(t.Optional[EllarCLIService], ctx.meta.get(ELLAR_META))
+
+    if not ellar_project_meta:
+        raise EllarCLIException("No pyproject.toml file found.")
+
     if not ellar_project_meta.has_meta:
-        print("No pyproject.toml file found.")
-        raise typer.Abort()
+        raise EllarCLIException(
+            "No available project found. please create ellar project with `ellar create-project 'project-name'`"
+        )
 
     _possible_config_module = ellar_project_meta.project_meta.config
     application = None if factory else ellar_project_meta.project_meta.application
