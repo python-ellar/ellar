@@ -34,7 +34,6 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3 :: Only",
     "Framework :: AsyncIO",
     "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
@@ -48,7 +47,9 @@ dependencies = [
     "starlette == 0.19.1; python_version < '3.7'",
     "pydantic",
     "jinja2",
-    "typer"
+    "typer",
+    # exclude 0.11.2 and 0.11.3 due to https://github.com/sdispater/tomlkit/issues/225
+    "tomlkit >=0.11.1,<1.0.0,!=0.11.2,!=0.11.3",
 ]
 
 [project.scripts]

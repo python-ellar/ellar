@@ -12,6 +12,9 @@ clean: ## Removing cached python compiled files
 
 install: ## Install dependencies
 	flit install --deps develop --symlink
+
+install-full: ## Install dependencies
+	make install
 	pre-commit install -f
 
 lint: ## Run code linters
