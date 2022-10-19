@@ -1,10 +1,16 @@
 import functools
+import os.path
+import sys
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from uuid import uuid4
 
 import pytest
 from pydantic import create_model
 from starlette.testclient import TestClient
+from tomlkit import table
+
+from ellar.cli.service import PY_PROJECT_TOML, EllarCLIService, EllarPyProject
+from ellar.cli.testing import EllarCliRunner
 
 
 @pytest.fixture
@@ -34,3 +40,51 @@ def fixture_model_with_path(request):
 @pytest.fixture
 def random_type():
     return type(f"Random{uuid4().hex[:6]}", (), {})
+
+
+@pytest.fixture
+def mock_py_project_table():
+    return table()
+
+
+@pytest.fixture
+def ellar_py_project(mock_py_project_table):
+    return EllarPyProject.get_or_create_ellar_py_project(mock_py_project_table)
+
+
+@pytest.fixture
+def add_ellar_project_to_py_project(ellar_py_project, tmp_py_project_path, tmpdir):
+    EllarCLIService.write_py_project(
+        tmp_py_project_path, ellar_py_project.get_root_node()
+    )
+
+    def _wrapper(project_name: str):
+        cli_service = EllarCLIService(
+            py_project_path=tmp_py_project_path,
+            ellar_py_projects=ellar_py_project,
+            cwd=tmpdir,
+        )
+        cli_service.create_ellar_project_meta(project_name)
+        return ellar_py_project
+
+    return _wrapper
+
+
+@pytest.fixture
+def write_empty_py_project(tmp_py_project_path, mock_py_project_table):
+    EllarCLIService.write_py_project(tmp_py_project_path, mock_py_project_table)
+    return mock_py_project_table
+
+
+@pytest.fixture
+def tmp_py_project_path(tmpdir):
+    os.chdir(str(tmpdir))
+    py_project_toml = os.path.join(tmpdir, PY_PROJECT_TOML)
+    return py_project_toml
+
+
+@pytest.fixture
+def cli_runner(tmpdir):
+    os.chdir(str(tmpdir))
+    sys.path.append(str(tmpdir))
+    return EllarCliRunner()
