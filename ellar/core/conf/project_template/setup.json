@@ -50,16 +50,16 @@
         {
           "name": "config.ellar",
           "is_directory": "false"
-        }
-      ]
-    },
-    {
-      "name": "tests",
-      "is_directory": "true",
-      "files": [
+        },
         {
-          "name": "conftest.ellar",
-          "is_directory": "false"
+          "name": "tests",
+          "is_directory": "true",
+          "files": [
+            {
+              "name": "conftest.ellar",
+              "is_directory": "false"
+            }
+          ]
         }
       ]
     }
