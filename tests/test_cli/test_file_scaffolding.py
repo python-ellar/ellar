@@ -41,12 +41,12 @@ class DummyFileScaffolding(FileTemplateScaffold):
         return "whatever content {{whatever|title}}"
 
 
-def test_validation_executed(tmpdir, write_empty_py_project):
+def test_validation_executed(tmp_path, write_empty_py_project):
     ellar_cli_service = EllarCLIService.import_project_meta()
     dummy = DummyFileScaffolding(
-        working_directory=tmpdir,
+        working_directory=str(tmp_path),
         working_project_name="dummy",
-        scaffold_ellar_template_root_path=tmpdir,
+        scaffold_ellar_template_root_path=str(tmp_path),
         schema=EllarScaffoldSchema.schema_example(),
         ellar_cli_service=ellar_cli_service,
     )
@@ -56,13 +56,13 @@ def test_validation_executed(tmpdir, write_empty_py_project):
 
 
 def test_on_scaffold_completed_on_scaffold_started_and_create_directory_executed(
-    tmpdir, write_empty_py_project
+    tmp_path, write_empty_py_project
 ):
     ellar_cli_service = EllarCLIService.import_project_meta()
     dummy = DummyFileScaffolding(
-        working_directory=tmpdir,
+        working_directory=str(tmp_path),
         working_project_name="dummy",
-        scaffold_ellar_template_root_path=tmpdir,
+        scaffold_ellar_template_root_path=str(tmp_path),
         schema=EllarScaffoldSchema.schema_example(),
         ellar_cli_service=ellar_cli_service,
     )

@@ -58,7 +58,7 @@ def build_typers() -> None:
 
     meta_: EllarCLIService = EllarCLIService.import_project_meta(app_name)
 
-    if meta_.has_meta:
+    if meta_ and meta_.has_meta:
         modules = AppFactory.get_all_modules(meta_.import_root_module())
         reflector = Reflector()
 

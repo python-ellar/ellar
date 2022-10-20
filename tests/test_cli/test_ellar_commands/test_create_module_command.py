@@ -31,7 +31,7 @@ def test_create_module_fails_for_invalid_module_name(
 
 
 def test_create_module_fails_for_existing_module_project_name(
-    tmpdir, cli_runner, write_empty_py_project
+    cli_runner, write_empty_py_project
 ):
     result = cli_runner.invoke_ellar_command(
         ["create-project", "testing_new_project_two"]

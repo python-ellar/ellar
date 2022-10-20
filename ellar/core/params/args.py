@@ -331,7 +331,7 @@ class EndpointArgsModel:
                                 for k, v in keys.items()
                             }
 
-                            field_info = field_info_type(**attrs)  # type:ignore
+                            field_info = field_info_type(**attrs)
 
                             model_field = get_parameter_field(
                                 param_default=field_info,

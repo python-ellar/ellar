@@ -10,22 +10,22 @@ HEADERS = "Content-Security-Policy:default-src 'self'; script-src https://exampl
 runserver = importlib.import_module("ellar.cli.manage_commands.runserver")
 
 
-def test_runserver_command_fails_for_py_project_none(cli_runner):
-    result = cli_runner.invoke_ellar_command(["runserver"])
-    assert result.exit_code == 1
-    assert result.output == "Error: No pyproject.toml file found.\n"
+def test_runserver_command_fails_for_py_project_none(process_runner):
+    result = process_runner(["ellar", "runserver"])
+    assert result.returncode == 1
+    assert result.stderr == b"Error: No pyproject.toml file found.\n"
 
 
-def test_runserver_fails_if_no_project_is_found(cli_runner, write_empty_py_project):
-    result = cli_runner.invoke_ellar_command(["runserver"])
-    assert result.exit_code == 1
-    assert result.output == (
-        "Error: No available project found. please create ellar project with `ellar create-project 'project-name'`\n"
+def test_runserver_fails_if_no_project_is_found(process_runner, write_empty_py_project):
+    result = process_runner(["ellar", "runserver"])
+    assert result.returncode == 1
+    assert result.stderr == (
+        b"Error: No available project found. please create ellar project with `ellar create-project 'project-name'`\n"
     )
 
 
-def test_runserver_command_works(cli_runner, write_empty_py_project):
-    cli_runner.invoke_ellar_command(["create-project", "ellar_project_1_0"])
+def test_runserver_command_works(cli_runner, process_runner, write_empty_py_project):
+    process_runner(["ellar", "create-project", "ellar_project_1_0"])
     with mock.patch.object(runserver, "uvicorn_run") as mock_run:
         result = cli_runner.invoke_ellar_command(["runserver"])
     assert result.exit_code == 0
@@ -34,8 +34,10 @@ def test_runserver_command_works(cli_runner, write_empty_py_project):
     assert mock_run.call_args[0] == (ellar_cli_service.project_meta.application,)
 
 
-def test_cli_headers(tmpdir, cli_runner, write_empty_py_project) -> None:
-    cli_runner.invoke_ellar_command(["create-project", "ellar_project_1"])
+def test_cli_headers(
+    tmpdir, cli_runner, process_runner, write_empty_py_project
+) -> None:
+    process_runner(["ellar", "create-project", "ellar_project_1"])
     with mock.patch.object(runserver, "uvicorn_run") as mock_run:
         result = cli_runner.invoke_ellar_command(["runserver", "--header", HEADERS])
 
@@ -50,8 +52,10 @@ def test_cli_headers(tmpdir, cli_runner, write_empty_py_project) -> None:
     ]
 
 
-def test_cli_call_change_reload_run(tmpdir, cli_runner, write_empty_py_project) -> None:
-    cli_runner.invoke_ellar_command(["create-project", "ellar_project_2"])
+def test_cli_call_change_reload_run(
+    tmpdir, cli_runner, process_runner, write_empty_py_project
+) -> None:
+    process_runner(["ellar", "create-project", "ellar_project_2"])
     with mock.patch.object(runserver, "uvicorn_run") as mock_run:
         result = cli_runner.invoke_ellar_command(["runserver", "--reload"])
 
@@ -60,8 +64,10 @@ def test_cli_call_change_reload_run(tmpdir, cli_runner, write_empty_py_project) 
     assert mock_run.call_args[1]["reload"] is True
 
 
-def test_cli_call_multiprocess_run(cli_runner, write_empty_py_project) -> None:
-    cli_runner.invoke_ellar_command(["create-project", "ellar_project_3"])
+def test_cli_call_multiprocess_run(
+    cli_runner, process_runner, write_empty_py_project
+) -> None:
+    process_runner(["ellar", "create-project", "ellar_project_3"])
     with mock.patch.object(runserver, "uvicorn_run") as mock_run:
         result = cli_runner.invoke_ellar_command(["runserver", "--workers=2"])
 
@@ -71,9 +77,9 @@ def test_cli_call_multiprocess_run(cli_runner, write_empty_py_project) -> None:
 
 
 def test_cli_uds(
-    tmp_path, cli_runner, write_empty_py_project
+    tmp_path, cli_runner, process_runner, write_empty_py_project
 ) -> None:  # pragma: py-win32
-    cli_runner.invoke_ellar_command(["create-project", "ellar_project_4"])
+    process_runner(["ellar", "create-project", "ellar_project_4"])
     uds_file = tmp_path / "uvicorn.sock"
     uds_file.touch(exist_ok=True)
 
@@ -89,8 +95,8 @@ def test_cli_uds(
     assert mock_run.call_args[1]["uds"] == str(uds_file)
 
 
-def test_cli_event_size(cli_runner, write_empty_py_project) -> None:
-    cli_runner.invoke_ellar_command(["create-project", "ellar_project_5"])
+def test_cli_event_size(cli_runner, process_runner, write_empty_py_project) -> None:
+    process_runner(["ellar", "create-project", "ellar_project_5"])
     with mock.patch.object(runserver, "uvicorn_run") as mock_run:
         result = cli_runner.invoke_ellar_command(
             ["runserver", "--h11-max-incomplete-event-size", str(32 * 1024)]
@@ -110,8 +116,10 @@ def load_env_h11_protocol():
     os.environ.update(old_environ)
 
 
-def test_env_variables(load_env_h11_protocol: None, cli_runner, write_empty_py_project):
-    cli_runner.invoke_ellar_command(["create-project", "ellar_project_6"])
+def test_env_variables(
+    load_env_h11_protocol: None, process_runner, cli_runner, write_empty_py_project
+):
+    process_runner(["ellar", "create-project", "ellar_project_6"])
     with mock.patch.object(runserver, "uvicorn_run") as mock_run:
         result = cli_runner.invoke_ellar_command(["runserver"], env=os.environ)
     assert result.output == ""
@@ -121,9 +129,9 @@ def test_env_variables(load_env_h11_protocol: None, cli_runner, write_empty_py_p
 
 
 def test_mis_match_env_variables(
-    load_env_h11_protocol: None, cli_runner, write_empty_py_project
+    load_env_h11_protocol: None, process_runner, cli_runner, write_empty_py_project
 ):
-    cli_runner.invoke_ellar_command(["create-project", "ellar_project_7"])
+    process_runner(["ellar", "create-project", "ellar_project_7"])
     with mock.patch.object(runserver, "uvicorn_run") as mock_run:
         result = cli_runner.invoke_ellar_command(
             ["runserver", "--http=httptools"], env=os.environ

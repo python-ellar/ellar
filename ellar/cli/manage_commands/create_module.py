@@ -25,6 +25,10 @@ class ModuleTemplateScaffold(FileTemplateScaffold):
         print(f"{self._working_project_name} module completely scaffolded")
 
     def validate_project_name(self) -> None:
+        working_directory_in_sys_path = False
+        if self._working_directory in sys.path:
+            working_directory_in_sys_path = True
+
         if not self._working_project_name.isidentifier():
             message = (
                 f"'{self._working_project_name}' is not a valid module-name. "
@@ -33,7 +37,8 @@ class ModuleTemplateScaffold(FileTemplateScaffold):
             raise EllarCLIException(message)
 
         try:
-            sys.path.append(self._working_directory)
+            if not working_directory_in_sys_path:
+                sys.path.append(self._working_directory)
             import_module(self._working_project_name)
         except ImportError:
             pass
@@ -45,6 +50,9 @@ class ModuleTemplateScaffold(FileTemplateScaffold):
                 )
             )
             raise EllarCLIException(message)
+        finally:
+            if not working_directory_in_sys_path:
+                sys.path.remove(self._working_directory)
 
     def get_scaffolding_context(self, working_project_name: str) -> t.Dict:
         template_context = dict(module_name=working_project_name)

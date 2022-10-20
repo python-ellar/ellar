@@ -1,5 +1,6 @@
 import functools
 import os.path
+import subprocess
 import sys
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from uuid import uuid4
@@ -53,7 +54,7 @@ def ellar_py_project(mock_py_project_table):
 
 
 @pytest.fixture
-def add_ellar_project_to_py_project(ellar_py_project, tmp_py_project_path, tmpdir):
+def add_ellar_project_to_py_project(ellar_py_project, tmp_py_project_path, tmp_path):
     EllarCLIService.write_py_project(
         tmp_py_project_path, ellar_py_project.get_root_node()
     )
@@ -62,7 +63,7 @@ def add_ellar_project_to_py_project(ellar_py_project, tmp_py_project_path, tmpdi
         cli_service = EllarCLIService(
             py_project_path=tmp_py_project_path,
             ellar_py_projects=ellar_py_project,
-            cwd=tmpdir,
+            cwd=str(tmp_path),
         )
         cli_service.create_ellar_project_meta(project_name)
         return ellar_py_project
@@ -77,14 +78,32 @@ def write_empty_py_project(tmp_py_project_path, mock_py_project_table):
 
 
 @pytest.fixture
-def tmp_py_project_path(tmpdir):
-    os.chdir(str(tmpdir))
-    py_project_toml = os.path.join(tmpdir, PY_PROJECT_TOML)
+def tmp_py_project_path(tmp_path):
+    os.chdir(str(tmp_path))
+    py_project_toml = tmp_path / PY_PROJECT_TOML
+    py_project_toml.touch(exist_ok=True)
     return py_project_toml
 
 
+@pytest.fixture(autouse=True)
+def sys_path(tmp_path):
+    sys.path.append(str(tmp_path))
+    yield
+    sys.path.remove(str(tmp_path))
+
+
 @pytest.fixture
-def cli_runner(tmpdir):
-    os.chdir(str(tmpdir))
-    sys.path.append(str(tmpdir))
+def cli_runner(tmp_path):
+    os.chdir(str(tmp_path))
     return EllarCliRunner()
+
+
+@pytest.fixture
+def process_runner(tmp_path):
+    os.chdir(str(tmp_path))
+
+    def _wrapper_process(*args, **kwargs):
+        result = subprocess.run(*args, **kwargs, capture_output=True)
+        return result
+
+    return _wrapper_process
