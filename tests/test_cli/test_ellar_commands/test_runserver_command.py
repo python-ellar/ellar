@@ -96,7 +96,9 @@ def test_cli_uds(
     assert mock_run.call_args[1]["uds"] == str(uds_file)
 
 
-@pytest.mark.skipif(sys.version_info <= (3, 6), "Requires later version of Uvicorn")
+@pytest.mark.skipif(
+    sys.version_info <= (3, 6), reason="Requires later version of Uvicorn"
+)
 def test_cli_event_size(cli_runner, process_runner, write_empty_py_project) -> None:
     process_runner(["ellar", "create-project", "ellar_project_5"])
     with mock.patch.object(runserver, "uvicorn_run") as mock_run:
