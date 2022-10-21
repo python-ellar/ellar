@@ -79,17 +79,20 @@ def test_create_module_fails_for_existing_directory_name(
     )
 
 
-def test_create_module_works(tmpdir, cli_runner, write_empty_py_project):
-    result = cli_runner.invoke_ellar_command(
-        ["create-project", "test_project_new_module"]
-    )
-    assert result.exit_code == 0
+def test_create_module_works(tmpdir, process_runner, write_empty_py_project):
+    result = process_runner(["ellar", "create-project", "test_project_new_module"])
+    assert result.returncode == 0
 
-    result = cli_runner.invoke_ellar_command(
-        ["--project=test_project_new_module", "create-module", "test_new_module"]
+    result = process_runner(
+        [
+            "ellar",
+            "--project=test_project_new_module",
+            "create-module",
+            "test_new_module",
+        ]
     )
-    assert result.exit_code == 0
-    assert result.output == "test_new_module module completely scaffolded\n"
+    assert result.returncode == 0
+    assert result.stdout == b"test_new_module module completely scaffolded\n"
 
     ellar_cli_service = EllarCLIService.import_project_meta("test_project_new_module")
     module_path = os.path.join(
