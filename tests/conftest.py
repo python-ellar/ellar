@@ -103,7 +103,9 @@ def process_runner(tmp_path):
     os.chdir(str(tmp_path))
 
     def _wrapper_process(*args, **kwargs):
-        result = subprocess.run(*args, **kwargs, capture_output=True)
+        kwargs.setdefault("stdout", subprocess.PIPE)
+        kwargs.setdefault("stderr", subprocess.PIPE)
+        result = subprocess.run(*args, **kwargs)
         return result
 
     return _wrapper_process
