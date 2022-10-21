@@ -46,10 +46,8 @@ def test_default_configurations():
 
     assert config.MIDDLEWARE == []
 
-    assert RequestValidationError in config.APP_EXCEPTION_HANDLERS
-    assert APIException in config.APP_EXCEPTION_HANDLERS
-
-    assert config.USER_CUSTOM_EXCEPTION_HANDLERS == {}
+    assert RequestValidationError in config.EXCEPTION_HANDLERS
+    assert APIException in config.EXCEPTION_HANDLERS
 
     assert callable(config.DEFAULT_NOT_FOUND_HANDLER)
     assert config.DEFAULT_LIFESPAN_HANDLER is None

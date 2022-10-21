@@ -1,11 +1,13 @@
 import typing as t
 
 from starlette import status
+from starlette.exceptions import HTTPException
 
 from .base import APIException, ErrorDetail
 from .validation import RequestValidationError, WebSocketRequestValidationError
 
 __all__ = [
+    "HTTPException",
     "ImproperConfiguration",
     "APIException",
     "WebSocketRequestValidationError",

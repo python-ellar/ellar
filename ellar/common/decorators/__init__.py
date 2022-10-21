@@ -1,4 +1,5 @@
 from .base import set_meta  # noqa
+from .command import command  # noqa
 from .controller import Controller  # noqa
 from .exception import exception_handler  # noqa
 from .guards import guards  # noqa

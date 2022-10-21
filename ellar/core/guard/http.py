@@ -24,7 +24,7 @@ class HttpBearerAuth(BaseHttpAuth, ABC):
     def _get_credentials(
         self, connection: HTTPConnection
     ) -> HTTPAuthorizationCredentials:
-        authorization: str = connection.headers.get(self.header)
+        authorization: t.Optional[str] = connection.headers.get(self.header)
         scheme, _, credentials = self.authorization_partitioning(authorization)
         if not (authorization and scheme and credentials):
             self.raise_exception()
@@ -54,7 +54,7 @@ class HttpBasicAuth(BaseHttpAuth, ABC):
         )
 
     def _get_credentials(self, connection: HTTPConnection) -> HTTPBasicCredentials:
-        authorization: str = connection.headers.get(self.header)
+        authorization: t.Optional[str] = connection.headers.get(self.header)
         parts = authorization.split(" ") if authorization else []
         scheme, credentials = str(), str()
 

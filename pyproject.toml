@@ -41,14 +41,15 @@ classifiers = [
 ]
 
 dependencies = [
-    "injector",
     "injector; python_version >= '3.7'",
     "injector <= 0.19.0; python_version < '3.7'",
-    "starlette >= 0.20.0; python_version >= '3.7'",
+    "starlette == 0.21.0; python_version >= '3.7'",
     "starlette == 0.19.1; python_version < '3.7'",
-    "pydantic",
+    "pydantic >=1.6.2,!=1.7,!=1.7.1,!=1.7.2,!=1.7.3,!=1.8,!=1.8.1,<2.0.0",
     "jinja2",
-    "typer"
+    "typer",
+    # exclude 0.11.2 and 0.11.3 due to https://github.com/sdispater/tomlkit/issues/225
+    "tomlkit >=0.11.1,<1.0.0,!=0.11.2,!=0.11.3",
 ]
 
 [project.scripts]
@@ -60,19 +61,20 @@ Source = "https://github.com/eadwinCode/ellar"
 
 [project.optional-dependencies]
 test = [
-    "black",
-    "isort",
-    "flake8",
-    "pytest",
-    "pytest-cov",
+    "pytest >=6.2.4,<8.0.0",
+    "pytest-cov >=2.12.0,<4.0.0",
+    "mypy ==0.971",
+    "flake8 >=3.8.3,<4.0.0",
+    "black ==22.8.0",
+    "isort >=5.0.6,<6.0.0",
     "pytest-asyncio",
-    "mypy==0.931",
     "databases[sqlite] >= 0.3.2",
     "orjson >= 3.2.1",
     "ujson >= 4.0.1",
     "python-multipart >= 0.0.5",
     "anyio[trio] >= 3.2.1",
-    "requests >= 2.24.0",
+    "requests >= 2.24.0; python_version < '3.7'",
+    "httpx >= 0.22.0; python_version >= '3.7'",
     "autoflake",
     "email_validator >=1.1.1",
 

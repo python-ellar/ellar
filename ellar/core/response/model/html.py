@@ -4,7 +4,7 @@ from ellar.core.context import ExecutionContext, IExecutionContext
 from ellar.core.templating import Environment, TemplateResponse
 from ellar.core.templating.renderer import get_template_name, process_view_model
 
-from ..responses import Response
+from ..response_types import Response
 from .base import ResponseModel
 
 
@@ -13,20 +13,20 @@ class HTMLResponseModelRuntimeError(RuntimeError):
 
 
 class HTMLResponseModel(ResponseModel):
+    response_type: t.Type[Response] = TemplateResponse
+
     def __init__(
         self,
         template_name: str,
-        response_type: t.Type[TemplateResponse] = TemplateResponse,
         use_mvc: bool = False,
     ) -> None:
-        super().__init__(response_type=response_type)
+        super().__init__()
         self.template_name = template_name
         self.use_mvc = use_mvc
 
     def create_response(
         self, context: IExecutionContext, response_obj: t.Any, status_code: int
     ) -> Response:
-        self.response_type = t.cast(t.Type[TemplateResponse], self.response_type)
 
         jinja_environment = context.get_service_provider().get(Environment)
         template_name = self._get_template_name(ctx=context)

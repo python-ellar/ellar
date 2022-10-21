@@ -1,0 +1,67 @@
+{
+  "context": ["project_name", "secret_key"],
+  "files": [
+    {
+      "name": "project_name",
+      "is_directory": "true",
+      "files": [
+        {
+          "name": "apps",
+          "is_directory": "true",
+          "files": [
+            {
+              "name": "__init__.ellar",
+              "is_directory": "false"
+            }
+          ]
+        },
+        {
+          "name": "core",
+          "is_directory": "true",
+          "files": [
+            {
+              "name": "__init__.ellar",
+              "is_directory": "false"
+            }
+          ]
+        },
+        {
+          "name": "domain",
+          "is_directory": "true",
+          "files": [
+            {
+              "name": "__init__.ellar",
+              "is_directory": "false"
+            }
+          ]
+        },
+        {
+          "name": "__init__.ellar",
+          "is_directory": "false"
+        },
+        {
+          "name": "server.ellar",
+          "is_directory": "false"
+        },
+        {
+          "name": "root_module.ellar",
+          "is_directory": "false"
+        },
+        {
+          "name": "config.ellar",
+          "is_directory": "false"
+        },
+        {
+          "name": "tests",
+          "is_directory": "true",
+          "files": [
+            {
+              "name": "conftest.ellar",
+              "is_directory": "false"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,8 @@
 import os
+import sys
 from typing import List, Union
 
+import pytest
 from starlette.formparsers import UploadFile as StarletteUploadFile
 
 from ellar.common import File, Form
@@ -94,6 +96,7 @@ async def form_upload_multiple(
 tm = TestClientFactory.create_test_module(routers=(router,))
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python >= 3.7")
 def test_multipart_request_files(tmpdir):
     path = os.path.join(tmpdir, "test.txt")
     with open(path, "wb") as file:
@@ -106,7 +109,7 @@ def test_multipart_request_files(tmpdir):
             "test": {
                 "filename": "test.txt",
                 "content": "<file content>",
-                "content_type": "",
+                "content_type": "text/plain",
             }
         }
 
@@ -128,6 +131,7 @@ def test_multipart_request_files_with_content_type(tmpdir):
         }
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python >= 3.7")
 def test_multipart_request_multiple_files(tmpdir):
     path1 = os.path.join(tmpdir, "test1.txt")
     with open(path1, "wb") as file:
@@ -146,7 +150,7 @@ def test_multipart_request_multiple_files(tmpdir):
             "test1": {
                 "filename": "test1.txt",
                 "content": "<file1 content>",
-                "content_type": "",
+                "content_type": "text/plain",
             },
             "test2": {
                 "filename": "test2.txt",
@@ -156,6 +160,7 @@ def test_multipart_request_multiple_files(tmpdir):
         }
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python >= 3.7")
 def test_multi_items(tmpdir):
     path1 = os.path.join(tmpdir, "test1.txt")
     with open(path1, "wb") as file:
@@ -169,7 +174,7 @@ def test_multi_items(tmpdir):
     with open(path1, "rb") as f1, open(path2, "rb") as f2:
         response = client.post(
             "/multiple",
-            data=[("test1", "abc")],
+            data={"test1": "abc"},
             files=[("test1", f1), ("test1", ("test2.txt", f2, "text/plain"))],
         )
         assert response.json() == {
@@ -178,7 +183,7 @@ def test_multi_items(tmpdir):
                 {
                     "filename": "test1.txt",
                     "content": "<file1 content>",
-                    "content_type": "",
+                    "content_type": "text/plain",
                 },
                 {
                     "filename": "test2.txt",

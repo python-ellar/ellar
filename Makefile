@@ -13,6 +13,10 @@ clean: ## Removing cached python compiled files
 install: ## Install dependencies
 	flit install --deps develop --symlink
 
+install-full: ## Install dependencies
+	make install
+	pre-commit install -f
+
 lint: ## Run code linters
 	black --check ellar tests
 	isort --check ellar tests
@@ -33,3 +37,9 @@ test-cov: ## Run tests with coverage
 doc-deploy: ## Run Deploy Documentation
 	make clean
 	mkdocs gh-deploy --force
+
+
+pre-commit-lint: ## Runs Requires commands during pre-commit
+	make clean
+	make fmt
+	make lint

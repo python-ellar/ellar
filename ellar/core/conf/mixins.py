@@ -2,9 +2,14 @@ import typing as t
 
 from starlette.middleware import Middleware
 from starlette.responses import JSONResponse
+from starlette.types import ASGIApp
 
+from ellar.constants import LOG_LEVELS as log_levels
 from ellar.core.events import EventHandler
 from ellar.core.versioning import BaseAPIVersioning
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core import App
 
 __all__ = ["ConfigDefaultTypesMixin", "TVersioning", "TMiddleware", "TEventHandler"]
 
@@ -52,30 +57,71 @@ class TEventHandler(EventHandler):
 
 
 class ConfigDefaultTypesMixin:
+    SECRET_KEY: str
     DEBUG: bool
+    # injector auto_bind = True allows you to resolve types that are not registered on the container
+    # For more info, read: https://injector.readthedocs.io/en/latest/index.html
     INJECTOR_AUTO_BIND: bool
+
+    # Default JSON response class
     DEFAULT_JSON_CLASS: t.Type[JSONResponse]
 
+    # jinja Environment options
+    # https://jinja.palletsprojects.com/en/3.0.x/api/#high-level-api
     JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any]
+
+    # Application route versioning scheme
     VERSIONING_SCHEME: TVersioning
 
+    # Enable or Disable Application Router route searching by appending backslash
     REDIRECT_SLASHES: bool
+
+    # Define references to static folders in python packages.
+    # eg STATIC_FOLDER_PACKAGES = [('boostrap4', 'statics')]
     STATIC_FOLDER_PACKAGES: t.Optional[t.List[t.Union[str, t.Tuple[str, str]]]]
+
+    # Define references to static folders defined within the project
     STATIC_DIRECTORIES: t.Optional[t.List[t.Union[str, t.Any]]]
 
+    # Application user defined middlewares
     MIDDLEWARE: t.List[TMiddleware]
-    APP_EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable]
 
-    USER_CUSTOM_EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable]
+    # A dictionary mapping either integer status codes,
+    # or exception class types onto callables which handle the exceptions.
+    # Exception handler callables should be of the form
+    # `handler(request, exc) -> response` and may be be either standard functions, or async functions.
     EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable]
+
+    # static route
     STATIC_MOUNT_PATH: str
 
+    # defines other custom json encoders
     SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]]
 
+    # will be set automatically when @middleware is found in a Module class
     MIDDLEWARE_DECORATOR: t.List[TMiddleware]
 
+    # will be set automatically when @on_startup is found in a Module class
     ON_REQUEST_STARTUP: t.List[TEventHandler]
+
+    # will be set automatically when @on_shutdown is found in a Module class
     ON_REQUEST_SHUTDOWN: t.List[TEventHandler]
 
+    # will be set automatically when @template_filter is found in a Module class
     TEMPLATE_FILTERS: t.Dict[str, t.Callable[..., t.Any]]
+
+    # will be set automatically when @template_global is found in a Module class
     TEMPLATE_GLOBAL_FILTERS: t.Dict[str, t.Callable[..., t.Any]]
+
+    # Default not found handler
+    DEFAULT_NOT_FOUND_HANDLER: ASGIApp
+
+    # The lifespan context function is a newer style that replaces
+    # on_startup / on_shutdown handlers. Use one or the other, not both.
+    DEFAULT_LIFESPAN_HANDLER: t.Optional[t.Callable[["App"], t.AsyncContextManager]]
+
+    # logging configuration
+    LOGGING_CONFIG: t.Optional[t.Dict[str, t.Any]]
+
+    # logging Level
+    LOG_LEVEL: t.Optional[log_levels]

@@ -21,7 +21,7 @@ from ellar.serializer import (
     serialize_object,
 )
 
-from ..responses import Response
+from ..response_types import Response
 from .interface import IResponseModel
 
 
@@ -64,15 +64,15 @@ class ResponseModelField(ModelField):
 
 
 class BaseResponseModel(IResponseModel, ABC):
-    __slots__ = ("_response_type", "media_type", "description", "meta", "schema")
+    __slots__ = ("_response_type", "media_type", "description", "meta", "_model_field")
 
     response_type: t.Type[Response] = Response
-    model_schema: t.Union[ResponseModelField, t.Any] = None
+    model_field_or_schema: t.Union[ResponseModelField, t.Any] = None
 
     def __init__(
         self,
         description: str = "Successful Response",
-        schema: t.Union[ResponseModelField, t.Any] = None,
+        model_field_or_schema: t.Union[ResponseModelField, t.Any] = None,
         **kwargs: t.Any,
     ) -> None:
         self._response_type: t.Type[Response] = t.cast(
@@ -83,26 +83,34 @@ class BaseResponseModel(IResponseModel, ABC):
         )
         self.description = description
         self.meta = kwargs
+        self._model_field = self._get_model_field_from_schema(model_field_or_schema)
 
-        _schema: t.Optional[ResponseModelField] = schema or self.model_schema
-        if _schema and not isinstance(_schema, ResponseModelField):
+    def _get_model_field_from_schema(
+        self, model_field_or_schema: t.Optional[t.Union[ResponseModelField, t.Any]]
+    ) -> t.Optional[ResponseModelField]:
+        _model_field_or_schema: t.Optional[ResponseModelField] = (
+            model_field_or_schema or self.model_field_or_schema
+        )
+        if _model_field_or_schema and not isinstance(
+            _model_field_or_schema, ResponseModelField
+        ):
+            # convert to serializable type of base `Class BaseSerializer`
             new_response_schema = ResponseTypeDefinitionConverter(
-                _schema
+                _model_field_or_schema
             ).re_group_outer_type()
 
-            _schema = t.cast(
+            _model_field_or_schema = t.cast(
                 ResponseModelField,
                 create_model_field(
-                    name="response_model",
+                    name="response_model",  # TODO: find a good name for the field
                     type_=new_response_schema,
                     model_field_class=ResponseModelField,
                 ),
             )
-        self.schema: t.Optional[ResponseModelField] = _schema
+        return _model_field_or_schema
 
-    @abstractmethod
     def get_model_field(self) -> t.Optional[t.Union[ResponseModelField, t.Any]]:
-        pass
+        return self._model_field
 
     @abstractmethod
     def serialize(
@@ -151,9 +159,6 @@ class BaseResponseModel(IResponseModel, ABC):
 
 
 class ResponseModel(BaseResponseModel):
-    def get_model_field(self) -> t.Optional[t.Union[ResponseModelField, t.Any]]:
-        return self.schema
-
     def serialize(
         self,
         response_obj: t.Any,

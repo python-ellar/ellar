@@ -26,16 +26,17 @@ class BModule:
 
 
 def test_factory__read_all_module():
-    modules_dict = AppFactory._read_all_module(module=BModule)
+    modules_dict = AppFactory.read_all_module(module=BModule)
     assert len(modules_dict) == 2
     assert list(modules_dict.values())[0] is AModule
     assert list(modules_dict.values())[1] is ApplicationModule
 
-    modules_dict = AppFactory._read_all_module(module=AModule)
-    assert len(modules_dict) == 1
-    assert list(modules_dict.values())[0] is ApplicationModule
+    modules_list = AppFactory.get_all_modules(module=AModule)
+    assert len(modules_list) == 2
+    assert modules_list[0] is AModule
+    assert modules_list[1] is ApplicationModule
 
-    modules_dict = AppFactory._read_all_module(module=ApplicationModule)
+    modules_dict = AppFactory.read_all_module(module=ApplicationModule)
     assert len(modules_dict) == 0
 
 

@@ -8,7 +8,6 @@ from ellar.helper.importer import import_from_string
 from ellar.types import VT
 
 from .app_settings_models import ConfigValidationSchema
-from .default_settings import ConfigDefaults
 from .mixins import ConfigDefaultTypesMixin
 
 
@@ -31,16 +30,13 @@ class Config(DataMutableMapper, AttributeDictAccessMixin, ConfigDefaultTypesMixi
         self.config_module = config_module or environ.get(ELLAR_CONFIG_MODULE, None)
 
         self._data.clear()
-        for setting in dir(ConfigDefaults):
-            if setting.isupper():
-                self._data[setting] = ConfigDefaults.__dict__[setting]
 
         if self.config_module:
             try:
                 mod = import_from_string(self.config_module)
                 for setting in dir(mod):
                     if setting.isupper():
-                        self._data[setting] = mod.__dict__[setting]
+                        self._data[setting] = getattr(mod, setting)
             except Exception as ex:
                 raise ConfigRuntimeError(str(ex))
 

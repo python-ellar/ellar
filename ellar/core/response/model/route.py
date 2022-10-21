@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from ellar.core.context import IExecutionContext
 
-from ..responses import Response
+from ..response_types import Response
 from .base import ResponseModel, ResponseResolver, RouteResponseExecution
 from .factory import create_response_model
 from .interface import IResponseModel
@@ -50,7 +50,7 @@ class RouteResponseModel:
 
             self.models[status_code] = create_response_model(
                 JSONResponseModel,
-                schema=t.cast(t.Type[BaseModel], response_schema),
+                model_field_or_schema=t.cast(t.Type[BaseModel], response_schema),
                 description=description,
             )
 

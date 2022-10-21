@@ -1,7 +1,9 @@
+import logging
 import typing as t
 
 from starlette.routing import BaseRoute, Mount
 
+from ellar.constants import LOG_LEVELS
 from ellar.core.conf import Config
 from ellar.core.context import ExecutionContext, IExecutionContext
 from ellar.core.datastructures import State, URLPath
@@ -77,12 +79,20 @@ class App(AppTemplating):
             on_startup=[self.on_startup.async_run],
             on_shutdown=[self.on_shutdown.async_run],
             default=self.config.DEFAULT_NOT_FOUND_HANDLER,  # type: ignore
-            lifespan=self.config.DEFAULT_LIFESPAN_HANDLER,  # type: ignore
+            lifespan=self.config.DEFAULT_LIFESPAN_HANDLER,
         )
         self.middleware_stack = self.build_middleware_stack()
         self._finalize_app_initialization()
+        self._config_logging()
 
-        logger.info(f"APP SETTINGS: {self._config.config_module}")
+    def _config_logging(self) -> None:
+        log_level = (
+            self.config.LOG_LEVEL.value
+            if self.config.LOG_LEVEL
+            else LOG_LEVELS.info.value
+        )
+        logging.getLogger("ellar").setLevel(log_level)
+        logger.info(f"APP SETTINGS MODULE: {self.config.config_module}")
 
     def _statics_wrapper(self) -> t.Callable:
         async def _statics_func_wrapper(

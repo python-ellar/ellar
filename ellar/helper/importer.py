@@ -12,7 +12,6 @@ def import_from_string(import_str: t.Any) -> t.Any:
     last name in the path. Raise ImportError if the import failed.
     eg: ExamplePackage.ExampleModule:Attributes
     """
-    from importlib import import_module
 
     if not isinstance(import_str, str):
         return import_str
@@ -24,13 +23,7 @@ def import_from_string(import_str: t.Any) -> t.Any:
         )
         raise ImportFromStringError(message.format(import_str=import_str))
 
-    try:
-        module = import_module(module_str)
-    except ImportError as exc:
-        if exc.name != module_str:
-            raise exc from None
-        message = 'Could not import module "{module_str}".'
-        raise ImportFromStringError(message.format(module_str=module_str))
+    module = module_import(module_str)
 
     instance = module
     try:
@@ -43,3 +36,16 @@ def import_from_string(import_str: t.Any) -> t.Any:
         )
 
     return instance
+
+
+def module_import(module_str: str) -> t.Any:
+    from importlib import import_module
+
+    try:
+        module = import_module(module_str)
+        return module
+    except ImportError as exc:
+        if exc.name != module_str:
+            raise exc from None
+        message = 'Could not import module "{module_str}".'
+        raise ImportFromStringError(message.format(module_str=module_str))

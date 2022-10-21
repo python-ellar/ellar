@@ -14,6 +14,9 @@ from ellar.di import ProviderConfig, SingletonScope, injectable
 from ellar.exceptions import ImproperConfiguration
 from ellar.reflect import reflect
 
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.commands import EllarTyper
+
 
 def _wrapper(
     target: t.Type,
@@ -58,6 +61,7 @@ def Module(
     base_directory: t.Optional[t.Union[Path, str]] = None,
     static_folder: str = "static",
     modules: t.Sequence[t.Type] = tuple(),
+    commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = tuple(),
 ) -> t.Callable:
     kwargs = AttributeDict(
         name=name,
@@ -68,6 +72,7 @@ def Module(
         providers=providers,
         template_folder=template_folder,
         modules=modules,
+        commands=commands,
     )
 
     return partial(

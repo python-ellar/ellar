@@ -32,6 +32,10 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import App, ControllerBase
 
 
+class InvalidModuleTypeException(Exception):
+    pass
+
+
 def create_module_ref_factor(
     module_type: t.Union[t.Type, t.Type[ModuleBase]],
     config: Config,
@@ -46,14 +50,18 @@ def create_module_ref_factor(
             config=config,
             **init_kwargs,
         )
-    else:
+        return module_ref
+    elif type(module_type) == ModuleBaseMeta:
         module_ref = ModulePlainRef(
             module_type,
             container=container,
             config=config,
             **init_kwargs,
         )
-    return module_ref
+        return module_ref
+    raise InvalidModuleTypeException(
+        f"{module_type.__name__} must be a subclass of `ellar.core.ModuleBase`"
+    )
 
 
 class ModuleRefBase(ABC):

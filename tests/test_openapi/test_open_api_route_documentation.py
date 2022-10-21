@@ -23,7 +23,7 @@ class CustomCookieAPIKey(APIKeyCookie):
 
 
 class CustomResponseModel(ResponseModel):
-    model_schema = CreateCarSchema
+    model_field_or_schema = CreateCarSchema
 
 
 router = ModuleRouter()

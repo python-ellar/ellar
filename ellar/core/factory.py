@@ -13,20 +13,28 @@ from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.commands import EllarTyper
     from ellar.core import GuardCanActivate
     from ellar.core.routing import ModuleMount, ModuleRouter
 
 
 class AppFactory:
     @classmethod
-    def _read_all_module(
+    def get_all_modules(
+        cls, module: t.Type[t.Union[ModuleBase, t.Any]]
+    ) -> t.List[t.Type[ModuleBase]]:
+        module_dependency = [module] + list(cls.read_all_module(module).values())
+        return module_dependency
+
+    @classmethod
+    def read_all_module(
         cls, module: t.Type[t.Union[ModuleBase, t.Any]]
     ) -> t.Dict[t.Type, t.Type[ModuleBase]]:
         modules = reflect.get_metadata(MODULE_METADATA.MODULES, module) or []
         module_dependency = OrderedDict()
         for module in modules:
             module_dependency[module] = module
-            module_dependency.update(cls._read_all_module(module))
+            module_dependency.update(cls.read_all_module(module))
         return module_dependency
 
     @classmethod
@@ -40,9 +48,7 @@ class AppFactory:
             MODULE_WATERMARK, app_module
         ), "Only Module is allowed"
 
-        module_dependency = [app_module] + list(
-            cls._read_all_module(app_module).values()
-        )
+        module_dependency = cls.get_all_modules(app_module)
         for module in reversed(module_dependency):
             if injector.get_module(module):
                 continue
@@ -67,6 +73,7 @@ class AppFactory:
 
         config = Config(app_configured=True, config_module=config_module)
         injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND)
+        injector.container.register_instance(config, concrete_type=Config)
         cls._build_modules(app_module=module, injector=injector, config=config)
 
         shutdown_event = config.ON_REQUEST_STARTUP
@@ -77,10 +84,7 @@ class AppFactory:
             injector=injector,
             on_shutdown_event_handlers=shutdown_event if shutdown_event else None,
             on_startup_event_handlers=startup_event if startup_event else None,
-            lifespan=t.cast(
-                t.Optional[t.Callable[[App], t.AsyncContextManager[t.Any]]],
-                config.DEFAULT_LIFESPAN_HANDLER,
-            ),
+            lifespan=config.DEFAULT_LIFESPAN_HANDLER,
             global_guards=global_guards,
         )
 
@@ -94,13 +98,14 @@ class AppFactory:
             t.Union["ModuleRouter", "ModuleMount", Mount, Host]
         ] = tuple(),
         providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = tuple(),
-        modules: t.Sequence[t.Type[t.Union[ModuleBase, t.Any]]] = (),
+        modules: t.Sequence[t.Type[t.Union[ModuleBase, t.Any]]] = tuple(),
         template_folder: t.Optional[str] = None,
         base_directory: t.Optional[str] = None,
         static_folder: str = "static",
         global_guards: t.List[
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
         ] = None,
+        commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = tuple(),
         config_module: str = None,
     ) -> App:
         from ellar.common import Module
@@ -113,6 +118,7 @@ class AppFactory:
             base_directory=base_directory,
             static_folder=static_folder,
             modules=modules,
+            commands=commands,
         )
         app_factory_module = type(f"Module{uuid4().hex[:6]}", (ModuleBase,), {})
         module(app_factory_module)

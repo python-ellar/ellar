@@ -7,7 +7,7 @@ from pydantic import BaseModel, create_model
 from pydantic.error_wrappers import ErrorWrapper
 from pydantic.fields import FieldInfo, ModelField, Required
 from pydantic.schema import get_annotation_from_field_info
-from pydantic.typing import ForwardRef, evaluate_forwardref  # type: ignore
+from pydantic.typing import ForwardRef, evaluate_forwardref  # type:ignore
 from pydantic.utils import lenient_issubclass
 from starlette.convertors import Convertor
 
@@ -331,7 +331,7 @@ class EndpointArgsModel:
                                 for k, v in keys.items()
                             }
 
-                            field_info = field_info_type(**attrs)  # type:ignore
+                            field_info = field_info_type(**attrs)
 
                             model_field = get_parameter_field(
                                 param_default=field_info,

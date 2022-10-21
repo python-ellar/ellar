@@ -1,3 +1,5 @@
+import logging
+from enum import Enum
 from typing import Any, Dict, List, no_type_check
 
 from pydantic.fields import (
@@ -72,7 +74,10 @@ OPERATION_ENDPOINT_KEY = "OPERATION_ENDPOINT"
 CONTROLLER_OPERATION_HANDLER_KEY = "CONTROLLER_OPERATION_HANDLER"
 CONTROLLER_CLASS_KEY = "CONTROLLER_CLASS_KEY"
 REFLECT_TYPE = "__REFLECT_TYPE__"
+CALLABLE_COMMAND_INFO = "__CALLABLE_COMMAND_INFO__"
 GROUP_METADATA = "GROUP_METADATA"
+ELLAR_META = "ELLAR_META"
+ELLAR_PY_PROJECT = "ellar"
 
 
 class MODULE_REF_TYPES(metaclass=_AnnotationToValue):
@@ -89,6 +94,7 @@ class MODULE_METADATA(metaclass=_AnnotationToValue):
     PROVIDERS: str
     TEMPLATE_FOLDER: str
     MODULES: str
+    COMMANDS: str
 
 
 class CONTROLLER_METADATA(metaclass=_AnnotationToValue):
@@ -119,6 +125,16 @@ primitive_types = (int, float, bool, str)
 METHODS_WITH_BODY = {"GET", "HEAD", "POST", "PUT", "DELETE", "PATCH"}
 STATUS_CODES_WITH_NO_BODY = {100, 101, 102, 103, 204, 304}
 REF_PREFIX = "#/components/schemas/"
+ELLAR_TRACE_LOG_LEVEL = 5
+
+
+class LOG_LEVELS(Enum):
+    critical = logging.CRITICAL
+    error = logging.ERROR
+    warning = logging.WARNING
+    info = logging.INFO
+    debug = logging.DEBUG
+    trace = ELLAR_TRACE_LOG_LEVEL
 
 
 class NOT_SET_TYPE:
@@ -133,3 +149,45 @@ class NOT_SET_TYPE:
 
 
 NOT_SET: Any = NOT_SET_TYPE()
+
+
+DEFAULT_LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "default": {
+            "()": "uvicorn.logging.DefaultFormatter",
+            "fmt": "%(levelprefix)s %(message)s",
+            "use_colors": None,
+        },
+        "access": {
+            "()": "uvicorn.logging.AccessFormatter",
+            "fmt": '%(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s',
+        },
+    },
+    "handlers": {
+        "default": {
+            "formatter": "default",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stderr",
+        },
+        "access": {
+            "formatter": "access",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout",
+        },
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "uvicorn": {"handlers": ["default"], "level": "INFO"},
+        "uvicorn.error": {"level": "INFO"},
+        "uvicorn.access": {"handlers": ["access"], "level": "INFO", "propagate": False},
+        "ellar": {
+            "handlers": ["default"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}

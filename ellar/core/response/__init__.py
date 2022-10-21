@@ -5,7 +5,7 @@ from ellar.serializer import (
     serialize_object,
 )
 
-from .responses import (
+from .response_types import (
     FileResponse,
     HTMLResponse,
     JSONResponse,

@@ -2,6 +2,7 @@ from ellar.core.params.params import Param, ParamTypes
 from ellar.core.routing import ModuleRouter
 
 from .decorators.base import set_meta
+from .decorators.command import command
 from .decorators.controller import Controller
 from .decorators.exception import exception_handler
 from .decorators.guards import guards
@@ -40,6 +41,7 @@ from .routing.params import (
 )
 
 __all__ = [
+    "command",
     "ModuleRouter",
     "render",
     "Module",
