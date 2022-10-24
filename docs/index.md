@@ -111,8 +111,7 @@ You will see the automatic interactive API documentation (provided by <a href="h
 
 Project is still in development
 
-- Project CLI scaffolding
-- Documentation
+- Documentation - in progress
 - Database Plugin with [Encode/ORM](https://github.com/encode/orm)
 - Caching 
 - API Throttling
