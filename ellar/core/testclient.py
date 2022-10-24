@@ -1,4 +1,5 @@
 import typing as t
+from pathlib import Path
 
 from starlette.testclient import TestClient as TestClient
 
@@ -39,7 +40,7 @@ class TestClientFactory:
         routers: t.Sequence[ModuleRouter] = tuple(),
         providers: t.Sequence[ProviderConfig] = tuple(),
         template_folder: t.Optional[str] = None,
-        base_directory: t.Optional[str] = None,
+        base_directory: t.Optional[t.Union[str, Path]] = None,
         static_folder: str = "static",
         config_module: str = None,
     ) -> _TestingModule:

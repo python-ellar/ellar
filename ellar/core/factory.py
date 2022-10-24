@@ -1,5 +1,6 @@
 import typing as t
 from collections import OrderedDict
+from pathlib import Path
 from uuid import uuid4
 
 from starlette.routing import Host, Mount
@@ -100,7 +101,7 @@ class AppFactory:
         providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = tuple(),
         modules: t.Sequence[t.Type[t.Union[ModuleBase, t.Any]]] = tuple(),
         template_folder: t.Optional[str] = None,
-        base_directory: t.Optional[str] = None,
+        base_directory: t.Optional[t.Union[str, Path]] = None,
         static_folder: str = "static",
         global_guards: t.List[
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]

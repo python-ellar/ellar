@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-from ellar.common import Controller, get
+from ellar.common import Controller, get, render
 from ellar.core import ControllerBase, TestClientFactory
 from ellar.core.templating import (
     TemplateResponse,
@@ -30,6 +30,15 @@ class EllarController(ControllerBase):
         )
 
 
+@Controller(prefix="/template-static")
+class TemplateWithStaticsController(ControllerBase):
+    @get("/index", response={200: TemplateResponse})
+    @render("watever.html")
+    def index(self):
+        """Looks for ellar/index since use_mvc=True"""
+        return {}
+
+
 tm = TestClientFactory.create_test_module(
     controllers=(EllarController,), base_directory=BASEDIR, template_folder="templates"
 )
@@ -51,4 +60,20 @@ def test_render_template():
     assert (
         content == '<!DOCTYPE html> <html lang="en"> '
         '<head> <meta charset="UTF-8"> <title>Index Page</title> </head> <body> </body> </html>'
+    )
+
+
+def test_render_template_with_static_ref():
+    test_module = TestClientFactory.create_test_module(
+        controllers=(TemplateWithStaticsController,),
+        template_folder="templates",
+        base_directory=Path(__file__).resolve().parent,
+    )
+    client = test_module.get_client()
+    response = client.get("/template-static/index")
+    assert response.status_code == 200
+    content = re.sub("\\s+", " ", response.text).strip()
+    assert (
+        content
+        == '<!DOCTYPE html> <head> <title>Welcome - Ellar ASGI Python Framework</title> <link rel="stylesheet" href="http://testserver/static/watever.txt"/> </head>'
     )

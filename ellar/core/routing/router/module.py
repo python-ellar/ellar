@@ -34,6 +34,9 @@ def controller_router_factory(
     routes = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, controller) or []
     app = Router()
     app.routes = ModuleRouteCollection(routes)  # type:ignore
+    include_in_schema = reflect.get_metadata_or_raise_exception(
+        CONTROLLER_METADATA.INCLUDE_IN_SCHEMA, controller
+    )
     router = ModuleMount(
         app=app,
         path=reflect.get_metadata_or_raise_exception(
@@ -48,10 +51,7 @@ def controller_router_factory(
         guards=reflect.get_metadata_or_raise_exception(
             CONTROLLER_METADATA.GUARDS, controller
         ),
-        include_in_schema=reflect.get_metadata_or_raise_exception(
-            CONTROLLER_METADATA.INCLUDE_IN_SCHEMA, controller
-        )
-        or True,
+        include_in_schema=include_in_schema if include_in_schema is not None else True,
         **openapi
     )
     return router

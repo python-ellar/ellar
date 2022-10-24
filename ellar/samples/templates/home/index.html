@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome - Ellar ASGI Python Framework</title>
+    <link rel="shortcut icon" type="image/x-icon"
+          href="{{ url_for('static', path='img/Icon.svg') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/bootstrap.min.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: rgb(46, 48, 62);
+            color: whitesmoke;
+            font-family: "PT Sans", Monaco, "Courier New", Courier, monospace;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <div class="px-4 py-5 my-5 text-center">
+        <img class="d-block mx-auto mb-4" src="{{ url_for('static', path='img/EllarLogoIconOnly.png') }}"
+             alt="" width="300" height="300">
+        <h1 class="display-5" style="font-weight: 700">Welcome to Ellar Framework</h1>
+        <div class="col-lg-6 mx-auto">
+            <a href="{{git_hub}}" target="_blank">Github</a> |
+            <a href="{{docs_url}}" target="_blank">Documentation</a>
+        </div>
+    </div>
+</main>
+</body>
+</html>
