@@ -82,7 +82,7 @@ ellar create-module car
 ```
 
 ## Add Schema
-In `car.schema.py`, lets add some serializer for car input and output data
+In `car/schema.py`, lets add some serializer for car input and output data
 ```python
 from ellar.serializer import Serializer
 
@@ -97,7 +97,7 @@ class RetrieveCarSerializer(CarSerializer):
 ```
 
 ## Add Services
-In `car.services.py`, lets create a dummy repository `CarDummyDB` to manage our car data.
+In `car/services.py`, lets create a dummy repository `CarDummyDB` to manage our car data.
 ```python
 import typing as t
 import uuid
@@ -150,7 +150,7 @@ class CarDummyDB:
             return self._data.pop(idx)
 ```
 ## Add Controller
-In `car.controllers.py`, lets create `CarController`
+In `car/controllers.py`, lets create `CarController`
 
 ```python
 import typing as t
@@ -198,7 +198,7 @@ class CarController(ControllerBase):
 
 ```
 ## Register Service and Controller
-In `car.module.py`, lets register `CarController` and `CarDummyDB`
+In `car/module.py`, lets register `CarController` and `CarDummyDB`
 
 ```python
 from ellar.common import Module
@@ -223,7 +223,7 @@ class CarModule(ModuleBase):
 
 
 ## Enabling OpenAPI Docs
-To start up openapi, we need to go back to project folder in the `carsite.server.py`
+To start up openapi, we need to go back to project folder in the `server.py`
 then add the following below.
 ```python
 import os
