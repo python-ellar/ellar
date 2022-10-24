@@ -206,7 +206,7 @@ class OpenAPIDocumentBuilder:
         for mount in mounts:
             if isinstance(mount, ModuleMount):
                 data = mount.get_tag()
-                if data:
+                if data and mount.include_in_schema:
                     self._build.setdefault("tags", []).append(data)
         if components:
             self._build.setdefault("components", {}).update(components)

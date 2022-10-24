@@ -20,7 +20,7 @@ class HTMLResponseModel(ResponseModel):
         template_name: str,
         use_mvc: bool = False,
     ) -> None:
-        super().__init__()
+        super().__init__(model_field_or_schema=str)
         self.template_name = template_name
         self.use_mvc = use_mvc
 

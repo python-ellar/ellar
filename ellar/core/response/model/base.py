@@ -91,13 +91,14 @@ class BaseResponseModel(IResponseModel, ABC):
         _model_field_or_schema: t.Optional[ResponseModelField] = (
             model_field_or_schema or self.model_field_or_schema
         )
-        if _model_field_or_schema and not isinstance(
-            _model_field_or_schema, ResponseModelField
-        ):
-            # convert to serializable type of base `Class BaseSerializer`
-            new_response_schema = ResponseTypeDefinitionConverter(
-                _model_field_or_schema
-            ).re_group_outer_type()
+        if not isinstance(_model_field_or_schema, ResponseModelField):
+            try:
+                # convert to serializable type of base `Class BaseSerializer` is possible
+                new_response_schema = ResponseTypeDefinitionConverter(
+                    _model_field_or_schema
+                ).re_group_outer_type()
+            except Exception:
+                new_response_schema = _model_field_or_schema
 
             _model_field_or_schema = t.cast(
                 ResponseModelField,
