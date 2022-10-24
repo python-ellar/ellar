@@ -50,6 +50,7 @@ dependencies = [
     "typer >=0.6.1,<0.7.0",
     # exclude 0.11.2 and 0.11.3 due to https://github.com/sdispater/tomlkit/issues/225
     "tomlkit >=0.11.1,<1.0.0,!=0.11.2,!=0.11.3",
+    "uvicorn[standard] >=0.12.0",
     "requests >= 2.24.0; python_version < '3.7'",
     "httpx >= 0.22.0; python_version >= '3.7'",
 ]
@@ -75,8 +76,6 @@ test = [
     "ujson >= 4.0.1",
     "python-multipart >= 0.0.5",
     "anyio[trio] >= 3.2.1",
-    "requests >= 2.24.0; python_version < '3.7'",
-    "httpx >= 0.22.0; python_version >= '3.7'",
     "autoflake",
     "email_validator >=1.1.1",
 
@@ -86,8 +85,16 @@ test = [
     "types-dataclasses ==0.1.7",
 ]
 dev = [
-    "uvicorn[standard] >=0.12.0",
     "pre-commit"
+]
+
+all = [
+    "python-multipart >=0.0.5,<0.0.6",
+    "itsdangerous >=1.1.0,<3.0.0",
+    "pyyaml >=5.3.1,<7.0.0",
+    "ujson >=4.0.1,!=4.0.2,!=4.1.0,!=4.2.0,!=4.3.0,!=5.0.0,!=5.1.0,<6.0.0",
+    "orjson >=3.2.1,<4.0.0",
+    "email_validator >=1.1.1,<2.0.0",
 ]
 doc = [
     "mkdocs >=1.1.2,<2.0.0",
