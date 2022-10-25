@@ -44,9 +44,7 @@ def build_typers() -> None:
         options, args = getopt.getopt(
             sys.argv[1:],
             "p:",
-            [
-                "project=",
-            ],
+            ["project=", "help"],
         )
         app_name: t.Optional[str] = None
 
