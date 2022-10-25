@@ -29,12 +29,14 @@ pip install ellar
 ## Create a project
 To create an ellar project, you need to have a `pyproject.toml` available on your root directory.
 This is necessary for ellar to store some `metadata` about your project. 
+
 ### Step 1
 For Pip Users, you need to create `pyproject.toml` file
 ```shell
 touch pyproject.toml
 ```
 If you are using `Poetry`, you are ready to go
+
 ### Step 2
 Run the ellar create project cli command,
 ```shell
@@ -51,6 +53,7 @@ ellar runserver --reload
 Now go to [http://127.0.0.1:8000](http://127.0.0.1:8000)
 ![Swagger UI](img/ellar_framework.png)
 
+
 ## Create a project module
 A project module is a project app defining a group of controllers or services including templates and static files.
 So, now we have a project created, lets add an app to the project.
@@ -59,7 +62,7 @@ ellar create-module car
 ```
 
 ## Add Schema
-In `car.schema.py`, lets add some serializer for car input and output data
+In `car/schema.py`, lets add some serializer for car input and output data
 ```python
 from ellar.serializer import Serializer
 
@@ -74,7 +77,7 @@ class RetrieveCarSerializer(CarSerializer):
 ```
 
 ## Add Services
-In `car.services.py`, lets create a dummy repository `CarDummyDB` to manage our car data.
+In `car/services.py`, lets create a dummy repository `CarDummyDB` to manage our car data.
 ```python
 import typing as t
 import uuid
@@ -127,7 +130,7 @@ class CarDummyDB:
             return self._data.pop(idx)
 ```
 ## Add Controller
-In `car.controllers.py`, lets create `CarController`
+In `car/controllers.py`, lets create `CarController`
 
 ```python
 import typing as t
@@ -175,7 +178,7 @@ class CarController(ControllerBase):
 
 ```
 ## Register Service and Controller
-In `car.module.py`, lets register `CarController` and `CarDummyDB`
+In `car/module.py`, lets register `CarController` and `CarDummyDB`
 
 ```python
 from ellar.common import Module
@@ -198,9 +201,27 @@ class CarModule(ModuleBase):
         pass
 ```
 
+## Registering Module
+Ellar is not aware of `CarModule` yet, so we need to add it to the `modules` list of `ApplicationModule` at the `carsite/root_module.py`.
+```python
+from ellar.common import Module, exception_handler
+from ellar.core import ModuleBase
+from ellar.core.connection import Request
+from ellar.core.response import JSONResponse, Response
 
-## Enabling OpenAPI
-To start up openapi, we need to go back to project folder in the `carsite.server.py`
+from ellar.samples.modules import HomeModule
+from .apps.car.module import CarModule
+
+
+@Module(modules=[HomeModule, CarModule])
+class ApplicationModule(ModuleBase):
+    @exception_handler(404)
+    def exception_404_handler(cls, request: Request, exc: Exception) -> Response:
+        return JSONResponse(dict(detail="Resource not found."))
+
+```
+## Enabling OpenAPI Docs
+To start up openapi, we need to go back to project folder in the `server.py`
 then add the following below.
 ```python
 import os
