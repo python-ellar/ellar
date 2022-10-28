@@ -6,6 +6,29 @@ from typer.models import Default
 
 
 class EllarTyper(Typer):
+    """
+    Creates a CLI command group that will be added to ellar cli commands
+    Example:
+    ---------
+
+    ```python
+    db = EllarTyper(name="db")
+
+    @db.commands
+    def create_database(ctx):
+        # creates database
+
+    @db.commands
+    def run_migration(ctx):
+        # run database migration
+
+
+    @Module(commands=[db])
+    class ApplicationModule(ModuleBase):
+        pass
+    ```
+    """
+
     @t.no_type_check
     def __init__(
         self,

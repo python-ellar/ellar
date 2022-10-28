@@ -18,6 +18,19 @@ def serializer_filter(
     exclude_defaults: bool = False,
     exclude_none: bool = False,
 ) -> t.Callable:
+    """
+    ========= ROUTE FUNCTION DECORATOR ==============
+
+    defines route function pydantic filters for data serialization
+    :param include:
+    :param exclude:
+    :param by_alias:
+    :param skip_defaults:
+    :param exclude_unset:
+    :param exclude_defaults:
+    :param exclude_none:
+    :return:
+    """
     from ellar.serializer import SerializerFilter
 
     return set_meta(

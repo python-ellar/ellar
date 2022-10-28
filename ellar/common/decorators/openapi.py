@@ -13,6 +13,17 @@ def openapi_info(
     tags: t.Optional[t.List[str]] = None,
     deprecated: t.Optional[bool] = None,
 ) -> t.Callable:
+    """
+    ========= ROUTE FUNCTION DECORATOR ==============
+
+    Route Function OpenAPI extra information
+    :param operation_id: OpenAPI operational id
+    :param summary: summary
+    :param description: description
+    :param tags: tags
+    :param deprecated:
+    :return:
+    """
     return set_meta(
         OPENAPI_KEY,
         AttributeDict(
