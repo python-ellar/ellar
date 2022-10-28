@@ -49,7 +49,7 @@ dependencies = [
     "typer >=0.6.1,<0.7.0",
     # exclude 0.11.2 and 0.11.3 due to https://github.com/sdispater/tomlkit/issues/225
     "tomlkit >=0.11.1,<1.0.0,!=0.11.2,!=0.11.3",
-    "uvicorn[standard] >=0.12.0",
+    "uvicorn[standard] == 0.18.3",
     # testing
     "httpx >= 0.22.0"
 ]
@@ -60,6 +60,7 @@ ellar = "ellar.cli:main"
 [project.urls]
 Documentation = "https://github.com/eadwinCode/ellar"
 Source = "https://github.com/eadwinCode/ellar"
+Homepage = "https://eadwincode.github.io/ellar/"
 
 [project.optional-dependencies]
 test = [
