@@ -82,7 +82,7 @@ test = [
 
     # types
     "types-ujson ==0.1.1",
-    "types-orjson ==3.6.0",
+    "types-orjson ==3.6.2",
     "types-dataclasses ==0.1.7",
 ]
 dev = [
