@@ -29,7 +29,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -47,15 +46,9 @@ dependencies = [
     "jinja2",
     # cli
     "typer >=0.6.1,<0.7.0",
-    # exclude 0.11.2 and 0.11.3 due to https://github.com/sdispater/tomlkit/issues/225
-    "tomlkit >=0.11.1,<1.0.0,!=0.11.2,!=0.11.3",
-    "uvicorn[standard] == 0.18.3",
     # testing
     "httpx >= 0.22.0"
 ]
-
-[project.scripts]
-ellar = "ellar.cli:main"
 
 [project.urls]
 Documentation = "https://github.com/eadwinCode/ellar"
@@ -101,5 +94,6 @@ doc = [
     "mkdocs-material >=7.1.9,<8.0.0",
     "mdx-include >=1.4.1,<2.0.0",
     "mkdocs-markdownextradata-plugin >=0.1.7,<0.3.0",
-    "markdown-include"
+    "markdown-include",
+    "mkdocstrings"
 ]
