@@ -1,7 +1,7 @@
 import typing as t
 
 from starlette import status
-from starlette.exceptions import HTTPException
+from starlette.exceptions import HTTPException, WebSocketException
 
 from .base import APIException, ErrorDetail
 from .validation import RequestValidationError, WebSocketRequestValidationError
@@ -19,6 +19,7 @@ __all__ = [
     "MethodNotAllowed",
     "NotAcceptable",
     "UnsupportedMediaType",
+    "WebSocketException",
 ]
 
 

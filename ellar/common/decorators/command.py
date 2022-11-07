@@ -21,6 +21,11 @@ def command(
     hidden: bool = False,
     deprecated: bool = False,
 ) -> t.Callable[[CommandFunctionType], CommandFunctionType]:
+    """
+    ========= FUNCTION DECORATOR ==============
+
+    Define Application Command which will be available on ellar cli
+    """
     if cls is None:
         cls = TyperCommand
 

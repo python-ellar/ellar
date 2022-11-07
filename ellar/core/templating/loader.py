@@ -10,8 +10,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 
 class JinjaLoader(BaseLoader):
-    """A loader that looks for templates in the application and all
-    the blueprint folders.
+    """A loader that looks for templates in the application.
     An idea from flask
     """
 

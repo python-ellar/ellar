@@ -44,6 +44,17 @@ class TestClientFactory:
         static_folder: str = "static",
         config_module: str = None,
     ) -> _TestingModule:
+        """
+        Create a TestingModule to test controllers and services in isolation
+        :param controllers:
+        :param routers:
+        :param providers:
+        :param template_folder:
+        :param base_directory:
+        :param static_folder:
+        :param config_module:
+        :return:
+        """
         app = AppFactory.create_app(
             controllers=controllers,
             routers=routers,
@@ -62,6 +73,9 @@ class TestClientFactory:
         mock_providers: t.Sequence[ProviderConfig] = tuple(),
         config_module: str = None,
     ) -> _TestingModule:
+        """
+        Create a TestingModule from an existing module
+        """
         app = AppFactory.create_app(
             modules=(module,), providers=mock_providers, config_module=config_module
         )

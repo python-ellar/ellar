@@ -374,6 +374,23 @@ class BulkBodyParameterResolver(BodyParameterResolver, BulkParameterResolver):
 
 
 class NonFieldRouteParameterResolver(BaseRouteParameterResolver, ABC):
+    """
+    Define extra route function parameter dependencies
+
+    Example:
+    >>> class UserField(NonFieldRouteParameterResolver):
+    >>>     async def resolve(self, ctx: IExecutionContext, **kwargs: t.Any) -> t.Any:
+    >>>          request = ctx.switch_to_request()
+    >>>          user = request.get('user', None)
+    >>>          if user:
+    >>>             return {self.parameter_name: user}, []
+    >>>          return {}, [ErrorWrapper('Authenticated Users Only', loc=self.parameter_name)]
+    Usage:
+    >>> @get('/abc')
+    >>> def abc(user: User = UserField()):
+    >>>     return user
+    """
+
     in_: str = "non_field_parameter"
 
     def __init__(self, data: t.Optional[t.Any] = None):

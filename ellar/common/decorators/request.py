@@ -9,6 +9,13 @@ def set_attr_key(handle: t.Callable, key: str, value: t.Any) -> None:
 
 
 def on_startup(func: t.Optional[t.Callable] = None) -> t.Callable:
+    """
+    ========= MODULE DECORATOR ==============
+
+    Defines request start up callback
+    :param func:
+    :return:
+    """
     if func and callable(func):
         set_attr_key(func, ON_REQUEST_STARTUP_KEY, EventHandler(func))
         return func
@@ -21,6 +28,13 @@ def on_startup(func: t.Optional[t.Callable] = None) -> t.Callable:
 
 
 def on_shutdown(func: t.Optional[t.Callable] = None) -> t.Callable:
+    """
+    ========= MODULE DECORATOR ==============
+
+    Defines request shutdown callback
+    :param func:
+    :return:
+    """
     if func and callable(func):
         set_attr_key(func, ON_REQUEST_SHUTDOWN_KEY, EventHandler(func))
         return func

@@ -10,5 +10,5 @@ class HomeController(ControllerBase):
         return {
             "message": "",
             "docs_url": "https://eadwincode.github.io/ellar/",
-            "git_hub": "https://eadwincode.github.io/ellar/",
+            "git_hub": "https://github.com/eadwincode/ellar",
         }

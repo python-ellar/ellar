@@ -22,6 +22,14 @@ def add_exception_handler(
 def exception_handler(
     exc_class_or_status_code: t.Union[int, t.Type[Exception]]
 ) -> t.Callable:
+    """
+    ========= MODULE DECORATOR ==============
+
+    Defines Exception Handler at Module Level
+    :param exc_class_or_status_code:
+    :return: Function
+    """
+
     def decorator(func: t.Callable) -> t.Callable:
         add_exception_handler(exc_class_or_status_code, func)
         return func

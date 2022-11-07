@@ -63,6 +63,21 @@ def Controller(
     guards: t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]] = None,
     include_in_schema: bool = True,
 ) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:  # pragma: no cover
+    """
+    ========= CLASS DECORATOR ==============
+
+    Controller Class Decorator
+    :param prefix: Route Prefix default=[ControllerName]
+    :param tag: OPENAPI tag
+    :param description: OPENAPI description
+    :param external_doc_description: OPENAPI External Doc Description
+    :param external_doc_url: OPENAPI External Document URL
+    :param name: route name prefix for url reversing, eg name:route_name default=''
+    :param version: default URL versioning for all defined route in a controller
+    :param guards: default guard for all routes defined under this controller
+    :param include_in_schema: include controller in OPENAPI schema
+    :return: t.Type[ControllerBase]
+    """
     ...
 
 
@@ -78,6 +93,19 @@ def Controller(
     guards: t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]] = None,
     include_in_schema: bool = True,
 ) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:
+    """
+    Controller Class Decorator
+    :param prefix: Route Prefix default=[ControllerName]
+    :param tag: OPENAPI tag
+    :param description: OPENAPI description
+    :param external_doc_description: OPENAPI External Doc Description
+    :param external_doc_url: OPENAPI External Document URL
+    :param name: route name prefix for url reversing, eg name:route_name default=''
+    :param version: default URL versioning for all defined route in a controller
+    :param guards: default guard for all routes defined under this controller
+    :param include_in_schema: include controller in OPENAPI schema
+    :return: t.Type[ControllerBase]
+    """
     _prefix: t.Optional[t.Any] = prefix if prefix is not None else NOT_SET
     if prefix and isinstance(prefix, type):
         _prefix = NOT_SET

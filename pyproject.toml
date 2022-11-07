@@ -12,7 +12,7 @@ authors = [
    {name = "Ezeudoh Tochukwu", email = "tochukwu.ezeudoh@gmail.com"},
 ]
 dynamic = ["version", "description"]
-requires-python = ">=3.6"
+requires-python = ">=3.7"
 readme = "README.md"
 home-page = "https://github.com/eadwinCode/ellar"
 classifiers = [
@@ -29,7 +29,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -41,29 +40,25 @@ classifiers = [
 ]
 
 dependencies = [
-    "injector <= 0.19.0; python_version < '3.7'",
-    "injector; python_version >= '3.7'",
-    "starlette == 0.21.0; python_version >= '3.7'",
-    "starlette == 0.19.1; python_version < '3.7'",
+    "injector == 0.20.1",
+    "starlette == 0.21.0",
     "pydantic >=1.6.2,!=1.7,!=1.7.1,!=1.7.2,!=1.7.3,!=1.8,!=1.8.1,<2.0.0",
     "jinja2",
+    # cli
     "typer >=0.6.1,<0.7.0",
-    # exclude 0.11.2 and 0.11.3 due to https://github.com/sdispater/tomlkit/issues/225
-    "tomlkit >=0.11.1,<1.0.0,!=0.11.2,!=0.11.3",
-    "uvicorn[standard] >=0.12.0; python_version < '3.7'",
-    "uvicorn[standard] ==0.18.3; python_version >= '3.7'",
-    "requests >= 2.24.0; python_version < '3.7'",
-    "httpx >= 0.22.0; python_version >= '3.7'",
+    # testing
+    "httpx >= 0.22.0"
 ]
-
-[project.scripts]
-ellar = "ellar.cli:main"
 
 [project.urls]
 Documentation = "https://github.com/eadwinCode/ellar"
 Source = "https://github.com/eadwinCode/ellar"
+Homepage = "https://eadwincode.github.io/ellar/"
 
 [project.optional-dependencies]
+# standard = [
+#     "ellar-cli >=0.0.2,<5.0.0"
+# ]
 test = [
     "pytest >=6.2.4,<8.0.0",
     "pytest-cov >=2.12.0,<5.0.0",
@@ -102,5 +97,6 @@ doc = [
     "mkdocs-material >=7.1.9,<9.0.0",
     "mdx-include >=1.4.1,<2.0.0",
     "mkdocs-markdownextradata-plugin >=0.1.7,<0.3.0",
-    "markdown-include"
+    "markdown-include",
+    "mkdocstrings"
 ]

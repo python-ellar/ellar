@@ -24,6 +24,16 @@ class RenderDecoratorException(Exception):
 
 
 def render(template_name: t.Optional[str] = NOT_SET) -> t.Callable:
+    """
+    ========= ROUTE FUNCTION DECORATOR ==============
+
+    Renders route function response to HTML Response
+
+    :param template_name: template name.
+    when @render is used in a Controller Class, the function becomes the template_name and the path to the html file
+    becomes `templateFolder/ControllerName/functionName`. This can be overridden by providing `template_name`.
+    :return:
+    """
     if template_name is not NOT_SET:
         assert isinstance(
             template_name, str

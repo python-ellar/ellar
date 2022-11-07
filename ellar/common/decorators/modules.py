@@ -63,6 +63,31 @@ def Module(
     modules: t.Sequence[t.Type] = tuple(),
     commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = tuple(),
 ) -> t.Callable:
+    """
+    ========= MODULE DECORATOR ==============
+
+    Defines a class as Module
+
+    :param name: Module name
+
+    :param controllers: List of Module Controllers
+
+    :param routers: List of Module [ModuleRouters, Host, Mount, Router]
+
+    :param providers: List of Module Services or `ProviderConfig`
+
+    :param template_folder: Module template folder name
+
+    :param base_directory: Module base_directory for template folder and static files
+
+    :param static_folder: Module static folder name
+
+    :param modules: List of Module Types - t.Type[MODULEBASE]
+
+    :param commands: List of Command Decorated functions and EllarTyper
+
+    :return: t.TYPE[MODULEBASE]
+    """
     kwargs = AttributeDict(
         name=name,
         controllers=controllers,

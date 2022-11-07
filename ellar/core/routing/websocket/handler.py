@@ -5,7 +5,7 @@ from starlette import status
 from starlette.types import Message
 
 from ellar.core.params import WebsocketEndpointArgsModel
-from ellar.exceptions import WebSocketRequestValidationError
+from ellar.exceptions import WebSocketException, WebSocketRequestValidationError
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.connection import WebSocket
@@ -81,9 +81,6 @@ class WebSocketExtraHandler:
         )
         if errors:
             exc = WebSocketRequestValidationError(errors)
-            await context.switch_to_websocket().send_json(
-                dict(code=status.WS_1003_UNSUPPORTED_DATA, errors=exc.errors())
-            )
             raise exc
         return extra_kwargs
 
@@ -112,26 +109,18 @@ class WebSocketExtraHandler:
     async def decode(self, websocket: "WebSocket", message: Message) -> t.Any:
         if self.encoding == "text":
             if "text" not in message:
-                await websocket.send_json(
-                    dict(
-                        code=status.WS_1003_UNSUPPORTED_DATA,
-                        details="Expected text websocket messages, but got bytes",
-                    )
+                raise WebSocketException(
+                    code=status.WS_1003_UNSUPPORTED_DATA,
+                    reason="Expected text websocket messages, but got bytes",
                 )
-                await websocket.close(code=status.WS_1003_UNSUPPORTED_DATA)
-                raise RuntimeError("Expected text websocket messages, but got bytes")
             return message["text"]
 
         elif self.encoding == "bytes":
             if "bytes" not in message:
-                await websocket.send_json(
-                    dict(
-                        code=status.WS_1003_UNSUPPORTED_DATA,
-                        details="Expected bytes websocket messages, but got text",
-                    )
+                raise WebSocketException(
+                    code=status.WS_1003_UNSUPPORTED_DATA,
+                    reason="Expected bytes websocket messages, but got text",
                 )
-                await websocket.close(code=status.WS_1003_UNSUPPORTED_DATA)
-                raise RuntimeError("Expected bytes websocket messages, but got text")
             return message["bytes"]
 
         elif self.encoding == "json":
@@ -143,14 +132,10 @@ class WebSocketExtraHandler:
             try:
                 return json.loads(text)
             except json.decoder.JSONDecodeError:
-                await websocket.send_json(
-                    dict(
-                        code=status.WS_1003_UNSUPPORTED_DATA,
-                        details="Malformed JSON data received.",
-                    )
+                raise WebSocketException(
+                    code=status.WS_1003_UNSUPPORTED_DATA,
+                    reason="Malformed JSON data received.",
                 )
-                await websocket.close(code=status.WS_1003_UNSUPPORTED_DATA)
-                raise RuntimeError("Malformed JSON data received.")
 
         assert (
             self.encoding is None

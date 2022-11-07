@@ -31,6 +31,9 @@ def Path(
     deprecated: t.Optional[bool] = None,
     **extra: t.Any,
 ) -> t.Any:
+    """
+    Defines expected path in Route Function Parameter
+    """
     return params.Path(
         default=default,
         alias=alias,
@@ -68,6 +71,9 @@ def Query(
     deprecated: t.Optional[bool] = None,
     **extra: t.Any,
 ) -> t.Any:
+    """
+    Defines expected query in Route Function Parameter
+    """
     return params.Query(
         default,
         alias=alias,
@@ -106,6 +112,9 @@ def Header(
     deprecated: t.Optional[bool] = None,
     **extra: t.Any,
 ) -> t.Any:
+    """
+    Defines expected header in Route Function Parameter
+    """
     return params.Header(
         default,
         alias=alias,
@@ -144,6 +153,9 @@ def Cookie(
     deprecated: t.Optional[bool] = None,
     **extra: t.Any,
 ) -> t.Any:
+    """
+    Defines expected cookie in Route Function Parameter
+    """
     return params.Cookie(
         default,
         alias=alias,
@@ -182,6 +194,9 @@ def Body(
     examples: t.Optional[t.Dict[str, t.Any]] = None,
     **extra: t.Any,
 ) -> t.Any:
+    """
+    Defines expected body object in Route Function Parameter
+    """
     return params.Body(
         default,
         embed=embed,
@@ -220,6 +235,9 @@ def Form(
     examples: t.Optional[t.Dict[str, t.Any]] = None,
     **extra: t.Any,
 ) -> t.Any:
+    """
+    Defines expected form parameter in Route Function Parameter
+    """
     return params.Form(
         default,
         media_type=media_type,
@@ -257,6 +275,9 @@ def File(
     examples: t.Optional[t.Dict[str, t.Any]] = None,
     **extra: t.Any,
 ) -> t.Any:
+    """
+    Defines expected file data in Route Function Parameter
+    """
     return params.File(
         default,
         media_type=media_type,
@@ -295,6 +316,9 @@ def WsBody(
     examples: t.Optional[t.Dict[str, t.Any]] = None,
     **extra: t.Any,
 ) -> t.Any:
+    """
+    Defines expected body object in websocket Route Function Parameter
+    """
     return params.WsBody(
         default,
         embed=embed,
@@ -345,16 +369,32 @@ class _ExecutionContextParameter(NonFieldRouteParameterResolver):
 
 
 def Req() -> Request:
+    """
+    Route Function Parameter for retrieving Current Request Instance
+    :return: Request
+    """
     return t.cast(Request, _RequestParameter())
 
 
 def Ws() -> WebSocket:
+    """
+    Route Function Parameter for retrieving Current WebSocket Instance
+    :return: WebSocket
+    """
     return t.cast(WebSocket, _WebSocketParameter())
 
 
 def Ctx() -> IExecutionContext:
+    """
+    Route Function Parameter for retrieving Current IExecutionContext Instance
+    :return: IExecutionContext
+    """
     return t.cast(IExecutionContext, _ExecutionContextParameter())
 
 
 def Provide(service: t.Optional[t.Type[T]] = None) -> T:
+    """
+    Route Function Parameter for resolving registered Provider
+    :return: T
+    """
     return t.cast(T, ParameterInjectable(service))

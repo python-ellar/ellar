@@ -20,10 +20,19 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 
 class AppFactory:
+    """
+    Factory for creating Ellar Application
+    """
+
     @classmethod
     def get_all_modules(
         cls, module: t.Type[t.Union[ModuleBase, t.Any]]
     ) -> t.List[t.Type[ModuleBase]]:
+        """
+        Gets all registered modules from a particular module in their order of dependencies
+        :param module: Module Type
+        :return: t.List[t.Type[ModuleBase]]
+        """
         module_dependency = [module] + list(cls.read_all_module(module).values())
         return module_dependency
 
@@ -31,6 +40,11 @@ class AppFactory:
     def read_all_module(
         cls, module: t.Type[t.Union[ModuleBase, t.Any]]
     ) -> t.Dict[t.Type, t.Type[ModuleBase]]:
+        """
+        Retrieves all modules dependencies registered in another module
+        :param module: Module Type
+        :return: t.Dict[t.Type, t.Type[ModuleBase]]
+        """
         modules = reflect.get_metadata(MODULE_METADATA.MODULES, module) or []
         module_dependency = OrderedDict()
         for module in modules:
@@ -45,6 +59,13 @@ class AppFactory:
         config: Config,
         injector: EllarInjector,
     ) -> None:
+        """
+        builds application module and registers them to EllarInjector
+        :param app_module: Root App Module
+        :param config: App Configuration instance
+        :param injector: App Injector instance
+        :return: `None`
+        """
         assert reflect.get_metadata(
             MODULE_WATERMARK, app_module
         ), "Only Module is allowed"

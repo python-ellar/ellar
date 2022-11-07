@@ -19,6 +19,13 @@ def add_middleware(
 
 
 def middleware(middleware_type: str) -> t.Callable:
+    """
+    ========= MODULE DECORATOR ==============
+
+    Defines middle functions at module level
+    :param middleware_type: Middleware type
+    :return: Function
+    """
     assert middleware_type == "http", 'Currently only middleware("http") is supported.'
 
     def decorator(func: t.Callable) -> t.Callable:
