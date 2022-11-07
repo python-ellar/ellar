@@ -37,13 +37,13 @@
 ### Poetry Installation
 For [Poetry](https://python-poetry.org/) usages
 ```shell
-poetry add ellar
+poetry add ellar[standard]
 ```
 
 ### Pip Installation
 For normal pip installation
 ```shell
-pip install ellar
+pip install ellar[standard]
 ```
 
 ## Create a project
