@@ -28,7 +28,7 @@
 - Compatible with `asyncio` and `trio` backends.
 
 ## Requirements
-- Python >= 3.6
+- Python >= 3.7
 - Starlette
 - Pydantic
 - Injector
@@ -44,6 +44,11 @@ poetry add ellar[standard]
 For normal pip installation
 ```shell
 pip install ellar[standard]
+```
+### Py36 Support
+For python3.6 users, 
+```shell
+pip install ellar==0.2.2
 ```
 
 ## Create a project
