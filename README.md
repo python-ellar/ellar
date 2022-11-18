@@ -76,7 +76,7 @@ ellar runserver --reload
 Now go to [http://127.0.0.1:8000](http://127.0.0.1:8000)
 ![Swagger UI](docs/img/ellar_framework.png)
 
-For more info on Ella CLI, click [here](https://github.com/eadwinCode/ellar-cli)
+For more info on Ellar CLI, click [here](https://github.com/eadwinCode/ellar-cli)
 
 ## Create a project module
 A project module is a project app defining a group of controllers or services including templates and static files.
