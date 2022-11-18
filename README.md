@@ -55,15 +55,13 @@ pip install ellar==0.2.2
 To create an ellar project, you need to have a `pyproject.toml` available on your root directory.
 This is necessary for ellar to store some `metadata` about your project. 
 
-### Step 1
+### Create a project
 For Pip Users, you need to create `pyproject.toml` file
 ```shell
-touch pyproject.toml
+ellar new carsite
 ```
-If you are using `Poetry`, you are ready to go
-
-### Step 2
-Run the ellar create project cli command,
+If you are using `Poetry`, at your project root directory with `pyproject.toml`,
+run the ellar create project cli command,
 ```shell
 ellar create-project carsite
 ```
@@ -78,6 +76,7 @@ ellar runserver --reload
 Now go to [http://127.0.0.1:8000](http://127.0.0.1:8000)
 ![Swagger UI](docs/img/ellar_framework.png)
 
+For more info on Ella CLI, click [here](https://github.com/eadwinCode/ellar-cli)
 
 ## Create a project module
 A project module is a project app defining a group of controllers or services including templates and static files.
