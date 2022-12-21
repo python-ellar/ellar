@@ -45,6 +45,12 @@ For normal pip installation
 ```shell
 pip install ellar[standard]
 ```
+### NB:
+Some shells may treat square braces (`[` and `]`) as special characters. If that's the case here, then use a quote around the characters to prevent unexpected shell expansion.
+```shell
+pip install "ellar[standard]"
+```
+
 ### Py36 Support
 For python3.6 users, 
 ```shell
