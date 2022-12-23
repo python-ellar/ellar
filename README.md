@@ -10,28 +10,23 @@
 [![PyPI version](https://img.shields.io/pypi/v/ellar.svg)](https://pypi.python.org/pypi/ellar)
 [![PyPI version](https://img.shields.io/pypi/pyversions/ellar.svg)](https://pypi.python.org/pypi/ellar)
 
-## Features
-- Pydantic integration
-- Dependency Injection (DI)
-- Templating with Jinja2
-- OpenAPI Documentation (Swagger and ReDoc)
-- Controller (MVC)
-- Guards (Authentications, roles and permissions)
-- Modularization (eg: flask blueprint)
-- Websocket support
-- Session and Cookie support
-- CORS, GZip, Static Files, Streaming responses
-- Test client built on `requests`
-- In-process background tasks.
-- Startup and shutdown events.
-- Application Events
-- Compatible with `asyncio` and `trio` backends.
+## Features Summary
+- `Pydantic integration`
+- `Dependency Injection (DI)`
+- `Templating with Jinja2`
+- `OpenAPI Documentation (Swagger and ReDoc)`
+- `Controller (MVC)`
+- `Guards (authentications, roles and permissions)`
+- `Modularization (eg: flask blueprint)`
+- `Websocket support`
+- `Session and Cookie support`
+- `CORS, GZip, Static Files, Streaming responses`
 
-## Requirements
-- Python >= 3.7
-- Starlette
-- Pydantic
-- Injector
+## Dependency Summary
+- `Python >= 3.7`
+- `Starlette`
+- `Pydantic`
+- `Injector`
 
 ## Installation
 ### Poetry Installation
