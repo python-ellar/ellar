@@ -64,7 +64,13 @@ class ResponseModelField(ModelField):
 
 
 class BaseResponseModel(IResponseModel, ABC):
-    __slots__ = ("_response_type", "media_type", "description", "meta", "_model_field")
+    __slots__ = (
+        "_response_type",
+        "_media_type",
+        "_description",
+        "meta",
+        "_model_field",
+    )
 
     response_type: t.Type[Response] = Response
     model_field_or_schema: t.Union[ResponseModelField, t.Any] = None
@@ -78,12 +84,20 @@ class BaseResponseModel(IResponseModel, ABC):
         self._response_type: t.Type[Response] = t.cast(
             t.Type[Response], kwargs.get("response_type") or self.response_type
         )
-        self.media_type = str(
+        self._media_type = str(
             kwargs.get("media_type") or self._response_type.media_type
         )
-        self.description = description
+        self._description = description
         self.meta = kwargs
         self._model_field = self._get_model_field_from_schema(model_field_or_schema)
+
+    @property
+    def media_type(self) -> str:
+        return self._media_type
+
+    @property
+    def description(self) -> str:
+        return self._description
 
     def _get_model_field_from_schema(
         self, model_field_or_schema: t.Optional[t.Union[ResponseModelField, t.Any]]
