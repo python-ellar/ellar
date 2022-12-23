@@ -81,7 +81,7 @@ class RouteOperationBase:
 
     def matches(self, scope: TScope) -> t.Tuple[Match, TScope]:
         match = super().matches(scope)  # type: ignore
-        if match[0] is not Match.NONE:
+        if match[0] is Match.FULL:
             version_scheme_resolver: "BaseAPIVersioningResolver" = t.cast(
                 "BaseAPIVersioningResolver", scope[SCOPE_API_VERSIONING_RESOLVER]
             )

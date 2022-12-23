@@ -256,9 +256,9 @@ class OperationDefinitions:
 
     def http_route(
         self,
-        path: str,
-        methods: t.List[str],
+        path: str = "/",
         *,
+        methods: t.List[str],
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[

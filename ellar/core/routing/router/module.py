@@ -1,6 +1,7 @@
 import typing as t
+import uuid
 
-from starlette.routing import BaseRoute, Mount as StarletteMount, Route, Router
+from starlette.routing import BaseRoute, Match, Mount as StarletteMount, Route, Router
 from starlette.types import ASGIApp
 
 from ellar.compatible import AttributeDict
@@ -16,13 +17,13 @@ from ellar.core.controller import ControllerBase
 from ellar.core.routing.route import RouteOperation
 from ellar.core.routing.websocket.route import WebsocketRouteOperation
 from ellar.reflect import reflect
+from ellar.types import TReceive, TScope, TSend
 
 from ..operation_definitions import OperationDefinitions
-from .route_collections import ModuleRouteCollection
+from .route_collections import RouteCollection
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
-
 
 __all__ = ["ModuleMount", "ModuleRouter", "controller_router_factory"]
 
@@ -33,7 +34,8 @@ def controller_router_factory(
     openapi = reflect.get_metadata(CONTROLLER_METADATA.OPENAPI, controller) or dict()
     routes = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, controller) or []
     app = Router()
-    app.routes = ModuleRouteCollection(routes)  # type:ignore
+    app.routes = RouteCollection(routes)  # type:ignore
+
     include_in_schema = reflect.get_metadata_or_raise_exception(
         CONTROLLER_METADATA.INCLUDE_IN_SCHEMA, controller
     )
@@ -52,7 +54,7 @@ def controller_router_factory(
             CONTROLLER_METADATA.GUARDS, controller
         ),
         include_in_schema=include_in_schema if include_in_schema is not None else True,
-        **openapi
+        **openapi,
     )
     return router
 
@@ -85,6 +87,7 @@ class ModuleMount(StarletteMount):
         ] = (guards or [])
         self._version = set(version or [])
         self._build: bool = False
+        self._current_found_route_key = f"{uuid.uuid4().hex:4}_ModuleMountRoute"
 
     def get_meta(self) -> t.Mapping:
         return self._meta
@@ -115,33 +118,32 @@ class ModuleMount(StarletteMount):
     def _build_ws_route_operation(self, route: WebsocketRouteOperation) -> None:
         route.build_route_operation(path_prefix=self.path, name=self.name)
 
-    def get_flatten_routes(self) -> t.List[BaseRoute]:
-        if not self._build:
-            for route in self.routes:
-                _route: RouteOperation = t.cast(RouteOperation, route)
+    def build_child_routes(self, flatten: bool = False) -> None:
+        for route in self.routes:
+            _route: RouteOperation = t.cast(RouteOperation, route)
 
-                route_versioning = reflect.get_metadata(VERSIONING_KEY, _route.endpoint)
-                route_guards = reflect.get_metadata(GUARDS_KEY, _route.endpoint)
+            route_versioning = reflect.get_metadata(VERSIONING_KEY, _route.endpoint)
+            route_guards = reflect.get_metadata(GUARDS_KEY, _route.endpoint)
+
+            if not route_versioning:
+                reflect.define_metadata(
+                    VERSIONING_KEY,
+                    self._version,
+                    _route.endpoint,
+                    default_value=set(),
+                )
+            if not route_guards:
+                reflect.define_metadata(
+                    GUARDS_KEY,
+                    self._route_guards,
+                    _route.endpoint,
+                    default_value=[],
+                )
+            if flatten:
                 openapi = (
                     reflect.get_metadata(OPENAPI_KEY, _route.endpoint)
                     or AttributeDict()
                 )
-
-                if not route_versioning:
-                    reflect.define_metadata(
-                        VERSIONING_KEY,
-                        self._version,
-                        _route.endpoint,
-                        default_value=set(),
-                    )
-                if not route_guards:
-                    reflect.define_metadata(
-                        GUARDS_KEY,
-                        self._route_guards,
-                        _route.endpoint,
-                        default_value=[],
-                    )
-
                 if isinstance(_route, Route):
                     if not openapi.tags and self._meta.get("tag"):
                         tags = {self._meta.get("tag")}
@@ -151,13 +153,57 @@ class ModuleMount(StarletteMount):
                     self._build_route_operation(_route)
                 elif isinstance(_route, WebsocketRouteOperation):
                     self._build_ws_route_operation(_route)
+
+    def get_flatten_routes(self) -> t.List[BaseRoute]:
+        if not self._build:
+            self.build_child_routes(flatten=True)
             self._build = True
         return list(self.routes)
+
+    def matches(self, scope: TScope) -> t.Tuple[Match, TScope]:
+        match, _child_scope = super().matches(scope)
+        if match == Match.FULL:
+            scope_copy = dict(scope)
+            scope_copy.update(_child_scope)
+            partial: t.Optional[RouteOperation] = None
+            partial_scope = dict()
+
+            for route in self.routes:
+                # Determine if any route matches the incoming scope,
+                # and hand over to the matching route if found.
+                match, child_scope = route.matches(scope_copy)
+                if match == Match.FULL:
+                    _child_scope.update(child_scope)
+                    _child_scope[self._current_found_route_key] = route
+                    return Match.FULL, _child_scope
+                elif (
+                    match == Match.PARTIAL
+                    and partial is None
+                    and isinstance(route, RouteOperation)
+                ):
+                    partial = route
+                    partial_scope = dict(_child_scope)
+                    partial_scope.update(child_scope)
+
+            if partial:
+                partial_scope[self._current_found_route_key] = partial
+                return Match.PARTIAL, partial_scope
+
+        return Match.NONE, {}
+
+    async def handle(self, scope: TScope, receive: TReceive, send: TSend) -> None:
+        route = t.cast(t.Optional[Route], scope.get(self._current_found_route_key))
+        if route:
+            del scope[self._current_found_route_key]
+            await route.handle(scope, receive, send)
+            return
+        mount_router = t.cast(Router, self.app)
+        await mount_router.default(scope, receive, send)
 
 
 class ModuleRouter(ModuleMount):
     operation_definition_class: t.Type[OperationDefinitions] = OperationDefinitions
-    routes: ModuleRouteCollection  # type:ignore
+    routes: RouteCollection  # type:ignore
 
     def __init__(
         self,
@@ -172,7 +218,7 @@ class ModuleRouter(ModuleMount):
         include_in_schema: bool = True,
     ) -> None:
         app = Router()
-        app.routes = ModuleRouteCollection()  # type:ignore
+        app.routes = RouteCollection()  # type:ignore
 
         super(ModuleRouter, self).__init__(
             path=path,
