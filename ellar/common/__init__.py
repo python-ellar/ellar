@@ -32,10 +32,14 @@ from .routing.params import (
     File,
     Form,
     Header,
+    Host,
+    Http,
     Path,
     Provide,
     Query,
     Req,
+    Res,
+    Session,
     Ws,
     WsBody,
 )
@@ -81,4 +85,8 @@ __all__ = [
     "on_startup",
     "template_filter",
     "template_global",
+    "Res",
+    "Session",
+    "Host",
+    "Http",
 ]

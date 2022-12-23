@@ -6,7 +6,7 @@ from enum import Enum
 
 from pydantic.fields import FieldInfo, ModelField, Undefined
 
-from ellar.constants import MULTI_RESOLVER_KEY
+from ellar.constants import MULTI_RESOLVER_FORM_GROUPED_KEY, MULTI_RESOLVER_KEY
 
 from .resolvers import (
     BodyParameterResolver,
@@ -84,7 +84,7 @@ class Param(FieldInfo):
     def create_resolver(self, model_field: ModelField) -> RouteParameterResolver:
         multiple_resolvers = model_field.field_info.extra.get(MULTI_RESOLVER_KEY)
         if multiple_resolvers:
-            model_field.field_info.extra.pop(MULTI_RESOLVER_KEY)
+            model_field.field_info.extra.clear()
             return self.bulk_resolver(
                 model_field=model_field, resolvers=multiple_resolvers
             )
@@ -244,16 +244,17 @@ class WsBody(Body):
     resolver: t.Type[RouteParameterResolver] = WsBodyParameterResolver
 
 
-class Form(Body):
+class Form(Param):
+    in_ = ParamTypes.body
     resolver: t.Type[RouteParameterResolver] = FormParameterResolver
-    MEDIA_TYPE: str = "application/x-www-form-urlencoded"
+    MEDIA_TYPE: str = "application/form-data"
     bulk_resolver: t.Type[BulkParameterResolver] = BulkFormParameterResolver
 
     def __init__(
         self,
         default: t.Any,
         *,
-        media_type: str = "application/x-www-form-urlencoded",
+        media_type: t.Optional[str] = None,
         alias: t.Optional[str] = None,
         title: t.Optional[str] = None,
         description: t.Optional[str] = None,
@@ -270,8 +271,6 @@ class Form(Body):
     ):
         super().__init__(
             default,
-            embed=True,
-            media_type=media_type,
             alias=alias,
             title=title,
             description=description,
@@ -286,6 +285,23 @@ class Form(Body):
             examples=examples,
             **extra,
         )
+        self.embed = True
+        self.media_type = media_type or self.MEDIA_TYPE
+
+    def create_resolver(self, model_field: ModelField) -> RouteParameterResolver:
+        model_field.field_info.extra.setdefault(MULTI_RESOLVER_KEY, [])
+        model_field.field_info.extra.setdefault(MULTI_RESOLVER_FORM_GROUPED_KEY, False)
+
+        multiple_resolvers = model_field.field_info.extra.pop(MULTI_RESOLVER_KEY)
+        is_grouped = model_field.field_info.extra.pop(MULTI_RESOLVER_FORM_GROUPED_KEY)
+
+        if multiple_resolvers:
+            return self.bulk_resolver(
+                model_field=model_field,
+                resolvers=multiple_resolvers,
+                is_grouped=is_grouped,
+            )
+        return self.resolver(model_field)
 
 
 class File(Form):

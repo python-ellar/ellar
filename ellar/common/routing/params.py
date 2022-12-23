@@ -2,11 +2,13 @@ import typing as t
 
 from pydantic.error_wrappers import ErrorWrapper
 from pydantic.fields import Undefined
+from starlette.responses import Response
 
-from ellar.core.connection import Request, WebSocket
+from ellar.core.connection import HTTPConnection, Request, WebSocket
 from ellar.core.context import IExecutionContext
 from ellar.core.params import params
 from ellar.core.params.resolvers import (
+    BaseRequestRouteParameterResolver,
     NonFieldRouteParameterResolver,
     ParameterInjectable,
 )
@@ -368,6 +370,49 @@ class _ExecutionContextParameter(NonFieldRouteParameterResolver):
         return {self.parameter_name: ctx}, []
 
 
+class _HostRequestParam(BaseRequestRouteParameterResolver):
+    lookup_connection_field = None
+
+    async def get_value(self, ctx: IExecutionContext) -> t.Any:
+        connection = ctx.switch_to_http_connection()
+        if connection.client:
+            return connection.client.host
+
+
+class _SessionRequestParam(BaseRequestRouteParameterResolver):
+    lookup_connection_field = "session"
+
+
+class _ConnectionParam(NonFieldRouteParameterResolver):
+    async def resolve(
+        self, ctx: IExecutionContext, **kwargs: t.Any
+    ) -> t.Tuple[t.Dict, t.List]:
+        try:
+            connection = ctx.switch_to_http_connection()
+            return {self.parameter_name: connection}, []
+        except Exception as ex:
+            return {}, [ErrorWrapper(ex, loc=self.parameter_name or "connection")]
+
+
+class _ResponseRequestParam(NonFieldRouteParameterResolver):
+    async def resolve(
+        self, ctx: IExecutionContext, **kwargs: t.Any
+    ) -> t.Tuple[t.Dict, t.List]:
+        try:
+            response = ctx.get_response()
+            return {self.parameter_name: response}, []
+        except Exception as ex:
+            return {}, [ErrorWrapper(ex, loc=self.parameter_name or "response")]
+
+
+def Http() -> HTTPConnection:
+    """
+    Route Function Parameter for retrieving Current Request Instance
+    :return: Request
+    """
+    return t.cast(Request, _ConnectionParam())
+
+
 def Req() -> Request:
     """
     Route Function Parameter for retrieving Current Request Instance
@@ -398,3 +443,28 @@ def Provide(service: t.Optional[t.Type[T]] = None) -> T:
     :return: T
     """
     return t.cast(T, ParameterInjectable(service))
+
+
+def Session() -> t.Dict:
+    """
+    Route Function Parameter for resolving registered `HTTPConnection.sessions`
+    Ensure SessionMiddleware is registered to application middlewares
+    :return: Dict
+    """
+    return t.cast(t.Dict, _SessionRequestParam())
+
+
+def Host() -> str:
+    """
+    Route Function Parameter for resolving registered `HTTPConnection.client.host`
+    :return: str
+    """
+    return t.cast(str, _HostRequestParam())
+
+
+def Res() -> Response:
+    """
+    Route Function Parameter for resolving registered Response
+    :return: Response
+    """
+    return t.cast(Response, _ResponseRequestParam())

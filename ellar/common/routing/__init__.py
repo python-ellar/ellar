@@ -8,10 +8,14 @@ from .params import (
     File,
     Form,
     Header,
+    Host,
+    Http,
     Path,
     Provide,
     Query,
     Req,
+    Res,
+    Session,
     Ws,
     WsBody,
 )
@@ -58,4 +62,8 @@ __all__ = [
     "head",
     "http_route",
     "ws_route",
+    "Res",
+    "Session",
+    "Host",
+    "Http",
 ]
