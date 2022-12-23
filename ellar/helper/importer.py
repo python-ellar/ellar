@@ -1,4 +1,7 @@
+import re
 import typing as t
+
+_module_import_regex = re.compile("(((\\w+)?(\\.<\\w+>)?(\\.\\w+))+)", re.IGNORECASE)
 
 
 class ImportFromStringError(Exception):
@@ -49,3 +52,21 @@ def module_import(module_str: str) -> t.Any:
             raise exc from None
         message = 'Could not import module "{module_str}".'
         raise ImportFromStringError(message.format(module_str=module_str))
+
+
+@t.no_type_check
+def get_class_import(klass: t.Union[t.Type, t.Any]) -> str:
+    """
+    Generates String to import a class object
+    :param klass:
+    :return: string
+    """
+    if hasattr(klass, "__class__") and not isinstance(klass, type):
+        klass = klass.__class__
+
+    regex_path = _module_import_regex.search(str(klass))
+    result = regex_path.group()
+    split_result = result.rsplit(".", maxsplit=1)
+    if len(split_result) == 2:
+        return f"{split_result[0]}:{split_result[1]}"
+    return result
