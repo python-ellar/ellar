@@ -64,7 +64,8 @@ class _Reflect:
                     _meta_values = type(existing)(existing)
                 else:
                     # if existing item is not a Collection, And we are trying to set same key again,
-                    _meta_values = metadata_value
+                    # then it has to be changed to a collection
+                    _meta_values = [existing] + _meta_values
             else:
                 _meta_values = metadata_value
             target_metadata[metadata_key] = _meta_values
