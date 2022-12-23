@@ -5,19 +5,13 @@ from enum import Enum
 from pydantic import BaseModel
 from pydantic.fields import ModelField, Undefined
 from pydantic.schema import field_schema
-from starlette.convertors import (
-    FloatConvertor,
-    IntegerConvertor,
-    PathConvertor,
-    StringConvertor,
-    UUIDConvertor,
-)
 from starlette.routing import Mount, compile_path
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
-from ellar.compatible import cached_property
+from ellar.compatible import AttributeDict, cached_property
 from ellar.constants import GUARDS_KEY, METHODS_WITH_BODY, OPENAPI_KEY, REF_PREFIX
 from ellar.core.guard import BaseAuthGuard
+from ellar.core.params.args import EndpointArgsModel
 from ellar.core.params.params import Body, Param
 from ellar.core.params.resolvers import (
     BodyParameterResolver,
@@ -31,15 +25,6 @@ from ellar.shortcuts import normalize_path
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
-
-
-CONVERTOR_TYPES = {
-    StringConvertor: dict(title="title", type="string"),
-    PathConvertor: dict(title="title", type="string"),
-    IntegerConvertor: dict(title="title", type="integer"),
-    FloatConvertor: dict(title="title", type="number"),
-    UUIDConvertor: dict(title="title", type="string", format="uuid"),
-}
 
 
 class OpenAPIRoute(ABC):
@@ -70,28 +55,23 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
         ] = None,
     ) -> None:
-        self.tag = tag
-        self.description = description
-        self.external_doc_description = external_doc_description
-        self.external_doc_url = external_doc_url
+        meta = mount.get_meta() if isinstance(mount, ModuleMount) else AttributeDict()
+        self.tag = tag or meta.tag  # type: ignore
+        self.description = description or meta.description  # type: ignore
+        self.external_doc_description = (
+            external_doc_description or meta.external_doc_description  # type: ignore
+        )
+        self.external_doc_url = external_doc_url or meta.external_doc_url  # type: ignore
         self.mount = mount
         self.path_regex, self.path_format, self.param_convertors = compile_path(
             self.mount.path
         )
-        self.global_route_parameters = []
+        # if there is some convertor on ModuleMount Object, then we need to convert it to ModelField
+        self.global_route_parameters: t.List[ModelField] = [
+            EndpointArgsModel.get_convertor_model_field(name, convertor)
+            for name, convertor in self.param_convertors.items()
+        ]
         self.global_guards = global_guards or []
-
-        if self.param_convertors:
-            for name, converter in self.param_convertors.items():
-                schema = CONVERTOR_TYPES[converter.__class__]
-                schema.update(title=name)
-                parameter = {
-                    "name": name,
-                    "in": "path",
-                    "required": True,
-                    "schema": schema,
-                }
-                self.global_route_parameters.append(parameter)
 
         self._routes: t.List["OpenAPIRouteDocumentation"] = self._build_routes()
 
@@ -116,11 +96,13 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             if isinstance(route, RouteOperation) and route.include_in_schema:
                 openapi = reflector.get(OPENAPI_KEY, route.endpoint) or dict()
                 guards = reflector.get(GUARDS_KEY, route.endpoint)
-                self._routes.append(
+
+                _routes.append(
                     OpenAPIRouteDocumentation(
                         route=route,
                         global_route_parameters=self.global_route_parameters,
                         guards=guards or self.global_guards,
+                        tags=[self.tag],
                         **openapi,
                     )
                 )
@@ -150,17 +132,12 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             else self.path_format
         )
         for openapi_route in self._routes:
-            path, _security_schemes = openapi_route.get_child_openapi_path(
-                model_name_map=model_name_map
+            openapi_route.get_openapi_path(
+                model_name_map=model_name_map,
+                paths=paths,
+                security_schemes=security_schemes,
+                path_prefix=path_prefix,
             )
-            if path:
-                route_path = (
-                    normalize_path(f"{path_prefix}/{openapi_route.route.path_format}")
-                    if path_prefix
-                    else openapi_route.route.path_format
-                )
-                paths.setdefault(route_path, {}).update(path)
-            security_schemes.update(_security_schemes)
 
 
 class OpenAPIRouteDocumentation(OpenAPIRoute):
@@ -173,7 +150,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         description: t.Optional[str] = None,
         tags: t.Optional[t.List[str]] = None,
         deprecated: t.Optional[bool] = None,
-        global_route_parameters: t.List[t.Dict] = None,
+        global_route_parameters: t.List[ModelField] = None,
         guards: t.List[t.Union["GuardCanActivate", t.Type["GuardCanActivate"]]] = None,
     ) -> None:
         self.operation_id = operation_id
@@ -198,7 +175,11 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
 
     @cached_property
     def input_fields(self) -> t.List[ModelField]:
-        _models: t.List[ModelField] = []
+        omitted_path_parameter_fields = (
+            self.route.endpoint_parameter_model.get_omitted_prefix()
+        )
+        _models: t.List[ModelField] = self.global_route_parameters
+
         for item in self.route.endpoint_parameter_model.get_all_models():
             if isinstance(item, BodyParameterResolver):
                 continue
@@ -209,6 +190,12 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
 
             if isinstance(item, RouteParameterResolver):
                 _models.append(item.model_field)
+
+        already_existing_parameter_names = [model.name for model in _models]
+        for omitted_path_parameter_field in omitted_path_parameter_fields:
+            if omitted_path_parameter_field.name in already_existing_parameter_names:
+                continue
+            _models.append(omitted_path_parameter_field)
 
         return _models
 
@@ -282,7 +269,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             if field_info.deprecated:
                 parameter["deprecated"] = field_info.deprecated
             parameters.append(parameter)
-        return parameters + self.global_route_parameters
+        return parameters
 
     def get_openapi_operation_request_body(
         self,
@@ -345,14 +332,10 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             operation_responses = operation.setdefault("responses", {})
             for status, response_model in self.route.response_model.models.items():
                 operation_responses_status = operation_responses.setdefault(status, {})
-                operation_responses_status["description"] = getattr(
-                    response_model, "description", ""
-                )
+                operation_responses_status["description"] = response_model.description
 
                 content = operation_responses_status.setdefault("content", {})
-                media_type = content.setdefault(
-                    getattr(response_model, "media_type", "text/plain"), {}
-                )
+                media_type = content.setdefault(response_model.media_type, {})
                 media_type.setdefault("schema", {"type": "string"})
 
                 model_field = response_model.get_model_field()

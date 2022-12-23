@@ -117,15 +117,19 @@ class OpenAPIDocumentBuilder:
         openapi_route_models: t.List = []
         reflector = app.injector.get(Reflector)
         for route in app.routes:
-            if isinstance(route, Mount) and len(route.routes) > 0:
+            if (
+                isinstance(route, ModuleMount)
+                and len(route.routes) > 0
+                and route.include_in_schema
+            ):
                 openapi: t.Dict = dict()
                 guards = app.get_guards()
+
                 openapi_route_models.append(
                     OpenAPIMountDocumentation(
                         mount=route, global_guards=guards, **openapi
                     )
                 )
-                continue
             elif (
                 isinstance(route, (RouteOperation, ControllerRouteOperation))
                 and route.include_in_schema
@@ -203,11 +207,10 @@ class OpenAPIDocumentBuilder:
         if definitions:
             components["schemas"] = {k: definitions[k] for k in sorted(definitions)}
 
-        for mount in mounts:
-            if isinstance(mount, ModuleMount):
-                data = mount.get_tag()
-                if data and mount.include_in_schema:
-                    self._build.setdefault("tags", []).append(data)
+        for route_model in openapi_route_models:
+            if isinstance(route_model, OpenAPIMountDocumentation):
+                data = route_model.get_tag()
+                self._build.setdefault("tags", []).append(data)
         if components:
             self._build.setdefault("components", {}).update(components)
         return OpenAPI(**self._build)
