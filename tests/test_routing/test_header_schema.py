@@ -1,5 +1,6 @@
 from ellar.common import Header
 from ellar.core import TestClientFactory
+from ellar.core.connection import Request
 from ellar.core.routing import ModuleRouter
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
@@ -11,7 +12,7 @@ mr = ModuleRouter("")
 
 @mr.get("/test/header")
 def header_params_schema(
-    request,
+    request: Request,
     filters: Filter = Header(..., alias="will_not_work_for_schema_with_many_field"),
 ):
     return filters.dict()
@@ -19,7 +20,7 @@ def header_params_schema(
 
 @mr.get("/test-mixed/header")
 def header_params_mixed_schema(
-    request,
+    request: Request,
     filters: Filter = Header(...),
     data: Data = Header(...),
 ):

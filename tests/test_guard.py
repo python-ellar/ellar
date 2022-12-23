@@ -81,7 +81,7 @@ for _path, auth in [
 
     @get(f"/{_path}")
     @guards(auth)
-    def auth_demo_endpoint(request: Req()):
+    def auth_demo_endpoint(request=Req()):
         return {"authentication": request.user}
 
     app.router.append(auth_demo_endpoint)

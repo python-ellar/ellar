@@ -12,6 +12,7 @@ from ellar.core import (
     TestClient,
     TestClientFactory,
 )
+from ellar.core.connection import Request
 from ellar.core.context import IExecutionContext
 from ellar.core.events import EventHandler
 from ellar.core.modules import ModuleTemplateRef
@@ -19,13 +20,15 @@ from ellar.core.staticfiles import StaticFiles
 from ellar.core.templating import Environment
 from ellar.core.versioning import VERSIONING, DefaultAPIVersioning, UrlPathAPIVersioning
 from ellar.di import EllarInjector
+from ellar.helper.importer import get_class_import
 from ellar.openapi import OpenAPIDocumentModule
 from ellar.services.reflector import Reflector
 
+from .config import ConfigTrustHostConfigure
 from .sample import AppAPIKey, ApplicationModule
 
 test_module = TestClientFactory.create_test_module_from_module(
-    module=ApplicationModule, config_module="tests.test_application.config:Config"
+    module=ApplicationModule, config_module=get_class_import(ConfigTrustHostConfigure)
 )
 
 
@@ -155,7 +158,7 @@ class TestStarletteCompatibility:
 
     def test_app_debug(self):
         @get("/")
-        async def homepage(request):
+        async def homepage(request: Request):
             raise RuntimeError()
 
         app = AppFactory.create_app()

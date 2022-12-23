@@ -8,6 +8,7 @@ from ellar.constants import (
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
+from ellar.core.connection import Request
 from ellar.core.response.model import HTMLResponseModel
 from ellar.core.templating import TemplateFunctionData
 from ellar.exceptions import ImproperConfiguration
@@ -16,7 +17,7 @@ from ellar.reflect import reflect
 
 def test_render_decorator_works():
     @render("index")
-    def endpoint_render(request):
+    def endpoint_render(request: Request):
         pass
 
     response_override = reflect.get_metadata(RESPONSE_OVERRIDE_KEY, endpoint_render)
@@ -32,7 +33,7 @@ def test_render_decorator_raise_exception_for_invalid_template_name():
     ):
 
         @render
-        def endpoint_render(request):
+        def endpoint_render(request: Request):
             pass
 
 
@@ -41,7 +42,7 @@ def test_render_decorator_uses_endpoint_name_as_template_name():
     class AController:
         @get("/endpoint_render")
         @render()
-        def endpoint_render(request):
+        def endpoint_render(self, request: Request):
             pass
 
     a_controller_operations = reflect.get_metadata(

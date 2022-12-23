@@ -1,5 +1,6 @@
 from ellar.common import Cookie
 from ellar.core import TestClientFactory
+from ellar.core.connection import Request
 from ellar.core.routing import ModuleRouter
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
@@ -11,7 +12,7 @@ router = ModuleRouter("")
 
 @router.get("/test/cookie")
 def cookie_params_schema(
-    request,
+    request: Request,
     filters: Filter = Cookie(..., alias="will_not_work_for_schema_with_many_field"),
 ):
     return filters.dict()
@@ -19,7 +20,7 @@ def cookie_params_schema(
 
 @router.get("/test-mixed/cookie")
 def cookie_params_mixed_schema(
-    request,
+    request: Request,
     filters: Filter = Cookie(...),
     data: Data = Cookie(...),
 ):

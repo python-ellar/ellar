@@ -1,6 +1,7 @@
 from ellar.common import guards
 from ellar.constants import GUARDS_KEY
 from ellar.core import ExecutionContext
+from ellar.core.connection import Request
 from ellar.core.guard import GuardCanActivate
 from ellar.reflect import reflect
 
@@ -16,12 +17,12 @@ class SomeGuard2(SomeGuard):
 
 
 @guards(SomeGuard)
-def endpoint(request):
+def endpoint(request: Request):
     return "foo"
 
 
 @guards(SomeGuard, SomeGuard2)
-def endpoint2(request):
+def endpoint2(request: Request):
     return "foo"
 
 

@@ -5,6 +5,7 @@ from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Host, Mount, Route, Router
 
 from ellar.common import Controller, Module, ModuleRouter, exception_handler, get
+from ellar.core.connection import Request, WebSocket
 from ellar.core.guard import APIKeyQuery
 
 
@@ -60,17 +61,17 @@ router = ModuleRouter()
 
 @router.get("/func")
 @router.head("/func")
-def func_homepage(request):
+def func_homepage(request: Request):
     return PlainTextResponse("Hello, world!")
 
 
 @router.get("/async")
-async def async_homepage(request):
+async def async_homepage(request: Request):
     return PlainTextResponse("Hello, world!")
 
 
 @router.ws_route("/ws")
-async def websocket_endpoint(session):
+async def websocket_endpoint(session: WebSocket):
     await session.accept()
     await session.send_text("Hello, world!")
     await session.close()
@@ -83,7 +84,7 @@ class ClassBaseController:
         return PlainTextResponse("Hello, world!")
 
     @get("/500")
-    def runtime_error(self, request):
+    def runtime_error(self, request: Request):
         raise RuntimeError()
 
 

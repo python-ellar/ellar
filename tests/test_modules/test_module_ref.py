@@ -249,7 +249,7 @@ def test_module_template_ref_routes_returns_valid_routes():
             ModuleBaseExample2, config=config, container=container
         )
     assert len(module_ref.routers) == 4
-    assert len(module_ref.routes) == 5
+    assert len(module_ref.routes) == 3
 
 
 def test_module_template_ref_routes():
@@ -261,7 +261,7 @@ def test_module_template_ref_routes():
     )
     assert len(module_ref.routers) == 2
     counts = sum(len(item.routes) for item in module_ref.routers)
-    assert len(module_ref.routes) == counts
+    assert counts == 4
 
 
 def test_module_template_registers_providers_and_controllers():
