@@ -81,6 +81,18 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
 
     STATIC_MOUNT_PATH: str = "/static"
 
+    CORS_ALLOW_ORIGINS: t.List[str] = []
+    CORS_ALLOW_METHODS: t.List[str] = ["GET"]
+    CORS_ALLOW_HEADERS: t.List[str] = []
+
+    CORS_ALLOW_CREDENTIALS: bool = False
+    CORS_ALLOW_ORIGIN_REGEX: t.Optional[str] = None
+    CORS_EXPOSE_HEADERS: t.Sequence[str] = ()
+    CORS_MAX_AGE: int = 600
+
+    ALLOWED_HOSTS: t.List[str] = ["*"]
+    REDIRECT_HOST: bool = True
+
     MIDDLEWARE: t.List[TMiddleware] = []
 
     _APP_EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable] = {

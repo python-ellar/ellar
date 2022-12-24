@@ -5,10 +5,10 @@ from ellar.serializer import SerializerFilter
 
 
 @serializer_filter(
-    include=["test1", "test2"],
+    include={"test1", "test2"},
     exclude_none=True,
     by_alias=False,
-    exclude=["exclude1", "exclude2"],
+    exclude={"exclude1", "exclude2"},
     skip_defaults=None,
     exclude_unset=True,
     exclude_defaults=True,

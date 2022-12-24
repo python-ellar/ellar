@@ -5,7 +5,11 @@ from .args import (
     WebsocketEndpointArgsModel,
 )
 from .params import Body, Cookie, File, Form, Header, Param, ParamTypes, Path, Query
-from .resolvers import NonFieldRouteParameterResolver
+from .resolvers import (
+    BaseRequestRouteParameterResolver,
+    BaseRouteParameterResolver,
+    NonFieldRouteParameterResolver,
+)
 
 __all__ = [
     "WebsocketEndpointArgsModel",
@@ -13,6 +17,8 @@ __all__ = [
     "ExtraEndpointArg",
     "EndpointArgsModel",
     "NonFieldRouteParameterResolver",
+    "BaseRequestRouteParameterResolver",
+    "BaseRouteParameterResolver",
     "Body",
     "Cookie",
     "File",

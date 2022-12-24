@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import Field
 
 from ellar.common import ModuleRouter, Path, Query
+from ellar.core.connection import Request
 from ellar.core.factory import AppFactory
 from ellar.core.schema import Schema
 
@@ -214,7 +215,7 @@ def get_query_aliased_name(query: AliasedSchema = Query(..., alias="aliased.-_~n
 
 
 @router.get("/query/param")
-def get_query_param(request, query=Query(None)):
+def get_query_param(request: Request, query=Query(None)):
     if query is None:
         return "foo bar"
     return f"foo bar {query}"

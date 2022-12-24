@@ -1,6 +1,7 @@
 from ellar.common import openapi_info
 from ellar.compatible import AttributeDict
 from ellar.constants import OPENAPI_KEY
+from ellar.core.connection import Request
 from ellar.reflect import reflect
 
 
@@ -11,7 +12,7 @@ from ellar.reflect import reflect
     operation_id="4524d-z23zd-453ed-2342e",
     tags=["endpoint", "endpoint-25"],
 )
-def endpoint(request):
+def endpoint(request: Request):
     pass
 
 

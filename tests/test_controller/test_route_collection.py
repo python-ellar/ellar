@@ -7,7 +7,7 @@ from starlette.routing import Host, Mount, Router, compile_path
 from ellar.core import Config
 from ellar.core.middleware import RequestVersioningMiddleware
 from ellar.core.routing import RouteOperation, WebsocketRouteOperation
-from ellar.core.routing.router import ModuleRouteCollection, RouteCollection
+from ellar.core.routing.router import RouteCollection
 from ellar.core.versioning import UrlPathAPIVersioning
 from ellar.helper import generate_controller_operation_unique_id
 
@@ -75,7 +75,7 @@ class MockMountRouteOperation(Mount):
         super().__init__(path=path, name=name, app=self.asgi_app)
 
 
-@pytest.mark.parametrize("collection_model", [ModuleRouteCollection, RouteCollection])
+@pytest.mark.parametrize("collection_model", [RouteCollection])
 def test_module_route_collection_for_same_path_but_different_version(
     collection_model, test_client_factory
 ):
@@ -100,7 +100,7 @@ def test_module_route_collection_for_same_path_but_different_version(
     }
 
 
-@pytest.mark.parametrize("collection_model", [ModuleRouteCollection, RouteCollection])
+@pytest.mark.parametrize("collection_model", [RouteCollection])
 def test_module_route_collection_extend(collection_model):
     routes = collection_model()
     routes.extend(
@@ -114,7 +114,7 @@ def test_module_route_collection_extend(collection_model):
     assert len(routes) == 3
 
 
-@pytest.mark.parametrize("collection_model", [ModuleRouteCollection, RouteCollection])
+@pytest.mark.parametrize("collection_model", [RouteCollection])
 def test_module_route_collection_host(collection_model):
 
     routes = collection_model()
@@ -134,7 +134,7 @@ def test_module_route_collection_host(collection_model):
     assert _hash in routes._routes
 
 
-@pytest.mark.parametrize("collection_model", [ModuleRouteCollection, RouteCollection])
+@pytest.mark.parametrize("collection_model", [RouteCollection])
 def test_module_route_collection_mount(collection_model):
     routes = collection_model()
     routes.append(MockMountRouteOperation("/mount"))
@@ -155,7 +155,7 @@ def test_module_route_collection_mount(collection_model):
 
 @pytest.mark.parametrize(
     "collection_model, expected_result",
-    [(ModuleRouteCollection, "/sample/1"), (RouteCollection, "/sample")],
+    [(RouteCollection, "/sample")],
 )
 def test_module_route_collection_setitem_and_getitem(collection_model, expected_result):
     routes = collection_model()
@@ -170,7 +170,7 @@ def test_module_route_collection_setitem_and_getitem(collection_model, expected_
     assert routes[0].path == expected_result
 
 
-@pytest.mark.parametrize("collection_model", [ModuleRouteCollection, RouteCollection])
+@pytest.mark.parametrize("collection_model", [RouteCollection])
 def test_module_route_collection_for_same_path_different_method(
     collection_model, test_client_factory
 ):

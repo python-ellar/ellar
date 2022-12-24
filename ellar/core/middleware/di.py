@@ -2,15 +2,21 @@ import typing as t
 
 from injector import CallableProvider
 from starlette.middleware.errors import ServerErrorMiddleware
+from starlette.requests import (
+    HTTPConnection as StarletteHTTPConnection,
+    Request as StarletteRequest,
+)
+from starlette.websockets import WebSocket as StarletteWebSocket
 
 from ellar.constants import SCOPE_EXECUTION_CONTEXT_PROVIDER, SCOPE_SERVICE_PROVIDER
-from ellar.core.connection import HTTPConnection, Request, WebSocket
+from ellar.core.connection.http import HTTPConnection, Request
+from ellar.core.connection.websocket import WebSocket
 from ellar.core.context import ExecutionContext, IExecutionContext
 from ellar.core.response import Response
 from ellar.types import ASGIApp, TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.di.injector import EllarInjector
+    from ellar.di.injector import EllarInjector, RequestServiceProvider
 
 
 class RequestServiceProviderMiddleware(ServerErrorMiddleware):
@@ -27,6 +33,47 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
         )
         self.injector = injector
 
+    @classmethod
+    def _register_connection(
+        cls, ctx: ExecutionContext, request_provider: "RequestServiceProvider"
+    ) -> None:
+        request_provider.update_context(
+            HTTPConnection,
+            CallableProvider(ctx.switch_to_http_connection),
+        )
+        request_provider.update_context(
+            StarletteHTTPConnection,
+            CallableProvider(ctx.switch_to_http_connection),
+        )
+
+    @classmethod
+    def _register_request(
+        cls, ctx: ExecutionContext, request_provider: "RequestServiceProvider"
+    ) -> None:
+        request_provider.update_context(
+            Request, CallableProvider(ctx.switch_to_request)
+        )
+        request_provider.update_context(
+            StarletteRequest, CallableProvider(ctx.switch_to_request)
+        )
+
+    @classmethod
+    def _register_response(
+        cls, ctx: ExecutionContext, request_provider: "RequestServiceProvider"
+    ) -> None:
+        request_provider.update_context(Response, CallableProvider(ctx.get_response))
+
+    @classmethod
+    def _register_websocket(
+        cls, ctx: ExecutionContext, request_provider: "RequestServiceProvider"
+    ) -> None:
+        request_provider.update_context(
+            WebSocket, CallableProvider(ctx.switch_to_websocket)
+        )
+        request_provider.update_context(
+            StarletteWebSocket, CallableProvider(ctx.switch_to_websocket)
+        )
+
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
         if scope["type"] not in ["http", "websocket"]:  # pragma: no cover
             await super().__call__(scope, receive, send)
@@ -37,20 +84,15 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
             request_provider.update_context(
                 t.cast(t.Type, IExecutionContext), execute_context
             )
+            request_provider.update_context(
+                t.cast(t.Type, ExecutionContext), execute_context
+            )
 
-            request_provider.update_context(
-                HTTPConnection,
-                CallableProvider(execute_context.switch_to_http_connection),
-            )
-            request_provider.update_context(
-                WebSocket, CallableProvider(execute_context.switch_to_websocket)
-            )
-            request_provider.update_context(
-                Request, CallableProvider(execute_context.switch_to_request)
-            )
-            request_provider.update_context(
-                Response, CallableProvider(execute_context.get_response)
-            )
+            self._register_request(execute_context, request_provider)
+            self._register_websocket(execute_context, request_provider)
+            self._register_response(execute_context, request_provider)
+            self._register_connection(execute_context, request_provider)
+
             scope[SCOPE_SERVICE_PROVIDER] = request_provider
             scope[SCOPE_EXECUTION_CONTEXT_PROVIDER] = execute_context
             await super().__call__(scope, receive, send)

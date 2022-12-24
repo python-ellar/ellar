@@ -97,6 +97,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
             self.endpoint_parameter_model.build_model()
         self.include_in_schema = include_in_schema
         if name:
+            # necessary for route flattening
             self.name = f"{name}:{self.name}"
 
     def _load_model(self) -> None:

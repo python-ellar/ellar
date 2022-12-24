@@ -340,20 +340,57 @@ class BulkParameterResolver(RouteParameterResolver):
 
 
 class BulkFormParameterResolver(FormParameterResolver, BulkParameterResolver):
+    def __init__(self, *args: t.Any, is_grouped: bool = False, **kwargs: t.Any):
+        super().__init__(*args, **kwargs)
+        self.is_grouped = is_grouped
+        self._use_resolver: t.Callable[
+            [IExecutionContext, t.Any], t.Awaitable[t.Tuple]
+        ] = t.cast(
+            t.Callable[[IExecutionContext, t.Any], t.Awaitable[t.Tuple]],
+            self.resolve_grouped_fields
+            if is_grouped
+            else self.resolve_ungrouped_fields,
+        )
+
+    async def resolve_grouped_fields(
+        self, ctx: IExecutionContext, body: t.Any
+    ) -> t.Tuple:
+        value, resolver_errors = await self._get_resolver_data(ctx, body)
+        if resolver_errors:
+            return value, resolver_errors
+
+        processed_value, processed_errors = self.model_field.validate(
+            value,
+            {},
+            loc=(self.model_field.field_info.in_.value, self.model_field.alias),
+        )
+        if processed_errors:
+            processed_errors = self.validate_error_sequence(processed_errors)
+            return processed_value, processed_errors
+        return {self.model_field.name: processed_value}, []
+
+    async def resolve_ungrouped_fields(
+        self, ctx: IExecutionContext, body: t.Any
+    ) -> t.Tuple:
+        return await self._get_resolver_data(ctx, body)
+
+    async def _get_resolver_data(self, ctx: IExecutionContext, body: t.Any) -> t.Tuple:
+        values: t.Dict[str, t.Any] = {}
+        errors: t.List[ErrorWrapper] = []
+        for parameter_resolver in self._resolvers:
+            value_, errors_ = await parameter_resolver.resolve(ctx=ctx, body=body)
+            if value_:
+                values.update(value_)
+            if errors_:
+                errors += self.validate_error_sequence(errors_)
+        return values, errors
+
     async def resolve_handle(
         self, ctx: IExecutionContext, *args: t.Any, **kwargs: t.Any
     ) -> t.Tuple:
         _body = await self.get_request_body(ctx)
-        values: t.Dict[str, t.Any] = {}
-        errors: t.List[ErrorWrapper] = []
         if self._resolvers:
-            for parameter_resolver in self._resolvers:
-                value_, errors_ = await parameter_resolver.resolve(ctx=ctx, body=_body)
-                if value_:
-                    values.update(value_)
-                if errors_:
-                    errors += self.validate_error_sequence(errors_)
-            return values, errors
+            return await self._use_resolver(ctx, _body)
         return await super(BulkFormParameterResolver, self).resolve_handle(
             ctx, *args, **kwargs
         )
@@ -408,6 +445,10 @@ class NonFieldRouteParameterResolver(BaseRouteParameterResolver, ABC):
 
 
 class ParameterInjectable(NonFieldRouteParameterResolver):
+    """
+    Defines `Provider` resolver for route parameter based on the provided `service`
+    """
+
     def __init__(self, service: t.Optional[t.Type[T]] = None) -> None:
         if service:
             assert isinstance(service, type), "Service must be a type"
@@ -446,3 +487,38 @@ class ParameterInjectable(NonFieldRouteParameterResolver):
         except Exception as ex:
             logger.error(f"Unable to resolve service {self.data} \nErrorMessage: {ex}")
             return {}, [ErrorWrapper(ex, loc=self.parameter_name or "provide")]
+
+
+class BaseRequestRouteParameterResolver(NonFieldRouteParameterResolver):
+    """
+    Defines HTTPConnection fields resolver for route parameter based on the provided `lookup_connection_field`
+    """
+
+    # Look up field in ctx.switch_to_connection().lookup_connection_field
+    lookup_connection_field: t.Optional[str]
+
+    def __call__(
+        self, parameter_name: str, parameter_annotation: t.Type[T]
+    ) -> "ParameterInjectable":
+        result = super().__call__(parameter_name, parameter_annotation)
+        if not hasattr(self, "lookup_connection_field"):
+            raise Exception(f"{self.__class__.__name__}.request_field is not set")
+        return result  # type: ignore
+
+    async def get_value(self, ctx: IExecutionContext) -> t.Any:
+        assert self.lookup_connection_field
+
+        connection = ctx.switch_to_http_connection()
+        return connection.get(self.lookup_connection_field)
+
+    async def resolve(
+        self, ctx: IExecutionContext, **kwargs: t.Any
+    ) -> t.Tuple[t.Dict, t.List]:
+        try:
+            value = await self.get_value(ctx)
+            return {self.parameter_name: value}, []
+        except Exception as ex:
+            logger.error(
+                f"Unable to resolve `{self.lookup_connection_field}` in connection \nErrorMessage: {ex}"
+            )
+            return {}, [ErrorWrapper(ex, loc=str(self.parameter_name))]

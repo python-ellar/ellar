@@ -61,7 +61,7 @@ class EmptyAPIResponseModel(JSONResponseModel):
         serializer_filter: t.Optional[SerializerFilter] = None,
     ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
         try:
-            # try an serialize object
+            # try a serialize object
             return serialize_object(response_obj, serializer_filter=serializer_filter)
         except Exception:
             """Failed to auto serialize object"""

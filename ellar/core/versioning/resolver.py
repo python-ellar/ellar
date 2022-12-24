@@ -42,6 +42,9 @@ class BaseAPIVersioningResolver:
         if str(version) == str(NOT_SET):
             return True
 
+        if route_versions and version not in route_versions:
+            return False
+
         return (
             version is not None
             and version == str(self.default_version)

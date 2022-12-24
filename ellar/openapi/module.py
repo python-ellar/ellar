@@ -54,7 +54,7 @@ class OpenAPIDocumentModule(ModuleBase):
         title: str = "Ellar Swagger Doc",
         swagger_js_url: str = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-bundle.js",
         swagger_css_url: str = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui.css",
-        swagger_favicon_url: str = "https://fastapi.tiangolo.com/img/favicon.png",
+        swagger_favicon_url: str = "https://eadwincode.github.io/ellar/img/Icon.svg",
     ) -> None:
         self._setup_docs(
             template_name="swagger",
@@ -72,7 +72,7 @@ class OpenAPIDocumentModule(ModuleBase):
         path: str = "redoc",
         title: str = "Ellar Redoc",
         redoc_js_url: str = "https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js",
-        redoc_favicon_url: str = "https://fastapi.tiangolo.com/img/favicon.png",
+        redoc_favicon_url: str = "https://eadwincode.github.io/ellar/img/Icon.svg",
         with_google_fonts: bool = True,
     ) -> None:
         self._setup_docs(

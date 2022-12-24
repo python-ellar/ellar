@@ -1,5 +1,6 @@
 from ellar.common import Query
 from ellar.core import TestClientFactory
+from ellar.core.connection import Request
 from ellar.core.routing import ModuleRouter
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
@@ -11,7 +12,7 @@ mr = ModuleRouter("")
 
 @mr.get("/test")
 def query_params_schema(
-    request,
+    request: Request,
     filters: Filter = Query(..., alias="will_not_work_for_schema_with_many_field"),
 ):
     return filters.dict()
@@ -19,7 +20,7 @@ def query_params_schema(
 
 @mr.get("/test-mixed")
 def query_params_mixed_schema(
-    request,
+    request: Request,
     query1: int,
     query2: int = 5,
     filters: Filter = Query(...),

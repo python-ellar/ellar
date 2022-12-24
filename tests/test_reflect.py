@@ -18,7 +18,7 @@ def test_define_metadata_without_default(random_type):
     reflect.define_metadata(key, "Ellar", random_type, default_value=None)
     assert reflect.get_metadata(key, random_type) == "Ellar"
     reflect.define_metadata(key, "Starlette", random_type, default_value=None)
-    assert reflect.get_metadata(key, random_type) == "Starlette"
+    assert reflect.get_metadata(key, random_type) == ["Ellar", "Starlette"]
 
 
 def test_define_metadata_with_existing_tuple(random_type):

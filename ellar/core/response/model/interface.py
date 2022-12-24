@@ -11,8 +11,13 @@ from ..response_types import Response
 class IResponseModel(ABC):
     # TODO: abstract to a interface package
 
-    media_type: str
-    description: str
+    @property
+    def media_type(self) -> str:
+        return "text/plain"
+
+    @property
+    def description(self) -> str:
+        return ""
 
     @abstractmethod
     def get_model_field(self) -> t.Optional[t.Union[ModelField, t.Any]]:

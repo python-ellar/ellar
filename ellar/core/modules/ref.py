@@ -219,7 +219,9 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         if not self._flatten_routes:
             for router in self._routers:
                 if isinstance(router, ModuleMount):
-                    self._flatten_routes.extend(router.get_flatten_routes())
+                    # TODO: Allow users to choose whether to run flatten route of group routes together
+                    router.build_child_routes()
+                    self._flatten_routes.append(router)
                     continue
                 if isinstance(router, BaseRoute):
                     self._flatten_routes.append(router)

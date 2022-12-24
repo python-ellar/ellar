@@ -1,11 +1,11 @@
 import typing as t
 
-from starlette.middleware import Middleware
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp
 
 from ellar.constants import LOG_LEVELS as log_levels
 from ellar.core.events import EventHandler
+from ellar.core.middleware import Middleware
 from ellar.core.versioning import BaseAPIVersioning
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -125,3 +125,17 @@ class ConfigDefaultTypesMixin:
 
     # logging Level
     LOG_LEVEL: t.Optional[log_levels]
+
+    # CORS Middleware setup (ellar.core.middleware.CORSMiddleware)
+    CORS_ALLOW_ORIGINS: t.List[str]
+    CORS_ALLOW_METHODS: t.List[str]
+    CORS_ALLOW_HEADERS: t.List[str]
+    CORS_ALLOW_CREDENTIALS: bool
+
+    CORS_ALLOW_ORIGIN_REGEX: t.Optional[str]
+    CORS_EXPOSE_HEADERS: t.Sequence[str]
+    CORS_MAX_AGE: int
+
+    # TrustHostMiddleware setup
+    ALLOWED_HOSTS: t.List[str]
+    REDIRECT_HOST: bool

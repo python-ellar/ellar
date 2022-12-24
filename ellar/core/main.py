@@ -10,10 +10,12 @@ from ellar.core.datastructures import State, URLPath
 from ellar.core.events import EventHandler, RouterEventManager
 from ellar.core.guard import GuardCanActivate
 from ellar.core.middleware import (
+    CORSMiddleware,
     ExceptionMiddleware,
     Middleware,
     RequestServiceProviderMiddleware,
     RequestVersioningMiddleware,
+    TrustedHostMiddleware,
 )
 from ellar.core.modules import ModuleBase, ModuleTemplateRef
 from ellar.core.modules.ref import create_module_ref_factor
@@ -134,7 +136,7 @@ class App(AppTemplating):
             module, container=self.injector.container, config=self.config, **init_kwargs
         )
         self.injector.add_module(module_ref)
-        self.middleware_stack = self.build_middleware_stack()
+        self.rebuild_middleware_stack()
 
         if isinstance(module_ref, ModuleTemplateRef):
             module_ref.run_module_register_services()
@@ -182,6 +184,21 @@ class App(AppTemplating):
 
         middleware = (
             [
+                Middleware(
+                    CORSMiddleware,
+                    allow_origins=self.config.CORS_ALLOW_ORIGINS,
+                    allow_credentials=self.config.CORS_ALLOW_CREDENTIALS,
+                    allow_methods=self.config.CORS_ALLOW_METHODS,
+                    allow_headers=self.config.CORS_ALLOW_HEADERS,
+                    allow_origin_regex=self.config.CORS_ALLOW_ORIGIN_REGEX,
+                    expose_headers=self.config.CORS_EXPOSE_HEADERS,
+                    max_age=self.config.CORS_MAX_AGE,
+                ),
+                Middleware(
+                    TrustedHostMiddleware,
+                    allowed_hosts=self.config.ALLOWED_HOSTS,
+                    www_redirect=self.config.REDIRECT_HOST,
+                ),
                 Middleware(
                     RequestServiceProviderMiddleware,
                     debug=self.debug,
@@ -262,3 +279,6 @@ class App(AppTemplating):
             return func
 
         return decorator
+
+    def rebuild_middleware_stack(self) -> None:
+        self.middleware_stack = self.build_middleware_stack()

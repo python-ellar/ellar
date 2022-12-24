@@ -5,6 +5,7 @@ from starlette.responses import Response
 from ellar.common import Provide, Query, get, set_meta
 from ellar.constants import EXTRA_ROUTE_ARGS_KEY
 from ellar.core import TestClientFactory
+from ellar.core.connection import Request
 from ellar.core.context import IExecutionContext
 from ellar.core.params import ExtraEndpointArg
 from ellar.openapi import OpenAPIDocumentBuilder
@@ -66,7 +67,7 @@ def add_extra_non_field_extra_args(func):
 @add_extra_non_field_extra_args
 @add_additional_signature_to_endpoint
 def query_params_extra(
-    request,
+    request: Request,
     filters: Filter = Query(),
 ):
     return filters.dict()

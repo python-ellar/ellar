@@ -12,6 +12,7 @@ from ellar.core.connection import WebSocket
 from ellar.core.context import ExecutionContext
 from ellar.core.params import WebsocketEndpointArgsModel
 from ellar.exceptions import ImproperConfiguration, WebSocketRequestValidationError
+from ellar.helper import get_name
 from ellar.reflect import reflect
 
 from ..base import WebsocketRouteOperationBase
@@ -65,6 +66,7 @@ class WebsocketRouteOperation(
         extra_handler_type: t.Optional[t.Type[WebSocketExtraHandler]] = None,
         **handlers_kwargs: t.Any,
     ) -> None:
+        assert path.startswith("/"), "Routed paths must start with '/'"
         self._handlers_kwargs: t.Dict[str, t.Any] = dict(
             encoding=encoding,
             on_receive=None,
@@ -77,7 +79,13 @@ class WebsocketRouteOperation(
             t.Type[WebSocketExtraHandler]
         ] = extra_handler_type
 
-        super().__init__(path=path, endpoint=endpoint, name=name)
+        self.path = path
+        self.path_regex, self.path_format, self.param_convertors = compile_path(
+            self.path
+        )
+        self.endpoint = endpoint  # type: ignore
+        self.name = get_name(endpoint) if name is None else name
+
         self.endpoint_parameter_model: WebsocketEndpointArgsModel = NOT_SET
 
         reflect.define_metadata(CONTROLLER_OPERATION_HANDLER_KEY, self, self.endpoint)

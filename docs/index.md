@@ -10,103 +10,59 @@
 [![PyPI version](https://img.shields.io/pypi/v/ellar.svg)](https://pypi.python.org/pypi/ellar)
 [![PyPI version](https://img.shields.io/pypi/pyversions/ellar.svg)](https://pypi.python.org/pypi/ellar)
 
-## Features
-- Pydantic integration
-- DI Container
-- Templating with Jinja2
-- OpenAPI Documentation (Swagger and ReDoc)
-- Controller (MVC)
-- Guards (Authentications, roles and permissions)
-- Modularization (eg: flask blueprint)
-- Websocket support
-- Session and Cookie support
-- CORS, GZip, Static Files, Streaming responses
-- Test client built on `requests`
-- In-process background tasks.
-- Startup and shutdown events.
-- Application Events
-- Compatible with `asyncio` and `trio` backends.
+---
+## Introduction
+Ellar is a lightweight ASGI framework for building efficient and scalable server-side python application.
+It supports both OOP (Object-Oriented Programming) and FP (Functional Programming)
 
-## Requirements
-- Python >= 3.6
-- Starlette
-- Pydantic
-- Injector
+Ellar is built around [Starlette]()(ASGI toolkit) which processes all the HTTP request and background tasks. Although, there is a high level 
+of abstraction, some concepts of Starlette are still supported.
+
+## Inspiration
+Ellar was heavily inspired by [NestJS]() in its simplicity in usage while managing complex project structures and application. 
+It also adopted some concepts of [FastAPI]() in handling request parameters and data serialization with pydantic.
+With that said, the aim of Ellar focuses on high level of abstraction of framework APIs, project structures, architectures and speed of handling requests.
 
 ## Installation
+To get started, you need to scaffold a project using [Ellar-CLI]() toolkit. This is recommended for first-time user.
+The scaffolded project is more like a guide to project setup.
 
-```
-pip install ellar
-```
-
-## Usage
-
-Create a file `controller.py`:
-
-```Python
-from ellar.common import ModuleRouter, Controller, get
-
-router = ModuleRouter('', tag='Math')
-
-
-@router.get("/add")
-def add(request, a: int, b: int):
-    return {"result": a + b}
-
-
-@Controller("", tag='Math')
-class MathAPI:
-
-    @get('/subtract', )
-    def subtract(self, a: int, b: int):
-        """Subtracts a from b"""
-        return {"result": a - b}
-
-    @get('/divide', )
-    def divide(self, a: int, b: int):
-        """Divides a by b"""
-        return {"result": a / b}
-
-    @get('/multiple', )
-    def multiple(self, a: int, b: int):
-        """Multiples a with b"""
-        return {"result": a * b}
-
+```shell
+$(venv) pip install ellar[standard]
+$(venv) ellar new project-name
 ```
 
-Create another file `server.py`:
-
-```Python
-from ellar.core import AppFactory
-from ellar.openapi import OpenAPIDocumentBuilder, OpenAPIDocumentModule
-from .controller import router, MathAPI
-
-
-app = AppFactory.create_app(routers=(router, ), controllers=(MathAPI, ))
-
-document_builder = OpenAPIDocumentBuilder()
-document_builder.set_title('Your Title')\
-    .set_version('1.0.2')\
-    .set_contact(name='Eadwin', url='https://www.yahoo.com', email='eadwin@gmail.com')\
-    .set_license('MIT Licence', url='https://www.google.com')
-
-document = document_builder.build_document(app)
-module = app.install_module(OpenAPIDocumentModule, document=document)
-module.setup_swagger_doc()
+### Py36 Support
+For python3.6 users, 
+```shell
+$(venv) pip install ellar==0.2.2
 ```
 
-### Start up Server
-```bash
-uvicorn server:app --reload
+then, start the app with:
+```shell
+$(venv) ellar runserver --reload
 ```
 
-### Interactive API docs
+Open your browser and navigate to [`http://localhost:3000/`](http://localhost:3000/).
+![Swagger UI](img/ellar_framework.png)
 
-Now go to <a href="http://localhost:8000/docs/" target="_blank">http://localhost:8000/docs/</a>
+## Features Summary
+- `Pydantic integration`
+- `Dependency Injection (DI)`
+- `Templating with Jinja2`
+- `OpenAPI Documentation (Swagger and ReDoc)`
+- `Controller (MVC)`
+- `Guards (authentications, roles and permissions)`
+- `Modularization (eg: flask blueprint)`
+- `Websocket support`
+- `Session and Cookie support`
+- `CORS, GZip, Static Files, Streaming responses`
 
-You will see the automatic interactive API documentation (provided by <a href="https://github.com/swagger-api/swagger-ui" target="_blank">Swagger UI</a>):
-
-![Swagger UI](img/ellar_demo.gif)
+## Dependency Summary
+- `Python >= 3.6`
+- `Starlette`
+- `Pydantic`
+- `Injector`
 
 ## Status
 
