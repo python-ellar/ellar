@@ -5,6 +5,7 @@ with features that covers a lot of ground at an introductory level.
 
 ## Library Dependencies
 Ellar core depends on:
+
 - `python >= 3.7`
 - `Starlette`
 - `Injector`
@@ -70,6 +71,7 @@ Both provides all necessary parameter for creating Ellar application
 
 ## Run your project
 Ellar runs [UVICORN - ASGI Server](https://www.uvicorn.org/) under the hood.
+
 ```shell
 $(venv) cd project-name
 $(venv) ellar runserver --reload

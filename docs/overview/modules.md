@@ -32,7 +32,7 @@ the internal data structure used to resolve module and provider relationships an
 The best way to organize your components is to build your projects as `Modules`. 
 Thus, the architecture resulting from most applications will include multiple modules with closely related **functionality**.
 
-# `Feature modules`
+## `Feature modules`
 Module helps to organize code relevant for specific features, ensuring that the code is clear and organized.
 This will help to manage complexity and develop using SOLID especially as the application or team grows.
 
@@ -60,7 +60,7 @@ class DogsModule(ModuleBase):
         pass
 ```
 
-# `Module Parameters`
+## `Module Parameters`
 Let's create a Module and take a quick overview of its parameters.
 
 ```python
@@ -95,8 +95,8 @@ class BookModule(ModuleBase):
 | `static_folder`   | defines the static folder for this module                                                                                    |
 | `template_folder` | defines the template folder for this module                                                                                  |
 
-# `Additional Module Configurations`
-- ## `Module Events`
+## `Additional Module Configurations`
+### `Module Events`
 Every registered Module receives two event calls during its instantiation and when application is ready.
 
 ```python
@@ -115,7 +115,7 @@ class ModuleEventSample(ModuleBase):
 ```
 `before_init` receives current app `Config` as a parameter and `application_ready` function receives `App` instance as parameter.
 
-- ## `Module Exceptions`
+### `Module Exceptions`
 In Ellar, custom exceptions can be registered through modules. 
 During module meta-data computation, Ellar reads additional properties such as these from registered modules
 
@@ -131,7 +131,7 @@ class ModuleExceptionSample(ModuleBase):
 ```
 `exception_404_handler` will be register to the application at runtime during `ModuleExceptionSample` computation.
 
-- ## `Module Templating Filters`
+### `Module Templating Filters`
 We can also define `Jinja2` templating filters in project Modules or any `@Module()` module.
 The defined filters are be passed down to `Jinja2` **environment** instance alongside the `template_folder` 
 value when creating **TemplateLoader**.
@@ -155,7 +155,7 @@ class ModuleTemplateFilterSample(ModuleBase):
     def double_filter_dec(cls, n):
         return n * 2
 ```
-- ## `Module Request Events`
+### `Module Request Events`
 During application request handling, application router emits two events `start_up` and `shutdown` event.
 We can subscribe to those events in our modules. 
 ```python
@@ -185,7 +185,7 @@ These will be registered to the application router during `ModuleRequestEventsSa
 Also, the events can be `async` as in the case of `on_shutdown_func_2` and `on_startup_func_2`
 
 
-# `dependency injection`
+## `Dependency Injection`
 A module class can inject providers as well (e.g., for configuration purposes):
 
 For example, from our sample project, the can inject `Config` to the `DogModule`
@@ -214,7 +214,7 @@ class DogsModule(ModuleBase):
 ```
 
 
-# `Injector Module`
+## `Injector Module`
 Since `EllarInjector` is based on a python library [injector](https://injector.readthedocs.io/en/latest/index.html) both 
 share similar `Module` features with few distinct features. As an added support, you can create or reuse modules from `injector` Modules.
 

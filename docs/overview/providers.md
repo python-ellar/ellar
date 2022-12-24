@@ -1,8 +1,10 @@
 A provider is any class or object that is **injectable** as a dependency to another class, and it's required when creating an instance of that class.
+
 So, in a way, providers are like services, repositories, factories etc., classes that can manage complex tasks.
 This concept of class injection is known as [Dependency Injector](https://de.wikipedia.org/wiki/Dependency_Injection)
 
 You can easily create a provider class by decorating that class with the `@injectable()` mark
+
 ```python
 from ellar.di import injectable, singleton_scope
 
@@ -88,7 +90,7 @@ class DogsController(ControllerBase):
 We have defined `DogsRepository` as a dependency to `DogsController` which means Ellar will resolve `DogsRepository` instance when creating `DogsController` instance.
 This was made possible by type definition on `dog_repo` parameter and with the type defined, Ellar knows the provider to look for.
 
-!!info
+!!! info
     Every class dependencies should be defined in the class **constructor**, that way Ellar will resolve all the dependencies needed for an object instantiation.
 
 ## Provider registration

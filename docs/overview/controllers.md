@@ -74,9 +74,10 @@ For example, a path prefix of `/users` combined with the decorator `@get('/profi
 `GET /users/profile`.
 
 
-Overview of HTTP function decorator parameters:
+#### Overview of HTTP function decorator parameters:
 
 `@get(path: str, name: str, include_in_schema: bool, response: t.Union[t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type])`
+
 - `path`: defines path for route mapping. `default='/'`
 - `name`: defines a `name` that will be used to identify this route during URL reversing. default is function name eg: `get_all`
 - `include_in_schema`: indicates if an endpoint should be available in OPENAPI docs
@@ -108,6 +109,7 @@ class DogsController(ControllerBase):
 ```
 
 - injection (`parameter_name=Req()`)
+
 We can also inject request object to any handler by using `@Req` decorator in handler signature.
 ```python
 # project_name/apps/dogs/controllers.py
@@ -127,6 +129,7 @@ class DogsController(ControllerBase):
 ```
 
 - controllers context
+
 During request handler execution, `Execution Context` is available on the Controller instance and `request` object can be gotten from the context.
 ```python
 # project_name/apps/dogs/controllers.py
@@ -162,6 +165,7 @@ Other request `handler` signature injectors
 | `Provide()` | injects services                                                                                       |
 
 ## Resource
+
 Let add create endpoint to our `DogsController` resource.
 ```python
 # project_name/apps/dogs/controllers.py
@@ -181,7 +185,9 @@ class DogsController(ControllerBase):
         return 'This action returns all dogs'
     ...
 ```
+
 ### HTTP Methods
+
 Ellar provides decorators for all the standard HTTP methods:
 - `@get`  - `GET` HTTP method
 - `@post` - `POST` HTTP method
@@ -195,6 +201,7 @@ Ellar provides decorators for all the standard HTTP methods:
 
 
 ## Asynchronicity
+
 Ellar support modern asynchronous programming in python using `async` and `await` syntax.
 
 ```python
@@ -216,6 +223,7 @@ class DogsController(ControllerBase):
     ...
 ```
 ## Request Payload
+
 Let's use `@Body()` to defined required data to create a dog in our previous `create`(POST) endpoint. 
 Before that, we need to define our data input/output serializers
 
@@ -259,7 +267,8 @@ async def create(self, payload: CreateDogSerializer = Body()):
 `CreateDogSerializer`, a pydantic type, so fields(`name`, `age`, `breed`) validations according to defined types and
 specifications is supported out of the box. It's important to note the way we used `CreateDogSerializer` as a type annotation to `payload` parameter in `create` method. 
 During request Ellar computes the route handler signatures and validates them to the annotated types before executing the handler.
-![CreateDogSchema](img/create-dog-schema.png)
+
+![CreateDogSchema](../img/create-dog-schema.png)
 
 Let's add other endpoints
 
@@ -327,4 +336,4 @@ class DogsModule(ModuleBase):
         pass
 ```
 
-![controller_dog.gif](img/controller_dog.gif)
+![controller_dog.gif](../img/controller_dog.gif)

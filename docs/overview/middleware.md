@@ -101,7 +101,7 @@ This is how to apply any `ASGI` middlewares such as `GZipMiddleware`, `EllarASGI
 ## Starlette Middlewares
 Let's explore other Starlette middlewares and other third party ASGI Middlewares
 
-- ### `GZipMiddleware`
+### `GZipMiddleware`
 Handles GZip responses for any request that includes "gzip" in the Accept-Encoding header.
 The middleware will handle both standard and streaming responses.
 
@@ -121,11 +121,12 @@ class DevelopmentConfig(BaseConfig):
 ```
 
 The following arguments are supported:
+
 - `minimum_size` - Do not GZip responses that are smaller than this minimum size in bytes. Defaults to `500`.
 
 The middleware won't GZip responses that already have a Content-Encoding set, to prevent them from being encoded twice.
 
-- ### `HTTPSRedirectMiddleware`
+### `HTTPSRedirectMiddleware`
 Enforces that all incoming requests must either be `https` or `wss`.
 
 Any incoming requests to `http` or `ws` will be redirected to the secure scheme instead.
@@ -144,7 +145,8 @@ class DevelopmentConfig(BaseConfig):
     ]
     
 ```
-- ### `TrustedHostMiddleware`
+
+### `TrustedHostMiddleware`
 This middleware is already part of ellar application middlewares. The middleware takes an argument `allowed_host` which can be configured in the configuration class.
 
 
@@ -165,10 +167,11 @@ To allow any hostname either use `allowed_hosts=["*"]` or omit the middleware.
 
 If an incoming request does not validate correctly then a `400` response will be sent.
 
-- ### `CORSMiddleware`
+### `CORSMiddleware`
 Adds appropriate [`CORS headers`](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) to outgoing responses in order to allow cross-origin requests from browsers.
 
 Since `CORSMiddleware` is part of default application middleware, let's see how to configure CORS arguments in ellar application.
+
 ```python
 # project_name/config.py
 import typing as t
@@ -187,7 +190,9 @@ class DevelopmentConfig(BaseConfig):
     CORS_MAX_AGE: int = 600
     
 ```
+
 The following arguments are supported:
+
 - `CORS_ALLOW_ORIGINS` - A list of origins that should be permitted to make cross-origin requests. eg. `['https://example.org', 'https://www.example.org']`. You can use `['*']` to allow any origin.
 - `CORS_ALLOW_ORIGIN_REGEX` - A regex string to match against origins that should be permitted to make cross-origin requests. eg. `'https://.*\.example\.org'`.
 - `CORS_ALLOW_METHODS` - A list of HTTP methods that should be allowed for cross-origin requests. Defaults to `['GET']`. You can use `['*']` to allow all standard methods.
@@ -209,10 +214,11 @@ The middleware responds to two particular types of HTTP request
 Any request with an `Origin` header. In this case the middleware will pass the request through as normal, but will include appropriate CORS headers on the response.
 
 
-- ### `Other Middlewares`
+### `Other Middlewares`
 
 There are many other ASGI middlewares.
 For example:
+
 - [Sentry](https://docs.sentry.io/platforms/python/asgi/)
 - [Uvicorn's ProxyHeadersMiddleware](https://github.com/encode/uvicorn/blob/master/uvicorn/middleware/proxy_headers.py)
 - [MessagePack](https://github.com/florimondmanca/msgpack-asgi)
