@@ -28,7 +28,7 @@ class UserRepository:
 
 class UserController(ControllerBase):
     def __init__(self, user_repo: UserRepository) -> None:
-        self.userRepo = user_repo
+        self.user_repo = user_repo
 ```
 In our previous `Dogs` module, we can refactor the `DogsController` and move some actions to a service.
 
@@ -87,13 +87,14 @@ class DogsController(ControllerBase):
 
     ...
 ```
+
 We have defined `DogsRepository` as a dependency to `DogsController` which means Ellar will resolve `DogsRepository` instance when creating `DogsController` instance.
 This was made possible by type definition on `dog_repo` parameter and with the type defined, Ellar knows the provider to look for.
 
 !!! info
     Every class dependencies should be defined in the class **constructor**, that way Ellar will resolve all the dependencies needed for an object instantiation.
 
-## Provider registration
+## Provider Registration
 To get this working, we need to expose the `DogsRepository` to the `DogsModule` module just like we did for the `DogsController`.
 
 ```python
@@ -120,7 +121,10 @@ class DogsModule(ModuleBase):
 
 ## Provider Scopes
 There are different scope which defines different ways a service is instantiated.
-- `transient_scope`: Whenever a transient scoped provider is required, a new instance of the provider is created
+
+### `transient_scope`: 
+Whenever a transient scoped provider is required, a new instance of the provider is created
+
 ```python
 from ellar.di import EllarInjector, transient_scope, injectable
 
@@ -140,7 +144,10 @@ a_transient_instance_2 = injector.get(ATransientClass)
 
 assert a_transient_instance_2 != a_transient_instance_1 # True
 ```
-- `singleton_scope`: A singleton scoped provider is created once throughout the lifespan of the Container instance. For example
+
+### `singleton_scope`: 
+A singleton scoped provider is created once throughout the lifespan of the Container instance. For example
+
 ```python
 from ellar.di import EllarInjector, singleton_scope, injectable
 
@@ -161,8 +168,10 @@ a_singleton_instance_2 = injector.get(ASingletonClass)
 assert a_singleton_instance_2 == a_singleton_instance_1 # True
 ```
 
-- `request_scope`: A request scoped provider is instantiated once during the scope of the request. And its destroyed once the request is complete.
+### `request_scope`: 
+A request scoped provider is instantiated once during the scope of the request. And its destroyed once the request is complete.
 It is important to noted that `request_scope` behaves like a `singleton_scope` during HTTPConnection mode and behaves like a `transient_scope` outside a HTTPConnection mode.
+
 ```python
 from ellar.di import EllarInjector, request_scope, injectable, RequestServiceProvider
 
@@ -190,7 +199,8 @@ assert request_instance_2 != request_instance_1
 
 ## Provider Configurations
 There are two ways we can configure providers that are required in EllarInjector IoC.
-- `ProviderConfig`:
+
+### `ProviderConfig`:
 With `ProviderConfig` we can register `base_type` against a `concrete_type` or register a `base_type` against a value type.
 
 For example:
@@ -244,7 +254,7 @@ assert a_module_instance.ifoo_b == a_foo_instance
 In above example, we used `ProviderConfig` as a value type as in the case of `IFooB` type and 
 as a concrete type as in the case of `IFoo` type.
 
-- `register_providers`:
+### `register_providers`:
 We can also achieve the same by overriding `register_providers` in any Module class.
 
 For example:

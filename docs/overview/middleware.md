@@ -1,16 +1,7 @@
 Middlewares are functions that are called during request before hitting a specific route handler. 
 Middleware functions can modify **request** and **response** objects during `http` or `websocket` connection. 
 
-```
-                                                ┌────────────────────────────┐
-┌──────────────────────┐  request               │                            │   request          ┌────────────────────────────┐
-│                      ├───────────────────────►│   CORSMiddleware           ├──────────────────► │                            │
-│  Client Request      │                        │                            │                    │  Route Handler             │
-│                      │◄────────────────────── │   TrustedHostMiddleware    │◄────────────────── │                            │
-└──────────────────────┘     response           │                            │   response         └────────────────────────────┘
-                                                │   ....                     │
-                                                └────────────────────────────┘
-```
+![middleware description image](../img/middleware.png)
 
 Ellar Middlewares follows [`Starlette ASGI Middleware`](https://www.starlette.io/middleware/) pattern 
 and are set up in a pipeline nature to have a request-response cycle behaviour.
@@ -24,6 +15,7 @@ During request, each `ASGI` Middleware must call the ASGI `app` passed to it dur
         pass
     
     ```
+
 ```python
 # ASGI Middleware Interface
 import typing as t
@@ -40,6 +32,7 @@ class EllarASGIMiddlewareStructure:
 ```
 
 Actions that can be performed by middleware functions:
+
 - Execute any code
 - Make changes to request and response objects
 - End the request-response cycle if need be
@@ -96,7 +89,7 @@ class DevelopmentConfig(BaseConfig):
     ]
     
 ```
-This is how to apply any `ASGI` middlewares such as `GZipMiddleware`, `EllarASGIMiddlewareStructure` and others available in `Starlette` library to `Ellar` application
+This is how to apply any `ASGI` middlewares such as `GZipMiddleware`, `EllarASGIMiddlewareStructure` and others available in `Starlette` library.
 
 ## Starlette Middlewares
 Let's explore other Starlette middlewares and other third party ASGI Middlewares

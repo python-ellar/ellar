@@ -1,32 +1,8 @@
 A module is a class annotated with a `@Module()` decorator. 
 The `@Module()` decorator provides **metadata** that **Ellar** makes use of to organize the application structure.
-```
-                                           ┌──────────────────────────────┐
-                                           │                              │
-                      ┌──────────────────► │     ApplicationModule        │ ◄─────────────────────────┐
-                      │                    │                              │                           │
-                      │                    └──────────────────────────────┘                           │
-                      │                                    ▲                                          │
-                      │                                    │                                          │
-                      │                                    │                                          │
-                      │                                    │                                          │
-                      │                                    │                                          │
-        ┌─────────────┴─────────────┐           ┌──────────┴─────────────────┐         ┌──────────────┴───────────────┐
-        │                           │           │                            │         │                              │
-        │   BooksModule             │           │   StoreModule              │    ┌───►│       OrderModule            │ ◄──────┐
-        │                           │           │                            │    │    │                              │        │
-        └───────────────────────────┘           └────────────────────────────┘    │    └──────────────────────────────┘        │
-               ▲                                                                  │                                            │
-               │                                                                  │                                            │
-               │                                                                  │                                            │
-               │                                                                  │                                            │
-               │                                                                  │                                            │
-┌──────────────┴────────────┐                                        ┌────────────┴────────────────┐     ┌─────────────────────┴────────┐
-│                           │                                        │                             │     │                              │
-│    SubscriptionModule     │                                        │    AnyFeatureModule1        │     │      AnyFeatureModule2       │
-│                           │                                        │                             │     │                              │
-└───────────────────────────┘                                        └─────────────────────────────┘     └──────────────────────────────┘
-```
+
+![middleware description image](../img/ModuleDescription.png)
+
 The `ApplicationModule` is the entry point for Ellar to build your application graph - 
 the internal data structure used to resolve module and provider relationships and dependencies.
 The best way to organize your components is to build your projects as `Modules`. 
@@ -94,6 +70,7 @@ class BookModule(ModuleBase):
 | `base_directory`  | root directory for this module to read `static_folder` and `template_folder`. Default is the root folder of the Module Class |
 | `static_folder`   | defines the static folder for this module                                                                                    |
 | `template_folder` | defines the template folder for this module                                                                                  |
+
 
 ## `Additional Module Configurations`
 ### `Module Events`

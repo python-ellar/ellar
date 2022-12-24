@@ -1,25 +1,9 @@
 
 The Controller is responsible for handling incoming requests and returning responses to client. 
 The purpose of a controller is to receive specific requests for an application and `ApplicationRouter` decides which controller should handle an incoming request.
-```
-                                                                         ┌───────────────────┐
-                                                                  ┌─────►│ controller        │
-                                                                  │      └───────────────────┘
-                                                                  │
-                                                                  │
-                                                                  │
-                                                                  │
-                                                                  │
-┌─────────────────────┐                 ┌────────────────────┐    │
-│  client  requests   ├─◄──────────────►│ Application Router ├─◄──┤
-└─────────────────────┘                 └────────────────────┘    │
-                                                                  │
-                                                                  │
-                                                                  │
-                                                                  │      ┌────────────────────┐
-                                                                  └─────►│ controller         │
-                                                                         └────────────────────┘
-```
+
+![controller description image](../img/controller_description.png)
+
 Controllers can also be seen as a router which has many routes registered in it.
 
 ### Creating a Controller
@@ -74,7 +58,7 @@ For example, a path prefix of `/users` combined with the decorator `@get('/profi
 `GET /users/profile`.
 
 
-#### Overview of HTTP function decorator parameters:
+### Overview of HTTP function decorator parameters:
 
 `@get(path: str, name: str, include_in_schema: bool, response: t.Union[t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type])`
 
@@ -88,8 +72,9 @@ Ellar will always serialize all HTTP handler functions returned data as `json` u
 For the above example, `get_all` returned a string. This will be serialized to json with a `status code` 200.
 
 
-## Request object
-There are different ways handlers can access client request details
+## Request Object
+There are different ways handlers can access client request details:
+
 - Annotation (`parameter_name:Request`)
 Ellar will resolve any parameter annotated as `Request` in request handler signature as `Request` object.
 ```python
@@ -265,7 +250,9 @@ async def create(self, payload: CreateDogSerializer = Body()):
 ```
 
 `CreateDogSerializer`, a pydantic type, so fields(`name`, `age`, `breed`) validations according to defined types and
-specifications is supported out of the box. It's important to note the way we used `CreateDogSerializer` as a type annotation to `payload` parameter in `create` method. 
+specifications is supported out of the box. 
+
+It's important to note the way we used `CreateDogSerializer` as a type annotation to `payload` parameter in `create` method. 
 During request Ellar computes the route handler signatures and validates them to the annotated types before executing the handler.
 
 ![CreateDogSchema](../img/create-dog-schema.png)
