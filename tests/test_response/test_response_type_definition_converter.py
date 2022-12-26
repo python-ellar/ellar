@@ -3,11 +3,11 @@ from typing import Dict, List, Union, cast
 import pytest
 from pydantic.typing import get_args
 
+from ellar.core.exceptions import RequestValidationError
 from ellar.core.response.model import (
     ResponseModelField,
     ResponseTypeDefinitionConverter,
 )
-from ellar.exceptions import RequestValidationError
 from ellar.helper.modelfield import create_model_field
 from ellar.serializer import BaseSerializer
 

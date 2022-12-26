@@ -167,8 +167,10 @@ def test_module_template_ref_scan_exceptions_handlers():
     create_module_ref_factor(ModuleBaseExample2, config=config, container=container)
     exception_handlers = config[EXCEPTION_HANDLERS_KEY]
 
-    assert isinstance(exception_handlers, dict)
-    assert 404 in exception_handlers
+    assert isinstance(exception_handlers, list)
+    exception_handler = exception_handlers[0]
+    k, v = iter(exception_handler)
+    assert 404 == k
 
 
 def test_module_template_ref_scan_middle_ware():

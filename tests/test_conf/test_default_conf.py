@@ -8,7 +8,6 @@ from ellar.constants import ELLAR_CONFIG_MODULE
 from ellar.core.conf import Config, ConfigDefaultTypesMixin
 from ellar.core.conf.config import ConfigRuntimeError
 from ellar.core.versioning import DefaultAPIVersioning, UrlPathAPIVersioning
-from ellar.exceptions import APIException, RequestValidationError
 
 
 class ConfigTesting(ConfigDefaultTypesMixin):
@@ -45,9 +44,6 @@ def test_default_configurations():
     assert config.STATIC_MOUNT_PATH == "/static"
 
     assert config.MIDDLEWARE == []
-
-    assert RequestValidationError in config.EXCEPTION_HANDLERS
-    assert APIException in config.EXCEPTION_HANDLERS
 
     assert callable(config.DEFAULT_NOT_FOUND_HANDLER)
     assert config.DEFAULT_LIFESPAN_HANDLER is None

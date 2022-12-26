@@ -98,13 +98,13 @@ class ClassBaseController:
 )
 class ApplicationModule:
     @exception_handler(405)
-    async def method_not_allow_exception(self, request, exec):
+    async def method_not_allow_exception(self, ctx, exec):
         return JSONResponse({"detail": "Custom message"}, status_code=405)
 
     @exception_handler(500)
-    async def error_500(self, request, exec):
+    async def error_500(self, ctx, exec):
         return JSONResponse({"detail": "Server Error"}, status_code=500)
 
     @exception_handler(HTTPException)
-    async def http_exception(self, request, exc):
+    async def http_exception(self, ctx, exc):
         return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)

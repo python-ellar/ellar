@@ -1,4 +1,4 @@
-from ellar.exceptions.base import ErrorDetail
+from ellar.core.exceptions.base import ErrorDetail
 
 
 class TestErrorDetail:

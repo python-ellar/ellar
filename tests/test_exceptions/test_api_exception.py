@@ -2,7 +2,7 @@ import pytest
 
 from ellar.common import get
 from ellar.core import TestClientFactory
-from ellar.exceptions import (
+from ellar.core.exceptions import (
     APIException,
     AuthenticationFailed,
     MethodNotAllowed,
