@@ -7,6 +7,11 @@ from ellar.core.context import IExecutionContext
 
 
 class IExceptionHandler(ABC, t.Iterable):
+    def __eq__(self, other: t.Any) -> bool:
+        if isinstance(other, IExceptionHandler):
+            return other.exception_type_or_code == self.exception_type_or_code
+        return False
+
     def __iter__(self) -> t.Iterator:
         as_tuple = (self.exception_type_or_code, self)
         return iter(as_tuple)

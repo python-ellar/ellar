@@ -100,7 +100,10 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
 
             scope[SCOPE_SERVICE_PROVIDER] = request_provider
             scope[SCOPE_EXECUTION_CONTEXT_PROVIDER] = execute_context
-            await super().__call__(scope, receive, send)
+            if scope["type"] == "http":
+                await super().__call__(scope, receive, send)
+            else:
+                await self.app(scope, receive, send)
 
     async def error_handler(self, request: Request, exc: Exception) -> Response:
         execute_context = request.scope[SCOPE_EXECUTION_CONTEXT_PROVIDER]

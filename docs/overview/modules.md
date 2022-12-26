@@ -73,6 +73,7 @@ class BookModule(ModuleBase):
 
 
 ## `Additional Module Configurations`
+
 ### `Module Events`
 Every registered Module receives two event calls during its instantiation and when application is ready.
 
@@ -87,10 +88,42 @@ class ModuleEventSample(ModuleBase):
         """Called before creating Module object"""
     
     def application_ready(self, app: App) -> None:
-        """Called when application is ready"""
+        """Called when application is ready - this is similar to @on_startup event"""
 
 ```
 `before_init` receives current app `Config` as a parameter and `application_ready` function receives `App` instance as parameter.
+
+####  `Starlette Application Events`
+We can register multiple event handlers for dealing with code that needs to run before 
+the application starts `up`, or when the application is shutting `down`.
+This is the way we support `Starlette` start up events in `Ellar`
+
+```python
+
+from ellar.common import Module, on_shutdown, on_startup
+from ellar.core import ModuleBase
+
+@Module()
+class ModuleRequestEventsSample(ModuleBase):
+    @on_startup
+    def on_startup_func(cls):
+        pass
+    
+    @on_startup()
+    async def on_startup_func_2(cls):
+        pass
+    
+    @on_shutdown
+    def on_shutdown_func(cls):
+        pass
+    
+    @on_shutdown()
+    async def on_shutdown_func_2(cls):
+        pass
+```
+These will be registered to the application router during `ModuleRequestEventsSample` computation at runtime.
+Also, the events can be `async` as in the case of `on_shutdown_func_2` and `on_startup_func_2`
+
 
 ### `Module Exceptions`
 In Ellar, custom exceptions can be registered through modules. 
@@ -132,35 +165,6 @@ class ModuleTemplateFilterSample(ModuleBase):
     def double_filter_dec(cls, n):
         return n * 2
 ```
-### `Module Request Events`
-During application request handling, application router emits two events `start_up` and `shutdown` event.
-We can subscribe to those events in our modules. 
-```python
-
-from ellar.common import Module, on_shutdown, on_startup
-from ellar.core import ModuleBase
-
-@Module()
-class ModuleRequestEventsSample(ModuleBase):
-    @on_startup
-    def on_startup_func(cls):
-        pass
-    
-    @on_startup()
-    async def on_startup_func_2(cls):
-        pass
-    
-    @on_shutdown
-    def on_shutdown_func(cls):
-        pass
-    
-    @on_shutdown()
-    async def on_shutdown_func_2(cls):
-        pass
-```
-These will be registered to the application router during `ModuleRequestEventsSample` computation at runtime.
-Also, the events can be `async` as in the case of `on_shutdown_func_2` and `on_startup_func_2`
-
 
 ## `Dependency Injection`
 A module class can inject providers as well (e.g., for configuration purposes):

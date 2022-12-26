@@ -68,3 +68,11 @@ class CallableExceptionHandler(IExceptionHandler):
         if self.is_async:
             return await self.callable_exception_handler(*args)  # type:ignore
         return await run_in_threadpool(self.callable_exception_handler, *args)
+
+    def __eq__(self, other: t.Any) -> bool:
+        if isinstance(other, CallableExceptionHandler):
+            return (
+                other.exception_type_or_code == self.exception_type_or_code
+                and other.callable_exception_handler == other.callable_exception_handler
+            )
+        return False

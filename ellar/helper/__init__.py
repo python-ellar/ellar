@@ -34,7 +34,7 @@ def get_name(endpoint: t.Union[t.Callable, t.Type, object]) -> str:
 
 
 def is_async_callable(obj: t.Any) -> bool:
-    while isinstance(obj, functools.partial):
+    while isinstance(obj, functools.partial):  # pragma: no cover
         obj = obj.func
 
     return asyncio.iscoroutinefunction(obj) or (

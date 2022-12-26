@@ -1,4 +1,5 @@
 import typing as t
+from unittest.mock import patch
 
 import pytest
 from pydantic.error_wrappers import ValidationError
@@ -37,6 +38,15 @@ class OverrideAPIExceptionHandler(APIExceptionHandler):
         self, ctx: IExecutionContext, exc: t.Union[t.Any, Exception]
     ) -> t.Union[Response, t.Any]:
         return JSONResponse({"detail": str(exc)}, status_code=404)
+
+
+class OverrideHTTPException(IExceptionHandler):
+    exception_type_or_code = HTTPException
+
+    async def catch(
+        self, ctx: IExecutionContext, exc: t.Union[t.Any, Exception]
+    ) -> t.Union[Response, t.Any]:
+        return JSONResponse({"detail": "HttpException Override"}, status_code=400)
 
 
 class ServerErrorHandler(IExceptionHandler):
@@ -189,3 +199,34 @@ def test_debug_after_response_sent(test_client_factory):
     client = test_client_factory(app)
     with pytest.raises(RuntimeError):
         client.get("/")
+
+
+def test_application_add_exception_handler():
+    @get()
+    def homepage():
+        raise HTTPException(detail="Bad Request", status_code=400)
+
+    tm = TestClientFactory.create_test_module()
+    tm.app.router.append(homepage)
+    tm.app.add_exception_handler(OverrideHTTPException())
+
+    client = tm.get_client()
+    res = client.get("/")
+
+    assert res.status_code == 400
+    assert res.json() == {"detail": "HttpException Override"}
+
+
+def test_application_adding_same_exception_twice():
+    tm = TestClientFactory.create_test_module()
+    with patch.object(
+        tm.app.__class__, "rebuild_middleware_stack"
+    ) as rebuild_middleware_stack_mock:
+        tm.app.add_exception_handler(OverrideHTTPException())
+    rebuild_middleware_stack_mock.assert_called()
+
+    with patch.object(
+        tm.app.__class__, "rebuild_middleware_stack"
+    ) as rebuild_middleware_stack_mock:
+        tm.app.add_exception_handler(OverrideHTTPException())
+    assert rebuild_middleware_stack_mock.call_count == 0
