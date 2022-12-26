@@ -1,25 +1,23 @@
 import typing as t
 
-from pydantic import Field, root_validator, validator
+from pydantic import Field, validator
 from pydantic.json import ENCODERS_BY_TYPE as encoders_by_type
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.websockets import WebSocketClose
 
 from ellar.constants import DEFAULT_LOGGING as default_logging, LOG_LEVELS as log_levels
 from ellar.core.response import JSONResponse, PlainTextResponse
 from ellar.core.versioning import DefaultAPIVersioning
-from ellar.exceptions import (
-    APIException,
-    HTTPException as StarletteHTTPException,
-    RequestValidationError,
-)
 from ellar.serializer import Serializer, SerializerFilter
 from ellar.types import ASGIApp, TReceive, TScope, TSend
 
-from ..exception_handlers import (
-    api_exception_handler,
-    request_validation_exception_handler,
+from .mixins import (
+    ConfigDefaultTypesMixin,
+    TEventHandler,
+    TExceptionHandler,
+    TMiddleware,
+    TVersioning,
 )
-from .mixins import ConfigDefaultTypesMixin, TEventHandler, TMiddleware, TVersioning
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
@@ -95,14 +93,7 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
 
     MIDDLEWARE: t.List[TMiddleware] = []
 
-    _APP_EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable] = {
-        RequestValidationError: request_validation_exception_handler,
-        APIException: api_exception_handler,
-    }
-
-    USER_CUSTOM_EXCEPTION_HANDLERS: t.Dict[
-        t.Union[int, t.Type[Exception]], t.Callable
-    ] = {}
+    EXCEPTION_HANDLERS: t.List[TExceptionHandler] = []  # type:ignore
 
     # Default not found handler
     DEFAULT_NOT_FOUND_HANDLER: ASGIApp = _not_found
@@ -122,8 +113,6 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     # logging Level
     LOG_LEVEL: t.Optional[log_levels] = log_levels.info
 
-    MIDDLEWARE_DECORATOR: t.List[TMiddleware] = []
-
     ON_REQUEST_STARTUP: t.List[TEventHandler] = []
     ON_REQUEST_SHUTDOWN: t.List[TEventHandler] = []
 
@@ -131,23 +120,6 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     TEMPLATE_GLOBAL_FILTERS: t.Dict[str, t.Callable[..., t.Any]] = {}
 
     LOGGING: t.Optional[t.Dict[str, t.Any]] = None
-
-    @root_validator(pre=False)
-    def pre_root_validate(cls, values: t.Any) -> t.Any:
-        app_exception_handlers = dict(cls._APP_EXCEPTION_HANDLERS)
-        user_custom_exception_handlers = values.get(
-            "USER_CUSTOM_EXCEPTION_HANDLERS", {}
-        )
-
-        app_exception_handlers.update(**user_custom_exception_handlers)
-
-        values["EXCEPTION_HANDLERS"] = app_exception_handlers
-        middleware_decorator_handlers = list(values.get("MIDDLEWARE_DECORATOR", []))
-        user_settings_middleware = list(values.get("MIDDLEWARE", []))
-        middleware_decorator_handlers.extend(user_settings_middleware)
-        values["MIDDLEWARE"] = middleware_decorator_handlers
-
-        return values
 
     @validator("MIDDLEWARE", pre=True)
     def pre_middleware_validate(cls, value: t.Any) -> t.Any:
