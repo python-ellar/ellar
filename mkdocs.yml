@@ -13,7 +13,7 @@ theme:
       primary: pink
       accent: pink
       toggle:
-        icon: material/toggle-switch
+        icon: material/lightbulb
         name: Switch to dark mode
 
     - media: "(prefers-color-scheme: dark)"
@@ -21,7 +21,7 @@ theme:
       primary: pink
       accent: pink
       toggle:
-        icon: material/toggle-switch-off-outline
+        icon: material/lightbulb-outline
         name: Switch to light mode
 
   language: en
@@ -41,9 +41,9 @@ nav:
       - Providers:  overview/providers.md
       - Modules:  overview/modules.md
       - Middlewares:  overview/middleware.md
-      - Exception Filters:  overview/exception-filters.md
+      - Exception Filters:  overview/exception_filters.md
       - Guards:  overview/guards.md
-      - Custom Decorators:  overview/custom-decorators.md
+      - Custom Decorators:  overview/custom_decorators.md
       - How-to Guides:
         - Parsing Request Inputs:
             - Body: overview/how-to-guide/parsing-inputs/body.md
@@ -78,5 +78,7 @@ markdown_extensions:
 - codehilite
 - admonition
 - pymdownx.superfences
+- toc:
+    permalink: true
 extra_css:
   - stylesheets/extra.css
