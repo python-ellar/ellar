@@ -20,7 +20,7 @@ from ellar.constants import ROUTE_OPENAPI_PARAMETERS, primitive_types, sequence_
 from ellar.core.connection.http import HTTPConnection, Request
 from ellar.core.connection.websocket import WebSocket
 from ellar.core.context import ExecutionContext, IExecutionContext
-from ellar.exceptions import ImproperConfiguration
+from ellar.core.exceptions import ImproperConfiguration
 
 from .. import params
 from ..helpers import is_scalar_field, is_scalar_sequence_field

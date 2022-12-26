@@ -1,5 +1,3 @@
-import sys
-
 from starlette.middleware import Middleware as Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -15,13 +13,8 @@ from starlette.middleware.trustedhost import (
 from starlette.middleware.wsgi import WSGIMiddleware as WSGIMiddleware
 
 from .di import RequestServiceProviderMiddleware
+from .exceptions import ExceptionMiddleware
 from .versioning import RequestVersioningMiddleware
-
-if sys.version_info >= (3, 7):  # pragma: no cover
-    from starlette.middleware.exceptions import ExceptionMiddleware
-else:
-    from starlette.exceptions import ExceptionMiddleware
-
 
 __all__ = [
     "Middleware",

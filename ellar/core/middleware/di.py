@@ -16,6 +16,7 @@ from ellar.core.response import Response
 from ellar.types import ASGIApp, TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core.exceptions.interfaces import IExceptionHandler
     from ellar.di.injector import EllarInjector, RequestServiceProvider
 
 
@@ -26,10 +27,14 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
         *,
         debug: bool,
         injector: "EllarInjector",
-        handler: t.Callable = None
+        handler: "IExceptionHandler" = None
     ) -> None:
+        _handler = None
+        if handler:
+            self._500_error_handler = handler
+            _handler = self.error_handler
         super(RequestServiceProviderMiddleware, self).__init__(
-            debug=debug, handler=handler, app=app
+            debug=debug, handler=_handler, app=app
         )
         self.injector = injector
 
@@ -96,3 +101,9 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
             scope[SCOPE_SERVICE_PROVIDER] = request_provider
             scope[SCOPE_EXECUTION_CONTEXT_PROVIDER] = execute_context
             await super().__call__(scope, receive, send)
+
+    async def error_handler(self, request: Request, exc: Exception) -> Response:
+        execute_context = request.scope[SCOPE_EXECUTION_CONTEXT_PROVIDER]
+        assert self._500_error_handler
+        response = await self._500_error_handler.catch(ctx=execute_context, exc=exc)
+        return response

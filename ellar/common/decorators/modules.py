@@ -8,10 +8,10 @@ from starlette.routing import Host, Mount
 from ellar.compatible import AttributeDict
 from ellar.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.core import ControllerBase
+from ellar.core.exceptions import ImproperConfiguration
 from ellar.core.modules.base import ModuleBase, ModuleBaseMeta
 from ellar.core.routing import ModuleMount, ModuleRouter
 from ellar.di import ProviderConfig, SingletonScope, injectable
-from ellar.exceptions import ImproperConfiguration
 from ellar.reflect import reflect
 
 if t.TYPE_CHECKING:  # pragma: no cover

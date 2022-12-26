@@ -4,8 +4,8 @@ import typing as t
 from starlette import status
 from starlette.types import Message
 
+from ellar.core.exceptions import WebSocketException, WebSocketRequestValidationError
 from ellar.core.params import WebsocketEndpointArgsModel
-from ellar.exceptions import WebSocketException, WebSocketRequestValidationError
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.connection import WebSocket

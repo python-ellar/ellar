@@ -4,7 +4,7 @@ from abc import ABC
 from base64 import b64decode
 
 from ellar.core.connection import HTTPConnection
-from ellar.exceptions import APIException, AuthenticationFailed
+from ellar.core.exceptions import APIException, AuthenticationFailed
 
 from .base import BaseHttpAuth, HTTPAuthorizationCredentials, HTTPBasicCredentials
 

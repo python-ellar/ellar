@@ -9,10 +9,10 @@ from ellar.constants import (
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
+from ellar.core.exceptions import ImproperConfiguration
 from ellar.core.response.model import HTMLResponseModel
 from ellar.core.routing import RouteOperationBase
 from ellar.core.templating import TemplateFunctionData
-from ellar.exceptions import ImproperConfiguration
 from ellar.helper import class_base_function_regex, get_name
 from ellar.types import TemplateFilterCallable, TemplateGlobalCallable
 

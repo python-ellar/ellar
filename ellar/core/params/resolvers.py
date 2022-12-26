@@ -16,7 +16,7 @@ from starlette.exceptions import HTTPException
 from ellar.constants import sequence_shape_to_type, sequence_shapes, sequence_types
 from ellar.core.context import IExecutionContext
 from ellar.core.datastructures import UploadFile
-from ellar.exceptions import RequestValidationError
+from ellar.core.exceptions import RequestValidationError
 from ellar.logger import logger
 from ellar.types import T
 

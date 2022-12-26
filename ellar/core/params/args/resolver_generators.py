@@ -8,7 +8,7 @@ from ellar.constants import (
     MULTI_RESOLVER_KEY,
     sequence_types,
 )
-from ellar.exceptions import ImproperConfiguration
+from ellar.core.exceptions import ImproperConfiguration
 
 from .. import params
 from ..helpers import is_scalar_field, is_scalar_sequence_field

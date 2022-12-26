@@ -12,6 +12,7 @@ from ellar.constants import (
 from ellar.core.events import EventHandler
 from ellar.reflect import reflect
 
+from ..exceptions.callable_exceptions import CallableExceptionHandler
 from .helper import class_parameter_executor_wrapper
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -42,8 +43,12 @@ class ModuleBaseBuilder:
 
     def exception_config(self, exception_dict: t.Dict) -> None:
         for k, v in exception_dict.items():
-            func = class_parameter_executor_wrapper(self._cls, v)
-            reflect.define_metadata(EXCEPTION_HANDLERS_KEY, {k: func}, self._cls)
+            func = CallableExceptionHandler(
+                self._cls, callable_exception_handler=v, exc_class_or_status_code=k
+            )
+            reflect.define_metadata(
+                EXCEPTION_HANDLERS_KEY, func, self._cls, default_value=[]
+            )
 
     @t.no_type_check
     def middleware_config(self, middleware: "MiddlewareSchema") -> None:
