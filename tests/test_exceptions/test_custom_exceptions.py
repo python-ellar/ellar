@@ -88,7 +88,7 @@ def test_invalid_handler_raise_exception():
     ]
 
 
-def test_invalid_iexception_handler_setup_raise_exception():
+def test_invalid_exception_handler_setup_raise_exception():
     with pytest.raises(AssertionError) as ex:
 
         class InvalidExceptionSetup(IExceptionHandler):
@@ -97,7 +97,33 @@ def test_invalid_iexception_handler_setup_raise_exception():
             ) -> t.Union[Response, t.Any]:
                 pass
 
-    assert "exception_type_or_code must be defined" in str(ex.value)
+    assert "'exception_type_or_code' must be defined" in str(ex.value)
+
+
+def test_invalid_exception_type_setup_raise_exception():
+    with pytest.raises(AssertionError) as ex:
+
+        class InvalidExceptionSetup(IExceptionHandler):
+            exception_type_or_code = ""
+
+            def catch(
+                self, ctx: IExecutionContext, exc: t.Any
+            ) -> t.Union[Response, t.Any]:
+                pass
+
+        assert "'exception_type_or_code' must be defined" in str(ex.value)
+
+    with pytest.raises(AssertionError) as ex:
+
+        class InvalidExceptionSetup2(IExceptionHandler):
+            exception_type_or_code = InvalidExceptionHandler
+
+            def catch(
+                self, ctx: IExecutionContext, exc: t.Any
+            ) -> t.Union[Response, t.Any]:
+                pass
+
+        assert "'exception_type_or_code' is not a valid type" in str(ex.value)
 
 
 def test_custom_exception_works():
@@ -167,7 +193,7 @@ def test_raise_default_http_exception():
     client = tm.get_client()
     res = client.get("/")
     assert res.status_code == 400
-    assert res.text == "Bad Request"
+    assert res.json() == {"detail": "Bad Request", "status_code": 400}
 
 
 @pytest.mark.parametrize("status_code", [204, 304])

@@ -174,7 +174,10 @@ class TestStarletteCompatibility:
         client = TestClient(app, raise_server_exceptions=False)
         response = client.get("/")
         assert response.status_code == 500
-        assert "Internal Server Error" in response.text
+        assert response.json() == {
+            "detail": "Internal server error",
+            "status_code": 500,
+        }
         assert app.debug
 
 
@@ -199,7 +202,7 @@ class TestEllarApp:
 
         response = client.post("/static/example.txt")
         assert response.status_code == 405
-        assert response.text == "Method Not Allowed"
+        assert response.json() == {"detail": "Method Not Allowed", "status_code": 405}
 
     def test_app_staticfiles_with_different_static_path(self, tmpdir):
         path = os.path.join(tmpdir, "example.txt")

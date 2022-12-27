@@ -256,12 +256,32 @@ def test_get_path(path, expected_status, expected_response):
         ("/path/param-starlette-str/foobar", 200, "foobar"),
         ("/path/param-starlette-int/0", 200, 0),
         ("/path/param-starlette-int/42", 200, 42),
-        ("/path/param-starlette-int/42.5", 404, b"Not Found"),
-        ("/path/param-starlette-int/-1", 404, b"Not Found"),
-        ("/path/param-starlette-int/True", 404, b"Not Found"),
-        ("/path/param-starlette-int/foobar", 404, b"Not Found"),
+        (
+            "/path/param-starlette-int/42.5",
+            404,
+            {"detail": "Not Found", "status_code": 404},
+        ),
+        (
+            "/path/param-starlette-int/-1",
+            404,
+            {"detail": "Not Found", "status_code": 404},
+        ),
+        (
+            "/path/param-starlette-int/True",
+            404,
+            {"detail": "Not Found", "status_code": 404},
+        ),
+        (
+            "/path/param-starlette-int/foobar",
+            404,
+            {"detail": "Not Found", "status_code": 404},
+        ),
         ("/path/param-starlette-int-str/42", 200, "42"),
-        ("/path/param-starlette-int-str/42.5", 404, b"Not Found"),
+        (
+            "/path/param-starlette-int-str/42.5",
+            404,
+            {"detail": "Not Found", "status_code": 404},
+        ),
         (
             "/path/param-starlette-uuid/31ea378c-c052-4b4c-bf0b-679ce5cfcc2a",
             200,
@@ -270,7 +290,7 @@ def test_get_path(path, expected_status, expected_response):
         (
             "/path/param-starlette-uuid/31ea378c-c052-4b4c-bf0b-679ce5cfcc2",
             404,
-            b"Not Found",
+            {"detail": "Not Found", "status_code": 404},
         ),
     ],
 )

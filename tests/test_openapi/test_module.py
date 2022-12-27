@@ -106,12 +106,12 @@ def test_openapi_module_with_route_guards():
 
     response = client.get("openapi.json")
     assert response.status_code == 403
-    assert response.text == "Not Allowed"
+    assert response.json() == {"detail": "Not Allowed", "status_code": 403}
 
     response = client.get("docs")
     assert response.status_code == 403
-    assert response.text == "Not Allowed"
+    assert response.json() == {"detail": "Not Allowed", "status_code": 403}
 
     response = client.get("redoc")
     assert response.status_code == 403
-    assert response.text == "Not Allowed"
+    assert response.json() == {"detail": "Not Allowed", "status_code": 403}
