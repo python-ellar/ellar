@@ -79,7 +79,7 @@ def test_staticfiles_post(tmpdir):
 
     response = client.post("/example.txt")
     assert response.status_code == 405
-    assert response.text == "Method Not Allowed"
+    assert response.json() == {"detail": "Method Not Allowed", "status_code": 405}
 
 
 def test_staticfiles_with_directory_returns_404(tmpdir):
@@ -93,7 +93,7 @@ def test_staticfiles_with_directory_returns_404(tmpdir):
 
     response = client.get("/")
     assert response.status_code == 404
-    assert response.text == "Not Found"
+    assert response.json() == {"detail": "Not Found", "status_code": 404}
 
 
 def test_staticfiles_with_missing_file_returns_404(tmpdir):
@@ -107,7 +107,7 @@ def test_staticfiles_with_missing_file_returns_404(tmpdir):
 
     response = client.get("/404.txt")
     assert response.status_code == 404
-    assert response.text == "Not Found"
+    assert response.json() == {"detail": "Not Found", "status_code": 404}
 
 
 def test_staticfiles_instantiated_with_missing_directory(tmpdir):
@@ -375,7 +375,7 @@ def test_staticfiles_with_invalid_dir_permissions_returns_401(tmpdir):
 
     response = client.get("/example.txt")
     assert response.status_code == 401
-    assert response.text == "Unauthorized"
+    assert response.json() == {"detail": "Unauthorized", "status_code": 401}
 
 
 def test_staticfiles_with_missing_dir_returns_404(tmpdir):
@@ -389,7 +389,7 @@ def test_staticfiles_with_missing_dir_returns_404(tmpdir):
 
     response = client.get("/foo/example.txt")
     assert response.status_code == 404
-    assert response.text == "Not Found"
+    assert response.json() == {"detail": "Not Found", "status_code": 404}
 
 
 def test_staticfiles_access_file_as_dir_returns_404(tmpdir):
@@ -403,7 +403,7 @@ def test_staticfiles_access_file_as_dir_returns_404(tmpdir):
 
     response = client.get("/example.txt/foo")
     assert response.status_code == 404
-    assert response.text == "Not Found"
+    assert response.json() == {"detail": "Not Found", "status_code": 404}
 
 
 def test_staticfiles_unhandled_os_error_returns_500(tmpdir, monkeypatch):
@@ -422,4 +422,4 @@ def test_staticfiles_unhandled_os_error_returns_500(tmpdir, monkeypatch):
 
     response = client.get("/example.txt")
     assert response.status_code == 500
-    assert response.text == "Internal Server Error"
+    assert response.json() == {"detail": "Internal server error", "status_code": 500}

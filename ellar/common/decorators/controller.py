@@ -13,8 +13,8 @@ from ellar.constants import (
 )
 from ellar.core import ControllerBase
 from ellar.core.controller import ControllerType
+from ellar.core.exceptions import ImproperConfiguration
 from ellar.di import RequestScope, injectable
-from ellar.exceptions import ImproperConfiguration
 from ellar.reflect import reflect
 
 if t.TYPE_CHECKING:  # pragma: no cover

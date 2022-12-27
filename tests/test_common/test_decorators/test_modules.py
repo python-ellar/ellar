@@ -2,8 +2,8 @@ import pytest
 
 from ellar.common import Module
 from ellar.constants import MODULE_METADATA, MODULE_WATERMARK
+from ellar.core.exceptions import ImproperConfiguration
 from ellar.di import has_binding, is_decorated_with_injectable
-from ellar.exceptions import ImproperConfiguration
 from ellar.reflect import reflect
 
 

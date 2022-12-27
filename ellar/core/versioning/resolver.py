@@ -7,7 +7,7 @@ from starlette.routing import compile_path
 
 from ellar.constants import NOT_SET
 from ellar.core.connection import HTTPConnection
-from ellar.exceptions import NotAcceptable, NotFound
+from ellar.core.exceptions import NotAcceptable, NotFound
 from ellar.types import TScope
 
 

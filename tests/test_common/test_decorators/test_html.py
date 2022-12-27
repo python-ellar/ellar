@@ -9,9 +9,9 @@ from ellar.constants import (
     TEMPLATE_GLOBAL_KEY,
 )
 from ellar.core.connection import Request
+from ellar.core.exceptions import ImproperConfiguration
 from ellar.core.response.model import HTMLResponseModel
 from ellar.core.templating import TemplateFunctionData
-from ellar.exceptions import ImproperConfiguration
 from ellar.reflect import reflect
 
 

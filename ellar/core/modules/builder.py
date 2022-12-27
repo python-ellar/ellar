@@ -12,7 +12,8 @@ from ellar.constants import (
 from ellar.core.events import EventHandler
 from ellar.reflect import reflect
 
-from .helper import class_parameter_executor_wrapper
+from ..exceptions.callable_exceptions import CallableExceptionHandler
+from .helper import module_callable_factory
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.middleware.schema import MiddlewareSchema
@@ -42,14 +43,16 @@ class ModuleBaseBuilder:
 
     def exception_config(self, exception_dict: t.Dict) -> None:
         for k, v in exception_dict.items():
-            func = class_parameter_executor_wrapper(self._cls, v)
-            reflect.define_metadata(EXCEPTION_HANDLERS_KEY, {k: func}, self._cls)
+            func = CallableExceptionHandler(
+                self._cls, callable_exception_handler=v, exc_class_or_status_code=k
+            )
+            reflect.define_metadata(
+                EXCEPTION_HANDLERS_KEY, func, self._cls, default_value=[]
+            )
 
     @t.no_type_check
     def middleware_config(self, middleware: "MiddlewareSchema") -> None:
-        middleware.dispatch = class_parameter_executor_wrapper(
-            self._cls, middleware.dispatch
-        )
+        middleware.dispatch = module_callable_factory(middleware.dispatch, self._cls)
         reflect.define_metadata(
             MIDDLEWARE_HANDLERS_KEY,
             middleware.create_middleware(),
@@ -58,23 +61,23 @@ class ModuleBaseBuilder:
         )
 
     def on_request_shut_down_config(self, on_shutdown_event: EventHandler) -> None:
-        on_shutdown_event.handler = class_parameter_executor_wrapper(
-            self._cls, on_shutdown_event.handler
+        on_shutdown_event.handler = module_callable_factory(
+            on_shutdown_event.handler, self._cls
         )
         reflect.define_metadata(
             ON_REQUEST_SHUTDOWN_KEY,
-            on_shutdown_event.handler,
+            on_shutdown_event,
             self._cls,
             default_value=[],
         )
 
     def on_request_startup_config(self, on_startup_event: EventHandler) -> None:
-        on_startup_event.handler = class_parameter_executor_wrapper(
-            self._cls, on_startup_event.handler
+        on_startup_event.handler = module_callable_factory(
+            on_startup_event.handler, self._cls
         )
         reflect.define_metadata(
             ON_REQUEST_STARTUP_KEY,
-            on_startup_event.handler,
+            on_startup_event,
             self._cls,
             default_value=[],
         )
@@ -83,8 +86,8 @@ class ModuleBaseBuilder:
         reflect.define_metadata(
             TEMPLATE_FILTER_KEY,
             {
-                template_filter.name: class_parameter_executor_wrapper(
-                    self._cls, template_filter.func
+                template_filter.name: module_callable_factory(
+                    template_filter.func, self._cls
                 )
             },
             self._cls,
@@ -95,8 +98,8 @@ class ModuleBaseBuilder:
         reflect.define_metadata(
             TEMPLATE_GLOBAL_KEY,
             {
-                template_filter.name: class_parameter_executor_wrapper(
-                    self._cls, template_filter.func
+                template_filter.name: module_callable_factory(
+                    template_filter.func, self._cls
                 )
             },
             self._cls,

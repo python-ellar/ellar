@@ -1,6 +1,7 @@
 import os
+import typing as t
 
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 
 from ellar.common import Module, get, template_filter, template_global
 from ellar.compatible import asynccontextmanager
@@ -15,6 +16,11 @@ from ellar.core import (
 from ellar.core.connection import Request
 from ellar.core.context import IExecutionContext
 from ellar.core.events import EventHandler
+from ellar.core.exceptions.interfaces import (
+    IExceptionHandler,
+    IExceptionMiddlewareService,
+)
+from ellar.core.exceptions.service import ExceptionMiddlewareService
 from ellar.core.modules import ModuleTemplateRef
 from ellar.core.staticfiles import StaticFiles
 from ellar.core.templating import Environment
@@ -168,7 +174,10 @@ class TestStarletteCompatibility:
         client = TestClient(app, raise_server_exceptions=False)
         response = client.get("/")
         assert response.status_code == 500
-        assert "Internal Server Error" in response.text
+        assert response.json() == {
+            "detail": "Internal server error",
+            "status_code": 500,
+        }
         assert app.debug
 
 
@@ -179,7 +188,12 @@ class TestEllarApp:
             file.write("<file content>")
 
         config = Config(STATIC_DIRECTORIES=[tmpdir])
-        app = App(injector=EllarInjector(), config=config)
+        injector = EllarInjector()
+        injector.container.register_singleton(
+            IExceptionMiddlewareService, ExceptionMiddlewareService
+        )
+        injector.container.register_instance(config)
+        app = App(injector=injector, config=config)
         client = TestClient(app)
 
         response = client.get("/static/example.txt")
@@ -188,7 +202,7 @@ class TestEllarApp:
 
         response = client.post("/static/example.txt")
         assert response.status_code == 405
-        assert response.text == "Method Not Allowed"
+        assert response.json() == {"detail": "Method Not Allowed", "status_code": 405}
 
     def test_app_staticfiles_with_different_static_path(self, tmpdir):
         path = os.path.join(tmpdir, "example.txt")
@@ -198,7 +212,12 @@ class TestEllarApp:
         config = Config(
             STATIC_MOUNT_PATH="/static-modified", STATIC_DIRECTORIES=[tmpdir]
         )
-        app = App(injector=EllarInjector(), config=config)
+        injector = EllarInjector()
+        injector.container.register_singleton(
+            IExceptionMiddlewareService, ExceptionMiddlewareService
+        )
+        injector.container.register_instance(config)
+        app = App(injector=injector, config=config)
         client = TestClient(app)
 
         response = client.get("/static-modified/example.txt")
@@ -246,6 +265,10 @@ class TestEllarApp:
         injector = EllarInjector(
             auto_bind=False
         )  # will raise an exception is service is not registered
+        injector.container.register_singleton(
+            IExceptionMiddlewareService, ExceptionMiddlewareService
+        )
+        injector.container.register_instance(config)
 
         app = App(config=config, injector=injector)
         assert injector.get(Reflector)
@@ -258,16 +281,24 @@ class TestEllarApp:
         class CustomException(Exception):
             pass
 
+        class CustomExceptionHandler(IExceptionHandler):
+            exception_type_or_code = CustomException
+
+            async def catch(
+                self, ctx: IExecutionContext, exc: t.Union[t.Any, Exception]
+            ) -> t.Union[Response, t.Any]:
+                return JSONResponse(dict(detail=str(exc)), status_code=404)
+
         config = Config()
         injector = EllarInjector(
             auto_bind=False
         )  # will raise an exception is service is not registered
-
+        injector.container.register_singleton(
+            IExceptionMiddlewareService, ExceptionMiddlewareService
+        )
+        injector.container.register_instance(config)
         app = App(config=config, injector=injector)
-
-        @app.exception_handler(CustomException)
-        async def exception_custom_exception(request, exc):
-            return JSONResponse(dict(detail=str(exc)), status_code=404)
+        app.add_exception_handler(CustomExceptionHandler())
 
         @get("/404")
         def raise_custom_exception():

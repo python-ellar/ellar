@@ -1,3 +1,5 @@
+import asyncio
+import functools
 import inspect
 import re
 import typing as t
@@ -29,3 +31,12 @@ def get_name(endpoint: t.Union[t.Callable, t.Type, object]) -> str:
     if inspect.isfunction(endpoint) or inspect.isclass(endpoint):
         return endpoint.__name__
     return endpoint.__class__.__name__
+
+
+def is_async_callable(obj: t.Any) -> bool:
+    while isinstance(obj, functools.partial):  # pragma: no cover
+        obj = obj.func
+
+    return asyncio.iscoroutinefunction(obj) or (
+        callable(obj) and asyncio.iscoroutinefunction(obj.__call__)
+    )

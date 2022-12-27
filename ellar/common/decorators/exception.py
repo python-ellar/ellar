@@ -7,12 +7,12 @@ from ellar.constants import EXCEPTION_HANDLERS_KEY
 
 class ValidateExceptionHandler(BaseModel):
     key: t.Union[int, t.Type[Exception]]
-    value: t.Callable
+    value: t.Union[t.Callable, t.Type]
 
 
-def add_exception_handler(
+def _add_exception_handler(
     exc_class_or_status_code: t.Union[int, t.Type[Exception]],
-    handler: t.Callable,
+    handler: t.Union[t.Callable, t.Type],
 ) -> None:
     validator = ValidateExceptionHandler(key=exc_class_or_status_code, value=handler)
     exception_handlers = {validator.key: validator.value}
@@ -30,8 +30,8 @@ def exception_handler(
     :return: Function
     """
 
-    def decorator(func: t.Callable) -> t.Callable:
-        add_exception_handler(exc_class_or_status_code, func)
+    def decorator(func: t.Union[t.Callable, t.Type]) -> t.Callable:
+        _add_exception_handler(exc_class_or_status_code, func)
         return func
 
     return decorator

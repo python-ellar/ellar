@@ -1,0 +1,65 @@
+import typing as t
+
+from starlette.exceptions import HTTPException
+
+from ellar.constants import SCOPE_EXECUTION_CONTEXT_PROVIDER
+from ellar.types import ASGIApp, TMessage, TReceive, TScope, TSend
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core.exceptions.service import ExceptionMiddlewareService
+
+
+class ExceptionMiddleware:
+    def __init__(
+        self,
+        app: ASGIApp,
+        exception_middleware_service: "ExceptionMiddlewareService",
+        debug: bool = False,
+    ) -> None:
+        self.app = app
+        self.debug = debug  # TODO: We ought to handle 404 cases if debug is set.
+        self._exception_middleware_service = exception_middleware_service
+
+    async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
+        if scope["type"] not in ("http", "websocket"):
+            await self.app(scope, receive, send)
+            return
+
+        response_started = False
+
+        async def sender(message: TMessage) -> None:
+            nonlocal response_started
+
+            if message["type"] == "http.response.start":
+                response_started = True
+            await send(message)
+
+        try:
+            await self.app(scope, receive, sender)
+        except Exception as exc:
+            handler = None
+
+            if isinstance(exc, HTTPException):
+                handler = self._exception_middleware_service.lookup_status_code_exception_handler(
+                    exc.status_code
+                )
+
+            if handler is None:
+                handler = self._exception_middleware_service.lookup_exception_handler(
+                    exc
+                )
+
+            if handler is None:
+                raise exc
+
+            if response_started:
+                msg = "Caught handled exception, but response already started."
+                raise RuntimeError(msg) from exc
+
+            if scope["type"] == "http":
+                response = await handler.catch(
+                    scope[SCOPE_EXECUTION_CONTEXT_PROVIDER], exc
+                )
+                await response(scope, receive, sender)
+            elif scope["type"] == "websocket":
+                await handler.catch(scope[SCOPE_EXECUTION_CONTEXT_PROVIDER], exc)

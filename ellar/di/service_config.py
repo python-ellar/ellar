@@ -7,7 +7,7 @@ from injector import (
 )
 
 from ellar.constants import INJECTABLE_ATTRIBUTE
-from ellar.exceptions import ImproperConfiguration
+from ellar.core.exceptions import ImproperConfiguration
 from ellar.shortcuts import fail_silently
 from ellar.types import T
 

@@ -4,8 +4,8 @@ import pytest
 from pydantic import BaseModel
 
 from ellar.common import Header, Query
+from ellar.core.exceptions import ImproperConfiguration
 from ellar.core.routing import ModuleRouter
-from ellar.exceptions import ImproperConfiguration
 
 mr = ModuleRouter("")
 

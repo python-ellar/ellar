@@ -10,8 +10,8 @@ from ellar.constants import (
 )
 from ellar.core.connection import WebSocket
 from ellar.core.context import ExecutionContext
+from ellar.core.exceptions import ImproperConfiguration, WebSocketRequestValidationError
 from ellar.core.params import WebsocketEndpointArgsModel
-from ellar.exceptions import ImproperConfiguration, WebSocketRequestValidationError
 from ellar.helper import get_name
 from ellar.reflect import reflect
 

@@ -8,6 +8,10 @@ from ellar.core.conf import Config
 from ellar.core.context import ExecutionContext, IExecutionContext
 from ellar.core.datastructures import State, URLPath
 from ellar.core.events import EventHandler, RouterEventManager
+from ellar.core.exceptions.interfaces import (
+    IExceptionHandler,
+    IExceptionMiddlewareService,
+)
 from ellar.core.guard import GuardCanActivate
 from ellar.core.middleware import (
     CORSMiddleware,
@@ -57,7 +61,6 @@ class App(AppTemplating):
         self._injector: EllarInjector = injector
 
         self._global_guards = [] if global_guards is None else list(global_guards)
-        self._exception_handlers = dict(t.cast(dict, self.config.EXCEPTION_HANDLERS))
         self._user_middleware = list(t.cast(list, self.config.MIDDLEWARE))
 
         self.on_startup = RouterEventManager(
@@ -173,14 +176,11 @@ class App(AppTemplating):
         return self._config
 
     def build_middleware_stack(self) -> ASGIApp:
-        error_handler = None
-        exception_handlers = {}
-
-        for key, value in self._exception_handlers.items():
-            if key in (500, Exception):
-                error_handler = value
-            else:
-                exception_handlers[key] = value
+        service_middleware = self.injector.get(
+            IExceptionMiddlewareService  # type:ignore
+        )
+        service_middleware.build_exception_handlers()
+        error_handler = service_middleware.get_500_error_handler()
 
         middleware = (
             [
@@ -212,7 +212,9 @@ class App(AppTemplating):
             + self._user_middleware
             + [
                 Middleware(
-                    ExceptionMiddleware, handlers=exception_handlers, debug=self.debug
+                    ExceptionMiddleware,
+                    exception_middleware_service=service_middleware,
+                    debug=self.debug,
                 ),
             ]
         )
@@ -265,20 +267,15 @@ class App(AppTemplating):
 
     def add_exception_handler(
         self,
-        exc_class_or_status_code: t.Union[int, t.Type[Exception]],
-        handler: t.Callable,
-    ) -> None:  # pragma: no cover
-        self._exception_handlers[exc_class_or_status_code] = handler
-        self.middleware_stack = self.build_middleware_stack()
-
-    def exception_handler(
-        self, exc_class_or_status_code: t.Union[int, t.Type[Exception]]
-    ) -> t.Callable:  # pragma: nocover
-        def decorator(func: t.Callable) -> t.Callable:
-            self.add_exception_handler(exc_class_or_status_code, func)
-            return func
-
-        return decorator
+        *exception_handlers: IExceptionHandler,
+    ) -> None:
+        _added_any = False
+        for exception_handler in exception_handlers:
+            if exception_handler not in self.config.EXCEPTION_HANDLERS:
+                self.config.EXCEPTION_HANDLERS.append(exception_handler)
+                _added_any = True
+        if _added_any:
+            self.rebuild_middleware_stack()
 
     def rebuild_middleware_stack(self) -> None:
         self.middleware_stack = self.build_middleware_stack()

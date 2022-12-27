@@ -261,9 +261,9 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
 
     def scan_exceptions_handlers(self) -> None:
         exception_handlers = (
-            reflect.get_metadata(EXCEPTION_HANDLERS_KEY, self._module_type) or {}
+            reflect.get_metadata(EXCEPTION_HANDLERS_KEY, self._module_type) or []
         )
-        self._config[EXCEPTION_HANDLERS_KEY].update(exception_handlers)
+        self._config[EXCEPTION_HANDLERS_KEY].extend(exception_handlers)
 
     def scan_middle_ware(self) -> None:
         middleware = (

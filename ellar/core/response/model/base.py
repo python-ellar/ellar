@@ -8,7 +8,7 @@ from pydantic.fields import ModelField
 from ellar.constants import SERIALIZER_FILTER_KEY, primitive_types
 from ellar.core.context import IExecutionContext
 from ellar.core.converters import TypeDefinitionConverter
-from ellar.exceptions import RequestValidationError
+from ellar.core.exceptions import RequestValidationError
 from ellar.helper.modelfield import create_model_field
 from ellar.reflect import reflect
 from ellar.serializer import (

@@ -1,3 +1,4 @@
+import inspect
 import typing as t
 
 from starlette.responses import JSONResponse
@@ -5,13 +6,38 @@ from starlette.types import ASGIApp
 
 from ellar.constants import LOG_LEVELS as log_levels
 from ellar.core.events import EventHandler
+from ellar.core.exceptions.interfaces import IExceptionHandler
 from ellar.core.middleware import Middleware
 from ellar.core.versioning import BaseAPIVersioning
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import App
 
-__all__ = ["ConfigDefaultTypesMixin", "TVersioning", "TMiddleware", "TEventHandler"]
+__all__ = [
+    "ConfigDefaultTypesMixin",
+    "TVersioning",
+    "TMiddleware",
+    "TEventHandler",
+    "TExceptionHandler",
+]
+
+
+class TExceptionHandler:
+    @classmethod
+    def __get_validators__(
+        cls: t.Type["TExceptionHandler"],
+    ) -> t.Iterable[t.Callable[..., t.Any]]:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls: t.Type["TExceptionHandler"], v: t.Any) -> t.Any:
+        if isinstance(v, IExceptionHandler):
+            return v
+
+        if inspect.isclass(v):
+            raise ValueError(f"Expected TExceptionHandler, received: {v}")
+
+        raise ValueError(f"Expected TExceptionHandler, received: {type(v)}")
 
 
 class TVersioning(BaseAPIVersioning):
@@ -89,17 +115,14 @@ class ConfigDefaultTypesMixin:
     # A dictionary mapping either integer status codes,
     # or exception class types onto callables which handle the exceptions.
     # Exception handler callables should be of the form
-    # `handler(request, exc) -> response` and may be be either standard functions, or async functions.
-    EXCEPTION_HANDLERS: t.Dict[t.Union[int, t.Type[Exception]], t.Callable]
+    # `handler(request, exc) -> response` and may be either standard functions, or async functions.
+    EXCEPTION_HANDLERS: t.List[IExceptionHandler]
 
     # static route
     STATIC_MOUNT_PATH: str
 
     # defines other custom json encoders
     SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]]
-
-    # will be set automatically when @middleware is found in a Module class
-    MIDDLEWARE_DECORATOR: t.List[TMiddleware]
 
     # will be set automatically when @on_startup is found in a Module class
     ON_REQUEST_STARTUP: t.List[TEventHandler]

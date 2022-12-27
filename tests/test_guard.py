@@ -3,6 +3,7 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 
 from ellar.common import Req, get, guards
 from ellar.core import AppFactory, TestClient
+from ellar.core.exceptions import APIException
 from ellar.core.guard import (
     APIKeyCookie,
     APIKeyHeader,
@@ -11,7 +12,6 @@ from ellar.core.guard import (
     HttpBearerAuth,
     HttpDigestAuth,
 )
-from ellar.exceptions import APIException
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
 

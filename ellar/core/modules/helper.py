@@ -4,7 +4,8 @@ from functools import wraps
 
 
 def _executor_wrapper_async(
-    cls: t.Type, func: t.Callable
+    cls: t.Type,
+    func: t.Callable,
 ) -> t.Callable[..., t.Coroutine]:
     @wraps(func)
     async def _decorator(*args: t.Any, **kwargs: t.Any) -> t.Any:
@@ -21,8 +22,8 @@ def _executor_wrapper(cls: t.Type, func: t.Callable) -> t.Callable:
     return _decorator
 
 
-def class_parameter_executor_wrapper(
-    cls: t.Type, func: t.Callable
+def module_callable_factory(
+    func: t.Callable, cls: t.Type
 ) -> t.Union[t.Callable, t.Callable[..., t.Coroutine]]:
     if inspect.iscoroutinefunction(func):
         return _executor_wrapper_async(cls, func)

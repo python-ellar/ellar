@@ -3,7 +3,7 @@ import typing as t
 from starlette.status import WS_1008_POLICY_VIOLATION
 
 from ellar.core.context import ExecutionContext
-from ellar.exceptions import WebSocketRequestValidationError
+from ellar.core.exceptions import WebSocketRequestValidationError
 
 from ...websocket import WebsocketRouteOperation
 from ..base import ControllerRouteOperationBase

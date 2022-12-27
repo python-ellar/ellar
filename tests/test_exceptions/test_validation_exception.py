@@ -3,7 +3,7 @@ from pydantic.error_wrappers import ErrorWrapper
 
 from ellar.common import Ws, get, ws_route
 from ellar.core import TestClientFactory
-from ellar.exceptions.validation import (
+from ellar.core.exceptions.validation import (
     RequestValidationError,
     WebSocketRequestValidationError,
 )

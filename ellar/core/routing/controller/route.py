@@ -3,8 +3,8 @@ import typing as t
 from starlette.concurrency import run_in_threadpool
 
 from ellar.core.context import ExecutionContext
+from ellar.core.exceptions import RequestValidationError
 from ellar.core.routing.route import RouteOperation
-from ellar.exceptions import RequestValidationError
 
 from .base import ControllerRouteOperationBase
 
