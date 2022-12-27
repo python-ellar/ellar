@@ -41,7 +41,7 @@ nav:
       - Providers:  overview/providers.md
       - Modules:  overview/modules.md
       - Middlewares:  overview/middleware.md
-      - Exception Filters:  overview/exception_filters.md
+      - Exception Handling:  overview/exception_handling.md
       - Guards:  overview/guards.md
       - Custom Decorators:  overview/custom_decorators.md
       - How-to Guides:
