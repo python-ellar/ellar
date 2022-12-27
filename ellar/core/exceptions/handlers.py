@@ -5,7 +5,7 @@ from starlette.exceptions import (
     HTTPException as StarletteHTTPException,
     WebSocketException as StarletteWebSocketException,
 )
-from starlette.responses import PlainTextResponse, Response
+from starlette.responses import Response
 
 from ellar.core.context import IExecutionContext
 from ellar.core.exceptions import APIException, RequestValidationError
@@ -20,10 +20,19 @@ class HTTPExceptionHandler(IExceptionHandler):
     async def catch(
         self, ctx: IExecutionContext, exc: StarletteHTTPException
     ) -> t.Union[Response, t.Any]:
+        assert isinstance(exc, StarletteHTTPException)
+        config = ctx.get_app().config
+
         if exc.status_code in {204, 304}:
             return Response(status_code=exc.status_code, headers=exc.headers)
-        return PlainTextResponse(
-            exc.detail, status_code=exc.status_code, headers=exc.headers
+
+        if isinstance(exc.detail, (list, dict)):
+            data = exc.detail
+        else:
+            data = dict(detail=exc.detail, status_code=exc.status_code)
+
+        return config.DEFAULT_JSON_CLASS(
+            data, status_code=exc.status_code, headers=exc.headers
         )
 
 
@@ -44,14 +53,16 @@ class APIExceptionHandler(IExceptionHandler):
     async def catch(
         self, ctx: IExecutionContext, exc: APIException
     ) -> t.Union[Response, t.Any]:
+        assert isinstance(exc, APIException)
+
         config = ctx.get_app().config
-        headers = getattr(exc, "headers", {})
         if isinstance(exc.detail, (list, dict)):
             data = exc.detail
         else:
-            data = {"detail": exc.detail}
+            data = exc.get_details()
+
         return config.DEFAULT_JSON_CLASS(
-            serialize_object(data), status_code=exc.status_code, headers=headers
+            serialize_object(data), status_code=exc.status_code, headers=exc.headers
         )
 
 

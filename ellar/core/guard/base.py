@@ -11,7 +11,9 @@ from ellar.core.exceptions import APIException
 
 
 class GuardCanActivate(ABC, metaclass=ABCMeta):
-    exception_class: t.Type[HTTPException] = HTTPException
+    exception_class: t.Union[
+        t.Type[HTTPException], t.Type[APIException]
+    ] = HTTPException
     status_code: int = HTTP_403_FORBIDDEN
     detail: str = "Not authenticated"
 

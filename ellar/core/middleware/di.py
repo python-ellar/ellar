@@ -6,6 +6,7 @@ from starlette.requests import (
     HTTPConnection as StarletteHTTPConnection,
     Request as StarletteRequest,
 )
+from starlette.responses import JSONResponse
 from starlette.websockets import WebSocket as StarletteWebSocket
 
 from ellar.constants import SCOPE_EXECUTION_CONTEXT_PROVIDER, SCOPE_SERVICE_PROVIDER
@@ -110,3 +111,8 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
         assert self._500_error_handler
         response = await self._500_error_handler.catch(ctx=execute_context, exc=exc)
         return response
+
+    def error_response(self, request: StarletteRequest, exc: Exception) -> Response:
+        return JSONResponse(
+            dict(detail="Internal server error", status_code=500), status_code=500
+        )

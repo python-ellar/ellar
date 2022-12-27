@@ -267,10 +267,14 @@ class App(AppTemplating):
 
     def add_exception_handler(
         self,
-        exception_handler: IExceptionHandler,
+        *exception_handlers: IExceptionHandler,
     ) -> None:
-        if exception_handler not in self.config.EXCEPTION_HANDLERS:
-            self.config.EXCEPTION_HANDLERS.append(exception_handler)
+        _added_any = False
+        for exception_handler in exception_handlers:
+            if exception_handler not in self.config.EXCEPTION_HANDLERS:
+                self.config.EXCEPTION_HANDLERS.append(exception_handler)
+                _added_any = True
+        if _added_any:
             self.rebuild_middleware_stack()
 
     def rebuild_middleware_stack(self) -> None:
