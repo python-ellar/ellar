@@ -1,20 +1,19 @@
-A module is a class annotated with a `@Module()` decorator. 
-The `@Module()` decorator provides **metadata** that **Ellar** makes use of to organize the application structure.
+A module is a class annotated with a `@Module()` decorator.
+The `@Module()` decorator provides **metadata** that exports a `Module` data and defines the module structure.
 
 ![middleware description image](../img/ModuleDescription.png)
 
-The `ApplicationModule` is the entry point for Ellar to build your application graph - 
-the internal data structure used to resolve module and provider relationships and dependencies.
-The best way to organize your components is to build your projects as `Modules`. 
+The best way to organize your components is to build your projects as `Modules`.
+
+The `ApplicationModule` is the entry-point/root module to building the application module tree -
+the internal data structure used to resolve `module` and `provider` relationships and dependencies.
+
 Thus, the architecture resulting from most applications will include multiple modules with closely related **functionality**.
 
-## `Feature modules`
-Module helps to organize code relevant for specific features, ensuring that the code is clear and organized.
-This will help to manage complexity and develop using SOLID especially as the application or team grows.
+## **Feature modules**
+Building an application as a group of feature modules bundled together helps to manage complexity, have a maintainable, extendable, and testable code base, and encourage development using SOLID principles.
 
-A typical example of a feature module is the **dogs** project. The `DogsModule` wraps all the services and controller
-that manages the dog resource which makes it easy to maintain and extend.
-
+A typical example of a feature module is the **dogs** project. The `DogsModule` wraps all the services and controller that manages the `dog` resource which makes it easy to maintain, extend, and testable.
 ```python
 # project_name/apps/dogs/module.py
 
@@ -36,7 +35,7 @@ class DogsModule(ModuleBase):
         pass
 ```
 
-## `Module Parameters`
+## **Module Parameters**
 Let's create a Module and take a quick overview of its parameters.
 
 ```python
@@ -68,14 +67,14 @@ class BookModule(ModuleBase):
 | `routers`         | the set of `ModuleRouter` defined in this module                                                                             |
 | `commands`        | the set of `EllarTyper` or `command` decorated functions                                                                     |
 | `base_directory`  | root directory for this module to read `static_folder` and `template_folder`. Default is the root folder of the Module Class |
-| `static_folder`   | defines the static folder for this module                                                                                    |
-| `template_folder` | defines the template folder for this module                                                                                  |
+| `static_folder`   | defines the static folder for this module - default: `static`                                                                |
+| `template_folder` | defines the template folder for this module - default: `templates`                                                           |
 
 
-## `Additional Module Configurations`
+## **Additional Module Configurations**
 
-### `Module Events`
-Every registered Module receives two event calls during its instantiation and when application is ready.
+### **Module Events**
+Every registered Module receives two event calls during its instantiation and when the application is ready.
 
 ```python
 from ellar.common import Module
@@ -93,10 +92,10 @@ class ModuleEventSample(ModuleBase):
 ```
 `before_init` receives current app `Config` as a parameter and `application_ready` function receives `App` instance as parameter.
 
-####  `Starlette Application Events`
-We can register multiple event handlers for dealing with code that needs to run before 
+####  **Starlette Application Events**
+We can register multiple event handlers for dealing with `tasks` that need to run before
 the application starts `up`, or when the application is shutting `down`.
-This is the way we support `Starlette` start up events in `Ellar`
+This is the way we support `Starlette` start-up events in `Ellar`
 
 ```python
 
@@ -121,27 +120,26 @@ class ModuleRequestEventsSample(ModuleBase):
     async def on_shutdown_func_2(cls):
         pass
 ```
-These will be registered to the application router during `ModuleRequestEventsSample` computation at runtime.
+These will be registered to the application router during the `ModuleRequestEventsSample` computation at runtime.
 Also, the events can be `async` as in the case of `on_shutdown_func_2` and `on_startup_func_2`
 
-
-### `Module Exceptions`
-In Ellar, custom exceptions can be registered through modules. 
-During module meta-data computation, Ellar reads additional properties such as these from registered modules
+### **Module Exceptions**
+Custom exception handlers can be registered through modules.
 
 ```python
 from ellar.common import Module, exception_handler
-from ellar.core import ModuleBase, JSONResponse, Request, Response
+from ellar.core import  ModuleBase, JSONResponse, Response
+from ellar.core.context import IExecutionContext
 
 @Module()
 class ModuleExceptionSample(ModuleBase):
     @exception_handler(404)
-    def exception_404_handler(cls, request: Request, exc: Exception) -> Response:
+    def exception_404_handler(cls, ctx: IExecutionContext, exc: Exception) -> Response:
         return JSONResponse(dict(detail="Resource not found."))
 ```
 `exception_404_handler` will be register to the application at runtime during `ModuleExceptionSample` computation.
 
-### `Module Templating Filters`
+### **`Module Templating Filters`**
 We can also define `Jinja2` templating filters in project Modules or any `@Module()` module.
 The defined filters are be passed down to `Jinja2` **environment** instance alongside the `template_folder` 
 value when creating **TemplateLoader**.
@@ -166,10 +164,11 @@ class ModuleTemplateFilterSample(ModuleBase):
         return n * 2
 ```
 
-## `Dependency Injection`
+## **Dependency Injection**
 A module class can inject providers as well (e.g., for configuration purposes):
 
 For example, from our sample project, the can inject `Config` to the `DogModule`
+
 ```python
 # project_name/apps/dogs/module.py
 
@@ -195,9 +194,10 @@ class DogsModule(ModuleBase):
 ```
 
 
-## `Injector Module`
-Since `EllarInjector` is based on a python library [injector](https://injector.readthedocs.io/en/latest/index.html) both 
-share similar `Module` features with few distinct features. As an added support, you can create or reuse modules from `injector` Modules.
+## **Injector Module**
+`EllarInjector` is based on a python library [injector](https://injector.readthedocs.io/en/latest/index.html). Both share similar `Module` features with few distinct features. 
+
+As an added support, you can create or reuse modules from `injector` Modules.
 
 !!! info
     This type of module is used to configure `injector` **bindings** and **providers** for dependency injection purposes.

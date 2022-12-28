@@ -1,12 +1,12 @@
 
-The Controller is responsible for handling incoming requests and returning responses to client. 
-The purpose of a controller is to receive specific requests for an application and `ApplicationRouter` decides which controller should handle an incoming request.
+The Controller is responsible for handling incoming requests and returning responses to the client.
+The purpose of a controller is to receive specific requests for an application `ApplicationRouter`. `ApplicationRouter` on the other hand, decides which `controller` should handle an incoming request.
 
 ![controller description image](../img/controller_description.png)
 
-Controllers can also be seen as a router which has many routes registered in it.
+Controllers can be said to be a router with many routes registered in them.
 
-### Creating a Controller
+### **Creating a Controller**
 To create a controller, we use classes and decorators. The `Controller` decorator associates classes with a required
 `metadata` needed for Ellar to create a routing table
 
@@ -19,14 +19,11 @@ class UsersController(ControllerBase):
     """We have created a controller for Users"""
 ```
 
-## Routing
-In this section, we are going to highlight the important features of the `@Controller()`, a `class decorator` 
-for defining a controller. By default, `@Controller()` will create a path prefix `/dogs` gotten from class name in `Dogs`Controller 
-that will be used to group related routes and minimize duplicate route definition and code repetition.
+## **Routing**
+In this section, we are going to highlight key features of the `@Controller()`, a `class decorator` 
+for defining a controller. By default, `@Controller()` will create a path prefix `/dogs` gotten from the class name in `Dogs`Controller. This will be used to group related routes and minimize duplicate route definitions.
 
-For example, we may choose to group a set of routes that manage interactions with a customer entity under the route `/users`.
-In that case, we could specify the path prefix `/users` in the `@Controller()` decorator so that we don't have to repeat that portion of the path for each route in the file.
-
+For example, we may choose to group a set of routes that manage interactions with a customer entity under the route `/users`. In that case, we could specify the path prefix `/users` in the `@Controller()` decorator so we don't have to repeat that portion of the path for each route in the controller.
 
 ```python
 # project_name/apps/dogs/controllers.py
@@ -48,35 +45,36 @@ class DogsController(ControllerBase):
 !!! hint
     Class Decorators name are capitalized while function/method decorator name are in lower case
 
-The `@get()` HTTP method decorator before the `get_all(self)` method marks `get_all(self)` as HTTP request handler for
-a specific endpoint matching HTTP Request of `GET` and the route path. What is the route path of `get_all(self)`? The route
-path is determined by concatenating the controller `path prefix` and path specified in the HTTP method function decorator `@get()`.
-Since we've declared a prefix for every route `(dogs)`, and haven't added any path information in the decorator(`default='/'`), 
-Ellar will map `GET /dogs/` requests to this handler
+The `@get()` HTTP method decorator before the `get_all(self)` method marks `get_all(self)` as the HTTP request handler that will handle a specific endpoint matching the route path and HTTP method of `GET`. 
 
-For example, a path prefix of `/users` combined with the decorator `@get('/profile')` would produce a route mapping for requests like
+But what then is the route path of `get_all(self)`? The route path is determined by concatenating the controller `path prefix` and the path specified in the HTTP method function decorator `@get()`.
+
+For example, we've declared a prefix for every route `(dogs)`, and haven't added any path information in the decorator, which means the path will default to `/`. In that case,
+Ellar will map `GET /dogs/` requests to the `get_all(self)` handler.
+
+Another example to help make things clear, a path prefix of `/users` combined with the decorator `@get('/profile')` would produce a route mapping for requests like
 `GET /users/profile`.
 
 
-### Overview of HTTP function decorator parameters:
+### **Overview of HTTP function decorator parameters:**
 
 `@get(path: str, name: str, include_in_schema: bool, response: t.Union[t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type])`
 
-- `path`: defines path for route mapping. `default='/'`
+- `path`: defines the path for route mapping. `default='/'`
 - `name`: defines a `name` that will be used to identify this route during URL reversing. default is function name eg: `get_all`
 - `include_in_schema`: indicates if an endpoint should be available in OPENAPI docs
-- `response`: defines different response `schema`, `status code` and `Response` type that is available on the endpoint.
+- `response`: defines different response `schema`, `status code`, and `Response` type that is available on the endpoint.
 This is only necessary for OPENAPI documentation. default: `None`
 
-Ellar will always serialize all HTTP handler functions returned data as `json` unless the data returned is `Response` object.
-For the above example, `get_all` returned a string. This will be serialized to json with a `status code` 200.
+Ellar serializes all route handler returned data to `JSON` unless the data returned is a `Response` object.
+For the above example, `get_all` returned a string. This will be serialized to JSON with a status code 200.
 
-
-## Request Object
+## **Request Object**
 There are different ways handlers can access client request details:
 
-- Annotation (`parameter_name:Request`)
-Ellar will resolve any parameter annotated as `Request` in request handler signature as `Request` object.
+### **Annotation (`parameter_name:Request`)**
+
+Ellar will resolve any parameter annotated as `Request` in the request handler signature as a `Request` object.
 ```python
 # project_name/apps/dogs/controllers.py
 
@@ -93,7 +91,7 @@ class DogsController(ControllerBase):
     ...
 ```
 
-- injection (`parameter_name=Req()`)
+### **injection (`parameter_name=Req()`)**
 
 We can also inject request object to any handler by using `@Req` decorator in handler signature.
 ```python
@@ -113,9 +111,9 @@ class DogsController(ControllerBase):
     ...
 ```
 
-- controllers context
+### **Controllers Context**
 
-During request handler execution, `Execution Context` is available on the Controller instance and `request` object can be gotten from the context.
+During request handler execution, `Execution Context` is available on the Controller instance and the `request` object can be gotten from the context.
 ```python
 # project_name/apps/dogs/controllers.py
 
@@ -143,13 +141,13 @@ Other request `handler` signature injectors
 | `Header()`  | pydantic field - resolves required Request `header` parameters                                         |
 | `Query()`   | pydantic field - resolves required Request `query` parameters                                          |
 | `File()`    | pydantic field - resolves required Request `body` parameters with content-type=`x-www-form-urlencoded` |
-| `Ctx()`     | Data-transfer-object or Serializers declarations.                                                      |
+| `Ctx()`     | Injects `ExecutionContext`.                                                                            |
 | `Cookie()`  | pydantic field - resolves required Request `cookie` parameters                                         |
 | `Session()` | injects Request session data                                                                           |
 | `Host()`    | injects Request clients host                                                                           |
 | `Provide()` | injects services                                                                                       |
 
-## Resource
+## **Resource**
 
 Let add create endpoint to our `DogsController` resource.
 ```python
@@ -171,9 +169,10 @@ class DogsController(ControllerBase):
     ...
 ```
 
-### HTTP Methods
+### **HTTP Methods**
 
 Ellar provides decorators for all the standard HTTP methods:
+
 - `@get`  - `GET` HTTP method
 - `@post` - `POST` HTTP method
 - `@put` - `PUT` HTTP method
@@ -184,10 +183,9 @@ Ellar provides decorators for all the standard HTTP methods:
 - `@head` - `HEAD` HTTP method
 - `@http_route` - allows one or more HTTP methods combination, eg: `@http_route(methods=['PUT', 'PATCH'])`
 
+## **Asynchronicity**
 
-## Asynchronicity
-
-Ellar support modern asynchronous programming in python using `async` and `await` syntax.
+Ellar supports modern asynchronous programming in python using `async` and `await` syntax.
 
 ```python
 # project_name/apps/dogs/controllers.py
@@ -207,9 +205,10 @@ class DogsController(ControllerBase):
         return 'This action returns all dogs'
     ...
 ```
-## Request Payload
 
-Let's use `@Body()` to defined required data to create a dog in our previous `create`(POST) endpoint. 
+## **Request Payload**
+
+Let's use `@Body()` to define the required data to create a dog in our previous `create`(POST) endpoint.
 Before that, we need to define our data input/output serializers
 
 ```python
@@ -249,11 +248,13 @@ async def create(self, payload: CreateDogSerializer = Body()):
     return 'This action adds a new dog'
 ```
 
-`CreateDogSerializer`, a pydantic type, so fields(`name`, `age`, `breed`) validations according to defined types and
-specifications is supported out of the box. 
+`CreateDogSerializer` is a pydantic type. These means `name`, `age` and `breed` fields are type validated out of the box. 
 
-It's important to note the way we used `CreateDogSerializer` as a type annotation to `payload` parameter in `create` method. 
-During request Ellar computes the route handler signatures and validates them to the annotated types before executing the handler.
+It's important to note the way we used `CreateDogSerializer` as a type annotation of the `payload` parameter in the `create` route handler method. 
+Ellar will compute values for all the route handler parameters and validates them based on the annotated types before executing the handler. 
+
+!!! info
+    if a parameter is not annotated, it will be assumed as a `string` type
 
 ![CreateDogSchema](../img/create-dog-schema.png)
 
@@ -295,12 +296,15 @@ class DogsController(ControllerBase):
         return f'This action returns all dogs at limit={query.limit}, offset={query.offset}'
 
 ```
-## Linking Controller
+## **Linking Controller**
 
-In the previous page, we already wired our `dogs` module (`DogsModule`) to `ApplicationModule` in `project_name/root_module`
-So, lets link `DogsController` to `DogsModule`.
+In the previous page, we already wired our `dogs` module (`DogsModule`) to `ApplicationModule` in `project_name/root_module` but this time we shall be adding things to the `DogsModule`. To keep things more simple, organized, and modular.
 
-It is good to note that controllers always belong to a module, which is why we include the `controllers` array within the @Module() decorator. 
+Let's register `DogsController` to `DogsModule`.
+`@Module()` takes `controllers` as a parameter which is an array of the `ControllerBase` type.
+
+In the `dogs` module,
+
 ```python
 # project_name/apps/dogs/module.py
 

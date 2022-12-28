@@ -12,19 +12,20 @@
 
 ---
 ## Introduction
-Ellar is a lightweight ASGI framework for building efficient and scalable server-side python application.
+Ellar is a lightweight ASGI framework for building efficient and scalable server-side python applications.
 It supports both OOP (Object-Oriented Programming) and FP (Functional Programming)
 
-Ellar is built around [Starlette](https://www.starlette.io/)(ASGI toolkit) which processes all the HTTP request and background tasks. Although, there is a high level 
+
+Ellar is built around [Starlette (ASGI toolkit)](https://www.starlette.io/) which processes all the HTTP requests and background tasks. Although, there is a high level 
 of abstraction, some concepts of Starlette are still supported.
 
 ## Inspiration
-Ellar was heavily inspired by [NestJS](https://docs.nestjs.com/) in its simplicity in usage while managing complex project structures and application. 
+Ellar was heavily inspired by [NestJS](https://docs.nestjs.com/) in its simplicity in usage while managing complex project structures and applications. 
 It also adopted some concepts of [FastAPI](https://fastapi.tiangolo.com/) in handling request parameters and data serialization with pydantic.
-With that said, the aim of Ellar focuses on high level of abstraction of framework APIs, project structures, architectures and speed of handling requests.
+With that said, the aim of Ellar focuses on a high level of abstraction of framework APIs, project structures, architectures, and speed of handling requests.
 
 ## Installation
-To get started, you need to scaffold a project using [Ellar-CLI](https://eadwincode.github.io/ellar-cli/) toolkit. This is recommended for first-time user.
+To get started, you need to scaffold a project using [Ellar-CLI](https://eadwincode.github.io/ellar-cli/) toolkit. This is recommended for a first-time user.
 The scaffolded project is more like a guide to project setup.
 
 ```shell

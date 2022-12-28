@@ -1,6 +1,5 @@
 
-Ellar `ExceptionMiddleware` together with `ExceptionMiddlewareService` are responsible for processing all unhandled exception
-across the application and provides an appropriate user-friendly response.
+The `ExceptionMiddleware` and `ExceptionMiddlewareService` handle all unhandled exceptions throughout an application and provide user-friendly responses.
 
 ```json
 {
@@ -9,12 +8,12 @@ across the application and provides an appropriate user-friendly response.
 }
 ```
 
-Default exceptions types Managed by default:
+Types of exceptions managed by default:
 
-- **`HTTPException`**: Default exception class provided by `Starlette` for HTTP client
-- **`WebSocketException`**: Default websocket exception class also provided by `Starlette` for websocket connection
-- **`RequestValidationException`**: Request data validation exception provided by `Pydantic`
-- **`APIException`**: Custom exception created for typical REST API based application to provides more concept about the exception raised.
+- **`HTTPException`**: Provided by `Starlette` to handle HTTP errors
+- **`WebSocketException`**: Provided by `Starlette` to manage websocket errors
+- **`RequestValidationException`**: Provided by `Pydantic` for validation of request data
+- **`APIException`**: Handles HTTP errors and provides more context about the error.
 
 ## **HTTPException**
 
@@ -32,8 +31,7 @@ You can use the `WebSocketException` class to raise errors inside WebSocket endp
 You can set any code valid as defined [in the specification](https://tools.ietf.org/html/rfc6455#section-7.4.1).
 
 ## **APIException**
-As stated earlier, its an exception type for typical REST API based application. Its gives more concept to error and provides a
-simple interface for creating other custom exception need in your application.
+It is a type of exception for REST API based applications. It gives more concept to error and provides a simple interface for creating other custom exception needs in your application without having to create an extra exception handler.
 
 For example,
 
@@ -69,10 +67,10 @@ Now, when you visit [http://127.0.0.1/dogs/](http://127.0.0.1/dogs/), you will g
 }
 ```
 
-We have a JSON response because Ellar has an exception handler for `APIException`. This handler can be change to return some different. 
-We shall how to do that on Overriding Default Exception Handlers.
+When we raise the `ServiceUnavailableException` exception type, it produces a `JSON` response because `Ellar` has implemented an exception handler for any `APIException` exception type. 
+We will see how to change the default exception handler later.
 
-There is other error presentation available on `APIException` instance:
+There is another error presentation available on the `APIException` instance:
 - `.detail`: returns textual description of the error.
 - `get_full_details()`: returns both textual description and other information about the error.
 
@@ -85,7 +83,7 @@ Service Unavailable
 
 ## **Creating Custom Exception Handler**
 
-To create an exception handler for your custom exception, you have to create a class that follow `IExceptionHandler` contract.
+To create an exception handler for your custom exception, you have to make a class that follows the `IExceptionHandler` contract.
 
 At the root project folder, create a file `custom_exceptions.py`,
 
@@ -113,12 +111,14 @@ class MyCustomExceptionHandler(IExceptionHandler):
         )
 
 ```
+
+**IExceptionHandler** Overview:
+
 - `exception_type_or_code`: defines the `exception class` OR `status code` to target when resolving exception handlers.
 - `catch()`: defines the handling code and response to be returned to the client.
 
 ### **Creating Exception Handler for status code**
-Let's create a handler for `MethodNotAllowedException` which, according to HTTP code is `405`.
-
+Let's create a handler for `MethodNotAllowedException` which, according to the HTTP code is `405`.
 ```python
 # project_name/apps/custom_exceptions.py
 import typing as t
@@ -153,10 +153,10 @@ class ExceptionHandlerAction405(IExceptionHandler):
         context_kwargs = {}
         return render_template('405.html', request=ctx.switch_to_request(), **context_kwargs)
 ```
-We have registered a handler for any `HTTPException` with status code `405` and we have chosen to return a template `405.html` as response.
+We have registered a handler for any `HTTP` exception with a `405` status code which we are returning a template `405.html` as a response.
 
 !!!info
-    Ellar will look for `405.html` in all registered module. So `dogs` folder, create a `templates` folder and add `405.html`.
+    Ellar will look for `405.html` in all registered modules. So `dogs` folder, create a `templates` folder and add `405.html`.
 
 The same way can create Handler for `500` error code.
 
@@ -164,7 +164,7 @@ The same way can create Handler for `500` error code.
 ## **Registering Exception Handlers**
 We have successfully created two exception handlers `ExceptionHandlerAction405` and `MyCustomExceptionHandler` but they are not yet visible to the application.
 
-- `config.py`: The config file holds manage application settings including `EXCEPTION_HANDLERS` fields which defines all custom exception handlers used in the application.
+- `config.py`: The config file holds manage application settings. The `EXCEPTION_HANDLERS` variable defines all custom exception handlers registered to `ExceptionMiddlewareService` when bootstrapping the application.
 
 ```python
 # project_name/config.py
@@ -205,10 +205,10 @@ application.add_exception_handler(
 ```
 
 ## **Override Default Exception Handler**
-We have gone through how to create an exception handler for status code and specific exception type. 
-So, override any exception handler follows the same pattern with a target to exception class
+We have seen how to create an exception handler for status codes and specific exception types.
+To override any exception handler, it follows the same pattern and then defines the target to exception type
 
-for example:
+For example:
 
 ```python
 # project_name/apps/custom_exceptions.py
@@ -230,4 +230,4 @@ class OverrideAPIExceptionHandler(IExceptionHandler):
         )
 ```
 
-Once we register `OverrideAPIExceptionHandler` exception handler, it will become the default handler for `APIException` exception type.
+Once we register the `OverrideAPIExceptionHandler` exception handler, it will become the default handler for the `APIException` exception type.
