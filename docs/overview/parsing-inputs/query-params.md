@@ -2,8 +2,18 @@
 
 When you declare other function parameters that are not part of the path parameters, they are automatically interpreted as "query" parameters.
 
-```Python hl_lines="5"
-{!./src/tutorial/query/code01.py!}
+```python
+from ellar.common import get, Controller
+from ellar.core import ControllerBase
+
+fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
+
+
+@Controller
+class ItemsController(ControllerBase):
+    @get('/weapons')
+    def list_weapons(self, limit: int = 10, offset: int = 0):
+        return fake_items_db[offset: offset + limit]
 ```
 
 To query this operation, you use a URL like:
@@ -23,36 +33,53 @@ The same benefits that apply to path parameters also apply to query parameters:
 
 Note: if you do not annotate your arguments, they will be treated as `str` types:
 
-```Python hl_lines="2"
-@api.get("/weapons")
-def list_weapons(request, limit, offset):
-    # type(limit) == str
-    # type(offset) == str
+```python
+from ellar.common import get, Controller
+from ellar.core import ControllerBase
+
+fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
+
+
+@Controller
+class ItemsController(ControllerBase):
+    @get('/weapons')
+    def list_weapons(self, limit, offset):
+        assert type(limit) == str
+        assert type(offset) == str
+        return fake_items_db[offset: int(offset) + int(limit)]
 ```
 
 ### Defaults
 
 As query parameters are not a fixed part of a path, they are optional and can have default values:
 
-```Python hl_lines="2"
-@api.get("/weapons")
-def list_weapons(request, limit: int = 10, offset: int = 0):
-    return weapons[offset : offset + limit]
+```python
+from ellar.common import get, Controller
+from ellar.core import ControllerBase
+
+fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
+
+
+@Controller
+class ItemsController(ControllerBase):
+    @get('/weapons')
+    def list_weapons(self, limit: int = 10, offset: int = 0):
+        return fake_items_db[offset: offset + limit]
 ```
 
 In the example above we set default values of `offset=0` and `limit=10`.
 
 So, going to the URL:
 ```
-http://localhost:8000/api/weapons
+http://localhost:8000/items/weapons
 ```
 would be the same as going to:
 ```
-http://localhost:8000/api/weapons?offset=0&limit=10
+http://localhost:8000/items/weapons?offset=0&limit=10
 ```
 If you go to, for example:
 ```
-http://localhost:8000/api/weapons?offset=20
+http://localhost:8000/items/weapons?offset=20
 ```
 
 the parameter values in your function will be:
@@ -65,43 +92,84 @@ the parameter values in your function will be:
 
 You can declare required or optional GET parameters in the same way as declaring Python function arguments:
 
-```Python hl_lines="5"
-{!./src/tutorial/query/code02.py!}
+```python
+from ellar.common import get, Controller
+from ellar.core import ControllerBase
+
+weapons = ["Ninjato", "Shuriken", "Katana", "Kama", "Kunai", "Naginata", "Yari"]
+
+
+@Controller
+class ItemsController(ControllerBase):
+    @get("/weapons/search")
+    def search_weapons(self, q: str, offset: int = 0):
+        results = [w for w in weapons if q in w.lower()]
+        print(q, results)
+        return results[offset: offset + 10]
 ```
 
-In this case, **Django Ninja** will always validate that you pass the `q` param in the GET, and the `offset` param is an optional integer.
+In this case, **Ellar** will always validate that you pass the `q` param in the GET, and the `offset` param is an optional integer.
 
 ### GET parameters type conversion
 
 Let's declare multiple type arguments:
-```Python hl_lines="5"
-{!./src/tutorial/query/code03.py!}
+```python
+from ellar.common import get, Controller
+from ellar.core import ControllerBase
+from datetime import date
+
+
+@Controller
+class ItemsController(ControllerBase):
+    @get("/example")
+    def example(self, s: str = None, b: bool = None, d: date = None, i: int = None):
+        return [s, b, d, i]
 ```
 The `str` type is passed as is.
 
 For the `bool` type, all the following:
 ```
-http://localhost:8000/api/example?b=1
-http://localhost:8000/api/example?b=True
-http://localhost:8000/api/example?b=true
-http://localhost:8000/api/example?b=on
-http://localhost:8000/api/example?b=yes
+http://localhost:8000/items/example?b=1
+http://localhost:8000/items/example?b=True
+http://localhost:8000/items/example?b=true
+http://localhost:8000/items/example?b=on
+http://localhost:8000/items/example?b=yes
 ```
 or any other case variation (uppercase, first letter in uppercase, etc.), your function will see
 the parameter `b` with a `bool` value of `True`, otherwise as `False`.
 
 Date can be both date string and integer (unix timestamp):
+```
+http://localhost:8000/items/example?d=1672286800
+# same as 2022-12-29
 
-<pre style="font-size: .85em; background-color:rgb(245, 245, 245);">
-http://localhost:8000/api/example?d=<strong>1577836800</strong>  # same as 2020-01-01
-http://localhost:8000/api/example?d=<strong>2020-01-01</strong>
-</pre>
-
+http://localhost:8000/items/example?d=2022-12-29
+```
 
 ### Using Schema
 
 You can also use Schema to encapsulate GET parameters:
 
-```Python hl_lines="1 2  5 6 7 8"
-{!./src/tutorial/query/code010.py!}
+```python
+from typing import List
+from pydantic import Field
+from ellar.serializer import Serializer
+from ellar.common import get, Controller, Query
+from ellar.core import ControllerBase
+
+
+
+class Filters(Serializer):
+    limit: int = 100
+    offset: int = None
+    query: str = None
+    category__in: List[str] = Field(None, alias="categories")
+
+
+@Controller
+class ItemsController(ControllerBase):
+    @get('/query-as-schema')
+    def query_as_schema(self, filters: Filters = Query()):
+        return {"filters": filters.dict()}
 ```
+![Query Doc](../../img/query_filter_swagger.png)

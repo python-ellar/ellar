@@ -52,7 +52,7 @@ nav:
   #          - Body: overview/parsing-inputs/body.md
   #          - Form: overview/parsing-inputs/form-param.md
   #          - File: overview/parsing-inputs/file-param.md
-  #          - Query: overview/parsing-inputs/query-param.md
+      - Query: overview/parsing-inputs/query-params.md
   #          - Response: overview/responses.md
   - Templating:
     - html: templating/templating.md
