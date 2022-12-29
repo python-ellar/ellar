@@ -36,6 +36,7 @@ from .resolver_generators import (
     BulkArgsResolverGenerator,
     FormArgsResolverGenerator,
     PathArgsResolverGenerator,
+    QueryHeaderResolverGenerator,
 )
 
 
@@ -43,6 +44,8 @@ class EndpointArgsModel:
     _bulk_resolvers_generators = {
         str(params.Form): FormArgsResolverGenerator,
         str(params.Path): PathArgsResolverGenerator,
+        str(params.Query): QueryHeaderResolverGenerator,
+        str(params.Header): QueryHeaderResolverGenerator,
     }
 
     _provider_skip = primitive_types + sequence_types + (Representation,)

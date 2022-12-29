@@ -16,6 +16,31 @@ from .factory import get_parameter_field
 
 
 class BulkArgsResolverGenerator:
+    """
+    This class splits Schema into different ModelFields to he resolved independently and computed back later.
+    class ASchema(BaseModel):
+        A: int
+        B: int
+
+    def endpoint(a: ASchema = Query())
+        pass
+
+    args_resolver = BulkArgsResolverGenerator(a) where `a` is `endpoint` parameter.
+    args_resolver.generate_resolvers() == [AModelFieldResolver, BModelFieldResolver]
+
+    The generated ModelFieldResolvers are saved to self.param_field.field_info.extra with MULTI_RESOLVER_KEY key
+    Which will be available when creating a resolver and cleared afterwards
+
+    def create_resolver(self, model_field: ModelField) -> RouteParameterResolver:
+        multiple_resolvers = model_field.field_info.extra.get(MULTI_RESOLVER_KEY)
+        if multiple_resolvers:
+            model_field.field_info.extra.clear()
+            return self.bulk_resolver(
+                model_field=model_field, resolvers=multiple_resolvers
+            )
+        return self.resolver(model_field)
+    """
+
     __slots__ = ("param_field", "pydantic_outer_type")
 
     def __init__(self, pydantic_type: ModelField) -> None:
@@ -23,13 +48,10 @@ class BulkArgsResolverGenerator:
         self.param_field = pydantic_type
 
     def validate(self, field_name: str, field: ModelField) -> None:
-        if not is_scalar_field(field=field) and not is_scalar_sequence_field(
-            self.param_field
-        ):
+        if not is_scalar_field(field=field):
             raise ImproperConfiguration(
-                f"field: '{field_name}' with annotation:'{field.type_}' "
-                f"can't be processed. Field type should belong to {sequence_types} "
-                f"or any primitive type"
+                f"field: '{field_name}' with annotation:'{field.outer_type_}' in '{self.param_field.type_}'"
+                f"can't be processed. Field type is not a primitive type"
             )
 
     def get_parameter_field(
@@ -91,10 +113,17 @@ class BulkArgsResolverGenerator:
         self.param_field.field_info.extra[MULTI_RESOLVER_KEY] = resolvers
 
 
-class FormArgsResolverGenerator(BulkArgsResolverGenerator):
+class QueryHeaderResolverGenerator(BulkArgsResolverGenerator):
     def validate(self, field_name: str, field: ModelField) -> None:
-        """ "Do nothing"""
+        if not is_scalar_field(field=field) and not is_scalar_sequence_field(field):
+            raise ImproperConfiguration(
+                f"field: '{field_name}' with annotation:'{field.outer_type_}' in '{self.param_field.type_}'"
+                f"can't be processed. Field type should belong to {sequence_types} "
+                f"or any primitive type"
+            )
 
+
+class FormArgsResolverGenerator(QueryHeaderResolverGenerator):
     def generate_resolvers(self, body_field_class: t.Type[FieldInfo]) -> None:
         super().generate_resolvers(body_field_class=body_field_class)
         self.param_field.field_info.extra[MULTI_RESOLVER_FORM_GROUPED_KEY] = True
@@ -102,10 +131,10 @@ class FormArgsResolverGenerator(BulkArgsResolverGenerator):
 
 class PathArgsResolverGenerator(BulkArgsResolverGenerator):
     def validate(self, field_name: str, field: ModelField) -> None:
-        """ "Do nothing"""
-        assert is_scalar_field(
-            field=field
-        ), "Path params must be of one of the supported types"
+        if not is_scalar_field(field=field):
+            raise ImproperConfiguration(
+                "Path params must be of one of the supported types. Only primitive types"
+            )
 
     def get_parameter_field(
         self,
