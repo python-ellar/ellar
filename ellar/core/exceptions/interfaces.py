@@ -36,7 +36,7 @@ class IExceptionHandler(ABC, t.Iterable):
 
 class IExceptionMiddlewareService:
     @abstractmethod
-    def build_exception_handlers(self) -> None:
+    def build_exception_handlers(self, *exception_handlers: IExceptionHandler) -> None:
         pass
 
     @abstractmethod

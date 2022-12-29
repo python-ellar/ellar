@@ -34,7 +34,9 @@ class BaseAPIVersioning(ABC):
 
 
 class DefaultAPIVersioning(BaseAPIVersioning):
-    pass
+    """
+    A PlaceHolder Versioning Scheme.
+    """
 
 
 class UrlPathAPIVersioning(BaseAPIVersioning):

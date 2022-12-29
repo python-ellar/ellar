@@ -1,3 +1,5 @@
+# Input Parsing
+
 In this section, we are going to learn how inputs are parsed in the Ellar route handle functions.
 
 To get started, we need to create another module for this tutorial.

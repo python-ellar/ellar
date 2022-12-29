@@ -2,7 +2,6 @@ import typing as t
 
 from ellar.di import injectable
 
-from ..conf.config import Config
 from .handlers import (
     APIExceptionHandler,
     HTTPExceptionHandler,
@@ -21,14 +20,13 @@ class ExceptionMiddlewareService(IExceptionMiddlewareService):
         RequestValidationErrorHandler(),
     ]
 
-    def __init__(self, config: Config) -> None:
-        self.config = config
+    def __init__(self) -> None:
         self._status_handlers: t.Dict[int, IExceptionHandler] = {}
         self._exception_handlers: t.Dict[t.Type[Exception], IExceptionHandler] = {}
         self._500_error_handler: t.Optional[IExceptionHandler] = None
 
-    def build_exception_handlers(self) -> None:
-        handlers = list(self.DEFAULTS) + list(self.config.EXCEPTION_HANDLERS)
+    def build_exception_handlers(self, *exception_handlers: IExceptionHandler) -> None:
+        handlers = list(self.DEFAULTS) + list(exception_handlers)
         for key, value in handlers:
             if key == 500:
                 self._500_error_handler = value
