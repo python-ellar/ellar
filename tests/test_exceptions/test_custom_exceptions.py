@@ -133,8 +133,7 @@ def test_custom_exception_works():
 
     tm = TestClientFactory.create_test_module()
     tm.app.router.append(homepage)
-    tm.app.config.EXCEPTION_HANDLERS += [NewExceptionHandler()]
-    tm.app.rebuild_middleware_stack()
+    tm.app.add_exception_handler(NewExceptionHandler())
 
     client = tm.get_client()
     res = client.get("/")
@@ -149,8 +148,7 @@ def test_exception_override_works():
 
     tm = TestClientFactory.create_test_module()
     tm.app.router.append(homepage)
-    tm.app.config.EXCEPTION_HANDLERS += [OverrideAPIExceptionHandler()]
-    tm.app.rebuild_middleware_stack()
+    tm.app.add_exception_handler(OverrideAPIExceptionHandler())
 
     client = tm.get_client()
     res = client.get("/")
@@ -174,8 +172,7 @@ def test_500_error_as_a_function(exception_handler):
 
     tm = TestClientFactory.create_test_module()
     tm.app.router.append(homepage)
-    tm.app.config.EXCEPTION_HANDLERS += [exception_handler]
-    tm.app.rebuild_middleware_stack()
+    tm.app.add_exception_handler(exception_handler)
 
     client = tm.get_client(raise_server_exceptions=False)
     res = client.get("/")
@@ -220,7 +217,7 @@ def test_debug_after_response_sent(test_client_factory):
     app = ExceptionMiddleware(
         app,
         debug=True,
-        exception_middleware_service=ExceptionMiddlewareService(config=Config()),
+        exception_middleware_service=ExceptionMiddlewareService(),
     )
     client = test_client_factory(app)
     with pytest.raises(RuntimeError):

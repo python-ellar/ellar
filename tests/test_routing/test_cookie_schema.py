@@ -1,11 +1,14 @@
-from ellar.common import Cookie
+import pytest
+
+from ellar.common import Cookie, get
 from ellar.core import TestClientFactory
 from ellar.core.connection import Request
+from ellar.core.exceptions import ImproperConfiguration
 from ellar.core.routing import ModuleRouter
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
 
-from .sample import Data, Filter
+from .sample import Data, Filter, ListOfPrimitiveSchema, NonPrimitiveSchema
 
 router = ModuleRouter("")
 
@@ -105,3 +108,30 @@ def test_cookie_schema():
             "in": "cookie",
         },
     ]
+
+
+def test_invalid_schema_cookie():
+    with pytest.raises(ImproperConfiguration) as ex:
+
+        @get("/test")
+        def invalid_path_parameter(cookie: NonPrimitiveSchema = Cookie()):
+            pass
+
+    assert (
+        str(ex.value)
+        == "field: 'filter' with annotation:'<class 'tests.test_routing.sample.Filter'>' in "
+        "'<class 'tests.test_routing.sample.NonPrimitiveSchema'>'can't be processed. "
+        "Field type is not a primitive type"
+    )
+
+    with pytest.raises(ImproperConfiguration) as ex:
+
+        @get("/test")
+        def invalid_path_parameter(cookie: ListOfPrimitiveSchema = Cookie()):
+            pass
+
+    assert (
+        str(ex.value) == "field: 'an_int' with annotation:'typing.List[int]' in "
+        "'<class 'tests.test_routing.sample.ListOfPrimitiveSchema'>'can't be processed. "
+        "Field type is not a primitive type"
+    )
