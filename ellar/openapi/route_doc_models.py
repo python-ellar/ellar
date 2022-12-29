@@ -159,7 +159,9 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         self.tags = tags
         self.deprecated = deprecated
         self.route = route
-        self.global_route_parameters = global_route_parameters or []
+        self.global_route_parameters = (
+            list(global_route_parameters) if global_route_parameters else []
+        )
         self.guards = guards or []
 
         if self.tags and not isinstance(self.tags, list):
