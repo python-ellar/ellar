@@ -4,6 +4,8 @@ which is similar to [OpenAPI path parameters](https://swagger.io/docs/specificat
 
 
 ```python
+# project_name/apps/items/controllers.py
+
 from ellar.common import get, Controller
 from ellar.core import ControllerBase
 
@@ -29,6 +31,8 @@ So, if you run this example and go to [http://localhost:8000/items/foo](http://l
 You can declare the type of path parameter in the function using standard Python type annotations:
 
 ```python
+# project_name/apps/items/controllers.py
+
 from ellar.common import get, Controller
 from ellar.core import ControllerBase
 
@@ -81,6 +85,8 @@ The same error would appear if you provided a `float` instead of an `int`, as in
 You can use [Starlette Path Converters](https://www.starlette.io/routing/#path-parameters) to help parse the path:
 
 ```python
+# project_name/apps/items/controllers.py
+
 from ellar.common import get, Controller
 from ellar.core import ControllerBase
 
@@ -115,6 +121,8 @@ For example, lets another route handler `some_view` and give it a path `/dir/{va
 What this means is that the parameter is `value`, and the last part, `:path`, tells it that the parameter should match any path.
 
 ```python
+# project_name/apps/items/controllers.py
+
 from ellar.common import get, Controller
 from ellar.core import ControllerBase
 
@@ -133,6 +141,8 @@ and your `value` will be equal to `"some/path/with-slashes"`
 You can pass as many variables as you want into `path`, just remember to have unique names and don't forget to use the same names in the function arguments.
 
 ```Python
+# project_name/apps/items/controllers.py
+
 from ellar.common import get, Controller
 from ellar.core import ControllerBase
 
@@ -150,6 +160,8 @@ class ItemsController(ControllerBase):
 You can also use Schema to encapsulate path parameters that depend on each other (and validate them as a group):
 
 ```python
+# project_name/apps/items/controllers.py
+
 import datetime
 from ellar.serializer import Serializer
 from ellar.common import get, Controller, Path
@@ -187,6 +199,8 @@ but you want the possible valid path parameter values to be predefined, you can 
 For an example:
 
 ```python
+# project_name/apps/items/controllers.py
+
 from ellar.common import get, Controller
 from ellar.core import ControllerBase
 from enum import Enum

@@ -14,18 +14,6 @@ from .decorators.request import on_shutdown, on_startup
 from .decorators.serializer import serializer_filter
 from .decorators.versioning import version
 from .routing import (
-    delete,
-    get,
-    head,
-    http_route,
-    options,
-    patch,
-    post,
-    put,
-    trace,
-    ws_route,
-)
-from .routing.params import (
     Body,
     Cookie,
     Ctx,
@@ -40,8 +28,19 @@ from .routing.params import (
     Req,
     Res,
     Session,
+    UploadFile,
     Ws,
     WsBody,
+    delete,
+    get,
+    head,
+    http_route,
+    options,
+    patch,
+    post,
+    put,
+    trace,
+    ws_route,
 )
 
 __all__ = [
@@ -89,4 +88,5 @@ __all__ = [
     "Session",
     "Host",
     "Http",
+    "UploadFile",
 ]

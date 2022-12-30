@@ -3,6 +3,8 @@
 When you declare other function parameters that are not part of the path parameters, they are automatically interpreted as "query" parameters.
 
 ```python
+# project_name/apps/items/controllers.py
+
 from ellar.common import get, Controller
 from ellar.core import ControllerBase
 
@@ -34,6 +36,8 @@ The same benefits that apply to path parameters also apply to query parameters:
 Note: if you do not annotate your arguments, they will be treated as `str` types:
 
 ```python
+# project_name/apps/items/controllers.py
+
 from ellar.common import get, Controller
 from ellar.core import ControllerBase
 
@@ -54,6 +58,8 @@ class ItemsController(ControllerBase):
 As query parameters are not a fixed part of a path, they are optional and can have default values:
 
 ```python
+# project_name/apps/items/controllers.py
+
 from ellar.common import get, Controller
 from ellar.core import ControllerBase
 
@@ -93,6 +99,8 @@ the parameter values in your function will be:
 You can declare required or optional GET parameters in the same way as declaring Python function arguments:
 
 ```python
+# project_name/apps/items/controllers.py
+
 from ellar.common import get, Controller
 from ellar.core import ControllerBase
 
@@ -114,6 +122,8 @@ In this case, **Ellar** will always validate that you pass the `q` param in the 
 
 Let's declare multiple type arguments:
 ```python
+# project_name/apps/items/controllers.py
+
 from ellar.common import get, Controller
 from ellar.core import ControllerBase
 from datetime import date
@@ -151,6 +161,8 @@ http://localhost:8000/items/example?d=2022-12-29
 You can also use Schema to encapsulate GET parameters:
 
 ```python
+# project_name/apps/items/controllers.py
+
 from typing import List
 from pydantic import Field
 from ellar.serializer import Serializer
@@ -172,4 +184,5 @@ class ItemsController(ControllerBase):
     def query_as_schema(self, filters: Filters = Query()):
         return {"filters": filters.dict()}
 ```
+
 ![Query Doc](../../img/query_filter_swagger.png)

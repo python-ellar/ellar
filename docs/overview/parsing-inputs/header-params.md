@@ -1,107 +1,139 @@
-# Query parameters
+# Header Parameters
 
-When you declare other function parameters that are not part of the path parameters, they are automatically interpreted as "query" parameters.
-
-```Python hl_lines="5"
-{!./src/tutorial/query/code01.py!}
-```
+You can define Header parameters the same way you define `Query`, `Path` and `Cookie` parameters.
 
 To query this operation, you use a URL like:
 
-```
-http://localhost:8000/api/weapons?offset=0&limit=10
-```
-By default, all GET parameters are strings, and when you annotate your function arguments with types, they are converted to that type and validated against it.
+## Import `Header`
 
-The same benefits that apply to path parameters also apply to query parameters:
+First import `Header` from `ellar.common` module
 
-- Editor support (obviously)
-- Data "parsing"
-- Data validation
-- Automatic documentation
+## Declare `Header` parameters
+
+Then declare the header parameters using the same structure as with `Path`, `Query` and `Cookie`.
+
+The first value is the default value, you can pass all the extra validation or annotation parameters:
+
+```python
+# project_name/apps/items/controllers.py
+
+from ellar.common import Controller, get, Header
+from ellar.core import ControllerBase
+from typing import Optional
 
 
-Note: if you do not annotate your arguments, they will be treated as `str` types:
-
-```Python hl_lines="2"
-@api.get("/weapons")
-def list_weapons(request, limit, offset):
-    # type(limit) == str
-    # type(offset) == str
-```
-
-### Defaults
-
-As query parameters are not a fixed part of a path, they are optional and can have default values:
-
-```Python hl_lines="2"
-@api.get("/weapons")
-def list_weapons(request, limit: int = 10, offset: int = 0):
-    return weapons[offset : offset + limit]
+@Controller
+class ItemsController(ControllerBase):
+    @get("/")
+    async def read_items(self, user_agent: Optional[str] = Header(default=None)):
+        return {"User-Agent": user_agent}
 ```
 
-In the example above we set default values of `offset=0` and `limit=10`.
+!!! info
+    To declare headers, you need to use `Header`, because otherwise the parameters would be interpreted as query parameters.
 
-So, going to the URL:
+## Automatic conversion
+
+`Header` has a little extra functionality.
+
+Most of the standard headers are separated by a "hyphen" character, also known as the "minus symbol" (`-`).
+
+But a variable like `user-agent` is not valid in Python.
+
+By default, `Header` will convert the parameter names characters from underscore (`_`) to hyphen (`-`) to extract and document the headers.
+
+Also, HTTP headers are case-insensitive, so, you can declare them with standard Python style (also known as "snake_case").
+
+So, you can use `user_agent` as you normally would in Python code, instead of needing to capitalize the first letters as `User_Agent` or something similar.
+
+If for some reason you need to disable automatic conversion of underscores to hyphens, set the parameter `convert_underscores` of `Header` to `False`:
+
+```python
+# project_name/apps/items/controllers.py
+
+from ellar.common import Controller, get, Header
+from ellar.core import ControllerBase
+from typing import Optional
+
+
+@Controller
+class ItemsController(ControllerBase):
+    @get("/")
+    async def read_items(
+        self, strange_header: Optional[str] = Header(default=None, convert_underscores=False)
+    ):
+        return {"strange_header": strange_header}
 ```
-http://localhost:8000/api/weapons
+
+!!! warning
+    Before setting `convert_underscores` to `False`, bear in mind that some HTTP proxies and servers disallow the usage of headers with underscores.
+
+
+## Duplicate headers
+
+It is possible to receive duplicate headers. That means, the same header with multiple values.
+
+You can define those cases using a list in the type declaration.
+
+You will receive all the values from the duplicate header as a Python `list`.
+
+For example, to declare a header of `X-Token` that can appear more than once, you can write:
+
+```python
+# project_name/apps/items/controllers.py
+
+from ellar.common import Controller, get, Header
+from ellar.core import ControllerBase
+from typing import Optional, List
+
+
+@Controller
+class ItemsController(ControllerBase):
+    @get("/")
+    async def read_items(self, x_token: Optional[List[str]] = Header(default=None)):
+        return {"X-Token values": x_token}
 ```
-would be the same as going to:
+
+If you communicate with that *path operation* sending two HTTP headers like:
+
 ```
-http://localhost:8000/api/weapons?offset=0&limit=10
-```
-If you go to, for example:
-```
-http://localhost:8000/api/weapons?offset=20
-```
-
-the parameter values in your function will be:
-
- - `offset=20`  (because you set it in the URL)
- - `limit=10`  (because that was the default value)
-
-
-### Required and optional parameters
-
-You can declare required or optional GET parameters in the same way as declaring Python function arguments:
-
-```Python hl_lines="5"
-{!./src/tutorial/query/code02.py!}
+X-Token: foo
+X-Token: bar
 ```
 
-In this case, **Django Ninja** will always validate that you pass the `q` param in the GET, and the `offset` param is an optional integer.
+The response would be like:
 
-### GET parameters type conversion
-
-Let's declare multiple type arguments:
-```Python hl_lines="5"
-{!./src/tutorial/query/code03.py!}
+```JSON
+{
+    "X-Token values": [
+        "bar",
+        "foo"
+    ]
+}
 ```
-The `str` type is passed as is.
-
-For the `bool` type, all the following:
-```
-http://localhost:8000/api/example?b=1
-http://localhost:8000/api/example?b=True
-http://localhost:8000/api/example?b=true
-http://localhost:8000/api/example?b=on
-http://localhost:8000/api/example?b=yes
-```
-or any other case variation (uppercase, first letter in uppercase, etc.), your function will see
-the parameter `b` with a `bool` value of `True`, otherwise as `False`.
-
-Date can be both date string and integer (unix timestamp):
-
-<pre style="font-size: .85em; background-color:rgb(245, 245, 245);">
-http://localhost:8000/api/example?d=<strong>1577836800</strong>  # same as 2020-01-01
-http://localhost:8000/api/example?d=<strong>2020-01-01</strong>
-</pre>
-
 
 ### Using Schema
 
-You can also use Schema to encapsulate GET parameters:
+You can also use Schema to encapsulate `Header` parameters:
 
-```Python hl_lines="1 2  5 6 7 8"
-{!./src/tutorial/query/code010.py!}
+```python
+# project_name/apps/items/controllers.py
+
+from typing import List
+from ellar.serializer import Serializer
+from ellar.common import get, Controller, Header
+from ellar.core import ControllerBase
+
+
+
+class HeaderSchema(Serializer):
+    version: int = 1
+    x_token: List[str] = None # similar to x_token: Optional[List[str]]
+
+
+@Controller
+class ItemsController(ControllerBase):
+    @get('/header-as-schema')
+    def header_as_schema(self, headers: HeaderSchema = Header()):
+        return {"headers": headers.dict()}
 ```

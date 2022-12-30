@@ -1,28 +1,43 @@
 # Form data
 
-**Django Ninja** also allows you to parse and validate `request.POST` data
+**Ellar** also allows you to parse and validate `request.POST` data
 (aka `application x-www-form-urlencoded` or `multipart/form-data`).
+When you need to receive form fields instead of JSON, you can use `Form`.
+
+!!! info
+    To use forms, first install [python-multipart](https://andrew-d.github.io/python-multipart/).
+
+    E.g. `pip install python-multipart`.
+
 
 ## Form Data as params 
 
-```Python hl_lines="1 4"
-from ninja import NinjaAPI, Form
+```python
+# project_name/apps/items/controllers.py
 
-@api.post("/login")
-def login(request, username: str = Form(...), password: str = Form(...)):
-    return {'username': username, 'password': '*****'}
+from ellar.common import Controller, Form, post
+from ellar.core import ControllerBase
+
+
+@Controller
+class ItemsController(ControllerBase):
+    @post("/login")
+    def login(self, username: str = Form(), password: str = Form()):
+        return {'username': username, 'password': '*****'}
 ```
 
 Note the following:
 
 1) You need to import the `Form` class from `ninja`
-```Python
-from ninja import Form
+```python
+from ellar.common import Form
 ```
 
 2) Use `Form` as default value for your parameter:
-```Python
-username: str = Form(...)
+```python
+from ellar.common import Form
+
+username: str = Form()
 ```
 
 ## Using a Schema
@@ -30,9 +45,29 @@ username: str = Form(...)
 In a similar manner to [Body](../body/#declare-it-as-a-parameter), you can use
 a Schema to organize your parameters.
 
-```Python hl_lines="12"
-{!./src/tutorial/form/code01.py!}
+```python
+# project_name/apps/items/controllers.py
+
+from ellar.serializer import Serializer
+from ellar.common import Controller, post, Form
+from ellar.core import ControllerBase
+
+
+class Item(Serializer):
+    name: str
+    description: str = None
+    price: float
+    quantity: int
+
+
+@Controller
+class ItemsController(ControllerBase):
+    @post("/")
+    def create(self, item: Item = Form()):
+        return item
 ```
+
+![Openapi schema](../../img/form-schema-doc.png)
 
 ## Request form + path + query parameters
 
@@ -41,13 +76,36 @@ Form data in combination with other parameter sources.
 
 You can declare query **and** path **and** form field, **and** etc... parameters at the same time.
 
-**Django Ninja** will recognize that the function parameters that match path
+**Ellar** will recognize that the function parameters that match path
 parameters should be **taken from the path**, and that function parameters that
 are declared with `Form(...)` should be **taken from the request form fields**, etc.
 
-```Python hl_lines="12"
-{!./src/tutorial/form/code02.py!}
+```python
+# project_name/apps/items/controllers.py
+
+from ellar.serializer import Serializer
+from ellar.common import Controller, Form, post, put
+from ellar.core import ControllerBase
+
+
+class Item(Serializer):
+    name: str
+    description: str = None
+    price: float
+    quantity: int
+
+
+@Controller
+class ItemsController(ControllerBase):
+    @post("/")
+    def create(self, item: Item = Form()):
+        return item
+    
+    @put("/{item_id}")
+    def update(self, item_id: int, q: str, item: Item=Form()):
+        return {"item_id": item_id, "item": item.dict(), "q": q}
 ```
+
 ## Mapping Empty Form Field to Default
 
 Form fields that are optional, are often sent with an empty value. This value is
@@ -56,6 +114,49 @@ interpreted as an empty string, and thus may fail validation for fields such as 
 This can be fixed, as described in the Pydantic docs, by using
 [Generic Classes as Types](https://pydantic-docs.helpmanual.io/usage/types/#generic-classes-as-types).
 
-```Python hl_lines="15 16 23-25"
-{!./src/tutorial/form/code03.py!}
+```python
+# project_name/apps/items/controllers.py
+
+from ellar.serializer import Serializer
+from ellar.common import Controller, Form, post, put
+from ellar.core import ControllerBase
+from pydantic.fields import ModelField
+from typing import Generic, TypeVar
+
+PydanticField = TypeVar("PydanticField")
+
+
+class EmptyStrToDefault(Generic[PydanticField]):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: PydanticField, field: ModelField) -> PydanticField:
+        if value == "":
+            return field.default
+        return value
+
+
+class Item(Serializer):
+    name: str
+    description: str = None
+    price: EmptyStrToDefault[float] = 0.0
+    quantity: EmptyStrToDefault[int] = 0
+    in_stock: EmptyStrToDefault[bool] = True
+
+
+@Controller
+class ItemsController(ControllerBase):
+    @post("/")
+    def create(self, item: Item = Form()):
+        return item
+    
+    @put("/{item_id}")
+    def update(self, item_id: int, q: str, item: Item=Form()):
+        return {"item_id": item_id, "item": item.dict(), "q": q}
+    
+    @put("/items-blank-default")
+    def update(self, item: Item=Form()):
+        return item.dict()
 ```
