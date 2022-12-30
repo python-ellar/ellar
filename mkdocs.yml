@@ -47,14 +47,14 @@ nav:
 #      - Functional Programming:  overview/functional_route.md
   - Configuration: configurations.md
   - How-to Guides:
-      - Input Parsing: overview/parsing-inputs/index.md
-      - Path: overview/parsing-inputs/path-params.md
-      - Query: overview/parsing-inputs/query-params.md
-      - Header: overview/parsing-inputs/header-params.md
-      - Cookie: overview/parsing-inputs/cookie-params.md
-      - Body: overview/parsing-inputs/body.md
-      - Form: overview/parsing-inputs/form-params.md
-      - File: overview/parsing-inputs/file-params.md
+      - Input Parsing: parsing-inputs/index.md
+      - Path: parsing-inputs/path-params.md
+      - Query: parsing-inputs/query-params.md
+      - Header: parsing-inputs/header-params.md
+      - Cookie: parsing-inputs/cookie-params.md
+      - Body: parsing-inputs/body.md
+      - Form: parsing-inputs/form-params.md
+      - File: parsing-inputs/file-params.md
   #          - Response: overview/responses.md
   - Templating:
     - html: templating/templating.md

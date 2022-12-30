@@ -185,4 +185,4 @@ class ItemsController(ControllerBase):
         return {"filters": filters.dict()}
 ```
 
-![Query Doc](../../img/query_filter_swagger.png)
+![Query Doc](../img/query_filter_swagger.png)

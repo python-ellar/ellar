@@ -121,11 +121,11 @@ With just that Python type declaration, **Ellar** will:
 
 The JSON Schemas of your models will be part of your OpenAPI generated schema, and will be shown in the interactive API docs:
 
-![Openapi schema](../../img/body-schema-doc.png)
+![Openapi schema](../img/body-schema-doc.png)
 
 ... and they will be also used in the API docs inside each *path operation* that needs them:
 
-![Openapi schema](../../img/body-schema-doc2.png)
+![Openapi schema](../img/body-schema-doc2.png)
 
 
 ## Request Body + Path parameters
@@ -309,7 +309,7 @@ class ItemsController(ControllerBase):
 ```
 And you will have this:
 
-![Openapi schema](../../img/body-schema-doc3.png)
+![Openapi schema](../img/body-schema-doc3.png)
 
 !!! info
     `Body` also has all the same extra validation and metadata parameters as `Query`,`Path` and others you will see later.
