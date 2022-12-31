@@ -11,9 +11,9 @@ from ellar.constants import (
 )
 from ellar.core.exceptions import ImproperConfiguration
 from ellar.core.response.model import HTMLResponseModel
-from ellar.core.routing import RouteOperationBase
 from ellar.core.templating import TemplateFunctionData
 from ellar.helper import class_base_function_regex, get_name
+from ellar.shortcuts import fail_silently
 from ellar.types import TemplateFilterCallable, TemplateGlobalCallable
 
 from .base import set_meta
@@ -29,9 +29,13 @@ def render(template_name: t.Optional[str] = NOT_SET) -> t.Callable:
 
     Renders route function response to HTML Response
 
-    :param template_name: template name.
-    when @render is used in a Controller Class, the function becomes the template_name and the path to the html file
+    Decorated Function is expected to return an object of dict as a context variable for the template to be rendered.
+
+    When @render is used in a Controller Class, the function becomes the template_name and the path to the html file
     becomes `templateFolder/ControllerName/functionName`. This can be overridden by providing `template_name`.
+
+    :param template_name: template name.
+
     :return:
     """
     if template_name is not NOT_SET:
@@ -41,15 +45,18 @@ def render(template_name: t.Optional[str] = NOT_SET) -> t.Callable:
     template_name = None if template_name is NOT_SET else template_name
 
     def _decorator(func: t.Union[t.Callable, t.Any]) -> t.Union[t.Callable, t.Any]:
-        if not callable(func) or isinstance(func, RouteOperationBase):
+        if not inspect.isfunction(func):
+            line_nos = fail_silently(
+                inspect.getsourcelines, getattr(func, "endpoint", func)
+            )
             warnings.warn_explicit(
                 UserWarning(
-                    "\n@Render should be used only as a function decorator. "
-                    "\nUse @Render before @Method decorator."
+                    "\n@render should be used only as a function decorator. "
+                    "\nUse @render before @HTTPMethod decorator."
                 ),
                 category=None,
                 filename=inspect.getfile(getattr(func, "endpoint", func)),
-                lineno=inspect.getsourcelines(getattr(func, "endpoint", func))[1],
+                lineno=line_nos[1] if line_nos and len(line_nos) > 0 else None,
                 source=None,
             )
             return func

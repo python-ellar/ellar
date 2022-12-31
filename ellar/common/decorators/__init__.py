@@ -2,6 +2,7 @@ from .base import set_meta  # noqa
 from .command import command  # noqa
 from .controller import Controller  # noqa
 from .exception import exception_handler  # noqa
+from .file import file  # noqa
 from .guards import guards  # noqa
 from .html import render, template_filter, template_global  # noqa
 from .middleware import middleware  # noqa

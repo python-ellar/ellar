@@ -5,6 +5,7 @@ from .decorators.base import set_meta
 from .decorators.command import command
 from .decorators.controller import Controller
 from .decorators.exception import exception_handler
+from .decorators.file import file
 from .decorators.guards import guards
 from .decorators.html import render, template_filter, template_global
 from .decorators.middleware import middleware
@@ -89,4 +90,5 @@ __all__ = [
     "Host",
     "Http",
     "UploadFile",
+    "file",
 ]
