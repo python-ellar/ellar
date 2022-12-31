@@ -51,7 +51,7 @@ from ellar.core import ModuleBase
     commands=[],
     base_directory=None, 
     static_folder='static', 
-    template_folder='template'
+    template_folder='templates'
 )
 class BookModule(ModuleBase):
     pass
@@ -134,12 +134,12 @@ from ellar.core.context import IExecutionContext
 @Module()
 class ModuleExceptionSample(ModuleBase):
     @exception_handler(404)
-    def exception_404_handler(cls, ctx: IExecutionContext, exc: Exception) -> Response:
+    def exception_404_handler(cls, context: IExecutionContext, exc: Exception) -> Response:
         return JSONResponse(dict(detail="Resource not found."))
 ```
 `exception_404_handler` will be register to the application at runtime during `ModuleExceptionSample` computation.
 
-### **`Module Templating Filters`**
+### **Module Templating Filters**
 We can also define `Jinja2` templating filters in project Modules or any `@Module()` module.
 The defined filters are be passed down to `Jinja2` **environment** instance alongside the `template_folder` 
 value when creating **TemplateLoader**.
@@ -193,6 +193,48 @@ class DogsModule(ModuleBase):
         pass
 ```
 
+## **Module Middleware**
+
+Middlewares functions can be defined at Module level with `@middleware()` function decorator.
+
+For example:
+
+```python
+from ellar.common import Module, middleware
+from ellar.core import ModuleBase
+from ellar.core.context import IExecutionContext
+from starlette.responses import PlainTextResponse
+
+
+@Module()
+class ModuleMiddlewareSample(ModuleBase):
+    @middleware()
+    async def my_middleware_function_1(cls, context: IExecutionContext, call_next):
+        request = context.switch_to_request() # for http response only
+        request.state.my_middleware_function_1 = True
+        await call_next()
+    
+    @middleware()
+    async def my_middleware_function_2(cls, context: IExecutionContext, call_next):
+        connection = context.switch_to_http_connection() # for websocket response only
+        if connection.scope['type'] == 'websocket':
+            websocket = context.switch_to_websocket()
+            websocket.state.my_middleware_function_2 = True
+        await call_next()
+
+    @middleware()
+    async def my_middleware_function_3(cls, context: IExecutionContext, call_next):
+        connection = context.switch_to_http_connection() # for http response only
+        if connection.headers['somekey']:
+            # response = context.get_response() -> use the `response` to add extra definitions to things you want to see on
+            return PlainTextResponse('Header is not allowed.')
+        await call_next()
+```
+Things to note:
+
+- middleware functions must be `async`.
+- middleware functions can return a `response` or modify a `response` returned
+- middleware functions must call `call_next` and `await` its actions as shown above.
 
 ## **Injector Module**
 `EllarInjector` is based on a python library [injector](https://injector.readthedocs.io/en/latest/index.html). Both share similar `Module` features with few distinct features. 

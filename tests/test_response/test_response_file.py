@@ -83,9 +83,9 @@ def test_file_response_for_module_router_and_controller(path):
         response.headers["content-disposition"]
         == 'attachment; filename="file-test-css.css"'
     )
-    assert response.headers["content-length"] == "22"
+    assert response.headers["content-length"] == "23"
     assert response.headers["etag"]
-    assert response.text == ".div {background: red}"
+    assert response.text == ".div {background: red}\n"
 
 
 @pytest.mark.parametrize(
