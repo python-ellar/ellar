@@ -55,7 +55,9 @@ nav:
       - Body: parsing-inputs/body.md
       - Form: parsing-inputs/form-params.md
       - File: parsing-inputs/file-params.md
-  #          - Response: overview/responses.md
+      - Handling Response:
+          - Response Schema: handling-response/response.md
+          - Response Model: handling-response/response-model.md
   - Templating:
     - html: templating/templating.md
     - Static Files: templating/staticfiles.md
