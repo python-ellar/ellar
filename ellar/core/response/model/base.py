@@ -67,17 +67,17 @@ class BaseResponseModel(IResponseModel, ABC):
     __slots__ = (
         "_response_type",
         "_media_type",
-        "_description",
         "meta",
         "_model_field",
     )
 
     response_type: t.Type[Response] = Response
     model_field_or_schema: t.Union[ResponseModelField, t.Any] = None
+    default_description: str = "Successful Response"
 
     def __init__(
         self,
-        description: str = "Successful Response",
+        description: str = None,
         model_field_or_schema: t.Union[ResponseModelField, t.Any] = None,
         **kwargs: t.Any,
     ) -> None:
@@ -87,7 +87,7 @@ class BaseResponseModel(IResponseModel, ABC):
         self._media_type = str(
             kwargs.get("media_type") or self._response_type.media_type
         )
-        self._description = description
+        self.default_description = description or self.default_description
         self.meta = kwargs
         self._model_field = self._get_model_field_from_schema(model_field_or_schema)
 
@@ -97,7 +97,7 @@ class BaseResponseModel(IResponseModel, ABC):
 
     @property
     def description(self) -> str:
-        return self._description
+        return self.default_description
 
     def _get_model_field_from_schema(
         self, model_field_or_schema: t.Optional[t.Union[ResponseModelField, t.Any]]
@@ -139,7 +139,9 @@ class BaseResponseModel(IResponseModel, ABC):
         self, context: IExecutionContext, response_obj: t.Any, status_code: int
     ) -> Response:
         """Cant create custom responses, Please override this function to create a custom response"""
-        response_args, headers = self.get_context_response(context=context)
+        response_args, headers = self.get_context_response(
+            context=context, status_code=status_code
+        )
         serializer_filter: t.Optional[SerializerFilter] = reflect.get_metadata(
             SERIALIZER_FILTER_KEY, context.get_handler()
         )
