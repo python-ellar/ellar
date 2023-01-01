@@ -57,10 +57,11 @@ class App(AppTemplating):
         ), "Use either 'lifespan' or 'on_startup'/'on_shutdown', not both."
 
         self._config = config
-        # TODO: read auto_bind from configure
         self._injector: EllarInjector = injector
 
         self._global_guards = [] if global_guards is None else list(global_guards)
+        self._exception_handlers = list(self.config.EXCEPTION_HANDLERS)
+
         self._user_middleware = list(t.cast(list, self.config.MIDDLEWARE))
 
         self.on_startup = RouterEventManager(
@@ -81,8 +82,12 @@ class App(AppTemplating):
         self.router = ApplicationRouter(
             routes=self._get_module_routes(),
             redirect_slashes=self.config.REDIRECT_SLASHES,
-            on_startup=[self.on_startup.async_run],
-            on_shutdown=[self.on_shutdown.async_run],
+            on_startup=[self.on_startup.async_run]
+            if self.config.DEFAULT_LIFESPAN_HANDLER is None
+            else None,
+            on_shutdown=[self.on_shutdown.async_run]
+            if self.config.DEFAULT_LIFESPAN_HANDLER is None
+            else None,
             default=self.config.DEFAULT_NOT_FOUND_HANDLER,  # type: ignore
             lifespan=self.config.DEFAULT_LIFESPAN_HANDLER,
         )
@@ -179,8 +184,12 @@ class App(AppTemplating):
         service_middleware = self.injector.get(
             IExceptionMiddlewareService  # type:ignore
         )
-        service_middleware.build_exception_handlers()
+        service_middleware.build_exception_handlers(*self._exception_handlers)
         error_handler = service_middleware.get_500_error_handler()
+        allowed_hosts = self.config.ALLOWED_HOSTS
+
+        if self.debug and allowed_hosts != ["*"]:
+            allowed_hosts = ["*"]
 
         middleware = (
             [
@@ -196,7 +205,7 @@ class App(AppTemplating):
                 ),
                 Middleware(
                     TrustedHostMiddleware,
-                    allowed_hosts=self.config.ALLOWED_HOSTS,
+                    allowed_hosts=allowed_hosts,
                     www_redirect=self.config.REDIRECT_HOST,
                 ),
                 Middleware(
@@ -271,8 +280,8 @@ class App(AppTemplating):
     ) -> None:
         _added_any = False
         for exception_handler in exception_handlers:
-            if exception_handler not in self.config.EXCEPTION_HANDLERS:
-                self.config.EXCEPTION_HANDLERS.append(exception_handler)
+            if exception_handler not in self._exception_handlers:
+                self._exception_handlers.append(exception_handler)
                 _added_any = True
         if _added_any:
             self.rebuild_middleware_stack()

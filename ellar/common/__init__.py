@@ -5,6 +5,7 @@ from .decorators.base import set_meta
 from .decorators.command import command
 from .decorators.controller import Controller
 from .decorators.exception import exception_handler
+from .decorators.file import file
 from .decorators.guards import guards
 from .decorators.html import render, template_filter, template_global
 from .decorators.middleware import middleware
@@ -14,18 +15,6 @@ from .decorators.request import on_shutdown, on_startup
 from .decorators.serializer import serializer_filter
 from .decorators.versioning import version
 from .routing import (
-    delete,
-    get,
-    head,
-    http_route,
-    options,
-    patch,
-    post,
-    put,
-    trace,
-    ws_route,
-)
-from .routing.params import (
     Body,
     Cookie,
     Ctx,
@@ -40,8 +29,19 @@ from .routing.params import (
     Req,
     Res,
     Session,
+    UploadFile,
     Ws,
     WsBody,
+    delete,
+    get,
+    head,
+    http_route,
+    options,
+    patch,
+    post,
+    put,
+    trace,
+    ws_route,
 )
 
 __all__ = [
@@ -89,4 +89,6 @@ __all__ = [
     "Session",
     "Host",
     "Http",
+    "UploadFile",
+    "file",
 ]

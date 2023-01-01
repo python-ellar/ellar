@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import IntEnum
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import Field
 
@@ -36,3 +36,16 @@ class Filter(Schema):
 class Data(Schema):
     an_int: int = Field(alias="int", default=0)
     a_float: float = Field(alias="float", default=1.5)
+
+
+class NonPrimitiveSchema(Schema):
+    # The schema can only work for Body
+    # And will fail for Path, Cookie, Query, Header, Form
+    filter: Filter
+
+
+class ListOfPrimitiveSchema(Schema):
+    # The schema can only work for Body, Query, Header and Form
+    # And will fail for Path, Cookie
+    an_int: List[int] = Field(alias="int")
+    a_float: List[float] = Field(alias="float")

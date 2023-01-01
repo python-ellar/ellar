@@ -17,7 +17,7 @@ class ExceptionMiddleware:
         debug: bool = False,
     ) -> None:
         self.app = app
-        self.debug = debug  # TODO: We ought to handle 404 cases if debug is set.
+        self.debug = debug
         self._exception_middleware_service = exception_middleware_service
 
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:

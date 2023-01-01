@@ -195,10 +195,9 @@ def test_module_template_ref_scan_exceptions_handlers():
 def test_module_template_ref_scan_middle_ware():
     @Module()
     class ModuleMiddlewareExample(ModuleBase):
-        @middleware("http")
-        async def middleware(cls, request, call_next):
-            response = await call_next(request)
-            return response
+        @middleware()
+        async def middleware_func(cls, context, call_next):
+            await call_next()
 
     config = Config(**{MIDDLEWARE_HANDLERS_KEY: ()})
     container = EllarInjector(auto_bind=False).container
@@ -207,10 +206,10 @@ def test_module_template_ref_scan_middle_ware():
     create_module_ref_factor(
         ModuleMiddlewareExample, config=config, container=container
     )
-    middleware = config[MIDDLEWARE_HANDLERS_KEY]
+    config_middleware = config[MIDDLEWARE_HANDLERS_KEY]
 
-    assert isinstance(middleware, list)
-    assert "middleware" == get_name(middleware[0].options["dispatch"])
+    assert isinstance(config_middleware, list)
+    assert "middleware_func" == get_name(config_middleware[0].options["dispatch"])
 
 
 def test_module_template_ref_get_all_routers():

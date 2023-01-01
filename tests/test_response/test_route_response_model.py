@@ -20,6 +20,8 @@ class JsonApiResponse(JSONResponse):
 
 class JsonApiResponseModel(ResponseModel):
     response_type = JsonApiResponse
+    model_field_or_schema = List[Union[NoteSchemaDC, BlogObjectDTO]]
+    default_description = "Successful JsonAPI Response"
 
 
 @pytest.mark.parametrize(
@@ -63,7 +65,7 @@ class JsonApiResponseModel(ResponseModel):
             {200: JsonApiResponseModel()},
             JsonApiResponseModel,
             200,
-            "Successful Response",
+            "Successful JsonAPI Response",
             "application/vnd.api+json",
         ),
         (

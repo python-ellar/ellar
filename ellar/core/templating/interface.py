@@ -135,7 +135,14 @@ class AppTemplating(JinjaTemplating):
     _static_app: t.Optional[ASGIApp]
     _injector: "EllarInjector"
     has_static_files: bool
-    build_middleware_stack: t.Callable
+
+    @abstractmethod
+    def build_middleware_stack(self) -> t.Callable:  # pragma: no cover
+        pass
+
+    @abstractmethod
+    def rebuild_middleware_stack(self) -> None:  # pragma: no cover
+        pass
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
         for loader in self._injector.get_templating_modules().values():
@@ -149,7 +156,8 @@ class AppTemplating(JinjaTemplating):
     def debug(self, value: bool) -> None:
         del self.__dict__["jinja_environment"]
         self.config.DEBUG = value
-        self.build_middleware_stack()
+        # TODO: Add warning
+        self.rebuild_middleware_stack()
 
     @cached_property
     def jinja_environment(self) -> BaseEnvironment:

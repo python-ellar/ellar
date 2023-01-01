@@ -35,42 +35,45 @@ plugins:
 
 nav:
   - Introduction: index.md
-  - Quick Overview:
+  - Overview:
       - Step One:  overview/index.md
       - Controllers:  overview/controllers.md
       - Providers:  overview/providers.md
       - Modules:  overview/modules.md
       - Middlewares:  overview/middleware.md
       - Exception Handling:  overview/exception_handling.md
-      - Guards:  overview/guards.md
-      - Custom Decorators:  overview/custom_decorators.md
-      - How-to Guides:
-        - Parsing Request Inputs:
-            - Body: overview/how-to-guide/parsing-inputs/body.md
-            - Form: overview/how-to-guide/parsing-inputs/form-param.md
-            - File: overview/how-to-guide/parsing-inputs/file-param.md
-            - Path: overview/how-to-guide/parsing-inputs/path-param.md
-            - Query: overview/how-to-guide/parsing-inputs/query-param.md
-        - Handling Responses:
-          - Response: overview/handling-responses/responses.md
-  - Basics:
-      - Configuration: basics/configurations.md
-      - Execution Context: basics/execution-context.md
-      - Custom Providers: basics/custom-providers.md
-      - Injection Scopes: basics/injection-scope.md
-      - Model View Controller: basics/model-view-controller.md
-      - Serialization: basics/serialization.md
-      - Static Files: basics/staticfiles.md
-      - Events: basics/events.md
-      - Versioning: basics/versioning.md
-      - Commands: basics/commands.md
-      - Templating: basics/templating.md
-      - Testing: basics/testing.md
+#      - Guards:  overview/guards.md
+#      - Custom Decorators:  overview/custom_decorators.md
+#      - Functional Programming:  overview/functional_route.md
+  - Configuration: configurations.md
+  - How-to Guides:
+      - Input Parsing: parsing-inputs/index.md
+      - Path: parsing-inputs/path-params.md
+      - Query: parsing-inputs/query-params.md
+      - Header: parsing-inputs/header-params.md
+      - Cookie: parsing-inputs/cookie-params.md
+      - Body: parsing-inputs/body.md
+      - Form: parsing-inputs/form-params.md
+      - File: parsing-inputs/file-params.md
+      - Handling Response:
+          - Response Schema: handling-response/response.md
+          - Response Model: handling-response/response-model.md
+  - Templating:
+    - html: templating/templating.md
+    - Static Files: templating/staticfiles.md
+
+  - Execution Context: basics/execution-context.md
+#  - Custom Providers: basics/custom-providers.md
+#  - Injection Scopes: basics/injection-scope.md
+#  - Model View Controller: basics/model-view-controller.md
+  - Serialization: basics/serialization.md
+  - Events: basics/events.md
+  - Versioning: basics/versioning.md
+  - Commands: basics/commands.md
+  - Testing: basics/testing.md
   - OpenAPI: openapi/index.md
   - WebSockets: websockets.md
   - Mount: mount.md
-  - Templates: templates.md
-  - Events: events.md
   - Background Tasks: background-task.md
   - Release Notes: release-notes.md
 

@@ -27,6 +27,15 @@ def test_render_decorator_works():
     assert html_response.template_name == "index"
 
 
+def test_render_decorator_wont_work_after_route_action_definition():
+    @render("index")
+    class Whatever:
+        pass
+
+    response_override = reflect.get_metadata(RESPONSE_OVERRIDE_KEY, Whatever)
+    assert response_override is None
+
+
 def test_render_decorator_raise_exception_for_invalid_template_name():
     with pytest.raises(
         AssertionError, match="Render Operation must invoked eg. @render()"

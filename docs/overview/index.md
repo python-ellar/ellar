@@ -1,6 +1,6 @@
-## First steps
+
 You will learn the core fundamentals of Ellar with this set of articles. We are going to build a basic CRUD application
-with features that covers a lot of ground at an introductory level.
+with features that cover a lot of ground at an introductory level.
 
 
 ## Library Dependencies
@@ -17,8 +17,10 @@ Using the Ellar CLI, you can easily set up a new project by running the followin
 $(venv) pip install ellar[standard]
 $(venv) ellar new project-name
 ```
-This will create a `project-name` directory with other necessary files required for Ellar CLI to properly manage your project. 
-Also, some boilerplate files populated installed in a new `project_name` to get structure to your project.
+
+The `new` command will create a `project-name` project directory with other necessary files needed for the Ellar CLI tool to properly manage your project.
+Also, some boilerplate files are populated and installed in a new `project_name` to get structure to your project.
+
 ```shell
 project-name/
 ├─ project_name/
@@ -173,8 +175,8 @@ Goto your browser and visit: [http://localhost:8000/dogs/](http://localhost:8000
 ```
 
 ## Enabling OpenAPI Docs
-To start up openapi, we need to go back to project folder in the `server.py`
-then add the following below.
+To set up OPENAPI documentation, we need to go back to the project folder. In the `server.py`
+then add the below.
 ```python
 # project_name/server.py
 

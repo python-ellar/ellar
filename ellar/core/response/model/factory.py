@@ -12,7 +12,7 @@ def create_response_model(
     response_model: t.Union[t.Type["ResponseModel"], t.Type[T]],
     *,
     response_type: t.Type[Response] = None,
-    description: str = "Successful Response",
+    description: str = None,
     model_field_or_schema: t.Union[t.Type["ResponseModelField"], t.Any] = None,
     **kwargs: t.Any,
 ) -> t.Union["ResponseModel", T]:

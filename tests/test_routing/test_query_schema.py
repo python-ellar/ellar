@@ -1,11 +1,14 @@
-from ellar.common import Query
+import pytest
+
+from ellar.common import Query, get
 from ellar.core import TestClientFactory
 from ellar.core.connection import Request
+from ellar.core.exceptions import ImproperConfiguration
 from ellar.core.routing import ModuleRouter
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
 
-from .sample import Data, Filter
+from .sample import Data, Filter, NonPrimitiveSchema
 
 mr = ModuleRouter("")
 
@@ -105,3 +108,19 @@ def test_schema():
             "in": "query",
         },
     ]
+
+
+def test_invalid_schema_query():
+    with pytest.raises(ImproperConfiguration) as ex:
+
+        @get("/test")
+        def invalid_path_parameter(cookie: NonPrimitiveSchema = Query()):
+            pass
+
+    assert (
+        str(ex.value)
+        == "field: 'filter' with annotation:'<class 'tests.test_routing.sample.Filter'>' in "
+        "'<class 'tests.test_routing.sample.NonPrimitiveSchema'>'can't be processed. "
+        "Field type should belong to (<class 'list'>, <class 'set'>, <class 'tuple'>) "
+        "or any primitive type"
+    )

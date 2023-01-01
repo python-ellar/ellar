@@ -162,7 +162,23 @@ class TestStarletteCompatibility:
         assert startup_complete
         assert cleanup_complete
 
-    def test_app_debug(self):
+    def test_app_debug_return_html(self):
+        @get("/")
+        async def homepage(request: Request):
+            raise RuntimeError()
+
+        app = AppFactory.create_app()
+        app.router.append(homepage)
+        app.debug = True
+
+        client = TestClient(app, raise_server_exceptions=False)
+        response = client.get("/", headers={"accept": "text/html"})
+        assert response.status_code == 500
+        assert "<head>" in response.text
+        assert ".traceback-container" in response.text
+        assert app.debug
+
+    def test_app_debug_plain_text(self):
         @get("/")
         async def homepage(request: Request):
             raise RuntimeError()
@@ -174,10 +190,8 @@ class TestStarletteCompatibility:
         client = TestClient(app, raise_server_exceptions=False)
         response = client.get("/")
         assert response.status_code == 500
-        assert response.json() == {
-            "detail": "Internal server error",
-            "status_code": 500,
-        }
+        assert "test_application_functions.py" in response.text
+        assert "line 184" in response.text
         assert app.debug
 
 

@@ -1,12 +1,11 @@
 import typing as t
 
-from starlette.middleware.base import BaseHTTPMiddleware
-
 from ellar.constants import MIDDLEWARE_HANDLERS_KEY
+from ellar.core.middleware import FunctionBasedMiddleware
 from ellar.core.middleware.schema import MiddlewareSchema
 
 
-def add_middleware(
+def _add_middleware(
     middleware_class: type, dispatch: t.Callable, **options: t.Any
 ) -> None:
     setattr(
@@ -18,18 +17,16 @@ def add_middleware(
     )
 
 
-def middleware(middleware_type: str) -> t.Callable:
+def middleware() -> t.Callable:
     """
     ========= MODULE DECORATOR ==============
 
     Defines middle functions at module level
-    :param middleware_type: Middleware type
     :return: Function
     """
-    assert middleware_type == "http", 'Currently only middleware("http") is supported.'
 
     def decorator(func: t.Callable) -> t.Callable:
-        add_middleware(BaseHTTPMiddleware, dispatch=func)
+        _add_middleware(FunctionBasedMiddleware, dispatch=func)
         return func
 
     return decorator

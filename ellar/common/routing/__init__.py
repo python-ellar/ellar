@@ -1,3 +1,4 @@
+from ellar.core.datastructures import UploadFile
 from ellar.core.params import Param, ParamTypes
 from ellar.core.routing import OperationDefinitions
 
@@ -46,6 +47,7 @@ __all__ = [
     "WsBody",
     "Cookie",
     "File",
+    "UploadFile",
     "Form",
     "Header",
     "Path",
