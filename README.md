@@ -161,7 +161,7 @@ In `car/controllers.py`, lets create `CarController`
 import typing as t
 from ellar.common import Controller, delete, get, put, post
 from ellar.core import ControllerBase
-from ellar.exceptions import NotFound
+from ellar.core.exceptions import NotFound
 from .schemas import CarSerializer, RetrieveCarSerializer
 from .services import CarDummyDB
 
