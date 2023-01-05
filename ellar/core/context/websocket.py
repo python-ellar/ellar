@@ -2,10 +2,14 @@ from ellar.compatible import cached_property
 from ellar.core.connection import WebSocket
 from ellar.types import TReceive, TScope, TSend
 
-from .interface import IWebSocketConnectionHost
+from .interface import IWebSocketHostContext
 
 
-class WebSocketConnectionHost(IWebSocketConnectionHost):
+class WebSocketHostContext(IWebSocketHostContext):
+    """
+    Provides a context around websocket session
+    """
+
     __slots__ = (
         "scope",
         "receive",

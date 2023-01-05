@@ -5,9 +5,7 @@ import jinja2
 from starlette.background import BackgroundTask
 from starlette.templating import _TemplateResponse as TemplateResponse
 
-from ellar.constants import SCOPE_HOST_CONTEXT_PROVIDER
 from ellar.core.connection import Request
-from ellar.core.context import IHostContext
 
 from .environment import Environment
 
@@ -28,11 +26,7 @@ def process_view_model(view_response: t.Any) -> t.Dict:
 def _get_jinja_and_template_context(
     template_name: str, request: Request, **context: t.Any
 ) -> t.Tuple["jinja2.Template", t.Dict]:
-    ctx: t.Optional[IHostContext] = request.scope.get(SCOPE_HOST_CONTEXT_PROVIDER)
-    if not ctx:
-        raise RuntimeError("Host Context not defined in request Scope")
-
-    jinja_environment = ctx.get_service_provider().get(Environment)
+    jinja_environment = request.service_provider.get(Environment)
     jinja_template = jinja_environment.get_template(get_template_name(template_name))
     template_context = dict(context)
     template_context.update(request=request)

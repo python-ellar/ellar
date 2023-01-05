@@ -2,7 +2,7 @@ import typing as t
 
 from starlette.status import WS_1008_POLICY_VIOLATION
 
-from ellar.core.context import ExecutionContext
+from ellar.core.context import IExecutionContext
 from ellar.core.exceptions import WebSocketRequestValidationError
 
 from ...websocket import WebsocketRouteOperation
@@ -19,7 +19,7 @@ class ControllerWebsocketRouteOperation(
     def get_websocket_handler(cls) -> t.Type[ControllerWebSocketExtraHandler]:
         return ControllerWebSocketExtraHandler
 
-    async def _handle_request(self, context: ExecutionContext) -> None:
+    async def _handle_request(self, context: IExecutionContext) -> None:
         controller_instance = self._get_controller_instance(ctx=context)
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
             ctx=context

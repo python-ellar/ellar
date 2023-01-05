@@ -8,10 +8,14 @@ from ellar.core.connection import HTTPConnection, Request
 from ellar.types import TReceive, TScope, TSend
 
 from .exceptions import HostContextException
-from .interface import IHTTPConnectionHost
+from .interface import IHTTPHostContext
 
 
-class HTTPConnectionHost(IHTTPConnectionHost):
+class HTTPHostContext(IHTTPHostContext):
+    """
+    Provides a context around HTTP Connection
+    """
+
     __slots__ = (
         "scope",
         "receive",

@@ -26,12 +26,9 @@ def get_requests(request: StarletteRequest, req=Req()):
 
 
 @router.get("/ellar-context")
-def get_requests(
-    context_1: IExecutionContext, context_2: ExecutionContext, context_3=Context()
-):
-    assert isinstance(context_2, ExecutionContext)  # True
+def get_requests(context_1: IExecutionContext, context_2=Context()):
     assert isinstance(context_1, ExecutionContext)
-    return context_1 == context_2 == context_3
+    return context_1 == context_2
 
 
 @router.get("/starlette-connection")

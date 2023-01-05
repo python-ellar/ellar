@@ -4,12 +4,16 @@ from abc import ABC, abstractmethod
 from ellar.types import T
 
 from .exceptions import HostContextException
-from .http import HTTPConnectionHost
+from .http import HTTPHostContext
 from .interface import IHostContext
-from .websocket import WebSocketConnectionHost
+from .websocket import WebSocketHostContext
 
 
 class HostContextFactory(t.Generic[T], ABC):
+    """
+    Factory for creating HostContext types and validating them.
+    """
+
     context_type: t.Type[T]
 
     __slots__ = ("context", "_context_type", "validate_func")
@@ -37,15 +41,20 @@ class HostContextFactory(t.Generic[T], ABC):
         )
 
 
-class HTTPConnectionContextFactory(HostContextFactory[HTTPConnectionHost]):
-    context_type = HTTPConnectionHost
+class HTTPConnectionContextFactory(HostContextFactory[HTTPHostContext]):
+    context_type = HTTPHostContext
 
     def validate(self) -> None:
+        """
+        Validation is skipped here because HTTPConnection is compatible with websocket and http
+        During websocket connection, we can still get HTTPConnection available,
+        but we can get request instance or response.
+        """
         pass
 
 
-class WebSocketContextFactory(HostContextFactory[WebSocketConnectionHost]):
-    context_type = WebSocketConnectionHost
+class WebSocketContextFactory(HostContextFactory[WebSocketHostContext]):
+    context_type = WebSocketHostContext
 
     def validate(self) -> None:
         if self.context.get_type() != "websocket":

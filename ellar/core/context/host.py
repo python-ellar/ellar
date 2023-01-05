@@ -4,7 +4,7 @@ from ellar.compatible import cached_property
 from ellar.constants import SCOPE_SERVICE_PROVIDER
 from ellar.types import TReceive, TScope, TSend
 
-from .interface import IHostContext, IHTTPConnectionHost, IWebSocketConnectionHost
+from .interface import IHostContext, IHTTPHostContext, IWebSocketHostContext
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
@@ -36,11 +36,11 @@ class HostContext(IHostContext):
     def _service_provider(self) -> "RequestServiceProvider":
         return self.scope[SCOPE_SERVICE_PROVIDER]  # type:ignore
 
-    def switch_to_http_connection(self) -> IHTTPConnectionHost:
-        return self.get_service_provider().get(IHTTPConnectionHost)  # type: ignore
+    def switch_to_http_connection(self) -> IHTTPHostContext:
+        return self.get_service_provider().get(IHTTPHostContext)  # type: ignore
 
-    def switch_to_websocket(self) -> IWebSocketConnectionHost:
-        return self.get_service_provider().get(IWebSocketConnectionHost)  # type: ignore
+    def switch_to_websocket(self) -> IWebSocketHostContext:
+        return self.get_service_provider().get(IWebSocketHostContext)  # type: ignore
 
     def get_type(self) -> str:
         return str(self.scope["type"])

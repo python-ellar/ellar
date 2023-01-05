@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from starlette.routing import Match
 
 from ellar.constants import GUARDS_KEY, SCOPE_API_VERSIONING_RESOLVER, VERSIONING_KEY
-from ellar.core.context import ExecutionContext
+from ellar.core.context import ExecutionContext, IExecutionContext
 from ellar.reflect import reflect
 from ellar.types import TReceive, TScope, TSend
 
@@ -25,7 +25,7 @@ class RouteOperationBase:
 
     @t.no_type_check
     def __call__(
-        self, context: ExecutionContext, *args: t.Any, **kwargs: t.Any
+        self, context: IExecutionContext, *args: t.Any, **kwargs: t.Any
     ) -> t.Any:
         return self.endpoint(*args, **kwargs)
 
@@ -33,7 +33,7 @@ class RouteOperationBase:
     def _load_model(self) -> None:
         """compute route models"""
 
-    async def run_route_guards(self, context: ExecutionContext) -> None:
+    async def run_route_guards(self, context: IExecutionContext) -> None:
         app = context.get_app()
         _guards: t.Optional[
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
@@ -57,7 +57,7 @@ class RouteOperationBase:
         await self._handle_request(context=context)
 
     @abstractmethod
-    async def _handle_request(self, *, context: ExecutionContext) -> None:
+    async def _handle_request(self, *, context: IExecutionContext) -> None:
         """return a context"""
 
     @abstractmethod

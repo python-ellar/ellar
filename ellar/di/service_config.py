@@ -7,10 +7,10 @@ from injector import (
 )
 
 from ellar.constants import INJECTABLE_ATTRIBUTE
-from ellar.core.exceptions import ImproperConfiguration
 from ellar.shortcuts import fail_silently
 from ellar.types import T
 
+from .exceptions import DIImproperConfiguration
 from .scopes import DIScope, ScopeDecorator, SingletonScope
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -36,7 +36,7 @@ class ProviderConfig(t.Generic[T]):
         use_class: t.Type[T] = None
     ):
         if use_value and use_class:
-            raise ImproperConfiguration(
+            raise DIImproperConfiguration(
                 "`use_class` and `use_value` can not be used at the same time."
             )
 

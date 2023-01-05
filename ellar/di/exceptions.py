@@ -7,6 +7,11 @@ from injector import (
     UnsatisfiedRequirement,
 )
 
+
+class DIImproperConfiguration(Exception):
+    pass
+
+
 __all__ = [
     "CallError",
     "CircularDependency",
@@ -15,4 +20,5 @@ __all__ = [
     "UnknownArgument",
     "UnknownProvider",
     "UnsatisfiedRequirement",
+    "DIImproperConfiguration",
 ]

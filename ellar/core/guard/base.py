@@ -6,7 +6,7 @@ from starlette.exceptions import HTTPException
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 
 from ellar.core.connection import HTTPConnection
-from ellar.core.context import ExecutionContext
+from ellar.core.context import IExecutionContext
 from ellar.core.exceptions import APIException
 
 
@@ -18,7 +18,7 @@ class GuardCanActivate(ABC, metaclass=ABCMeta):
     detail: str = "Not authenticated"
 
     @abstractmethod
-    async def can_activate(self, context: ExecutionContext) -> bool:
+    async def can_activate(self, context: IExecutionContext) -> bool:
         pass
 
     def raise_exception(self) -> None:
@@ -41,7 +41,7 @@ class BaseAuthGuard(GuardCanActivate, ABC, metaclass=ABCMeta):
     def get_guard_scheme(cls) -> t.Dict:
         pass
 
-    async def can_activate(self, context: ExecutionContext) -> bool:
+    async def can_activate(self, context: IExecutionContext) -> bool:
         connection = context.switch_to_http_connection().get_client()
         result = await self.handle_request(connection=connection)
         if result:

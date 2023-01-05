@@ -9,18 +9,14 @@ from starlette.requests import (
 from starlette.responses import JSONResponse
 from starlette.websockets import WebSocket as StarletteWebSocket
 
-from ellar.constants import (
-    SCOPE_HOST_CONTEXT_PROVIDER,
-    SCOPE_RESPONSE_STARTED,
-    SCOPE_SERVICE_PROVIDER,
-)
+from ellar.constants import SCOPE_RESPONSE_STARTED, SCOPE_SERVICE_PROVIDER
 from ellar.core.connection.http import HTTPConnection, Request
 from ellar.core.connection.websocket import WebSocket
 from ellar.core.context import (
     HostContext,
     IHostContext,
-    IHTTPConnectionHost,
-    IWebSocketConnectionHost,
+    IHTTPHostContext,
+    IWebSocketHostContext,
 )
 from ellar.core.context.factory import (
     HTTPConnectionContextFactory,
@@ -55,7 +51,7 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
     @classmethod
     def _register_connection(cls, service_provider: "RequestServiceProvider") -> None:
         def get_http_connection() -> HTTPConnection:
-            http_connection_context = service_provider.get(IHTTPConnectionHost)  # type: ignore
+            http_connection_context = service_provider.get(IHTTPHostContext)  # type: ignore
             return http_connection_context.get_client()
 
         service_provider.update_context(
@@ -68,7 +64,7 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
     @classmethod
     def _register_request(cls, service_provider: "RequestServiceProvider") -> None:
         def get_request_connection() -> Request:
-            http_connection_context = service_provider.get(IHTTPConnectionHost)  # type: ignore
+            http_connection_context = service_provider.get(IHTTPHostContext)  # type: ignore
             return http_connection_context.get_request()
 
         service_provider.update_context(
@@ -81,7 +77,7 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
     @classmethod
     def _register_response(cls, service_provider: "RequestServiceProvider") -> None:
         def get_response() -> Response:
-            http_connection_context = service_provider.get(IHTTPConnectionHost)  # type: ignore
+            http_connection_context = service_provider.get(IHTTPHostContext)  # type: ignore
             return http_connection_context.get_response()
 
         service_provider.update_context(Response, CallableProvider(get_response))
@@ -89,7 +85,7 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
     @classmethod
     def _register_websocket(cls, service_provider: "RequestServiceProvider") -> None:
         def get_websocket_connection() -> WebSocket:
-            ws_connection_context = service_provider.get(IWebSocketConnectionHost)  # type: ignore
+            ws_connection_context = service_provider.get(IWebSocketHostContext)  # type: ignore
             return ws_connection_context.get_client()
 
         websocket_context = CallableProvider(get_websocket_connection)
@@ -111,15 +107,14 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
         async with self.injector.create_request_service_provider() as service_provider:
             host_context = HostContext(scope=scope, receive=receive, send=sender)
             service_provider.update_context(t.cast(t.Type, IHostContext), host_context)
-            service_provider.update_context(t.cast(t.Type, HostContext), host_context)
 
             service_provider.update_context(
-                IHTTPConnectionHost,
+                IHTTPHostContext,
                 CallableProvider(HTTPConnectionContextFactory(host_context)),
             )
 
             service_provider.update_context(
-                IWebSocketConnectionHost,
+                IWebSocketHostContext,
                 CallableProvider(WebSocketContextFactory(host_context)),
             )
 
@@ -129,7 +124,6 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
             self._register_connection(service_provider)
 
             scope[SCOPE_SERVICE_PROVIDER] = service_provider
-            scope[SCOPE_HOST_CONTEXT_PROVIDER] = host_context
 
             if host_context.get_type() == "http":
                 await super().__call__(scope, receive, sender)
@@ -137,7 +131,7 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
                 await self.app(scope, receive, sender)
 
     async def error_handler(self, request: Request, exc: Exception) -> Response:
-        host_context = request.scope[SCOPE_HOST_CONTEXT_PROVIDER]
+        host_context = request.scope[SCOPE_SERVICE_PROVIDER].get(IHostContext)
         assert self._500_error_handler
         response = await self._500_error_handler.catch(host_context, exc)
         return response

@@ -4,16 +4,16 @@ from .host import HostContext
 from .interface import (
     IExecutionContext,
     IHostContext,
-    IHTTPConnectionHost,
-    IWebSocketConnectionHost,
+    IHTTPHostContext,
+    IWebSocketHostContext,
 )
 
 __all__ = [
     "IExecutionContext",
     "ExecutionContext",
     "IHostContext",
-    "IHTTPConnectionHost",
-    "IWebSocketConnectionHost",
+    "IHTTPHostContext",
+    "IWebSocketHostContext",
     "HostContext",
     "HostContextException",
 ]

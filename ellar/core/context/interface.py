@@ -8,11 +8,10 @@ from ellar.types import TReceive, TScope, TSend
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import ControllerBase
     from ellar.core.main import App
-    from ellar.core.routing import RouteOperationBase
     from ellar.di.injector import RequestServiceProvider
 
 
-class IHTTPConnectionHost(ABC):
+class IHTTPHostContext(ABC):
     @property
     @abstractmethod
     def has_response(self) -> bool:
@@ -31,7 +30,7 @@ class IHTTPConnectionHost(ABC):
         """Returns HTTPConnection instance"""
 
 
-class IWebSocketConnectionHost(ABC):
+class IWebSocketHostContext(ABC):
     @abstractmethod
     def get_client(self) -> WebSocket:
         """Returns WebSocket instance"""
@@ -43,11 +42,11 @@ class IHostContext(ABC, metaclass=ABCMeta):
         """Gets  RequestServiceProvider instance"""
 
     @abstractmethod
-    def switch_to_http_connection(self) -> IHTTPConnectionHost:
+    def switch_to_http_connection(self) -> IHTTPHostContext:
         """Returns HTTPConnection instance"""
 
     @abstractmethod
-    def switch_to_websocket(self) -> IWebSocketConnectionHost:
+    def switch_to_websocket(self) -> IWebSocketHostContext:
         """Returns WebSocket instance"""
 
     @abstractmethod
@@ -64,10 +63,6 @@ class IHostContext(ABC, metaclass=ABCMeta):
 
 
 class IExecutionContext(IHostContext, ABC):
-    @abstractmethod
-    def set_operation(self, operation: t.Optional["RouteOperationBase"] = None) -> None:
-        """re-inits operation handler"""
-
     @abstractmethod
     def get_handler(self) -> t.Callable:
         """Gets operation handler"""

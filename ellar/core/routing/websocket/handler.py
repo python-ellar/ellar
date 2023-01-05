@@ -9,7 +9,7 @@ from ellar.core.params import WebsocketEndpointArgsModel
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.connection import WebSocket
-    from ellar.core.context import ExecutionContext
+    from ellar.core.context import IExecutionContext
 
 
 class WebSocketExtraHandler:
@@ -47,7 +47,7 @@ class WebSocketExtraHandler:
         return v
 
     async def dispatch(
-        self, context: "ExecutionContext", **receiver_kwargs: t.Any
+        self, context: "IExecutionContext", **receiver_kwargs: t.Any
     ) -> None:
         websocket = context.switch_to_websocket().get_client()
         await self.execute_on_connect(context=context)
@@ -71,7 +71,7 @@ class WebSocketExtraHandler:
             await self.execute_on_disconnect(context=context, close_code=close_code)
 
     async def _resolve_receiver_dependencies(
-        self, context: "ExecutionContext", data: t.Any
+        self, context: "IExecutionContext", data: t.Any
     ) -> t.Dict:
         (
             extra_kwargs,
@@ -85,7 +85,7 @@ class WebSocketExtraHandler:
         return extra_kwargs
 
     async def execute_on_receive(
-        self, *, context: "ExecutionContext", data: t.Any, **receiver_kwargs: t.Any
+        self, *, context: "IExecutionContext", data: t.Any, **receiver_kwargs: t.Any
     ) -> None:
         extra_kwargs = await self._resolve_receiver_dependencies(
             context=context, data=data
@@ -94,14 +94,14 @@ class WebSocketExtraHandler:
         receiver_kwargs.update(extra_kwargs)
         await self.on_receive(**receiver_kwargs)
 
-    async def execute_on_connect(self, *, context: "ExecutionContext") -> None:
+    async def execute_on_connect(self, *, context: "IExecutionContext") -> None:
         if self.on_connect:
             await self.on_connect(context.switch_to_websocket().get_client())
             return
         await context.switch_to_websocket().get_client().accept()
 
     async def execute_on_disconnect(
-        self, *, context: "ExecutionContext", close_code: int
+        self, *, context: "IExecutionContext", close_code: int
     ) -> None:
         if self.on_disconnect:
             await self.on_disconnect(
