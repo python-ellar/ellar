@@ -5,7 +5,7 @@ from starlette.requests import (
 from starlette.responses import Response as StarletteResponse
 from starlette.websockets import WebSocket as StarletteWebSocket
 
-from ellar.common import Ctx, Http, Req, Res, Ws
+from ellar.common import Context, Http, Req, Res, Ws
 from ellar.core import ExecutionContext, TestClientFactory
 from ellar.core.connection import (
     HTTPConnection as EllarHTTPConnection,
@@ -27,7 +27,7 @@ def get_requests(request: StarletteRequest, req=Req()):
 
 @router.get("/ellar-context")
 def get_requests(
-    context_1: IExecutionContext, context_2: ExecutionContext, context_3=Ctx()
+    context_1: IExecutionContext, context_2: ExecutionContext, context_3=Context()
 ):
     assert isinstance(context_2, ExecutionContext)  # True
     assert isinstance(context_1, ExecutionContext)

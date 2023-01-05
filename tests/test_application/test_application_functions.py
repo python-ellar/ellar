@@ -1,7 +1,7 @@
 import os
 import typing as t
 
-from starlette.responses import JSONResponse, Response
+from starlette.responses import JSONResponse, PlainTextResponse, Response
 
 from ellar.common import Module, get, template_filter, template_global
 from ellar.compatible import asynccontextmanager
@@ -196,6 +196,19 @@ class TestStarletteCompatibility:
 
 
 class TestEllarApp:
+    def test_ellar_as_asgi_app(self):
+        @get("/")
+        async def homepage(request: Request, ctx: IExecutionContext):
+            res = PlainTextResponse("Ellar Route Handler as an ASGI app")
+            await res(*ctx.get_args())
+
+        app = AppFactory.create_app()
+        app.router.append(homepage)
+        client = TestClient(app)
+        response = client.get("/")
+        assert response.status_code == 200
+        assert response.text == "Ellar Route Handler as an ASGI app"
+
     def test_app_staticfiles_route(self, tmpdir):
         path = os.path.join(tmpdir, "example.txt")
         with open(path, "w") as file:

@@ -12,12 +12,25 @@ from ellar.core.guard import (
     HttpBearerAuth,
     HttpDigestAuth,
 )
+from ellar.di import injectable
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
+from ellar.services import Reflector
 
 
 class CustomException(APIException):
     pass
+
+
+@injectable()
+class QuerySecretKeyInjectable(APIKeyQuery):
+    def __init__(self, reflector: Reflector) -> None:
+        super().__init__()
+        self.reflector = reflector
+
+    async def authenticate(self, connection, key):
+        if key == "querysecretkey":
+            return key
 
 
 class QuerySecretKey(APIKeyQuery):
@@ -71,12 +84,13 @@ app = AppFactory.create_app()
 
 for _path, auth in [
     ("apikeyquery", QuerySecretKey()),
+    ("apikeyquery-injectable", QuerySecretKeyInjectable),
     ("apikeyheader", HeaderSecretKey()),
     ("apikeycookie", CookieSecretKey()),
     ("basic", BasicAuth()),
-    ("bearer", BearerAuth()),
-    ("digest", DigestAuth()),
-    ("customexception", HeaderSecretKeyCustomException()),
+    ("bearer", BearerAuth),
+    ("digest", DigestAuth),
+    ("customexception", HeaderSecretKeyCustomException),
 ]:
 
     @get(f"/{_path}")
@@ -97,6 +111,18 @@ BODY_UNAUTHORIZED_DEFAULT = {"detail": "Not authenticated"}
         ("/apikeyquery", {}, HTTP_401_UNAUTHORIZED, BODY_UNAUTHORIZED_DEFAULT),
         (
             "/apikeyquery?key=querysecretkey",
+            {},
+            200,
+            dict(authentication="querysecretkey"),
+        ),
+        (
+            "/apikeyquery-injectable",
+            {},
+            HTTP_401_UNAUTHORIZED,
+            BODY_UNAUTHORIZED_DEFAULT,
+        ),
+        (
+            "/apikeyquery-injectable?key=querysecretkey",
             {},
             200,
             dict(authentication="querysecretkey"),
@@ -191,6 +217,11 @@ def test_auth_schema():
             "name": "HeaderSecretKey",
         },
         "QuerySecretKey": {"type": "apiKey", "in": "query", "name": "QuerySecretKey"},
+        "QuerySecretKeyInjectable": {
+            "type": "apiKey",
+            "in": "query",
+            "name": "QuerySecretKeyInjectable",
+        },
         "API Authentication": {
             "type": "http",
             "scheme": "basic",

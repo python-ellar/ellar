@@ -3,7 +3,7 @@ from starlette.responses import PlainTextResponse
 
 from ellar.common import Module, ModuleRouter, middleware
 from ellar.core import TestClientFactory
-from ellar.core.context import IExecutionContext
+from ellar.core.context import IHostContext
 
 mr = ModuleRouter()
 
@@ -21,22 +21,22 @@ def homepage(request: Request):
 @Module(routers=[mr])
 class ModuleMiddleware:
     @middleware()
-    async def middleware_modify_response(cls, context: IExecutionContext, call_next):
-        response = context.get_response()
+    async def middleware_modify_response(cls, context: IHostContext, call_next):
+        response = context.switch_to_http_connection().get_response()
         response.headers.setdefault("modified-header", "Ellar")
         await call_next()
 
     @middleware()
-    async def middleware_modify_request(cls, context: IExecutionContext, call_next):
-        request = context.switch_to_request()
+    async def middleware_modify_request(cls, context: IHostContext, call_next):
+        request = context.switch_to_http_connection().get_request()
         request.state.user = None
         if request.headers.get("set-user"):
             request.state.user = dict(username="Ellar")
         await call_next()
 
     @middleware()
-    async def middleware_return_response(cls, context: IExecutionContext, call_next):
-        request = context.switch_to_request()
+    async def middleware_return_response(cls, context: IHostContext, call_next):
+        request = context.switch_to_http_connection().get_request()
         if request.headers.get("ellar"):
             return PlainTextResponse("middleware_return_response returned a response")
         await call_next()
