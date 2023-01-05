@@ -2,6 +2,7 @@ import inspect
 import typing as t
 
 from starlette.concurrency import run_in_threadpool
+from starlette.responses import Response
 from starlette.routing import Route as StarletteRoute, compile_path
 
 from ellar.constants import (
@@ -10,7 +11,7 @@ from ellar.constants import (
     NOT_SET,
     RESPONSE_OVERRIDE_KEY,
 )
-from ellar.core.context import ExecutionContext
+from ellar.core.context import IExecutionContext
 from ellar.core.exceptions import ImproperConfiguration, RequestValidationError
 from ellar.core.params import RequestEndpointArgsModel
 from ellar.core.response.model import RouteResponseModel
@@ -127,7 +128,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
             name=self.name, path=self.path_format, methods=_methods
         )
 
-    async def _handle_request(self, context: ExecutionContext) -> None:
+    async def _handle_request(self, context: IExecutionContext) -> None:
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
             ctx=context
         )
@@ -140,4 +141,5 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         response = self.response_model.process_response(
             ctx=context, response_obj=response_obj
         )
-        await response(context.scope, context.receive, context.send)
+        if isinstance(response, Response):
+            await response(*context.get_args())

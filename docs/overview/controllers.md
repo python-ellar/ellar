@@ -124,7 +124,7 @@ from ellar.core import ControllerBase, Request
 class DogsController(ControllerBase):
     @get()
     def get_all(self):
-        assert isinstance(self.context.switch_to_request(), Request) # True
+        assert isinstance(self.context.switch_to_http_connection().get_request(), Request) # True
         return 'This action returns all dogs'
     ...
 ```
@@ -164,7 +164,7 @@ class DogsController(ControllerBase):
     
     @get()
     def get_all(self):
-        assert isinstance(self.context.switch_to_request(), Request) # True
+        assert isinstance(self.context.switch_to_http_connection().get_request(), Request) # True
         return 'This action returns all dogs'
     ...
 ```
@@ -201,7 +201,7 @@ class DogsController(ControllerBase):
     
     @get()
     async def get_all(self):
-        assert isinstance(self.context.switch_to_request(), Request) # True
+        assert isinstance(self.context.switch_to_http_connection().get_request(), Request) # True
         return 'This action returns all dogs'
     ...
 ```
@@ -292,7 +292,7 @@ class DogsController(ControllerBase):
 
     @get()
     async def get_all(self, query: DogListFilter = Query()):
-        assert isinstance(self.context.switch_to_request(), Request)  # True
+        assert isinstance(self.context.switch_to_http_connection().get_request(), Request)  # True
         return f'This action returns all dogs at limit={query.limit}, offset={query.offset}'
 
 ```

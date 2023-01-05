@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 from starlette.responses import Response
 
-from ellar.core.context import IExecutionContext
+from ellar.core.context import IHostContext
 
 
 class IExceptionHandler(ABC, t.Iterable):
@@ -19,9 +19,7 @@ class IExceptionHandler(ABC, t.Iterable):
     exception_type_or_code: t.Optional[t.Union[int, t.Type[Exception]]] = None
 
     @abstractmethod
-    async def catch(
-        self, ctx: IExecutionContext, exc: t.Any
-    ) -> t.Union[Response, t.Any]:  #
+    async def catch(self, ctx: IHostContext, exc: t.Any) -> t.Union[Response, t.Any]:  #
         pass
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:

@@ -22,6 +22,7 @@ __all__ = [
     "Provider",
     "provider_decorator",
     "ModuleProvider",
+    "ServiceUnavailableProvider",
 ]
 
 
@@ -32,3 +33,11 @@ class ModuleProvider(ClassProvider):
 
     def get(self, injector: "Injector") -> T:
         return injector.create_object(self._cls, additional_kwargs=self._init_kwargs)
+
+
+class ServiceUnavailableProvider(Provider[str]):
+    def __init__(self, error_message: str) -> None:
+        self.error_message = error_message
+
+    def get(self, injector: "Injector") -> T:
+        raise Exception(self.error_message)

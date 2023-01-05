@@ -8,7 +8,7 @@ from starlette.responses import JSONResponse, Response
 
 from ellar.common import get
 from ellar.core import Config, TestClientFactory
-from ellar.core.context import IExecutionContext
+from ellar.core.context import IHostContext
 from ellar.core.exceptions.callable_exceptions import CallableExceptionHandler
 from ellar.core.exceptions.handlers import APIException, APIExceptionHandler
 from ellar.core.exceptions.interfaces import IExceptionHandler
@@ -28,14 +28,14 @@ class NewExceptionHandler(IExceptionHandler):
     exception_type_or_code = NewException
 
     async def catch(
-        self, ctx: IExecutionContext, exc: t.Union[t.Any, Exception]
+        self, ctx: IHostContext, exc: t.Union[t.Any, Exception]
     ) -> t.Union[Response, t.Any]:
         return JSONResponse({"detail": str(exc)}, status_code=400)
 
 
 class OverrideAPIExceptionHandler(APIExceptionHandler):
     async def catch(
-        self, ctx: IExecutionContext, exc: t.Union[t.Any, Exception]
+        self, ctx: IHostContext, exc: t.Union[t.Any, Exception]
     ) -> t.Union[Response, t.Any]:
         return JSONResponse({"detail": str(exc)}, status_code=404)
 
@@ -44,7 +44,7 @@ class OverrideHTTPException(IExceptionHandler):
     exception_type_or_code = HTTPException
 
     async def catch(
-        self, ctx: IExecutionContext, exc: t.Union[t.Any, Exception]
+        self, ctx: IHostContext, exc: t.Union[t.Any, Exception]
     ) -> t.Union[Response, t.Any]:
         return JSONResponse({"detail": "HttpException Override"}, status_code=400)
 
@@ -53,13 +53,13 @@ class ServerErrorHandler(IExceptionHandler):
     exception_type_or_code = 500
 
     async def catch(
-        self, ctx: IExecutionContext, exc: t.Union[t.Any, Exception]
+        self, ctx: IHostContext, exc: t.Union[t.Any, Exception]
     ) -> t.Union[Response, t.Any]:
         return JSONResponse({"detail": "Server Error"}, status_code=500)
 
 
-def error_500(ctx: IExecutionContext, exc: Exception):
-    assert isinstance(ctx, IExecutionContext)
+def error_500(ctx: IHostContext, exc: Exception):
+    assert isinstance(ctx, IHostContext)
     return JSONResponse({"detail": "Server Error"}, status_code=500)
 
 
@@ -92,9 +92,7 @@ def test_invalid_exception_handler_setup_raise_exception():
     with pytest.raises(AssertionError) as ex:
 
         class InvalidExceptionSetup(IExceptionHandler):
-            def catch(
-                self, ctx: IExecutionContext, exc: t.Any
-            ) -> t.Union[Response, t.Any]:
+            def catch(self, ctx: IHostContext, exc: t.Any) -> t.Union[Response, t.Any]:
                 pass
 
     assert "'exception_type_or_code' must be defined" in str(ex.value)
@@ -106,9 +104,7 @@ def test_invalid_exception_type_setup_raise_exception():
         class InvalidExceptionSetup(IExceptionHandler):
             exception_type_or_code = ""
 
-            def catch(
-                self, ctx: IExecutionContext, exc: t.Any
-            ) -> t.Union[Response, t.Any]:
+            def catch(self, ctx: IHostContext, exc: t.Any) -> t.Union[Response, t.Any]:
                 pass
 
         assert "'exception_type_or_code' must be defined" in str(ex.value)
@@ -118,9 +114,7 @@ def test_invalid_exception_type_setup_raise_exception():
         class InvalidExceptionSetup2(IExceptionHandler):
             exception_type_or_code = InvalidExceptionHandler
 
-            def catch(
-                self, ctx: IExecutionContext, exc: t.Any
-            ) -> t.Union[Response, t.Any]:
+            def catch(self, ctx: IHostContext, exc: t.Any) -> t.Union[Response, t.Any]:
                 pass
 
         assert "'exception_type_or_code' is not a valid type" in str(ex.value)

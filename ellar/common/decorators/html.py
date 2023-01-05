@@ -16,7 +16,7 @@ from ellar.helper import class_base_function_regex, get_name
 from ellar.shortcuts import fail_silently
 from ellar.types import TemplateFilterCallable, TemplateGlobalCallable
 
-from .base import set_meta
+from .base import set_metadata as set_meta
 
 
 class RenderDecoratorException(Exception):

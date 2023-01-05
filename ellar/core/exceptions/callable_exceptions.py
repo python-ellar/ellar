@@ -5,7 +5,7 @@ from starlette.responses import Response
 
 from ellar.helper import is_async_callable
 
-from ..context import IExecutionContext
+from ..context import IHostContext
 from .interfaces import IExceptionHandler
 
 
@@ -45,7 +45,7 @@ class CallableExceptionHandler(IExceptionHandler):
         *func_args: t.Any,
         exc_class_or_status_code: t.Union[t.Type[Exception], int],
         callable_exception_handler: t.Callable[
-            [IExecutionContext, Exception],
+            [IHostContext, Exception],
             t.Union[t.Awaitable[Response], Response, t.Any],
         ]
     ) -> None:
@@ -62,7 +62,7 @@ class CallableExceptionHandler(IExceptionHandler):
             self.is_async = True
 
     async def catch(
-        self, ctx: IExecutionContext, exc: Exception
+        self, ctx: IHostContext, exc: Exception
     ) -> t.Union[Response, t.Any]:
         args = tuple(list(self.func_args) + [ctx, exc])
         if self.is_async:

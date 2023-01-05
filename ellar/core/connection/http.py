@@ -16,7 +16,7 @@ class HTTPConnection(StarletteHTTPConnection):
     def service_provider(self) -> "RequestServiceProvider":
         assert (
             SCOPE_SERVICE_PROVIDER in self.scope
-        ), "DIRequestServiceProviderMiddleware must be installed to access request.service_provider"
+        ), "RequestServiceProviderMiddleware must be installed to access request.service_provider"
         return t.cast("RequestServiceProvider", self.scope[SCOPE_SERVICE_PROVIDER])
 
 

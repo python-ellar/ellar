@@ -78,7 +78,7 @@ class EllarInjector(Injector):
     async def create_request_service_provider(
         self,
     ) -> t.AsyncGenerator[RequestServiceProvider, None]:
-        request_provider = RequestServiceProvider(self.container)
+        request_provider = RequestServiceProvider(self.container, auto_bind=True)
         try:
             yield request_provider
         finally:

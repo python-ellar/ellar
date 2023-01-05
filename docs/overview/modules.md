@@ -129,12 +129,12 @@ Custom exception handlers can be registered through modules.
 ```python
 from ellar.common import Module, exception_handler
 from ellar.core import  ModuleBase, JSONResponse, Response
-from ellar.core.context import IExecutionContext
+from ellar.core.context import IHostContext
 
 @Module()
 class ModuleExceptionSample(ModuleBase):
     @exception_handler(404)
-    def exception_404_handler(cls, context: IExecutionContext, exc: Exception) -> Response:
+    def exception_404_handler(cls, context: IHostContext, exc: Exception) -> Response:
         return JSONResponse(dict(detail="Resource not found."))
 ```
 `exception_404_handler` will be register to the application at runtime during `ModuleExceptionSample` computation.
@@ -202,29 +202,28 @@ For example:
 ```python
 from ellar.common import Module, middleware
 from ellar.core import ModuleBase
-from ellar.core.context import IExecutionContext
+from ellar.core.context import IHostContext
 from starlette.responses import PlainTextResponse
 
 
 @Module()
 class ModuleMiddlewareSample(ModuleBase):
     @middleware()
-    async def my_middleware_function_1(cls, context: IExecutionContext, call_next):
-        request = context.switch_to_request() # for http response only
+    async def my_middleware_function_1(cls, context: IHostContext, call_next):
+        request = context.switch_to_http_connection().get_request() # for http response only
         request.state.my_middleware_function_1 = True
         await call_next()
     
     @middleware()
-    async def my_middleware_function_2(cls, context: IExecutionContext, call_next):
-        connection = context.switch_to_http_connection() # for websocket response only
-        if connection.scope['type'] == 'websocket':
-            websocket = context.switch_to_websocket()
+    async def my_middleware_function_2(cls, context: IHostContext, call_next):
+        if context.get_type() == 'websocket':
+            websocket = context.switch_to_websocket().get_client()
             websocket.state.my_middleware_function_2 = True
         await call_next()
 
     @middleware()
-    async def my_middleware_function_3(cls, context: IExecutionContext, call_next):
-        connection = context.switch_to_http_connection() # for http response only
+    async def my_middleware_function_3(cls, context: IHostContext, call_next):
+        connection = context.switch_to_http_connection().get_client() # for http response only
         if connection.headers['somekey']:
             # response = context.get_response() -> use the `response` to add extra definitions to things you want to see on
             return PlainTextResponse('Header is not allowed.')

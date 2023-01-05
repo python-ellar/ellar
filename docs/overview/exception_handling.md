@@ -91,7 +91,7 @@ At the root project folder, create a file `custom_exceptions.py`,
 # project_name/custom_exceptions.py
 import typing as t
 from ellar.core.exceptions import IExceptionHandler
-from ellar.core.context import IExecutionContext
+from ellar.core.context import IHostContext
 from starlette.responses import Response
 
 
@@ -103,7 +103,7 @@ class MyCustomExceptionHandler(IExceptionHandler):
     exception_type_or_code = MyCustomException
     
     async def catch(
-        self, ctx: IExecutionContext, exc: MyCustomException
+        self, ctx: IHostContext, exc: MyCustomException
     ) -> t.Union[Response, t.Any]:
         app_config = ctx.get_app().config
         return app_config.DEFAULT_JSON_CLASS(
@@ -123,7 +123,7 @@ Let's create a handler for `MethodNotAllowedException` which, according to the H
 # project_name/apps/custom_exceptions.py
 import typing as t
 from ellar.core.exceptions import IExceptionHandler
-from ellar.core.context import IExecutionContext
+from ellar.core.context import IHostContext
 from ellar.core import render_template
 from starlette.responses import Response
 from starlette.exceptions import HTTPException
@@ -136,7 +136,7 @@ class MyCustomExceptionHandler(IExceptionHandler):
     exception_type_or_code = MyCustomException
     
     async def catch(
-        self, ctx: IExecutionContext, exc: MyCustomException
+        self, ctx: IHostContext, exc: MyCustomException
     ) -> t.Union[Response, t.Any]:
         app_config = ctx.get_app().config
         return app_config.DEFAULT_JSON_CLASS(
@@ -148,10 +148,10 @@ class ExceptionHandlerAction405(IExceptionHandler):
     exception_type_or_code = 405
     
     async def catch(
-        self, ctx: IExecutionContext, exc: HTTPException
+        self, ctx: IHostContext, exc: HTTPException
     ) -> t.Union[Response, t.Any]:
         context_kwargs = {}
-        return render_template('405.html', request=ctx.switch_to_request(), **context_kwargs)
+        return render_template('405.html', request=ctx.switch_to_http_connection().get_request(), **context_kwargs)
 ```
 We have registered a handler for any `HTTP` exception with a `405` status code which we are returning a template `405.html` as a response.
 
@@ -214,7 +214,7 @@ For example:
 # project_name/apps/custom_exceptions.py
 import typing as t
 from ellar.core.exceptions import IExceptionHandler, APIException
-from ellar.core.context import IExecutionContext
+from ellar.core.context import IHostContext
 from starlette.responses import Response
 
 
@@ -222,7 +222,7 @@ class OverrideAPIExceptionHandler(IExceptionHandler):
     exception_type_or_code = APIException
     
     async def catch(
-        self, ctx: IExecutionContext, exc: APIException
+        self, ctx: IHostContext, exc: APIException
     ) -> t.Union[Response, t.Any]:
         app_config = ctx.get_app().config
         return app_config.DEFAULT_JSON_CLASS(

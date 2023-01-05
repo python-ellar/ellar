@@ -17,14 +17,16 @@ class EllarController(ControllerBase):
     @get("/index", response={200: TemplateResponse})
     def index_render_template(self):
         """Looks for ellar/index since use_mvc=True"""
-        return render_template("index", request=self.context.switch_to_request())
+        return render_template(
+            "index", request=self.context.switch_to_http_connection().get_request()
+        )
 
     @get("/another_index2")
     def another_index2(self, first_name: str, last_name: str):
         """Since a template name is provided, it will looks for template name"""
         return render_template_string(
             "render_string",
-            request=self.context.switch_to_request(),
+            request=self.context.switch_to_http_connection().get_request(),
             first_name=first_name,
             last_name=last_name,
         )

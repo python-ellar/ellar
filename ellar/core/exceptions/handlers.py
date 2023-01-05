@@ -7,7 +7,7 @@ from starlette.exceptions import (
 )
 from starlette.responses import Response
 
-from ellar.core.context import IExecutionContext
+from ellar.core.context import IHostContext
 from ellar.core.exceptions import APIException, RequestValidationError
 from ellar.serializer import serialize_object
 
@@ -18,7 +18,7 @@ class HTTPExceptionHandler(IExceptionHandler):
     exception_type_or_code = StarletteHTTPException
 
     async def catch(
-        self, ctx: IExecutionContext, exc: StarletteHTTPException
+        self, ctx: IHostContext, exc: StarletteHTTPException
     ) -> t.Union[Response, t.Any]:
         assert isinstance(exc, StarletteHTTPException)
         config = ctx.get_app().config
@@ -40,9 +40,9 @@ class WebSocketExceptionHandler(IExceptionHandler):
     exception_type_or_code = StarletteWebSocketException
 
     async def catch(
-        self, ctx: IExecutionContext, exc: StarletteWebSocketException
+        self, ctx: IHostContext, exc: StarletteWebSocketException
     ) -> t.Union[Response, t.Any]:
-        websocket = ctx.switch_to_websocket()
+        websocket = ctx.switch_to_websocket().get_client()
         await websocket.close(code=exc.code, reason=exc.reason)
         return None
 
@@ -51,7 +51,7 @@ class APIExceptionHandler(IExceptionHandler):
     exception_type_or_code = APIException
 
     async def catch(
-        self, ctx: IExecutionContext, exc: APIException
+        self, ctx: IHostContext, exc: APIException
     ) -> t.Union[Response, t.Any]:
         assert isinstance(exc, APIException)
 
@@ -70,7 +70,7 @@ class RequestValidationErrorHandler(IExceptionHandler):
     exception_type_or_code = RequestValidationError
 
     async def catch(
-        self, ctx: IExecutionContext, exc: RequestValidationError
+        self, ctx: IHostContext, exc: RequestValidationError
     ) -> t.Union[Response, t.Any]:
         config = ctx.get_app().config
         return config.DEFAULT_JSON_CLASS(

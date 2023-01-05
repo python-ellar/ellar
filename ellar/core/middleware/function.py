@@ -3,12 +3,12 @@ import typing as t
 from starlette.responses import Response
 
 from ellar.core.connection import HTTPConnection
-from ellar.core.context import IExecutionContext
+from ellar.core.context import IHostContext
 from ellar.types import ASGIApp, TReceive, TScope, TSend
 
 AwaitableCallable = t.Callable[..., t.Awaitable]
 DispatchFunction = t.Callable[
-    [IExecutionContext, AwaitableCallable], t.Awaitable[t.Optional[Response]]
+    [IHostContext, AwaitableCallable], t.Awaitable[t.Optional[Response]]
 ]
 T = t.TypeVar("T")
 
@@ -21,7 +21,7 @@ class FunctionBasedMiddleware:
     @middleware()
     def my_middleware(context: IExecution, call_next):
         print("Called my_middleware")
-        request = context.switch_to_request()
+        request = context.switch_to_http_connection().get_request()
         request.state.my_middleware = True
         await call_next()
 
@@ -29,7 +29,7 @@ class FunctionBasedMiddleware:
     @middleware()
     def my_middleware(context: IExecution, call_next):
         print("Called my_middleware")
-        response = context.get_response()
+        response = context.switch_to_http_connection().get_response()
         response.content = "Some Content"
         response.status_code = 200
         return response
@@ -42,7 +42,7 @@ class FunctionBasedMiddleware:
         self.dispatch_function = dispatch or self.dispatch
 
     async def dispatch(
-        self, context: IExecutionContext, call_next: AwaitableCallable
+        self, context: IHostContext, call_next: AwaitableCallable
     ) -> Response:
         raise NotImplementedError()  # pragma: no cover
 
@@ -56,7 +56,7 @@ class FunctionBasedMiddleware:
         if not connection.service_provider:  # pragma: no cover
             raise Exception("Service Provider is required")
 
-        context = connection.service_provider.get(IExecutionContext)  # type: ignore
+        context = connection.service_provider.get(IHostContext)  # type: ignore
 
         async def call_next() -> None:
             await self.app(scope, receive, send)

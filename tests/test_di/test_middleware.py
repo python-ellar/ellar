@@ -4,7 +4,7 @@ import pytest
 
 from ellar.constants import SCOPE_SERVICE_PROVIDER
 from ellar.core.connection import HTTPConnection, Request, WebSocket
-from ellar.core.context import IExecutionContext
+from ellar.core.context import IHostContext
 from ellar.core.middleware import RequestServiceProviderMiddleware
 from ellar.core.response import Response
 from ellar.di import EllarInjector
@@ -39,17 +39,23 @@ async def assert_iexecute_context_app(scope, receive, send):
     assert scope[SCOPE_SERVICE_PROVIDER]
 
     service_provider = scope[SCOPE_SERVICE_PROVIDER]
-    execution_context: IExecutionContext = service_provider.get(IExecutionContext)
+    host_context: IHostContext = service_provider.get(IHostContext)
     assert (
         service_provider.get(HTTPConnection)
-        is execution_context.switch_to_http_connection()
+        is host_context.switch_to_http_connection().get_client()
     )
-    assert service_provider.get(Request) is execution_context.switch_to_request()
-    assert service_provider.get(Response) is execution_context.get_response()
-    assert service_provider is execution_context.get_service_provider()
+    assert (
+        service_provider.get(Request)
+        is host_context.switch_to_http_connection().get_request()
+    )
+    assert (
+        service_provider.get(Response)
+        is host_context.switch_to_http_connection().get_response()
+    )
+    assert service_provider is host_context.get_service_provider()
 
     with pytest.raises(Exception):
-        execution_context.switch_to_websocket()
+        host_context.switch_to_websocket()
 
     with pytest.raises(Exception):
         service_provider.get(WebSocket)
@@ -67,6 +73,32 @@ async def assert_iexecute_context_app(scope, receive, send):
             body=json.dumps({"message": "execution context work"}).encode(),
         )
     )
+
+
+async def assert_iexecute_context_app_websocket(scope, receive, send):
+    assert scope[SCOPE_SERVICE_PROVIDER]
+
+    service_provider = scope[SCOPE_SERVICE_PROVIDER]
+    host_context: IHostContext = service_provider.get(IHostContext)
+
+    websocket = host_context.switch_to_websocket().get_client()
+    assert service_provider.get(WebSocket) is websocket
+    assert service_provider is host_context.get_service_provider()
+
+    assert (
+        service_provider.get(HTTPConnection)
+        is host_context.switch_to_http_connection().get_client()
+    )
+
+    with pytest.raises(Exception):
+        service_provider.get(Request)
+
+    with pytest.raises(Exception):
+        service_provider.get(Response)
+
+    await websocket.accept()
+    await websocket.send_text("Hello, world!")
+    await websocket.close()
 
 
 def test_di_middleware(test_client_factory):
@@ -96,3 +128,14 @@ def test_di_middleware_execution_context_initialization(test_client_factory):
     assert response.status_code == 200
     data = response.json()
     assert data["message"] == "execution context work"
+
+
+def test_di_middleware_execution_context_initialization_websocket(test_client_factory):
+    asgi_app = RequestServiceProviderMiddleware(
+        assert_iexecute_context_app_websocket, debug=False, injector=EllarInjector()
+    )
+
+    client = test_client_factory(asgi_app)
+    with client.websocket_connect("/") as session:
+        text = session.receive_text()
+        assert text == "Hello, world!"

@@ -9,7 +9,7 @@ from ellar.constants import (
     NOT_SET,
 )
 from ellar.core.connection import WebSocket
-from ellar.core.context import ExecutionContext
+from ellar.core.context import IExecutionContext
 from ellar.core.exceptions import ImproperConfiguration, WebSocketRequestValidationError
 from ellar.core.params import WebsocketEndpointArgsModel
 from ellar.helper import get_name
@@ -98,14 +98,14 @@ class WebsocketRouteOperation(
     def get_websocket_handler(cls) -> t.Type[WebSocketExtraHandler]:
         return WebSocketExtraHandler
 
-    async def _handle_request(self, context: ExecutionContext) -> None:
+    async def _handle_request(self, context: IExecutionContext) -> None:
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
             ctx=context
         )
         if errors:
-            websocket = context.switch_to_websocket()
+            websocket = context.switch_to_websocket().get_client()
             exc = WebSocketRequestValidationError(errors)
-            await context.switch_to_websocket().send_json(
+            await websocket.send_json(
                 dict(code=WS_1008_POLICY_VIOLATION, errors=exc.errors())
             )
             await websocket.close(code=WS_1008_POLICY_VIOLATION)

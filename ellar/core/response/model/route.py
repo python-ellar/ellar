@@ -2,6 +2,7 @@ import typing as t
 
 from pydantic import BaseModel
 
+from ellar.constants import SCOPE_RESPONSE_STARTED
 from ellar.core.context import IExecutionContext
 
 from ..response_types import Response
@@ -64,9 +65,12 @@ class RouteResponseModel:
 
         if len(self.models) == 1:
             status_code = list(self.models.keys())[0]
-
-        if ctx.has_response and ctx.get_response().status_code > 0:
-            status_code = ctx.get_response().status_code
+        http_connection = ctx.switch_to_http_connection()
+        if (
+            http_connection.has_response
+            and http_connection.get_response().status_code > 0
+        ):
+            status_code = http_connection.get_response().status_code
 
         if isinstance(response_obj, tuple) and len(response_obj) == 2:
             status_code, response_obj = endpoint_response_content
@@ -84,9 +88,13 @@ class RouteResponseModel:
 
     def process_response(
         self, ctx: IExecutionContext, response_obj: t.Union[t.Any, t.Tuple[int, t.Any]]
-    ) -> Response:
+    ) -> t.Optional[Response]:
         if isinstance(response_obj, Response):
             return response_obj
+        scope, _, _ = ctx.get_args()
+
+        if scope.get(SCOPE_RESPONSE_STARTED) is True:
+            return None
 
         resolver = self.response_resolver(ctx, response_obj)
         return resolver.response_model.create_response(

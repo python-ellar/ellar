@@ -2,7 +2,7 @@ import typing as t
 
 from ellar.constants import SERIALIZER_FILTER_KEY
 
-from .base import set_meta
+from .base import set_metadata as set_meta
 
 
 def serializer_filter(
