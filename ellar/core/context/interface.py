@@ -3,6 +3,7 @@ from abc import ABC, ABCMeta, abstractmethod
 
 from ellar.core.connection import HTTPConnection, Request, WebSocket
 from ellar.core.response import Response
+from ellar.types import TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import ControllerBase
@@ -11,46 +12,66 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.di.injector import RequestServiceProvider
 
 
-class ExecutionContextException(Exception):
-    pass
-
-
-class IExecutionContext(ABC, metaclass=ABCMeta):
-    @abstractmethod
-    def set_operation(self, operation: t.Optional["RouteOperationBase"] = None) -> None:
-        """re-inits operation handler"""
-
+class IHTTPConnectionHost(ABC):
     @property
     @abstractmethod
     def has_response(self) -> bool:
         """checks if response was requested before send"""
 
     @abstractmethod
+    def get_response(self) -> Response:
+        """Gets response"""
+
+    @abstractmethod
+    def get_request(self) -> Request:
+        """Returns Request instance"""
+
+    @abstractmethod
+    def get_client(self) -> HTTPConnection:
+        """Returns HTTPConnection instance"""
+
+
+class IWebSocketConnectionHost(ABC):
+    @abstractmethod
+    def get_client(self) -> WebSocket:
+        """Returns WebSocket instance"""
+
+
+class IHostContext(ABC, metaclass=ABCMeta):
+    @abstractmethod
     def get_service_provider(self) -> "RequestServiceProvider":
         """Gets  RequestServiceProvider instance"""
 
     @abstractmethod
-    def switch_to_request(self) -> Request:
-        """Returns Request instance"""
-
-    @abstractmethod
-    def switch_to_http_connection(self) -> HTTPConnection:
+    def switch_to_http_connection(self) -> IHTTPConnectionHost:
         """Returns HTTPConnection instance"""
 
     @abstractmethod
-    def switch_to_websocket(self) -> WebSocket:
+    def switch_to_websocket(self) -> IWebSocketConnectionHost:
         """Returns WebSocket instance"""
-
-    @abstractmethod
-    def get_response(self) -> Response:
-        """Gets response"""
 
     @abstractmethod
     def get_app(self) -> "App":
         """Gets application instance"""
 
+    @abstractmethod
+    def get_type(self) -> str:
+        """returns scope type"""
+
+    @abstractmethod
+    def get_args(self) -> t.Tuple[TScope, TReceive, TSend]:
+        """returns all args passed to asgi function"""
+
+
+class IExecutionContext(IHostContext, ABC):
+    @abstractmethod
+    def set_operation(self, operation: t.Optional["RouteOperationBase"] = None) -> None:
+        """re-inits operation handler"""
+
+    @abstractmethod
     def get_handler(self) -> t.Callable:
         """Gets operation handler"""
 
+    @abstractmethod
     def get_class(self) -> t.Optional[t.Type["ControllerBase"]]:
         """Gets operation handler class"""

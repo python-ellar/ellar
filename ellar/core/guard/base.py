@@ -42,7 +42,7 @@ class BaseAuthGuard(GuardCanActivate, ABC, metaclass=ABCMeta):
         pass
 
     async def can_activate(self, context: ExecutionContext) -> bool:
-        connection = context.switch_to_http_connection()
+        connection = context.switch_to_http_connection().get_client()
         result = await self.handle_request(connection=connection)
         if result:
             # auth parameter on request

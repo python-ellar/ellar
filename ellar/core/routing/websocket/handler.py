@@ -49,7 +49,7 @@ class WebSocketExtraHandler:
     async def dispatch(
         self, context: "ExecutionContext", **receiver_kwargs: t.Any
     ) -> None:
-        websocket = context.switch_to_websocket()
+        websocket = context.switch_to_websocket().get_client()
         await self.execute_on_connect(context=context)
         close_code = status.WS_1000_NORMAL_CLOSURE
 
@@ -96,15 +96,17 @@ class WebSocketExtraHandler:
 
     async def execute_on_connect(self, *, context: "ExecutionContext") -> None:
         if self.on_connect:
-            await self.on_connect(context.switch_to_websocket())
+            await self.on_connect(context.switch_to_websocket().get_client())
             return
-        await context.switch_to_websocket().accept()
+        await context.switch_to_websocket().get_client().accept()
 
     async def execute_on_disconnect(
         self, *, context: "ExecutionContext", close_code: int
     ) -> None:
         if self.on_disconnect:
-            await self.on_disconnect(context.switch_to_websocket(), close_code)
+            await self.on_disconnect(
+                context.switch_to_websocket().get_client(), close_code
+            )
 
     async def decode(self, websocket: "WebSocket", message: Message) -> t.Any:
         if self.encoding == "text":

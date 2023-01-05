@@ -160,8 +160,9 @@ class BaseResponseModel(IResponseModel, ABC):
         cls, context: IExecutionContext, **kwargs: t.Any
     ) -> t.Tuple[t.Dict, t.Dict]:
         response_args = dict(kwargs)
-        if context.has_response:
-            endpoint_response = context.get_response()
+        http_connection = context.switch_to_http_connection()
+        if http_connection.has_response:
+            endpoint_response = http_connection.get_response()
             response_args = dict(background=endpoint_response.background)
             if endpoint_response.status_code > 0:
                 response_args["status_code"] = endpoint_response.status_code

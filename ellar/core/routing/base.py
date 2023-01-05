@@ -44,7 +44,7 @@ class RouteOperationBase:
         if _guards:
             for guard in _guards:
                 if isinstance(guard, type):
-                    guard = guard()
+                    guard = context.get_service_provider().get(guard)
                 result = await guard.can_activate(context)
                 if not result:
                     guard.raise_exception()

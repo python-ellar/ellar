@@ -1,18 +1,16 @@
 import typing as t
 
-from injector import Binder as InjectorBinder, Binding
+from injector import Binding
 
 from ellar.logger import logger as log
 from ellar.types import T
 
 from ..providers import InstanceProvider, Provider
 from ..scopes import DIScope, RequestScope, ScopeDecorator
-
-if t.TYPE_CHECKING:  # pragma: no cover
-    from .container import Container
+from .container import Container
 
 
-class RequestServiceProvider(InjectorBinder):
+class RequestServiceProvider(Container):
     __slots__ = ("_bindings", "_log_prefix", "_context")
 
     def __init__(self, container: "Container", auto_bind: bool = False) -> None:

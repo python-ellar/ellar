@@ -2,7 +2,8 @@ import typing as t
 
 from starlette.exceptions import HTTPException
 
-from ellar.constants import SCOPE_EXECUTION_CONTEXT_PROVIDER
+from ellar.core.connection import HTTPConnection
+from ellar.core.context import HostContext, IHostContext
 from ellar.types import ASGIApp, TMessage, TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -56,10 +57,15 @@ class ExceptionMiddleware:
                 msg = "Caught handled exception, but response already started."
                 raise RuntimeError(msg) from exc
 
-            if scope["type"] == "http":
-                response = await handler.catch(
-                    scope[SCOPE_EXECUTION_CONTEXT_PROVIDER], exc
-                )
+            connection = HTTPConnection(scope, receive)
+
+            if not connection.service_provider:  # pragma: no cover
+                context = HostContext(scope=scope, receive=receive, send=send)
+            else:
+                context = connection.service_provider.get(IHostContext)  # type: ignore
+
+            if context.get_type() == "http":
+                response = await handler.catch(context, exc)
                 await response(scope, receive, sender)
-            elif scope["type"] == "websocket":
-                await handler.catch(scope[SCOPE_EXECUTION_CONTEXT_PROVIDER], exc)
+            elif context.get_type() == "websocket":
+                await handler.catch(context, exc)

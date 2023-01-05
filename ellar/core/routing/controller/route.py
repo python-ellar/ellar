@@ -1,6 +1,7 @@
 import typing as t
 
 from starlette.concurrency import run_in_threadpool
+from starlette.responses import Response
 
 from ellar.core.context import ExecutionContext
 from ellar.core.exceptions import RequestValidationError
@@ -30,4 +31,5 @@ class ControllerRouteOperation(ControllerRouteOperationBase, RouteOperation):
         response = self.response_model.process_response(
             ctx=context, response_obj=response_obj
         )
-        await response(context.scope, context.receive, context.send)
+        if isinstance(response, Response):
+            await response(context.scope, context.receive, context.send)

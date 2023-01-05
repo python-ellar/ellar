@@ -346,7 +346,7 @@ class _RequestParameter(NonFieldRouteParameterResolver):
         self, ctx: IExecutionContext, **kwargs: t.Any
     ) -> t.Tuple[t.Dict, t.List]:
         try:
-            request = ctx.switch_to_request()
+            request = ctx.switch_to_http_connection().get_request()
             return {self.parameter_name: request}, []
         except Exception as ex:
             return {}, [ErrorWrapper(ex, loc=self.parameter_name or "request")]
@@ -357,7 +357,7 @@ class _WebSocketParameter(NonFieldRouteParameterResolver):
         self, ctx: IExecutionContext, **kwargs: t.Any
     ) -> t.Tuple[t.Dict, t.List]:
         try:
-            websocket = ctx.switch_to_websocket()
+            websocket = ctx.switch_to_websocket().get_client()
             return {self.parameter_name: websocket}, []
         except Exception as ex:
             return {}, [ErrorWrapper(ex, loc=self.parameter_name or "websocket")]
@@ -374,7 +374,7 @@ class _HostRequestParam(BaseRequestRouteParameterResolver):
     lookup_connection_field = None
 
     async def get_value(self, ctx: IExecutionContext) -> t.Any:
-        connection = ctx.switch_to_http_connection()
+        connection = ctx.switch_to_http_connection().get_client()
         if connection.client:
             return connection.client.host
 
@@ -388,7 +388,7 @@ class _ConnectionParam(NonFieldRouteParameterResolver):
         self, ctx: IExecutionContext, **kwargs: t.Any
     ) -> t.Tuple[t.Dict, t.List]:
         try:
-            connection = ctx.switch_to_http_connection()
+            connection = ctx.switch_to_http_connection().get_client()
             return {self.parameter_name: connection}, []
         except Exception as ex:
             return {}, [ErrorWrapper(ex, loc=self.parameter_name or "connection")]
@@ -399,7 +399,7 @@ class _ResponseRequestParam(NonFieldRouteParameterResolver):
         self, ctx: IExecutionContext, **kwargs: t.Any
     ) -> t.Tuple[t.Dict, t.List]:
         try:
-            response = ctx.get_response()
+            response = ctx.switch_to_http_connection().get_response()
             return {self.parameter_name: response}, []
         except Exception as ex:
             return {}, [ErrorWrapper(ex, loc=self.parameter_name or "response")]
@@ -429,7 +429,7 @@ def Ws() -> WebSocket:
     return t.cast(WebSocket, _WebSocketParameter())
 
 
-def Ctx() -> IExecutionContext:
+def Context() -> IExecutionContext:
     """
     Route Function Parameter for retrieving Current IExecutionContext Instance
     :return: IExecutionContext

@@ -2,6 +2,7 @@ import inspect
 import typing as t
 
 from starlette.concurrency import run_in_threadpool
+from starlette.responses import Response
 from starlette.routing import Route as StarletteRoute, compile_path
 
 from ellar.constants import (
@@ -140,4 +141,5 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         response = self.response_model.process_response(
             ctx=context, response_obj=response_obj
         )
-        await response(context.scope, context.receive, context.send)
+        if isinstance(response, Response):
+            await response(context.scope, context.receive, context.send)

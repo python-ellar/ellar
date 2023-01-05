@@ -4,8 +4,8 @@ from ellar.core.routing import OperationDefinitions
 
 from .params import (
     Body,
+    Context,
     Cookie,
-    Ctx,
     File,
     Form,
     Header,
@@ -39,7 +39,7 @@ http_route = _route_definitions.http_route
 ws_route = _route_definitions.ws_route
 
 __all__ = [
-    "Ctx",
+    "Context",
     "Provide",
     "Req",
     "Ws",

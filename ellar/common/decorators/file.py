@@ -10,7 +10,7 @@ from ellar.core.response.model import (
 )
 from ellar.shortcuts import fail_silently
 
-from .base import set_meta
+from .base import set_metadata as set_meta
 
 
 def file(media_type: t.Optional[str] = NOT_SET, streaming: bool = False) -> t.Callable:

@@ -5,7 +5,12 @@ from starlette.routing import BaseRoute, Mount
 
 from ellar.constants import LOG_LEVELS
 from ellar.core.conf import Config
-from ellar.core.context import ExecutionContext, IExecutionContext
+from ellar.core.context import (
+    ExecutionContext,
+    HostContext,
+    IExecutionContext,
+    IHostContext,
+)
 from ellar.core.datastructures import State, URLPath
 from ellar.core.events import EventHandler, RouterEventManager
 from ellar.core.exceptions.interfaces import (
@@ -269,8 +274,16 @@ class App(AppTemplating):
         self.injector.container.register_instance(self.config, Config)
         self.injector.container.register_instance(self.jinja_environment, Environment)
         self.injector.container.register_scoped(
+            IHostContext,
+            ModuleProvider(
+                HostContext, scope={"type": "invalid"}, receive=None, send=None
+            ),
+        )
+        self.injector.container.register_scoped(
             IExecutionContext,
-            ModuleProvider(ExecutionContext, scope={}, receive=None, send=None),
+            ModuleProvider(
+                ExecutionContext, scope={"type": "invalid"}, receive=None, send=None
+            ),
         )
         self._run_module_application_ready()
 

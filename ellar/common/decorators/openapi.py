@@ -3,7 +3,7 @@ import typing as t
 from ellar.compatible import AttributeDict
 from ellar.constants import OPENAPI_KEY
 
-from .base import set_meta
+from .base import set_metadata as set_meta
 
 
 def openapi_info(

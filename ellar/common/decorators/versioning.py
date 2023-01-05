@@ -2,7 +2,7 @@ import typing as t
 
 from ellar.constants import VERSIONING_KEY
 
-from .base import set_meta
+from .base import set_metadata as set_meta
 
 
 def version(*_version: str) -> t.Callable:

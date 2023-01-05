@@ -24,15 +24,17 @@ class ControllerWebSocketExtraHandler(WebSocketExtraHandler):
     async def execute_on_connect(self, *, context: ExecutionContext) -> None:
         if self.on_connect:
             await self.on_connect(
-                self.controller_instance, context.switch_to_websocket()
+                self.controller_instance, context.switch_to_websocket().get_client()
             )
             return
-        await context.switch_to_websocket().accept()
+        await context.switch_to_websocket().get_client().accept()
 
     async def execute_on_disconnect(
         self, *, context: ExecutionContext, close_code: int
     ) -> None:
         if self.on_disconnect:
             await self.on_disconnect(
-                self.controller_instance, context.switch_to_websocket(), close_code
+                self.controller_instance,
+                context.switch_to_websocket().get_client(),
+                close_code,
             )

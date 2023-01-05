@@ -1,7 +1,7 @@
 from ellar.core.params.params import Param, ParamTypes
 from ellar.core.routing import ModuleRouter
 
-from .decorators.base import set_meta
+from .decorators.base import set_metadata
 from .decorators.command import command
 from .decorators.controller import Controller
 from .decorators.exception import exception_handler
@@ -16,8 +16,8 @@ from .decorators.serializer import serializer_filter
 from .decorators.versioning import version
 from .routing import (
     Body,
+    Context,
     Cookie,
-    Ctx,
     File,
     Form,
     Header,
@@ -52,7 +52,7 @@ __all__ = [
     "guards",
     "Param",
     "ParamTypes",
-    "set_meta",
+    "set_metadata",
     "Controller",
     "openapi_info",
     "version",
@@ -74,7 +74,7 @@ __all__ = [
     "Path",
     "Query",
     "WsBody",
-    "Ctx",
+    "Context",
     "Provide",
     "Req",
     "Ws",

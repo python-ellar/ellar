@@ -73,7 +73,7 @@ class HeaderParameterResolver(RouteParameterResolver):
     def get_received_parameter(
         cls, ctx: IExecutionContext
     ) -> t.Union[QueryParams, Headers]:
-        connection = ctx.switch_to_http_connection()
+        connection = ctx.switch_to_http_connection().get_client()
         return connection.headers
 
     async def resolve_handle(
@@ -116,14 +116,14 @@ class QueryParameterResolver(HeaderParameterResolver):
     def get_received_parameter(
         cls, ctx: IExecutionContext
     ) -> t.Union[QueryParams, Headers]:
-        connection = ctx.switch_to_http_connection()
+        connection = ctx.switch_to_http_connection().get_client()
         return connection.query_params
 
 
 class PathParameterResolver(RouteParameterResolver):
     @classmethod
     def get_received_parameter(cls, ctx: IExecutionContext) -> t.Mapping[str, t.Any]:
-        connection = ctx.switch_to_http_connection()
+        connection = ctx.switch_to_http_connection().get_client()
         return connection.path_params
 
     async def resolve_handle(self, ctx: IExecutionContext, **kwargs: t.Any) -> t.Tuple:
@@ -142,7 +142,7 @@ class PathParameterResolver(RouteParameterResolver):
 class CookieParameterResolver(PathParameterResolver):
     @classmethod
     def get_received_parameter(cls, ctx: IExecutionContext) -> t.Mapping[str, t.Any]:
-        connection = ctx.switch_to_http_connection()
+        connection = ctx.switch_to_http_connection().get_client()
         return connection.cookies
 
 
@@ -171,7 +171,7 @@ class BodyParameterResolver(WsBodyParameterResolver):
 
     async def get_request_body(self, ctx: IExecutionContext) -> t.Any:
         try:
-            request = ctx.switch_to_request()
+            request = ctx.switch_to_http_connection().get_request()
             body_bytes = await request.body()
             if body_bytes:
                 json_body: t.Any = Undefined
@@ -218,7 +218,7 @@ class FormParameterResolver(BodyParameterResolver):
 
     async def get_request_body(self, ctx: IExecutionContext) -> t.Any:
         try:
-            request = ctx.switch_to_request()
+            request = ctx.switch_to_http_connection().get_request()
             body_bytes = await request.form()
             return body_bytes
         except Exception as e:
@@ -417,7 +417,7 @@ class NonFieldRouteParameterResolver(BaseRouteParameterResolver, ABC):
     Example:
     >>> class UserField(NonFieldRouteParameterResolver):
     >>>     async def resolve(self, ctx: IExecutionContext, **kwargs: t.Any) -> t.Any:
-    >>>          request = ctx.switch_to_request()
+    >>>          request = ctx.switch_to_http_connection().get_request()
     >>>          user = request.get('user', None)
     >>>          if user:
     >>>             return {self.parameter_name: user}, []
@@ -494,7 +494,7 @@ class BaseRequestRouteParameterResolver(NonFieldRouteParameterResolver):
     Defines HTTPConnection fields resolver for route parameter based on the provided `lookup_connection_field`
     """
 
-    # Look up field in ctx.switch_to_connection().lookup_connection_field
+    # Look up field in ctx.switch_to_connection().get_client().lookup_connection_field
     lookup_connection_field: t.Optional[str]
 
     def __call__(
@@ -508,7 +508,7 @@ class BaseRequestRouteParameterResolver(NonFieldRouteParameterResolver):
     async def get_value(self, ctx: IExecutionContext) -> t.Any:
         assert self.lookup_connection_field
 
-        connection = ctx.switch_to_http_connection()
+        connection = ctx.switch_to_http_connection().get_client()
         return connection.get(self.lookup_connection_field)
 
     async def resolve(

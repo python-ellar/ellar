@@ -103,9 +103,9 @@ class WebsocketRouteOperation(
             ctx=context
         )
         if errors:
-            websocket = context.switch_to_websocket()
+            websocket = context.switch_to_websocket().get_client()
             exc = WebSocketRequestValidationError(errors)
-            await context.switch_to_websocket().send_json(
+            await websocket.send_json(
                 dict(code=WS_1008_POLICY_VIOLATION, errors=exc.errors())
             )
             await websocket.close(code=WS_1008_POLICY_VIOLATION)
