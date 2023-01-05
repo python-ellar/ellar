@@ -100,6 +100,11 @@ for _path, auth in [
 
     app.router.append(auth_demo_endpoint)
 
+app.injector.container.register(HeaderSecretKeyCustomException)
+app.injector.container.register(QuerySecretKeyInjectable)
+app.injector.container.register(BearerAuth)
+app.injector.container.register(DigestAuth)
+
 client = TestClient(app)
 
 BODY_UNAUTHORIZED_DEFAULT = {"detail": "Not authenticated"}

@@ -14,7 +14,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 
 class EllarInjector(Injector):
-    __slots__ = ("_stack", "parent", "container", "_modules")
+    __slots__ = ("_stack", "parent", "container", "_modules", "_auto_bind")
 
     def __init__(
         self,
@@ -22,12 +22,12 @@ class EllarInjector(Injector):
         parent: "Injector" = None,
     ) -> None:
         self._stack = ()
-
+        self._auto_bind = auto_bind
         self.parent = parent
         # Binder
         self.container = Container(
             self,
-            auto_bind=auto_bind,
+            auto_bind=self._auto_bind,
             parent=parent.binder if parent is not None else None,
         )
 
@@ -78,7 +78,9 @@ class EllarInjector(Injector):
     async def create_request_service_provider(
         self,
     ) -> t.AsyncGenerator[RequestServiceProvider, None]:
-        request_provider = RequestServiceProvider(self.container, auto_bind=True)
+        request_provider = RequestServiceProvider(
+            self.container, auto_bind=self._auto_bind
+        )
         try:
             yield request_provider
         finally:
