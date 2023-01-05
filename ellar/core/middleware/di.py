@@ -58,8 +58,10 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
             http_connection_context = service_provider.get(IHTTPConnectionHost)  # type: ignore
             return http_connection_context.get_client()
 
-        service_provider.register(HTTPConnection, CallableProvider(get_http_connection))
-        service_provider.register(
+        service_provider.update_context(
+            HTTPConnection, CallableProvider(get_http_connection)
+        )
+        service_provider.update_context(
             StarletteHTTPConnection, CallableProvider(get_http_connection)
         )
 
@@ -69,8 +71,10 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
             http_connection_context = service_provider.get(IHTTPConnectionHost)  # type: ignore
             return http_connection_context.get_request()
 
-        service_provider.register(Request, CallableProvider(get_request_connection))
-        service_provider.register(
+        service_provider.update_context(
+            Request, CallableProvider(get_request_connection)
+        )
+        service_provider.update_context(
             StarletteRequest, CallableProvider(get_request_connection)
         )
 
@@ -80,7 +84,7 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
             http_connection_context = service_provider.get(IHTTPConnectionHost)  # type: ignore
             return http_connection_context.get_response()
 
-        service_provider.register(Response, CallableProvider(get_response))
+        service_provider.update_context(Response, CallableProvider(get_response))
 
     @classmethod
     def _register_websocket(cls, service_provider: "RequestServiceProvider") -> None:
@@ -89,8 +93,8 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
             return ws_connection_context.get_client()
 
         websocket_context = CallableProvider(get_websocket_connection)
-        service_provider.register(WebSocket, websocket_context)
-        service_provider.register(StarletteWebSocket, websocket_context)
+        service_provider.update_context(WebSocket, websocket_context)
+        service_provider.update_context(StarletteWebSocket, websocket_context)
 
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
         if scope["type"] not in ["http", "websocket"]:  # pragma: no cover
@@ -109,12 +113,12 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
             service_provider.update_context(t.cast(t.Type, IHostContext), host_context)
             service_provider.update_context(t.cast(t.Type, HostContext), host_context)
 
-            service_provider.register_scoped(
+            service_provider.update_context(
                 IHTTPConnectionHost,
                 CallableProvider(HTTPConnectionContextFactory(host_context)),
             )
 
-            service_provider.register_scoped(
+            service_provider.update_context(
                 IWebSocketConnectionHost,
                 CallableProvider(WebSocketContextFactory(host_context)),
             )

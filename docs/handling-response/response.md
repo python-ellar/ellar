@@ -1,7 +1,5 @@
 # Handling Responses
 
-## Define a response Schema
-
 **Ellar** allows you to define the schema of your responses both for validation and documentation purposes.
 
 The response schema is defined on the HTTP method decorator and its applied 
