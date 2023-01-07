@@ -3,8 +3,14 @@ from abc import ABC, abstractmethod
 
 from starlette.routing import Match
 
-from ellar.constants import GUARDS_KEY, SCOPE_API_VERSIONING_RESOLVER, VERSIONING_KEY
-from ellar.core.context import ExecutionContext, IExecutionContext
+from ellar.constants import (
+    GUARDS_KEY,
+    SCOPE_API_VERSIONING_RESOLVER,
+    SCOPE_SERVICE_PROVIDER,
+    VERSIONING_KEY,
+)
+from ellar.core.context import IExecutionContext, IExecutionContextFactory
+from ellar.di import EllarInjector
 from ellar.reflect import reflect
 from ellar.types import TReceive, TScope, TSend
 
@@ -33,11 +39,13 @@ class RouteOperationBase:
     def _load_model(self) -> None:
         """compute route models"""
 
+    @t.no_type_check
     async def run_route_guards(self, context: IExecutionContext) -> None:
         app = context.get_app()
         _guards: t.Optional[
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = reflect.get_metadata(GUARDS_KEY, self.endpoint)
+
         if not _guards:
             _guards = app.get_guards()
 
@@ -45,14 +53,17 @@ class RouteOperationBase:
             for guard in _guards:
                 if isinstance(guard, type):
                     guard = context.get_service_provider().get(guard)
+
                 result = await guard.can_activate(context)
                 if not result:
                     guard.raise_exception()
 
     async def app(self, scope: TScope, receive: TReceive, send: TSend) -> None:
-        context = ExecutionContext.create_context(
-            scope=scope, receive=receive, send=send, operation=self
-        )
+        service_provider = t.cast(EllarInjector, scope[SCOPE_SERVICE_PROVIDER])
+
+        execution_context_factory = service_provider.get(IExecutionContextFactory)
+        context = execution_context_factory.create_context(operation=self)
+
         await self.run_route_guards(context=context)
         await self._handle_request(context=context)
 

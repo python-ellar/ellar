@@ -4,9 +4,10 @@ import pytest
 
 from ellar.constants import SCOPE_SERVICE_PROVIDER
 from ellar.core.connection import HTTPConnection, Request, WebSocket
-from ellar.core.context import IHostContext
+from ellar.core.context import HostContextException, IHostContext
 from ellar.core.middleware import RequestServiceProviderMiddleware
 from ellar.core.response import Response
+from ellar.core.services import CoreServiceRegistration
 from ellar.di import EllarInjector
 
 from ..injector_module import Configuration, DummyModule
@@ -54,10 +55,10 @@ async def assert_iexecute_context_app(scope, receive, send):
     )
     assert service_provider is host_context.get_service_provider()
 
-    with pytest.raises(Exception):
+    with pytest.raises(HostContextException):
         host_context.switch_to_websocket()
 
-    with pytest.raises(Exception):
+    with pytest.raises(HostContextException):
         service_provider.get(WebSocket)
 
     await send(
@@ -90,10 +91,10 @@ async def assert_iexecute_context_app_websocket(scope, receive, send):
         is host_context.switch_to_http_connection().get_client()
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(HostContextException):
         service_provider.get(Request)
 
-    with pytest.raises(Exception):
+    with pytest.raises(HostContextException):
         service_provider.get(Response)
 
     await websocket.accept()
@@ -107,7 +108,7 @@ def test_di_middleware(test_client_factory):
     asgi_app = RequestServiceProviderMiddleware(
         assert_service_provider_app, debug=False, injector=injector_
     )
-
+    CoreServiceRegistration(injector_).register_all()
     client = test_client_factory(asgi_app)
     response = client.get("/")
 
@@ -118,9 +119,11 @@ def test_di_middleware(test_client_factory):
 
 
 def test_di_middleware_execution_context_initialization(test_client_factory):
+    injector_ = EllarInjector()
     asgi_app = RequestServiceProviderMiddleware(
-        assert_iexecute_context_app, debug=False, injector=EllarInjector()
+        assert_iexecute_context_app, debug=False, injector=injector_
     )
+    CoreServiceRegistration(injector_).register_all()
 
     client = test_client_factory(asgi_app)
     response = client.get("/")
@@ -131,9 +134,11 @@ def test_di_middleware_execution_context_initialization(test_client_factory):
 
 
 def test_di_middleware_execution_context_initialization_websocket(test_client_factory):
+    injector_ = EllarInjector()
     asgi_app = RequestServiceProviderMiddleware(
-        assert_iexecute_context_app_websocket, debug=False, injector=EllarInjector()
+        assert_iexecute_context_app_websocket, debug=False, injector=injector_
     )
+    CoreServiceRegistration(injector_).register_all()
 
     client = test_client_factory(asgi_app)
     with client.websocket_connect("/") as session:

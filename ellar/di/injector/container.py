@@ -3,6 +3,7 @@ from inspect import isabstract
 
 from injector import Binder as InjectorBinder, Binding, Module as InjectorModule
 
+from ellar.constants import NOT_SET
 from ellar.helper import get_name
 from ellar.types import T
 
@@ -63,14 +64,22 @@ class Container(InjectorBinder):
                     f"Cannot register {get_name(base_type)} for abstract class "
                     f"{get_name(concrete_type)}"
                 )
-        except TypeError:
+        except TypeError:  # pragma: no cover
             # ignore generic types issues
             pass
 
         provider = self.provider_for(base_type, concrete_type)
-        _scope: t.Any = scope or get_scope(base_type) or TransientScope
-        if isinstance(scope, ScopeDecorator):
-            _scope = scope.scope
+
+        _scope: t.Any = scope or NOT_SET
+
+        if _scope is NOT_SET and isinstance(concrete_type, type):
+            _scope = get_scope(concrete_type) or TransientScope
+        elif _scope is NOT_SET:
+            _scope = get_scope(base_type) or TransientScope
+
+        if isinstance(_scope, ScopeDecorator):
+            _scope = _scope.scope
+
         self.register_binding(base_type, Binding(base_type, provider, _scope))
 
     def register_instance(

@@ -1,6 +1,7 @@
+import contextvars
 import logging
 from enum import Enum
-from typing import Any, Dict, List, no_type_check
+from typing import Any, Dict, List, Optional, no_type_check
 
 from pydantic.fields import (
     SHAPE_LIST,
@@ -9,6 +10,13 @@ from pydantic.fields import (
     SHAPE_TUPLE,
     SHAPE_TUPLE_ELLIPSIS,
 )
+
+from .asgi_args import ASGIArgs
+
+ASGI_CONTEXT_VAR: contextvars.ContextVar[Optional[ASGIArgs]] = contextvars.ContextVar(
+    "ASGI-CONTEXT-VAR"
+)
+ASGI_CONTEXT_VAR.set(None)
 
 
 class _AnnotationToValue(type):

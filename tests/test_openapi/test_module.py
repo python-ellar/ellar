@@ -94,7 +94,7 @@ def test_openapi_module_creates_redocs_endpoint():
 
 
 def test_openapi_module_with_route_guards():
-    app = AppFactory.create_app()
+    app = AppFactory.create_app(providers=[CustomDocsGuard])
     document = OpenAPIDocumentBuilder().build_document(app)
 
     module_instance = app.install_module(

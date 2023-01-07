@@ -4,7 +4,7 @@ import pytest
 from injector import Binder, Injector, UnsatisfiedRequirement
 
 from ellar.common import Module
-from ellar.constants import MODULE_REF_TYPES
+from ellar.constants import ASGI_CONTEXT_VAR, MODULE_REF_TYPES
 from ellar.core import Config, ModuleBase
 from ellar.core.modules.ref import create_module_ref_factor
 from ellar.di import Container, EllarInjector
@@ -62,40 +62,56 @@ def test_default_container_registration():
 
 
 @pytest.mark.asyncio
-async def test_request_service_provider():
+async def test_request_service_context():
     injector = EllarInjector(auto_bind=False)
     injector.container.register_scoped(Foo1)
     injector.container.register_exact_transient(Foo2)
 
-    def assert_attributes(provider, expected):
-        assert hasattr(provider, "parent") is expected
-        assert hasattr(provider, "injector") is expected
-        assert hasattr(provider, "_context") is expected
+    def assert_attributes():
+        asgi_context_var = ASGI_CONTEXT_VAR.get()
+        assert len(asgi_context_var.context) == 0
+        assert len(asgi_context_var.scope) == 0
+        assert asgi_context_var.receive is None
+        assert asgi_context_var.send is None
 
-    async with injector.create_request_service_provider() as request_provider:
-        assert_attributes(request_provider, True)
-        foo_instance = Foo()
-        request_provider.update_context(Foo, foo_instance)
-        request_provider.update_context(
-            Foo1, Foo1()
-        )  # overrides parent provider config for Foo1
+    async with injector.create_asgi_args({}, None, None):
+        assert_attributes()
+        asgi_context = ASGI_CONTEXT_VAR.get()
 
-        assert isinstance(
-            injector.container.get_binding(Foo1)[0].provider, ClassProvider
-        )
-        assert isinstance(
-            request_provider.get_binding(Foo1)[0].provider, InstanceProvider
-        )
+        foo1 = injector.get(Foo1)  # result will be tracked by asgi_context
+        injector.get(Foo2)  # registered as transient scoped
 
-        assert request_provider.get(Foo) is foo_instance
-        # request_provider defaults to parent when binding is not in its context
-        assert isinstance(request_provider.get(Foo2), Foo2)
+        assert isinstance(asgi_context.context[Foo1], InstanceProvider)
+        assert asgi_context.context.get(Foo2) is None
+
+        # transient scoped
+        foo2 = injector.get(Foo2)
+        assert isinstance(foo2, Foo2)
+        assert injector.get(Foo2) != foo2  # transient scoped
+
+        assert injector.get(Foo1) == foo1  # still within the context....
 
         with pytest.raises(UnsatisfiedRequirement):
-            # parent can not resolve bindings added to request service provider
             injector.get(Foo)
 
-    assert_attributes(request_provider, False)
+    assert injector.get(Foo1) != foo1
+
+
+@pytest.mark.asyncio
+async def test_injector_update_scoped_context():
+    injector = EllarInjector(auto_bind=False)
+
+    async with injector.create_asgi_args({}, None, None):
+        asgi_context = ASGI_CONTEXT_VAR.get()
+
+        injector.update_scoped_context(Foo1, Foo1())
+        injector.update_scoped_context(Foo, ClassProvider(Foo))
+
+        assert isinstance(asgi_context.context[Foo1], InstanceProvider)
+        assert isinstance(asgi_context.context[Foo], ClassProvider)
+
+    injector.update_scoped_context(Foo1, Foo1())
+    assert ASGI_CONTEXT_VAR.get() is None
 
 
 class TestInjectorModuleFunctions:

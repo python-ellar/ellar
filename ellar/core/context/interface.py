@@ -8,7 +8,8 @@ from ellar.types import TReceive, TScope, TSend
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import ControllerBase
     from ellar.core.main import App
-    from ellar.di.injector import RequestServiceProvider
+    from ellar.core.routing import RouteOperationBase
+    from ellar.di.injector import EllarInjector
 
 
 class IHTTPHostContext(ABC):
@@ -38,7 +39,7 @@ class IWebSocketHostContext(ABC):
 
 class IHostContext(ABC, metaclass=ABCMeta):
     @abstractmethod
-    def get_service_provider(self) -> "RequestServiceProvider":
+    def get_service_provider(self) -> "EllarInjector":
         """Gets  RequestServiceProvider instance"""
 
     @abstractmethod
@@ -70,3 +71,15 @@ class IExecutionContext(IHostContext, ABC):
     @abstractmethod
     def get_class(self) -> t.Optional[t.Type["ControllerBase"]]:
         """Gets operation handler class"""
+
+
+class IHostContextFactory(ABC):
+    @abstractmethod
+    def create_context(self) -> IHostContext:
+        pass
+
+
+class IExecutionContextFactory(ABC):
+    @abstractmethod
+    def create_context(self, operation: "RouteOperationBase") -> IExecutionContext:
+        pass

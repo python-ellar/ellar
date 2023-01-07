@@ -7,13 +7,13 @@ from starlette.routing import Host, Mount
 
 from ellar.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.core import Config
-from ellar.core.exceptions.interfaces import IExceptionMiddlewareService
-from ellar.core.exceptions.service import ExceptionMiddlewareService
 from ellar.core.main import App
 from ellar.core.modules import ModuleBase
 from ellar.core.modules.ref import create_module_ref_factor
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
+
+from .services import CoreServiceRegistration
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.commands import EllarTyper
@@ -97,9 +97,8 @@ class AppFactory:
 
         config = Config(app_configured=True, config_module=config_module)
         injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND)
-        injector.container.register(
-            IExceptionMiddlewareService, ExceptionMiddlewareService
-        )
+
+        CoreServiceRegistration(injector).register_all()
         injector.container.register_instance(config, concrete_type=Config)
         cls._build_modules(app_module=module, injector=injector, config=config)
 

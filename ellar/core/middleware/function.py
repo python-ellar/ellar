@@ -56,7 +56,7 @@ class FunctionBasedMiddleware:
         if not connection.service_provider:  # pragma: no cover
             raise Exception("Service Provider is required")
 
-        context = connection.service_provider.get(IHostContext)  # type: ignore
+        context = connection.service_provider.get(IHostContext)
 
         async def call_next() -> None:
             await self.app(scope, receive, send)
