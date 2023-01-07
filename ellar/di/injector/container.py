@@ -64,7 +64,7 @@ class Container(InjectorBinder):
                     f"Cannot register {get_name(base_type)} for abstract class "
                     f"{get_name(concrete_type)}"
                 )
-        except TypeError:
+        except TypeError:  # pragma: no cover
             # ignore generic types issues
             pass
 

@@ -128,6 +128,8 @@ There are different scope which defines different ways a service is instantiated
 Whenever a transient scoped provider is required, a new instance of the provider is created
 
 ```python
+# main.py
+
 from ellar.di import EllarInjector, transient_scope, injectable
 
 injector = EllarInjector(auto_bind=False)
@@ -141,10 +143,15 @@ injector.container.register(ATransientClass)
 # OR
 # injector.container.register_transient(ATransientClass)
 
-a_transient_instance_1 = injector.get(ATransientClass)
-a_transient_instance_2 = injector.get(ATransientClass)
+def validate_transient_scope():
+    a_transient_instance_1 = injector.get(ATransientClass)
+    a_transient_instance_2 = injector.get(ATransientClass)
+    
+    assert a_transient_instance_2 != a_transient_instance_1 # True
 
-assert a_transient_instance_2 != a_transient_instance_1 # True
+    
+if __name__ == "__main__":
+    validate_transient_scope()
 ```
 
 ### **`singleton_scope`**: 
@@ -152,6 +159,8 @@ A singleton scoped provider is created once throughout the lifespan of the Conta
 
 For example:
 ```python
+# main.py
+
 from ellar.di import EllarInjector, singleton_scope, injectable
 
 injector = EllarInjector(auto_bind=False)
@@ -165,10 +174,14 @@ injector.container.register(ASingletonClass)
 # OR
 # injector.container.register_singleton(ASingletonClass)
 
-a_singleton_instance_1 = injector.get(ASingletonClass)
-a_singleton_instance_2 = injector.get(ASingletonClass)
+def validate_singleton_scope():
+    a_singleton_instance_1 = injector.get(ASingletonClass)
+    a_singleton_instance_2 = injector.get(ASingletonClass)
 
-assert a_singleton_instance_2 == a_singleton_instance_1 # True
+    assert a_singleton_instance_2 == a_singleton_instance_1 # True
+
+if __name__ == "__main__":
+    validate_singleton_scope()
 ```
 
 ### **`request_scope`**: 
@@ -176,7 +189,10 @@ A request scoped provider is instantiated once during the scope of the request. 
 It is important to note that `request_scope` behaves like a `singleton_scope` during HTTPConnection mode and behaves like a `transient_scope` outside HTTPConnection mode.
 
 ```python
-from ellar.di import EllarInjector, request_scope, injectable, RequestServiceProvider
+# main.py
+
+import uvicorn
+from ellar.di import EllarInjector, request_scope, injectable
 
 injector = EllarInjector(auto_bind=False)
 
@@ -187,16 +203,22 @@ class ARequestScopeClass:
 
 
 injector.container.register(ARequestScopeClass)
-request_injector = RequestServiceProvider(injector.container)
 
-request_instance_1 = request_injector.get(ARequestScopeClass)
-request_instance_2 = request_injector.get(ARequestScopeClass)
-assert request_instance_2 == request_instance_1
 
-request_instance_1 = injector.get(ARequestScopeClass)
-request_instance_2 = injector.get(ARequestScopeClass)
+async def scoped_request(scope, receive, send):
+    async with injector.create_asgi_args(scope, receive, send) as request_injector:
+        request_instance_1 = request_injector.get(ARequestScopeClass)
+        request_instance_2 = request_injector.get(ARequestScopeClass)
+        assert request_instance_2 == request_instance_1
 
-assert request_instance_2 != request_instance_1
+    request_instance_1 = injector.get(ARequestScopeClass)
+    request_instance_2 = injector.get(ARequestScopeClass)
+
+    assert request_instance_2 != request_instance_1
+
+
+if __name__ == "__main__":
+    uvicorn.run("main:scoped_request", port=5000, log_level="info")
 
 ```
 
@@ -208,6 +230,8 @@ With `ProviderConfig`, we can register a `base_type` against a `concrete_type` O
 
 For example:
 ```python
+# main.py
+
 from ellar.common import Module
 from ellar.core import ModuleBase, Config
 from ellar.di import ProviderConfig, injectable, EllarInjector
@@ -244,15 +268,20 @@ class AModule(ModuleBase):
         self.ifoo_b = ifoo_b
 
 
-module_ref = create_module_ref_factor(
+def validate_provider_config():
+    module_ref = create_module_ref_factor(
     AModule, container=injector.container, config=Config(),
-)
-module_ref.run_module_register_services()
-a_module_instance: AModule = injector.get(AModule)
+    )
+    module_ref.run_module_register_services()
+    a_module_instance: AModule = injector.get(AModule)
+    
+    assert isinstance(a_module_instance.ifoo, AFooClass)
+    assert isinstance(a_module_instance.ifoo_b, AFooClass)
+    assert a_module_instance.ifoo_b == a_foo_instance
 
-assert isinstance(a_module_instance.ifoo, AFooClass)
-assert isinstance(a_module_instance.ifoo_b, AFooClass)
-assert a_module_instance.ifoo_b == a_foo_instance
+    
+if __name__ == "__main__":
+    validate_provider_config()
 ```
 In above example, we used `ProviderConfig` as a value type as in the case of `IFooB` type and 
 as a concrete type as in the case of `IFoo` type.
@@ -262,6 +291,8 @@ We can also achieve the same by overriding `register_providers` in any Module cl
 
 For example:
 ```python
+# main.py
+
 from ellar.common import Module
 from ellar.core import ModuleBase, Config
 from ellar.di import Container, EllarInjector, injectable, ProviderConfig
@@ -293,15 +324,20 @@ class AModule(ModuleBase):
         container.register(IFooB, a_foo_instance)
 
 
-module_ref = create_module_ref_factor(
+def validate_register_services():
+    module_ref = create_module_ref_factor(
     AModule, container=injector.container, config=Config(),
-)
-module_ref.run_module_register_services()
+    )
+    module_ref.run_module_register_services()
+    
+    ifoo_b = injector.get(IFooB)
+    ifoo = injector.get(IFoo)
+    
+    assert isinstance(ifoo_b, AFooClass)
+    assert isinstance(ifoo, AFooClass)
+    assert ifoo_b == a_foo_instance
 
-ifoo_b = injector.get(IFooB)
-ifoo = injector.get(IFoo)
+if __name__ == "__main__":
+    validate_register_services()
 
-assert isinstance(ifoo_b, AFooClass)
-assert isinstance(ifoo, AFooClass)
-assert ifoo_b == a_foo_instance
 ```

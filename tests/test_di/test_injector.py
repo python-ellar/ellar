@@ -110,6 +110,9 @@ async def test_injector_update_scoped_context():
         assert isinstance(asgi_context.context[Foo1], InstanceProvider)
         assert isinstance(asgi_context.context[Foo], ClassProvider)
 
+    injector.update_scoped_context(Foo1, Foo1())
+    assert ASGI_CONTEXT_VAR.get() is None
+
 
 class TestInjectorModuleFunctions:
     def setup(self):

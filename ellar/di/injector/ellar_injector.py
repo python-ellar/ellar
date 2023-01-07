@@ -95,7 +95,8 @@ class EllarInjector(Injector):
 
         binding, binder = self.container.get_binding(interface)
         scope = binding.scope
-        if isinstance(scope, ScopeDecorator):
+
+        if isinstance(scope, ScopeDecorator):  # pragma: no cover
             scope = scope.scope
         # Fetch the corresponding Scope instance from the Binder.
         scope_binding, _ = binder.get_binding(scope)

@@ -2,7 +2,7 @@ import typing as t
 
 from ellar.types import TReceive, TScope, TSend
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.di.providers import Provider
 
 
