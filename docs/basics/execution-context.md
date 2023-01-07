@@ -236,3 +236,6 @@ class DogsController(ControllerBase):
         result.update(message='This action adds a new dog')
         return result
 ```
+
+!!! info
+    It's important to note that `ExecutionContext` becomes available when there is route handler found to handle the current request.
