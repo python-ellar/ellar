@@ -38,10 +38,9 @@ async def test_request_scope_instance():
     injector = EllarInjector(auto_bind=False)
     ProviderConfig(IContext, use_class=AnyContext).register(injector.container)
 
-    # resolving RequestScope Providers outside RequestServiceProvider will behaves like TransientScope
+    # resolving RequestScope Providers outside RequestServiceProvider will behave like TransientScope
     assert injector.get(IContext) != injector.get(IContext)
     assert isinstance(injector.get(IContext), AnyContext)
-    async with injector.create_request_service_provider() as request_provider:
-        # TODO: sync request_provider.get to injector.get during request
+    async with injector.create_asgi_args({}, None, None) as request_provider:
         # resolving RequestScope during request will behave like singleton
         assert request_provider.get(IContext) == request_provider.get(IContext)

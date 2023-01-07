@@ -17,12 +17,9 @@ from ellar.core import (
 from ellar.core.connection import Request
 from ellar.core.context import IExecutionContext, IHostContext
 from ellar.core.events import EventHandler
-from ellar.core.exceptions.interfaces import (
-    IExceptionHandler,
-    IExceptionMiddlewareService,
-)
-from ellar.core.exceptions.service import ExceptionMiddlewareService
+from ellar.core.exceptions.interfaces import IExceptionHandler
 from ellar.core.modules import ModuleTemplateRef
+from ellar.core.services import CoreServiceRegistration
 from ellar.core.staticfiles import StaticFiles
 from ellar.core.templating import Environment
 from ellar.core.versioning import VERSIONING, DefaultAPIVersioning, UrlPathAPIVersioning
@@ -192,7 +189,6 @@ class TestStarletteCompatibility:
         response = client.get("/")
         assert response.status_code == 500
         assert "test_application_functions.py" in response.text
-        assert "line 185" in response.text
         assert app.debug
 
 
@@ -217,9 +213,7 @@ class TestEllarApp:
 
         config = Config(STATIC_DIRECTORIES=[tmpdir])
         injector = EllarInjector()
-        injector.container.register_singleton(
-            IExceptionMiddlewareService, ExceptionMiddlewareService
-        )
+        CoreServiceRegistration(injector).register_all()
         injector.container.register_instance(config)
         app = App(injector=injector, config=config)
         client = TestClient(app)
@@ -241,9 +235,7 @@ class TestEllarApp:
             STATIC_MOUNT_PATH="/static-modified", STATIC_DIRECTORIES=[tmpdir]
         )
         injector = EllarInjector()
-        injector.container.register_singleton(
-            IExceptionMiddlewareService, ExceptionMiddlewareService
-        )
+        CoreServiceRegistration(injector).register_all()
         injector.container.register_instance(config)
         app = App(injector=injector, config=config)
         client = TestClient(app)
@@ -293,9 +285,7 @@ class TestEllarApp:
         injector = EllarInjector(
             auto_bind=False
         )  # will raise an exception is service is not registered
-        injector.container.register_singleton(
-            IExceptionMiddlewareService, ExceptionMiddlewareService
-        )
+        CoreServiceRegistration(injector).register_all()
         injector.container.register_instance(config)
 
         app = App(config=config, injector=injector)
@@ -327,9 +317,7 @@ class TestEllarApp:
         injector = EllarInjector(
             auto_bind=False
         )  # will raise an exception is service is not registered
-        injector.container.register_singleton(
-            IExceptionMiddlewareService, ExceptionMiddlewareService
-        )
+        CoreServiceRegistration(injector).register_all()
         injector.container.register_instance(config)
         app = App(config=config, injector=injector)
         app.add_exception_handler(CustomExceptionHandler())
