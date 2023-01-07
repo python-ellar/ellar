@@ -62,7 +62,7 @@ class ExceptionMiddleware:
             if not connection.service_provider:  # pragma: no cover
                 context = HostContext(scope=scope, receive=receive, send=send)
             else:
-                context = connection.service_provider.get(IHostContext)  # type: ignore
+                context = connection.service_provider.get(IHostContext)
 
             if context.get_type() == "http":
                 response = await handler.catch(context, exc)

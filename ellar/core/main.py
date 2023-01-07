@@ -5,7 +5,6 @@ from starlette.routing import BaseRoute, Mount
 
 from ellar.constants import LOG_LEVELS
 from ellar.core.conf import Config
-from ellar.core.context import IExecutionContext, IHostContext
 from ellar.core.datastructures import State, URLPath
 from ellar.core.events import EventHandler, RouterEventManager
 from ellar.core.exceptions.interfaces import (
@@ -27,9 +26,7 @@ from ellar.core.routing import ApplicationRouter
 from ellar.core.templating import AppTemplating, Environment
 from ellar.core.versioning import VERSIONING, BaseAPIVersioning
 from ellar.di.injector import EllarInjector
-from ellar.di.providers import ServiceUnavailableProvider
 from ellar.logger import logger
-from ellar.services.reflector import Reflector
 from ellar.types import ASGIApp, T, TReceive, TScope, TSend
 
 
@@ -181,9 +178,7 @@ class App(AppTemplating):
         return self._config
 
     def build_middleware_stack(self) -> ASGIApp:
-        service_middleware = self.injector.get(
-            IExceptionMiddlewareService  # type:ignore
-        )
+        service_middleware = self.injector.get(IExceptionMiddlewareService)
         service_middleware.build_exception_handlers(*self._exception_handlers)
         error_handler = service_middleware.get_500_error_handler()
         allowed_hosts = self.config.ALLOWED_HOSTS
@@ -264,19 +259,9 @@ class App(AppTemplating):
             module_ref.run_application_ready(self)
 
     def _finalize_app_initialization(self) -> None:
-
         self.injector.container.register_instance(self)
-        self.injector.container.register_instance(Reflector())
         self.injector.container.register_instance(self.config, Config)
         self.injector.container.register_instance(self.jinja_environment, Environment)
-        self.injector.container.register_scoped(
-            IHostContext,
-            ServiceUnavailableProvider("Service Unavailable at the current context."),
-        )
-        self.injector.container.register_scoped(
-            IExecutionContext,
-            ServiceUnavailableProvider("Service Unavailable at the current context."),
-        )
         self._run_module_application_ready()
 
     def add_exception_handler(

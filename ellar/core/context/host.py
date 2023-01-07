@@ -8,7 +8,7 @@ from .interface import IHostContext, IHTTPHostContext, IWebSocketHostContext
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
-    from ellar.di.injector import RequestServiceProvider
+    from ellar.di import EllarInjector
 
 
 class HostContext(IHostContext):
@@ -29,11 +29,11 @@ class HostContext(IHostContext):
         self.receive = receive
         self.send = send
 
-    def get_service_provider(self) -> "RequestServiceProvider":
+    def get_service_provider(self) -> "EllarInjector":
         return self._service_provider  # type:ignore
 
     @cached_property
-    def _service_provider(self) -> "RequestServiceProvider":
+    def _service_provider(self) -> "EllarInjector":
         return self.scope[SCOPE_SERVICE_PROVIDER]  # type:ignore
 
     def switch_to_http_connection(self) -> IHTTPHostContext:

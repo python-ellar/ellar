@@ -110,7 +110,7 @@ class ModuleRefBase(ABC):
         """Register Module"""
 
     def get_module_instance(self) -> ModuleBase:
-        return self.container.injector.get(t.cast(t.Type[ModuleBase], self.module))
+        return self.container.injector.get(self.module)  # type:ignore
 
 
 class ModulePlainRef(ModuleRefBase):
