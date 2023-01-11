@@ -239,3 +239,73 @@ class DogsController(ControllerBase):
 
 !!! info
     It's important to note that `ExecutionContext` becomes available when there is route handler found to handle the current request.
+
+To access the route's role(s) (custom metadata), we'll use the `Reflector` helper class, which is provided out of the box by the framework. 
+`Reflector` can be injected into a class in the normal way:
+
+```python
+# project_name/apps/dogs/guards.py
+from ellar.di import injectable
+from ellar.core import GuardCanActivate, IExecutionContext
+from ellar.services import Reflector
+
+
+@injectable()
+class RoleGuard(GuardCanActivate):
+    def __init__(self, reflector: Reflector):
+        self.reflector = reflector
+
+    async def can_activate(self, context: IExecutionContext) -> bool:
+        roles = self.reflector.get('roles', context.get_handler())
+        # request = context.switch_to_http_connection().get_request()
+        # check if user in request object has role
+        return 'user' in roles
+```
+
+Next, we apply the `RoleGuard` to `DogsController`
+
+```python
+# project_name/apps/dogs/controllers.py
+import typing
+from ellar.common import Body, Controller, post, set_metadata
+from ellar.core import ControllerBase
+from .schemas import CreateDogSerializer, DogListFilter
+from .guards import RoleGuard
+
+def roles(*_roles: str) -> typing.Callable:
+    return set_metadata('roles', list(_roles))
+
+
+@Controller('/dogs', guards=[RoleGuard, ])
+class DogsController(ControllerBase):
+    @post()
+    @roles('admin', 'is_staff')
+    async def create(self, payload: CreateDogSerializer = Body()):
+        result = payload.dict()
+        result.update(message='This action adds a new dog')
+        return result
+```
+
+Also, since `RoleGuard` depends on `Reflector`, it has to be registered as a provider. And we do that in `DogsModule`:
+
+```python
+# project_name/apps/dogs/module.py
+
+from ellar.common import Module
+from ellar.core import ModuleBase
+from ellar.di import Container
+
+from .controllers import DogsController
+from .guards import RoleGuard
+
+
+@Module(
+    controllers=[DogsController],
+    providers=[RoleGuard],
+)
+class DogsModule(ModuleBase):
+    def register_providers(self, container: Container) -> None:
+        # for more complicated provider registrations
+        # container.register_instance(...)
+        pass
+```
