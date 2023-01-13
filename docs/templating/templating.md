@@ -1,5 +1,6 @@
 Jinja2 is a powerful template engine for Python. It can be used in web applications to separate static and dynamic content, 
 making it easier to maintain and update the dynamic content. 
+
 In Ellar, a Model-View-Controller (MVC) framework, Jinja2 templates are typically used in the View layer to render dynamic content, 
 while the Model and Controller layers handle the data and logic of the application.
 
