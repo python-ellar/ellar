@@ -7,7 +7,7 @@ This allows different components of the application like **exception handlers**,
 There are two class `HostContext` and `ExecutionContext` which provides set of methods and properties for accessing and manipulating the current context of execution.
 
 
-## HostContext
+## **HostContext**
 The `HostContext` class provides a wrapper around `ASGI` app parameters (`scope`, `receive` and `send`) and provides some methods that allows you choosing the appropriate context(e.g., HTTP or WebSockets).
 
 For example, the `catch()` method of an **exception handlers** is called with an IHostContext.
@@ -44,7 +44,7 @@ class MyCustomExceptionHandler(IExceptionHandler):
 
 ```
 
-## Switching to other Contexts
+## **Switching to other Contexts**
 
 Currently, in Ellar you can only switch between `http` and `websocket` context. And each context has `get_client` method that returns context session.
 
@@ -141,7 +141,7 @@ class IWebSocketConnectionHost(ABC):
         """Returns WebSocket instance"""
 ```
 
-## ExecutionContext Class
+## **ExecutionContext Class**
 `ExecutionContext` extends `HostContext` and provides extra information like `Controller` class and controller `function` 
 that will handler the current request.
 
@@ -189,7 +189,7 @@ In this example, the `get_user` method is decorated with the `@get` decorator to
 
 Once you have access to the `ExecutionContext` object, you can use its methods and properties to access information about the current request.
 
-## Reflector and Metadata
+## **Reflector and Metadata**
 Ellar provides the ability to attach **custom metadata** to route handlers through the `@set_metadata()` decorator. 
 We can then access this metadata from within our class to make certain decisions.
 

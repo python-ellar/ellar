@@ -4,7 +4,7 @@ ModuleRouter allows you to define your route handlers as standalone functions, p
 This can be beneficial for python developers who prefer using functions. 
 It is important to note that using ModuleRouter does not limit your access to other features provided by Ellar.
 
-## Usage
+## **Usage**
 The Ellar CLI tool generates a `routers.py` file in every `create-module` scaffold command. 
 This file contains a quick guide on how to use the `ModuleRouter` class.
 
@@ -40,7 +40,7 @@ Each route takes two query parameters, 'a' and 'b' which are declared as int typ
 
 Next, we have to make the `math_router` visible to the application
 
-## Registering Module Router
+## **Registering Module Router**
 Like controllers, ModuleRouters also need to be registered to their root module in order to be used in a web application. 
 In the example provided above, the `math_router` would be registered under the `project_name/apps/dogs/module.py` file.
 
@@ -72,7 +72,7 @@ class DogsModule(ModuleBase):
 ![math_router.png](../img/math_router.png)
 
 
-## Accessing Other Request Object
+## **Accessing Other Request Object**
 In functional route handle, we can access request object and response object through custom decorators or type annotation as shown below.
 
 ### By Type Annotation
@@ -92,7 +92,7 @@ def addition(request: Request, res: Response, a:int, b:int):
 
 ```
 
-- By Custom decorators
+### **By Custom decorators**
 You can also achieve the same result by using custom decorator.
 
 ```python
@@ -111,7 +111,7 @@ def addition(*, request=Req(), res=Res(), a:int, b:int):
 
 ![math_router_with_request_object.png](../img/math_router_with_request_object.png)
 
-## Inject Services
+## **Inject Services**
 We can also inject service providers just like controller routes using the `Provide` function.
 
 ```python

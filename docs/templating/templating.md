@@ -5,11 +5,11 @@ In Ellar, a Model-View-Controller (MVC) framework, Jinja2 templates are typicall
 while the Model and Controller layers handle the data and logic of the application.
 
 
-## Installation
+## **Installation**
 [`Jinja2`](https://jinja.palletsprojects.com/en/3.0.x/) package is installed alongside with Ellar.
 
 
-## Quick overview on jinja2 Usage
+## **Quick overview on jinja2 Usage**
 A Jinja2 template is a plain text file that contains dynamic content, represented using Jinja2 syntax. 
 Here's an example template that displays a list of items:
 
@@ -71,7 +71,7 @@ and returns the rendered template as the `HTTP` response to the request.
 This example also shows manual setup of using `jinja2` in Ellar.
 
 
-## Jinja2 usage in Ellar
+## **Jinja2 usage in Ellar**
 
 In Ellar, we use the `@render` decorator to convert the responses returned by the view to a Templated Response by creating an `HTMLResponseModel` with a status code of 200 to handle the response.
 Also, each registered `Module` is a `TemplateLoader` for loading templates available at `templates_folder`. And, a `Module` TemplateLoader object is created when the `template_folder` folder exists.
@@ -175,10 +175,10 @@ if __name__ == "__main__":
     - [`Starlette Recommendation`](https://www.starlette.io/templates/#asynchronous-template-rendering)
 
 
-## Jinja2 Configurations
+## **Jinja2 Configurations**
 If there are specific configurations you want to apply to your Jinja2 Environment, you can look at [JINJA_TEMPLATE_OPTIONS](https://eadwincode.github.io/ellar/configurations/#jinja_templates_options) configuration.
 
-## Default Jinja Template Context
+## **Default Jinja Template Context**
 
 Every jinja template in ellar receives two context, `url_for`, `config`, `request` object and other specific context defined to render a template.
 
@@ -187,7 +187,7 @@ Every jinja template in ellar receives two context, `url_for`, `config`, `reques
 - `request` is current request object.
 
 
-## Static Files
+## **Static Files In Template**
 
 As stated above, you can resolve file paths to static files using `url_for`.
 
@@ -205,7 +205,7 @@ The `url_for` takes `path` parameter, in the case of `static` files, to match th
 This `url_for('static', path='img/Icon.svg')` will search for `img/Icon.svg` in all registered static folders.
 
 
-### Reversing Controllers URL
+### Reversing Controllers URLs
 It is common to need to generate URLs for specific routes, particularly when returning a redirect response. 
 This can be achieved by using the `request.url_for` method in the request object, or in the case of templating, by using the `url_for()` function.
 
@@ -285,7 +285,7 @@ we can see that the `parameter_a` is used as a keyword argument to satisfy the d
     If the `url_for` function is called with a path that does not exist or with insufficient parameters to resolve an existing URL, 
     it will raise a `starlette.routing.NoMatchFound` exception.
 
-### Module Router
+### Reversing Module Router URLs
 
 Just like in controller, we can also reverse URLs that belongs to `ModuleRouter`. 
 
@@ -356,3 +356,7 @@ In this case, when reversing the URL, you would use `request.url_for('users:user
 which will generate `http://127.0.0.1:5000/template-reversing/profile/value_of_user_id` based on routing configuration.
 
 This allows for greater control and readability when reversing URLs, and makes it less prone to error if the function name of the route were to change in the future.
+
+
+### Adding template filters and template globals.
+Jinja template filter and global functions can be defined at module level as shown here: [Module Templating Filters](../overview/modules/#module-templating-filters)
