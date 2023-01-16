@@ -278,6 +278,23 @@ Now we can test our API at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/do
 Please ensure your server is running
 ![Swagger UI](docs/img/car_api.png)
 
+## HTML Templating
+Ellar has built-in support for Jinja2, which is a popular template engine for HTML. This feature allows for easy and efficient HTML templating similar to that of Flask. Jinja2 can be used to create reusable templates, and to insert dynamic data into HTML pages. It also has support for template inheritance, control structures, and other useful features that can help to simplify and streamline the process of creating HTML templates.
+
+```html
+<html>
+  <body>
+    <ul>
+      {% for item in items %}
+      <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </body>
+</html>
+```
+
+See the [Doc](https://eadwincode.github.io/ellar/templating/templating/) for more examples.
+
 ## Status
 Project is still in development
 - Documentation - (in progress)
