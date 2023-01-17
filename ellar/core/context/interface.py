@@ -81,5 +81,11 @@ class IHostContextFactory(ABC):
 
 class IExecutionContextFactory(ABC):
     @abstractmethod
-    def create_context(self, operation: "RouteOperationBase") -> IExecutionContext:
+    def create_context(
+        self,
+        operation: "RouteOperationBase",
+        scope: TScope,
+        receive: TReceive,
+        send: TSend,
+    ) -> IExecutionContext:
         pass

@@ -42,13 +42,12 @@ class NewExecutionHostFactory(IExecutionContextFactory):
     def __init__(self, reflector: Reflector):
         self.reflector = reflector
 
-    def create_context(self, operation) -> IExecutionContext:
+    def create_context(self, operation, scope, receive, send) -> IExecutionContext:
         scoped_request_args = ASGI_CONTEXT_VAR.get()
 
         if not scoped_request_args:
             raise ServiceUnavailable()
 
-        scope, receive, send = scoped_request_args.get_args()
         i_execution_context = NewExecutionContext(
             scope=scope,
             receive=receive,

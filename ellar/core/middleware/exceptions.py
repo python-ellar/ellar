@@ -2,12 +2,13 @@ import typing as t
 
 from starlette.exceptions import HTTPException
 
-from ellar.core.connection import HTTPConnection
-from ellar.core.context import HostContext, IHostContext
+from ellar.constants import SCOPE_SERVICE_PROVIDER
+from ellar.core.context import IHostContext
 from ellar.types import ASGIApp, TMessage, TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.exceptions.service import ExceptionMiddlewareService
+    from ellar.di import EllarInjector
 
 
 class ExceptionMiddleware:
@@ -34,6 +35,7 @@ class ExceptionMiddleware:
             if message["type"] == "http.response.start":
                 response_started = True
             await send(message)
+            return
 
         try:
             await self.app(scope, receive, sender)
@@ -57,15 +59,17 @@ class ExceptionMiddleware:
                 msg = "Caught handled exception, but response already started."
                 raise RuntimeError(msg) from exc
 
-            connection = HTTPConnection(scope, receive)
+            service_provider: "EllarInjector" = t.cast(
+                "EllarInjector", scope[SCOPE_SERVICE_PROVIDER]
+            )
 
-            if not connection.service_provider:  # pragma: no cover
-                context = HostContext(scope=scope, receive=receive, send=send)
-            else:
-                context = connection.service_provider.get(IHostContext)
+            context = service_provider.get(IHostContext)
 
             if context.get_type() == "http":
                 response = await handler.catch(context, exc)
+                if not response and not response_started:
+                    msg = "HTTP ExceptionHandler must return a response."
+                    raise RuntimeError(msg) from exc
                 await response(scope, receive, sender)
             elif context.get_type() == "websocket":
                 await handler.catch(context, exc)
