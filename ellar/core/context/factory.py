@@ -5,7 +5,7 @@ from ellar.constants import ASGI_CONTEXT_VAR
 from ellar.di import injectable
 from ellar.di.exceptions import ServiceUnavailable
 from ellar.services import Reflector
-from ellar.types import T
+from ellar.types import T, TReceive, TScope, TSend
 
 from .exceptions import HostContextException
 from .execution import ExecutionContext
@@ -97,13 +97,18 @@ class ExecutionContextFactory(IExecutionContextFactory):
     def __init__(self, reflector: Reflector) -> None:
         self.reflector = reflector
 
-    def create_context(self, operation: "RouteOperationBase") -> IExecutionContext:
+    def create_context(
+        self,
+        operation: "RouteOperationBase",
+        scope: TScope,
+        receive: TReceive,
+        send: TSend,
+    ) -> IExecutionContext:
         scoped_request_args = ASGI_CONTEXT_VAR.get()
 
         if not scoped_request_args:
             raise ServiceUnavailable()
 
-        scope, receive, send = scoped_request_args.get_args()
         i_execution_context = ExecutionContext(
             scope=scope,
             receive=receive,

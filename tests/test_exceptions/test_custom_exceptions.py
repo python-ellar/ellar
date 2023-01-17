@@ -49,6 +49,15 @@ class OverrideHTTPException(IExceptionHandler):
         return JSONResponse({"detail": "HttpException Override"}, status_code=400)
 
 
+class RuntimeHTTPException(IExceptionHandler):
+    exception_type_or_code = HTTPException
+
+    async def catch(
+        self, ctx: IHostContext, exc: t.Union[t.Any, Exception]
+    ) -> t.Union[Response, t.Any]:
+        return None
+
+
 class ServerErrorHandler(IExceptionHandler):
     exception_type_or_code = 500
 
@@ -232,6 +241,20 @@ def test_application_add_exception_handler():
 
     assert res.status_code == 400
     assert res.json() == {"detail": "HttpException Override"}
+
+
+def test_application_http_exception_handler_raise_exception_for_returning_none():
+    @get()
+    def homepage():
+        raise HTTPException(detail="Bad Request", status_code=400)
+
+    tm = TestClientFactory.create_test_module()
+    tm.app.router.append(homepage)
+    tm.app.add_exception_handler(RuntimeHTTPException())
+    with pytest.raises(
+        RuntimeError, match="HTTP ExceptionHandler must return a response."
+    ):
+        tm.get_client().get("/")
 
 
 def test_application_adding_same_exception_twice():

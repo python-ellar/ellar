@@ -62,7 +62,9 @@ class RouteOperationBase:
         service_provider = t.cast(EllarInjector, scope[SCOPE_SERVICE_PROVIDER])
 
         execution_context_factory = service_provider.get(IExecutionContextFactory)
-        context = execution_context_factory.create_context(operation=self)
+        context = execution_context_factory.create_context(
+            operation=self, scope=scope, receive=receive, send=send
+        )
 
         await self.run_route_guards(context=context)
         await self._handle_request(context=context)
