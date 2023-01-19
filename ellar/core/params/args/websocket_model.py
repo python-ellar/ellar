@@ -7,13 +7,13 @@ from starlette.convertors import Convertor
 from ellar.core.context import IExecutionContext
 
 from .. import params
-from ..resolvers import RouteParameterResolver, WsBodyParameterResolver
+from ..resolvers import BaseRouteParameterResolver, WsBodyParameterResolver
 from .base import EndpointArgsModel
 from .extra_args import ExtraEndpointArg
 
 
 class WebsocketEndpointArgsModel(EndpointArgsModel):
-    body_resolver: t.List[RouteParameterResolver]
+    body_resolver: t.List[BaseRouteParameterResolver]
 
     def __init__(
         self,
@@ -29,9 +29,10 @@ class WebsocketEndpointArgsModel(EndpointArgsModel):
             param_converters=param_converters,
             extra_endpoint_args=extra_endpoint_args,
         )
+        self.body_resolver = []
 
     def build_body_field(self) -> None:
-        for resolver in list(self._computation_models):
+        for resolver in list(self._computation_models[params.Body.in_.value]):
             if isinstance(resolver, WsBodyParameterResolver):
                 self.body_resolver.append(resolver)
                 self._computation_models[
@@ -39,8 +40,8 @@ class WebsocketEndpointArgsModel(EndpointArgsModel):
                 ].remove(resolver)
 
         if self.body_resolver and len(self.body_resolver) > 1:
-            for resolver in self.body_resolver:  # type:ignore
-                setattr(resolver.model_field.field_info, "embed", True)  # type:ignore
+            for resolver in self.body_resolver:
+                setattr(resolver.model_field.field_info, "embed", True)
 
     def compute_route_parameter_list(
         self, body_field_class: t.Type[FieldInfo] = params.Body

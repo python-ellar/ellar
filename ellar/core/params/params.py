@@ -9,6 +9,7 @@ from pydantic.fields import FieldInfo, ModelField, Undefined
 from ellar.constants import MULTI_RESOLVER_FORM_GROUPED_KEY, MULTI_RESOLVER_KEY
 
 from .resolvers import (
+    BaseRouteParameterResolver,
     BodyParameterResolver,
     BulkBodyParameterResolver,
     BulkFormParameterResolver,
@@ -19,7 +20,6 @@ from .resolvers import (
     HeaderParameterResolver,
     PathParameterResolver,
     QueryParameterResolver,
-    RouteParameterResolver,
     WsBodyParameterResolver,
 )
 
@@ -41,7 +41,7 @@ class ParamTypes(Enum):
 
 class Param(FieldInfo):
     in_: ParamTypes = ParamTypes.query
-    resolver: t.Type[RouteParameterResolver] = QueryParameterResolver
+    resolver: t.Type[BaseRouteParameterResolver] = QueryParameterResolver
     bulk_resolver: t.Type[BulkParameterResolver] = BulkParameterResolver
 
     def __init__(
@@ -81,7 +81,7 @@ class Param(FieldInfo):
             **extra,
         )
 
-    def create_resolver(self, model_field: ModelField) -> RouteParameterResolver:
+    def create_resolver(self, model_field: ModelField) -> BaseRouteParameterResolver:
         multiple_resolvers = model_field.field_info.extra.get(MULTI_RESOLVER_KEY)
         if multiple_resolvers:
             model_field.field_info.extra.clear()
@@ -96,7 +96,7 @@ class Param(FieldInfo):
 
 class Path(Param):
     in_ = ParamTypes.path
-    resolver: t.Type[RouteParameterResolver] = PathParameterResolver
+    resolver: t.Type[BaseRouteParameterResolver] = PathParameterResolver
 
     def __init__(
         self,
@@ -138,12 +138,12 @@ class Path(Param):
 
 class Query(Param):
     in_ = ParamTypes.query
-    resolver: t.Type[RouteParameterResolver] = QueryParameterResolver
+    resolver: t.Type[BaseRouteParameterResolver] = QueryParameterResolver
 
 
 class Header(Param):
     in_ = ParamTypes.header
-    resolver: t.Type[RouteParameterResolver] = HeaderParameterResolver
+    resolver: t.Type[BaseRouteParameterResolver] = HeaderParameterResolver
 
     def __init__(
         self,
@@ -187,13 +187,13 @@ class Header(Param):
 
 class Cookie(Param):
     in_ = ParamTypes.cookie
-    resolver: t.Type[RouteParameterResolver] = CookieParameterResolver
+    resolver: t.Type[BaseRouteParameterResolver] = CookieParameterResolver
 
 
 class Body(Param):
     in_ = ParamTypes.body
     MEDIA_TYPE: str = "application/json"
-    resolver: t.Type[RouteParameterResolver] = BodyParameterResolver
+    resolver: t.Type[BaseRouteParameterResolver] = BodyParameterResolver
     bulk_resolver: t.Type[BulkParameterResolver] = BulkBodyParameterResolver
 
     def __init__(
@@ -241,12 +241,12 @@ class Body(Param):
 
 
 class WsBody(Body):
-    resolver: t.Type[RouteParameterResolver] = WsBodyParameterResolver
+    resolver: t.Type[BaseRouteParameterResolver] = WsBodyParameterResolver
 
 
 class Form(Param):
     in_ = ParamTypes.body
-    resolver: t.Type[RouteParameterResolver] = FormParameterResolver
+    resolver: t.Type[BaseRouteParameterResolver] = FormParameterResolver
     MEDIA_TYPE: str = "application/form-data"
     bulk_resolver: t.Type[BulkParameterResolver] = BulkFormParameterResolver
 
@@ -288,7 +288,7 @@ class Form(Param):
         self.embed = True
         self.media_type = media_type or self.MEDIA_TYPE
 
-    def create_resolver(self, model_field: ModelField) -> RouteParameterResolver:
+    def create_resolver(self, model_field: ModelField) -> BaseRouteParameterResolver:
         model_field.field_info.extra.setdefault(MULTI_RESOLVER_KEY, [])
         model_field.field_info.extra.setdefault(MULTI_RESOLVER_FORM_GROUPED_KEY, False)
 
@@ -305,5 +305,5 @@ class Form(Param):
 
 
 class File(Form):
-    resolver: t.Type[RouteParameterResolver] = FileParameterResolver
+    resolver: t.Type[BaseRouteParameterResolver] = FileParameterResolver
     MEDIA_TYPE: str = "multipart/form-data"

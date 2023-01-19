@@ -1,16 +1,20 @@
 import typing as t
 
-from pydantic.error_wrappers import ErrorWrapper
 from pydantic.fields import Undefined
 from starlette.responses import Response
 
 from ellar.core.connection import HTTPConnection, Request, WebSocket
 from ellar.core.context import IExecutionContext
 from ellar.core.params import params
-from ellar.core.params.resolvers import (
-    BaseRequestRouteParameterResolver,
-    NonFieldRouteParameterResolver,
-    ParameterInjectable,
+from ellar.core.params.resolvers.non_parameter import (
+    ConnectionParam,
+    ExecutionContextParameter,
+    HostRequestParam,
+    ProviderParameterInjector,
+    RequestParameter,
+    ResponseRequestParam,
+    SessionRequestParam,
+    WebSocketParameter,
 )
 from ellar.types import T
 
@@ -341,76 +345,12 @@ def WsBody(
     )
 
 
-class _RequestParameter(NonFieldRouteParameterResolver):
-    async def resolve(
-        self, ctx: IExecutionContext, **kwargs: t.Any
-    ) -> t.Tuple[t.Dict, t.List]:
-        try:
-            request = ctx.switch_to_http_connection().get_request()
-            return {self.parameter_name: request}, []
-        except Exception as ex:
-            return {}, [ErrorWrapper(ex, loc=self.parameter_name or "request")]
-
-
-class _WebSocketParameter(NonFieldRouteParameterResolver):
-    async def resolve(
-        self, ctx: IExecutionContext, **kwargs: t.Any
-    ) -> t.Tuple[t.Dict, t.List]:
-        try:
-            websocket = ctx.switch_to_websocket().get_client()
-            return {self.parameter_name: websocket}, []
-        except Exception as ex:
-            return {}, [ErrorWrapper(ex, loc=self.parameter_name or "websocket")]
-
-
-class _ExecutionContextParameter(NonFieldRouteParameterResolver):
-    async def resolve(
-        self, ctx: IExecutionContext, **kwargs: t.Any
-    ) -> t.Tuple[t.Dict, t.List]:
-        return {self.parameter_name: ctx}, []
-
-
-class _HostRequestParam(BaseRequestRouteParameterResolver):
-    lookup_connection_field = None
-
-    async def get_value(self, ctx: IExecutionContext) -> t.Any:
-        connection = ctx.switch_to_http_connection().get_client()
-        if connection.client:
-            return connection.client.host
-
-
-class _SessionRequestParam(BaseRequestRouteParameterResolver):
-    lookup_connection_field = "session"
-
-
-class _ConnectionParam(NonFieldRouteParameterResolver):
-    async def resolve(
-        self, ctx: IExecutionContext, **kwargs: t.Any
-    ) -> t.Tuple[t.Dict, t.List]:
-        try:
-            connection = ctx.switch_to_http_connection().get_client()
-            return {self.parameter_name: connection}, []
-        except Exception as ex:
-            return {}, [ErrorWrapper(ex, loc=self.parameter_name or "connection")]
-
-
-class _ResponseRequestParam(NonFieldRouteParameterResolver):
-    async def resolve(
-        self, ctx: IExecutionContext, **kwargs: t.Any
-    ) -> t.Tuple[t.Dict, t.List]:
-        try:
-            response = ctx.switch_to_http_connection().get_response()
-            return {self.parameter_name: response}, []
-        except Exception as ex:
-            return {}, [ErrorWrapper(ex, loc=self.parameter_name or "response")]
-
-
 def Http() -> HTTPConnection:
     """
     Route Function Parameter for retrieving Current Request Instance
     :return: Request
     """
-    return t.cast(Request, _ConnectionParam())
+    return t.cast(Request, ConnectionParam())
 
 
 def Req() -> Request:
@@ -418,7 +358,7 @@ def Req() -> Request:
     Route Function Parameter for retrieving Current Request Instance
     :return: Request
     """
-    return t.cast(Request, _RequestParameter())
+    return t.cast(Request, RequestParameter())
 
 
 def Ws() -> WebSocket:
@@ -426,7 +366,7 @@ def Ws() -> WebSocket:
     Route Function Parameter for retrieving Current WebSocket Instance
     :return: WebSocket
     """
-    return t.cast(WebSocket, _WebSocketParameter())
+    return t.cast(WebSocket, WebSocketParameter())
 
 
 def Context() -> IExecutionContext:
@@ -434,7 +374,7 @@ def Context() -> IExecutionContext:
     Route Function Parameter for retrieving Current IExecutionContext Instance
     :return: IExecutionContext
     """
-    return t.cast(IExecutionContext, _ExecutionContextParameter())
+    return t.cast(IExecutionContext, ExecutionContextParameter())
 
 
 def Provide(service: t.Optional[t.Type[T]] = None) -> T:
@@ -442,7 +382,7 @@ def Provide(service: t.Optional[t.Type[T]] = None) -> T:
     Route Function Parameter for resolving registered Provider
     :return: T
     """
-    return t.cast(T, ParameterInjectable(service))
+    return t.cast(T, ProviderParameterInjector(service))
 
 
 def Session() -> t.Dict:
@@ -451,7 +391,7 @@ def Session() -> t.Dict:
     Ensure SessionMiddleware is registered to application middlewares
     :return: Dict
     """
-    return t.cast(t.Dict, _SessionRequestParam())
+    return t.cast(t.Dict, SessionRequestParam())
 
 
 def Host() -> str:
@@ -459,7 +399,7 @@ def Host() -> str:
     Route Function Parameter for resolving registered `HTTPConnection.client.host`
     :return: str
     """
-    return t.cast(str, _HostRequestParam())
+    return t.cast(str, HostRequestParam())
 
 
 def Res() -> Response:
@@ -467,4 +407,4 @@ def Res() -> Response:
     Route Function Parameter for resolving registered Response
     :return: Response
     """
-    return t.cast(Response, _ResponseRequestParam())
+    return t.cast(Response, ResponseRequestParam())

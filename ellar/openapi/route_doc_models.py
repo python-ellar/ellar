@@ -14,10 +14,10 @@ from ellar.core.guard import BaseAuthGuard
 from ellar.core.params.args import EndpointArgsModel
 from ellar.core.params.params import Body, Param
 from ellar.core.params.resolvers import (
+    BaseRouteParameterResolver,
     BodyParameterResolver,
     BulkParameterResolver,
     RouteParameterModelField,
-    RouteParameterResolver,
 )
 from ellar.core.routing import ModuleMount, RouteOperation
 from ellar.services.reflector import Reflector
@@ -190,7 +190,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
                 _models.extend(item.get_model_fields())
                 continue
 
-            if isinstance(item, RouteParameterResolver):
+            if isinstance(item, BaseRouteParameterResolver):
                 _models.append(item.model_field)
 
         already_existing_parameter_names = [model.name for model in _models]
