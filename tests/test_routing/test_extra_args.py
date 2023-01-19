@@ -2,7 +2,7 @@ from functools import wraps
 
 from starlette.responses import Response
 
-from ellar.common import Provide, Query, get, set_metadata
+from ellar.common import Context, Query, Res, get, set_metadata
 from ellar.constants import EXTRA_ROUTE_ARGS_KEY
 from ellar.core import TestClientFactory
 from ellar.core.connection import Request
@@ -41,10 +41,10 @@ def add_additional_signature_to_endpoint(func):
 def add_extra_non_field_extra_args(func):
     # EXTRA ARGS SETUP
     context = ExtraEndpointArg(
-        name="context", annotation=IExecutionContext, default_value=Provide()
+        name="context", annotation=IExecutionContext, default_value=Context()
     )
     response = ExtraEndpointArg(
-        name="response", annotation=Response, default_value=Provide()
+        name="response", annotation=Response, default_value=Res()
     )
 
     set_metadata(EXTRA_ROUTE_ARGS_KEY, response)(func)

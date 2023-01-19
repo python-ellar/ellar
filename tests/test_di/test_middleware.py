@@ -3,10 +3,8 @@ import json
 import pytest
 
 from ellar.constants import SCOPE_SERVICE_PROVIDER
-from ellar.core.connection import HTTPConnection, Request, WebSocket
-from ellar.core.context import HostContextException, IHostContext
+from ellar.core.context import HostContextException, IHostContextFactory
 from ellar.core.middleware import RequestServiceProviderMiddleware
-from ellar.core.response import Response
 from ellar.core.services import CoreServiceRegistration
 from ellar.di import EllarInjector
 
@@ -40,26 +38,13 @@ async def assert_iexecute_context_app(scope, receive, send):
     assert scope[SCOPE_SERVICE_PROVIDER]
 
     service_provider = scope[SCOPE_SERVICE_PROVIDER]
-    host_context: IHostContext = service_provider.get(IHostContext)
-    assert (
-        service_provider.get(HTTPConnection)
-        is host_context.switch_to_http_connection().get_client()
+    host_context_factory: IHostContextFactory = service_provider.get(
+        IHostContextFactory
     )
-    assert (
-        service_provider.get(Request)
-        is host_context.switch_to_http_connection().get_request()
-    )
-    assert (
-        service_provider.get(Response)
-        is host_context.switch_to_http_connection().get_response()
-    )
-    assert service_provider is host_context.get_service_provider()
+    host_context = host_context_factory.create_context(scope, receive, send)
 
     with pytest.raises(HostContextException):
         host_context.switch_to_websocket()
-
-    with pytest.raises(HostContextException):
-        service_provider.get(WebSocket)
 
     await send(
         {
@@ -80,22 +65,19 @@ async def assert_iexecute_context_app_websocket(scope, receive, send):
     assert scope[SCOPE_SERVICE_PROVIDER]
 
     service_provider = scope[SCOPE_SERVICE_PROVIDER]
-    host_context: IHostContext = service_provider.get(IHostContext)
+    host_context_factory: IHostContextFactory = service_provider.get(
+        IHostContextFactory
+    )
+    host_context = host_context_factory.create_context(scope, receive, send)
 
     websocket = host_context.switch_to_websocket().get_client()
-    assert service_provider.get(WebSocket) is websocket
     assert service_provider is host_context.get_service_provider()
 
-    assert (
-        service_provider.get(HTTPConnection)
-        is host_context.switch_to_http_connection().get_client()
-    )
+    with pytest.raises(HostContextException):
+        host_context.switch_to_http_connection().get_request()
 
     with pytest.raises(HostContextException):
-        service_provider.get(Request)
-
-    with pytest.raises(HostContextException):
-        service_provider.get(Response)
+        host_context.switch_to_http_connection().get_response()
 
     await websocket.accept()
     await websocket.send_text("Hello, world!")
