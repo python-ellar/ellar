@@ -6,7 +6,7 @@ from starlette.responses import JSONResponse
 
 from ellar.constants import SCOPE_RESPONSE_STARTED, SCOPE_SERVICE_PROVIDER
 from ellar.core.connection.http import Request
-from ellar.core.context import IHostContext
+from ellar.core.context import IHostContextFactory
 from ellar.core.response import Response
 from ellar.di import EllarInjector
 from ellar.types import ASGIApp, TMessage, TReceive, TScope, TSend
@@ -48,20 +48,22 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
             await send(message)
             return
 
-        async with self.injector.create_asgi_args(
-            scope, receive, sender
-        ) as service_provider:
+        _sender = sender if scope["type"] == "http" else send
+
+        async with self.injector.create_asgi_args() as service_provider:
             scope[SCOPE_SERVICE_PROVIDER] = service_provider
 
-            host_context: IHostContext = service_provider.get(IHostContext)
-
-            if host_context.get_type() == "http":
-                await super().__call__(*host_context.get_args())
+            if scope["type"] == "http":
+                await super().__call__(scope, receive, _sender)
             else:
-                await self.app(*host_context.get_args())
+                await self.app(scope, receive, _sender)
 
     async def error_handler(self, request: Request, exc: Exception) -> Response:
-        host_context = request.scope[SCOPE_SERVICE_PROVIDER].get(IHostContext)
+        host_context_factory: IHostContextFactory = request.scope[
+            SCOPE_SERVICE_PROVIDER
+        ].get(IHostContextFactory)
+        host_context = host_context_factory.create_context(request.scope)
+
         assert self._500_error_handler
         response = await self._500_error_handler.catch(host_context, exc)
         return response
