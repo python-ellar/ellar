@@ -26,9 +26,15 @@ from .. import params
 from ..helpers import is_scalar_field, is_scalar_sequence_field
 from ..resolvers import (
     BaseRouteParameterResolver,
-    NonFieldRouteParameterResolver,
-    ParameterInjectable,
-    RouteParameterResolver,
+    IRouteParameterResolver,
+    NonParameterResolver,
+)
+from ..resolvers.non_parameter import (
+    ConnectionParam,
+    ExecutionContextParameter,
+    RequestParameter,
+    ResponseRequestParam,
+    WebSocketParameter,
 )
 from .extra_args import ExtraEndpointArg
 from .factory import get_parameter_field
@@ -38,6 +44,24 @@ from .resolver_generators import (
     PathArgsResolverGenerator,
     QueryHeaderResolverGenerator,
 )
+
+DEFAULT_RESOLVERS: t.Dict[t.Type, t.Type[NonParameterResolver]] = {
+    Request: RequestParameter,
+    StarletteRequest: RequestParameter,
+    WebSocket: WebSocketParameter,
+    StarletteWebSocket: WebSocketParameter,
+    Response: ResponseRequestParam,
+    HTTPConnection: ConnectionParam,
+    StarletteHTTPConnection: ConnectionParam,
+    IExecutionContext: ExecutionContextParameter,
+    ExecutionContext: ExecutionContextParameter,
+}
+
+
+def add_default_resolver(
+    type_identifier: t.Type, resolver_type: t.Type[NonParameterResolver]
+) -> None:
+    DEFAULT_RESOLVERS.update({type_identifier: resolver_type})
 
 
 class EndpointArgsModel:
@@ -72,12 +96,14 @@ class EndpointArgsModel:
         self.path = path
         self.param_converters = param_converters
         self._computation_models: t.DefaultDict[
-            str, t.List[BaseRouteParameterResolver]
+            str, t.List[IRouteParameterResolver]
         ] = defaultdict(list)
         self.path_param_names = self.get_path_param_names(path)
         self.endpoint_signature = self.get_typed_signature(endpoint)
-        self.body_resolver: t.Optional[t.Union[t.Any, RouteParameterResolver]] = None
-        self._route_models: t.List[BaseRouteParameterResolver] = []
+        self.body_resolver: t.Optional[
+            t.Union[t.Any, BaseRouteParameterResolver]
+        ] = None
+        self._route_models: t.List[IRouteParameterResolver] = []
         self._extra_endpoint_args: t.List[ExtraEndpointArg] = (
             list(extra_endpoint_args) if extra_endpoint_args else []
         )
@@ -89,14 +115,14 @@ class EndpointArgsModel:
             str(type(param)), BulkArgsResolverGenerator
         )
 
-    def get_route_models(self) -> t.List[BaseRouteParameterResolver]:
+    def get_route_models(self) -> t.List[IRouteParameterResolver]:
         """
         Returns all computed endpoint resolvers required for function execution
         :return: List[BaseRouteParameterResolver]
         """
         return self._route_models
 
-    def get_all_models(self) -> t.List[BaseRouteParameterResolver]:
+    def get_all_models(self) -> t.List[IRouteParameterResolver]:
         """
         Returns all computed endpoint resolvers + omitted resolvers
         :return: List[BaseRouteParameterResolver]
@@ -150,7 +176,7 @@ class EndpointArgsModel:
             + self._computation_models[params.Path.in_.value]
             + self._computation_models[params.Query.in_.value]
             + self._computation_models[params.Cookie.in_.value]
-            + self._computation_models[NonFieldRouteParameterResolver.in_]
+            + self._computation_models[NonParameterResolver.in_]
         )
 
     def compute_route_parameter_list(
@@ -236,7 +262,7 @@ class EndpointArgsModel:
         param_annotation: t.Optional[t.Type],
         key: str = None,
     ) -> t.Optional[bool]:
-        if isinstance(param_default, NonFieldRouteParameterResolver):
+        if isinstance(param_default, NonParameterResolver):
             model = param_default(param_name, param_annotation)  # type:ignore
             self._computation_models[key or model.in_].append(model)
             return True
@@ -349,22 +375,9 @@ class EndpointArgsModel:
     def _add_non_pydantic_field_to_dependency(
         self, param_name: str, param_default: t.Any, param_annotation: t.Any
     ) -> bool:
-        if (
-            param_annotation
-            in (
-                Request,
-                WebSocket,
-                HTTPConnection,
-                Response,
-                StarletteRequest,
-                StarletteHTTPConnection,
-                IExecutionContext,
-                ExecutionContext,
-                StarletteWebSocket,
-            )
-            and param_default == inspect.Parameter.empty
-        ):
-            _inject = ParameterInjectable()(param_name, param_annotation)
+        resolver_class = DEFAULT_RESOLVERS.get(param_annotation)
+        if resolver_class and param_default == inspect.Parameter.empty:
+            _inject = resolver_class()(param_name, param_annotation)
             self._computation_models[_inject.in_].append(_inject)
             return True
         return False
