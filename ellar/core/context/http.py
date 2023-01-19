@@ -4,6 +4,7 @@ from starlette.background import BackgroundTasks
 from starlette.responses import Response
 
 from ellar.compatible import cached_property
+from ellar.constants import SCOPED_RESPONSE
 from ellar.core.connection import HTTPConnection, Request
 from ellar.types import TReceive, TScope, TSend
 
@@ -43,22 +44,22 @@ class HTTPHostContext(IHTTPHostContext):
 
     @property
     def has_response(self) -> bool:
-        return self._response is not None
+        return SCOPED_RESPONSE in self.scope
 
     def get_response(self) -> Response:
-        if not self._response:
+        if SCOPED_RESPONSE not in self.scope:
             if self.scope["type"] != "http":
                 raise HostContextException(
                     f"Response is not allow for connection type scope[type]={self.scope['type']}"
                 )
 
-            self._response = Response(
+            self.scope[SCOPED_RESPONSE] = Response(
                 background=BackgroundTasks(),
                 content=None,
                 status_code=-100,
             )
 
-        return self._response
+        return t.cast(Response, self.scope[SCOPED_RESPONSE])
 
     def get_request(self) -> Request:
         return self._request  # type: ignore
