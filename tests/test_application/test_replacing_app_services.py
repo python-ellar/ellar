@@ -2,7 +2,6 @@ from starlette.exceptions import HTTPException
 from starlette.responses import PlainTextResponse
 
 from ellar.common import Controller, Module, exception_handler, get
-from ellar.constants import ASGI_CONTEXT_VAR
 from ellar.core import TestClientFactory
 from ellar.core.context import (
     ExecutionContext,
@@ -15,7 +14,6 @@ from ellar.core.context import (
 from ellar.core.exceptions import IExceptionMiddlewareService
 from ellar.core.exceptions.service import ExceptionMiddlewareService
 from ellar.di import ProviderConfig, injectable
-from ellar.di.exceptions import ServiceUnavailable
 from ellar.services import Reflector
 
 
@@ -42,12 +40,9 @@ class NewExecutionHostFactory(IExecutionContextFactory):
     def __init__(self, reflector: Reflector):
         self.reflector = reflector
 
-    def create_context(self, operation, scope, receive, send) -> IExecutionContext:
-        scoped_request_args = ASGI_CONTEXT_VAR.get()
-
-        if not scoped_request_args:
-            raise ServiceUnavailable()
-
+    def create_context(
+        self, operation, scope, receive=None, send=None
+    ) -> IExecutionContext:
         i_execution_context = NewExecutionContext(
             scope=scope,
             receive=receive,
@@ -55,22 +50,13 @@ class NewExecutionHostFactory(IExecutionContextFactory):
             operation_handler=operation.endpoint,
             reflector=self.reflector,
         )
-        i_execution_context.get_service_provider().update_scoped_context(
-            IExecutionContext, i_execution_context
-        )
 
         return i_execution_context
 
 
 @injectable()
 class NewHostContextFactory(IHostContextFactory):
-    def create_context(self) -> IHostContext:
-        scoped_request_args = ASGI_CONTEXT_VAR.get()
-
-        if not scoped_request_args:
-            raise ServiceUnavailable()
-
-        scope, receive, send = scoped_request_args.get_args()
+    def create_context(self, scope, receive=None, send=None) -> IHostContext:
         host_context = NewHostContext(scope=scope, receive=receive, send=send)
         host_context.get_service_provider().update_scoped_context(
             IHostContext, host_context
@@ -98,9 +84,8 @@ def test_can_replace_host_context():
 
     assert hasattr(NewHostContext, "worked") is False
     client = tm.get_client()
-    res = client.get("/example/")
-    assert res.status_code == 200
-    assert res.text == '"ExecutionContext"'
+    res = client.get("/example/exception")
+    assert res.json() == {"detail": "Bad Request", "status_code": 400}
 
     assert hasattr(NewHostContext, "worked") is True
     assert NewHostContext.worked is True

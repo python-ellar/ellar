@@ -41,6 +41,6 @@ async def test_request_scope_instance():
     # resolving RequestScope Providers outside RequestServiceProvider will behave like TransientScope
     assert injector.get(IContext) != injector.get(IContext)
     assert isinstance(injector.get(IContext), AnyContext)
-    async with injector.create_asgi_args({}, None, None) as request_provider:
+    async with injector.create_asgi_args() as request_provider:
         # resolving RequestScope during request will behave like singleton
         assert request_provider.get(IContext) == request_provider.get(IContext)

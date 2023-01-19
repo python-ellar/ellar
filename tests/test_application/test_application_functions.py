@@ -1,7 +1,6 @@
 import os
 import typing as t
 
-import pytest
 from starlette.responses import JSONResponse, PlainTextResponse, Response
 
 from ellar.common import Module, get, template_filter, template_global
@@ -15,7 +14,7 @@ from ellar.core import (
     TestClientFactory,
 )
 from ellar.core.connection import Request
-from ellar.core.context import IExecutionContext, IHostContext
+from ellar.core.context import IExecutionContext
 from ellar.core.events import EventHandler
 from ellar.core.exceptions.interfaces import IExceptionHandler
 from ellar.core.modules import ModuleTemplateRef
@@ -292,14 +291,6 @@ class TestEllarApp:
         assert injector.get(Reflector)
         assert injector.get(Config) is config
         assert injector.get(Environment) is app.jinja_environment
-        with pytest.raises(
-            Exception, match="Service Unavailable at the current context."
-        ):
-            injector.get(IExecutionContext)
-        with pytest.raises(
-            Exception, match="Service Unavailable at the current context."
-        ):
-            injector.get(IHostContext)
 
     def test_app_exception_handler(self):
         class CustomException(Exception):
