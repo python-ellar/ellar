@@ -1,6 +1,7 @@
 import inspect
 import typing as t
 from abc import ABC
+from types import FunctionType
 
 from ellar.compatible import AttributeDict
 from ellar.constants import (
@@ -14,6 +15,7 @@ from ellar.constants import (
 from ellar.core import ControllerBase
 from ellar.core.controller import ControllerType
 from ellar.core.exceptions import ImproperConfiguration
+from ellar.core.routing.controller import ControllerRouteOperationBase
 from ellar.di import RequestScope, injectable
 from ellar.reflect import reflect
 
@@ -21,9 +23,13 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
 
 
-def get_route_functions(cls: t.Type) -> t.Iterable[t.Callable]:
+def get_route_functions(
+    cls: t.Type,
+) -> t.Iterable[t.Union[t.Callable, ControllerRouteOperationBase]]:
     for method in cls.__dict__.values():
-        if hasattr(method, OPERATION_ENDPOINT_KEY):
+        if hasattr(method, OPERATION_ENDPOINT_KEY) or isinstance(
+            method, ControllerRouteOperationBase
+        ):
             yield method
 
 
@@ -33,7 +39,11 @@ def reflect_all_controller_type_routes(cls: t.Type[ControllerBase]) -> None:
     for base_cls in reversed(bases):
         if base_cls not in [ABC, ControllerBase, object]:
             for item in get_route_functions(base_cls):
-                operation = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, item)
+                operation = item
+                if callable(item) and type(item) == FunctionType:
+                    operation = reflect.get_metadata(  # type: ignore
+                        CONTROLLER_OPERATION_HANDLER_KEY, item
+                    )
                 reflect.define_metadata(CONTROLLER_CLASS_KEY, cls, item)
                 reflect.define_metadata(
                     CONTROLLER_OPERATION_HANDLER_KEY,

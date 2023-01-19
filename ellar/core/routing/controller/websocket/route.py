@@ -1,6 +1,7 @@
 import typing as t
 
 from starlette.status import WS_1008_POLICY_VIOLATION
+from starlette.websockets import WebSocketState
 
 from ellar.core.context import IExecutionContext
 from ellar.core.exceptions import WebSocketRequestValidationError
@@ -27,6 +28,8 @@ class ControllerWebsocketRouteOperation(
         if errors:
             websocket = context.switch_to_websocket().get_client()
             exc = WebSocketRequestValidationError(errors)
+            if websocket.client_state == WebSocketState.CONNECTING:
+                await websocket.accept()
             await websocket.send_json(
                 dict(code=WS_1008_POLICY_VIOLATION, errors=exc.errors())
             )
