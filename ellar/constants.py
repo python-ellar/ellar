@@ -11,12 +11,12 @@ from pydantic.fields import (
     SHAPE_TUPLE_ELLIPSIS,
 )
 
-from .asgi_args import ASGIArgs
+from .asgi_args import RequestScopeContext
 
-ASGI_CONTEXT_VAR: contextvars.ContextVar[Optional[ASGIArgs]] = contextvars.ContextVar(
-    "ASGI-CONTEXT-VAR"
-)
-ASGI_CONTEXT_VAR.set(None)
+SCOPED_CONTEXT_VAR: contextvars.ContextVar[
+    Optional[RequestScopeContext]
+] = contextvars.ContextVar("ASGI-CONTEXT-VAR")
+SCOPED_CONTEXT_VAR.set(None)
 
 
 class _AnnotationToValue(type):
@@ -49,9 +49,8 @@ TRACE = "TRACE"
 ROUTE_METHODS = [POST, PUT, PATCH, DELETE, GET, HEAD, OPTIONS, TRACE]
 
 SCOPE_SERVICE_PROVIDER = "SERVICE_PROVIDER"
-SCOPE_EXECUTION_CONTEXT_PROVIDER = "SERVICE_EXECUTION_CONTEXT_PROVIDER"
-SCOPE_HOST_CONTEXT_PROVIDER = "SCOPE_HOST_CONTEXT_PROVIDER"
-SCOPE_RESPONSE_STARTED = "response_started"
+SCOPE_RESPONSE_STARTED = "__response_started__"
+SCOPED_RESPONSE = "__response__"
 SCOPE_API_VERSIONING_RESOLVER = "API_VERSIONING_RESOLVER"
 SCOPE_API_VERSIONING_SCHEME = "API_VERSIONING_SCHEME"
 ELLAR_CONFIG_MODULE = "ELLAR_CONFIG_MODULE"

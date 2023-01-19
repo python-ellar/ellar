@@ -3,11 +3,11 @@ from collections import OrderedDict, defaultdict
 
 from injector import Injector
 
-from ellar.asgi_args import ASGIArgs
+from ellar.asgi_args import RequestScopeContext
 from ellar.compatible import asynccontextmanager
-from ellar.constants import ASGI_CONTEXT_VAR, MODULE_REF_TYPES
+from ellar.constants import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR
 from ellar.logger import logger as log
-from ellar.types import T, TReceive, TScope, TSend
+from ellar.types import T
 
 from ..providers import InstanceProvider, Provider
 from ..scopes import DIScope, ScopeDecorator
@@ -88,7 +88,7 @@ class EllarInjector(Injector):
         interface: t.Type[T],
         scope: t.Union[ScopeDecorator, t.Type[DIScope]] = None,
     ) -> T:
-        scoped_context = ASGI_CONTEXT_VAR.get()
+        scoped_context = SCOPED_CONTEXT_VAR.get()
         context = None
         if scoped_context:
             context = scoped_context.context
@@ -119,7 +119,7 @@ class EllarInjector(Injector):
     def update_scoped_context(self, interface: t.Type[T], value: T) -> None:
         # Sets RequestScope contexts so that they can be available when needed
         #
-        scoped_context = ASGI_CONTEXT_VAR.get()
+        scoped_context = SCOPED_CONTEXT_VAR.get()
         if scoped_context is None:
             return
 
@@ -129,11 +129,9 @@ class EllarInjector(Injector):
             scoped_context.context.update({interface: InstanceProvider(value)})
 
     @asynccontextmanager
-    async def create_asgi_args(
-        self, scope: TScope, receive: TReceive, send: TSend
-    ) -> t.AsyncGenerator["EllarInjector", None]:
+    async def create_asgi_args(self) -> t.AsyncGenerator["EllarInjector", None]:
         try:
-            ASGI_CONTEXT_VAR.set(ASGIArgs(scope, receive, send))
+            SCOPED_CONTEXT_VAR.set(RequestScopeContext())
             yield self
         finally:
-            ASGI_CONTEXT_VAR.set(None)
+            SCOPED_CONTEXT_VAR.set(None)
