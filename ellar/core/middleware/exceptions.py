@@ -3,7 +3,7 @@ import typing as t
 from starlette.exceptions import HTTPException
 
 from ellar.constants import SCOPE_SERVICE_PROVIDER
-from ellar.core.context import IHostContext
+from ellar.core.context import IHostContextFactory
 from ellar.types import ASGIApp, TMessage, TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -35,7 +35,6 @@ class ExceptionMiddleware:
             if message["type"] == "http.response.start":
                 response_started = True
             await send(message)
-            return
 
         try:
             await self.app(scope, receive, sender)
@@ -63,7 +62,8 @@ class ExceptionMiddleware:
                 "EllarInjector", scope[SCOPE_SERVICE_PROVIDER]
             )
 
-            context = service_provider.get(IHostContext)
+            context_factory = service_provider.get(IHostContextFactory)
+            context = context_factory.create_context(scope)
 
             if context.get_type() == "http":
                 response = await handler.catch(context, exc)
@@ -72,4 +72,5 @@ class ExceptionMiddleware:
                     raise RuntimeError(msg) from exc
                 await response(scope, receive, sender)
             elif context.get_type() == "websocket":
-                await handler.catch(context, exc)
+                ws_context = context_factory.create_context(scope, receive, send)
+                await handler.catch(ws_context, exc)
