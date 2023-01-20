@@ -66,7 +66,7 @@ class ModuleMount(StarletteMount):
         app: ASGIApp = None,
         routes: t.Sequence[BaseRoute] = None,
         name: str = None,
-        tag: str = NOT_SET,
+        tag: t.Optional[str] = NOT_SET,
         description: str = None,
         external_doc_description: str = None,
         external_doc_url: str = None,
