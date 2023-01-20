@@ -281,7 +281,7 @@ class OperationDefinitions:
 
     def ws_route(
         self,
-        path: str,
+        path: str = "/",
         *,
         name: str = None,
         encoding: str = "json",

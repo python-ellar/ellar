@@ -75,7 +75,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
 
         self._routes: t.List["OpenAPIRouteDocumentation"] = self._build_routes()
 
-    def get_tag(self) -> t.Dict:
+    def get_tag(self) -> t.Optional[t.Dict]:
         external_doc = None
         if self.external_doc_url:
             external_doc = dict(
@@ -86,7 +86,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             return dict(
                 name=self.tag, description=self.description, externalDocs=external_doc
             )
-        return dict()
+        return None
 
     def _build_routes(self) -> t.List["OpenAPIRouteDocumentation"]:
         reflector: Reflector = Reflector()
@@ -96,13 +96,12 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             if isinstance(route, RouteOperation) and route.include_in_schema:
                 openapi = reflector.get(OPENAPI_KEY, route.endpoint) or dict()
                 guards = reflector.get(GUARDS_KEY, route.endpoint)
-
+                openapi.setdefault("tags", [self.tag] if self.tag else ["default"])
                 _routes.append(
                     OpenAPIRouteDocumentation(
                         route=route,
                         global_route_parameters=self.global_route_parameters,
                         guards=guards or self.global_guards,
-                        tags=[self.tag],
                         **openapi,
                     )
                 )

@@ -210,7 +210,8 @@ class OpenAPIDocumentBuilder:
         for route_model in openapi_route_models:
             if isinstance(route_model, OpenAPIMountDocumentation):
                 data = route_model.get_tag()
-                self._build.setdefault("tags", []).append(data)
+                if data:
+                    self._build.setdefault("tags", []).append(data)
         if components:
             self._build.setdefault("components", {}).update(components)
         return OpenAPI(**self._build)
