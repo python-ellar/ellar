@@ -21,6 +21,7 @@ from ellar.constants import (
 )
 from ellar.core import AppFactory, Config, ModuleBase, TestClientFactory
 from ellar.core.modules.ref import (
+    InvalidModuleTypeException,
     ModulePlainRef,
     ModuleProvider,
     ModuleTemplateRef,
@@ -247,6 +248,18 @@ def test_module_template_ref_get_all_routers_fails_for_invalid_controller():
             )
 
 
+def test_invalid_module_template_ref():
+    config = Config()
+    container = EllarInjector(auto_bind=False).container
+
+    invalid_module = type("InvalidModule", (), {})
+    with pytest.raises(
+        InvalidModuleTypeException,
+        match="must be a subclass of `ellar.core.ModuleBase`",
+    ):
+        create_module_ref_factor(invalid_module, config=config, container=container)
+
+
 def test_module_plain_ref_routes_return_empty_list():
     config = Config()
     container = EllarInjector(auto_bind=False).container
@@ -255,6 +268,7 @@ def test_module_plain_ref_routes_return_empty_list():
         NonTemplateModuleExample, config=config, container=container
     )
     assert module_ref.routes == []
+    assert isinstance(module_ref.config, Config)
 
 
 def test_module_template_ref_routes_returns_valid_routes():

@@ -30,7 +30,7 @@ def generate_controller_operation_unique_id(
 def get_name(endpoint: t.Union[t.Callable, t.Type, object]) -> str:
     if inspect.isfunction(endpoint) or inspect.isclass(endpoint):
         return endpoint.__name__
-    return endpoint.__class__.__name__
+    return endpoint.__class__.__name__  # pragma: no cover
 
 
 def is_async_callable(obj: t.Any) -> bool:

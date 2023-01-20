@@ -1,10 +1,7 @@
 import inspect
 import typing as t
 
-from pydantic.error_wrappers import ErrorWrapper
-
 from ellar.core.context import IExecutionContext
-from ellar.logger import logger
 from ellar.types import T
 
 from .base import NonParameterResolver
@@ -44,12 +41,8 @@ class ProviderParameterInjector(NonParameterResolver):
     async def resolve(
         self, ctx: IExecutionContext, **kwargs: t.Any
     ) -> t.Tuple[t.Dict, t.List]:
-        try:
-            service_provider = ctx.get_service_provider()
-            if not self.data:
-                raise Exception("ParameterInjectable not properly setup")
-            value = service_provider.get(self.data)
-            return {self.parameter_name: value}, []
-        except Exception as ex:
-            logger.error(f"Unable to resolve service {self.data} \nErrorMessage: {ex}")
-            return {}, [ErrorWrapper(ex, loc=self.parameter_name or "provide")]
+        service_provider = ctx.get_service_provider()
+        if not self.data:
+            raise RuntimeError("ProviderParameterInjector not properly setup")
+        value = service_provider.get(self.data)
+        return {self.parameter_name: value}, []
