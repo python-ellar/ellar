@@ -72,7 +72,7 @@ class OperationDefinitions:
         _operation = _ws_operation_class(**ws_route_parameters.dict())
         setattr(ws_route_parameters.endpoint, OPERATION_ENDPOINT_KEY, True)
         if self._routes is not None and not isinstance(
-            _operation, ControllerRouteOperationBase
+            _operation, ControllerWebsocketRouteOperation
         ):
             self._routes.append(_operation)
         return _operation
@@ -281,7 +281,7 @@ class OperationDefinitions:
 
     def ws_route(
         self,
-        path: str,
+        path: str = "/",
         *,
         name: str = None,
         encoding: str = "json",

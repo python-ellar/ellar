@@ -6,9 +6,9 @@ from .args import (
 )
 from .params import Body, Cookie, File, Form, Header, Param, ParamTypes, Path, Query
 from .resolvers import (
-    BaseRequestRouteParameterResolver,
-    BaseRouteParameterResolver,
-    NonFieldRouteParameterResolver,
+    BaseConnectionParameterResolver,
+    IRouteParameterResolver,
+    NonParameterResolver,
 )
 
 __all__ = [
@@ -16,9 +16,9 @@ __all__ = [
     "RequestEndpointArgsModel",
     "ExtraEndpointArg",
     "EndpointArgsModel",
-    "NonFieldRouteParameterResolver",
-    "BaseRequestRouteParameterResolver",
-    "BaseRouteParameterResolver",
+    "NonParameterResolver",
+    "BaseConnectionParameterResolver",
+    "IRouteParameterResolver",
     "Body",
     "Cookie",
     "File",

@@ -147,3 +147,8 @@ async def test_reflect_async_context_works():
 
     assert reflect.has_metadata("defined_key_c", function_new) is False
     assert reflect.has_metadata("defined_key_d", function_new) is False
+
+
+def test_define_metadata_raise_exception():
+    with pytest.raises(Exception, match="`target` is not a valid type"):
+        reflect.define_metadata("defined_key_c", "Eadwin", "defined_key_c")

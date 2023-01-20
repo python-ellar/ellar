@@ -8,7 +8,7 @@ from ellar.core.context import IExecutionContext
 from ellar.helper.modelfield import create_model_field
 
 from .. import params
-from ..resolvers import RouteParameterResolver
+from ..resolvers import BaseRouteParameterResolver
 from .base import EndpointArgsModel
 from .extra_args import ExtraEndpointArg
 
@@ -56,7 +56,7 @@ class RequestEndpointArgsModel(EndpointArgsModel):
         elif body_resolvers:
             # if body_resolvers is more than one, we create a bulk_body_resolver instead
             _body_resolvers_model_fields = (
-                t.cast(RouteParameterResolver, item).model_field
+                t.cast(BaseRouteParameterResolver, item).model_field
                 for item in body_resolvers
             )
             model_name = "body_" + self.operation_unique_id

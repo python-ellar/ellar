@@ -74,7 +74,7 @@ class AppFactory:
 
         module_dependency = cls.get_all_modules(app_module)
         for module in reversed(module_dependency):
-            if injector.get_module(module):
+            if injector.get_module(module):  # pragma: no cover
                 continue
 
             module_ref = create_module_ref_factor(

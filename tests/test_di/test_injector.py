@@ -4,7 +4,7 @@ import pytest
 from injector import Binder, Injector, UnsatisfiedRequirement
 
 from ellar.common import Module
-from ellar.constants import ASGI_CONTEXT_VAR, MODULE_REF_TYPES
+from ellar.constants import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR
 from ellar.core import Config, ModuleBase
 from ellar.core.modules.ref import create_module_ref_factor
 from ellar.di import Container, EllarInjector
@@ -67,16 +67,8 @@ async def test_request_service_context():
     injector.container.register_scoped(Foo1)
     injector.container.register_exact_transient(Foo2)
 
-    def assert_attributes():
-        asgi_context_var = ASGI_CONTEXT_VAR.get()
-        assert len(asgi_context_var.context) == 0
-        assert len(asgi_context_var.scope) == 0
-        assert asgi_context_var.receive is None
-        assert asgi_context_var.send is None
-
-    async with injector.create_asgi_args({}, None, None):
-        assert_attributes()
-        asgi_context = ASGI_CONTEXT_VAR.get()
+    async with injector.create_asgi_args():
+        asgi_context = SCOPED_CONTEXT_VAR.get()
 
         foo1 = injector.get(Foo1)  # result will be tracked by asgi_context
         injector.get(Foo2)  # registered as transient scoped
@@ -101,8 +93,8 @@ async def test_request_service_context():
 async def test_injector_update_scoped_context():
     injector = EllarInjector(auto_bind=False)
 
-    async with injector.create_asgi_args({}, None, None):
-        asgi_context = ASGI_CONTEXT_VAR.get()
+    async with injector.create_asgi_args():
+        asgi_context = SCOPED_CONTEXT_VAR.get()
 
         injector.update_scoped_context(Foo1, Foo1())
         injector.update_scoped_context(Foo, ClassProvider(Foo))
@@ -111,7 +103,7 @@ async def test_injector_update_scoped_context():
         assert isinstance(asgi_context.context[Foo], ClassProvider)
 
     injector.update_scoped_context(Foo1, Foo1())
-    assert ASGI_CONTEXT_VAR.get() is None
+    assert SCOPED_CONTEXT_VAR.get() is None
 
 
 class TestInjectorModuleFunctions:

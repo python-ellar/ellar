@@ -7,7 +7,9 @@ from .interface import (
     IExecutionContextFactory,
     IHostContext,
     IHostContextFactory,
+    IHTTPConnectionContextFactory,
     IHTTPHostContext,
+    IWebSocketContextFactory,
     IWebSocketHostContext,
 )
 
@@ -23,4 +25,6 @@ __all__ = [
     "IHostContextFactory",
     "ExecutionContextFactory",
     "HostContextFactory",
+    "IHTTPConnectionContextFactory",
+    "IWebSocketContextFactory",
 ]

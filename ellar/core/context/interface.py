@@ -3,13 +3,21 @@ from abc import ABC, ABCMeta, abstractmethod
 
 from ellar.core.connection import HTTPConnection, Request, WebSocket
 from ellar.core.response import Response
-from ellar.types import TReceive, TScope, TSend
+from ellar.types import T, TMessage, TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import ControllerBase
     from ellar.core.main import App
     from ellar.core.routing import RouteOperationBase
     from ellar.di.injector import EllarInjector
+
+
+async def empty_receive() -> t.NoReturn:  # pragma: no cover
+    raise RuntimeError("Receive channel has not been made available")
+
+
+async def empty_send(message: TMessage) -> t.NoReturn:  # pragma: no cover
+    raise RuntimeError("Send channel has not been made available")
 
 
 class IHTTPHostContext(ABC):
@@ -75,11 +83,56 @@ class IExecutionContext(IHostContext, ABC):
 
 class IHostContextFactory(ABC):
     @abstractmethod
-    def create_context(self) -> IHostContext:
+    def create_context(
+        self,
+        scope: TScope,
+        receive: TReceive = empty_receive,
+        send: TSend = empty_send,
+    ) -> IHostContext:
         pass
 
 
 class IExecutionContextFactory(ABC):
     @abstractmethod
-    def create_context(self, operation: "RouteOperationBase") -> IExecutionContext:
+    def create_context(
+        self,
+        operation: "RouteOperationBase",
+        scope: TScope,
+        receive: TReceive = empty_receive,
+        send: TSend = empty_send,
+    ) -> IExecutionContext:
         pass
+
+
+class SubHostContextFactory(t.Generic[T], ABC):
+    """
+    Factory for creating HostContext types and validating them.
+    """
+
+    context_type: t.Type[T]
+
+    __slots__ = ()
+
+    def __call__(self, context: IHostContext) -> T:
+        self.validate(context)
+        return self.create_context_type(context)
+
+    @abstractmethod
+    def validate(self, context: IHostContext) -> None:
+        pass
+
+    def create_context_type(self, context: IHostContext) -> T:
+        scope, receive, send = context.get_args()
+        return self.context_type(  # type:ignore
+            scope=scope,
+            receive=receive,
+            send=send,
+        )
+
+
+class IHTTPConnectionContextFactory(SubHostContextFactory[IHTTPHostContext], ABC):
+    context_typ: t.Type[IHTTPHostContext]
+
+
+class IWebSocketContextFactory(SubHostContextFactory[IWebSocketHostContext], ABC):
+    context_type: t.Type[IWebSocketHostContext]
