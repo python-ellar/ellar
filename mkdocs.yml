@@ -44,7 +44,7 @@ nav:
       - Exception Handling:  overview/exception_handling.md
 #      - Guards:  overview/guards.md
 #      - Custom Decorators:  overview/custom_decorators.md
-#      - Functional Programming:  overview/functional_route.md
+      - Module Router:  overview/module-router.md
   - Configuration: configurations.md
   - How-to Guides:
       - Input Parsing: parsing-inputs/index.md
