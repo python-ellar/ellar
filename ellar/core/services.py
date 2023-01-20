@@ -1,13 +1,10 @@
 from ellar.di import EllarInjector
-from ellar.di.exceptions import ServiceUnavailable
 from ellar.services.reflector import Reflector
 
 from .context import (
     ExecutionContextFactory,
     HostContextFactory,
-    IExecutionContext,
     IExecutionContextFactory,
-    IHostContext,
     IHostContextFactory,
     IHTTPConnectionContextFactory,
     IWebSocketContextFactory,
@@ -24,14 +21,6 @@ class CoreServiceRegistration:
 
     def __init__(self, injector: EllarInjector) -> None:
         self.injector = injector
-
-    def register_execution_host_context(self) -> None:
-        def resolve_execution_host_context() -> IHostContext:
-            raise ServiceUnavailable("Service Unavailable at the current context.")
-
-        self.injector.container.register_scoped(
-            IExecutionContext, resolve_execution_host_context
-        )
 
     def register_all(self) -> None:
         self.injector.container.register(
@@ -52,4 +41,3 @@ class CoreServiceRegistration:
         )
 
         self.injector.container.register_instance(Reflector())
-        self.register_execution_host_context()

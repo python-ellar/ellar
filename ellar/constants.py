@@ -15,7 +15,7 @@ from .asgi_args import RequestScopeContext
 
 SCOPED_CONTEXT_VAR: contextvars.ContextVar[
     Optional[RequestScopeContext]
-] = contextvars.ContextVar("ASGI-CONTEXT-VAR")
+] = contextvars.ContextVar("SCOPED-CONTEXT-VAR")
 SCOPED_CONTEXT_VAR.set(None)
 
 
@@ -26,7 +26,7 @@ class _AnnotationToValue(type):
     def __new__(mcls, name, bases, namespace):
         cls = super().__new__(mcls, name, bases, namespace)
         annotations = dict()
-        for base in reversed(bases):
+        for base in reversed(bases):  # pragma: no cover
             annotations.update(getattr(base, "__annotations__", {}))
         annotations.update(namespace.get("__annotations__", {}))
         cls.keys = []

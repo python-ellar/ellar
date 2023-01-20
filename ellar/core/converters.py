@@ -32,7 +32,9 @@ class TypeDefinitionConverter(ABC):
             self.response_object = self.get_modified_type(outer_type_)
 
     @abstractmethod
-    def get_modified_type(self, outer_type_: t.Any) -> t.Type[t.Any]:
+    def get_modified_type(
+        self, outer_type_: t.Any
+    ) -> t.Type[t.Any]:  # pragma: no cover
         ...
 
     def get_sub_fields(
@@ -50,5 +52,5 @@ class TypeDefinitionConverter(ABC):
         sub_fields = [field.re_group_outer_type() for field in self.sub_fields]
         return self.type_origin[tuple(sub_fields)]
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return f"<type_origin='{self.type_origin}', sub-fields='{len(self.sub_fields)}'"

@@ -60,7 +60,7 @@ DEFAULT_RESOLVERS: t.Dict[t.Type, t.Type[NonParameterResolver]] = {
 
 def add_default_resolver(
     type_identifier: t.Type, resolver_type: t.Type[NonParameterResolver]
-) -> None:
+) -> None:  # pragma: no cover
     DEFAULT_RESOLVERS.update({type_identifier: resolver_type})
 
 

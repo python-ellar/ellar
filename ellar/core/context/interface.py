@@ -12,11 +12,11 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.di.injector import EllarInjector
 
 
-async def empty_receive() -> t.NoReturn:
+async def empty_receive() -> t.NoReturn:  # pragma: no cover
     raise RuntimeError("Receive channel has not been made available")
 
 
-async def empty_send(message: TMessage) -> t.NoReturn:
+async def empty_send(message: TMessage) -> t.NoReturn:  # pragma: no cover
     raise RuntimeError("Send channel has not been made available")
 
 

@@ -2,7 +2,7 @@ import pytest
 
 from ellar.constants import NOT_SET
 from ellar.core import TestClientFactory
-from ellar.core.versioning import VERSIONING
+from ellar.core.versioning import VERSIONING, UrlPathAPIVersioning
 
 from .operations import mr
 
@@ -24,6 +24,7 @@ tm.app.enable_versioning(VERSIONING.URL, version_parameter="v")
     ],
 )
 def test_url_route_versioning(path, expected_result):
+    assert isinstance(tm.app.versioning_scheme, UrlPathAPIVersioning)
     client = tm.get_client()
     response = client.get(path)
     assert response.status_code == 200

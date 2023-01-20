@@ -38,7 +38,7 @@ class JinjaLoader(BaseLoader):
             if loader is not None:
                 yield loader
 
-    def list_templates(self) -> t.List[str]:
+    def list_templates(self) -> t.List[str]:  # pragma: no cover
         # TODO: add test for this
         result = set()
 

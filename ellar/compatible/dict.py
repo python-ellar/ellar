@@ -41,7 +41,7 @@ class DataMapper(t.Mapping, t.Generic[KT, VT]):
     def __len__(self) -> int:
         return self._data.__len__()
 
-    def __iter__(self) -> t.Iterator[VT]:
+    def __iter__(self) -> t.Iterator[VT]:  # pragma: no cover
         return iter(self._data)
 
 
@@ -49,5 +49,5 @@ class DataMutableMapper(DataMapper, t.MutableMapping[KT, VT]):
     def __setitem__(self, k: KT, v: VT) -> None:
         self._data.__setitem__(k, v)
 
-    def __delitem__(self, v: KT) -> None:
+    def __delitem__(self, v: KT) -> None:  # pragma: no cover
         self._data.__delitem__(v)

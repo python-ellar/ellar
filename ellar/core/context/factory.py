@@ -1,8 +1,6 @@
 import typing as t
 
-from ellar.constants import SCOPED_CONTEXT_VAR
 from ellar.di import injectable, request_scope
-from ellar.di.exceptions import ServiceUnavailable
 from ellar.services import Reflector
 from ellar.types import TReceive, TScope, TSend
 
@@ -73,10 +71,6 @@ class ExecutionContextFactory(IExecutionContextFactory):
         receive: TReceive = empty_receive,
         send: TSend = empty_send,
     ) -> IExecutionContext:
-        scoped_request_args = SCOPED_CONTEXT_VAR.get()
-
-        if not scoped_request_args:
-            raise ServiceUnavailable()
 
         i_execution_context = ExecutionContext(
             scope=scope,
