@@ -2,6 +2,7 @@ import json
 import typing as t
 
 from starlette import status
+from starlette.status import WS_1008_POLICY_VIOLATION
 from starlette.types import Message
 
 from ellar.core.exceptions import WebSocketException, WebSocketRequestValidationError
@@ -81,6 +82,9 @@ class WebSocketExtraHandler:
         )
         if errors:
             exc = WebSocketRequestValidationError(errors)
+            await context.switch_to_websocket().get_client().send_json(
+                dict(code=WS_1008_POLICY_VIOLATION, errors=exc.errors())
+            )
             raise exc
         return extra_kwargs
 

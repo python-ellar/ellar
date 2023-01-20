@@ -44,7 +44,7 @@ def reflect_all_controller_type_routes(cls: t.Type[ControllerBase]) -> None:
                     operation = reflect.get_metadata(  # type: ignore
                         CONTROLLER_OPERATION_HANDLER_KEY, item
                     )
-                reflect.define_metadata(CONTROLLER_CLASS_KEY, cls, item)
+                reflect.define_metadata(CONTROLLER_CLASS_KEY, cls, operation.endpoint)  # type: ignore
                 reflect.define_metadata(
                     CONTROLLER_OPERATION_HANDLER_KEY,
                     operation,
