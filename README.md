@@ -230,7 +230,7 @@ class CarModule(ModuleBase):
 Ellar is not aware of `CarModule` yet, so we need to add it to the `modules` list of `ApplicationModule` at the `carsite/root_module.py`.
 ```python
 from ellar.common import Module, exception_handler
-from ellar.core import ModuleBase
+from ellar.core import IHostContext, ModuleBase
 from ellar.core.connection import Request
 from ellar.core.response import JSONResponse, Response
 
@@ -241,7 +241,7 @@ from .apps.car.module import CarModule
 @Module(modules=[HomeModule, CarModule])
 class ApplicationModule(ModuleBase):
     @exception_handler(404)
-    def exception_404_handler(cls, request: Request, exc: Exception) -> Response:
+    def exception_404_handler(cls, context: IHostContext, exc: Exception) -> Response:
         return JSONResponse(dict(detail="Resource not found."))
 
 ```
