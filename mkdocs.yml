@@ -43,7 +43,7 @@ nav:
       - Middlewares:  overview/middleware.md
       - Exception Handling:  overview/exception_handling.md
 #      - Guards:  overview/guards.md
-#      - Custom Decorators:  overview/custom_decorators.md
+      - Custom Decorators:  overview/custom_decorators.md
       - Module Router:  overview/module-router.md
   - Configuration: configurations.md
   - How-to Guides:
