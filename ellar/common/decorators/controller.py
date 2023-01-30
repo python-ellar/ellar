@@ -11,6 +11,7 @@ from ellar.constants import (
     CONTROLLER_WATERMARK,
     NOT_SET,
     OPERATION_ENDPOINT_KEY,
+    REFLECT_TYPE,
 )
 from ellar.core import ControllerBase
 from ellar.core.controller import ControllerType
@@ -145,7 +146,10 @@ def Controller(
 
         if type(cls) is not ControllerType:
             # We force the cls to inherit from `ControllerBase` by creating another type.
-            cls = type(cls.__name__, (cls, ControllerBase), {})
+            attrs = {}
+            if hasattr(cls, REFLECT_TYPE):
+                attrs.update({REFLECT_TYPE: cls.__dict__[REFLECT_TYPE]})
+            cls = type(cls.__name__, (cls, ControllerBase), attrs)
 
         _controller_type = t.cast(t.Type[ControllerBase], cls)
 

@@ -7,14 +7,18 @@ from types import GeneratorType
 from pydantic import BaseConfig, BaseModel, dataclasses as PydanticDataclasses
 from pydantic.json import ENCODERS_BY_TYPE
 
+__pydantic_model__ = "__pydantic_model__"
+__pydantic_config__ = "__config__"
+__pydantic_root__ = "__root__"
+
 
 def get_dataclass_pydantic_model(
     dataclass_type: t.Type,
 ) -> t.Optional[t.Type[BaseModel]]:
-    return t.cast(
-        t.Optional[t.Type[BaseModel]],
-        getattr(dataclass_type, "__pydantic_model__", None),
-    )
+
+    if hasattr(dataclass_type, __pydantic_model__):
+        return t.cast(t.Type[BaseModel], dataclass_type.__dict__[__pydantic_model__])
+    return None
 
 
 class SerializerConfig(BaseConfig):
@@ -96,7 +100,7 @@ def convert_dataclass_to_pydantic_model(dataclass_type: t.Type) -> t.Type[BaseMo
         # convert to dataclass
         pydantic_dataclass = PydanticDataclasses.dataclass(
             dataclass_type,
-            config=getattr(dataclass_type, "__config__", SerializerConfig),
+            config=getattr(dataclass_type, __pydantic_config__, SerializerConfig),
         )
         return pydantic_dataclass.__pydantic_model__
     raise Exception(f"{dataclass_type} is not a dataclass")
@@ -108,7 +112,7 @@ def serialize_object(
     serializer_filter: t.Optional[SerializerFilter] = None,
 ) -> t.Any:
     if isinstance(obj, (BaseModel, BaseSerializer)):
-        __config__ = getattr(obj, "__config__", {})
+        __config__ = getattr(obj, __pydantic_config__, {})
         json_encoders = getattr(__config__, "json_encoders", {})
 
         _encoders = dict(encoders)
@@ -121,8 +125,8 @@ def serialize_object(
             else obj.dict(**(serializer_filter or SerializerFilter()).dict())
         )
 
-        if "__root__" in obj_dict:
-            obj_dict = obj_dict["__root__"]
+        if __pydantic_root__ in obj_dict:
+            obj_dict = obj_dict[__pydantic_root__]
 
         return serialize_object(obj_dict, _encoders)
     if is_dataclass(obj):

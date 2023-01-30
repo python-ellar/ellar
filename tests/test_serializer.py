@@ -122,7 +122,6 @@ def test_convert_dataclass_to_pydantic_model():
 
 def test_get_dataclass_pydantic_model():
     @pydantic_dataclasses.dataclass
-    @dataclass
     class SomeDataClassConvert2:
         name: str
 

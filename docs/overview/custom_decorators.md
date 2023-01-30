@@ -3,7 +3,7 @@ Ellar provides a variety of function decorators in the `ellar.common` python mod
 These decorators can be used to change the response type of a route function, add filters to the response schema, define the OPENAPI context, and more. 
 In general, these decorators can help to simplify and streamline the process of creating routes.
 
-## HTTP Method Decorator
+## **HTTP Method Decorator**
 `@get`, `@post`, `@put`, `@patch`, `@delete`, `@trace`, `@options`, `@head` are decorators that define the standard HTTP methods for a route function. 
 They indicate the type of HTTP request that the route function can handle, such as a `GET` request or a `POST` request. 
 
@@ -14,123 +14,23 @@ They indicate the type of HTTP request that the route function can handle, such 
 These decorators help to specify which type of request a route function can handle.
 
 
-## Route Function Parameters Decorators
+## **Route Function Parameters Decorators**
 These decorators are Pydantic `ModelField` that can be used to define and validate the dependencies of route function parameters. 
 They are used to ensure that the specified parameters are present in the request and are of the correct type. 
 If any of the specified parameters are missing or are of an invalid type, the decorators will raise a `422` error code and also provide a clear error message if the input validation fails.
 This helps to ensure that the application is receiving valid input and can process the request correctly. 
 
+- `Body(..., embed=False)`
+- `Form(..., embed=True)`
+- `Query(...)`
+- `File(...)`
+- `Path(...)`
+- `Header(...)`
+- `Cookie(...)`
 
-### `Body(..., embed=False)`
-`Body(..., embed=False)` is a decorator that marks a parameter as a property that should be included in the request body, with the `application/json` content-type. 
-When this decorator is used, the specified parameter will be included in the request body and will be parsed by the application as JSON
+Please refer to the "How-to-Guide" on parsing inputs [here](/ellar/parsing-inputs/) to see how this input decorators work. 
 
-For example:
-
-```python
-from ellar.common import Body, post
-
-...    
-@post('/example')
-def sample_endpoint_body(self, body_schema: BodySchema = Body()):
-    pass
-```
-The `BodySchema` defined as a type annotation becomes the required body data structure for validating input for [POST]`/example` route.
-
-### `Form(..., embed=True)`
-`Form(..., embed=True)` is a decorator that marks a parameter as a property that should be included in the request body, with the `application/x-www-form-urlencoded` or `multipart/form-data` content-type. 
-When this decorator is used, the specified parameter will be included in the request body and will be parsed by the application as a form field.
-
-For example:
-
-```python
-from ellar.common import Form, post
-
-...    
-@post('/example/form')
-def sample_endpoint_form(self, username: str = Form(), password: str = Form()):
-    pass
-```
-
-In the example, [POST]`/example/form` with be expecting a request body with FormData of `username` and `password`
-
-### `Query(...)`
-`Query(...)` is a decorator that marks a parameter as a property that should be included in the URL query.
-
-For example:
-
-```python
-from ellar.common import Query, get
-
-...    
-@get('/example')
-def sample_endpoint_query(self, search: str = Query(), q_optional: str | None = Query()):
-    pass
-```
-
-In this example, we have created two query parameters, `search` and `q_optional`. 
-The `search` parameter is required, and must be provided in the request. 
-The `q_optional` parameter is not necessary, and its provision is optional. 
-A successful request would include a search parameter in the query string, 
-such as [GET]`/example?search=something` or [GET]`/example?search=something?q_optional=abc` 
-where q_optional parameter is optional.
-
-### `File(...)`
-`File(...)` is a decorator that marks a parameter as a property that should be included in the request body, with the `application/x-www-form-urlencoded` or `multipart/form-data` content-type. 
-When this decorator is used, the specified parameter will be included in the request body and will be parsed by the application as a file.
-
-```python
-from ellar.common import File, get, UploadFile
-
-...    
-@get('/example')
-def sample_endpoint_file_upload(self, csv_file: UploadFile = File()):
-    file = csv_file.read()
-    return {'message': 'ok'}
-```
-
-
-### `Path(...)`
-`Path(...)` is a decorator that marks a parameter as a property that must be included in the request path. 
-When this decorator is used, the specified parameter must be included in the URL path of the request.
-
-For example:
-```python
-from ellar.common import Path, get
-
-...    
-@get('/example/{user_id:str}')
-def sample_endpoint_path(self, user_id: str = Path()):
-    return {'message': f'Path parameter: {user_id}'}
-```
-
-### `Header(...)`
-`Header(...)` is a decorator that marks a parameter as a property that should be included in the request header.
-
-For example:
-```python
-from ellar.common import Header, get
-
-...    
-@get('/example/{user_id:str}')
-def sample_endpoint_file_upload(self, user_agent: str = Header()):
-    return {'message': f'User-Agent: {user_agent}'}
-```
-
-### `Cookie(...)`
-`Cookie(...)` is a decorator that marks a parameter as a property that should be included in the request cookie. 
-
-For example:
-```python
-from ellar.common import Cookie, get
-
-...    
-@get('/example/{user_id:str}')
-def sample_endpoint_file_upload(self, my_cookie: str = Cookie()):
-    return {'message': f'My Cookie Value: {my_cookie}'}
-```
-
-### `WsBody(..., embed=False)`
+### WsBody(..., embed=False)
 
 `WsBody(...)` is a decorator that defines the message format that should be transmitted from the client in a WebSocket when there is a successful connection. 
 This decorator can be used to specify the structure of the message that is sent over the WebSocket, and to validate the message against a specified schema
@@ -154,17 +54,13 @@ async def on_connect(self, websocket: WebSocket, code: int):
     await websocket.close(code)
 ```
 
-We have provided a brief overview of how route parameter functions can be used in `Ellar`. 
-For a more detailed guide on how to use these functions, please refer to the "How-to-Guide" on parsing inputs, which can be found [here](../parsing-inputs/index). 
-This guide will provide more information on the available functions and how to use them effectively in your application.
-
-## Non Route Function Parameters Decorators
+## **Non Route Function Parameters Decorators**
 We discussed decorators that are used to define route function parameter dependencies in Ellar. 
 These decorators, such as `Query`, `Form`, and `Body`, etc. are pydantic models used to specify the expected parameters for a route function. 
 However, there are also some route parameters that are **system** dependent, such as the `request` or `websocket` object, and the `response` object. 
 These parameters are resolved by the application and supplied to the route function when needed, and are not specified with pydantic models or user input.
 
-### `Provide(Type)`
+### Provide(Type)
 The **Provide(Type)** decorator is used to resolve a service provider and inject it into a route function parameter. 
 This can be useful when using the ModuleRouter feature in Ellar. 
 It allows for easy injection of services into route functions, making it easier to manage dependencies and improve code organization. 
@@ -194,8 +90,8 @@ It also makes the code more modular and easier to test.
     Only types registered in the application can be resolved, but you can set `INJECTOR_AUTO_BIND = True` in configuration for the injector to register automatically that are not found. 
     please note that this automatic registration will be scoped to singleton by the `EllarInjector`.
 
-### `Context()`
-The **Context()** decorator injects the current `IExecutionContext` to route function parameter. See [ExecutionContext](../basics/execution-context)
+### Context
+The **Context()** decorator injects the current `IExecutionContext` to route function parameter. See [ExecutionContext](/basics/execution-context)
 
 For example:
 ```python
@@ -215,7 +111,7 @@ The `IExecutionContext` object provides access to various resources and informat
 In this example, the `switch_to_http_connection()` method is used to access the current HTTP connection and the `get_client()` method is used to get the client object for the connection. 
 The `query_params` attribute of the client object is then accessed and included in the response returned by the endpoint.
 
-### `Req()`
+### Req
 **Req()** decorator injects current `Request` object to route function parameter.
 
 For example:
@@ -235,7 +131,7 @@ def example_endpoint(req = Req()):
 In this example, the `example_endpoint` function has a parameter req decorated with `Req()`, which will be automatically populated with the current `Request` object at runtime. 
 The `headers` and `query_params` attributes of the `req` object can then be accessed and used within the function.
 
-### `Res()`
+### Res
 **Res()** decorator injects current `Response` object to route function parameter.
 
 For example:
@@ -254,7 +150,7 @@ def example_endpoint(res = Res()):
 In this example, the `Res()` decorator injects the current `Response` object to the `res` parameter of the `example_endpoint` function. 
 This will allow you to manipulate the headers of the response before it is sent back to the client.
 
-### `Ws()`
+### Ws
 **Ws()** decorator injects current `WebSocket` object to route function parameter.
 
 For example:
@@ -271,16 +167,16 @@ async def example_endpoint(ws = Ws()):
 The above code creates a WebSocket route '/test-ws' and when a client connects to this route, 
 the `example_endpoint` function is executed. The `Ws` decorator injects the current `WebSocket` object to the `ws` parameter of the function, which can then be used to interact with the WebSocket connection, such as accepting the connection and sending data to the client.
 
-### `Host()`
+### Host
 **Host()** decorator injects current client host address to route function parameter.
 
-### `Session()`
+### Session
 **Session()** decorator injects current Session object to route function parameter.
 
-### `Http()`
+### Http
 **Http()** decorator injects current HTTP connection object to route function parameter.
 
-## Creating a Custom Route Function Parameter Decorators
+## **Creating a Custom Parameter Decorators**
 You can still create your own route parameter decorators that suits your need. You simply need to follow a contract, `NonParameterResolver`, and override the resolve function.
 
 The `NonParameterResolver` has two attribute, `type_annotation` and `parameter_name`, that are provided automatically when computing route parameter dependencies. 
@@ -319,12 +215,11 @@ def example_endpoint(user: UserParam()):
 
 ```
 
-## Route Function Decorators
+## **Route Function Decorators**
 These decorators are used to modify the output data of a route function, add filtering to the output schema, or add extra OPENAPI information about the route function.
 
 They include:
-
-### `@render()`
+### RENDER
 **@render()** decorator converts a route function response to HTML template response. 
 
 for example: 
@@ -342,13 +237,13 @@ which will return a 200 status code and HTML content from my_template.
 The return object from the index function will be used as the templating context for `my_template` during the template rendering process. 
 This allows the function to pass data to the template and have it rendered with the provided context, the rendered template will be the response body.
 
-See [HTML Templating](../templating/templating.md) for more information on `render` and HTML templating with Ellar.
+See [HTML Templating](/ellar/templating/templating) for more information on `render` and HTML templating with Ellar.
 
-### `@file()`
+### FILE
 **@file()** decorator converts a route function response to file or streaming response type. 
 Based on the value of `streaming` parameter, file decorator creates `FileResponseModel` or `StreamingResponseModel`.
 
-#### FileResponseModel as @file(streaming=False)
+#### FileResponseModel as file(streaming=False)
 When `streaming` parameter in `@file(streaming=False)` decorator is set to `False`, a `FileResponseModel` is created as the response model for the decorated route function. 
 And the route function is required to return a dictionary object that follows a `FileResponseModelSchema` format:
 
@@ -389,7 +284,7 @@ def file_download(self):
 In the example, an additional parameter media_type is added to the @file(streaming=False) decorator to define the content-type of the file returned. This is helpful for creating the route function's OPENAPI documentation, as it allows the content-type to be defined upfront. Without this parameter, the content-type will be computed during runtime when returning a response for a request.
 It is a way to explicitly define the content-type of the file which will be returned.
 
-#### StreamingResponseModel as @file(streaming=True)
+#### StreamingResponseModel as file(streaming=True)
 On the other hand, when `streaming` parameter in `@file(streaming=True)` decorator is set to `True`, a `StreamingResponseModel` is created as the response model for the decorated route function. 
 And the route function is required to return an `ContentStream`. `ContentStream` is an synchronous or asynchronous iterator of string or bytes. 
 Type definition is shown below.
@@ -419,7 +314,7 @@ def file_stream(self):
     return slow_numbers(1, 4)
 ```
 
-### `@openapi_info()`
+### OPENAPI-INFO
 **@openapi_info()** decorator adds extra route function OPENAPI properties to route function OPENAPI documentation. They include:
 
 Parameters:
@@ -447,7 +342,7 @@ def openapi_info_function(self, query: str):
     return f"foo bar {query}"
 ```
 
-### `@serializer_filter()`
+### SERIALIZER-FILTER
 **@serializer_filter()** decorator provides Pydantic filtering options to decorated route function output schema.
 
 Parameters:
@@ -481,14 +376,13 @@ def serialized_output_1(self):
 In example, `serializer_filter` to filter values that are `None` and also excluded `password` property from been returned.
 See [Pydantic Model Export](https://docs.pydantic.dev/usage/exporting_models/#modeldict) for more examples.
 
-### `@version()`
+### VERSION
 **@version()**  is a decorator that provides endpoint versioning for a route function. 
 This decorator allows you to specify the version of the endpoint that the function is associated with. 
 Based on the versioning scheme configuration in the application, versioned route functions are called. This can be useful for maintaining backward compatibility, or for rolling out new features to different versions of an application. 
 More information on how to use this decorator can be found in the [Versioning documentation]()
 
 A quick example on how to use `version` decorator:
-
 ```python
 from ellar.common import post, version
 
@@ -502,7 +396,7 @@ The `version` decorator takes a list of values as an argument, for example `@ver
 This indicates that the `get_item_v2_v3` route function will handle version 2 and version 3 requests of the /create endpoint. 
 This allows for multiple versions of the same endpoint to be handled by different route functions, each with their own logic and implementation.
 
-### `@guards()`
+### GUARDS
 **@guards()**  is a decorator that applies a protection class of type GuardCanActivate to a route function. 
 These protection classes have a can_execute function that is called to determine whether a route function should be executed. 
 This decorator allows you to apply certain conditions or checks before a route function is executed, such as authentication or authorization checks. 
@@ -510,7 +404,6 @@ This can help to ensure that only authorized users can access certain resources.
 More information on how to use this decorator can be found in the [Guard Documentation]()
 
 A quick example on how to use `guards` decorator:
-
 ```python
 import typing as t
 from ellar.common import get, guards
@@ -536,13 +429,13 @@ This allows you to apply multiple guards to a single route function and have the
 This is useful for applying multiple levels of security or access control to a single endpoint. 
 Each guard class has a `can_execute` function that is called in the order specified by the decorator, if any of the guard's `can_execute` function returns False, the route function will not be executed.
 
-## Command Decorators
+## **Command Decorators**
 The `command` decorator is used to convert a decorated function into a command that can be executed through the Ellar command-line interface (CLI) actions. 
 This allows you to define custom commands that can be run from the command-line, which can be useful for tasks such as running database migrations, generating code, or other tasks that can be automated.
 
 See [Ellar-CLI Custom Commands](https://eadwincode.github.io/ellar-cli/custom-commands/)
 
-## Module Function Decorators
+## **Module Function Decorators**
 
 - `@exception_handler`: This decorator is used to register a function as an exception handler. This function will be called when an unhandled exception occurs during a request. It should take the exception instance as its only argument and return a response object.
 
@@ -557,4 +450,4 @@ See [Ellar-CLI Custom Commands](https://eadwincode.github.io/ellar-cli/custom-co
 - `@on_startup`: This decorator is used to register a function that will be called when the application is starting up.
 
 These decorators can be used to define functions that will be executed at specific points in the application's lifecycle. 
-They provide a way to separate and organize the different parts of an application. See [Module Additional Configuration](./modules/#additional-module-configurations) for examples on how these decorator functions are used.
+They provide a way to separate and organize the different parts of an application. See [Module Additional Configuration](../modules/#additional-module-configurations) for examples on how these decorator functions are used.

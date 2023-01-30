@@ -1,12 +1,29 @@
-# Handling Responses
+## Introduction
+The `Serializer` class in the Ellar, is a custom class based on `pydantic` models, which provides additional functionality specific to Ellar's requirements.
 
-**Ellar** allows you to define the schema of your responses both for validation and documentation purposes.
+To use `Serializer` in Ellar, you simply need to create a class that inherits from `Serializer` and define your data model using pydantic fields. 
+Here's an example of how you could define a serializer class for a user model:
 
-The response schema is defined on the HTTP method decorator and its applied 
-to OPENAPI documentation and validation of the data returned from route handler function.
+```python
+from ellar.serializer import Serializer
 
-We'll create a third operation that will return information about a Fake user.
+class UserSerializer(Serializer):
+    name: str
+    email: str
+    age: int
 
+```
+
+With this setup, you can use the `UserSerializer` class to validate incoming data and or serialize outgoing response data, 
+ensuring that it matches the expected format before saving it to the database or returning it to the client.
+
+## Handling Responses
+
+Let's see how we can use **Serializer** as a responses schema which will help us validate out data output and also provide documentation on route function response.
+
+The response schema is defined on the HTTP method decorator.
+
+For example:
 ```python
 # project_name/apps/items/controllers.py
 
@@ -14,6 +31,7 @@ from ellar.serializer import Serializer
 from ellar.common import Controller, get
 from ellar.core import ControllerBase
 
+# Define a User class with username, email, first_name, and last_name attributes
 class User:
     def __init__(self, username: str, email:str=None, first_name:str=None, last_name:str=None) -> None:
         self.username = username
@@ -27,25 +45,54 @@ class User:
         assert self.first_name and self.last_name
         return f'{self.first_name} {self.last_name}'
 
-
+# Define a Serializer class to validate response data
 class UserSchema(Serializer):
     username: str
     email: str = None
     first_name: str = None
     last_name: str = None
 
-
+# Create a fake user object
 current_user = User(username='ellar', email='ellar@example.com', first_name='ellar', last_name='asgi')    
 
-
+# Define an endpoint that returns the fake user's information
 @Controller
 class ItemsController(ControllerBase):
     @get("/me", response=UserSchema)
     def me(self):
         return current_user
+
+```
+This code sets up a User model and a `UserSerializer` class based on the `Serializer` class. 
+The User model represents a user with a `username`, `email`, `first_name`, and `last_name`. 
+The `UserSerializer` class is used to define the expected format of the response data in the `/me` endpoint.
+
+When the `/me` endpoint is called, it returns the `current_user` object as the response. 
+The `UserSerializer` is then used to parse and validate the `current_user` object, converting it into a dictionary representation 
+that can be easily serialized to JSON. 
+The resulting dictionary is then passed to the [`JSONResponseModel`](./response-model/#jsonresponsemodel) for serialization to a 
+JSON string and sending the response to the client.
+
+## Using Dataclass as Response Schema
+We can utilize the `dataclasses` feature as a response schema by utilizing the `DataclassSerializer` a base class. 
+
+For instance, we can convert the `UserSchema` to a dataclass by defining `UserDataclass` as follows:
+
+```python
+from dataclasses import dataclass
+from ellar.serializer import DataclassSerializer
+
+
+@dataclass
+class UserDataclass(DataclassSerializer):
+    username: str
+    email: str = None
+    first_name: str = None
+    last_name: str = None
+
 ```
 
-This will convert the `User` object into a dictionary of only the defined fields.
+By replacing the `UserSchema` with `UserDataclass`, we can expect the same outcomes in the returned response, response validation, and documentation.
 
 ### Multiple Response Types
 
@@ -112,6 +159,7 @@ Here, the `response` parameter takes a KeyValuePair of the `status` and response
     Note that we returned a tuple of status code and response data (`403, {"message": "Please sign in first"}`) to specify the response validation to use.
 
 
+
 ## Using Response Type/Object As Response
 
 You can use `Response` type to change the format of data returned from endpoint functions.
@@ -155,3 +203,5 @@ class ItemsController(ControllerBase):
     def me(self):
         return PlainTextResponse("some text response.", status_code=200)
 ```
+
+## using serialize_object function
