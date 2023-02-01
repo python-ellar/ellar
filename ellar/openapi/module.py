@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.common import Module, get, guards as guards_decorator, render
+from ellar.common import Module, ModuleRouter, render
 from ellar.core.guard import GuardCanActivate
 from ellar.core.main import App
 from ellar.core.modules import ModuleBase
@@ -16,36 +16,37 @@ class OpenAPIDocumentModule(ModuleBase):
         app: App,
         document: t.Optional[OpenAPI] = None,
         openapi_url: t.Optional[str] = None,
-        guards: t.Optional[
-            t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]
-        ] = None,
+        guards: t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]] = None,
     ):
         self.app = app
-        self._guards = guards or []
         self._openapi_url = openapi_url
+        self._openapi_router_prefix = ""
+        self._openapi_router = self.create_open_api_router(guards=guards)
+
         if not openapi_url and document:
             self._openapi_url = "/openapi.json"
 
-            @get(self._openapi_url, include_in_schema=False)
-            @guards_decorator(*self._guards)
+            @self._openapi_router.get(self._openapi_url, include_in_schema=False)
             def openapi_schema() -> t.Any:
                 assert document and isinstance(document, OpenAPI), "Invalid Document"
                 return document
 
-            app.router.append(openapi_schema)
+        app.router.append(self._openapi_router)
+
+    def create_open_api_router(
+        self, guards: t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]] = None
+    ) -> ModuleRouter:
+        return ModuleRouter(self._openapi_router_prefix, guards=guards)
 
     def _setup_docs(
         self, *, template_name: str, path: str, **template_context: t.Optional[t.Any]
     ) -> None:
         _path = path.lstrip("/").rstrip("/")
 
-        @get(f"/{_path}", include_in_schema=False)
+        @self._openapi_router.get(f"/{_path}", include_in_schema=False)
         @render(template_name)
-        @guards_decorator(*self._guards)
         def _doc() -> t.Any:
             return template_context
-
-        self.app.router.append(_doc)
 
     def setup_swagger_doc(
         self,
