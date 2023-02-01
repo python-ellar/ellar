@@ -1,3 +1,5 @@
+import typing as t
+
 from .base import set_metadata
 from .command import command
 from .controller import Controller
@@ -30,3 +32,7 @@ __all__ = [
     "openapi_info",
     "Module",
 ]
+
+
+def __dir__() -> t.List[str]:
+    return sorted(__all__)  # pragma: no cover

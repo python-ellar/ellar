@@ -1,3 +1,5 @@
+import typing as t
+
 from ellar.core.datastructures import UploadFile
 from ellar.core.params import Param, ParamTypes
 from ellar.core.routing import OperationDefinitions
@@ -69,3 +71,7 @@ __all__ = [
     "Host",
     "Http",
 ]
+
+
+def __dir__() -> t.List[str]:
+    return sorted(__all__)  # pragma: no cover

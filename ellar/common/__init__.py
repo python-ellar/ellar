@@ -1,3 +1,5 @@
+import typing as t
+
 from ellar.core.params.params import Param, ParamTypes
 from ellar.core.routing import ModuleRouter
 
@@ -97,3 +99,7 @@ __all__ = [
     "UploadFile",
     "file",
 ]
+
+
+def __dir__() -> t.List[str]:
+    return sorted(__all__)  # pragma: no cover
