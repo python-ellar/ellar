@@ -1,11 +1,18 @@
 import typing as t
+import uuid
 from collections import OrderedDict
 
 from starlette.routing import BaseRoute, Host, Mount
 
-from ellar.core.routing.route import RouteOperation
+from ellar.constants import CONTROLLER_CLASS_KEY
+from ellar.core.routing import RouteOperation, RouteOperationBase
 from ellar.core.routing.websocket.route import WebsocketRouteOperation
-from ellar.helper import generate_controller_operation_unique_id
+from ellar.helper import (
+    generate_controller_operation_unique_id,
+    get_unique_control_type,
+)
+from ellar.logger import logger
+from ellar.reflect import reflect
 
 
 class RouteCollection(t.Sequence[BaseRoute]):
@@ -13,9 +20,8 @@ class RouteCollection(t.Sequence[BaseRoute]):
 
     def __init__(self, routes: t.Optional[t.Sequence[BaseRoute]] = None) -> None:
         self._routes: t.Dict[int, BaseRoute] = OrderedDict()
-        self.extend([] if routes is None else list(routes))
         self._served_routes: t.List[BaseRoute] = []
-        self.sort_routes()
+        self.extend([] if routes is None else list(routes))
 
     @t.no_type_check
     def __getitem__(self, i: int) -> BaseRoute:
@@ -48,16 +54,23 @@ class RouteCollection(t.Sequence[BaseRoute]):
         # TODO: flatten the routes for faster look up
         self._served_routes = list(self._routes.values())
         self._served_routes.sort(
-            key=lambda e: getattr(e, "path", getattr(e, "host", ""))
+            key=lambda e: e.host if isinstance(e, Host) else e.path  # type: ignore
         )
 
     def _add_operation(
         self, operation: t.Union[RouteOperation, WebsocketRouteOperation, BaseRoute]
     ) -> None:
-        if not isinstance(
-            operation, (RouteOperation, WebsocketRouteOperation, BaseRoute)
-        ):
+
+        if not isinstance(operation, BaseRoute):
+            logger.warning("Tried Adding an operation that is not supported.")
             return
+
+        if isinstance(operation, RouteOperationBase) and not reflect.has_metadata(
+            CONTROLLER_CLASS_KEY, operation.endpoint
+        ):
+            reflect.define_metadata(
+                CONTROLLER_CLASS_KEY, get_unique_control_type(), operation.endpoint
+            )
 
         _methods = getattr(operation, "methods", {"WS"})
         _versioning = list(
@@ -79,6 +92,12 @@ class RouteCollection(t.Sequence[BaseRoute]):
             versioning=_versioning or ["no_versioning"],
         )
         if _hash in self._routes:
-            # TODO
-            """TODO: log warning to user when operations with the same route is found"""
+            _hash = generate_controller_operation_unique_id(
+                path=path,
+                methods=list(_methods),
+                versioning=_versioning or ["no_versioning"],
+                extra_string=f"{uuid.uuid4().hex:5}",
+            )
+
+            # TODO: log warning to user when operations with the same route is found
         self._routes[_hash] = operation
