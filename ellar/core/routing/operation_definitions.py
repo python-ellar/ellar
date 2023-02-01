@@ -16,8 +16,6 @@ from ellar.core.schema import RouteParameters, WsRouteParameters
 from ellar.helper import class_base_function_regex
 from ellar.types import TCallable
 
-from .base import RouteOperationBase
-from .controller.base import ControllerRouteOperationBase
 from .controller.route import ControllerRouteOperation
 from .controller.websocket.route import ControllerWebsocketRouteOperation
 from .route import RouteOperation
@@ -30,17 +28,7 @@ TWebsocketOperation = t.Union[
 
 
 class OperationDefinitions:
-    __slots__ = ("_routes",)
-
-    def __init__(
-        self,
-        app_routes: t.List[RouteOperationBase] = None,
-    ):
-        self._routes = app_routes
-
-    @property
-    def routes(self) -> t.List[RouteOperationBase]:
-        return self._routes or []
+    __slots__ = ()
 
     def _get_http_operations_class(self, func: t.Callable) -> t.Type[TOperation]:
         if class_base_function_regex.match(repr(func)):
@@ -56,11 +44,6 @@ class OperationDefinitions:
         _operation_class = self._get_http_operations_class(route_parameter.endpoint)
         _operation = _operation_class(**route_parameter.dict())
         setattr(route_parameter.endpoint, OPERATION_ENDPOINT_KEY, True)
-
-        if self._routes is not None and not isinstance(
-            _operation, ControllerRouteOperationBase
-        ):
-            self._routes.append(_operation)
         return _operation
 
     def _get_ws_operation(
@@ -71,10 +54,6 @@ class OperationDefinitions:
         )
         _operation = _ws_operation_class(**ws_route_parameters.dict())
         setattr(ws_route_parameters.endpoint, OPERATION_ENDPOINT_KEY, True)
-        if self._routes is not None and not isinstance(
-            _operation, ControllerWebsocketRouteOperation
-        ):
-            self._routes.append(_operation)
         return _operation
 
     def _get_decorator_or_operation(

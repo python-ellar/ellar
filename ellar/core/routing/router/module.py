@@ -6,20 +6,26 @@ from starlette.types import ASGIApp
 
 from ellar.compatible import AttributeDict
 from ellar.constants import (
+    CONTROLLER_CLASS_KEY,
     CONTROLLER_METADATA,
     CONTROLLER_OPERATION_HANDLER_KEY,
     GUARDS_KEY,
     NOT_SET,
-    OPENAPI_KEY,
+    OPERATION_ENDPOINT_KEY,
     VERSIONING_KEY,
 )
 from ellar.core.controller import ControllerBase
 from ellar.core.routing.route import RouteOperation
-from ellar.core.routing.websocket.route import WebsocketRouteOperation
+from ellar.core.schema import RouteParameters, WsRouteParameters
+from ellar.helper import get_unique_control_type
 from ellar.reflect import reflect
 from ellar.types import TReceive, TScope, TSend
 
-from ..operation_definitions import OperationDefinitions
+from ..operation_definitions import (
+    OperationDefinitions,
+    TOperation,
+    TWebsocketOperation,
+)
 from .route_collections import RouteCollection
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -36,6 +42,7 @@ def controller_router_factory(
     app = Router()
     app.routes = RouteCollection(routes)  # type:ignore
 
+    reflect.get_metadata_or_raise_exception(VERSIONING_KEY, controller)
     include_in_schema = reflect.get_metadata_or_raise_exception(
         CONTROLLER_METADATA.INCLUDE_IN_SCHEMA, controller
     )
@@ -47,13 +54,8 @@ def controller_router_factory(
         name=reflect.get_metadata_or_raise_exception(
             CONTROLLER_METADATA.NAME, controller
         ),
-        version=reflect.get_metadata_or_raise_exception(
-            CONTROLLER_METADATA.VERSION, controller
-        ),
-        guards=reflect.get_metadata_or_raise_exception(
-            CONTROLLER_METADATA.GUARDS, controller
-        ),
         include_in_schema=include_in_schema if include_in_schema is not None else True,
+        control_type=controller,
         **openapi,
     )
     return router
@@ -63,6 +65,7 @@ class ModuleMount(StarletteMount):
     def __init__(
         self,
         path: str,
+        control_type: t.Type,
         app: ASGIApp = None,
         routes: t.Sequence[BaseRoute] = None,
         name: str = None,
@@ -70,8 +73,6 @@ class ModuleMount(StarletteMount):
         description: str = None,
         external_doc_description: str = None,
         external_doc_url: str = None,
-        version: t.Union[t.Tuple, str] = (),
-        guards: t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]] = None,
         include_in_schema: bool = False,
     ) -> None:
         super(ModuleMount, self).__init__(path=path, routes=routes, name=name, app=app)
@@ -82,12 +83,11 @@ class ModuleMount(StarletteMount):
             description=description,
             external_doc_url=external_doc_url,
         )
-        self._route_guards: t.List[
-            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate", t.Any]
-        ] = (guards or [])
-        self._version = set(version or [])
-        self._build: bool = False
         self._current_found_route_key = f"{uuid.uuid4().hex:4}_ModuleMountRoute"
+        self._control_type = control_type
+
+    def get_control_type(self) -> t.Type:
+        return self._control_type
 
     def get_meta(self) -> t.Mapping:
         return self._meta
@@ -107,58 +107,6 @@ class ModuleMount(StarletteMount):
                 externalDocs=external_doc,
             )
         return dict()
-
-    def _build_route_operation(self, route: RouteOperation) -> None:
-        route.build_route_operation(
-            path_prefix=self.path,
-            name=self.name,
-            include_in_schema=self.include_in_schema,
-        )
-
-    def _build_ws_route_operation(self, route: WebsocketRouteOperation) -> None:
-        route.build_route_operation(path_prefix=self.path, name=self.name)
-
-    def build_child_routes(self, flatten: bool = False) -> None:
-        for route in self.routes:
-            _route: RouteOperation = t.cast(RouteOperation, route)
-
-            route_versioning = reflect.get_metadata(VERSIONING_KEY, _route.endpoint)
-            route_guards = reflect.get_metadata(GUARDS_KEY, _route.endpoint)
-
-            if not route_versioning:
-                reflect.define_metadata(
-                    VERSIONING_KEY,
-                    self._version,
-                    _route.endpoint,
-                    default_value=set(),
-                )
-            if not route_guards:
-                reflect.define_metadata(
-                    GUARDS_KEY,
-                    self._route_guards,
-                    _route.endpoint,
-                    default_value=[],
-                )
-            if flatten:
-                openapi = (
-                    reflect.get_metadata(OPENAPI_KEY, _route.endpoint)
-                    or AttributeDict()
-                )
-                if isinstance(_route, Route):
-                    if not openapi.tags and self._meta.get("tag"):
-                        tags = {self._meta.get("tag")}
-                        tags.update(set(openapi.tags or []))
-                        openapi.update(tags=list(tags))
-                        reflect.define_metadata(OPENAPI_KEY, openapi, _route.endpoint)
-                    self._build_route_operation(_route)
-                elif isinstance(_route, WebsocketRouteOperation):
-                    self._build_ws_route_operation(_route)
-
-    def get_flatten_routes(self) -> t.List[BaseRoute]:
-        if not self._build:
-            self.build_child_routes(flatten=True)
-            self._build = True
-        return list(self.routes)
 
     def matches(self, scope: TScope) -> t.Tuple[Match, TScope]:
         match, _child_scope = super().matches(scope)
@@ -201,8 +149,7 @@ class ModuleMount(StarletteMount):
         await mount_router.default(scope, receive, send)
 
 
-class ModuleRouter(ModuleMount):
-    operation_definition_class: t.Type[OperationDefinitions] = OperationDefinitions
+class ModuleRouter(OperationDefinitions, ModuleMount):
     routes: RouteCollection  # type:ignore
 
     def __init__(
@@ -213,7 +160,7 @@ class ModuleRouter(ModuleMount):
         description: str = None,
         external_doc_description: str = None,
         external_doc_url: str = None,
-        version: t.Union[t.Tuple, str] = (),
+        version: t.Union[t.Sequence[str], str] = (),
         guards: t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]] = None,
         include_in_schema: bool = True,
     ) -> None:
@@ -227,24 +174,41 @@ class ModuleRouter(ModuleMount):
             description=description,
             external_doc_description=external_doc_description,
             external_doc_url=external_doc_url,
-            version=version,
-            guards=guards,
             include_in_schema=include_in_schema,
             app=app,
+            control_type=get_unique_control_type(),
         )
-        _route_definitions = self.operation_definition_class(t.cast(list, self.routes))
+        reflect.define_metadata(GUARDS_KEY, guards or [], self.get_control_type())
+        reflect.define_metadata(
+            VERSIONING_KEY, set(version or []), self.get_control_type()
+        )
 
-        self.get = _route_definitions.get
-        self.post = _route_definitions.post
+    def _get_operation(self, route_parameter: RouteParameters) -> TOperation:
+        _operation_class = self._get_http_operations_class(route_parameter.endpoint)
+        _operation = _operation_class(**route_parameter.dict())
+        setattr(route_parameter.endpoint, OPERATION_ENDPOINT_KEY, True)
+        self._set_other_router_attributes(_operation)
+        return _operation
 
-        self.delete = _route_definitions.delete
-        self.patch = _route_definitions.patch
+    def _get_ws_operation(
+        self, ws_route_parameters: WsRouteParameters
+    ) -> TWebsocketOperation:
+        _ws_operation_class = self._get_ws_operations_class(
+            ws_route_parameters.endpoint
+        )
+        _operation = _ws_operation_class(**ws_route_parameters.dict())
+        setattr(ws_route_parameters.endpoint, OPERATION_ENDPOINT_KEY, True)
+        self._set_other_router_attributes(_operation)
+        return _operation
 
-        self.put = _route_definitions.put
-        self.options = _route_definitions.options
+    def _set_other_router_attributes(
+        self, operation: t.Union[TWebsocketOperation, TOperation]
+    ) -> None:
+        if not reflect.has_metadata(CONTROLLER_CLASS_KEY, operation.endpoint):
+            # this is need to happen before adding operation to router else we lose ability to
+            # get extra information about operation that is set on the router.
+            reflect.define_metadata(
+                CONTROLLER_CLASS_KEY, self.get_control_type(), operation.endpoint
+            )
 
-        self.trace = _route_definitions.trace
-        self.head = _route_definitions.head
-
-        self.http_route = _route_definitions.http_route
-        self.ws_route = _route_definitions.ws_route
+        self.app.routes.append(operation)  # type:ignore

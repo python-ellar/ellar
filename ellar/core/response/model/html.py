@@ -46,7 +46,7 @@ class HTMLResponseModel(ResponseModel):
         exe_ctx = t.cast(ExecutionContext, ctx)
         if self.use_mvc:
             controller_class = exe_ctx.get_class()
-            if not controller_class:
+            if not controller_class or not hasattr(controller_class, "full_view_name"):
                 raise HTMLResponseModelRuntimeError(
                     "cannot find Controller in request context"
                 )

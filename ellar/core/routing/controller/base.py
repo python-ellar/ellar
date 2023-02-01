@@ -13,7 +13,7 @@ class ControllerRouteOperationBase:
         controller_type: t.Optional[t.Type[ControllerBase]] = reflect.get_metadata(
             CONTROLLER_CLASS_KEY, self.endpoint
         )
-        if not controller_type:
+        if not controller_type and issubclass(controller_type, ControllerBase):  # type: ignore
             raise RuntimeError("Controller Type was not found")
 
         service_provider = ctx.get_service_provider()

@@ -220,7 +220,7 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
             for router in self._routers:
                 if isinstance(router, ModuleMount):
                     # TODO: Allow users to choose whether to run flatten route of group routes together
-                    router.build_child_routes()
+                    # router.build_child_routes()
                     self._flatten_routes.append(router)
                     continue
                 if isinstance(router, BaseRoute):
