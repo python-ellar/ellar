@@ -5,6 +5,7 @@ from weakref import WeakKeyDictionary
 
 from ellar.compatible import AttributeDict, asynccontextmanager
 from ellar.constants import REFLECT_TYPE
+from ellar.shortcuts import fail_silently
 
 
 def _get_actual_target(
@@ -13,7 +14,7 @@ def _get_actual_target(
     try:
         reflect_type = target.__dict__[REFLECT_TYPE]
     except KeyError:
-        setattr(target, REFLECT_TYPE, target)
+        fail_silently(setattr, target, REFLECT_TYPE, target)
         return target
     else:
         return t.cast(t.Union[t.Type, t.Callable], reflect_type)
@@ -53,12 +54,10 @@ class _Reflect:
             existing = target_metadata.get(metadata_key)
             if existing is not None:
                 if isinstance(existing, (list, tuple)):
-                    _meta_values.extend(existing)
-                    if isinstance(existing, tuple):
-                        _meta_values = type(existing)(_meta_values)
+                    _meta_values = existing + type(existing)(_meta_values)  # type: ignore
                 elif isinstance(existing, set):
-                    _meta_values.extend(existing)
-                    _meta_values = type(existing)(_meta_values)
+                    existing_combined = list(existing) + _meta_values
+                    _meta_values = type(existing)(existing_combined)
                 elif isinstance(existing, dict):
                     existing.update(dict(metadata_value))
                     _meta_values = type(existing)(existing)
