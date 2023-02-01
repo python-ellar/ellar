@@ -28,9 +28,9 @@ def test_define_metadata_with_existing_tuple(random_type):
     reflect.define_metadata("B", "AnotherEllar", random_type)
     reflect.define_metadata("B", "AnotherEllarC", random_type)
     assert reflect.get_metadata("B", random_type) == (
-        "AnotherEllarC",
-        "AnotherEllar",
         "EllarB",
+        "AnotherEllar",
+        "AnotherEllarC",
     )
 
 
@@ -41,9 +41,9 @@ def test_define_metadata_with_existing_list(random_type):
     reflect.define_metadata("B", "AnotherEllar", random_type)
     reflect.define_metadata("B", "AnotherEllarD", random_type)
     assert reflect.get_metadata("B", random_type) == [
-        "AnotherEllarD",
-        "AnotherEllar",
         "Ellar",
+        "AnotherEllar",
+        "AnotherEllarD",
     ]
 
 
@@ -68,7 +68,7 @@ def test_reflect_meta_decorator():
     @reflect.metadata("defined_key", "chioma")
     @reflect.metadata("defined_key_b", "jessy")
     def function_a():
-        pass
+        """ignore"""
 
     assert reflect.get_metadata("defined_key", function_a) == "chioma"
     assert reflect.get_metadata("defined_key_b", function_a) == "jessy"
@@ -81,7 +81,7 @@ def test_reflect_meta_decorator():
 def test_reflect_has_metadata_works():
     @reflect.metadata("defined_key", "jessy")
     def function_new():
-        pass
+        """ignore"""
 
     assert reflect.has_metadata("defined_key", function_new)
     assert reflect.has_metadata("defined_key_b", function_new) is False
@@ -90,7 +90,7 @@ def test_reflect_has_metadata_works():
 def test_reflect_get_metadata_or_raise_exception():
     @reflect.metadata("defined_key_b", "jessy")
     def function_new():
-        pass
+        """ignore"""
 
     assert (
         reflect.get_metadata_or_raise_exception("defined_key_b", function_new)
@@ -104,7 +104,7 @@ def test_reflect_get_metadata_or_raise_exception():
 def test_delete_metadata_works():
     @reflect.metadata("defined_key_b", "jessy")
     def function_new():
-        pass
+        """ignore"""
 
     reflect.delete_metadata("defined_key_b", function_new)
     assert reflect.has_metadata("defined_key_b", function_new) is False
@@ -114,7 +114,7 @@ def test_reflect_context_works():
     @reflect.metadata("defined_key_b", "jessy")
     @reflect.metadata("defined_key", "clara")
     def function_new():
-        pass
+        """ignore"""
 
     with reflect.context():
         reflect.define_metadata("defined_key_c", "Eadwin", function_new)
@@ -134,7 +134,7 @@ async def test_reflect_async_context_works():
     @reflect.metadata("defined_key_b", "jessy")
     @reflect.metadata("defined_key", "clara")
     def function_new():
-        pass
+        """ignore"""
 
     async with reflect.async_context():
         reflect.define_metadata("defined_key_c", "Eadwin", function_new)

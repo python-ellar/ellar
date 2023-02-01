@@ -13,7 +13,7 @@ from ellar.reflect import reflect
     tags=["endpoint", "endpoint-25"],
 )
 def endpoint(request: Request):
-    pass
+    pass  # pragma: no cover
 
 
 def test_openapi_sets_endpoint_meta():

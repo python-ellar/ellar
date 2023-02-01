@@ -5,22 +5,22 @@ from ellar.core.events import EventHandler
 
 @on_startup
 def on_startup_func():
-    pass
+    pass  # pragma: no cover
 
 
 @on_startup()
 async def on_startup_func_2():
-    pass
+    pass  # pragma: no cover
 
 
 @on_shutdown
 def on_shutdown_func():
-    pass
+    pass  # pragma: no cover
 
 
 @on_shutdown()
 async def on_shutdown_func_2():
-    pass
+    pass  # pragma: no cover
 
 
 def test_on_startup_decorator_is_converted_to_event_handler():

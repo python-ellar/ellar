@@ -4,12 +4,15 @@ import pytest
 from starlette.responses import JSONResponse
 from starlette.routing import Host, Mount, Router, compile_path
 
+from ellar.common import get
+from ellar.constants import CONTROLLER_CLASS_KEY, CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.core import Config
 from ellar.core.middleware import RequestVersioningMiddleware
 from ellar.core.routing import RouteOperation, WebsocketRouteOperation
 from ellar.core.routing.router import RouteCollection
 from ellar.core.versioning import UrlPathAPIVersioning
 from ellar.helper import generate_controller_operation_unique_id
+from ellar.reflect import reflect
 
 config = Config(VERSIONING_SCHEME=UrlPathAPIVersioning())
 
@@ -28,7 +31,7 @@ class MockRouteOperation(RouteOperation):
         self._versioning = versions
 
     def endpoint(self):
-        pass
+        return {"message": "okay"}
 
     async def app(self, scope, receive, send) -> None:
         response = JSONResponse(
@@ -46,6 +49,9 @@ class MockWebsocketRouteOperation(WebsocketRouteOperation):
     def __init__(self, path: str, versions: List[str] = []):
         self.path = path
         self._versioning = versions
+
+    def endpoint(self):
+        return {"message": "okay"}
 
     async def app(self, scope, receive, send) -> None:
         response = JSONResponse(
@@ -111,7 +117,7 @@ def test_module_route_collection_extend(collection_model):
             MockWebsocketRouteOperation("/sample", versions=["1"]),
         ]
     )
-    assert len(routes) == 3
+    assert len(routes) == 4
 
 
 @pytest.mark.parametrize("collection_model", [RouteCollection])
@@ -192,3 +198,23 @@ def test_module_route_collection_for_same_path_different_method(
     response = client.post("/sample")
     assert response.status_code == 200
     assert response.json() == {"path": "/sample", "methods": ["POST"], "versioning": []}
+
+
+@pytest.mark.parametrize("collection_model", [RouteCollection])
+def test_route_collection_create_control_type(collection_model):
+    @get()
+    def endpoint_once():
+        pass
+
+    assert reflect.get_metadata(CONTROLLER_CLASS_KEY, endpoint_once) is None
+    operation = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, endpoint_once)
+
+    collection_model([operation])
+    assert not isinstance(
+        reflect.get_metadata(CONTROLLER_CLASS_KEY, endpoint_once), list
+    )
+
+    collection_model([operation])
+    assert not isinstance(
+        reflect.get_metadata(CONTROLLER_CLASS_KEY, endpoint_once), list
+    )
