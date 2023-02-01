@@ -64,6 +64,9 @@ class MockWebsocketRouteOperation(WebsocketRouteOperation):
     def get_allowed_version(self):
         return self._versioning
 
+    def __hash__(self):
+        return id(self)
+
 
 class MockHostRouteOperation(Host):
     def asgi_app(self, scope, receive, send):
