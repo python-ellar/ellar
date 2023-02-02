@@ -5,17 +5,28 @@ from starlette.requests import (
 from starlette.responses import Response as StarletteResponse
 from starlette.websockets import WebSocket as StarletteWebSocket
 
-from ellar.common import Context, Http, Req, Res, Ws
-from ellar.core import ExecutionContext, TestClientFactory
+from ellar.common import Context, Host, Http, Provide, Req, Res, Session, Ws
+from ellar.core import Config, ExecutionContext, TestClientFactory
 from ellar.core.connection import (
     HTTPConnection as EllarHTTPConnection,
     Request as EllarRequest,
     WebSocket as EllarWebSocket,
 )
 from ellar.core.context import IExecutionContext
+from ellar.core.middleware import Middleware, SessionMiddleware
 from ellar.core.routing import ModuleRouter
+from ellar.helper.importer import get_class_import
 
 router = ModuleRouter()
+
+
+class SampleConfig:
+    SECRET_KEY: str = "ellar_cf303596-e51a-441a-ba67-5da42dbffb07"
+
+    MIDDLEWARE = [Middleware(SessionMiddleware, secret_key=SECRET_KEY)]
+
+
+config_path = get_class_import(SampleConfig)
 
 
 @router.get("/starlette-request")
@@ -23,6 +34,14 @@ def get_requests(request: StarletteRequest, req=Req()):
     assert isinstance(request, EllarRequest)  # True
     assert isinstance(req, EllarRequest)
     return req == request
+
+
+@router.get("/others")
+def get_requests(session=Session(), host=Host(), config=Provide(Config)):
+    assert isinstance(config, Config)  # True
+    assert host == "testclient"
+    assert isinstance(session, dict) and len(session) == 0
+    return True
 
 
 @router.get("/ellar-context")
@@ -54,7 +73,7 @@ async def get_websockets(websocket: StarletteWebSocket, ws=Ws()):
     await ws.close()
 
 
-tm = TestClientFactory.create_test_module(routers=[router])
+tm = TestClientFactory.create_test_module(routers=[router], config_module=config_path)
 client = tm.get_client()
 
 
@@ -78,6 +97,12 @@ def test_get_context():
 
 def test_get_response():
     response = client.get("/starlette-response")
+    assert response.status_code == 200
+    assert response.json() is True
+
+
+def test_other_route_function_parameter():
+    response = client.get("/others")
     assert response.status_code == 200
     assert response.json() is True
 

@@ -3,6 +3,7 @@ from starlette.websockets import WebSocket
 
 from ellar.common import ModuleRouter, WsBody
 from ellar.core import TestClientFactory
+from ellar.core.exceptions import ImproperConfiguration
 
 from .schema import Item
 
@@ -92,3 +93,16 @@ def test_plain_websocket_route():
         websocket.send_text("Ellar")
         message = websocket.receive_json()
         assert message == {"message": "Thanks. Ellar"}
+
+
+def test_websocket_setup_fails_when_using_body_without_handler():
+    with pytest.raises(
+        ImproperConfiguration,
+        match=r"`WsBody` should only be used when `use_extra_handler` flag is set to True in WsRoute",
+    ):
+
+        @router.ws_route("/ws-with-handler", use_extra_handler=False)
+        async def websocket_with_handler(
+            websocket: WebSocket, query: str, data: Item = WsBody()
+        ):
+            pass

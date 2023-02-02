@@ -44,7 +44,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         path: str,
         methods: t.List[str],
         endpoint: t.Callable,
-        response: t.Mapping[int, t.Type],
+        response: t.Mapping[int, t.Union[t.Type, t.Any]],
         name: t.Optional[str] = None,
         include_in_schema: bool = True,
     ) -> None:

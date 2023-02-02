@@ -1,7 +1,9 @@
-from ellar.core import ControllerBase
+import pytest
 
 from ellar.common import Controller, set_metadata
 from ellar.constants import CONTROLLER_METADATA, GUARDS_KEY, NOT_SET, VERSIONING_KEY
+from ellar.core import ControllerBase
+from ellar.core.exceptions import ImproperConfiguration
 from ellar.reflect import reflect
 
 
@@ -109,3 +111,14 @@ def test_controller_set_metadata_decorator_works():
         )
         == "Something"
     )
+
+
+def test_controller_decorator_fails_as_a_function_decorator():
+    def controller_function():
+        pass  # pragma: no cover
+
+    with pytest.raises(
+        ImproperConfiguration,
+        match=f"Controller is a class decorator - {controller_function}",
+    ):
+        Controller("/some-prefix")(controller_function)

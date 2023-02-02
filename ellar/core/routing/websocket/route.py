@@ -144,6 +144,3 @@ class WebsocketRouteOperation(
                 "`WsBody` should only be used when "
                 "`use_extra_handler` flag is set to True in WsRoute"
             )
-
-    def __hash__(self) -> t.Any:
-        return self.endpoint

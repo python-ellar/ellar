@@ -6,6 +6,7 @@ from starlette.middleware.gzip import GZipMiddleware as GZipMiddleware
 from starlette.middleware.httpsredirect import (
     HTTPSRedirectMiddleware as HTTPSRedirectMiddleware,
 )
+from starlette.middleware.sessions import SessionMiddleware as SessionMiddleware
 from starlette.middleware.trustedhost import (
     TrustedHostMiddleware as TrustedHostMiddleware,
 )
@@ -29,4 +30,5 @@ __all__ = [
     "WSGIMiddleware",
     "RequestVersioningMiddleware",
     "RequestServiceProviderMiddleware",
+    "SessionMiddleware",
 ]
