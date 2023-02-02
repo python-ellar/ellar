@@ -69,9 +69,11 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         self._load_model()
 
     def _load_model(self) -> None:
-        extra_route_args: t.List["ExtraEndpointArg"] = (
+        extra_route_args: t.Union[t.List["ExtraEndpointArg"], "ExtraEndpointArg"] = (
             reflect.get_metadata(EXTRA_ROUTE_ARGS_KEY, self.endpoint) or []
         )
+        if not isinstance(extra_route_args, list):
+            extra_route_args = [extra_route_args]
 
         if self.endpoint_parameter_model is NOT_SET:
             self.endpoint_parameter_model = self.request_endpoint_args_model(
