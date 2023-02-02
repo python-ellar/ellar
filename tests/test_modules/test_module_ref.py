@@ -234,7 +234,7 @@ def test_module_template_ref_get_all_routers_fails_for_invalid_controller():
     some_invalid_controller = type("SomeInvalidController", (), {})
     with reflect.context():
         reflect.define_metadata(
-            MODULE_METADATA.CONTROLLERS, some_invalid_controller, ModuleBaseExample
+            MODULE_METADATA.CONTROLLERS, [some_invalid_controller], ModuleBaseExample
         )
         config = Config()
         container = EllarInjector(auto_bind=False).container

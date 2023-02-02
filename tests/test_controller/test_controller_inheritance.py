@@ -44,7 +44,7 @@ def test_control_type_with_more_than_one_type_fails():
 
     reflect.define_metadata(
         CONTROLLER_CLASS_KEY,
-        type("slme", (), {}),
+        None,
         AnotherSampleController.endpoint_once,
     )
 
