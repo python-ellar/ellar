@@ -8,6 +8,7 @@ from .decorators import (
     Module,
     command,
     exception_handler,
+    extra_args,
     file,
     guards,
     middleware,
@@ -98,6 +99,7 @@ __all__ = [
     "Http",
     "UploadFile",
     "file",
+    "extra_args",
 ]
 
 

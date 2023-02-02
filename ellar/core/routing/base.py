@@ -83,7 +83,7 @@ class RouteOperationBase:
         """
         if not hasattr(self, "_control_type"):
             _control_type = reflect.get_metadata(CONTROLLER_CLASS_KEY, self.endpoint)
-            if _control_type is None or isinstance(_control_type, (list, tuple)):
+            if _control_type is None:
                 raise Exception("Operation must have a single control type.")
             self._control_type = t.cast(t.Type, _control_type)
 

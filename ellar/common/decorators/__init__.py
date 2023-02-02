@@ -4,6 +4,7 @@ from .base import set_metadata
 from .command import command
 from .controller import Controller
 from .exception import exception_handler
+from .extra_args import extra_args
 from .file import file
 from .guards import guards
 from .html import render, template_filter, template_global
@@ -31,6 +32,7 @@ __all__ = [
     "middleware",
     "openapi_info",
     "Module",
+    "extra_args",
 ]
 
 

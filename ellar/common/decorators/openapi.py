@@ -33,5 +33,4 @@ def openapi_info(
             deprecated=deprecated,
             tags=tags,
         ),
-        default_value=AttributeDict(),
     )

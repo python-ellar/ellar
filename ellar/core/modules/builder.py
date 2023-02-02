@@ -46,18 +46,15 @@ class ModuleBaseBuilder:
             func = CallableExceptionHandler(
                 self._cls, callable_exception_handler=v, exc_class_or_status_code=k
             )
-            reflect.define_metadata(
-                EXCEPTION_HANDLERS_KEY, func, self._cls, default_value=[]
-            )
+            reflect.define_metadata(EXCEPTION_HANDLERS_KEY, [func], self._cls)
 
     @t.no_type_check
     def middleware_config(self, middleware: "MiddlewareSchema") -> None:
         middleware.dispatch = module_callable_factory(middleware.dispatch, self._cls)
         reflect.define_metadata(
             MIDDLEWARE_HANDLERS_KEY,
-            middleware.create_middleware(),
+            [middleware.create_middleware()],
             self._cls,
-            default_value=[],
         )
 
     def on_request_shut_down_config(self, on_shutdown_event: EventHandler) -> None:
@@ -66,9 +63,8 @@ class ModuleBaseBuilder:
         )
         reflect.define_metadata(
             ON_REQUEST_SHUTDOWN_KEY,
-            on_shutdown_event,
+            [on_shutdown_event],
             self._cls,
-            default_value=[],
         )
 
     def on_request_startup_config(self, on_startup_event: EventHandler) -> None:
@@ -77,9 +73,8 @@ class ModuleBaseBuilder:
         )
         reflect.define_metadata(
             ON_REQUEST_STARTUP_KEY,
-            on_startup_event,
+            [on_startup_event],
             self._cls,
-            default_value=[],
         )
 
     def template_filter_config(self, template_filter: "TemplateFunctionData") -> None:
@@ -91,7 +86,6 @@ class ModuleBaseBuilder:
                 )
             },
             self._cls,
-            default_value={},
         )
 
     def template_global_config(self, template_filter: "TemplateFunctionData") -> None:
@@ -103,7 +97,6 @@ class ModuleBaseBuilder:
                 )
             },
             self._cls,
-            default_value={},
         )
 
     def build(self, namespace: t.Dict) -> None:

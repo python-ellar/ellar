@@ -58,9 +58,8 @@ def reflect_all_controller_type_routes(cls: t.Type[ControllerBase]) -> None:
                 reflect.define_metadata(CONTROLLER_CLASS_KEY, cls, endpoint_func)
                 reflect.define_metadata(
                     CONTROLLER_OPERATION_HANDLER_KEY,
-                    operation,
+                    [operation],
                     cls,
-                    default_value=[],
                 )
 
 

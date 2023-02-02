@@ -90,14 +90,14 @@ def Module(
     """
     kwargs = AttributeDict(
         name=name,
-        controllers=controllers,
+        controllers=list(controllers),
         base_directory=base_directory,
         static_folder=static_folder,
-        routers=routers,
-        providers=providers,
+        routers=list(routers),
+        providers=list(providers),
         template_folder=template_folder,
-        modules=modules,
-        commands=commands,
+        modules=list(modules),
+        commands=list(commands),
     )
 
     return partial(

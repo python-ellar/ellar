@@ -27,25 +27,28 @@ class Reflector:
         ]
 
         if len(metadata_collection) == 0:
-            return None
+            return []
 
         if len(metadata_collection) == 1:
             return metadata_collection[0]
 
+        @t.no_type_check
         def inline_function(previous_item: t.Any, next_item: t.Any) -> t.Any:
-            if isinstance(previous_item, list):
-                return previous_item.append(next_item)
+            if isinstance(previous_item, (list, tuple, set)):
+                previous_item.extend(
+                    list(next_item)
+                    if isinstance(next_item, (list, tuple, set))
+                    else [next_item]
+                )
+                return previous_item
 
             if isinstance(previous_item, dict) and isinstance(next_item, dict):
-                return previous_item.update(next_item)
-
-            if isinstance(previous_item, (tuple, set)):
-                return list(previous_item) + [next_item]
+                previous_item.update(next_item)
+                return previous_item
 
             return [previous_item, next_item]
 
-        results = functools.reduce(inline_function, metadata_collection)
-        return results
+        return functools.reduce(inline_function, metadata_collection)
 
     def get_all_and_override(
         self, metadata_key: str, *targets: t.Union[t.Type, t.Callable]
