@@ -43,7 +43,7 @@ class _Reflect:
             raise Exception("`target` is not a valid type")
 
         target_metadata = self._get_or_create_metadata(target, create=True)
-        if target_metadata:
+        if target_metadata is not None:
             existing = target_metadata.get(metadata_key)
             if existing is not None:
                 if isinstance(existing, (list, tuple)) and isinstance(
