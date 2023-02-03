@@ -18,7 +18,7 @@ from ellar.reflect import reflect
 def test_render_decorator_works():
     @render("index")
     def endpoint_render(request: Request):
-        pass
+        pass  # pragma: no cover
 
     response_override = reflect.get_metadata(RESPONSE_OVERRIDE_KEY, endpoint_render)
     assert isinstance(response_override, dict)
@@ -43,7 +43,7 @@ def test_render_decorator_raise_exception_for_invalid_template_name():
 
         @render
         def endpoint_render(request: Request):
-            pass
+            pass  # pragma: no cover
 
 
 def test_render_decorator_uses_endpoint_name_as_template_name():
@@ -52,7 +52,7 @@ def test_render_decorator_uses_endpoint_name_as_template_name():
         @get("/endpoint_render")
         @render()
         def endpoint_render(self, request: Request):
-            pass
+            pass  # pragma: no cover
 
     a_controller_operations = reflect.get_metadata(
         CONTROLLER_OPERATION_HANDLER_KEY, AController
@@ -77,13 +77,13 @@ def test_render_decorator_fails_for_missing_template_name():
 
         @render()
         def endpoint_render(request):
-            pass
+            pass  # pragma: no cover
 
 
 def test_template_global_function_applies_template_global_key():
     @template_global()
     def global_function_test():
-        pass
+        pass  # pragma: no cover
 
     assert hasattr(global_function_test, TEMPLATE_GLOBAL_KEY)
     template_data: TemplateFunctionData = getattr(
@@ -101,13 +101,13 @@ def test_template_global_function_fails_for_async_functions():
 
         @template_global()
         async def global_function_test():
-            pass
+            pass  # pragma: no cover
 
 
 def test_template_filter_function_applies_template_filter_key():
     @template_filter()
     def filter_function_test():
-        pass
+        pass  # pragma: no cover
 
     assert hasattr(filter_function_test, TEMPLATE_FILTER_KEY)
     template_data: TemplateFunctionData = getattr(
@@ -125,4 +125,4 @@ def test_template_filter_function_fails_for_async_functions():
 
         @template_filter()
         async def filter_function_test():
-            pass
+            pass  # pragma: no cover

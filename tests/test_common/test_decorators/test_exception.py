@@ -8,12 +8,12 @@ class CustomException(Exception):
 
 @exception_handler(CustomException)
 def exception_decorator_test():
-    pass
+    """ignore"""
 
 
 @exception_handler(exc_class_or_status_code=404)
 def exception_decorator_test_2():
-    pass
+    """ignore"""
 
 
 def test_exception_decorators_sets_exception_key():

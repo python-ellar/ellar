@@ -1,8 +1,6 @@
 import pytest
 
-from ellar.constants import OPENAPI_KEY
 from ellar.core.routing import ModuleRouter
-from ellar.reflect import reflect
 
 from .sample import router
 
@@ -52,12 +50,11 @@ def some_example_ws_2():
     ],
 )
 def test_build_routes(router_instance, prefix, tag, name):
-    for route in router_instance.get_flatten_routes():
-        assert name in route.name
-        assert prefix in route.path
-        if "WS" not in route.methods:
-            openapi = reflect.get_metadata(OPENAPI_KEY, route.endpoint)
-            assert tag in openapi.tags
+    for route in router_instance.routes:
+        reversed_path = router_instance.url_path_for(f"{name}:{route.name}")
+        assert reversed_path == router_instance.path_format.replace(
+            "/{path}", route.path
+        )
 
 
 def test_tag_configuration_module_router():
@@ -78,21 +75,15 @@ def test_tag_configuration_module_router():
     assert new_router.name is None
 
 
-def test_flatten_name_module_route_build():
+def test_module_router_url_reverse():
     new_router = ModuleRouter("/items/{orgID:int}", name="has_name")
 
     @new_router.get
     def some_route():
         pass
 
-    new_router.get_flatten_routes()
-    assert "has_name" in new_router.routes[0].name
-
-    new_router = ModuleRouter("/items/{orgID:int}")
-
-    @new_router.get
-    def some_route():
-        pass
-
-    new_router.get_flatten_routes()
-    assert "has_name" not in new_router.routes[0].name
+    reversed_path = new_router.url_path_for(
+        f"{new_router.name}:{new_router.routes[0].name}"
+    )
+    path = new_router.path_format.replace("/{path}", new_router.routes[0].path)
+    assert reversed_path == path

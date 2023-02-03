@@ -1,3 +1,5 @@
+import typing as t
+
 from .conf import Config, ConfigDefaultTypesMixin
 from .connection import Request, WebSocket
 from .context import ExecutionContext, HostContext, IExecutionContext, IHostContext
@@ -51,3 +53,7 @@ __all__ = [
     "Request",
     "WebSocket",
 ]
+
+
+def __dir__() -> t.List[str]:
+    return sorted(__all__)  # pragma: no cover

@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from starlette.routing import Match
 
 from ellar.constants import (
+    CONTROLLER_CLASS_KEY,
     GUARDS_KEY,
     SCOPE_API_VERSIONING_RESOLVER,
     SCOPE_SERVICE_PROVIDER,
@@ -12,6 +13,7 @@ from ellar.constants import (
 from ellar.core.context import IExecutionContext, IExecutionContextFactory
 from ellar.di import EllarInjector
 from ellar.reflect import reflect
+from ellar.services.reflector import Reflector
 from ellar.types import TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -41,10 +43,14 @@ class RouteOperationBase:
 
     @t.no_type_check
     async def run_route_guards(self, context: IExecutionContext) -> None:
+        reflector = context.get_service_provider().get(Reflector)
         app = context.get_app()
+
+        targets = [self.endpoint, self.get_control_type()]
+
         _guards: t.Optional[
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
-        ] = reflect.get_metadata(GUARDS_KEY, self.endpoint)
+        ] = reflector.get_all_and_override(GUARDS_KEY, *targets)
 
         if not _guards:
             _guards = app.get_guards()
@@ -69,16 +75,30 @@ class RouteOperationBase:
         await self.run_route_guards(context=context)
         await self._handle_request(context=context)
 
+    def get_control_type(self) -> t.Type:
+        """
+        For operation under a controller, `get_control_type` and `get_class` will return the same result
+        For operation under ModuleRouter, this will return a unique type created for the router for tracking some properties
+        :return: a type that wraps the operation
+        """
+        if not hasattr(self, "_control_type"):
+            _control_type = reflect.get_metadata(CONTROLLER_CLASS_KEY, self.endpoint)
+            if _control_type is None:
+                raise Exception("Operation must have a single control type.")
+            self._control_type = t.cast(t.Type, _control_type)
+
+        return self._control_type
+
     @abstractmethod
     async def _handle_request(self, *, context: IExecutionContext) -> None:
         """return a context"""
 
-    @abstractmethod
-    def build_route_operation(self, *args: t.Any, **kwargs: t.Any) -> None:
-        """Full operation initialization"""
-
     def get_allowed_version(self) -> t.Set[t.Union[int, float, str]]:
         versions = reflect.get_metadata(VERSIONING_KEY, self.endpoint) or set()
+        if not versions:
+            versions = (
+                reflect.get_metadata(VERSIONING_KEY, self.get_control_type()) or set()
+            )
         return t.cast(t.Set[t.Union[int, float, str]], versions)
 
     @classmethod

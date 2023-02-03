@@ -3,6 +3,8 @@ from typing import List, Union
 import pytest
 from starlette.responses import JSONResponse
 
+from ellar.constants import RESPONSE_OVERRIDE_KEY
+from ellar.core.exceptions import ImproperConfiguration
 from ellar.core.response.model import (
     EmptyAPIResponseModel,
     JSONResponseModel,
@@ -10,8 +12,14 @@ from ellar.core.response.model import (
     RouteResponseExecution,
     RouteResponseModel,
 )
+from ellar.core.routing import RouteOperation
+from ellar.reflect import reflect
 
 from ..schema import BlogObjectDTO, NoteSchemaDC
+
+
+def endpoint_sample():
+    pass  # pragma: no cover
 
 
 class JsonApiResponse(JSONResponse):
@@ -101,3 +109,17 @@ def test_route_response_model(
 def test_route_response_model_exception(inputs):
     with pytest.raises(RouteResponseExecution):
         RouteResponseModel(route_responses=inputs)
+
+
+def test_invalid_response_override_definition():
+    reflect.define_metadata(
+        RESPONSE_OVERRIDE_KEY, {EmptyAPIResponseModel()}, endpoint_sample
+    )
+    with pytest.raises(ImproperConfiguration) as ex:
+        RouteOperation(
+            path="/",
+            methods=["get"],
+            endpoint=endpoint_sample,
+            response={200: EmptyAPIResponseModel()},
+        )
+    assert "`RESPONSE_OVERRIDE` is must be of type `Dict`" in str(ex)

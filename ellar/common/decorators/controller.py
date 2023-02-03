@@ -9,9 +9,11 @@ from ellar.constants import (
     CONTROLLER_METADATA,
     CONTROLLER_OPERATION_HANDLER_KEY,
     CONTROLLER_WATERMARK,
+    GUARDS_KEY,
     NOT_SET,
     OPERATION_ENDPOINT_KEY,
     REFLECT_TYPE,
+    VERSIONING_KEY,
 )
 from ellar.core import ControllerBase
 from ellar.core.controller import ControllerType
@@ -45,12 +47,19 @@ def reflect_all_controller_type_routes(cls: t.Type[ControllerBase]) -> None:
                     operation = reflect.get_metadata(  # type: ignore
                         CONTROLLER_OPERATION_HANDLER_KEY, item
                     )
-                reflect.define_metadata(CONTROLLER_CLASS_KEY, cls, operation.endpoint)  # type: ignore
+                endpoint_func = operation.endpoint  # type:ignore
+                if reflect.has_metadata(CONTROLLER_CLASS_KEY, endpoint_func):
+                    raise Exception(
+                        f"{cls.__name__} Controller route tried to be processed more than once."
+                        f"\n-RouteFunction - {endpoint_func}."
+                        f"\n-Controller route function can not be reused once its under a `@Controller` decorator."
+                    )
+
+                reflect.define_metadata(CONTROLLER_CLASS_KEY, cls, endpoint_func)
                 reflect.define_metadata(
                     CONTROLLER_OPERATION_HANDLER_KEY,
-                    operation,
+                    [operation],
                     cls,
-                    default_value=[],
                 )
 
 
@@ -144,14 +153,17 @@ def Controller(
         if not isinstance(cls, type):
             raise ImproperConfiguration(f"Controller is a class decorator - {cls}")
 
+        _controller_type = t.cast(t.Type[ControllerBase], cls)
+        new_cls = None
+
         if type(cls) is not ControllerType:
             # We force the cls to inherit from `ControllerBase` by creating another type.
             attrs = {}
             if hasattr(cls, REFLECT_TYPE):
                 attrs.update({REFLECT_TYPE: cls.__dict__[REFLECT_TYPE]})
-            cls = type(cls.__name__, (cls, ControllerBase), attrs)
+            new_cls = type(cls.__name__, (cls, ControllerBase), attrs)
 
-        _controller_type = t.cast(t.Type[ControllerBase], cls)
+            _controller_type = t.cast(t.Type[ControllerBase], new_cls)
 
         _tag = _controller_type.controller_class_name()
 
@@ -168,13 +180,22 @@ def Controller(
                 .replace("controller", "")
             )
 
-        if not reflect.get_metadata(CONTROLLER_WATERMARK, _controller_type):
+        if not reflect.has_metadata(
+            CONTROLLER_WATERMARK, _controller_type
+        ) and not hasattr(cls, "__CONTROLLER_WATERMARK__"):
             reflect.define_metadata(CONTROLLER_WATERMARK, True, _controller_type)
             reflect_all_controller_type_routes(_controller_type)
             injectable(RequestScope)(cls)
 
             for key in CONTROLLER_METADATA.keys:
                 reflect.define_metadata(key, kwargs[key], _controller_type)
+
+            reflect.define_metadata(VERSIONING_KEY, kwargs.version, _controller_type)
+            reflect.define_metadata(GUARDS_KEY, kwargs.guards, _controller_type)
+
+        if new_cls:
+            # if we forced cls to inherit from ControllerBase, we need to block it from been processed
+            setattr(cls, "__CONTROLLER_WATERMARK__", True)
 
         return _controller_type
 

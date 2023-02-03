@@ -14,7 +14,7 @@ from ellar.serializer import SerializerFilter
     exclude_defaults=True,
 )
 def serializer_filter_decorator_test():
-    pass
+    pass  # pragma: no cover
 
 
 def test_serializer_filter_decorator_creates_serializer_filter():

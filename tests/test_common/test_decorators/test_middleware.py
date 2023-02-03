@@ -6,7 +6,7 @@ from ellar.core.middleware.schema import MiddlewareSchema
 
 @middleware()
 def middleware_function_test():
-    pass
+    pass  # pragma: no cover
 
 
 def test_middleware_decorator_works():

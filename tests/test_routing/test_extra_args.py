@@ -2,8 +2,7 @@ from functools import wraps
 
 from starlette.responses import Response
 
-from ellar.common import Context, Query, Res, get, set_metadata
-from ellar.constants import EXTRA_ROUTE_ARGS_KEY
+from ellar.common import Context, Query, Res, extra_args, get
 from ellar.core import TestClientFactory
 from ellar.core.connection import Request
 from ellar.core.context import IExecutionContext
@@ -22,12 +21,14 @@ def add_additional_signature_to_endpoint(func):
     query2 = ExtraEndpointArg(
         name="query2", annotation=str
     )  # will default to Query during computation
-    extra_args = [query1, query2]
-    set_metadata(EXTRA_ROUTE_ARGS_KEY, extra_args)(func)
+
+    extra_args(query1, query2)(func)
 
     @wraps(func)
     def _wrapper(*args, **kwargs):
         # RESOLVING EXTRA ARGS
+        # All extra args must be resolved before calling route function
+        # else extra argument will be pushed to the route function
         resolved_query1 = query1.resolve(kwargs)
         resolved_query2 = query2.resolve(kwargs)
 
@@ -47,8 +48,8 @@ def add_extra_non_field_extra_args(func):
         name="response", annotation=Response, default_value=Res()
     )
 
-    set_metadata(EXTRA_ROUTE_ARGS_KEY, response)(func)
-    set_metadata(EXTRA_ROUTE_ARGS_KEY, context)(func)
+    extra_args(response)(func)
+    extra_args(context)(func)
 
     @wraps(func)
     def _wrapper(*args, **kwargs):

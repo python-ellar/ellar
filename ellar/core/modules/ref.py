@@ -218,11 +218,13 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
     def routes(self) -> t.List[BaseRoute]:
         if not self._flatten_routes:
             for router in self._routers:
-                if isinstance(router, ModuleMount):
-                    # TODO: Allow users to choose whether to run flatten route of group routes together
-                    router.build_child_routes()
-                    self._flatten_routes.append(router)
-                    continue
+                # if isinstance(router, ModuleMount):
+                #     # TODO: Allow users to choose whether to run flatten route of group routes together
+                #     # router.build_child_routes()
+                #     self._flatten_routes.append(router)
+                #     continue
+                # if isinstance(router, BaseRoute):
+                #     self._flatten_routes.append(router)
                 if isinstance(router, BaseRoute):
                     self._flatten_routes.append(router)
         return self._flatten_routes

@@ -18,4 +18,4 @@ def guards(
     :param _guards: Guard Type or Instance
     :return:
     """
-    return set_meta(GUARDS_KEY, _guards, default_value=[])
+    return set_meta(GUARDS_KEY, list(_guards))

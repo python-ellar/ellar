@@ -8,22 +8,22 @@ from ellar.reflect import reflect
 
 class SomeGuard(GuardCanActivate):
     async def can_activate(self, context: ExecutionContext) -> bool:
-        return True
+        return True  # pragma: no cover
 
 
 class SomeGuard2(SomeGuard):
     async def can_activate(self, context: ExecutionContext) -> bool:
-        return False
+        return False  # pragma: no cover
 
 
 @guards(SomeGuard)
 def endpoint(request: Request):
-    return "foo"
+    return "foo"  # pragma: no cover
 
 
 @guards(SomeGuard, SomeGuard2)
 def endpoint2(request: Request):
-    return "foo"
+    return "foo"  # pragma: no cover
 
 
 def test_guard_decorator_applies_guards_key_to_reflect():

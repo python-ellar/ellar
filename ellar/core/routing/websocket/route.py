@@ -126,25 +126,12 @@ class WebsocketRouteOperation(
         else:
             await self.endpoint(**func_kwargs)
 
-    def build_route_operation(  # type:ignore
-        self,
-        path_prefix: str = "/",
-        name: t.Optional[str] = None,
-        **kwargs: t.Any,
-    ) -> None:
-        _path_changed = False
-        if path_prefix not in ("", "/") and path_prefix not in self.path:
-            self.path = f"{path_prefix.rstrip('/')}/{self.path.lstrip('/')}"
-            self.path_regex, self.path_format, self.param_convertors = compile_path(
-                self.path
-            )
-            _path_changed = True
-
+    def _load_model(self) -> None:
         extra_route_args: t.List["ExtraEndpointArg"] = (
             reflect.get_metadata(EXTRA_ROUTE_ARGS_KEY, self.endpoint) or []
         )
 
-        if self.endpoint_parameter_model is NOT_SET or _path_changed:
+        if self.endpoint_parameter_model is NOT_SET:
             self.endpoint_parameter_model = self.websocket_endpoint_args_model(
                 path=self.path_format,
                 endpoint=self.endpoint,
@@ -152,17 +139,8 @@ class WebsocketRouteOperation(
                 extra_endpoint_args=extra_route_args,
             )
             self.endpoint_parameter_model.build_model()
-        if name:
-            self.name = f"{name}:{self.name}"
-
         if not self._use_extra_handler and self.endpoint_parameter_model.body_resolver:
             raise ImproperConfiguration(
                 "`WsBody` should only be used when "
                 "`use_extra_handler` flag is set to True in WsRoute"
             )
-
-    def _load_model(self) -> None:
-        self.build_route_operation()
-
-    def __hash__(self) -> t.Any:
-        return self.endpoint

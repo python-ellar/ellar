@@ -123,11 +123,12 @@ class OpenAPIDocumentBuilder:
                 and route.include_in_schema
             ):
                 openapi: t.Dict = dict()
-                guards = app.get_guards()
+                guards = reflector.get(GUARDS_KEY, route.get_control_type())
+                app_guards = app.get_guards()
 
                 openapi_route_models.append(
                     OpenAPIMountDocumentation(
-                        mount=route, global_guards=guards, **openapi
+                        mount=route, global_guards=guards or app_guards, **openapi
                     )
                 )
             elif (

@@ -5,7 +5,7 @@ from ellar.reflect import reflect
 
 @version(1, 2, 3)
 def endpoint_versioning_func():
-    pass
+    pass  # pragma: no cover
 
 
 def test_version_decorator_define_endpoint_version_meta():

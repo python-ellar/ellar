@@ -78,7 +78,7 @@ class IExecutionContext(IHostContext, ABC):
 
     @abstractmethod
     def get_class(self) -> t.Optional[t.Type["ControllerBase"]]:
-        """Gets operation handler class"""
+        """Gets operation handler controller class"""
 
 
 class IHostContextFactory(ABC):

@@ -1,6 +1,9 @@
+import pytest
+
 from ellar.common import Controller, set_metadata
-from ellar.constants import CONTROLLER_METADATA, NOT_SET
+from ellar.constants import CONTROLLER_METADATA, GUARDS_KEY, NOT_SET, VERSIONING_KEY
 from ellar.core import ControllerBase
+from ellar.core.exceptions import ImproperConfiguration
 from ellar.reflect import reflect
 
 
@@ -48,11 +51,8 @@ def test_controller_decoration_default():
         "external_doc_description": None,
         "external_doc_url": None,
     }
-    assert reflect.get_metadata(CONTROLLER_METADATA.GUARDS, ControllerDefaultTest) == []
-    assert (
-        reflect.get_metadata(CONTROLLER_METADATA.VERSION, ControllerDefaultTest)
-        == set()
-    )
+    assert reflect.get_metadata(GUARDS_KEY, ControllerDefaultTest) == []
+    assert reflect.get_metadata(VERSIONING_KEY, ControllerDefaultTest) == set()
     assert (
         reflect.get_metadata(CONTROLLER_METADATA.PATH, ControllerDefaultTest)
         == "/defaulttest"
@@ -79,12 +79,8 @@ def test_controller_decoration_test():
         "external_doc_description": "external",
         "external_doc_url": "https://example.com",
     }
-    assert (
-        reflect.get_metadata(CONTROLLER_METADATA.GUARDS, ControllerDecorationTest) == []
-    )
-    assert reflect.get_metadata(
-        CONTROLLER_METADATA.VERSION, ControllerDecorationTest
-    ) == {
+    assert reflect.get_metadata(GUARDS_KEY, ControllerDecorationTest) == []
+    assert reflect.get_metadata(VERSIONING_KEY, ControllerDecorationTest) == {
         "v1",
     }
     assert (
@@ -115,3 +111,14 @@ def test_controller_set_metadata_decorator_works():
         )
         == "Something"
     )
+
+
+def test_controller_decorator_fails_as_a_function_decorator():
+    def controller_function():
+        pass  # pragma: no cover
+
+    with pytest.raises(
+        ImproperConfiguration,
+        match=f"Controller is a class decorator - {controller_function}",
+    ):
+        Controller("/some-prefix")(controller_function)

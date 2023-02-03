@@ -111,8 +111,6 @@ class CONTROLLER_METADATA(metaclass=_AnnotationToValue):
     OPENAPI: str
     PATH: str
     NAME: str
-    VERSION: str
-    GUARDS: str
     INCLUDE_IN_SCHEMA: str
 
 

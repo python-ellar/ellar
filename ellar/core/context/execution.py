@@ -1,8 +1,6 @@
 import typing as t
 
-from ellar.compatible import cached_property
 from ellar.constants import CONTROLLER_CLASS_KEY
-from ellar.di import injectable
 from ellar.services.reflector import Reflector
 from ellar.types import TReceive, TScope, TSend
 
@@ -13,13 +11,12 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.controller import ControllerBase
 
 
-@injectable()
 class ExecutionContext(HostContext, IExecutionContext):
     """
     Context for route functions and controllers
     """
 
-    __slots__ = ("_operation_handler",)
+    __slots__ = ("_operation_handler", "reflector", "_handler_controller_class")
 
     def __init__(
         self,
@@ -33,15 +30,17 @@ class ExecutionContext(HostContext, IExecutionContext):
         super(ExecutionContext, self).__init__(scope=scope, receive=receive, send=send)
         self._operation_handler = operation_handler
         self.reflector = reflector
+        _handler_controller_class = self.reflector.get(
+            CONTROLLER_CLASS_KEY, self.get_handler()
+        )
+
+        self._handler_controller_class: t.Optional[t.Type["ControllerBase"]] = t.cast(
+            t.Optional[t.Type["ControllerBase"]], _handler_controller_class
+        )
 
     def get_handler(self) -> t.Callable:
         assert self._operation_handler, "Operation is not available yet."
         return self._operation_handler
 
-    @cached_property
-    def _get_class(self) -> t.Optional[t.Type["ControllerBase"]]:
-        result = self.reflector.get(CONTROLLER_CLASS_KEY, self.get_handler())
-        return t.cast(t.Optional[t.Type["ControllerBase"]], result)
-
     def get_class(self) -> t.Optional[t.Type["ControllerBase"]]:
-        return self._get_class  # type: ignore
+        return self._handler_controller_class

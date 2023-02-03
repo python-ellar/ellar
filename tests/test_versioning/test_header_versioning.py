@@ -97,7 +97,7 @@ def test_header_versioning_version_parameter():
         ({"accept": "application/json; v=3.0"}),
     ],
 )
-def test_header_route_versioning_not_found(headers):
+def test_header_route_versioning_fails_for_float_versions(headers):
     tm.app.enable_versioning(VERSIONING.HEADER, version_parameter="v")
     client = tm.get_client()
     response = client.get("/version", headers=headers)

@@ -14,7 +14,7 @@ from ellar.reflect import reflect
 def test_file_decorator_works():
     @file(media_type="text/javascript")
     def endpoint_file(request: Request):
-        pass
+        """ignore"""
 
     response_override = reflect.get_metadata(RESPONSE_OVERRIDE_KEY, endpoint_file)
     assert isinstance(response_override, dict)
@@ -27,7 +27,7 @@ def test_file_decorator_works():
 def test_file_streaming_decorator_works():
     @file(media_type="text/javascript", streaming=True)
     def endpoint_file(request: Request):
-        pass
+        """ignore"""
 
     response_override = reflect.get_metadata(RESPONSE_OVERRIDE_KEY, endpoint_file)
     assert isinstance(response_override, dict)
@@ -41,7 +41,7 @@ def test_render_decorator_raise_exception_for_invalid_template_name():
 
         @file
         def endpoint_file(request: Request):
-            pass
+            """ignore"""
 
 
 def test_file_decorator_wont_work_after_route_action_definition():
@@ -59,7 +59,7 @@ def test_file_decorator_uses_endpoint_name_as_template_name():
         @get("/endpoint_file")
         @file(media_type="text/javascript")
         def endpoint_file(self, request: Request):
-            pass
+            """ignore"""
 
     a_controller_operations = reflect.get_metadata(
         CONTROLLER_OPERATION_HANDLER_KEY, AFileController
@@ -82,7 +82,7 @@ def test_file_stream_decorator_uses_endpoint_name_as_template_name():
         @get("/endpoint_file")
         @file(media_type="text/javascript", streaming=True)
         def endpoint_file(self, request: Request):
-            pass
+            """ignore"""
 
     a_controller_operations = reflect.get_metadata(
         CONTROLLER_OPERATION_HANDLER_KEY, AStreamFileController

@@ -15,40 +15,40 @@ def test_define_metadata_creates_attribute_dict(random_type):
 def test_define_metadata_without_default(random_type):
     key = "FrameworkName"
 
-    reflect.define_metadata(key, "Ellar", random_type, default_value=None)
+    reflect.define_metadata(key, "Ellar", random_type)
     assert reflect.get_metadata(key, random_type) == "Ellar"
-    reflect.define_metadata(key, "Starlette", random_type, default_value=None)
-    assert reflect.get_metadata(key, random_type) == ["Ellar", "Starlette"]
+    reflect.define_metadata(key, "Starlette", random_type)
+    assert reflect.get_metadata(key, random_type) == "Starlette"
 
 
 def test_define_metadata_with_existing_tuple(random_type):
-    reflect.define_metadata("B", "EllarB", random_type, default_value=tuple())
+    reflect.define_metadata("B", ("EllarB",), random_type)
     assert reflect.get_metadata("B", random_type) == ("EllarB",)
 
-    reflect.define_metadata("B", "AnotherEllar", random_type)
-    reflect.define_metadata("B", "AnotherEllarC", random_type)
+    reflect.define_metadata("B", ("AnotherEllar",), random_type)
+    reflect.define_metadata("B", ("AnotherEllarC",), random_type)
     assert reflect.get_metadata("B", random_type) == (
-        "AnotherEllarC",
-        "AnotherEllar",
         "EllarB",
+        "AnotherEllar",
+        "AnotherEllarC",
     )
 
 
 def test_define_metadata_with_existing_list(random_type):
-    reflect.define_metadata("B", "Ellar", random_type, default_value=[])
+    reflect.define_metadata("B", ["Ellar"], random_type)
     assert reflect.get_metadata("B", random_type) == ["Ellar"]
 
-    reflect.define_metadata("B", "AnotherEllar", random_type)
-    reflect.define_metadata("B", "AnotherEllarD", random_type)
+    reflect.define_metadata("B", ["AnotherEllar"], random_type)
+    reflect.define_metadata("B", ["AnotherEllarD"], random_type)
     assert reflect.get_metadata("B", random_type) == [
-        "AnotherEllarD",
-        "AnotherEllar",
         "Ellar",
+        "AnotherEllar",
+        "AnotherEllarD",
     ]
 
 
 def test_define_metadata_with_existing_dict(random_type):
-    reflect.define_metadata("C", dict(C="EllarC"), random_type, default_value=dict())
+    reflect.define_metadata("C", dict(C="EllarC"), random_type)
     assert reflect.get_metadata("C", random_type) == dict(C="EllarC")
 
     reflect.define_metadata("C", dict(D="EllarD"), random_type)
@@ -59,8 +59,8 @@ def test_define_metadata_with_existing_dict(random_type):
 
 
 def test_define_metadata_with_existing_set(random_type):
-    reflect.define_metadata("A", "EllarA", random_type, default_value=set())
-    reflect.define_metadata("A", "AnotherEllar", random_type)
+    reflect.define_metadata("A", {"EllarA"}, random_type)
+    reflect.define_metadata("A", {"AnotherEllar"}, random_type)
     assert reflect.get_metadata("A", random_type) == {"AnotherEllar", "EllarA"}
 
 
@@ -68,7 +68,7 @@ def test_reflect_meta_decorator():
     @reflect.metadata("defined_key", "chioma")
     @reflect.metadata("defined_key_b", "jessy")
     def function_a():
-        pass
+        """ignore"""
 
     assert reflect.get_metadata("defined_key", function_a) == "chioma"
     assert reflect.get_metadata("defined_key_b", function_a) == "jessy"
@@ -81,7 +81,7 @@ def test_reflect_meta_decorator():
 def test_reflect_has_metadata_works():
     @reflect.metadata("defined_key", "jessy")
     def function_new():
-        pass
+        """ignore"""
 
     assert reflect.has_metadata("defined_key", function_new)
     assert reflect.has_metadata("defined_key_b", function_new) is False
@@ -90,7 +90,7 @@ def test_reflect_has_metadata_works():
 def test_reflect_get_metadata_or_raise_exception():
     @reflect.metadata("defined_key_b", "jessy")
     def function_new():
-        pass
+        """ignore"""
 
     assert (
         reflect.get_metadata_or_raise_exception("defined_key_b", function_new)
@@ -104,7 +104,7 @@ def test_reflect_get_metadata_or_raise_exception():
 def test_delete_metadata_works():
     @reflect.metadata("defined_key_b", "jessy")
     def function_new():
-        pass
+        """ignore"""
 
     reflect.delete_metadata("defined_key_b", function_new)
     assert reflect.has_metadata("defined_key_b", function_new) is False
@@ -114,7 +114,7 @@ def test_reflect_context_works():
     @reflect.metadata("defined_key_b", "jessy")
     @reflect.metadata("defined_key", "clara")
     def function_new():
-        pass
+        """ignore"""
 
     with reflect.context():
         reflect.define_metadata("defined_key_c", "Eadwin", function_new)
@@ -134,7 +134,7 @@ async def test_reflect_async_context_works():
     @reflect.metadata("defined_key_b", "jessy")
     @reflect.metadata("defined_key", "clara")
     def function_new():
-        pass
+        """ignore"""
 
     async with reflect.async_context():
         reflect.define_metadata("defined_key_c", "Eadwin", function_new)
@@ -152,3 +152,10 @@ async def test_reflect_async_context_works():
 def test_define_metadata_raise_exception():
     with pytest.raises(Exception, match="`target` is not a valid type"):
         reflect.define_metadata("defined_key_c", "Eadwin", "defined_key_c")
+
+    with pytest.raises(Exception, match="`target` is not a valid type"):
+        reflect.define_metadata("defined_key_c", "Eadwin", None)
+
+
+def test_define_metadata_overrides_existing_collection_of_different_type():
+    pass

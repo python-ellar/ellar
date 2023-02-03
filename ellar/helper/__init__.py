@@ -3,6 +3,7 @@ import functools
 import inspect
 import re
 import typing as t
+import uuid
 
 class_base_function_regex: t.Pattern[t.Any] = re.compile(
     "<\\w+ ((\\w+\\.(<\\w+>)\\.)+)?(\\w+)\\.(\\w+) at \\w+>", re.IGNORECASE
@@ -20,11 +21,19 @@ def generate_operation_unique_id(
 
 
 def generate_controller_operation_unique_id(
-    *, path: str, methods: t.Sequence[str], versioning: t.Sequence[str]
+    *,
+    path: str,
+    methods: t.Sequence[str],
+    versioning: t.Sequence[str],
+    extra_string: str = "",
 ) -> int:
     _methods = "_".join(sorted(list(methods))).lower()
     _versioning = "_".join(sorted(list(versioning))).lower()
-    return hash(path + _methods + _versioning)
+    return hash(path + _methods + _versioning + extra_string)
+
+
+def get_unique_control_type() -> t.Type:
+    return type(f"{uuid.uuid4().hex:4}_ModuleRouter", (), {})
 
 
 def get_name(endpoint: t.Union[t.Callable, t.Type, object]) -> str:

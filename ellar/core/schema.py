@@ -84,7 +84,7 @@ class WsRouteParameters(BaseModel):
     path: str
     name: t.Optional[str] = None
     endpoint: t.Callable
-    encoding: str = Field("json")
+    encoding: t.Optional[str] = Field("json")
     use_extra_handler: bool = Field(False)
     extra_handler_type: t.Optional[t.Type["WebSocketExtraHandler"]] = None
 
@@ -94,7 +94,7 @@ class WsRouteParameters(BaseModel):
 
     @validator("encoding")
     def validate_encoding(cls, value: t.Any):
-        if value not in ["json", "text", "bytes"]:
+        if value not in ["json", "text", "bytes", None]:
             raise ValueError(
                 f"Encoding type not supported. Once [json | text | bytes]. Received: {value}"
             )

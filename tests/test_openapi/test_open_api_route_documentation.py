@@ -54,12 +54,9 @@ def create_car(car: CreateCarSchema):
     return car
 
 
-@router.http_route("/list", response={200: CreateCarSchema}, methods=("get", "post"))
+@router.http_route("/list", response={200: CreateCarSchema}, methods=["get", "post"])
 def list_and_create_car(car: CreateCarSchema = Body(default=None)):
     return car
-
-
-router.get_flatten_routes()
 
 
 def test_open_api_route_model_input_fields():

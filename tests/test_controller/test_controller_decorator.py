@@ -1,11 +1,7 @@
 import pytest
 
 from ellar.common import Controller, get, http_route, ws_route
-from ellar.constants import (
-    CONTROLLER_CLASS_KEY,
-    CONTROLLER_OPERATION_HANDLER_KEY,
-    OPENAPI_KEY,
-)
+from ellar.constants import CONTROLLER_CLASS_KEY, CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.core import ControllerBase
 from ellar.core.routing.router.module import controller_router_factory
 from ellar.di import has_binding, is_decorated_with_injectable
@@ -14,6 +10,7 @@ from ellar.reflect import reflect
 from .sample import SampleController
 
 
+@Controller(prefix="/items/{orgID:int}", name="override_name", tag="new_tag")
 class SomeController:
     def __init__(self, a: str):
         self.a = a
@@ -72,28 +69,33 @@ def test_controller_computed_properties():
         "description": None,
         "external_doc_url": None,
     }
-    new_controller = Controller(
+
+    @Controller(
         prefix="/items/{orgID:int}",
         tag="Item",
         description="Some Controller",
         external_doc_url="https://test.com",
         external_doc_description="Find out more here",
-    )(SomeController)
-    router = controller_router_factory(new_controller)
+    )
+    class SomeControllerB(ControllerBase):
+        def __init__(self, a: str):
+            self.a = a
+
+    router = controller_router_factory(SomeControllerB)
     assert router.get_meta() == {
         "tag": "Item",
         "description": "Some Controller",
         "external_doc_description": "Find out more here",
         "external_doc_url": "https://test.com",
     }
-    assert is_decorated_with_injectable(new_controller)
-    assert has_binding(new_controller)
+    assert is_decorated_with_injectable(SomeControllerB)
+    assert has_binding(SomeControllerB)
 
 
 def test_tag_configuration_controller_decorator():
     new_controller = Controller(
         prefix="/items/{orgID:int}", name="override_name", tag="new_tag"
-    )(SomeController)
+    )(type("SomeControllerX", (ControllerBase,), {}))
     router = controller_router_factory(new_controller)
     assert router.get_meta()["tag"] == "new_tag"
     assert router.name == "override_name"
@@ -101,17 +103,17 @@ def test_tag_configuration_controller_decorator():
     # defaults to controller name
     new_controller = Controller(
         prefix="/items/{orgID:int}",
-    )(SomeController)
+    )(type("SomeControllerY", (ControllerBase,), {}))
     router = controller_router_factory(new_controller)
-    assert router.get_meta()["tag"] == "some"
-    assert router.name == "some"
+    assert router.get_meta()["tag"] == "somey"
+    assert router.name == "somey"
 
     new_controller = Controller(prefix="/items/{orgID:int}", tag="new_tag")(
-        SomeController
+        type("SomeControllerZ", (ControllerBase,), {})
     )
     router = controller_router_factory(new_controller)
     assert router.get_meta()["tag"] == "new_tag"
-    assert router.name == "some"
+    assert router.name == "somez"
 
 
 @pytest.mark.parametrize(
@@ -119,21 +121,15 @@ def test_tag_configuration_controller_decorator():
     [
         (SampleController, "sample", "/prefix", "sample"),
         (
-            Controller(
-                prefix="/items/{orgID:int}", name="override_name", tag="new_tag"
-            )(SomeController),
+            SomeController,
             "new_tag",
             "/items/{orgID:int}",
             "override_name",
         ),
     ],
 )
-def test_build_routes(controller_type, tag, prefix, name):
+def test_controller_url_reverse(controller_type, tag, prefix, name):
     router = controller_router_factory(controller_type)
-    router.get_flatten_routes()
-    for route in router.get_flatten_routes():
-        assert name in route.name
-        assert prefix in route.path
-        if "WS" not in route.methods:
-            openapi = reflect.get_metadata(OPENAPI_KEY, route.endpoint)
-            assert tag in openapi.tags
+    for route in router.routes:
+        reversed_path = router.url_path_for(f"{name}:{route.name}")
+        assert reversed_path == router.path_format.replace("/{path}", route.path)

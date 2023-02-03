@@ -5,6 +5,7 @@ from weakref import WeakKeyDictionary
 
 from ellar.compatible import AttributeDict, asynccontextmanager
 from ellar.constants import REFLECT_TYPE
+from ellar.shortcuts import fail_silently
 
 
 def _get_actual_target(
@@ -13,7 +14,7 @@ def _get_actual_target(
     try:
         reflect_type = target.__dict__[REFLECT_TYPE]
     except KeyError:
-        setattr(target, REFLECT_TYPE, target)
+        fail_silently(setattr, target, REFLECT_TYPE, target)
         return target
     else:
         return t.cast(t.Union[t.Type, t.Callable], reflect_type)
@@ -32,43 +33,30 @@ class _Reflect:
         metadata_key: str,
         metadata_value: t.Any,
         target: t.Union[t.Type, t.Callable],
-        default_value: t.Any = None,
     ) -> t.Any:
         if (
             not isinstance(target, type)
             and not callable(target)
             and not ismethod(target)
+            or target is None
         ):
             raise Exception("`target` is not a valid type")
 
         target_metadata = self._get_or_create_metadata(target, create=True)
         if target_metadata is not None:
-            target_metadata.setdefault(metadata_key, default_value)
-
-            _meta_values: t.Any = (
-                list(metadata_value)
-                if isinstance(metadata_value, (list, tuple, set))
-                else [metadata_value]
-            )
             existing = target_metadata.get(metadata_key)
             if existing is not None:
-                if isinstance(existing, (list, tuple)):
-                    _meta_values.extend(existing)
-                    if isinstance(existing, tuple):
-                        _meta_values = type(existing)(_meta_values)
-                elif isinstance(existing, set):
-                    _meta_values.extend(existing)
-                    _meta_values = type(existing)(_meta_values)
-                elif isinstance(existing, dict):
+                if isinstance(existing, (list, tuple)) and isinstance(
+                    metadata_value, (list, tuple)
+                ):
+                    metadata_value = existing + type(existing)(metadata_value)  # type: ignore
+                elif isinstance(existing, set) and isinstance(metadata_value, set):
+                    existing_combined = list(existing) + list(metadata_value)
+                    metadata_value = type(existing)(existing_combined)
+                elif isinstance(existing, dict) and isinstance(metadata_value, dict):
                     existing.update(dict(metadata_value))
-                    _meta_values = type(existing)(existing)
-                else:
-                    # if existing item is not a Collection, And we are trying to set same key again,
-                    # then it has to be changed to a collection
-                    _meta_values = [existing] + _meta_values
-            else:
-                _meta_values = metadata_value
-            target_metadata[metadata_key] = _meta_values
+                    metadata_value = type(existing)(existing)
+            target_metadata[metadata_key] = metadata_value
 
     def metadata(self, metadata_key: str, metadata_value: t.Any) -> t.Any:
         def _wrapper(target: t.Union[t.Type, t.Callable]) -> t.Any:
