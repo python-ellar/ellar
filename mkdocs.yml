@@ -3,7 +3,10 @@ site_description: Ellar - Python ASGI web framework for building fast, efficient
 site_url: https://github.com/eadwinCode/ellar
 repo_name: eadwinCode/ellar
 repo_url: https://github.com/eadwinCode/ellar
-edit_uri: ''
+edit_uri: blob/master/docs
+
+docs_dir: docs
+site_dir: site
 
 theme:
   name: material
@@ -43,7 +46,7 @@ nav:
       - Middlewares:  overview/middleware.md
       - Exception Handling:  overview/exception_handling.md
 #      - Guards:  overview/guards.md
-#      - Custom Decorators:  overview/custom_decorators.md
+      - Custom Decorators:  overview/custom_decorators.md
       - Module Router:  overview/module-router.md
   - Configuration: configurations.md
   - How-to Guides:
@@ -62,12 +65,10 @@ nav:
     - html: templating/templating.md
     - Static Files: templating/staticfiles.md
 
-  - Execution Context: basics/execution-context.md
 #  - Custom Providers: basics/custom-providers.md
 #  - Injection Scopes: basics/injection-scope.md
 #  - Model View Controller: basics/model-view-controller.md
-  - Serialization: basics/serialization.md
-  - Events: basics/events.md
+#  - Events: basics/events.md
   - Versioning: basics/versioning.md
   - Commands: basics/commands.md
   - Testing: basics/testing.md
