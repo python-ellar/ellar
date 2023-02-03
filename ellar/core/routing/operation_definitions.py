@@ -263,7 +263,7 @@ class OperationDefinitions:
         path: str = "/",
         *,
         name: str = None,
-        encoding: str = "json",
+        encoding: t.Optional[str] = "json",
         use_extra_handler: bool = False,
         extra_handler_type: t.Optional[t.Type] = None,
     ) -> t.Callable[[TCallable], t.Union[TCallable, TWebsocketOperation]]:

@@ -65,9 +65,13 @@ class WebSocketExtraHandler:
                 elif message["type"] == "websocket.disconnect":
                     close_code = int(message.get("code", status.WS_1000_NORMAL_CLOSURE))
                     break
+        except WebSocketException as wexc:
+            await websocket.close(code=wexc.code)
+            raise RuntimeError(wexc.reason)
         except Exception as exc:
             close_code = status.WS_1011_INTERNAL_ERROR
             raise exc
+
         finally:
             await self.execute_on_disconnect(context=context, close_code=close_code)
 
