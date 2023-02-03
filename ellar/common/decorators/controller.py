@@ -163,7 +163,7 @@ def Controller(
                 attrs.update({REFLECT_TYPE: cls.__dict__[REFLECT_TYPE]})
             new_cls = type(cls.__name__, (cls, ControllerBase), attrs)
 
-        _controller_type = t.cast(t.Type[ControllerBase], new_cls)
+            _controller_type = t.cast(t.Type[ControllerBase], new_cls)
 
         _tag = _controller_type.controller_class_name()
 
