@@ -1,7 +1,15 @@
 import typing as t
 from inspect import isabstract
 
-from injector import Binder as InjectorBinder, Binding, Module as InjectorModule
+from injector import (
+    AssistedBuilder,
+    Binder as InjectorBinder,
+    Binding,
+    Module as InjectorModule,
+    Scope as InjectorScope,
+    UnsatisfiedRequirement,
+    _is_specialization,
+)
 
 from ellar.constants import NOT_SET
 from ellar.helper import get_name
@@ -15,7 +23,7 @@ from ..scopes import (
     SingletonScope,
     TransientScope,
 )
-from ..service_config import get_scope
+from ..service_config import get_scope, is_decorated_with_injectable
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.modules import ModuleBase
@@ -43,10 +51,35 @@ class Container(InjectorBinder):
         scope: t.Union[ScopeDecorator, t.Type[DIScope]] = None,
     ) -> Binding:
         provider = self.provider_for(interface, to)
-        scope = scope or getattr(to or interface, "__scope__", TransientScope)
+        scope = scope or get_scope(to or interface) or TransientScope
         if isinstance(scope, ScopeDecorator):
             scope = scope.scope
         return Binding(interface, provider, scope)
+
+    def get_binding(self, interface: type) -> t.Tuple[Binding, InjectorBinder]:
+        is_scope = isinstance(interface, type) and issubclass(interface, InjectorScope)
+        is_assisted_builder = _is_specialization(interface, AssistedBuilder)
+        try:
+            return self._get_binding(
+                interface, only_this_binder=is_scope or is_assisted_builder
+            )
+        except (KeyError, UnsatisfiedRequirement):
+            if is_scope:
+                scope = interface
+                self.bind(scope, to=scope(self.injector))
+                return self._get_binding(interface)
+            # The special interface is added here so that requesting a special
+            # interface with auto_bind disabled works
+            if (
+                self._auto_bind
+                or self._is_special_interface(interface)
+                or is_decorated_with_injectable(interface)
+            ):
+                binding = self.create_binding(interface)
+                self._bindings[interface] = binding
+                return binding, self
+
+        raise UnsatisfiedRequirement(None, interface)
 
     def register_binding(self, interface: t.Type, binding: Binding) -> None:
         self._bindings[interface] = binding

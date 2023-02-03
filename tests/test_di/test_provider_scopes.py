@@ -1,6 +1,8 @@
 import pytest
+from injector import inject
 
-from ellar.di import EllarInjector, ProviderConfig
+from ellar.di import EllarInjector, ProviderConfig, has_binding
+from ellar.di.exceptions import DIImproperConfiguration
 from ellar.di.scopes import RequestScope, SingletonScope, TransientScope
 
 from .examples import AnyContext, Foo, IContext
@@ -44,3 +46,20 @@ async def test_request_scope_instance():
     async with injector.create_asgi_args() as request_provider:
         # resolving RequestScope during request will behave like singleton
         assert request_provider.get(IContext) == request_provider.get(IContext)
+
+
+def test_invalid_use_of_provider_config():
+    with pytest.raises(DIImproperConfiguration):
+        ProviderConfig(IContext, use_class=AnyContext, use_value=AnyContext())
+
+
+def test_has_binding_works():
+    @inject
+    def inject_function(a: IContext):
+        pass
+
+    assert has_binding(IContext) is False
+    assert has_binding(AnyContext) is True
+
+    assert has_binding(lambda n: print("Hello")) is False
+    assert has_binding(inject_function) is True

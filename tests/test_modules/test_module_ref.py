@@ -89,9 +89,6 @@ def test_module_ref_registers_module_type():
     config = Config()
     container = EllarInjector(auto_bind=False).container
 
-    with pytest.raises(Exception):
-        container.injector.get(ModuleBaseExample)
-
     create_module_ref_factor(ModuleBaseExample, config=config, container=container)
     create_module_ref_factor(ModuleProviderTest, config=config, container=container)
 
