@@ -79,7 +79,7 @@ test = [
     # types
     "types-ujson ==5.7.0.0",
     "types-orjson ==3.6.2",
-    "types-dataclasses ==0.1.7",
+    "types-dataclasses ==0.6.6",
 ]
 dev = [
     "pre-commit"
