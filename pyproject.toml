@@ -77,7 +77,7 @@ test = [
     "email_validator >=1.1.1",
 
     # types
-    "types-ujson ==5.6.0.0",
+    "types-ujson ==5.7.0.0",
     "types-orjson ==3.6.2",
     "types-dataclasses ==0.1.7",
 ]
