@@ -19,19 +19,6 @@ Ellar is based on [Starlette (ASGI toolkit)](https://www.starlette.io/), a light
 While Ellar provides a high level of abstraction on top of Starlette, it still incorporates some of its features, as well as those of FastAPI. 
 If you are familiar with these frameworks, you will find it easy to understand and use Ellar.
 
-## 💝 Special Thanks
-
-This project is built with
-
-- [Starlette](https://www.starlette.io/)
-  - Starlette is a lightweight ASGI framework/toolkit, which is ideal for building async web services in Python.
-
-- [Pydantic](https://docs.pydantic.dev/)
-  - Data validation and settings management using Python type annotations.
-
-- [Injector](https://github.com/python-injector/injector)
-  - Python dependency injection framework, inspired by Guice
-
 ## Requirement
 - Python >= 3.7
 
@@ -296,14 +283,18 @@ Ellar has built-in support for Jinja2, which is a popular template engine for HT
 
 See the [Doc](https://eadwincode.github.io/ellar/templating/templating/) for more examples.
 
+## 💝 Special Thanks
 
-## Project Status
-Project is still in development
-- Documentation - (in progress)
-- Interceptors  -  [Aspect Oriented Programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming) (AOP) technique
-- Database Plugin with [Encode/ORM](https://github.com/encode/orm)
-- Caching 
-- API Throttling
+This project is built with
+
+- [Starlette](https://www.starlette.io/)
+  - Starlette is a lightweight ASGI framework/toolkit, which is ideal for building async web services in Python.
+
+- [Pydantic](https://docs.pydantic.dev/)
+  - Data validation and settings management using Python type annotations.
+
+- [Injector](https://github.com/python-injector/injector)
+  - Python dependency injection framework, inspired by Guice
 
 ## ⭐ Ellar Star Lords
 
@@ -312,3 +303,10 @@ Your support is much appreciated!
 
 [![Ellar Star Lords](https://reporoster.com/stars/eadwinCode/ellar)](https://github.com/eadwinCode/ellar/stargazers)
 
+## Project Status
+Project is still in development
+- Documentation - (in progress)
+- Interceptors  -  [Aspect Oriented Programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming) (AOP) technique
+- Database Plugin with [Encode/ORM](https://github.com/encode/orm)
+- Caching 
+- API Throttling
