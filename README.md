@@ -22,11 +22,8 @@
 - `Session and Cookie support`
 - `CORS, GZip, Static Files, Streaming responses`
 
-## Dependency Summary
-- `Python >= 3.7`
-- `Starlette`
-- `Pydantic`
-- `Injector`
+## Requirement
+- Python >= 3.7
 
 ## Installation
 ### Poetry Installation
@@ -295,10 +292,32 @@ Ellar has built-in support for Jinja2, which is a popular template engine for HT
 
 See the [Doc](https://eadwincode.github.io/ellar/templating/templating/) for more examples.
 
-## Status
+
+## Project Status
 Project is still in development
 - Documentation - (in progress)
 - Interceptors  -  [Aspect Oriented Programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming) (AOP) technique
 - Database Plugin with [Encode/ORM](https://github.com/encode/orm)
 - Caching 
 - API Throttling
+
+## 💝 Special Thanks
+
+This project is built with
+
+- [Starlette](https://www.starlette.io/)
+  - Starlette is a lightweight ASGI framework/toolkit, which is ideal for building async web services in Python.
+
+- [Pydantic](https://docs.pydantic.dev/)
+  - Data validation and settings management using Python type annotations.
+
+- [Injector](https://github.com/python-injector/injector)
+  - Python dependency injection framework, inspired by Guice
+
+## ⭐ Ellar Star Lords
+
+Many thanks to the kind individuals who leave a star.
+Your support is much appreciated!
+
+[![Ellar Star Lords](https://reporoster.com/stars/eadwinCode/ellar)](https://github.com/eadwinCode/ellar/stargazers)
+
