@@ -10,17 +10,27 @@
 [![PyPI version](https://img.shields.io/pypi/v/ellar.svg)](https://pypi.python.org/pypi/ellar)
 [![PyPI version](https://img.shields.io/pypi/pyversions/ellar.svg)](https://pypi.python.org/pypi/ellar)
 
-## Features Summary
-- `Pydantic integration`
-- `Dependency Injection (DI)`
-- `Templating with Jinja2`
-- `OpenAPI Documentation (Swagger and ReDoc)`
-- `Controller (MVC)`
-- `Guards (authentications, roles and permissions)`
-- `Modularization (eg: flask blueprint)`
-- `Websocket support`
-- `Session and Cookie support`
-- `CORS, GZip, Static Files, Streaming responses`
+## Introduction
+
+Ellar is a lightweight ASGI framework for building efficient and scalable server-side python applications.
+It supports both OOP (Object-Oriented Programming) and FP (Functional Programming)
+
+Ellar is based on [Starlette (ASGI toolkit)](https://www.starlette.io/), a lightweight ASGI framework/toolkit well-suited for developing asynchronous web services in Python. 
+While Ellar provides a high level of abstraction on top of Starlette, it still incorporates some of its features, as well as those of FastAPI. 
+If you are familiar with these frameworks, you will find it easy to understand and use Ellar.
+
+## 💝 Special Thanks
+
+This project is built with
+
+- [Starlette](https://www.starlette.io/)
+  - Starlette is a lightweight ASGI framework/toolkit, which is ideal for building async web services in Python.
+
+- [Pydantic](https://docs.pydantic.dev/)
+  - Data validation and settings management using Python type annotations.
+
+- [Injector](https://github.com/python-injector/injector)
+  - Python dependency injection framework, inspired by Guice
 
 ## Requirement
 - Python >= 3.7
@@ -41,12 +51,6 @@ pip install ellar[standard]
 Some shells may treat square braces (`[` and `]`) as special characters. If that's the case here, then use a quote around the characters to prevent unexpected shell expansion.
 ```shell
 pip install "ellar[standard]"
-```
-
-### Py36 Support
-For python3.6 users, 
-```shell
-pip install ellar==0.2.2
 ```
 
 ## Create a project
@@ -300,19 +304,6 @@ Project is still in development
 - Database Plugin with [Encode/ORM](https://github.com/encode/orm)
 - Caching 
 - API Throttling
-
-## 💝 Special Thanks
-
-This project is built with
-
-- [Starlette](https://www.starlette.io/)
-  - Starlette is a lightweight ASGI framework/toolkit, which is ideal for building async web services in Python.
-
-- [Pydantic](https://docs.pydantic.dev/)
-  - Data validation and settings management using Python type annotations.
-
-- [Injector](https://github.com/python-injector/injector)
-  - Python dependency injection framework, inspired by Guice
 
 ## ⭐ Ellar Star Lords
 
