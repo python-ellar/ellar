@@ -34,13 +34,6 @@ class WebSocketOperationMixin:
         self._handlers_kwargs.update(on_disconnect=func)
         return func
 
-    def custom_handler(self, name: str) -> t.Callable:
-        def _wrap(func: t.Callable) -> t.Callable:
-            self._handlers_kwargs.update({name: func})
-            return func
-
-        return _wrap
-
 
 class WebsocketRouteOperation(
     WebSocketOperationMixin, WebsocketRouteOperationBase, StarletteWebSocketRoute

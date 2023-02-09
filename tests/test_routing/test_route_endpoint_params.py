@@ -13,7 +13,8 @@ from ellar.core.connection import (
     WebSocket as EllarWebSocket,
 )
 from ellar.core.context import IExecutionContext
-from ellar.core.middleware import Middleware, SessionMiddleware
+from ellar.core.middleware import Middleware
+from ellar.core.middleware.sessions import SessionMiddleware
 from ellar.core.routing import ModuleRouter
 from ellar.helper.importer import get_class_import
 
