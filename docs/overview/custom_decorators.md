@@ -1,5 +1,6 @@
 
 Ellar provides a variety of function decorators in the `ellar.common` python module that can be used to modify the behavior of route functions. 
+
 These decorators can be used to change the response type of a route function, add filters to the response schema, define the OPENAPI context, and more. 
 In general, these decorators can help to simplify and streamline the process of creating routes.
 
@@ -57,12 +58,14 @@ async def on_connect(self, websocket: WebSocket, code: int):
 ## **Non Route Function Parameters Decorators**
 We discussed decorators that are used to define route function parameter dependencies in Ellar. 
 These decorators, such as `Query`, `Form`, and `Body`, etc. are pydantic models used to specify the expected parameters for a route function. 
+
 However, there are also some route parameters that are **system** dependent, such as the `request` or `websocket` object, and the `response` object. 
 These parameters are resolved by the application and supplied to the route function when needed, and are not specified with pydantic models or user input.
 
 ### Provide(Type)
 The **Provide(Type)** decorator is used to resolve a service provider and inject it into a route function parameter. 
 This can be useful when using the ModuleRouter feature in Ellar. 
+
 It allows for easy injection of services into route functions, making it easier to manage dependencies and improve code organization. 
 This can be useful for resolving database connections, external APIs, or other resources that are used by the route function.
 
@@ -108,6 +111,7 @@ def example_endpoint(ctx = Context()):
 
 In this example, the example_endpoint function is decorated with the **Context()** decorator, which injects the current `IExecutionContext` object into the `ctx` parameter of the function. 
 The `IExecutionContext` object provides access to various resources and information related to the current execution context, such as the current HTTP connection, query parameters, and more. 
+
 In this example, the `switch_to_http_connection()` method is used to access the current HTTP connection and the `get_client()` method is used to get the client object for the connection. 
 The `query_params` attribute of the client object is then accessed and included in the response returned by the endpoint.
 
@@ -167,14 +171,11 @@ async def example_endpoint(ws = Ws()):
 The above code creates a WebSocket route '/test-ws' and when a client connects to this route, 
 the `example_endpoint` function is executed. The `Ws` decorator injects the current `WebSocket` object to the `ws` parameter of the function, which can then be used to interact with the WebSocket connection, such as accepting the connection and sending data to the client.
 
-### Host
-**Host()** decorator injects current client host address to route function parameter.
+The same conditions and examples applies for:
 
-### Session
-**Session()** decorator injects current Session object to route function parameter.
-
-### Http
-**Http()** decorator injects current HTTP connection object to route function parameter.
+- **Host()** decorator injects current client host address to route function parameter.
+- **Session()** decorator injects current Session object to route function parameter. This requires [SessionMiddleware](https://www.starlette.io/middleware/#sessionmiddleware) module from Starlette added in application middleware and also `SessionMiddleware` module depends on [itsdangerous](https://pypi.org/project/itsdangerous/) package.
+- **Http()** decorator injects current HTTP connection object to route function parameter.
 
 ## **Creating a Custom Parameter Decorators**
 You can still create your own route parameter decorators that suits your need. You simply need to follow a contract, `NonParameterResolver`, and override the resolve function.
@@ -203,6 +204,7 @@ class UserParam(NonParameterResolver):
 
 This example defines a custom decorator called `UserParam` that inherits from `NonParameterResolver`. 
 The `resolve` method is overridden to extract the user from the current `IExecutionContext`'s request. 
+
 If the user is found, it is returned as a dict with the key as the `parameter_name` of the decorator, along with an empty list of errors. 
 If no user is found, an empty dict and a list of errors containing an ErrorWrapper object is returned. 
 
@@ -234,6 +236,7 @@ def index(self):
 
 In the example, the index function is decorated with the `render` decorator, 
 which will return a 200 status code and HTML content from my_template. 
+
 The return object from the index function will be used as the templating context for `my_template` during the template rendering process. 
 This allows the function to pass data to the template and have it rendered with the provided context, the rendered template will be the response body.
 
@@ -379,6 +382,7 @@ See [Pydantic Model Export](https://docs.pydantic.dev/usage/exporting_models/#mo
 ### VERSION
 **@version()**  is a decorator that provides endpoint versioning for a route function. 
 This decorator allows you to specify the version of the endpoint that the function is associated with. 
+
 Based on the versioning scheme configuration in the application, versioned route functions are called. This can be useful for maintaining backward compatibility, or for rolling out new features to different versions of an application. 
 More information on how to use this decorator can be found in the [Versioning documentation]()
 
@@ -397,10 +401,12 @@ This indicates that the `get_item_v2_v3` route function will handle version 2 an
 This allows for multiple versions of the same endpoint to be handled by different route functions, each with their own logic and implementation.
 
 ### GUARDS
-**@guards()**  is a decorator that applies a protection class of type GuardCanActivate to a route function. 
-These protection classes have a can_execute function that is called to determine whether a route function should be executed. 
-This decorator allows you to apply certain conditions or checks before a route function is executed, such as authentication or authorization checks. 
+**@guards()**  is a decorator that applies a protection class of type `GuardCanActivate` to a route function. 
+These protection classes have a `can_execute` function that is called to determine whether a route function should be executed. 
+
+This decorator allows you to apply certain conditions or checks before a route function is executed, such as `authentication` or `authorization` checks. 
 This can help to ensure that only authorized users can access certain resources. 
+
 More information on how to use this decorator can be found in the [Guard Documentation]()
 
 A quick example on how to use `guards` decorator:
@@ -425,8 +431,10 @@ async def get_guarded_items(self):
 ```
 The `guards` decorator, like the `version` decorator, takes a list of values as an argument. 
 During a request, the provided guards are called in the order in which they are provided. 
+
 This allows you to apply multiple guards to a single route function and have them executed in a specific order. 
 This is useful for applying multiple levels of security or access control to a single endpoint. 
+
 Each guard class has a `can_execute` function that is called in the order specified by the decorator, if any of the guard's `can_execute` function returns False, the route function will not be executed.
 
 ## **Command Decorators**

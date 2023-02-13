@@ -286,26 +286,4 @@ class DogsController(ControllerBase):
         return result
 ```
 
-Also, since `RoleGuard` depends on `Reflector`, it has to be registered as a provider. And we do that in `DogsModule`:
-
-```python
-# project_name/apps/dogs/module.py
-
-from ellar.common import Module
-from ellar.core import ModuleBase
-from ellar.di import Container
-
-from .controllers import DogsController
-from .guards import RoleGuard
-
-
-@Module(
-    controllers=[DogsController],
-    providers=[RoleGuard],
-)
-class DogsModule(ModuleBase):
-    def register_providers(self, container: Container) -> None:
-        # for more complicated provider registrations
-        # container.register_instance(...)
-        pass
-```
+Also, since `RoleGuard` is marked as `injectable`, EllarInjector service will be able to resolve `RoleGuard` without `RoleGuard` registered as a provider.

@@ -203,5 +203,3 @@ class ItemsController(ControllerBase):
     def me(self):
         return PlainTextResponse("some text response.", status_code=200)
 ```
-
-## using serialize_object function
