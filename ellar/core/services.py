@@ -1,6 +1,10 @@
+import typing as t
+
+from ellar.cache import BaseCacheBackend, CacheService, ICacheService
 from ellar.di import EllarInjector
 from ellar.services.reflector import Reflector
 
+from .conf import Config
 from .context import (
     ExecutionContextFactory,
     HostContextFactory,
@@ -17,10 +21,11 @@ from .exceptions.service import ExceptionMiddlewareService
 class CoreServiceRegistration:
     """Create Binding for all application service"""
 
-    __slots__ = ("injector",)
+    __slots__ = ("injector", "config")
 
-    def __init__(self, injector: EllarInjector) -> None:
+    def __init__(self, injector: EllarInjector, config: Config) -> None:
         self.injector = injector
+        self.config = config
 
     def register_all(self) -> None:
         self.injector.container.register(
@@ -39,5 +44,9 @@ class CoreServiceRegistration:
         self.injector.container.register_scoped(
             IWebSocketContextFactory, WebSocketContextFactory
         )
-
+        cache_service = CacheService(
+            t.cast(t.Dict[str, BaseCacheBackend], dict(self.config.CACHES))
+        )
         self.injector.container.register_instance(Reflector())
+        self.injector.container.register_instance(cache_service)
+        self.injector.container.register(ICacheService, cache_service)
