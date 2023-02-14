@@ -13,6 +13,7 @@ from ellar.types import ASGIApp, TReceive, TScope, TSend
 
 from .mixins import (
     ConfigDefaultTypesMixin,
+    TBaseCacheBackend,
     TEventHandler,
     TExceptionHandler,
     TMiddleware,
@@ -120,6 +121,7 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     TEMPLATE_GLOBAL_FILTERS: t.Dict[str, t.Callable[..., t.Any]] = {}
 
     LOGGING: t.Optional[t.Dict[str, t.Any]] = None
+    CACHES: t.Dict[str, TBaseCacheBackend] = {}
 
     @validator("MIDDLEWARE", pre=True)
     def pre_middleware_validate(cls, value: t.Any) -> t.Any:
@@ -136,4 +138,10 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     @validator("STATIC_MOUNT_PATH", pre=True)
     def pre_static_mount_path(cls, value: t.Any) -> t.Any:
         assert value.startswith("/"), "Routed paths must start with '/'"
+        return value
+
+    @validator("CACHES", pre=True)
+    def pre_cache_validate(cls, value: t.Dict) -> t.Any:
+        if value and not value.get("default"):
+            raise ValueError("CACHES configuration must have a 'default' key")
         return value

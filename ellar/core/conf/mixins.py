@@ -4,6 +4,7 @@ import typing as t
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp
 
+from ellar.cache.model import BaseCacheBackend
 from ellar.constants import LOG_LEVELS as log_levels
 from ellar.core.events import EventHandler
 from ellar.core.exceptions.interfaces import IExceptionHandler
@@ -19,7 +20,23 @@ __all__ = [
     "TMiddleware",
     "TEventHandler",
     "TExceptionHandler",
+    "TBaseCacheBackend",
 ]
+
+
+class TBaseCacheBackend:
+    @classmethod
+    def __get_validators__(
+        cls: t.Type["TBaseCacheBackend"],
+    ) -> t.Iterable[t.Callable[..., t.Any]]:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls: t.Type["TBaseCacheBackend"], v: t.Any) -> t.Any:
+        if isinstance(v, BaseCacheBackend):
+            return v
+
+        raise ValueError(f"Expected BaseCacheBackend, received: {type(v)}")
 
 
 class TExceptionHandler:
@@ -162,3 +179,5 @@ class ConfigDefaultTypesMixin:
     # TrustHostMiddleware setup
     ALLOWED_HOSTS: t.List[str]
     REDIRECT_HOST: bool
+
+    CACHES: t.Dict[str, TBaseCacheBackend]
