@@ -22,7 +22,7 @@ class CacheServiceSync(ICacheServiceSync):
         self,
         key: str,
         value: t.Any,
-        timeout: int = None,
+        timeout: t.Union[float, int] = None,
         version: str = None,
         backend: str = None,
     ) -> bool:
@@ -30,14 +30,18 @@ class CacheServiceSync(ICacheServiceSync):
         return _backend.set(key, value, version=version, timeout=timeout)
 
     def touch(
-        self, key: str, timeout: int = None, version: str = None, backend: str = None
+        self,
+        key: str,
+        timeout: t.Union[float, int] = None,
+        version: str = None,
+        backend: str = None,
     ) -> bool:
         _backend = self._get_backend(backend)
         return _backend.touch(key, version=version, timeout=timeout)
 
     def has_key(self, key: str, version: str = None, backend: str = None) -> bool:
         _backend = self._get_backend(backend)
-        return _backend.touch(key, version=version)
+        return _backend.has_key(key, version=version)
 
 
 @injectable  # type: ignore
@@ -71,7 +75,7 @@ class CacheService(CacheServiceSync, ICacheService):
         self,
         key: str,
         value: t.Any,
-        timeout: int = None,
+        timeout: t.Union[float, int] = None,
         version: str = None,
         backend: str = None,
     ) -> bool:
@@ -79,7 +83,11 @@ class CacheService(CacheServiceSync, ICacheService):
         return await _backend.set_async(key, value, timeout=timeout, version=version)
 
     async def touch_async(
-        self, key: str, timeout: int = None, version: str = None, backend: str = None
+        self,
+        key: str,
+        timeout: t.Union[float, int] = None,
+        version: str = None,
+        backend: str = None,
     ) -> bool:
         _backend = self._get_backend(backend)
         return await _backend.touch_async(key, timeout=timeout, version=version)

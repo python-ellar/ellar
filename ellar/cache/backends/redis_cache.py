@@ -27,14 +27,20 @@ class RedisCacheBackendSync(IBaseCacheBackendAsync, ABC):
         return bool(res)
 
     def set(
-        self, key: str, value: t.Any, timeout: int = None, version: str = None
+        self,
+        key: str,
+        value: t.Any,
+        timeout: t.Union[float, int] = None,
+        version: str = None,
     ) -> bool:
         res = self._async_executor(
             self.set_async(key, value, version=version, timeout=timeout)
         )
         return bool(res)
 
-    def touch(self, key: str, timeout: int = None, version: str = None) -> bool:
+    def touch(
+        self, key: str, timeout: t.Union[float, int] = None, version: str = None
+    ) -> bool:
         res = self._async_executor(
             self.touch_async(key, version=version, timeout=timeout)
         )
@@ -73,7 +79,9 @@ class RedisCacheBackend(RedisCacheBackendSync, BaseCacheBackend):
         self._serializer = serializer
         self._deserializer = deserializer
 
-    def get_backend_timeout(self, timeout: int = None) -> t.Union[float, int]:
+    def get_backend_timeout(
+        self, timeout: t.Union[float, int] = None
+    ) -> t.Union[float, int]:
         if timeout is None:
             timeout = self._default_timeout
         # The key will be made persistent if None used as a timeout.
@@ -99,7 +107,11 @@ class RedisCacheBackend(RedisCacheBackendSync, BaseCacheBackend):
 
     @make_key_decorator
     async def set_async(
-        self, key: str, value: t.Any, timeout: int = None, version: str = None
+        self,
+        key: str,
+        value: t.Any,
+        timeout: t.Union[float, int] = None,
+        version: str = None,
     ) -> bool:
         value = self._serializer(value, self.pickle_protocol)
         if timeout == 0:
@@ -118,7 +130,7 @@ class RedisCacheBackend(RedisCacheBackendSync, BaseCacheBackend):
 
     @make_key_decorator
     async def touch_async(
-        self, key: str, timeout: int = None, version: str = None
+        self, key: str, timeout: t.Union[float, int] = None, version: str = None
     ) -> bool:
         if timeout is None:
             res = await self._cache_client.persist(key)

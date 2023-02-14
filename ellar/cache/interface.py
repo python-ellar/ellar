@@ -22,7 +22,11 @@ class IBaseCacheBackendAsync(ABC):
 
     @abstractmethod
     async def set_async(
-        self, key: str, value: t.Any, timeout: int = None, version: str = None
+        self,
+        key: str,
+        value: t.Any,
+        timeout: t.Union[float, int] = None,
+        version: str = None,
     ) -> bool:
         """Add a new key/value to the cache (overwrites value, if key already
         exists in the cache).
@@ -40,7 +44,7 @@ class IBaseCacheBackendAsync(ABC):
 
     @abstractmethod
     async def touch_async(
-        self, key: str, timeout: int = None, version: str = None
+        self, key: str, timeout: t.Union[float, int] = None, version: str = None
     ) -> bool:
         """
         Update the key's expiry time using timeout. Return True if successful
@@ -68,7 +72,11 @@ class IBaseCacheBackendSync(ABC):
 
     @abstractmethod
     def set(
-        self, key: str, value: t.Any, timeout: int = None, version: str = None
+        self,
+        key: str,
+        value: t.Any,
+        timeout: t.Union[float, int] = None,
+        version: str = None,
     ) -> bool:
         """Add a new key/value to the cache (overwrites value, if key already
         exists in the cache).
@@ -85,7 +93,9 @@ class IBaseCacheBackendSync(ABC):
         """
 
     @abstractmethod
-    def touch(self, key: str, timeout: int = None, version: str = None) -> bool:
+    def touch(
+        self, key: str, timeout: t.Union[float, int] = None, version: str = None
+    ) -> bool:
         """
         Update the key's expiry time using timeout. Return True if successful
         or False if the key does not exist.
@@ -117,7 +127,7 @@ class ICacheServiceSync(ABC):
         self,
         key: str,
         value: t.Any,
-        timeout: int = None,
+        timeout: t.Union[float, int] = None,
         version: str = None,
         backend: str = None,
     ) -> bool:
@@ -138,7 +148,11 @@ class ICacheServiceSync(ABC):
 
     @abstractmethod
     def touch(
-        self, key: str, timeout: int = None, version: str = None, backend: str = None
+        self,
+        key: str,
+        timeout: t.Union[float, int] = None,
+        version: str = None,
+        backend: str = None,
     ) -> bool:
         """
         Update the key's expiry time using timeout. Return True if successful
@@ -181,7 +195,7 @@ class ICacheServiceAsync(ABC):
         self,
         key: str,
         value: t.Any,
-        timeout: int = None,
+        timeout: t.Union[float, int] = None,
         version: str = None,
         backend: str = None,
     ) -> bool:
@@ -202,7 +216,11 @@ class ICacheServiceAsync(ABC):
 
     @abstractmethod
     async def touch_async(
-        self, key: str, timeout: int = None, version: str = None, backend: str = None
+        self,
+        key: str,
+        timeout: t.Union[float, int] = None,
+        version: str = None,
+        backend: str = None,
     ) -> bool:
         """
         Update the key's expiry time using timeout. Return True if successful

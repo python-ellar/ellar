@@ -26,7 +26,7 @@ class CacheDecorator:
     def __init__(
         self,
         func: t.Callable,
-        timeout: int,
+        timeout: t.Union[int, float],
         *,
         key_prefix: str = "",
         version: str = None,
@@ -53,10 +53,6 @@ class CacheDecorator:
             make_key_callback or self.route_cache_make_key
         )
 
-    def _get_key(self, **input_kwargs: t.Any) -> str:
-        context: IExecutionContext = self._context_arg.resolve(input_kwargs)
-        return self._make_key_callback(context, self._key_prefix or "")
-
     def get_decorator_wrapper(self) -> t.Callable:
         if self._is_async:
             return self.get_async_cache_wrapper()
@@ -75,8 +71,8 @@ class CacheDecorator:
         @wraps(self._func)
         async def _async_wrapper(*args: t.Any, **kwargs: t.Any) -> t.Any:
             cache_service: ICacheService = self._cache_service_arg.resolve(kwargs)
-
-            key = self._get_key(**kwargs)
+            context: IExecutionContext = self._context_arg.resolve(kwargs)
+            key = self._make_key_callback(context, self._key_prefix or "")
 
             cached_value = await cache_service.get_async(
                 key, self._version, backend=self._backend
@@ -103,7 +99,8 @@ class CacheDecorator:
         def _wrapper(*args: t.Any, **kwargs: t.Any) -> t.Any:
             cache_service: ICacheService = self._cache_service_arg.resolve(kwargs)
 
-            key = self._get_key(**kwargs)
+            context: IExecutionContext = self._context_arg.resolve(kwargs)
+            key = self._make_key_callback(context, self._key_prefix or "")
 
             cached_value = cache_service.get(key, self._version, backend=self._backend)
             if cached_value:
@@ -123,7 +120,7 @@ class CacheDecorator:
 
 
 def cache(
-    timeout: int,
+    timeout: t.Union[float, int],
     *,
     key_prefix: str = "",
     version: str = None,

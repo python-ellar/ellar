@@ -61,7 +61,9 @@ class BaseCacheBackend(IBaseCacheBackendSync, IBaseCacheBackendAsync, ABC):
         """
         return "%s:%s:%s" % (self._key_prefix, version or self._version, key)
 
-    def get_backend_timeout(self, timeout: int = None) -> t.Union[float, int]:
+    def get_backend_timeout(
+        self, timeout: t.Union[float, int] = None
+    ) -> t.Union[float, int]:
         """
         Return the timeout value usable by this backend based upon the provided
         timeout.

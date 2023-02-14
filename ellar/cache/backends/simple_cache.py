@@ -1,4 +1,3 @@
-import asyncio
 import pickle
 import time
 import typing as t
@@ -7,6 +6,8 @@ from collections import OrderedDict
 
 from anyio import Lock
 
+from ellar.helper.event_loop import get_or_create_eventloop
+
 from ..interface import IBaseCacheBackendAsync
 from ..make_key_decorator import make_key_decorator, make_key_decorator_and_validate
 from ..model import BaseCacheBackend
@@ -14,7 +15,7 @@ from ..model import BaseCacheBackend
 
 class SimpleCacheBackendSync(IBaseCacheBackendAsync, ABC):
     def _async_executor(self, func: t.Awaitable) -> t.Any:
-        return asyncio.get_event_loop().run_until_complete(func)
+        return get_or_create_eventloop().run_until_complete(func)
 
     def get(self, key: str, version: str = None) -> t.Any:
         return self._async_executor(self.get_async(key, version=version))
@@ -24,14 +25,20 @@ class SimpleCacheBackendSync(IBaseCacheBackendAsync, ABC):
         return bool(res)
 
     def set(
-        self, key: str, value: t.Any, timeout: int = None, version: str = None
+        self,
+        key: str,
+        value: t.Any,
+        timeout: t.Union[float, int] = None,
+        version: str = None,
     ) -> bool:
         res = self._async_executor(
             self.set_async(key, value, timeout=timeout, version=version)
         )
         return bool(res)
 
-    def touch(self, key: str, timeout: int = None, version: str = None) -> bool:
+    def touch(
+        self, key: str, timeout: t.Union[float, int] = None, version: str = None
+    ) -> bool:
         res = self._async_executor(
             self.touch_async(key, timeout=timeout, version=version)
         )
@@ -72,7 +79,11 @@ class SimpleCacheBackend(SimpleCacheBackendSync, BaseCacheBackend):
 
     @make_key_decorator_and_validate
     async def set_async(
-        self, key: str, value: t.Any, timeout: int = None, version: str = None
+        self,
+        key: str,
+        value: t.Any,
+        timeout: t.Union[float, int] = None,
+        version: str = None,
     ) -> bool:
         async with self._lock:
             self._cache[key] = pickle.dumps(value, self.pickle_protocol)
@@ -93,7 +104,7 @@ class SimpleCacheBackend(SimpleCacheBackendSync, BaseCacheBackend):
 
     @make_key_decorator
     async def touch_async(
-        self, key: str, timeout: int = None, version: str = None
+        self, key: str, timeout: t.Union[float, int] = None, version: str = None
     ) -> bool:
         async with self._lock:
             if self._has_expired(key):

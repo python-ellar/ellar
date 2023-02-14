@@ -11,12 +11,16 @@ class BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
     _cache_client: t.Any
 
     @make_key_decorator
-    async def get(self, key: str, version: str = None) -> t.Any:
+    def get(self, key: str, version: str = None) -> t.Any:
         return self._cache_client.get(key)
 
     @make_key_decorator_and_validate
     def set(
-        self, key: str, value: t.Any, timeout: int = None, version: str = None
+        self,
+        key: str,
+        value: t.Any,
+        timeout: t.Union[float, int] = None,
+        version: str = None,
     ) -> bool:
         result = self._cache_client.set(
             key, value, int(self.get_backend_timeout(timeout))
@@ -34,7 +38,9 @@ class BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
         return bool(result)
 
     @make_key_decorator
-    def touch(self, key: str, timeout: int = None, version: str = None) -> bool:
+    def touch(
+        self, key: str, timeout: t.Union[float, int] = None, version: str = None
+    ) -> bool:
         result = self._cache_client.touch(key, self.get_backend_timeout(timeout))
         return bool(result)
 
@@ -83,7 +89,11 @@ class BasePylibMemcachedCache(BasePylibMemcachedCacheSync):
         return await self.executor(self.get, key)
 
     async def set_async(
-        self, key: str, value: t.Any, timeout: int = None, version: str = None
+        self,
+        key: str,
+        value: t.Any,
+        timeout: t.Union[float, int] = None,
+        version: str = None,
     ) -> bool:
         result = await self.executor(self.set, key, value, timeout)
         return bool(result)
@@ -93,7 +103,7 @@ class BasePylibMemcachedCache(BasePylibMemcachedCacheSync):
         return bool(result)
 
     async def touch_async(
-        self, key: str, timeout: int = None, version: str = None
+        self, key: str, timeout: t.Union[float, int] = None, version: str = None
     ) -> bool:
         result = await self.executor(self.touch, key, timeout)
         return bool(result)
