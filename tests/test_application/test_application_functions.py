@@ -212,7 +212,7 @@ class TestEllarApp:
 
         config = Config(STATIC_DIRECTORIES=[tmpdir])
         injector = EllarInjector()
-        CoreServiceRegistration(injector).register_all()
+        CoreServiceRegistration(injector, config=Config()).register_all()
         injector.container.register_instance(config)
         app = App(injector=injector, config=config)
         client = TestClient(app)
@@ -234,7 +234,7 @@ class TestEllarApp:
             STATIC_MOUNT_PATH="/static-modified", STATIC_DIRECTORIES=[tmpdir]
         )
         injector = EllarInjector()
-        CoreServiceRegistration(injector).register_all()
+        CoreServiceRegistration(injector, config=Config()).register_all()
         injector.container.register_instance(config)
         app = App(injector=injector, config=config)
         client = TestClient(app)
@@ -284,7 +284,7 @@ class TestEllarApp:
         injector = EllarInjector(
             auto_bind=False
         )  # will raise an exception is service is not registered
-        CoreServiceRegistration(injector).register_all()
+        CoreServiceRegistration(injector, config=Config()).register_all()
         injector.container.register_instance(config)
 
         app = App(config=config, injector=injector)
@@ -308,7 +308,7 @@ class TestEllarApp:
         injector = EllarInjector(
             auto_bind=False
         )  # will raise an exception is service is not registered
-        CoreServiceRegistration(injector).register_all()
+        CoreServiceRegistration(injector, config=Config()).register_all()
         injector.container.register_instance(config)
         app = App(config=config, injector=injector)
         app.add_exception_handler(CustomExceptionHandler())

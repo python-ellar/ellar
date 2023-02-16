@@ -75,6 +75,10 @@ test = [
     "anyio[trio] >= 3.2.1",
     "autoflake",
     "email_validator >=1.1.1",
+    "pylibmc",
+    "pymemcache",
+    "aiomcache",
+    "redis",
 
     # types
     "types-ujson ==5.7.0.0",
