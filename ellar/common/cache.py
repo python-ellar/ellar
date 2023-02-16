@@ -1,4 +1,5 @@
 import typing as t
+import uuid
 from functools import wraps
 
 from ellar.cache.interface import ICacheService
@@ -42,10 +43,10 @@ class CacheDecorator:
 
         # create extra args
         self._cache_service_arg = ExtraEndpointArg(
-            name="cache_service", annotation=ICacheService, default_value=Provide()  # type: ignore
+            name=f"cache_service_{uuid.uuid4().hex[:4]}", annotation=ICacheService, default_value=Provide()  # type: ignore
         )
         self._context_arg = ExtraEndpointArg(
-            name="route_context", annotation=IExecutionContext, default_value=Context()  # type: ignore
+            name=f"route_context_{uuid.uuid4().hex[:4]}", annotation=IExecutionContext, default_value=Context()  # type: ignore
         )
         # apply extra_args to endpoint
         extra_args(self._cache_service_arg, self._context_arg)(func)
