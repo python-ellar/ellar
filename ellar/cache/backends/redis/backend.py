@@ -1,7 +1,8 @@
-import asyncio
-import pickle
+import random
 import typing as t
 from abc import ABC
+
+from ellar.helper.event_loop import get_or_create_eventloop
 
 try:
     from redis.asyncio import Redis  # type: ignore
@@ -10,14 +11,15 @@ except ImportError as e:  # pragma: no cover
     raise RuntimeError(
         "To use `RedisCacheBackend`, you have to install 'redis' package e.g. `pip install redis`"
     ) from e
-from ..interface import IBaseCacheBackendAsync
-from ..make_key_decorator import make_key_decorator
-from ..model import BaseCacheBackend
+from ...interface import IBaseCacheBackendAsync
+from ...make_key_decorator import make_key_decorator
+from ...model import BaseCacheBackend
+from .serializer import IRedisSerializer, RedisSerializer
 
 
 class RedisCacheBackendSync(IBaseCacheBackendAsync, ABC):
     def _async_executor(self, func: t.Awaitable) -> t.Any:
-        return asyncio.get_event_loop().run_until_complete(func)
+        return get_or_create_eventloop().run_until_complete(func)
 
     def get(self, key: str, version: str = None) -> t.Any:
         return self._async_executor(self.get_async(key, version=version))
@@ -48,36 +50,58 @@ class RedisCacheBackendSync(IBaseCacheBackendAsync, ABC):
 
 
 class RedisCacheBackend(RedisCacheBackendSync, BaseCacheBackend):
-    """Redis-based cache backend."""
+    """Redis-based cache backend.
 
-    pickle_protocol: t.Any = pickle.HIGHEST_PROTOCOL
+    Redis Server Construct example::
+        backend = RedisCacheBackend(servers=['redis://[[username]:[password]]@localhost:6379/0'])
+        OR
+        backend = RedisCacheBackend(servers=['redis://[[username]:[password]]@localhost:6379/0'])
+        OR
+        backend = RedisCacheBackend(servers=['rediss://[[username]:[password]]@localhost:6379/0'])
+        OR
+        backend = RedisCacheBackend(servers=['unix://[username@]/path/to/socket.sock?db=0[&password=password]'])
+
+    """
 
     def __init__(
         self,
-        url: str = "localhost",
-        db: int = None,
-        port: int = None,
-        username: str = None,
-        password: str = None,
+        servers: t.List[str],
         options: t.Dict = None,
-        serializer: t.Callable = pickle.dumps,
-        deserializer: t.Callable = pickle.loads,
+        serializer: IRedisSerializer = None,
         **kwargs: t.Any
     ) -> None:
         super().__init__(**kwargs)
 
-        self._cache_client_init: Redis = None
+        self._pools: t.Dict[int, ConnectionPool] = {}
+        self._servers = servers
         _default_options = options or {}
         self._options = {
-            "url": url,
-            "db": db,
-            "port": port,
-            "username": username,
-            "password": password,
             **_default_options,
         }
-        self._serializer = serializer
-        self._deserializer = deserializer
+        self._serializer = serializer or RedisSerializer()
+
+    def _get_connection_pool_index(self, write: bool) -> int:
+        # Write to the first server. Read from other servers if there are more,
+        # otherwise read from the first server.
+        if write or len(self._servers) == 1:
+            return 0
+        return random.randint(1, len(self._servers) - 1)
+
+    def _get_connection_pool(self, write: bool) -> ConnectionPool:
+        index = self._get_connection_pool_index(write)
+        if index not in self._pools:
+            self._pools[index] = ConnectionPool.from_url(
+                self._servers[index],
+                **self._options,
+            )
+        return self._pools[index]
+
+    def _get_client(self, *, write: bool = False) -> Redis:
+        # key is used so that the method signature remains the same and custom
+        # cache client can be implemented which might require the key to select
+        # the server, e.g. sharding.
+        pool = self._get_connection_pool(write)
+        return Redis(connection_pool=pool)
 
     def get_backend_timeout(
         self, timeout: t.Union[float, int] = None
@@ -88,21 +112,12 @@ class RedisCacheBackend(RedisCacheBackendSync, BaseCacheBackend):
         # Non-positive values will cause the key to be deleted.
         return None if timeout is None else max(0, int(timeout))
 
-    @property
-    def _cache_client(self) -> Redis:
-        """
-        Implement transparent thread-safe access to a memcached client.
-        """
-        if self._cache_client_init is None:
-            pool = ConnectionPool.from_url(**self._options)
-            self._redis_int = Redis(connection_pool=pool)
-        return self._cache_client_init
-
     @make_key_decorator
     async def get_async(self, key: str, version: str = None) -> t.Any:
-        value = await self._cache_client.get(key)
+        client = self._get_client()
+        value = await client.get(key)
         if value:
-            return self._deserializer(value)
+            return self._serializer.load(value)
         return None
 
     @make_key_decorator
@@ -113,27 +128,26 @@ class RedisCacheBackend(RedisCacheBackendSync, BaseCacheBackend):
         timeout: t.Union[float, int] = None,
         version: str = None,
     ) -> bool:
-        value = self._serializer(value, self.pickle_protocol)
+        client = self._get_client()
+        value = self._serializer.dumps(value)
         if timeout == 0:
-            await self._cache_client.delete(key)
+            await client.delete(key)
 
-        return bool(
-            await self._cache_client.set(
-                key, value, ex=self.get_backend_timeout(timeout)
-            )
-        )
+        return bool(await client.set(key, value, ex=self.get_backend_timeout(timeout)))
 
     @make_key_decorator
     async def delete_async(self, key: str, version: str = None) -> bool:
-        result = await self._cache_client.delete(key)
+        client = self._get_client()
+        result = await client.delete(key)
         return bool(result)
 
     @make_key_decorator
     async def touch_async(
         self, key: str, timeout: t.Union[float, int] = None, version: str = None
     ) -> bool:
+        client = self._get_client()
         if timeout is None:
-            res = await self._cache_client.persist(key)
+            res = await client.persist(key)
             return bool(res)
-        res = await self._cache_client.expire(key, self.get_backend_timeout(timeout))
+        res = await client.expire(key, self.get_backend_timeout(timeout))
         return bool(res)

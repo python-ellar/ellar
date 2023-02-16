@@ -2,7 +2,7 @@ import typing as t
 
 from ellar.di import injectable
 
-from .backends.simple_cache import SimpleCacheBackend
+from .backends.local_cache import LocalMemCacheBackend
 from .interface import ICacheService, ICacheServiceSync
 from .model import BaseCacheBackend
 
@@ -52,7 +52,7 @@ class CacheService(CacheServiceSync, ICacheService):
                 "default"
             ), "CACHES configuration must have a 'default' key."
         self._backends = backends or {
-            "default": SimpleCacheBackend(key_prefix="ellar", version=1, timeout=300)
+            "default": LocalMemCacheBackend(key_prefix="ellar", version=1, timeout=300)
         }
 
     def _get_backend(self, backend: str = None) -> BaseCacheBackend:

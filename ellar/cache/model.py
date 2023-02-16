@@ -27,13 +27,13 @@ class BaseCacheBackend(IBaseCacheBackendSync, IBaseCacheBackendAsync, ABC):
         """
         Return True if the key is in the cache and has not expired.
         """
-        return await self.get_async(key, version) is not None
+        return await self.get_async(key, version=version) is not None
 
     def has_key(self, key: str, version: str = None) -> bool:
         """
         Return True if the key is in the cache and has not expired.
         """
-        return self.get(key, version) is not None
+        return self.get(key, version=version) is not None
 
     def validate_key(self, key: str) -> None:
         if len(key) > self.MEMCACHE_MAX_KEY_LENGTH:

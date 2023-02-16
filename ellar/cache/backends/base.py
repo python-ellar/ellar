@@ -86,7 +86,7 @@ class BasePylibMemcachedCache(BasePylibMemcachedCacheSync):
         return await run_in_threadpool(func, *args, **kwargs)
 
     async def get_async(self, key: str, version: str = None) -> t.Any:
-        return await self.executor(self.get, key)
+        return await self.executor(self.get, key, version=version)
 
     async def set_async(
         self,
@@ -95,17 +95,19 @@ class BasePylibMemcachedCache(BasePylibMemcachedCacheSync):
         timeout: t.Union[float, int] = None,
         version: str = None,
     ) -> bool:
-        result = await self.executor(self.set, key, value, timeout)
+        result = await self.executor(
+            self.set, key, value, timeout=timeout, version=version
+        )
         return bool(result)
 
     async def delete_async(self, key: str, version: str = None) -> bool:
-        result = await self.executor(self.delete, key, version)
+        result = await self.executor(self.delete, key, version=version)
         return bool(result)
 
     async def touch_async(
         self, key: str, timeout: t.Union[float, int] = None, version: str = None
     ) -> bool:
-        result = await self.executor(self.touch, key, timeout)
+        result = await self.executor(self.touch, key, timeout=timeout, version=version)
         return bool(result)
 
     async def close_async(self, **kwargs: t.Any) -> None:

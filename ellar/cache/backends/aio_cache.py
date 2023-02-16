@@ -83,7 +83,7 @@ class AioMemCacheBackend(AioMemCacheBackendSync, BaseCacheBackend):
 
     @make_key_decorator
     async def get_async(self, key: str, version: str = None) -> t.Optional[t.Any]:
-        value = await self._cache_client.get(key=key.encode("utf-8"))
+        value = await self._cache_client.get(key.encode("utf-8"))
         if value:
             return self._deserializer(value)
         return None  # pragma: no cover
@@ -104,12 +104,12 @@ class AioMemCacheBackend(AioMemCacheBackendSync, BaseCacheBackend):
 
     @make_key_decorator
     async def delete_async(self, key: str, version: str = None) -> bool:
-        return await self._cache_client.delete(key=key.encode("utf-8"))
+        return await self._cache_client.delete(key.encode("utf-8"))
 
     @make_key_decorator
     async def touch_async(
         self, key: str, timeout: t.Union[float, int] = None, version: str = None
     ) -> bool:
         return await self._cache_client.touch(
-            key=key.encode("utf-8"), exptime=self.get_backend_timeout(timeout)
+            key.encode("utf-8"), exptime=self.get_backend_timeout(timeout)
         )
