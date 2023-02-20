@@ -7,11 +7,11 @@ class IRedisSerializer(ABC):
     default_protocol: int = pickle.HIGHEST_PROTOCOL
 
     @abstractmethod
-    def load(self, data: t.Any) -> t.Any:
+    def load(self, data: t.Any) -> t.Any:  # pragma: no cover
         ...
 
     @abstractmethod
-    def dumps(self, data: t.Any) -> t.Any:
+    def dumps(self, data: t.Any) -> t.Any:  # pragma: no cover
         ...
 
 
@@ -26,7 +26,7 @@ class RedisSerializer(IRedisSerializer):
             return pickle.loads(data)
 
     def dumps(self, data: t.Any) -> t.Any:
-        # Only skip pickling for integers, a int subclasses as bool should be
+        # Only skip pickling for integers, an int subclasses as bool should be
         # pickled.
         if type(data) is int:
             return data

@@ -3,18 +3,17 @@ from time import sleep
 import pytest
 
 from ellar.cache.backends.aio_cache import AioMemCacheBackend
+from ellar.cache.model import CacheKeyWarning
 
 from .redis_mock import MockAsyncMemCacheClient
 
 
 class AioMemCacheBackendMock(AioMemCacheBackend):
-    @property
-    def _cache_client(self):
-        if self._client is None:
-            self._client = MockAsyncMemCacheClient(
-                **self._client_options, time_lookup="exptime"
-            )
-        return self._client
+    MEMCACHE_CLIENT = MockAsyncMemCacheClient
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._client_options.update(time_lookup="exptime")
 
 
 @pytest.mark.asyncio
@@ -28,7 +27,7 @@ async def test_aio_memcache_backend() -> None:
     assert not value
 
 
-class TestRedisCacheBackend:
+class TestAioMemCacheBackend:
     def setup(self):
         self.backend = AioMemCacheBackendMock(host="localhost", port=11211, pool_size=4)
 
@@ -54,8 +53,19 @@ class TestRedisCacheBackend:
         sleep(0.22)
         assert self.backend.get("test-touch") == "1"
 
+    def test_invalid_key_length(self):
+        # memcached limits key length to 250.
+        key = ("a" * 250) + "清"
+        expected_warning = (
+            "Cache key will cause errors if used with memcached: "
+            "%r (longer than %s)" % (key, self.backend.MEMCACHE_MAX_KEY_LENGTH)
+        )
+        with pytest.warns(CacheKeyWarning) as wa:
+            self.backend.set(key, "value")
+        assert str(wa.list[0].message) == str(CacheKeyWarning(expected_warning))
 
-class TestRedisCacheBackendAsync:
+
+class TestAioMemCacheBackendAsync:
     def setup(self):
         self.backend = AioMemCacheBackendMock(host="localhost", port=11211, pool_size=4)
 
@@ -68,9 +78,7 @@ class TestRedisCacheBackendAsync:
         assert value == "1"
 
     @pytest.mark.asyncio
-    async def test_has_key_async(
-        self,
-    ):
+    async def test_has_key_async(self):
         assert not await self.backend.has_key_async("test-has-key")
         assert await self.backend.set_async("test-has-key", "1", 1)
         assert await self.backend.has_key_async("test-has-key")
@@ -84,9 +92,7 @@ class TestRedisCacheBackendAsync:
         assert await self.backend.delete_async("test-delete")
 
     @pytest.mark.asyncio
-    async def test_touch_async(
-        self,
-    ):
+    async def test_touch_async(self):
         assert not await self.backend.touch_async("test-touch")
         assert await self.backend.set_async("test-touch", "1", 0.1)
         assert await self.backend.touch_async("test-touch", 30)

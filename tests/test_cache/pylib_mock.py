@@ -45,3 +45,13 @@ class MockClient(Client):
 
     def disconnect_all(self, *args, **kwargs):
         return None
+
+    def flush_all(self):
+        self._cache.clear()
+
+
+class MockSetFailureClient(MockClient):
+    def set(self, *args, **kwargs):
+        key, value, _time = args
+        self._cache[key] = (value, _time)
+        return False

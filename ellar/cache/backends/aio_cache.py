@@ -13,7 +13,7 @@ except ImportError as e:  # pragma: no cover
 
 
 from ..interface import IBaseCacheBackendAsync
-from ..make_key_decorator import make_key_decorator
+from ..make_key_decorator import make_key_decorator, make_key_decorator_and_validate
 from ..model import BaseCacheBackend
 
 
@@ -53,6 +53,7 @@ class AioMemCacheBackend(AioMemCacheBackendSync, BaseCacheBackend):
     """Memcached-based cache backend."""
 
     pickle_protocol = pickle.HIGHEST_PROTOCOL
+    MEMCACHE_CLIENT: t.Type = Client
 
     def __init__(
         self,
@@ -78,7 +79,7 @@ class AioMemCacheBackend(AioMemCacheBackendSync, BaseCacheBackend):
     @property
     def _cache_client(self) -> Client:
         if self._client is None:
-            self._client = Client(**self._client_options)
+            self._client = self.MEMCACHE_CLIENT(**self._client_options)
         return self._client
 
     @make_key_decorator
@@ -88,7 +89,7 @@ class AioMemCacheBackend(AioMemCacheBackendSync, BaseCacheBackend):
             return self._deserializer(value)
         return None  # pragma: no cover
 
-    @make_key_decorator
+    @make_key_decorator_and_validate
     async def set_async(
         self,
         key: str,

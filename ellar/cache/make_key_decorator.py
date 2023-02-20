@@ -29,9 +29,9 @@ class MakeKeyDecorator:
             version: str = None,
             **kwargs: t.Any
         ) -> t.Any:
-            _key = instance.make_key(key, version=version)
             if self._validate:
-                instance.validate_key(_key)
+                instance.validate_key(key)
+            _key = instance.make_key(key, version=version)
             return await self._func(instance, _key, *args, version=version, **kwargs)
 
         return _wrap
@@ -45,9 +45,9 @@ class MakeKeyDecorator:
             version: str = None,
             **kwargs: t.Any
         ) -> t.Any:
-            _key = instance.make_key(key, version=version)
             if self._validate:
-                instance.validate_key(_key)
+                instance.validate_key(key)
+            _key = instance.make_key(key, version=version)
             return self._func(instance, _key, *args, version=version, **kwargs)
 
         return _wrap

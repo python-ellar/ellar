@@ -12,7 +12,7 @@ except ImportError as e:  # pragma: no cover
         "To use `RedisCacheBackend`, you have to install 'redis' package e.g. `pip install redis`"
     ) from e
 from ...interface import IBaseCacheBackendAsync
-from ...make_key_decorator import make_key_decorator
+from ...make_key_decorator import make_key_decorator, make_key_decorator_and_validate
 from ...model import BaseCacheBackend
 from .serializer import IRedisSerializer, RedisSerializer
 
@@ -50,6 +50,7 @@ class RedisCacheBackendSync(IBaseCacheBackendAsync, ABC):
 
 
 class RedisCacheBackend(RedisCacheBackendSync, BaseCacheBackend):
+    MEMCACHE_CLIENT: t.Any = Redis
     """Redis-based cache backend.
 
     Redis Server Construct example::
@@ -101,7 +102,7 @@ class RedisCacheBackend(RedisCacheBackendSync, BaseCacheBackend):
         # cache client can be implemented which might require the key to select
         # the server, e.g. sharding.
         pool = self._get_connection_pool(write)
-        return Redis(connection_pool=pool)
+        return self.MEMCACHE_CLIENT(connection_pool=pool)
 
     def get_backend_timeout(
         self, timeout: t.Union[float, int] = None
@@ -120,7 +121,7 @@ class RedisCacheBackend(RedisCacheBackendSync, BaseCacheBackend):
             return self._serializer.load(value)
         return None
 
-    @make_key_decorator
+    @make_key_decorator_and_validate
     async def set_async(
         self,
         key: str,

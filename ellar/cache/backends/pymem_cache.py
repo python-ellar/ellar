@@ -16,7 +16,9 @@ from .base import BasePylibMemcachedCache
 class PyMemcacheCacheBackend(BasePylibMemcachedCache):
     """An implementation of a cache binding using pymemcache."""
 
-    def __init__(self, server: t.List[str], options: t.Dict = None, **kwargs: t.Any):
+    MEMCACHE_CLIENT = HashClient
+
+    def __init__(self, servers: t.List[str], options: t.Dict = None, **kwargs: t.Any):
 
         _default_options = options or {}
 
@@ -27,6 +29,4 @@ class PyMemcacheCacheBackend(BasePylibMemcachedCache):
             **_default_options,
         }
 
-        super().__init__(
-            server, library_client_type=HashClient, options=_options, **kwargs
-        )
+        super().__init__(servers, options=_options, **kwargs)

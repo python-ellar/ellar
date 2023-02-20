@@ -3,14 +3,13 @@ from time import sleep
 import pytest
 
 from ellar.cache.backends.redis import RedisCacheBackend
+from ellar.cache.model import CacheKeyWarning
 
 from .redis_mock import MockRedisClient
 
 
 class RedisCacheBackendMock(RedisCacheBackend):
-    def _get_client(self, *, write: bool = False) -> MockRedisClient:
-        pool = self._get_connection_pool(write)
-        return MockRedisClient(connection_pool=pool)
+    MEMCACHE_CLIENT = MockRedisClient
 
 
 @pytest.mark.asyncio
@@ -26,7 +25,13 @@ async def test_redis_backend() -> None:
 
 class TestRedisCacheBackend:
     def setup(self):
-        self.backend = RedisCacheBackendMock(servers=["redis://localhost:6379/0"])
+        self.backend = RedisCacheBackendMock(
+            servers=[
+                "redis://localhost:6379/0",
+                "redis://localhost:6379/1",
+                "redis://localhost:6379/2",
+            ]
+        )
 
     def test_set(self):
         assert self.backend.set("test", "1", 1)
@@ -50,10 +55,31 @@ class TestRedisCacheBackend:
         sleep(0.22)
         assert self.backend.get("test-touch") == "1"
 
+    def test_pickling_int_values_is_skipped(self):
+        assert self.backend.set("test-int-key", 1, 1)
+        assert self.backend.get("test-int-key") == 1
+
+    def test_invalid_key_length(self):
+        # memcached limits key length to 250.
+        key = ("a" * 250) + "清"
+        expected_warning = (
+            "Cache key will cause errors if used with memcached: "
+            "%r (longer than %s)" % (key, self.backend.MEMCACHE_MAX_KEY_LENGTH)
+        )
+        with pytest.warns(CacheKeyWarning) as wa:
+            self.backend.set(key, "value")
+        assert str(wa.list[0].message) == str(CacheKeyWarning(expected_warning))
+
 
 class TestRedisCacheBackendAsync:
     def setup(self):
-        self.backend = RedisCacheBackendMock(servers=["redis://localhost:6379/0"])
+        self.backend = RedisCacheBackendMock(
+            servers=[
+                "redis://localhost:6379/0",
+                "redis://localhost:6379/1",
+                "redis://localhost:6379/2",
+            ]
+        )
 
     @pytest.mark.asyncio
     async def test_set_async(
@@ -88,3 +114,29 @@ class TestRedisCacheBackendAsync:
         assert await self.backend.touch_async("test-touch", 30)
         sleep(0.22)
         assert await self.backend.get_async("test-touch") == "1"
+
+    @pytest.mark.asyncio
+    async def test_zero_timeout_deletes_old_value_if_any(self):
+        delete_called = False
+        set_called = False
+
+        class DemoCacheClient:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            async def delete(self, *args, **kwargs):
+                nonlocal delete_called
+                delete_called = True
+                return True
+
+            async def set(self, *args, **kwargs):
+                nonlocal set_called
+                set_called = True
+                return True
+
+        class DemoMemCachedBackend(RedisCacheBackend):
+            MEMCACHE_CLIENT = DemoCacheClient
+
+        backend = DemoMemCachedBackend(servers=["redis://localhost:6379/0"])
+        await backend.set_async("zero", "value", timeout=0)
+        assert set_called and delete_called

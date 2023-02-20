@@ -29,6 +29,10 @@ class TestLocalMemCacheBackend:
         sleep(0.22)
         assert self.backend.get("test-touch") == "1"
 
+    def test_cache_zero_timeout_expires_immediately(self):
+        assert self.backend.set("test-touch", 1, 0)
+        assert self.backend.get("test-touch") is None
+
 
 class TestLocalMemCacheBackendAsync:
     def setup(self):

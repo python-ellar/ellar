@@ -53,23 +53,14 @@ class BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
 
 
 class BasePylibMemcachedCache(BasePylibMemcachedCacheSync):
-    def __init__(
-        self,
-        server: t.List[str],
-        library_client_type: t.Type,
-        options: t.Dict = None,
-        **kwargs: t.Any
-    ):
-        super().__init__(**kwargs)
-        self._servers = server
+    MEMCACHE_CLIENT: t.Type
 
-        self._cache_client_class: t.Type = library_client_type
+    def __init__(self, servers: t.List[str], options: t.Dict = None, **kwargs: t.Any):
+        super().__init__(**kwargs)
+        self._servers = servers
+
         self._cache_client_init: t.Any = None
         self._options = options or {}
-
-    @property
-    def client_servers(self) -> t.List[str]:
-        return self._servers
 
     @property
     def _cache_client(self) -> t.Any:
@@ -77,8 +68,8 @@ class BasePylibMemcachedCache(BasePylibMemcachedCacheSync):
         Implement transparent thread-safe access to a memcached client.
         """
         if self._cache_client_init is None:
-            self._cache_client_init = self._cache_client_class(
-                self.client_servers, **self._options
+            self._cache_client_init = self.MEMCACHE_CLIENT(
+                self._servers, **self._options
             )
         return self._cache_client_init
 
