@@ -93,18 +93,30 @@ def test_configuration_settings_can_be_loaded_through_constructor():
     assert config.REDIRECT_SLASHES is True
     assert config.STATIC_MOUNT_PATH == "/static-changed"
 
+    config.set_defaults(
+        DEBUG=False, SECRET_KEY="your-secret-key-changed-again", NEW_KEY="Some new key"
+    )
+    assert config.DEBUG  # not changed
+    assert config.SECRET_KEY == "your-secret-key-changed"  # not changed
+    assert config.NEW_KEY == "Some new key"  # Added since its doesn't exist
+
 
 def test_configuration_can_be_changed_during_instantiation():
+    def int_encode(value):
+        pass
+
     config = Config(
         config_module=overriding_settings_path,
         DEBUG=False,
         SOME_NEW_CONFIGS="some new configuration values",
         JINJA_TEMPLATES_OPTIONS={"auto_reload": False},
+        SERIALIZER_CUSTOM_ENCODER={int: int_encode},
     )
 
     assert config.DEBUG is False
     assert config.JINJA_TEMPLATES_OPTIONS == {"auto_reload": False}
     assert config.SOME_NEW_CONFIGS == "some new configuration values"
+    assert config.SERIALIZER_CUSTOM_ENCODER[int] == int_encode
 
 
 def test_can_set_defaults_a_configuration_instance_once():

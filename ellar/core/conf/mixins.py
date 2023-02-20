@@ -52,9 +52,9 @@ class TExceptionHandler:
             return v
 
         if inspect.isclass(v):
-            raise ValueError(f"Expected TExceptionHandler, received: {v}")
+            raise ValueError(f"Expected 'ExceptionHandler', received: {v}")
 
-        raise ValueError(f"Expected TExceptionHandler, received: {type(v)}")
+        raise ValueError(f"Expected 'ExceptionHandler', received: {type(v)}")
 
 
 class TVersioning(BaseAPIVersioning):
@@ -81,7 +81,9 @@ class TMiddleware(Middleware):
     @classmethod
     def validate(cls: t.Type["Middleware"], v: t.Any) -> t.Any:
         if not isinstance(v, Middleware):
-            raise ValueError(f"Expected Middleware, received: {type(v)}")
+            raise ValueError(
+                f"Expected Type/instance of Middleware, received: {type(v)}"
+            )
         return v
 
 

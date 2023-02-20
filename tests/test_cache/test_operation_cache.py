@@ -53,8 +53,9 @@ def test_cache_for_async_route_function_return_data():
             mr,
         ]
     ).get_client()
-
     res = client.get("/index")
+    for i in range(2):
+        res = client.get("/index")
 
     assert res.json() == dict(message="Response Information cached Async")
     assert res.status_code == 200
