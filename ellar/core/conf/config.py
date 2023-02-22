@@ -50,7 +50,7 @@ class Config(DataMutableMapper, AttributeDictAccessMixin, ConfigDefaultTypesMixi
             self._data.setdefault(k, v)
         return self
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         hidden_values = {key: "..." for key in self._data.keys()}
         return f"<Configuration {repr(hidden_values)}, settings_module: {self.config_module}>"
 

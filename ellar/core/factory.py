@@ -97,9 +97,9 @@ class AppFactory:
 
         config = Config(app_configured=True, config_module=config_module)
         injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND)
-
-        CoreServiceRegistration(injector).register_all()
         injector.container.register_instance(config, concrete_type=Config)
+        CoreServiceRegistration(injector, config).register_all()
+
         cls._build_modules(app_module=module, injector=injector, config=config)
 
         shutdown_event = config.ON_REQUEST_STARTUP

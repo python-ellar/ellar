@@ -74,12 +74,14 @@ def error_500(ctx: IHostContext, exc: Exception):
 
 def test_invalid_handler_raise_exception():
     with pytest.raises(ValidationError) as ex:
-        Config(EXCEPTION_HANDLERS=[InvalidExceptionHandler])
+        Config(
+            EXCEPTION_HANDLERS=[InvalidExceptionHandler, OverrideAPIExceptionHandler()]
+        )
 
     assert ex.value.errors() == [
         {
             "loc": ("EXCEPTION_HANDLERS", 0),
-            "msg": "Expected TExceptionHandler, received: <class 'tests.test_exceptions.test_custom_exceptions.InvalidExceptionHandler'>",
+            "msg": "Expected 'ExceptionHandler', received: <class 'tests.test_exceptions.test_custom_exceptions.InvalidExceptionHandler'>",
             "type": "value_error",
         }
     ]
@@ -90,7 +92,7 @@ def test_invalid_handler_raise_exception():
     assert ex.value.errors() == [
         {
             "loc": ("EXCEPTION_HANDLERS", 0),
-            "msg": "Expected TExceptionHandler, received: "
+            "msg": "Expected 'ExceptionHandler', received: "
             "<class 'tests.test_exceptions.test_custom_exceptions.InvalidExceptionHandler'>",
             "type": "value_error",
         }
@@ -114,7 +116,7 @@ def test_invalid_exception_type_setup_raise_exception():
             exception_type_or_code = ""
 
             def catch(self, ctx: IHostContext, exc: t.Any) -> t.Union[Response, t.Any]:
-                pass
+                """do nothing"""
 
         assert "'exception_type_or_code' must be defined" in str(ex.value)
 
@@ -124,7 +126,7 @@ def test_invalid_exception_type_setup_raise_exception():
             exception_type_or_code = InvalidExceptionHandler
 
             def catch(self, ctx: IHostContext, exc: t.Any) -> t.Union[Response, t.Any]:
-                pass
+                """do nothing"""
 
         assert "'exception_type_or_code' is not a valid type" in str(ex.value)
 

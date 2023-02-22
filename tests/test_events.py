@@ -1,6 +1,7 @@
 import pytest
 
 from ellar.constants import NOT_SET
+from ellar.core import Config
 from ellar.core.events import EventHandler, RouterEventManager
 
 
@@ -54,3 +55,15 @@ async def test_router_event_manager():
     route_manager -= valid_function_2
 
     assert len(route_manager) == 1
+
+
+async def test_valid_event_config(anyio_backend):
+    called = 0
+
+    def valid_function_1():
+        nonlocal called
+        called += 1
+
+    config = Config(ON_REQUEST_STARTUP=[EventHandler(valid_function_1)])
+    await config.ON_REQUEST_STARTUP[0].run()
+    assert called == 1
