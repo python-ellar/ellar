@@ -12,14 +12,14 @@ class InvalidCacheBackendKeyException(Exception):
 
 
 class _CacheServiceSync(ICacheServiceSync):
-    _get_backend: t.Callable[..., BaseCacheBackend]
+    get_backend: t.Callable[..., BaseCacheBackend]
 
     def get(self, key: str, version: str = None, backend: str = None) -> t.Any:
-        _backend = self._get_backend(backend)
+        _backend = self.get_backend(backend)
         return _backend.get(key, version=version)
 
     def delete(self, key: str, version: str = None, backend: str = None) -> bool:
-        _backend = self._get_backend(backend)
+        _backend = self.get_backend(backend)
         return _backend.delete(key, version=version)
 
     def set(
@@ -30,7 +30,7 @@ class _CacheServiceSync(ICacheServiceSync):
         version: str = None,
         backend: str = None,
     ) -> bool:
-        _backend = self._get_backend(backend)
+        _backend = self.get_backend(backend)
         return _backend.set(key, value, version=version, timeout=timeout)
 
     def touch(
@@ -40,11 +40,11 @@ class _CacheServiceSync(ICacheServiceSync):
         version: str = None,
         backend: str = None,
     ) -> bool:
-        _backend = self._get_backend(backend)
+        _backend = self.get_backend(backend)
         return _backend.touch(key, version=version, timeout=timeout)
 
     def has_key(self, key: str, version: str = None, backend: str = None) -> bool:
-        _backend = self._get_backend(backend)
+        _backend = self.get_backend(backend)
         return _backend.has_key(key, version=version)
 
 
