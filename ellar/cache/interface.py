@@ -1,6 +1,9 @@
 import typing as t
 from abc import ABC, abstractmethod
 
+if t.TYPE_CHECKING:
+    from ellar.cache.model import BaseCacheBackend
+
 
 class IBaseCacheBackendAsync(ABC):
     @abstractmethod
@@ -238,3 +241,10 @@ class ICacheServiceAsync(ABC):
 
 class ICacheService(ICacheServiceSync, ICacheServiceAsync, ABC):
     """Cache Service Interface"""
+
+    def get_backend(self, backend: str = None) -> "BaseCacheBackend":
+        """
+        Return a given Cache Backend configured by configuration backend name.
+        :param backend: Cache Backend configuration name. If not set, 'default' backend will be returned
+        :return: BaseCacheBackend
+        """

@@ -3,7 +3,7 @@ import uuid
 from functools import wraps
 
 from ellar.cache.interface import ICacheService
-from ellar.core import IExecutionContext
+from ellar.core import ExecutionContext, IExecutionContext
 from ellar.core.params import ExtraEndpointArg
 from ellar.helper import is_async_callable
 
@@ -59,9 +59,7 @@ class CacheDecorator:
             return self.get_async_cache_wrapper()
         return self.get_cache_wrapper()
 
-    def route_cache_make_key(
-        self, context: IExecutionContext, key_prefix: str = ""
-    ) -> str:
+    def route_cache_make_key(self, context: IExecutionContext, key_prefix: str) -> str:
         """Defaults key generator for caching view"""
         connection = context.switch_to_http_connection()
         return f"{connection.get_client().url}:{key_prefix or 'view'}"
@@ -73,7 +71,11 @@ class CacheDecorator:
         async def _async_wrapper(*args: t.Any, **kwargs: t.Any) -> t.Any:
             cache_service: ICacheService = self._cache_service_arg.resolve(kwargs)
             context: IExecutionContext = self._context_arg.resolve(kwargs)
-            key = self._make_key_callback(context, self._key_prefix or "")
+
+            backend = cache_service.get_backend(backend=self._backend)
+            key = self._make_key_callback(
+                context, self._key_prefix or backend.key_prefix
+            )
 
             cached_value = await cache_service.get_async(
                 key, self._version, backend=self._backend
@@ -99,9 +101,12 @@ class CacheDecorator:
         @wraps(self._func)
         def _wrapper(*args: t.Any, **kwargs: t.Any) -> t.Any:
             cache_service: ICacheService = self._cache_service_arg.resolve(kwargs)
-
             context: IExecutionContext = self._context_arg.resolve(kwargs)
-            key = self._make_key_callback(context, self._key_prefix or "")
+
+            backend = cache_service.get_backend(backend=self._backend)
+            key = self._make_key_callback(
+                context, self._key_prefix or backend.key_prefix
+            )
 
             cached_value = cache_service.get(key, self._version, backend=self._backend)
             if cached_value:
@@ -126,7 +131,9 @@ def cache(
     key_prefix: str = "",
     version: str = None,
     backend: str = "default",
-    make_key_callback: t.Callable[[IExecutionContext, str], str] = None,
+    make_key_callback: t.Callable[
+        [t.Union[ExecutionContext, IExecutionContext], str], str
+    ] = None,
 ) -> t.Callable:
     def _wraps(func: t.Callable) -> t.Callable:
         cache_decorator = CacheDecorator(

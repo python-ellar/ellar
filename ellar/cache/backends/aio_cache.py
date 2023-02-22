@@ -17,7 +17,7 @@ from ..make_key_decorator import make_key_decorator, make_key_decorator_and_vali
 from ..model import BaseCacheBackend
 
 
-class AioMemCacheBackendSync(IBaseCacheBackendAsync, ABC):
+class _AioMemCacheBackendSync(IBaseCacheBackendAsync, ABC):
     def _async_executor(self, func: t.Awaitable) -> t.Any:
         return get_or_create_eventloop().run_until_complete(func)
 
@@ -49,7 +49,7 @@ class AioMemCacheBackendSync(IBaseCacheBackendAsync, ABC):
         return bool(res)
 
 
-class AioMemCacheBackend(AioMemCacheBackendSync, BaseCacheBackend):
+class AioMemCacheBackend(_AioMemCacheBackendSync, BaseCacheBackend):
     """Memcached-based cache backend."""
 
     pickle_protocol = pickle.HIGHEST_PROTOCOL

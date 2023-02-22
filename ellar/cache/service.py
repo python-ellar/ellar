@@ -7,7 +7,11 @@ from .interface import ICacheService, ICacheServiceSync
 from .model import BaseCacheBackend
 
 
-class CacheServiceSync(ICacheServiceSync):
+class InvalidCacheBackendKeyException(Exception):
+    pass
+
+
+class _CacheServiceSync(ICacheServiceSync):
     _get_backend: t.Callable[..., BaseCacheBackend]
 
     def get(self, key: str, version: str = None, backend: str = None) -> t.Any:
@@ -45,7 +49,11 @@ class CacheServiceSync(ICacheServiceSync):
 
 
 @injectable  # type: ignore
-class CacheService(CacheServiceSync, ICacheService):
+class CacheService(_CacheServiceSync, ICacheService):
+    """
+    A Cache Backend Service that wraps Ellar cache backends
+    """
+
     def __init__(self, backends: t.Dict[str, BaseCacheBackend] = None) -> None:
         if backends:
             assert backends.get(
@@ -55,20 +63,25 @@ class CacheService(CacheServiceSync, ICacheService):
             "default": LocalMemCacheBackend(key_prefix="ellar", version=1, timeout=300)
         }
 
-    def _get_backend(self, backend: str = None) -> BaseCacheBackend:
+    def get_backend(self, backend: str = None) -> BaseCacheBackend:
         _backend = backend or "default"
-        return self._backends[_backend]
+        try:
+            return self._backends[_backend]
+        except KeyError:
+            raise InvalidCacheBackendKeyException(
+                f"There is no backend configured with the name: '{_backend}'"
+            )
 
     async def get_async(
         self, key: str, version: str = None, backend: str = None
     ) -> t.Any:
-        _backend = self._get_backend(backend)
+        _backend = self.get_backend(backend)
         return await _backend.get_async(key, version=version)
 
     async def delete_async(
         self, key: str, version: str = None, backend: str = None
     ) -> bool:
-        _backend = self._get_backend(backend)
+        _backend = self.get_backend(backend)
         return bool(await _backend.delete_async(key, version=version))
 
     async def set_async(
@@ -79,7 +92,7 @@ class CacheService(CacheServiceSync, ICacheService):
         version: str = None,
         backend: str = None,
     ) -> bool:
-        _backend = self._get_backend(backend)
+        _backend = self.get_backend(backend)
         return await _backend.set_async(key, value, timeout=timeout, version=version)
 
     async def touch_async(
@@ -89,11 +102,11 @@ class CacheService(CacheServiceSync, ICacheService):
         version: str = None,
         backend: str = None,
     ) -> bool:
-        _backend = self._get_backend(backend)
+        _backend = self.get_backend(backend)
         return await _backend.touch_async(key, timeout=timeout, version=version)
 
     async def has_key_async(
         self, key: str, version: str = None, backend: str = None
     ) -> bool:
-        _backend = self._get_backend(backend)
+        _backend = self.get_backend(backend)
         return await _backend.has_key_async(key, version=version)

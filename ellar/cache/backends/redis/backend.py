@@ -17,7 +17,7 @@ from ...model import BaseCacheBackend
 from .serializer import IRedisSerializer, RedisSerializer
 
 
-class RedisCacheBackendSync(IBaseCacheBackendAsync, ABC):
+class _RedisCacheBackendSync(IBaseCacheBackendAsync, ABC):
     def _async_executor(self, func: t.Awaitable) -> t.Any:
         return get_or_create_eventloop().run_until_complete(func)
 
@@ -49,7 +49,7 @@ class RedisCacheBackendSync(IBaseCacheBackendAsync, ABC):
         return bool(res)
 
 
-class RedisCacheBackend(RedisCacheBackendSync, BaseCacheBackend):
+class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
     MEMCACHE_CLIENT: t.Any = Redis
     """Redis-based cache backend.
 

@@ -7,7 +7,7 @@ from ..make_key_decorator import make_key_decorator, make_key_decorator_and_vali
 from ..model import BaseCacheBackend
 
 
-class BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
+class _BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
     _cache_client: t.Any
 
     @make_key_decorator
@@ -52,7 +52,7 @@ class BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
         self._cache_client.flush_all()
 
 
-class BasePylibMemcachedCache(BasePylibMemcachedCacheSync):
+class BasePylibMemcachedCache(_BasePylibMemcachedCacheSync):
     MEMCACHE_CLIENT: t.Type
 
     def __init__(self, servers: t.List[str], options: t.Dict = None, **kwargs: t.Any):

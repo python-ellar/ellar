@@ -13,7 +13,7 @@ from ..make_key_decorator import make_key_decorator, make_key_decorator_and_vali
 from ..model import BaseCacheBackend
 
 
-class LocalMemCacheBackendSync(IBaseCacheBackendAsync, ABC):
+class _LocalMemCacheBackendSync(IBaseCacheBackendAsync, ABC):
     def _async_executor(self, func: t.Awaitable) -> t.Any:
         return get_or_create_eventloop().run_until_complete(func)
 
@@ -45,7 +45,7 @@ class LocalMemCacheBackendSync(IBaseCacheBackendAsync, ABC):
         return bool(res)
 
 
-class LocalMemCacheBackend(LocalMemCacheBackendSync, BaseCacheBackend):
+class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
     pickle_protocol = pickle.HIGHEST_PROTOCOL
 
     def __init__(self, **kwargs: t.Any) -> None:

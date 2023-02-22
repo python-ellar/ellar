@@ -23,6 +23,10 @@ class BaseCacheBackend(IBaseCacheBackendSync, IBaseCacheBackendAsync, ABC):
         self._version = version or 1
         self._default_timeout = int(timeout) if timeout else 300
 
+    @property
+    def key_prefix(self) -> str:
+        return self._key_prefix
+
     async def has_key_async(self, key: str, version: str = None) -> bool:
         """
         Return True if the key is in the cache and has not expired.
