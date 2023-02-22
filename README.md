@@ -303,5 +303,4 @@ Project is still in development
 - Documentation - (in progress)
 - Interceptors  -  [Aspect Oriented Programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming) (AOP) technique
 - Database Plugin with [Encode/ORM](https://github.com/encode/orm)
-- Caching 
 - API Throttling
