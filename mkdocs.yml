@@ -65,7 +65,7 @@ nav:
     - html: templating/templating.md
     - Static Files: templating/staticfiles.md
 
-#  - Custom Providers: basics/custom-providers.md
+  - Caching: caching.md
 #  - Injection Scopes: basics/injection-scope.md
 #  - Model View Controller: basics/model-view-controller.md
 #  - Events: basics/events.md
@@ -79,10 +79,25 @@ nav:
   - Release Notes: release-notes.md
 
 markdown_extensions:
-- codehilite
-- admonition
-- pymdownx.superfences
-- toc:
-    permalink: true
+  - attr_list
+  - toc:
+      permalink: true
+  - admonition
+  - def_list
+  - tables
+  - abbr
+  - footnotes
+  - md_in_html
+  - codehilite
+  - pymdownx.superfences:
+      custom_fences:
+      - name: mermaid
+        class: mermaid
+        format: !!python/name:pymdownx.superfences.fence_code_format ''
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.saneheaders
+
 extra_css:
   - stylesheets/extra.css
