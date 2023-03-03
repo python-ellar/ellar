@@ -12,6 +12,18 @@ class InvalidCacheBackendKeyException(Exception):
 
 
 class _CacheServiceSync(ICacheServiceSync):
+    def incr(
+        self, key: str, delta: int = 1, version: str = None, backend: str = None
+    ) -> int:
+        _backend = self.get_backend(backend)
+        return _backend.incr(key, delta=delta, version=version)
+
+    def decr(
+        self, key: str, delta: int = 1, version: str = None, backend: str = None
+    ) -> int:
+        _backend = self.get_backend(backend)
+        return _backend.decr(key, delta=delta, version=version)
+
     get_backend: t.Callable[..., BaseCacheBackend]
 
     def get(self, key: str, version: str = None, backend: str = None) -> t.Any:
@@ -110,3 +122,15 @@ class CacheService(_CacheServiceSync, ICacheService):
     ) -> bool:
         _backend = self.get_backend(backend)
         return await _backend.has_key_async(key, version=version)
+
+    async def incr_async(
+        self, key: str, delta: int = 1, version: str = None, backend: str = None
+    ) -> int:
+        _backend = self.get_backend(backend)
+        return await _backend.incr_async(key, delta=delta, version=version)
+
+    async def decr_async(
+        self, key: str, delta: int = 1, version: str = None, backend: str = None
+    ) -> int:
+        _backend = self.get_backend(backend)
+        return await _backend.decr_async(key, delta=delta, version=version)

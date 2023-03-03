@@ -11,10 +11,10 @@ except ImportError as e:  # pragma: no cover
         "To use `AioMemCacheBackend`, you have to install 'aiomcache' package e.g. `pip install aiomcache`"
     ) from e
 
-
 from ..interface import IBaseCacheBackendAsync
 from ..make_key_decorator import make_key_decorator, make_key_decorator_and_validate
 from ..model import BaseCacheBackend
+from .serializer import AioCacheSerializer, ICacheSerializer
 
 
 class _AioMemCacheBackendSync(IBaseCacheBackendAsync, ABC):
@@ -48,6 +48,14 @@ class _AioMemCacheBackendSync(IBaseCacheBackendAsync, ABC):
         )
         return bool(res)
 
+    def incr(self, key: str, delta: int = 1, version: str = None) -> int:
+        res = self._async_executor(self.incr_async(key, delta=delta, version=version))
+        return t.cast(int, res)
+
+    def decr(self, key: str, delta: int = 1, version: str = None) -> int:
+        res = self._async_executor(self.decr_async(key, delta=delta, version=version))
+        return t.cast(int, res)
+
 
 class AioMemCacheBackend(_AioMemCacheBackendSync, BaseCacheBackend):
     """Memcached-based cache backend."""
@@ -61,8 +69,7 @@ class AioMemCacheBackend(_AioMemCacheBackendSync, BaseCacheBackend):
         port: int = 11211,
         pool_size: int = 2,
         pool_minsize: int = None,
-        serializer: t.Callable = pickle.dumps,
-        deserializer: t.Callable = pickle.loads,
+        serializer: ICacheSerializer = None,
         **kwargs: t.Any
     ) -> None:
         super().__init__(**kwargs)
@@ -70,8 +77,7 @@ class AioMemCacheBackend(_AioMemCacheBackendSync, BaseCacheBackend):
         self._client_options = dict(
             host=host, port=port, pool_size=pool_size, pool_minsize=pool_minsize
         )
-        self._serializer = serializer
-        self._deserializer = deserializer
+        self._serializer = serializer or AioCacheSerializer()
 
     def get_backend_timeout(self, timeout: t.Union[float, int] = None) -> int:
         return int(super().get_backend_timeout(timeout))
@@ -86,7 +92,7 @@ class AioMemCacheBackend(_AioMemCacheBackendSync, BaseCacheBackend):
     async def get_async(self, key: str, version: str = None) -> t.Optional[t.Any]:
         value = await self._cache_client.get(key.encode("utf-8"))
         if value:
-            return self._deserializer(value)
+            return self._serializer.load(value)
         return None  # pragma: no cover
 
     @make_key_decorator_and_validate
@@ -99,7 +105,7 @@ class AioMemCacheBackend(_AioMemCacheBackendSync, BaseCacheBackend):
     ) -> bool:
         return await self._cache_client.set(
             key.encode("utf-8"),
-            self._serializer(value, self.pickle_protocol),
+            self._serializer.dumps(value),
             exptime=self.get_backend_timeout(timeout),
         )
 
@@ -114,3 +120,13 @@ class AioMemCacheBackend(_AioMemCacheBackendSync, BaseCacheBackend):
         return await self._cache_client.touch(
             key.encode("utf-8"), exptime=self.get_backend_timeout(timeout)
         )
+
+    @make_key_decorator
+    async def incr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+        res = await self._cache_client.incr(key.encode("utf-8"), increment=delta)
+        return t.cast(int, res)
+
+    @make_key_decorator
+    async def decr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+        res = await self._cache_client.decr(key.encode("utf-8"), decrement=delta)
+        return t.cast(int, res)

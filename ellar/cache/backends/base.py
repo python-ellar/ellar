@@ -44,6 +44,16 @@ class _BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
         result = self._cache_client.touch(key, self.get_backend_timeout(timeout))
         return bool(result)
 
+    @make_key_decorator
+    def incr(self, key: str, delta: int = 1, version: str = None) -> int:
+        result = self._cache_client.incr(key, delta)
+        return t.cast(int, result)
+
+    @make_key_decorator
+    def decr(self, key: str, delta: int = 1, version: str = None) -> int:
+        result = self._cache_client.decr(key, delta)
+        return t.cast(int, result)
+
     def close(self, **kwargs: t.Any) -> None:
         # Many clients don't clean up connections properly.
         self._cache_client.disconnect_all()
@@ -111,3 +121,11 @@ class BasePylibMemcachedCache(_BasePylibMemcachedCacheSync):
     def validate_key(self, key: str) -> None:
         super().validate_key(key)
         self._memcache_key_warnings(key)
+
+    async def incr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+        res = await self.executor(self.incr, key, delta=delta, version=version)
+        return t.cast(int, res)
+
+    async def decr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+        res = await self.executor(self.decr, key, delta=delta, version=version)
+        return t.cast(int, res)
