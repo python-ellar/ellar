@@ -60,7 +60,7 @@ def Module(
     template_folder: t.Optional[str] = "templates",
     base_directory: t.Optional[t.Union[Path, str]] = None,
     static_folder: str = "static",
-    modules: t.Sequence[t.Type] = tuple(),
+    modules: t.Sequence[t.Union[t.Type, t.Any]] = tuple(),
     commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = tuple(),
 ) -> t.Callable:
     """
