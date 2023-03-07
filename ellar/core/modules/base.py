@@ -7,9 +7,6 @@ from ellar.core.conf import Config
 from ellar.core.modules.builder import ModuleBaseBuilder
 from ellar.di.injector import Container
 
-if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core import App
-
 
 class ModuleBaseMeta(type):
     __MODULE_FIELDS__: t.Dict = {}
@@ -26,11 +23,10 @@ class ModuleBaseMeta(type):
 
 class ModuleBase(_InjectorModule, metaclass=ModuleBaseMeta):
     @classmethod
-    def before_init(cls, config: Config) -> None:
-        """Before Module initialisation"""
-
-    def application_ready(self, app: "App") -> None:
-        """Application Ready"""
+    def before_init(cls, config: Config) -> t.Dict:
+        """Before Module initialisation. Whatever value that is returned here will be passed
+        to the Module constructor during initialisation"""
+        return {}
 
     def register_services(self, container: Container) -> None:
         """Register other services manually"""

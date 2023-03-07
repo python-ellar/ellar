@@ -3,13 +3,12 @@ from collections import OrderedDict
 from pathlib import Path
 from uuid import uuid4
 
-from starlette.routing import Host, Mount
+from starlette.routing import BaseRoute, Host, Mount
 
 from ellar.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.core import Config
 from ellar.core.main import App
-from ellar.core.modules import ModuleBase
-from ellar.core.modules.ref import create_module_ref_factor
+from ellar.core.modules import DynamicModule, ModuleBase, ModuleConfigure
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
 
@@ -27,31 +26,38 @@ class AppFactory:
     """
 
     @classmethod
-    def get_all_modules(
-        cls, module: t.Type[t.Union[ModuleBase, t.Any]]
-    ) -> t.List[t.Type[ModuleBase]]:
+    def get_all_modules(cls, module_config: ModuleConfigure) -> t.List[ModuleConfigure]:
         """
         Gets all registered modules from a particular module in their order of dependencies
-        :param module: Module Type
+        :param module_config: Module Type
         :return: t.List[t.Type[ModuleBase]]
         """
-        module_dependency = [module] + list(cls.read_all_module(module).values())
+        module_dependency = [module_config] + list(
+            cls.read_all_module(module_config).values()
+        )
         return module_dependency
 
     @classmethod
     def read_all_module(
-        cls, module: t.Type[t.Union[ModuleBase, t.Any]]
-    ) -> t.Dict[t.Type, t.Type[ModuleBase]]:
+        cls, module_config: ModuleConfigure
+    ) -> t.Dict[t.Type, ModuleConfigure]:
         """
         Retrieves all modules dependencies registered in another module
-        :param module: Module Type
+        :param module_config: Module Type
         :return: t.Dict[t.Type, t.Type[ModuleBase]]
         """
-        modules = reflect.get_metadata(MODULE_METADATA.MODULES, module) or []
+        modules = (
+            reflect.get_metadata(MODULE_METADATA.MODULES, module_config.module) or []
+        )
         module_dependency = OrderedDict()
         for module in modules:
-            module_dependency[module] = module
-            module_dependency.update(cls.read_all_module(module))
+            if isinstance(module, DynamicModule):
+                module_config = ModuleConfigure(module.module)
+            else:
+                module_config = ModuleConfigure(module)
+
+            module_dependency[module_config.module] = module_config
+            module_dependency.update(cls.read_all_module(module_config))
         return module_dependency
 
     @classmethod
@@ -60,7 +66,7 @@ class AppFactory:
         app_module: t.Type[t.Union[ModuleBase, t.Any]],
         config: Config,
         injector: EllarInjector,
-    ) -> None:
+    ) -> t.List[BaseRoute]:
         """
         builds application module and registers them to EllarInjector
         :param app_module: Root App Module
@@ -72,17 +78,36 @@ class AppFactory:
             MODULE_WATERMARK, app_module
         ), "Only Module is allowed"
 
-        module_dependency = cls.get_all_modules(app_module)
-        for module in reversed(module_dependency):
-            if injector.get_module(module):  # pragma: no cover
+        app_module_config = ModuleConfigure(app_module)
+        module_dependency = cls.get_all_modules(app_module_config)
+        routes = []
+
+        for module_config in reversed(module_dependency):
+            if injector.get_module(module_config.module):  # pragma: no cover
                 continue
 
-            module_ref = create_module_ref_factor(
-                module,
-                container=injector.container,
-                config=config,
+            module_ref = module_config.get_module_ref(
+                container=injector.container, config=config
             )
+
+            if not isinstance(module_ref, ModuleConfigure):
+                module_ref.run_module_register_services()
+                routes.extend(module_ref.routes)
+
             injector.add_module(module_ref)
+
+        for module_config in injector.get_dynamic_modules():
+            if injector.get_module(module_config.module):
+                continue
+
+            module_ref = module_config.configure_with_factory(
+                config, injector.container
+            )
+            module_ref.run_module_register_services()
+
+            injector.add_module(module_ref)
+            routes.extend(module_ref.routes)
+        return routes
 
     @classmethod
     def _create_app(
@@ -100,7 +125,7 @@ class AppFactory:
         injector.container.register_instance(config, concrete_type=Config)
         CoreServiceRegistration(injector, config).register_all()
 
-        cls._build_modules(app_module=module, injector=injector, config=config)
+        routes = cls._build_modules(app_module=module, injector=injector, config=config)
 
         shutdown_event = config.ON_REQUEST_STARTUP
         startup_event = config.ON_REQUEST_SHUTDOWN
@@ -108,11 +133,33 @@ class AppFactory:
         app = App(
             config=config,
             injector=injector,
+            routes=routes,
             on_shutdown_event_handlers=shutdown_event if shutdown_event else None,
             on_startup_event_handlers=startup_event if startup_event else None,
             lifespan=config.DEFAULT_LIFESPAN_HANDLER,
             global_guards=global_guards,
         )
+
+        routes = []
+        module_changed = False
+
+        for module_config in injector.get_app_dependent_modules():
+            if injector.get_module(module_config.module):
+                continue
+
+            module_ref = module_config.configure_with_factory(
+                config, injector.container
+            )
+            module_ref.run_module_register_services()
+
+            injector.add_module(module_ref)
+            routes.extend(module_ref.routes)
+            module_changed = True
+
+        if module_changed:
+            app.router.extend(routes)
+            app.reload_static_app()
+            app.rebuild_middleware_stack()
 
         return app
 

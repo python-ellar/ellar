@@ -7,7 +7,7 @@ from .controller import ControllerBase
 from .factory import AppFactory
 from .guard import BaseAPIKey, BaseAuthGuard, BaseHttpAuth, GuardCanActivate
 from .main import App
-from .modules import ModuleBase
+from .modules import DynamicModule, IModuleConfigure, ModuleBase, ModuleConfigure
 from .response import (
     FileResponse,
     HTMLResponse,
@@ -36,6 +36,7 @@ __all__ = [
     "ModuleBase",
     "BaseAPIKey",
     "BaseAuthGuard",
+    "IModuleConfigure",
     "BaseHttpAuth",
     "GuardCanActivate",
     "Config",
@@ -52,6 +53,8 @@ __all__ = [
     "Response",
     "Request",
     "WebSocket",
+    "ModuleConfigure",
+    "DynamicModule",
 ]
 
 
