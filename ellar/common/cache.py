@@ -11,7 +11,7 @@ from .decorators.extra_args import extra_args
 from .routing.params import Context, Provide
 
 
-class CacheDecorator:
+class _CacheDecorator:
     __slots__ = (
         "_is_async",
         "_key_prefix",
@@ -136,7 +136,7 @@ def cache(
     ] = None,
 ) -> t.Callable:
     def _wraps(func: t.Callable) -> t.Callable:
-        cache_decorator = CacheDecorator(
+        cache_decorator = _CacheDecorator(
             func,
             timeout,
             key_prefix=key_prefix,
