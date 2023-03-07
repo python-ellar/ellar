@@ -31,7 +31,7 @@ Memcached runs as a daemon and is allotted a specified amount of RAM. All it doe
 After installing Memcached itself, you’ll need to install a Memcached binding. 
 There are several Python Memcached bindings available; 
 
-Ellar supports are [pylibmc](https://pypi.org/project/pylibmc/), [pymemcache](https://pypi.org/project/pymemcache/) and [aiomcache](https://github.com/aio-libs/aiomcache)
+Ellar supports are [pylibmc](https://pypi.org/project/pylibmc/) and [pymemcache](https://pypi.org/project/pymemcache/)
 
 For an example, lets assume you have a Memcached is running on localhost (127.0.0.1) port 11211, using the `pymemcache` or `pylibmc` binding:
 
@@ -57,18 +57,6 @@ For an example, lets assume you have a Memcached is running on localhost (127.0.
     class DevelopmentConfig(ConfigDefaultTypesMixin):
         CACHES = {
             'default': PyLibMCCacheBackend(servers=['127.0.0.1:11211'])
-        }
-    ```
-=== "aiomcache"
-    ```python
-    # project_name/config.py
-    
-    from ellar.core import ConfigDefaultTypesMixin
-    from ellar.cache.backends.aio_cache import AioMemCacheBackend
-    
-    class DevelopmentConfig(ConfigDefaultTypesMixin):
-        CACHES = {
-            'default': AioMemCacheBackend(host='127.0.0.1', port=11211)
         }
     ```
 If Memcached is available through a local Unix socket file /tmp/memcached.sock using the `pymemcache` or `pylibmc` binding:
@@ -333,6 +321,10 @@ The CacheService class provides methods like:
 - **has_key_async**_**(key: str, version: str = None, backend: str = None)**_: asynchronous version of `has_key` action
 - **touch**_**(key: str, timeout: t.Union[float, int] = None, version: str = None, backend: str = None)**_: sets a new expiration for a key
 - **touch_async**_**(key: str, timeout: t.Union[float, int] = None, version: str = None, backend: str = None)**_: asynchronous version of `touch` action
+- **incr**_**(key: str, delta: int = 1, version: str = None, backend: str = None)**_: increments a value for a key by delta
+- **incr_async**_**(key: str, delta: int = 1, version: str = None, backend: str = None)**_: asynchronous version of `incr` action
+- **decr**_**(key: str, delta: int = 1, version: str = None, backend: str = None)**_: decrement a value for a key by delta
+- **decr_async**_**(key: str, delta: int = 1, version: str = None, backend: str = None)**_: asynchronous version of `decr` action
 
 !!! note
     If `backend=None`, `default` backend configuration is used.
