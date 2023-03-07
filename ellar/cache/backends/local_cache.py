@@ -133,6 +133,7 @@ class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
         self._cache[key] = pickled
         return new_value
 
+    @make_key_decorator
     async def incr_async(self, key: str, delta: int = 1, version: str = None) -> int:
         async with self._lock:
             if self._has_expired(key):
@@ -140,9 +141,13 @@ class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
                 raise ValueError("Key '%s' not found" % key)
             return self._incr_decr_action(key, delta)
 
+    @make_key_decorator
     async def decr_async(self, key: str, delta: int = 1, version: str = None) -> int:
         async with self._lock:
             if self._has_expired(key):
                 await self._delete(key)
                 raise ValueError("Key '%s' not found" % key)
-            return self._incr_decr_action(key, delta * -1)
+            res = self._incr_decr_action(key, delta * -1)
+            if res < 0:
+                return self._incr_decr_action(key, res * -1)
+            return res

@@ -55,6 +55,26 @@ class TestRedisCacheBackend:
         sleep(0.22)
         assert self.backend.get("test-touch") == "1"
 
+    def test_incr_async(self):
+        self.backend.set("test-incr", 0, timeout=1)
+        self.backend.incr("test-incr")
+
+        assert self.backend.get("test-incr") == 1
+        self.backend.incr("test-incr", 2)
+
+        self.backend.incr("test-incr", 3)
+        assert self.backend.get("test-incr") == 6
+
+    def test_decr_async(self):
+        self.backend.set("test-decr", 2, timeout=1)
+        self.backend.decr("test-decr")
+
+        assert self.backend.get("test-decr") == 1
+        self.backend.decr("test-decr", 2)
+
+        self.backend.decr("test-decr", 3)
+        assert self.backend.get("test-decr") == 0
+
     def test_pickling_int_values_is_skipped(self):
         assert self.backend.set("test-int-key", 1, 1)
         assert self.backend.get("test-int-key") == 1
@@ -114,6 +134,25 @@ class TestRedisCacheBackendAsync:
         assert await self.backend.touch_async("test-touch", 30)
         sleep(0.22)
         assert await self.backend.get_async("test-touch") == "1"
+
+    @pytest.mark.asyncio
+    async def test_incr_async(self):
+        await self.backend.set_async("test-incr-async", 0, timeout=1)
+        await self.backend.incr_async("test-incr-async")
+        assert await self.backend.get_async("test-incr-async") == 1
+        await self.backend.incr_async("test-incr-async", 2)
+        await self.backend.incr_async("test-incr-async", 3)
+        assert await self.backend.get_async("test-incr-async") == 6
+
+    @pytest.mark.asyncio
+    async def test_decr_async(self):
+        await self.backend.set_async("test-decr-async", 2, timeout=1)
+        await self.backend.decr_async("test-decr-async")
+        assert await self.backend.get_async("test-decr-async") == 1
+
+        await self.backend.decr_async("test-decr-async", 2)
+        await self.backend.decr_async("test-decr-async", 3)
+        assert await self.backend.get_async("test-decr-async") == 0
 
     @pytest.mark.asyncio
     async def test_zero_timeout_deletes_old_value_if_any(self):

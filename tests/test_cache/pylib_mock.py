@@ -49,6 +49,21 @@ class MockClient(Client):
     def flush_all(self):
         self._cache.clear()
 
+    def _incr_decr_action(self, key: str, delta: int) -> int:
+        value, _time = self._cache[key]
+        new_value = value + delta
+        self._cache.update({key: (new_value, _time)})
+        return new_value
+
+    def incr(self, key: str, delta: int = 1, **kwargs) -> int:
+        return self._incr_decr_action(key, delta)
+
+    def decr(self, key: str, delta: int = 1, **kwargs) -> int:
+        res = self._incr_decr_action(key, delta * -1)
+        if res < 0:
+            return self._incr_decr_action(key, res * -1)
+        return res
+
 
 class MockSetFailureClient(MockClient):
     def set(self, *args, **kwargs):

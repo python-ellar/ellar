@@ -46,17 +46,16 @@ class _BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
 
     @make_key_decorator
     def incr(self, key: str, delta: int = 1, version: str = None) -> int:
-        result = self._cache_client.incr(key, delta)
+        result = self._cache_client.incr(key, abs(delta))
         return t.cast(int, result)
 
     @make_key_decorator
     def decr(self, key: str, delta: int = 1, version: str = None) -> int:
-        result = self._cache_client.decr(key, delta)
+        result = self._cache_client.decr(key, abs(delta))
         return t.cast(int, result)
 
     def close(self, **kwargs: t.Any) -> None:
-        # Many clients don't clean up connections properly.
-        self._cache_client.disconnect_all()
+        """Many clients don't clean up connections properly."""
 
     def clear(self) -> None:
         self._cache_client.flush_all()

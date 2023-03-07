@@ -62,3 +62,6 @@ class PyMemcacheCacheBackend(BasePylibMemcachedCache):
         }
 
         super().__init__(servers, options=_options, **kwargs)
+
+    def close(self, **kwargs: t.Any) -> None:
+        self._cache_client.disconnect_all()

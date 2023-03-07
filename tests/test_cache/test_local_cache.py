@@ -1,5 +1,7 @@
 from time import sleep
 
+import pytest
+
 from ellar.cache.backends.local_cache import LocalMemCacheBackend
 
 
@@ -32,6 +34,23 @@ class TestLocalMemCacheBackend:
     def test_cache_zero_timeout_expires_immediately(self):
         assert self.backend.set("test-touch", 1, 0)
         assert self.backend.get("test-touch") is None
+
+    def test_incr(self):
+        self.backend.set("test-incr-backend", 0, version="1", timeout=0.1)
+        self.backend.incr("test-incr-backend", version="1")
+        assert self.backend.get("test-incr-backend", version="1") == 1
+        self.backend.incr("test-incr-backend", 2, version="1")
+        self.backend.incr("test-incr-backend", 3, version="1")
+        assert self.backend.get("test-incr-backend") == 6
+
+    def test_decr(self):
+        self.backend.set("test-decr-backend", 2, version="1", timeout=0.1)
+        self.backend.decr("test-decr-backend", version="1")
+        assert self.backend.get("test-decr-backend", version="1") == 1
+
+        self.backend.decr("test-decr-backend", 2, version="1")
+        self.backend.decr("test-decr-backend", 3, version="1")
+        assert self.backend.get("test-decr-backend") == 0
 
 
 class TestLocalMemCacheBackendAsync:
@@ -68,3 +87,32 @@ class TestLocalMemCacheBackendAsync:
         key = backend.make_key("test")
         assert backend._cache[key]
         assert isinstance(backend._cache[key], bytes)
+
+    async def test_incr_async(self, anyio_backend):
+        await self.backend.set_async(
+            "test-incr-async-backend", 0, version="1", timeout=0.1
+        )
+        await self.backend.incr_async("test-incr-async-backend", version="1")
+        assert await self.backend.get_async("test-incr-async-backend", version="1") == 1
+        await self.backend.incr_async("test-incr-async-backend", 2, version="1")
+        await self.backend.incr_async("test-incr-async-backend", 3, version="1")
+        assert await self.backend.get_async("test-incr-async-backend") == 6
+
+        with pytest.raises(ValueError):
+            await self.backend.set_async("test-incr-async-backend", 0, timeout=0)
+            await self.backend.incr_async("test-incr-async-backend")
+
+    async def test_decr_async(self, anyio_backend):
+        await self.backend.set_async(
+            "test-decr-async-backend", 2, version="1", timeout=0.2
+        )
+        await self.backend.decr_async("test-decr-async-backend", version="1")
+        assert await self.backend.get_async("test-decr-async-backend", version="1") == 1
+
+        await self.backend.decr_async("test-decr-async-backend", 2, version="1")
+        await self.backend.decr_async("test-decr-async-backend", 3, version="1")
+        assert await self.backend.get_async("test-decr-async-backend") == 0
+
+        with pytest.raises(ValueError):
+            await self.backend.set_async("test-decr-async-backend", 2, timeout=0)
+            await self.backend.decr_async("test-decr-async-backend")
