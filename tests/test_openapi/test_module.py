@@ -9,7 +9,12 @@ from ellar.core import (
 )
 from ellar.core.modules.ref import create_module_ref_factor
 from ellar.di import EllarInjector
-from ellar.openapi import OpenAPIDocumentBuilder, OpenAPIDocumentModule
+from ellar.openapi import (
+    OpenAPIDocumentBuilder,
+    OpenAPIDocumentModule,
+    ReDocDocumentGenerator,
+    SwaggerDocumentGenerator,
+)
 
 
 class CustomDocsGuard(GuardCanActivate):
@@ -37,35 +42,49 @@ def test_openapi_module_template_path_exist():
     assert len(list_of_html_contained_in_path) == 0
 
 
-def test_openapi_module_with_openapi_url_doesnot_exist_new_openapi_url():
+def test_openapi_module_with_openapi_url_doesnot_create_new_openapi_url():
     app = AppFactory.create_app()
+    client = TestClient(app)
     document = OpenAPIDocumentBuilder().build_document(app)
 
-    module_instance = app.install_module(
-        OpenAPIDocumentModule, openapi_url="/openapi_url.json", document=document
+    module_config = OpenAPIDocumentModule.module_configure(
+        openapi_url="/openapi_url.json",
+        document=document,
+        document_generator=SwaggerDocumentGenerator(),
     )
-    assert module_instance._openapi_url == "/openapi_url.json"
+    app.install_module(module_config)
+    res = client.get("/docs")
+    assert res.status_code == 200
+    assert "/openapi_url.json" in res.text
 
 
 def test_openapi_module_creates_openapi_url():
     app = AppFactory.create_app()
     document = OpenAPIDocumentBuilder().build_document(app)
+    client = TestClient(app)
 
-    module_instance = app.install_module(OpenAPIDocumentModule, document=document)
-    assert module_instance._openapi_url == "/openapi.json"
+    module_config = OpenAPIDocumentModule.module_configure(
+        document=document, document_generator=SwaggerDocumentGenerator()
+    )
+    app.install_module(module_config)
+    res = client.get("/docs")
+
+    assert res.status_code == 200
+    assert "/openapi.json" in res.text
 
 
 def test_openapi_module_creates_swagger_endpoint():
     app = AppFactory.create_app()
     document = OpenAPIDocumentBuilder().build_document(app)
 
-    module_instance = app.install_module(
-        OpenAPIDocumentModule, document=document, openapi_url="/openapi_url.json"
+    module_config = OpenAPIDocumentModule.module_configure(
+        openapi_url="/openapi_url.json",
+        document=document,
+        document_generator=SwaggerDocumentGenerator(
+            title="Swagger Doc Test", path="docs-swagger-test"
+        ),
     )
-
-    module_instance.setup_swagger_doc(
-        title="Swagger Doc Test", path="docs-swagger-test"
-    )
+    app.install_module(module_config)
     client = TestClient(app)
     response = client.get("docs-swagger-test")
     assert response.status_code == 200
@@ -78,13 +97,16 @@ def test_openapi_module_creates_swagger_endpoint():
 def test_openapi_module_creates_redocs_endpoint():
     app = AppFactory.create_app()
     document = OpenAPIDocumentBuilder().build_document(app)
-
-    module_instance = app.install_module(
-        OpenAPIDocumentModule, document=document, openapi_url="/openapi_url.json"
+    module_config = OpenAPIDocumentModule.module_configure(
+        openapi_url="/openapi_url.json",
+        document=document,
+        document_generator=ReDocDocumentGenerator(
+            title="Redocs Doc Test", path="docs-redocs-test"
+        ),
     )
-
-    module_instance.setup_redocs(title="Redocs Doc Test", path="docs-redocs-test")
+    app.install_module(module_config)
     client = TestClient(app)
+
     response = client.get("docs-redocs-test")
     assert response.status_code == 200
 
@@ -97,11 +119,12 @@ def test_openapi_module_with_route_guards():
     app = AppFactory.create_app(providers=[CustomDocsGuard])
     document = OpenAPIDocumentBuilder().build_document(app)
 
-    module_instance = app.install_module(
-        OpenAPIDocumentModule, document=document, guards=[CustomDocsGuard]
+    module_config = OpenAPIDocumentModule.module_configure(
+        document=document,
+        guards=[CustomDocsGuard],
+        document_generator=(SwaggerDocumentGenerator(), ReDocDocumentGenerator()),
     )
-    module_instance.setup_redocs()
-    module_instance.setup_swagger_doc()
+    app.install_module(module_config)
     client = TestClient(app)
 
     response = client.get("openapi.json")
