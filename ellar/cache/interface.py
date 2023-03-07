@@ -1,7 +1,7 @@
 import typing as t
 from abc import ABC, abstractmethod
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.cache.model import BaseCacheBackend
 
 

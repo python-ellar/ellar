@@ -33,16 +33,16 @@ class RedisSerializer(ICacheSerializer):
         return pickle.dumps(data, self._protocol)
 
 
-class AioCacheSerializer(RedisSerializer):
-    def load(self, data: t.Any) -> t.Any:
-        try:
-            return int(data.decode("utf-8"))
-        except ValueError:
-            return pickle.loads(data)
-
-    def dumps(self, data: t.Any) -> t.Any:
-        # Only skip pickling for integers, an int subclasses as bool should be
-        # pickled.
-        if type(data) is int:
-            return str(data).encode("utf-8")
-        return pickle.dumps(data, self._protocol)
+# class AioCacheSerializer(RedisSerializer):
+#     def load(self, data: t.Any) -> t.Any:
+#         try:
+#             return int(data.decode("utf-8"))
+#         except ValueError:
+#             return pickle.loads(data)
+#
+#     def dumps(self, data: t.Any) -> t.Any:
+#         # Only skip pickling for integers, an int subclasses as bool should be
+#         # pickled.
+#         if type(data) is int:
+#             return str(data).encode("utf-8")
+#         return pickle.dumps(data, self._protocol)

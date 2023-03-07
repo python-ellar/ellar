@@ -129,7 +129,7 @@ class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
     async def get_async(self, key: str, version: str = None) -> t.Any:
         client = self._get_client()
         value = await client.get(key)
-        if value:
+        if value is not None:
             return self._serializer.load(value)
         return None
 

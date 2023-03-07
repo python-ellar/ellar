@@ -1,3 +1,3 @@
-from .serializer import AioCacheSerializer, ICacheSerializer, RedisSerializer
+from .serializer import ICacheSerializer, RedisSerializer
 
-__all__ = ["ICacheSerializer", "RedisSerializer", "AioCacheSerializer"]
+__all__ = ["ICacheSerializer", "RedisSerializer"]
