@@ -14,7 +14,7 @@ except ImportError as e:  # pragma: no cover
 from ...interface import IBaseCacheBackendAsync
 from ...make_key_decorator import make_key_decorator, make_key_decorator_and_validate
 from ...model import BaseCacheBackend
-from .serializer import IRedisSerializer, RedisSerializer
+from ..serializer import ICacheSerializer, RedisSerializer
 
 
 class _RedisCacheBackendSync(IBaseCacheBackendAsync, ABC):
@@ -48,6 +48,18 @@ class _RedisCacheBackendSync(IBaseCacheBackendAsync, ABC):
         )
         return bool(res)
 
+    def has_key(self, key: str, version: str = None) -> bool:
+        res = self._async_executor(self.has_key_async(key, version=version))
+        return bool(res)
+
+    def incr(self, key: str, delta: int = 1, version: str = None) -> int:
+        res = self._async_executor(self.incr_async(key, delta=delta, version=version))
+        return t.cast(int, res)
+
+    def decr(self, key: str, delta: int = 1, version: str = None) -> int:
+        res = self._async_executor(self.decr_async(key, delta=delta, version=version))
+        return t.cast(int, res)
+
 
 class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
     MEMCACHE_CLIENT: t.Any = Redis
@@ -68,7 +80,7 @@ class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
         self,
         servers: t.List[str],
         options: t.Dict = None,
-        serializer: IRedisSerializer = None,
+        serializer: ICacheSerializer = None,
         **kwargs: t.Any
     ) -> None:
         super().__init__(**kwargs)
@@ -117,7 +129,7 @@ class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
     async def get_async(self, key: str, version: str = None) -> t.Any:
         client = self._get_client()
         value = await client.get(key)
-        if value:
+        if value is not None:
             return self._serializer.load(value)
         return None
 
@@ -152,3 +164,21 @@ class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
             return bool(res)
         res = await client.expire(key, self.get_backend_timeout(timeout))
         return bool(res)
+
+    @make_key_decorator
+    async def has_key_async(self, key: str, version: str = None) -> bool:
+        client = self._get_client()
+        res = await client.exists(key)
+        return bool(res)
+
+    @make_key_decorator
+    async def incr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+        client = self._get_client()
+        res = await client.incr(key, amount=delta)
+        return t.cast(int, res)
+
+    @make_key_decorator
+    async def decr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+        client = self._get_client()
+        res = await client.decr(key, amount=delta)
+        return t.cast(int, res)

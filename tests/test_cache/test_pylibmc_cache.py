@@ -58,6 +58,24 @@ class TestPyLibMCCacheBackend:
         assert self.backend.get("test-touch") == "1"
         assert self.backend.close() is None
 
+    def test_incr(self):
+        self.backend.set("test-incr-sync", 0, version="1", timeout=1)
+        self.backend.incr("test-incr-sync", version="1")
+        assert self.backend.get("test-incr-sync", version="1") == 1
+
+        self.backend.incr("test-incr-sync", 2, version="1")
+        self.backend.incr("test-incr-sync", 3, version="1")
+        assert self.backend.get("test-incr-sync") == 6
+
+    def test_decr(self):
+        self.backend.set("test-decr-sync", 2, version="1", timeout=1)
+        self.backend.decr("test-decr-sync", version="1")
+        assert self.backend.get("test-decr-sync", version="1") == 1
+
+        self.backend.decr("test-decr-sync", 2, version="1")
+        self.backend.decr("test-decr-sync", 3, version="1")
+        assert self.backend.get("test-decr-sync") == 0
+
     def test_clear(self):
         assert self.backend.set("test-touch", "1", 0.1)
         self.backend.clear()
@@ -126,6 +144,34 @@ class TestPyLibMCCacheBackendAsync:
         await self.backend.clear_async()
         assert await self.backend.get_async("test-touch") is None
 
+    async def test_incr_async(self, anyio_backend):
+        await self.backend.set_async(
+            f"test-incr-async-{anyio_backend}", 0, version="1", timeout=1
+        )
+        await self.backend.incr_async(f"test-incr-async-{anyio_backend}", version="1")
+        assert (
+            await self.backend.get_async(
+                f"test-incr-async-{anyio_backend}", version="1"
+            )
+            == 1
+        )
+        await self.backend.incr_async(
+            f"test-incr-async-{anyio_backend}", 2, version="1"
+        )
+        await self.backend.incr_async(
+            f"test-incr-async-{anyio_backend}", 3, version="1"
+        )
+        assert await self.backend.get_async(f"test-incr-async-{anyio_backend}") == 6
+
+    async def test_decr_async(self, anyio_backend):
+        await self.backend.set_async("test-decr-async-pylib", 2, version="1", timeout=1)
+        await self.backend.decr_async("test-decr-async-pylib", version="1")
+        assert await self.backend.get_async("test-decr-async-pylib", version="1") == 1
+
+        await self.backend.decr_async("test-decr-async-pylib", 2, version="1")
+        await self.backend.decr_async("test-decr-async-pylib", 3, version="1")
+        assert await self.backend.get_async("test-decr-async-pylib") == 0
+
 
 class TestPyMemCacheBackend:
     def test_init_pymemcache_backend(self):
@@ -137,6 +183,13 @@ class TestPyMemCacheBackend:
         }
         assert backend.close() is None
 
+    def test_different_connection_setup(self):
+        backend = PyMemcacheCacheBackend(servers=["127.0.0.1:11211", "172.10.169.53"])
+        assert len(backend._cache_client.clients) == 2
+        assert ["127.0.0.1:11211", "172.10.169.53:11211"] == list(
+            backend._cache_client.clients.keys()
+        )
+
     @patch("pymemcache.HashClient.flush_all")
     async def test_clear_async(self, mock_flush_all, anyio_backend):
         assert mock_flush_all.called is False
@@ -144,7 +197,7 @@ class TestPyMemCacheBackend:
         await backend.clear_async()
         assert mock_flush_all.called is True
 
-    @patch("pymemcache.HashClient.disconnect_all")
+    @patch("pymemcache.Client.close")
     async def test_close_async(self, mock_disconnect_all, anyio_backend):
         assert mock_disconnect_all.called is False
         backend = PyMemcacheCacheBackend(servers=["127.0.0.1:11211"])
@@ -152,14 +205,14 @@ class TestPyMemCacheBackend:
         assert mock_disconnect_all.called is True
 
     @patch("pymemcache.HashClient.flush_all")
-    def test_clear(self, mock_flush_all, anyio_backend):
+    def test_clear(self, mock_flush_all):
         assert mock_flush_all.called is False
         backend = PyMemcacheCacheBackend(servers=["127.0.0.1:11211"])
         backend.clear()
         assert mock_flush_all.called is True
 
-    @patch("pymemcache.HashClient.disconnect_all")
-    def test_close(self, mock_disconnect_all, anyio_backend):
+    @patch("pymemcache.Client.close")
+    def test_close(self, mock_disconnect_all):
         assert mock_disconnect_all.called is False
         backend = PyMemcacheCacheBackend(servers=["127.0.0.1:11211"])
         backend.close()

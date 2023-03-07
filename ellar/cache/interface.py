@@ -1,7 +1,7 @@
 import typing as t
 from abc import ABC, abstractmethod
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.cache.model import BaseCacheBackend
 
 
@@ -54,6 +54,23 @@ class IBaseCacheBackendAsync(ABC):
         or False if the key does not exist.
         """
 
+    async def has_key_async(self, key: str, version: str = None) -> bool:
+        """
+        Return True if the key is in the cache and has not expired.
+        """
+
+    @abstractmethod
+    async def incr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+        """
+        Increments the number stored at key by one. If the key does not exist, it is set to 0
+        """
+
+    @abstractmethod
+    async def decr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+        """
+        Decrements the number stored at key by one. If the key does not exist, it is set to 0
+        """
+
 
 class IBaseCacheBackendSync(ABC):
     @abstractmethod
@@ -102,6 +119,23 @@ class IBaseCacheBackendSync(ABC):
         """
         Update the key's expiry time using timeout. Return True if successful
         or False if the key does not exist.
+        """
+
+    def has_key(self, key: str, version: str = None) -> bool:
+        """
+        Return True if the key is in the cache and has not expired.
+        """
+
+    @abstractmethod
+    def incr(self, key: str, delta: int = 1, version: str = None) -> int:
+        """
+        Increments the number stored at key by one. If the key does not exist, it is set to 0
+        """
+
+    @abstractmethod
+    def decr(self, key: str, delta: int = 1, version: str = None) -> int:
+        """
+        Decrements the number stored at key by one. If the key does not exist, it is set to 0
         """
 
 
@@ -166,6 +200,22 @@ class ICacheServiceSync(ABC):
     def has_key(self, key: str, version: str = None, backend: str = None) -> bool:
         """
         Return True if the key is in the cache and has not expired.
+        """
+
+    @abstractmethod
+    def incr(
+        self, key: str, delta: int = 1, version: str = None, backend: str = None
+    ) -> int:
+        """
+        Increments the number stored at key by one. If the key does not exist, it is set to 0
+        """
+
+    @abstractmethod
+    def decr(
+        self, key: str, delta: int = 1, version: str = None, backend: str = None
+    ) -> int:
+        """
+        Decrements the number stored at key by one. If the key does not exist, it is set to 0
         """
 
 
@@ -236,6 +286,22 @@ class ICacheServiceAsync(ABC):
     ) -> bool:
         """
         Return True if the key is in the cache and has not expired.
+        """
+
+    @abstractmethod
+    async def incr_async(
+        self, key: str, delta: int = 1, version: str = None, backend: str = None
+    ) -> int:
+        """
+        Increments the number stored at key by one. If the key does not exist, it is set to 0
+        """
+
+    @abstractmethod
+    async def decr_async(
+        self, key: str, delta: int = 1, version: str = None, backend: str = None
+    ) -> int:
+        """
+        Decrements the number stored at key by one. If the key does not exist, it is set to 0
         """
 
 

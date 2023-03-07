@@ -38,6 +38,8 @@ doc-deploy: ## Run Deploy Documentation
 	make clean
 	mkdocs gh-deploy --force --ignore-version
 
+doc-serve: ## Launch doc local server
+	make mkdoc serve
 
 pre-commit-lint: ## Runs Requires commands during pre-commit
 	make clean

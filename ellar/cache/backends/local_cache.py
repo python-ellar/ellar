@@ -44,6 +44,14 @@ class _LocalMemCacheBackendSync(IBaseCacheBackendAsync, ABC):
         )
         return bool(res)
 
+    def incr(self, key: str, delta: int = 1, version: str = None) -> int:
+        res = self._async_executor(self.incr_async(key, delta=delta, version=version))
+        return t.cast(int, res)
+
+    def decr(self, key: str, delta: int = 1, version: str = None) -> int:
+        res = self._async_executor(self.decr_async(key, delta=delta, version=version))
+        return t.cast(int, res)
+
 
 class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
     pickle_protocol = pickle.HIGHEST_PROTOCOL
@@ -116,3 +124,30 @@ class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
     def has_key(self, key: str, version: str = None) -> bool:
         res = self._async_executor(self.has_key_async(key, version=version))
         return bool(res)
+
+    def _incr_decr_action(self, key: str, delta: int) -> int:
+        pickled = self._cache[key]
+        value = t.cast(int, pickle.loads(pickled))
+        new_value = value + delta
+        pickled = pickle.dumps(new_value, self.pickle_protocol)
+        self._cache[key] = pickled
+        return new_value
+
+    @make_key_decorator
+    async def incr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+        async with self._lock:
+            if self._has_expired(key):
+                await self._delete(key)
+                raise ValueError("Key '%s' not found" % key)
+            return self._incr_decr_action(key, delta)
+
+    @make_key_decorator
+    async def decr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+        async with self._lock:
+            if self._has_expired(key):
+                await self._delete(key)
+                raise ValueError("Key '%s' not found" % key)
+            res = self._incr_decr_action(key, delta * -1)
+            if res < 0:
+                return self._incr_decr_action(key, res * -1)
+            return res
