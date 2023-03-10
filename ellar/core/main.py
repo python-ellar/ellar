@@ -20,7 +20,13 @@ from ellar.core.middleware import (
     RequestVersioningMiddleware,
     TrustedHostMiddleware,
 )
-from ellar.core.modules import DynamicModule, ModuleBase, ModuleSetup, ModuleTemplateRef
+from ellar.core.modules import (
+    DynamicModule,
+    ModuleBase,
+    ModuleRefBase,
+    ModuleSetup,
+    ModuleTemplateRef,
+)
 from ellar.core.routing import ApplicationRouter
 from ellar.core.templating import AppTemplating, Environment
 from ellar.core.versioning import VERSIONING, BaseAPIVersioning
@@ -142,13 +148,11 @@ class App(AppTemplating):
         if module_ref:
             return module_ref.get_module_instance()
 
-        module_ref = module_config.get_module_ref(  # type: ignore
+        module_ref = module_config.get_module_ref(  # type: ignore[assignment]
             config=self.config,
             container=self.injector.container,
         )
-        if not module_ref:
-            raise Exception(f"Invalid Module Configuration for {module_config.module}")
-
+        assert isinstance(module_ref, ModuleRefBase)
         self.injector.add_module(module_ref)
 
         module_ref.run_module_register_services()
