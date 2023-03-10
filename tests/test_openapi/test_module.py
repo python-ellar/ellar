@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from ellar.core import (
     AppFactory,
     Config,
@@ -47,7 +49,7 @@ def test_openapi_module_with_openapi_url_doesnot_create_new_openapi_url():
     client = TestClient(app)
     document = OpenAPIDocumentBuilder().build_document(app)
 
-    module_config = OpenAPIDocumentModule.module_configure(
+    module_config = OpenAPIDocumentModule.setup(
         openapi_url="/openapi_url.json",
         document=document,
         document_generator=SwaggerDocumentGenerator(),
@@ -63,7 +65,7 @@ def test_openapi_module_creates_openapi_url():
     document = OpenAPIDocumentBuilder().build_document(app)
     client = TestClient(app)
 
-    module_config = OpenAPIDocumentModule.module_configure(
+    module_config = OpenAPIDocumentModule.setup(
         document=document, document_generator=SwaggerDocumentGenerator()
     )
     app.install_module(module_config)
@@ -72,12 +74,52 @@ def test_openapi_module_creates_openapi_url():
     assert res.status_code == 200
     assert "/openapi.json" in res.text
 
+    res = client.get("/openapi.json")
+    assert res.status_code == 200
+
+    assert res.json() == {
+        "openapi": "3.0.2",
+        "info": {"title": "Ellar API Docs", "version": "1.0.0"},
+        "paths": {},
+        "components": {
+            "schemas": {
+                "HTTPValidationError": {
+                    "title": "HTTPValidationError",
+                    "required": ["detail"],
+                    "type": "object",
+                    "properties": {
+                        "detail": {
+                            "title": "Details",
+                            "type": "array",
+                            "items": {"$ref": "#/components/schemas/ValidationError"},
+                        }
+                    },
+                },
+                "ValidationError": {
+                    "title": "ValidationError",
+                    "required": ["loc", "msg", "type"],
+                    "type": "object",
+                    "properties": {
+                        "loc": {
+                            "title": "Location",
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                        "msg": {"title": "Message", "type": "string"},
+                        "type": {"title": "Error Type", "type": "string"},
+                    },
+                },
+            }
+        },
+        "tags": [],
+    }
+
 
 def test_openapi_module_creates_swagger_endpoint():
     app = AppFactory.create_app()
     document = OpenAPIDocumentBuilder().build_document(app)
 
-    module_config = OpenAPIDocumentModule.module_configure(
+    module_config = OpenAPIDocumentModule.setup(
         openapi_url="/openapi_url.json",
         document=document,
         document_generator=SwaggerDocumentGenerator(
@@ -97,7 +139,7 @@ def test_openapi_module_creates_swagger_endpoint():
 def test_openapi_module_creates_redocs_endpoint():
     app = AppFactory.create_app()
     document = OpenAPIDocumentBuilder().build_document(app)
-    module_config = OpenAPIDocumentModule.module_configure(
+    module_config = OpenAPIDocumentModule.setup(
         openapi_url="/openapi_url.json",
         document=document,
         document_generator=ReDocDocumentGenerator(
@@ -119,7 +161,7 @@ def test_openapi_module_with_route_guards():
     app = AppFactory.create_app(providers=[CustomDocsGuard])
     document = OpenAPIDocumentBuilder().build_document(app)
 
-    module_config = OpenAPIDocumentModule.module_configure(
+    module_config = OpenAPIDocumentModule.setup(
         document=document,
         guards=[CustomDocsGuard],
         document_generator=(SwaggerDocumentGenerator(), ReDocDocumentGenerator()),
@@ -138,3 +180,25 @@ def test_openapi_module_with_route_guards():
     response = client.get("redoc")
     assert response.status_code == 403
     assert response.json() == {"detail": "Not Allowed", "status_code": 403}
+
+
+def test_invalid_open_api_doc_setup():
+    app = AppFactory.create_app(providers=[CustomDocsGuard])
+    document = OpenAPIDocumentBuilder().build_document(app)
+    with pytest.raises(Exception) as ex:
+
+        OpenAPIDocumentModule.setup(
+            document=document,
+            guards=[CustomDocsGuard],
+            document_generator=(CustomDocsGuard(),),
+        )
+    assert str(ex.value) == "CustomDocsGuard must be of type `IDocumentationGenerator`"
+
+    with pytest.raises(Exception) as ex:
+
+        OpenAPIDocumentModule.setup(
+            document=document,
+            guards=[CustomDocsGuard],
+            document_generator=(CustomDocsGuard,),
+        )
+    assert str(ex.value) == "CustomDocsGuard must be of type `IDocumentationGenerator`"

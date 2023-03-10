@@ -8,7 +8,7 @@ from starlette.routing import BaseRoute, Host, Mount
 from ellar.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.core import Config
 from ellar.core.main import App
-from ellar.core.modules import DynamicModule, ModuleBase, ModuleConfigure
+from ellar.core.modules import DynamicModule, ModuleBase, ModuleSetup
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
 
@@ -26,7 +26,7 @@ class AppFactory:
     """
 
     @classmethod
-    def get_all_modules(cls, module_config: ModuleConfigure) -> t.List[ModuleConfigure]:
+    def get_all_modules(cls, module_config: ModuleSetup) -> t.List[ModuleSetup]:
         """
         Gets all registered modules from a particular module in their order of dependencies
         :param module_config: Module Type
@@ -38,9 +38,7 @@ class AppFactory:
         return module_dependency
 
     @classmethod
-    def read_all_module(
-        cls, module_config: ModuleConfigure
-    ) -> t.Dict[t.Type, ModuleConfigure]:
+    def read_all_module(cls, module_config: ModuleSetup) -> t.Dict[t.Type, ModuleSetup]:
         """
         Retrieves all modules dependencies registered in another module
         :param module_config: Module Type
@@ -52,9 +50,11 @@ class AppFactory:
         module_dependency = OrderedDict()
         for module in modules:
             if isinstance(module, DynamicModule):
-                module_config = ModuleConfigure(module.module)
+                module_config = ModuleSetup(module.module)
+            elif isinstance(module, ModuleSetup):
+                module_config = module
             else:
-                module_config = ModuleConfigure(module)
+                module_config = ModuleSetup(module)
 
             module_dependency[module_config.module] = module_config
             module_dependency.update(cls.read_all_module(module_config))
@@ -78,7 +78,7 @@ class AppFactory:
             MODULE_WATERMARK, app_module
         ), "Only Module is allowed"
 
-        app_module_config = ModuleConfigure(app_module)
+        app_module_config = ModuleSetup(app_module)
         module_dependency = cls.get_all_modules(app_module_config)
         routes = []
 
@@ -90,14 +90,14 @@ class AppFactory:
                 container=injector.container, config=config
             )
 
-            if not isinstance(module_ref, ModuleConfigure):
+            if not isinstance(module_ref, ModuleSetup):
                 module_ref.run_module_register_services()
                 routes.extend(module_ref.routes)
 
             injector.add_module(module_ref)
 
         for module_config in injector.get_dynamic_modules():
-            if injector.get_module(module_config.module):
+            if injector.get_module(module_config.module):  # pragma: no cover
                 continue
 
             module_ref = module_config.configure_with_factory(
@@ -144,7 +144,7 @@ class AppFactory:
         module_changed = False
 
         for module_config in injector.get_app_dependent_modules():
-            if injector.get_module(module_config.module):
+            if injector.get_module(module_config.module):  # pragma: no cover
                 continue
 
             module_ref = module_config.configure_with_factory(

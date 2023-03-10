@@ -1,7 +1,7 @@
 from starlette.routing import Host, Mount
 
 from ellar.common import Module
-from ellar.core import AppFactory, Config, ModuleBase, ModuleConfigure, TestClient
+from ellar.core import AppFactory, Config, ModuleBase, ModuleSetup, TestClient
 from ellar.di import EllarInjector
 
 from .sample import (
@@ -26,17 +26,17 @@ class BModule:
 
 
 def test_factory__read_all_module():
-    modules_dict = AppFactory.read_all_module(ModuleConfigure(BModule))
+    modules_dict = AppFactory.read_all_module(ModuleSetup(BModule))
     assert len(modules_dict) == 2
     assert list(modules_dict.values())[0].module is AModule
     assert list(modules_dict.values())[1].module is ApplicationModule
 
-    modules_list = AppFactory.get_all_modules(ModuleConfigure(AModule))
+    modules_list = AppFactory.get_all_modules(ModuleSetup(AModule))
     assert len(modules_list) == 2
     assert modules_list[0].module is AModule
     assert modules_list[1].module is ApplicationModule
 
-    modules_dict = AppFactory.read_all_module(ModuleConfigure(ApplicationModule))
+    modules_dict = AppFactory.read_all_module(ModuleSetup(ApplicationModule))
     assert len(modules_dict) == 0
 
 

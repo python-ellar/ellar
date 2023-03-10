@@ -16,8 +16,8 @@ from .container import Container
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.modules import (
         ModuleBase,
-        ModuleConfigure,
         ModuleRefBase,
+        ModuleSetup,
         ModuleTemplateRef,
     )
 
@@ -72,7 +72,7 @@ class EllarInjector(Injector):
 
     def get_dynamic_modules(
         self,
-    ) -> t.Generator["ModuleConfigure", t.Any, None]:
+    ) -> t.Generator["ModuleSetup", t.Any, None]:
         for _, module_configure in self._modules[MODULE_REF_TYPES.DYNAMIC].items():
             yield module_configure
 
@@ -80,7 +80,7 @@ class EllarInjector(Injector):
 
     def get_app_dependent_modules(
         self,
-    ) -> t.Generator["ModuleConfigure", t.Any, None]:
+    ) -> t.Generator["ModuleSetup", t.Any, None]:
         for _, module_configure in self._modules[
             MODULE_REF_TYPES.APP_DEPENDENT
         ].items():
@@ -104,9 +104,7 @@ class EllarInjector(Injector):
     ) -> t.Dict[t.Type["ModuleBase"], "ModuleTemplateRef"]:
         return self._modules.get(MODULE_REF_TYPES.TEMPLATE, {})
 
-    def add_module(
-        self, module_ref: t.Union["ModuleRefBase", "ModuleConfigure"]
-    ) -> None:
+    def add_module(self, module_ref: t.Union["ModuleRefBase", "ModuleSetup"]) -> None:
         self._modules[module_ref.ref_type].update({module_ref.module: module_ref})
 
     @t.no_type_check

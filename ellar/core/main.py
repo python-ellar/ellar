@@ -20,12 +20,7 @@ from ellar.core.middleware import (
     RequestVersioningMiddleware,
     TrustedHostMiddleware,
 )
-from ellar.core.modules import (
-    DynamicModule,
-    ModuleBase,
-    ModuleConfigure,
-    ModuleTemplateRef,
-)
+from ellar.core.modules import DynamicModule, ModuleBase, ModuleSetup, ModuleTemplateRef
 from ellar.core.routing import ApplicationRouter
 from ellar.core.templating import AppTemplating, Environment
 from ellar.core.versioning import VERSIONING, BaseAPIVersioning
@@ -139,9 +134,9 @@ class App(AppTemplating):
         **init_kwargs: t.Any,
     ) -> t.Union[T, ModuleBase]:
         if isinstance(module, DynamicModule):
-            module_config = ModuleConfigure(module.module, init_kwargs=init_kwargs)
+            module_config = ModuleSetup(module.module, init_kwargs=init_kwargs)
         else:
-            module_config = ModuleConfigure(module, init_kwargs=init_kwargs)
+            module_config = ModuleSetup(module, init_kwargs=init_kwargs)
 
         module_ref = self.injector.get_module(module_config.module)
         if module_ref:

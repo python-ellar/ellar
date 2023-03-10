@@ -1,7 +1,7 @@
 import typing as t
 
 from ellar.common import Module, ModuleRouter, render
-from ellar.core import DynamicModule, IModuleConfigure, ModuleBase
+from ellar.core import DynamicModule, IModuleSetup, ModuleBase
 from ellar.core.guard import GuardCanActivate
 from ellar.openapi.docs_generators import IDocumentationGenerator
 from ellar.openapi.openapi_v3 import OpenAPI
@@ -10,9 +10,9 @@ __all__ = ["OpenAPIDocumentModule"]
 
 
 @Module(template_folder="templates")
-class OpenAPIDocumentModule(ModuleBase, IModuleConfigure):
+class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
     @classmethod
-    def module_configure(
+    def setup(
         cls,
         document_generator: t.Union[
             t.Sequence[IDocumentationGenerator], IDocumentationGenerator
@@ -42,10 +42,10 @@ class OpenAPIDocumentModule(ModuleBase, IModuleConfigure):
         for doc_gen in _document_generator:
             if not isinstance(doc_gen, IDocumentationGenerator):
                 raise Exception(
-                    f"{doc_gen.__class__.__name__} must be of type `IDocumentationGenerator`"
+                    f"{doc_gen.__class__.__name__ if not isinstance(doc_gen, type) else doc_gen.__name__} must be of type `IDocumentationGenerator`"
                 )
 
-            cls.setup_document_manager(
+            cls._setup_document_manager(
                 router=router,
                 template_name=doc_gen.template_name,
                 path=doc_gen.path,
@@ -56,7 +56,7 @@ class OpenAPIDocumentModule(ModuleBase, IModuleConfigure):
         return DynamicModule(module=cls, providers=[], routers=(router,))
 
     @classmethod
-    def setup_document_manager(
+    def _setup_document_manager(
         cls,
         *,
         router: ModuleRouter,
