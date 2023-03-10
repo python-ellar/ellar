@@ -29,7 +29,7 @@ from .. import Config
 from .base import ModuleBase, ModuleBaseMeta
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core import App, ControllerBase
+    from ellar.core import ControllerBase
 
 
 class InvalidModuleTypeException(Exception):
@@ -196,7 +196,10 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         self.scan_templating_filters()
         self.scan_request_events()
         self.scan_exceptions_handlers()
-        self.scan_middle_ware()
+        self.scan_middleware()
+        self.register_providers()
+        self.register_controllers()
+        self._build_flatten_routes()
 
     @property
     def module(self) -> t.Type[ModuleBase]:
@@ -216,30 +219,23 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
 
     @property
     def routes(self) -> t.List[BaseRoute]:
-        if not self._flatten_routes:
-            for router in self._routers:
-                # if isinstance(router, ModuleMount):
-                #     # TODO: Allow users to choose whether to run flatten route of group routes together
-                #     # router.build_child_routes()
-                #     self._flatten_routes.append(router)
-                #     continue
-                # if isinstance(router, BaseRoute):
-                #     self._flatten_routes.append(router)
-                if isinstance(router, BaseRoute):
-                    self._flatten_routes.append(router)
         return self._flatten_routes
 
-    def run_module_register_services(self) -> None:
-        self.register_providers()
-        self.register_controllers()
-        super(ModuleTemplateRef, self).run_module_register_services()
+    def _build_flatten_routes(self) -> None:
+        for router in self._routers:
+            # if isinstance(router, ModuleMount):
+            #     # TODO: Allow users to choose whether to run flatten route of group routes together
+            #     # router.build_child_routes()
+            #     self._flatten_routes.append(router)
+            #     continue
+            # if isinstance(router, BaseRoute):
+            #     self._flatten_routes.append(router)
+            if isinstance(router, BaseRoute):
+                self._flatten_routes.append(router)
 
     def _register_module(self) -> None:
-        _module = self.module
-        if not is_decorated_with_injectable(self.module):
-            _module = injectable()(self.module)
         self.container.register(
-            _module, ModuleProvider(self.module, **self._init_kwargs)
+            self.module, ModuleProvider(self.module, **self._init_kwargs)
         )
 
     def scan_templating_filters(self) -> None:
@@ -267,7 +263,7 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         )
         self._config[EXCEPTION_HANDLERS_KEY].extend(exception_handlers)
 
-    def scan_middle_ware(self) -> None:
+    def scan_middleware(self) -> None:
         middleware = (
             reflect.get_metadata(MIDDLEWARE_HANDLERS_KEY, self._module_type) or []
         )
@@ -291,9 +287,9 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         for controller in self._controllers:
             ProviderConfig(controller).register(self._container)
 
-    def run_application_ready(self, app: "App") -> None:
-        _module_type_instance = self._container.injector.get(self._module_type)
-        _module_type_instance.application_ready(app)
+    # def run_application_ready(self, app: "App") -> None:
+    #     _module_type_instance = self._container.injector.get(self._module_type)
+    #     _module_type_instance.application_ready(app)
 
     def _get_all_routers(self) -> t.Sequence[t.Union[ModuleMount, Mount, BaseRoute]]:
         _routers = list(

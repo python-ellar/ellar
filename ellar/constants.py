@@ -93,6 +93,8 @@ ELLAR_PY_PROJECT = "ellar"
 class MODULE_REF_TYPES(metaclass=_AnnotationToValue):
     PLAIN: str
     TEMPLATE: str
+    DYNAMIC: str
+    APP_DEPENDENT: str
 
 
 class MODULE_METADATA(metaclass=_AnnotationToValue):

@@ -33,7 +33,7 @@ class ProviderConfig(t.Generic[T]):
         base_type: t.Union[t.Type[T], t.Type],
         *,
         use_value: T = None,
-        use_class: t.Type[T] = None
+        use_class: t.Union[t.Type[T], t.Any] = None
     ):
         if use_value and use_class:
             raise DIImproperConfiguration(

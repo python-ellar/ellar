@@ -156,7 +156,7 @@ class ModuleRouter(OperationDefinitions, ModuleMount):
         self,
         path: str = "",
         name: str = None,
-        tag: str = NOT_SET,
+        tag: t.Optional[str] = NOT_SET,
         description: str = None,
         external_doc_description: str = None,
         external_doc_url: str = None,
