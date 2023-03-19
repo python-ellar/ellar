@@ -1,11 +1,13 @@
 import typing as t
 
-from ellar.cache import BaseCacheBackend, CacheService, ICacheService
 from ellar.common import Module
 from ellar.core import Config, DynamicModule, IModuleSetup, ModuleBase, ModuleSetup
 from ellar.di import ProviderConfig
 
+from .interface import ICacheService
+from .model import BaseCacheBackend
 from .schema import CacheModuleSchemaSetup
+from .service import CacheService
 
 
 @Module()
