@@ -1,6 +1,5 @@
 import dataclasses
 import typing as t
-from abc import abstractmethod
 
 from starlette.routing import BaseRoute
 
@@ -56,20 +55,21 @@ class DynamicModule:
 @dataclasses.dataclass
 class ModuleSetup:
     """
-    ModuleConfigure is a way to configure a module late after the application has started.
+    ModuleSetup is a way to configure a module after the application has started.
     This is necessary for Module that requires some services available to configure them.
     For example:
 
-    @Module()
-    Class ModuleA(ModuleBase):
-        def module_configure(cls, setting1: t.Any, setting2: t.Any, setting3: t.Any):
-            return ModuleConfigure(module=cls, provider=[])
-
-    def module_a_configuration_factory(module: ModuleA, config: Config, foo: Foo):
-            return module.module_configure(setting1=config.setting1, setting2=config.setting2, setting3=foo.foo)
+     class MyModule(ModuleBase, IModuleSetup):
+        @classmethod
+        def setup(cls, param1: Any, param2: Any, foo: str) -> DynamicModule:
+            return DynamicModule(module, provider=[], controllers=[], routers=[])
 
 
-    @Module(modules=[ModuleAConfigure(ModuleA, inject=[Config, Foo], factory=module_a_configuration_factory), ])
+    def module_a_configuration_factory(module: t.Type[MyModule], config: Config, foo: Foo):
+        return module.setup(param1=config.param1, param2=config.param2, foo=foo.foo)
+
+
+    @Module(modules=[ModuleSetup(MyModule, inject=[Config, Foo], factory=module_a_configuration_factory), ])
     Class ApplicationModule(ModuleBase):
         pass
     """
@@ -154,10 +154,51 @@ class ModuleSetup:
 
 
 class IModuleSetup:
-    """Modules that must have a custom setup should inherit from IModuleConfigure"""
+    """Modules that must have a custom setup should inherit from IModuleSetup"""
 
     @classmethod
-    @abstractmethod
     @t.no_type_check
     def setup(cls, *args: t.Any, **kwargs: t.Any) -> DynamicModule:
-        """Module Dynamic Setup"""
+        """
+        Provides Dynamic set up for a module.
+
+        Usage:
+
+        class MyModule(ModuleBase, IModuleSetup):
+            @classmethod
+            def setup(cls, param1: Any, param2: Any) -> DynamicModule:
+                :return DynamicModule(module, provider=[], controllers=[], routers=[])
+
+
+        @Module(modules=[MyModule.setup(param1='xyz', param2='abc')])
+        class ApplicationModule(ModuleBase):
+            pass
+        """
+
+    @classmethod
+    @t.no_type_check
+    def register_setup(cls, *args: t.Any, **kwargs: t.Any) -> ModuleSetup:
+        """
+        The module defines all the dependencies its needs for its setup.
+        Allowing parameters needed for setting up the module to come from app Config.
+
+        Usage:
+
+        class MyModule(ModuleBase, IModuleSetup):
+            @classmethod
+            def register_setup(cls) -> ModuleSetup:
+                :return ModuleSetup(cls, inject=[Config, OtherServices], factory=cls.setup_module_factory)
+
+            @staticmethod
+            def setup_module_factory(module: t.Type['MyModule'], config: Config, others: OtherServices) -> DynamicModule:
+                param1 = config.param1
+                param2 = config.param2
+
+                :return DynamicModule(module, provider=[], controllers=[], routers=[])
+
+
+        @Module(modules=[MyModule.register_setup()])
+        class ApplicationModule(ModuleBase):
+            pass
+
+        """
