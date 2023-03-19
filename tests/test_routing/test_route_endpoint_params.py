@@ -16,18 +16,8 @@ from ellar.core.context import IExecutionContext
 from ellar.core.middleware import Middleware
 from ellar.core.middleware.sessions import SessionMiddleware
 from ellar.core.routing import ModuleRouter
-from ellar.helper.importer import get_class_import
 
 router = ModuleRouter()
-
-
-class SampleConfig:
-    SECRET_KEY: str = "ellar_cf303596-e51a-441a-ba67-5da42dbffb07"
-
-    MIDDLEWARE = [Middleware(SessionMiddleware, secret_key=SECRET_KEY)]
-
-
-config_path = get_class_import(SampleConfig)
 
 
 @router.get("/starlette-request")
@@ -74,7 +64,14 @@ async def get_websockets(websocket: StarletteWebSocket, ws=Ws()):
     await ws.close()
 
 
-tm = TestClientFactory.create_test_module(routers=[router], config_module=config_path)
+SECRET_KEY = "ellar_cf303596-e51a-441a-ba67-5da42dbffb07"
+tm = TestClientFactory.create_test_module(
+    routers=[router],
+    config_module=dict(
+        SECRET_KEY=SECRET_KEY,
+        MIDDLEWARE=[Middleware(SessionMiddleware, secret_key=SECRET_KEY)],
+    ),
+)
 client = tm.get_client()
 
 

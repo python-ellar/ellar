@@ -1,6 +1,7 @@
 from time import sleep
 
-from ellar.common import ModuleRouter, cache
+from ellar.cache import CacheModule, cache
+from ellar.common import ModuleRouter
 from ellar.core import TestClientFactory
 from ellar.core.response import PlainTextResponse
 
@@ -11,7 +12,7 @@ def test_cache_route_function_return_data():
     mr = ModuleRouter()
 
     @mr.get("/index")
-    @cache(timeout=0.12)  # cache for 3sec
+    @cache(ttl=0.12)  # cache for 3sec
     def homepage():
         nonlocal called_count
 
@@ -19,9 +20,10 @@ def test_cache_route_function_return_data():
         return dict(message="Response Information cached.")
 
     client = TestClientFactory.create_test_module(
+        modules=[CacheModule.register_setup()],
         routers=[
             mr,
-        ]
+        ],
     ).get_client()
 
     for i in range(2):
@@ -41,7 +43,7 @@ def test_cache_for_async_route_function_return_data():
     mr = ModuleRouter()
 
     @mr.get("/index")
-    @cache(timeout=3)  # cache for 3sec
+    @cache(ttl=3)  # cache for 3sec
     async def homepage():
         nonlocal called_count
 
@@ -49,9 +51,10 @@ def test_cache_for_async_route_function_return_data():
         return dict(message="Response Information cached Async")
 
     client = TestClientFactory.create_test_module(
+        modules=[CacheModule.register_setup()],
         routers=[
             mr,
-        ]
+        ],
     ).get_client()
     res = client.get("/index")
     for i in range(2):
@@ -68,7 +71,7 @@ def test_cache_for_async_route_function_return_response():
     mr = ModuleRouter()
 
     @mr.get("/index")
-    @cache(timeout=3)  # cache for 3sec
+    @cache(ttl=3)  # cache for 3sec
     async def homepage():
         nonlocal called_count
 
@@ -76,9 +79,10 @@ def test_cache_for_async_route_function_return_response():
         return PlainTextResponse("Response Information cached Async")
 
     client = TestClientFactory.create_test_module(
+        modules=[CacheModule.register_setup()],
         routers=[
             mr,
-        ]
+        ],
     ).get_client()
 
     res = client.get("/index")
@@ -94,7 +98,7 @@ def test_cache_route_function_return_response():
     mr = ModuleRouter()
 
     @mr.get("/index")
-    @cache(timeout=2)  # cache for 3sec
+    @cache(ttl=2)  # cache for 3sec
     def homepage():
         nonlocal called_count
 
@@ -102,9 +106,10 @@ def test_cache_route_function_return_response():
         return PlainTextResponse("Response Information cached")
 
     client = TestClientFactory.create_test_module(
+        modules=[CacheModule.register_setup()],
         routers=[
             mr,
-        ]
+        ],
     ).get_client()
 
     res = client.get("/index")

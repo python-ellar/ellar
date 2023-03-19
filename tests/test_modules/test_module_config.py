@@ -55,6 +55,27 @@ class DynamicInstantiatedModule(ModuleBase, IModuleSetup):
         )
 
 
+@Module()
+class DynamicModuleSetupRegisterModule(ModuleBase, IModuleSetup):
+    @classmethod
+    def setup(cls, a: int, b: int) -> DynamicModule:
+        dynamic_type = type("DynamicSample", (IDynamic,), {"a": a, "b": b})
+        return DynamicModule(
+            cls,
+            providers=[ProviderConfig(IDynamic, use_class=dynamic_type)],
+        )
+
+    @classmethod
+    def setup_register(cls) -> ModuleSetup:
+        return ModuleSetup(cls, inject=[Config], factory=cls.setup_register_factory)
+
+    @staticmethod
+    def setup_register_factory(
+        module: "DynamicModuleSetupRegisterModule", config: Config
+    ) -> DynamicModule:
+        return module.setup(config.a, config.b)
+
+
 def test_dynamic_module_haves_routes():
     routers = reflect.get_metadata(MODULE_METADATA.ROUTERS, DynamicInstantiatedModule)
     assert len(routers) == 1
@@ -89,6 +110,18 @@ def test_dynamic_module_setup_router_controllers_works():
     res = client.get("/dynamic-controller/sample")
     assert res.status_code == 200
     assert res.json() == {"message": 'You have reached "sample_example" home route'}
+
+
+def test_dynamic_module_setup_register_works():
+    with reflect.context():
+        test_module = TestClientFactory.create_test_module(
+            modules=(DynamicModuleSetupRegisterModule.setup_register(),),
+            config_module=dict(a=24555, b=8899900),
+        )
+        assert len(test_module.app.routes) == 0
+        dynamic_instance = test_module.app.injector.get(IDynamic)
+        assert dynamic_instance.a == 24555
+        assert dynamic_instance.b == 8899900
 
 
 @pytest.mark.parametrize(

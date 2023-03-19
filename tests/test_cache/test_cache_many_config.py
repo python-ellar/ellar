@@ -1,34 +1,32 @@
-from ellar.cache import ICacheService
+from ellar.cache import CacheModule, ICacheService, cache
 from ellar.cache.backends.local_cache import LocalMemCacheBackend
-from ellar.common import Controller, cache, get
+from ellar.common import Controller, get
 from ellar.core import TestClientFactory
 from ellar.core.response import PlainTextResponse
-from ellar.helper.importer import get_class_import
-
-
-class ManyCacheBackendConfig:
-    CACHES = {
-        "default": LocalMemCacheBackend(),
-        "another": LocalMemCacheBackend(key_prefix="another", version=2),
-    }
 
 
 @Controller("")
 class ExampleController:
     @get("/index-1")
-    @cache(timeout=1, backend="another")
+    @cache(ttl=1, backend="another")
     def index_1(self):
         return PlainTextResponse("ExampleController cache 1")
 
     @get("/index-2")
-    @cache(timeout=1, backend="default")
+    @cache(ttl=1, backend="default")
     def index_2(self):
         return dict(message="ExampleController cache 2")
 
 
 tm = TestClientFactory.create_test_module(
     controllers=[ExampleController],
-    config_module=get_class_import(ManyCacheBackendConfig),
+    modules=(CacheModule.register_setup(),),
+    config_module=dict(
+        CACHES={
+            "default": LocalMemCacheBackend(),
+            "another": LocalMemCacheBackend(key_prefix="another", version=2),
+        }
+    ),
 )
 
 

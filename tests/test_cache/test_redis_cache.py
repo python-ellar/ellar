@@ -56,7 +56,7 @@ class TestRedisCacheBackend:
         assert self.backend.get("test-touch") == "1"
 
     def test_incr_async(self):
-        self.backend.set("test-incr", 0, timeout=1)
+        self.backend.set("test-incr", 0, ttl=1)
         self.backend.incr("test-incr")
 
         assert self.backend.get("test-incr") == 1
@@ -66,7 +66,7 @@ class TestRedisCacheBackend:
         assert self.backend.get("test-incr") == 6
 
     def test_decr_async(self):
-        self.backend.set("test-decr", 2, timeout=1)
+        self.backend.set("test-decr", 2, ttl=1)
         self.backend.decr("test-decr")
 
         assert self.backend.get("test-decr") == 1
@@ -137,7 +137,7 @@ class TestRedisCacheBackendAsync:
 
     @pytest.mark.asyncio
     async def test_incr_async(self):
-        await self.backend.set_async("test-incr-async", 0, timeout=1)
+        await self.backend.set_async("test-incr-async", 0, ttl=1)
         await self.backend.incr_async("test-incr-async")
         assert await self.backend.get_async("test-incr-async") == 1
         await self.backend.incr_async("test-incr-async", 2)
@@ -146,7 +146,7 @@ class TestRedisCacheBackendAsync:
 
     @pytest.mark.asyncio
     async def test_decr_async(self):
-        await self.backend.set_async("test-decr-async", 2, timeout=1)
+        await self.backend.set_async("test-decr-async", 2, ttl=1)
         await self.backend.decr_async("test-decr-async")
         assert await self.backend.get_async("test-decr-async") == 1
 
@@ -177,5 +177,5 @@ class TestRedisCacheBackendAsync:
             MEMCACHE_CLIENT = DemoCacheClient
 
         backend = DemoMemCachedBackend(servers=["redis://localhost:6379/0"])
-        await backend.set_async("zero", "value", timeout=0)
+        await backend.set_async("zero", "value", ttl=0)
         assert set_called and delete_called

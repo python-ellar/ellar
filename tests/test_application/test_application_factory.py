@@ -1,3 +1,4 @@
+import pytest
 from starlette.routing import Host, Mount
 
 from ellar.common import Module
@@ -105,3 +106,10 @@ def test_factory_create_app_works(tmpdir):
     template = app.jinja_environment.get_template("example.html")
     result = template.render()
     assert result == "<html>Hello World<html/>"
+
+
+def test_invalid_config_module_raise_exception():
+    with pytest.raises(Exception) as ex:
+        AppFactory.create_app(config_module=set())
+
+    assert str(ex.value) == "config_module should be a importable str or a dict object"
