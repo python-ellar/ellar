@@ -42,16 +42,21 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
         for doc_gen in _document_generator:
             if not isinstance(doc_gen, IDocumentationGenerator):
                 raise Exception(
-                    f"{doc_gen.__class__.__name__ if not isinstance(doc_gen, type) else doc_gen.__name__} must be of type `IDocumentationGenerator`"
+                    f"{doc_gen.__class__.__name__ if not isinstance(doc_gen, type) else doc_gen.__name__} "
+                    f"must be of type `IDocumentationGenerator`"
                 )
 
+            template_context = dict(doc_gen.template_context)
+            template_context.setdefault(
+                "favicon_url", "https://eadwincode.github.io/ellar/img/Icon.svg"
+            )
             cls._setup_document_manager(
                 router=router,
                 template_name=doc_gen.template_name,
                 path=doc_gen.path,
                 openapi_url=openapi_url,
                 title=doc_gen.title,
-                **doc_gen.template_context,
+                **template_context,
             )
         return DynamicModule(module=cls, providers=[], routers=(router,))
 

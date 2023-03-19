@@ -49,7 +49,7 @@ class TestClientFactory:
         global_guards: t.List[
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
         ] = None,
-        config_module: str = None,
+        config_module: t.Union[str, t.Dict] = None,
     ) -> _TestingModule:
         """
         Create a TestingModule to test controllers and services in isolation

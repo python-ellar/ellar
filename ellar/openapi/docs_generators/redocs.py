@@ -23,13 +23,13 @@ class ReDocDocumentGenerator(IDocumentationGenerator):
         path: str = "redoc",
         title: str = "Ellar Redoc",
         redoc_js_url: str = "https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js",
-        redoc_favicon_url: str = "https://eadwincode.github.io/ellar/img/Icon.svg",
+        favicon_url: str = "https://eadwincode.github.io/ellar/img/Icon.svg",
         with_google_fonts: bool = True,
     ):
         self._path = path
         self._title = title
         self._template_context = dict(
             redoc_js_url=redoc_js_url,
-            redoc_favicon_url=redoc_favicon_url,
+            favicon_url=favicon_url,
             with_google_fonts=with_google_fonts,
         )

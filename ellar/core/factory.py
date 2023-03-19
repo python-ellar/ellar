@@ -96,7 +96,7 @@ class AppFactory:
 
             injector.add_module(module_ref)
 
-        for module_config in injector.get_dynamic_modules():
+        for module_config in reversed(list(injector.get_dynamic_modules())):
             if injector.get_module(module_config.module):  # pragma: no cover
                 continue
 
@@ -116,11 +116,24 @@ class AppFactory:
         global_guards: t.List[
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
         ] = None,
-        config_module: str = None,
+        config_module: t.Union[str, t.Dict] = None,
     ) -> App:
+        def _get_config_kwargs() -> t.Dict:
+            if config_module is None:
+                return {}
+
+            if not isinstance(config_module, (str, dict)):
+                raise Exception(
+                    "config_module should be a importable str or a dict object"
+                )
+
+            if isinstance(config_module, str):
+                return dict(config_module=config_module)
+            return dict(config_module)
+
         assert reflect.get_metadata(MODULE_WATERMARK, module), "Only Module is allowed"
 
-        config = Config(app_configured=True, config_module=config_module)
+        config = Config(app_configured=True, **_get_config_kwargs())
         injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND)
         injector.container.register_instance(config, concrete_type=Config)
         CoreServiceRegistration(injector, config).register_all()
@@ -143,7 +156,7 @@ class AppFactory:
         routes = []
         module_changed = False
 
-        for module_config in injector.get_app_dependent_modules():
+        for module_config in reversed(list(injector.get_app_dependent_modules())):
             if injector.get_module(module_config.module):  # pragma: no cover
                 continue
 
@@ -179,7 +192,7 @@ class AppFactory:
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
         ] = None,
         commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = tuple(),
-        config_module: str = None,
+        config_module: t.Union[str, t.Dict] = None,
     ) -> App:
         from ellar.common import Module
 
@@ -208,7 +221,7 @@ class AppFactory:
         global_guards: t.List[
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
         ] = None,
-        config_module: str = None,
+        config_module: t.Union[str, t.Dict] = None,
     ) -> App:
         return cls._create_app(
             module, config_module=config_module, global_guards=global_guards

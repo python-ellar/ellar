@@ -1,6 +1,3 @@
-import typing as t
-
-from ellar.cache import BaseCacheBackend, CacheService, ICacheService
 from ellar.di import EllarInjector
 from ellar.services.reflector import Reflector
 
@@ -44,9 +41,5 @@ class CoreServiceRegistration:
         self.injector.container.register_scoped(
             IWebSocketContextFactory, WebSocketContextFactory
         )
-        cache_service = CacheService(
-            t.cast(t.Dict[str, BaseCacheBackend], dict(self.config.CACHES))
-        )
+
         self.injector.container.register_instance(Reflector())
-        self.injector.container.register_instance(cache_service)
-        self.injector.container.register(ICacheService, cache_service)

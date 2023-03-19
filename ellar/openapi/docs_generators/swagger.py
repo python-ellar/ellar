@@ -24,12 +24,12 @@ class SwaggerDocumentGenerator(IDocumentationGenerator):
         title: str = "Ellar Swagger Doc",
         swagger_js_url: str = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-bundle.js",
         swagger_css_url: str = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui.css",
-        swagger_favicon_url: str = "https://eadwincode.github.io/ellar/img/Icon.svg",
+        favicon_url: str = "https://eadwincode.github.io/ellar/img/Icon.svg",
     ):
         self._path = path
         self._title = title
         self._template_context = dict(
             swagger_js_url=swagger_js_url,
             swagger_css_url=swagger_css_url,
-            swagger_favicon_url=swagger_favicon_url,
+            favicon_url=favicon_url,
         )
