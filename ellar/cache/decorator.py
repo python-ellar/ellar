@@ -3,12 +3,10 @@ import uuid
 from functools import wraps
 
 from ellar.cache.interface import ICacheService
+from ellar.common import Context, Provide, extra_args
 from ellar.core import ExecutionContext, IExecutionContext
 from ellar.core.params import ExtraEndpointArg
 from ellar.helper import is_async_callable
-
-from .decorators.extra_args import extra_args
-from .routing.params import Context, Provide
 
 
 class _CacheDecorator:
@@ -18,7 +16,7 @@ class _CacheDecorator:
         "_version",
         "_backend",
         "_func",
-        "_timeout",
+        "_ttl",
         "_cache_service_arg",
         "_context_arg",
         "_make_key_callback",
@@ -27,7 +25,7 @@ class _CacheDecorator:
     def __init__(
         self,
         func: t.Callable,
-        timeout: t.Union[int, float],
+        ttl: t.Union[int, float],
         *,
         key_prefix: str = "",
         version: str = None,
@@ -39,7 +37,7 @@ class _CacheDecorator:
         self._version = version
         self._backend = backend
         self._func = func
-        self._timeout = timeout
+        self._ttl = ttl
 
         # create extra args
         self._cache_service_arg = ExtraEndpointArg(
@@ -87,7 +85,7 @@ class _CacheDecorator:
             await cache_service.set_async(
                 key,
                 response,
-                timeout=self._timeout,
+                ttl=self._ttl,
                 version=self._version,
                 backend=self._backend,
             )
@@ -116,7 +114,7 @@ class _CacheDecorator:
             cache_service.set(
                 key,
                 response,
-                timeout=self._timeout,
+                ttl=self._ttl,
                 version=self._version,
                 backend=self._backend,
             )
@@ -126,7 +124,7 @@ class _CacheDecorator:
 
 
 def cache(
-    timeout: t.Union[float, int],
+    ttl: t.Union[float, int],
     *,
     key_prefix: str = "",
     version: str = None,
@@ -135,10 +133,20 @@ def cache(
         [t.Union[ExecutionContext, IExecutionContext], str], str
     ] = None,
 ) -> t.Callable:
+    """
+
+    :param ttl: the time to live
+    :param key_prefix: cache key prefix
+    :param version: will be used in constructing the key
+    :param backend: Cache Backend to use. Default is `default`
+    :param make_key_callback: Key dynamic construct.
+    :return: TCallable
+    """
+
     def _wraps(func: t.Callable) -> t.Callable:
         cache_decorator = _CacheDecorator(
             func,
-            timeout,
+            ttl,
             key_prefix=key_prefix,
             version=version,
             backend=backend,

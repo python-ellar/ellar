@@ -32,20 +32,16 @@ class _RedisCacheBackendSync(IBaseCacheBackendAsync, ABC):
         self,
         key: str,
         value: t.Any,
-        timeout: t.Union[float, int] = None,
+        ttl: t.Union[float, int] = None,
         version: str = None,
     ) -> bool:
-        res = self._async_executor(
-            self.set_async(key, value, version=version, timeout=timeout)
-        )
+        res = self._async_executor(self.set_async(key, value, version=version, ttl=ttl))
         return bool(res)
 
     def touch(
-        self, key: str, timeout: t.Union[float, int] = None, version: str = None
+        self, key: str, ttl: t.Union[float, int] = None, version: str = None
     ) -> bool:
-        res = self._async_executor(
-            self.touch_async(key, version=version, timeout=timeout)
-        )
+        res = self._async_executor(self.touch_async(key, version=version, ttl=ttl))
         return bool(res)
 
     def has_key(self, key: str, version: str = None) -> bool:
@@ -116,14 +112,12 @@ class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
         pool = self._get_connection_pool(write)
         return self.MEMCACHE_CLIENT(connection_pool=pool)
 
-    def get_backend_timeout(
-        self, timeout: t.Union[float, int] = None
-    ) -> t.Union[float, int]:
-        if timeout is None:
-            timeout = self._default_timeout
-        # The key will be made persistent if None used as a timeout.
+    def get_backend_ttl(self, ttl: t.Union[float, int] = None) -> t.Union[float, int]:
+        if ttl is None:
+            ttl = self._default_ttl
+        # The key will be made persistent if None used as a ttl.
         # Non-positive values will cause the key to be deleted.
-        return None if timeout is None else max(0, int(timeout))
+        return None if ttl is None else max(0, int(ttl))
 
     @make_key_decorator
     async def get_async(self, key: str, version: str = None) -> t.Any:
@@ -138,15 +132,15 @@ class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
         self,
         key: str,
         value: t.Any,
-        timeout: t.Union[float, int] = None,
+        ttl: t.Union[float, int] = None,
         version: str = None,
     ) -> bool:
         client = self._get_client()
         value = self._serializer.dumps(value)
-        if timeout == 0:
+        if ttl == 0:
             await client.delete(key)
 
-        return bool(await client.set(key, value, ex=self.get_backend_timeout(timeout)))
+        return bool(await client.set(key, value, ex=self.get_backend_ttl(ttl)))
 
     @make_key_decorator
     async def delete_async(self, key: str, version: str = None) -> bool:
@@ -156,13 +150,13 @@ class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
 
     @make_key_decorator
     async def touch_async(
-        self, key: str, timeout: t.Union[float, int] = None, version: str = None
+        self, key: str, ttl: t.Union[float, int] = None, version: str = None
     ) -> bool:
         client = self._get_client()
-        if timeout is None:
+        if ttl is None:
             res = await client.persist(key)
             return bool(res)
-        res = await client.expire(key, self.get_backend_timeout(timeout))
+        res = await client.expire(key, self.get_backend_ttl(ttl))
         return bool(res)
 
     @make_key_decorator

@@ -28,20 +28,16 @@ class _LocalMemCacheBackendSync(IBaseCacheBackendAsync, ABC):
         self,
         key: str,
         value: t.Any,
-        timeout: t.Union[float, int] = None,
+        ttl: t.Union[float, int] = None,
         version: str = None,
     ) -> bool:
-        res = self._async_executor(
-            self.set_async(key, value, timeout=timeout, version=version)
-        )
+        res = self._async_executor(self.set_async(key, value, ttl=ttl, version=version))
         return bool(res)
 
     def touch(
-        self, key: str, timeout: t.Union[float, int] = None, version: str = None
+        self, key: str, ttl: t.Union[float, int] = None, version: str = None
     ) -> bool:
-        res = self._async_executor(
-            self.touch_async(key, timeout=timeout, version=version)
-        )
+        res = self._async_executor(self.touch_async(key, ttl=ttl, version=version))
         return bool(res)
 
     def incr(self, key: str, delta: int = 1, version: str = None) -> int:
@@ -90,12 +86,12 @@ class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
         self,
         key: str,
         value: t.Any,
-        timeout: t.Union[float, int] = None,
+        ttl: t.Union[float, int] = None,
         version: str = None,
     ) -> bool:
         async with self._lock:
             self._cache[key] = pickle.dumps(value, self.pickle_protocol)
-            self._expire_track[key] = self.get_backend_timeout(timeout)
+            self._expire_track[key] = self.get_backend_ttl(ttl)
             return True
 
     def _has_expired(self, key: str) -> bool:
@@ -112,13 +108,13 @@ class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
 
     @make_key_decorator
     async def touch_async(
-        self, key: str, timeout: t.Union[float, int] = None, version: str = None
+        self, key: str, ttl: t.Union[float, int] = None, version: str = None
     ) -> bool:
         async with self._lock:
             if self._has_expired(key):
                 return False
 
-            self._expire_track[key] = self.get_backend_timeout(timeout)
+            self._expire_track[key] = self.get_backend_ttl(ttl)
             return True
 
     def has_key(self, key: str, version: str = None) -> bool:
