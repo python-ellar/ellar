@@ -256,7 +256,7 @@ import os
 
 from ellar.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
-from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder
+from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerDocumentGenerator
 from .root_module import ApplicationModule
 
 application = AppFactory.create_from_app_module(
@@ -273,8 +273,12 @@ document_builder.set_title('CarSite API') \
     .set_license('MIT Licence', url='https://www.google.com')
 
 document = document_builder.build_document(application)
-module = application.install_module(OpenAPIDocumentModule, document=document)
-module.setup_swagger_doc()
+module = OpenAPIDocumentModule.setup(
+    document=document,
+    document_generator=SwaggerDocumentGenerator(),
+    guards=[]
+)
+application.install_module(module)
 ```
 
 Now we can test our API at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs#/)
@@ -303,4 +307,3 @@ Project is still in development
 - Documentation - (in progress)
 - Interceptors  -  [Aspect Oriented Programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming) (AOP) technique
 - Database Plugin with [Encode/ORM](https://github.com/encode/orm)
-- API Throttling
