@@ -126,7 +126,6 @@ class TestStarletteCompatibility:
         app = App(
             config=Config(),
             injector=EllarInjector(),
-            routes=[],
             on_startup_event_handlers=[EventHandler(run_startup)],
             on_shutdown_event_handlers=[EventHandler(run_cleanup)],
         )
@@ -150,9 +149,7 @@ class TestStarletteCompatibility:
             yield
             cleanup_complete = True
 
-        app = App(
-            config=Config(), injector=EllarInjector(), lifespan=lifespan, routes=[]
-        )
+        app = App(config=Config(), injector=EllarInjector(), lifespan=lifespan)
 
         assert not startup_complete
         assert not cleanup_complete
@@ -217,7 +214,7 @@ class TestEllarApp:
         injector = EllarInjector()
         CoreServiceRegistration(injector, config=Config()).register_all()
         injector.container.register_instance(config)
-        app = App(injector=injector, config=config, routes=[])
+        app = App(injector=injector, config=config)
         client = TestClient(app)
 
         response = client.get("/static/example.txt")
@@ -239,7 +236,7 @@ class TestEllarApp:
         injector = EllarInjector()
         CoreServiceRegistration(injector, config=Config()).register_all()
         injector.container.register_instance(config)
-        app = App(injector=injector, config=config, routes=[])
+        app = App(injector=injector, config=config)
         client = TestClient(app)
 
         response = client.get("/static-modified/example.txt")
@@ -258,15 +255,15 @@ class TestEllarApp:
         assert module_instance is module_instance2
 
     def test_has_static_files(self, tmpdir):
-        app = App(injector=EllarInjector(), config=Config(), routes=[])
+        app = App(injector=EllarInjector(), config=Config())
         assert app.has_static_files is False
 
         config = Config(STATIC_DIRECTORIES=[tmpdir])
-        app = App(injector=EllarInjector(), config=config, routes=[])
+        app = App(injector=EllarInjector(), config=config)
         assert app.has_static_files
 
     def test_app_enable_versioning_and_versioning_scheme(self):
-        app = App(injector=EllarInjector(), config=Config(), routes=[])
+        app = App(injector=EllarInjector(), config=Config())
         assert app.config.VERSIONING_SCHEME
         assert isinstance(app.config.VERSIONING_SCHEME, DefaultAPIVersioning)
 
@@ -290,7 +287,7 @@ class TestEllarApp:
         CoreServiceRegistration(injector, config=Config()).register_all()
         injector.container.register_instance(config)
 
-        app = App(config=config, injector=injector, routes=[])
+        app = App(config=config, injector=injector)
         assert injector.get(Reflector)
         assert injector.get(Config) is config
         assert injector.get(Environment) is app.jinja_environment
@@ -313,7 +310,7 @@ class TestEllarApp:
         )  # will raise an exception is service is not registered
         CoreServiceRegistration(injector, config=Config()).register_all()
         injector.container.register_instance(config)
-        app = App(config=config, injector=injector, routes=[])
+        app = App(config=config, injector=injector)
         app.add_exception_handler(CustomExceptionHandler())
 
         @get("/404")
@@ -364,7 +361,7 @@ class TestAppTemplating:
             file.write("<file content>")
 
         config = Config(STATIC_DIRECTORIES=[tmpdir])
-        app = App(injector=EllarInjector(), config=config, routes=[])
+        app = App(injector=EllarInjector(), config=config)
         static_app = app.create_static_app()
         assert isinstance(static_app, StaticFiles)
         client = TestClient(static_app)
@@ -386,7 +383,7 @@ class TestAppTemplating:
             file.write("<file content>")
 
         config = Config(STATIC_DIRECTORIES=[tmpdir])
-        app = App(injector=EllarInjector(), config=config, routes=[])
+        app = App(injector=EllarInjector(), config=config)
         static_app_old = app._static_app
 
         app.reload_static_app()
@@ -399,7 +396,7 @@ class TestAppTemplating:
         assert res.text == "<file content>"
 
     def test_app_template_filter(self):
-        app = App(injector=EllarInjector(), config=Config(), routes=[])
+        app = App(injector=EllarInjector(), config=Config())
 
         @app.template_filter()
         def square(value):
@@ -424,7 +421,7 @@ class TestAppTemplating:
         assert result == "<html>filter square: 4, filter triple_function: 27</html>"
 
     def test_app_template_global(self):
-        app = App(injector=EllarInjector(), config=Config(), routes=[])
+        app = App(injector=EllarInjector(), config=Config())
 
         @app.template_global()
         def square(value):

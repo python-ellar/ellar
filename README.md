@@ -40,19 +40,15 @@ If you are familiar with these frameworks, you will find it easy to understand a
 ## Installation
 ### Poetry Installation
 For [Poetry](https://python-poetry.org/) usages
+
 ```shell
-poetry add ellar[standard]
+poetry add ellar-cli
 ```
 
 ### Pip Installation
 For normal pip installation
 ```shell
-pip install ellar[standard]
-```
-### NB:
-Some shells may treat square braces (`[` and `]`) as special characters. If that's the case here, then use a quote around the characters to prevent unexpected shell expansion.
-```shell
-pip install "ellar[standard]"
+pip install ellar-cli
 ```
 
 ## Create a project
@@ -234,7 +230,6 @@ Ellar is not aware of `CarModule` yet, so we need to add it to the `modules` lis
 ```python
 from ellar.common import Module, exception_handler
 from ellar.core import IHostContext, ModuleBase
-from ellar.core.connection import Request
 from ellar.core.response import JSONResponse, Response
 
 from ellar.samples.modules import HomeModule
