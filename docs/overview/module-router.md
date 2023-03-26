@@ -11,7 +11,7 @@ This file contains a quick guide on how to use the `ModuleRouter` class.
 Let's use the **routers.py** created in our previous project. And create **two** route functions, **addition** and **subtraction** 
 
 ```python
-# project_name/apps/dogs/routers.py
+# project_name/apps/car/routers.py
 """
 Define endpoints routes in python function fashion
 example:
@@ -42,7 +42,7 @@ Next, we have to make the `math_router` visible to the application
 
 ## **Registering Module Router**
 Like controllers, ModuleRouters also need to be registered to their root module in order to be used in a web application. 
-In the example provided above, the `math_router` would be registered under the `project_name/apps/dogs/module.py` file.
+In the example provided above, the `math_router` would be registered under the `project_name/apps/car/module.py` file.
 
 This registration process typically involves importing the `math_router` and then adding it to the list of `routers` in the `module.py` file. 
 This allows the router to be recognized by the application and its routes to be available to handle requests.
@@ -53,16 +53,16 @@ from ellar.common import Module
 from ellar.core import ModuleBase
 from ellar.di import Container
 
-from .controllers import DogsController
+from .controllers import CarController
 from .routers import math_router
 
 
 @Module(
-    controllers=[DogsController],
+    controllers=[CarController],
     providers=[],
     routers=[math_router],
 )
-class DogsModule(ModuleBase):
+class CarModule(ModuleBase):
     def register_providers(self, container: Container) -> None:
         # for more complicated provider registrations
         # container.register_instance(...)
@@ -115,19 +115,17 @@ def addition(*, request=Req(), res=Res(), a:int, b:int):
 We can also inject service providers just like controller routes using the `Provide` function.
 
 ```python
-from ellar.core import Request, Response, IExecutionContext
+from ellar.core import Response, Config
 from ellar.common import ModuleRouter, Provide
 
 
 math_router = ModuleRouter('/math', tag='Math')
 
 @math_router.get('/subtract')
-def subtraction(a:int, b:int, res=Provide(Response), req=Provide(Request), ctx=Provide(IExecutionContext)):
+def subtraction(a:int, b:int, res:Response, config=Provide(Config)):
     res.headers['x-operation'] = 'Subtraction'
     return dict(
-        is_request_object=isinstance(req, Request), 
-        is_response_object=isinstance(res, Response),
-        is_context_object=isinstance(ctx, IExecutionContext),
+        is_config=isinstance(config, Config),
         operation_result=a - b
     )
 

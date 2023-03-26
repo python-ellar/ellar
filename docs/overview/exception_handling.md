@@ -49,18 +49,18 @@ class ServiceUnavailableException(APIException):
 
 Let's use this `ServiceUnavailableException` in our previous project.
 
-For example, in the `DogsController`, we have a `get_all()` method (a `GET` route handler). 
+For example, in the `CarController`, we have a `get_all()` method (a `GET` route handler). 
 Let's assume that this route handler throws an exception for some reason. To demonstrate this, we'll hard-code it as follows:
 
 ```python
-# project_name/apps/dogs/controllers.py
+# project_name/apps/car/controllers.py
 
 @get()
 def get_all(self):
     raise ServiceUnavailableException()
 
 ```
-Now, when you visit [http://127.0.0.1/dogs/](http://127.0.0.1/dogs/), you will get a JSON response.
+Now, when you visit [http://127.0.0.1/car/](http://127.0.0.1/car/), you will get a JSON response.
 ```json
 {
   "detail": "Service Unavailable"
@@ -156,7 +156,7 @@ class ExceptionHandlerAction405(IExceptionHandler):
 We have registered a handler for any `HTTP` exception with a `405` status code which we are returning a template `405.html` as a response.
 
 !!!info
-    Ellar will look for `405.html` in all registered modules. So `dogs` folder, create a `templates` folder and add `405.html`.
+    Ellar will look for `405.html` in all registered modules. So `car` folder, create a `templates` folder and add `405.html`.
 
 The same way can create Handler for `500` error code.
 

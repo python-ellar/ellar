@@ -14,7 +14,7 @@ Ellar core depends on:
 ## Quick Step
 Using the Ellar CLI, you can easily set up a new project by running the following commands in your OS terminal:
 ```shell
-$(venv) pip install ellar[standard]
+$(venv) pip install ellar-cli
 $(venv) ellar new project-name
 ```
 
@@ -122,14 +122,14 @@ INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 
 One last thing, before we move to the next page, we need to create an app `module`.
 
-Lets add a `Dogs` module/app to our project:
+Lets add a `car` module/app to our project:
 ```shell
-$(venv) ellar create-module dogs
+$(venv) ellar create-module car
 ```
 The result of this CLI command is stored in `project-name/project_name/apps`
 ```
 apps/
-├─ dogs/
+├─ car/
 │  ├─ tests/
 │  │  ├─ test_controllers.py
 │  │  ├─ test_routers.py
@@ -142,13 +142,13 @@ apps/
 ```
 Brief overview of the generated files:
 
-|                    |                                                   |
-|--------------------|---------------------------------------------------|
-| `dogs.controllers` | A basic controller with an `index` route.         |
-| `dogs.module.py`   | dogs module/app `Module` metadata definition.     |
-| `dogs.services.py` | For Dogs module service declarations.             |
-| `dogs.schemas.py`  | Data-transfer-object or Serializers declarations. |
-| `dogs.tests/`      | testing directory for the dogs module.            |
+|                   |                                                   |
+|-------------------|---------------------------------------------------|
+| `car.controllers` | A basic controller with an `index` route.         |
+| `car.module.py`   | car module/app `Module` metadata definition.      |
+| `car.services.py` | For Dogs module service declarations.             |
+| `car.schemas.py`  | Data-transfer-object or Serializers declarations. |
+| `car.tests/`      | testing directory for the dogs module.            |
 
 To finish up with the created `dogs` module, we need to register it to the 
 `project_name.root_module.py`
@@ -156,10 +156,10 @@ To finish up with the created `dogs` module, we need to register it to the
 ```python
 # project_name/root_module.py
 ...
-from .apps.dogs.module import DogsModule
+from .apps.cars.module import CarModule
 
 
-@Module(modules=[HomeModule, DogsModule])
+@Module(modules=[HomeModule, CarModule])
 class ApplicationModule(ModuleBase):
     @exception_handler(404)
     def exception_404_handler(cls, request: Request, exc: Exception) -> Response:
@@ -167,10 +167,10 @@ class ApplicationModule(ModuleBase):
 ```
 That's it.
 
-Goto your browser and visit: [http://localhost:8000/dogs/](http://localhost:8000/dogs/)
+Goto your browser and visit: [http://localhost:8000/dogs/](http://localhost:8000/car/)
 ```json
 {
-  "detail": "Welcome Dogs Resource"
+  "detail": "Welcome Car Resource"
 }
 ```
 
@@ -183,7 +183,7 @@ then add the below.
 import os
 from ellar.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
-from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder
+from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerDocumentGenerator
 from .root_module import ApplicationModule
 
 application = AppFactory.create_from_app_module(
@@ -200,8 +200,12 @@ document_builder.set_title('Project Name API') \
     .set_license('MIT Licence', url='https://www.google.com')
 
 document = document_builder.build_document(application)
-module = application.install_module(OpenAPIDocumentModule, document=document)
-module.setup_swagger_doc()
+module_config = OpenAPIDocumentModule.setup(
+    document_generator=SwaggerDocumentGenerator(),
+    document=document,
+    guards=[]
+)
+application.install_module(module_config)
 ```
 
 Goto your browser and visit: [http://localhost:8000/docs/](http://localhost:8000/docs)

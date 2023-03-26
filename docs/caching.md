@@ -7,21 +7,64 @@ By caching data in a faster, more local storage location, the system can quickly
 In Ellar, we provided several cache backends interface that interacts with different cache types to assist in cache endpoint responses or other relevant data.
 
 ## Setting up the cache
-It's very simple to set up cache in Ellar but the crucial part is picking the cache type that is suitable for your application because some cache type behave differently and perform better and faster than others.
+It's very simple to set up cache in Ellar but the crucial part is picking the cache type that is suitable for your application 
+because some cache type behave differently and perform better and faster than others.
 
-The configuration of your cache defined in `CACHES` variable in `config.py` file.
+To set up cache, we need to use `CacheModule`. `CacheModule` provides two methods, `CacheModule.register_setup` and `CacheModule.setup`, for setting up `cache` in ellar applications.
 
-```python
-# project_name/config.py
+=== "CacheModule Register Setup"
+    This setup method requires you to defined `CACHES` variable containing 
+    key value pairs of cache backends in `config.py` file.
+    
+    for example:
+        
+    ```python
+    # project_name/config.py
+    
+    from ellar.core import ConfigDefaultTypesMixin
+    from ellar.cache.backends.local_cache import LocalMemCacheBackend
+    
+    class DevelopmentConfig(ConfigDefaultTypesMixin):
+        CACHES = {
+            'default': LocalMemCacheBackend(ttl=300, key_prefix='local', version=1)
+        }
+    ```
+    
+    After that you register `CacheModule` to application modules
+    ```python
+    # project_name/root_module.py
+    from ellar.cache import CacheModule
+    from ellar.common import Module
+    
+    @Module(modules=[CacheModule.register_setup()])
+    class ApplicationModule:
+        pass
+    ```
+    The `register_setup` will read `CACHES` from application config and setup the `CacheService` appropriately.
 
-from ellar.core import ConfigDefaultTypesMixin
-from ellar.cache.backends.local_cache import LocalMemCacheBackend
+=== "CacheModule Setup"
+    The setup method requires direct definition of cache backend on the `CacheModule` setup function.
+    
+    for example:
 
-class DevelopmentConfig(ConfigDefaultTypesMixin):
-    CACHES = {
-        'default': LocalMemCacheBackend(timeout=300, key_prefix='local', version=1)
-    }
-```
+    ```python
+    # project_name/root_module.py
+    from ellar.cache import CacheModule
+    from ellar.cache.backends.local_cache import LocalMemCacheBackend
+    from ellar.common import Module
+    
+    @Module(modules=[
+        CacheModule.setup(
+            default=LocalMemCacheBackend(ttl=300, key_prefix='default', version=1),
+            local=LocalMemCacheBackend(key_prefix='local'),
+            others=LocalMemCacheBackend(key_prefix='others'),
+        )
+    ])
+    class ApplicationModule:
+        pass
+    ```
+    In CacheModule.`setup`, the `default` parameter must be provided and other cache 
+    backends will be defined as keyword-arguments just like `local` and `others` incase you want to set up more than one cache backend.
 
 ### **Memcached**
 [Memcached](https://memcached.org/) is an entirely memory-based cache server, originally developed to handle high loads at LiveJournal.com and subsequently open-sourced by Danga Interactive.
@@ -273,7 +316,7 @@ class DevelopmentConfig(ConfigDefaultTypesMixin):
         'default': PyMemcacheCacheBackend(
             servers=['127.0.0.1:11211'], 
             options={'default_noreply': True}, 
-            timeout=300, 
+            ttl=300, 
             version=1, 
             key_prefix='project_name'
         )
@@ -296,7 +339,7 @@ from ellar.cache.backends.local_cache import LocalMemCacheBackend
 class DevelopmentConfig(ConfigDefaultTypesMixin):
     CACHES = {
         'default': RedisCacheBackend(servers=['redis://127.0.0.1:6379'], key_prefix='project_name'),
-        'secondary': LocalMemCacheBackend(timeout=300, key_prefix='project_name', version=1)
+        'secondary': LocalMemCacheBackend(ttl=300, key_prefix='project_name', version=1)
     }
 ```
  
@@ -313,14 +356,14 @@ The CacheService class provides methods like:
 
 - **get**_**(key: str, version: str = None, backend: str = None)**_: gets `key` value from a specified cache backend.
 - **get_async**_**(key: str, version: str = None, backend: str = None)**_: asynchronous version of `get` action
-- **set**_**(key: str, value: t.Any, timeout: t.Union[float, int] = None, version: str = None,backend: str = None)**_: sets value to a key to a specified cache backend.
-- **set_async**_**(key: str, value: t.Any, timeout: t.Union[float, int] = None, version: str = None,backend: str = None)**_: asynchronous version of `set` action
+- **set**_**(key: str, value: t.Any, ttl: t.Union[float, int] = None, version: str = None,backend: str = None)**_: sets value to a key to a specified cache backend.
+- **set_async**_**(key: str, value: t.Any, ttl: t.Union[float, int] = None, version: str = None,backend: str = None)**_: asynchronous version of `set` action
 - **delete**_**(key: str, version: str = None, backend: str = None)**_: deletes a key from a specified cache backend.
 - **delete_async**_**(key: str, version: str = None, backend: str = None)**_: asynchronous version of `delete` action
 - **has_key**_**(key: str, version: str = None, backend: str = None)**_: checks if a key exist in a specified backend
 - **has_key_async**_**(key: str, version: str = None, backend: str = None)**_: asynchronous version of `has_key` action
-- **touch**_**(key: str, timeout: t.Union[float, int] = None, version: str = None, backend: str = None)**_: sets a new expiration for a key
-- **touch_async**_**(key: str, timeout: t.Union[float, int] = None, version: str = None, backend: str = None)**_: asynchronous version of `touch` action
+- **touch**_**(key: str, ttl: t.Union[float, int] = None, version: str = None, backend: str = None)**_: sets a new expiration for a key
+- **touch_async**_**(key: str, ttl: t.Union[float, int] = None, version: str = None, backend: str = None)**_: asynchronous version of `touch` action
 - **incr**_**(key: str, delta: int = 1, version: str = None, backend: str = None)**_: increments a value for a key by delta
 - **incr_async**_**(key: str, delta: int = 1, version: str = None, backend: str = None)**_: asynchronous version of `incr` action
 - **decr**_**(key: str, delta: int = 1, version: str = None, backend: str = None)**_: decrement a value for a key by delta
@@ -373,7 +416,7 @@ Ellar provides a cache decorator that can be used to cache the responses of rout
 
 The cache decorator takes the following arguments:
 
-- `timeout`: the amount of time (in seconds) for which the response data should be cached.
+- `ttl`(time to live): the amount of time (in seconds) for which the response data should be cached.
 - `key_prefix` (optional): a string that is used to prefix the cache key, allowing for easy differentiation between different cache items.
 - `version` (optional): a string that is used to version the cache key, allowing for cache invalidation when the data schema changes.
 - `backend` (optional): the name of the cache backend to use for storing the cached data. By default, the `default` cache backend is used.
@@ -386,7 +429,7 @@ We can rewrite the above example using `cache` decorator:
     
     ...
     @get('/cache-test')
-    @cache(timeout=300, version='v1', key_prefix='project_name')
+    @cache(ttl=300, version='v1', key_prefix='project_name')
     def my_route_function(self):
         processed_value = 'some-value'
         return processed_value
@@ -397,7 +440,7 @@ We can rewrite the above example using `cache` decorator:
     
     ...
     @get('/cache-test')
-    @cache(timeout=300, version='v1', key_prefix='project_name')
+    @cache(ttl=300, version='v1', key_prefix='project_name')
     async def my_route_function(self):
         processed_value = 'some-value'
         return processed_value
@@ -422,7 +465,7 @@ Here's an example of how to use a custom `make_key_callback` function with the c
     
     ...
     @get("/my_endpoint")
-    @cache(timeout=60, make_key_callback=make_key_function)
+    @cache(ttl=60, make_key_callback=make_key_function)
     def my_endpoint(self):
         # Code to generate response data here
         processed_value = 'some-value'
@@ -442,7 +485,7 @@ Here's an example of how to use a custom `make_key_callback` function with the c
     
     ...
     @get("/my_endpoint")
-    @cache(timeout=60, make_key_callback=make_key_function)
+    @cache(ttl=60, make_key_callback=make_key_function)
     async def my_endpoint(self):
         # Code to generate response data here
         processed_value = 'some-value'

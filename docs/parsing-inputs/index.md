@@ -18,11 +18,11 @@ from ellar.core import ModuleBase
 from ellar.core.context import IExecutionContext
 from ellar.core.response import JSONResponse, Response
 from ellar.samples.modules import HomeModule
-from .apps.dogs.module import DogsModule
+from .apps.car.module import CarModule
 from .apps.items.module import ItemsModule
 
 
-@Module(modules=[HomeModule, DogsModule, ItemsModule])
+@Module(modules=[HomeModule, CarModule, ItemsModule])
 class ApplicationModule(ModuleBase):
     @exception_handler(404)
     def exception_404_handler(cls, ctx: IExecutionContext, exc: Exception) -> Response:
