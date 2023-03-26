@@ -14,7 +14,12 @@ from ..scopes import DIScope, ScopeDecorator
 from .container import Container
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.modules import ModuleBase, ModuleRefBase, ModuleTemplateRef
+    from ellar.core.modules import (
+        ModuleBase,
+        ModuleRefBase,
+        ModuleSetup,
+        ModuleTemplateRef,
+    )
 
 
 class EllarInjector(Injector):
@@ -45,6 +50,8 @@ class EllarInjector(Injector):
         self._modules: t.DefaultDict = defaultdict(OrderedDict)
         self._modules[MODULE_REF_TYPES.TEMPLATE] = OrderedDict()
         self._modules[MODULE_REF_TYPES.PLAIN] = OrderedDict()
+        self._modules[MODULE_REF_TYPES.DYNAMIC] = OrderedDict()
+        self._modules[MODULE_REF_TYPES.APP_DEPENDENT] = OrderedDict()
 
     @property  # type: ignore
     def binder(self) -> Container:  # type: ignore
@@ -63,6 +70,24 @@ class EllarInjector(Injector):
         modules.update(self._modules[MODULE_REF_TYPES.PLAIN])
         return modules
 
+    def get_dynamic_modules(
+        self,
+    ) -> t.Generator["ModuleSetup", t.Any, None]:
+        for _, module_configure in self._modules[MODULE_REF_TYPES.DYNAMIC].items():
+            yield module_configure
+
+        self._modules[MODULE_REF_TYPES.DYNAMIC].clear()
+
+    def get_app_dependent_modules(
+        self,
+    ) -> t.Generator["ModuleSetup", t.Any, None]:
+        for _, module_configure in self._modules[
+            MODULE_REF_TYPES.APP_DEPENDENT
+        ].items():
+            yield module_configure
+
+        self._modules[MODULE_REF_TYPES.APP_DEPENDENT].clear()
+
     def get_module(self, module: t.Type) -> t.Optional["ModuleRefBase"]:
         result: t.Optional["ModuleRefBase"] = None
         if module in self._modules[MODULE_REF_TYPES.TEMPLATE]:
@@ -79,7 +104,7 @@ class EllarInjector(Injector):
     ) -> t.Dict[t.Type["ModuleBase"], "ModuleTemplateRef"]:
         return self._modules.get(MODULE_REF_TYPES.TEMPLATE, {})
 
-    def add_module(self, module_ref: "ModuleRefBase") -> None:
+    def add_module(self, module_ref: t.Union["ModuleRefBase", "ModuleSetup"]) -> None:
         self._modules[module_ref.ref_type].update({module_ref.module: module_ref})
 
     @t.no_type_check

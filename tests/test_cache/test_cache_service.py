@@ -33,7 +33,7 @@ class TestCacheService:
         assert self.cache_service.get("test-touch") == "1"
 
     def test_incr(self):
-        self.cache_service.set("test-incr", 0, version="1", timeout=0.1)
+        self.cache_service.set("test-incr", 0, version="1", ttl=0.1)
         self.cache_service.incr("test-incr", version="1")
         assert self.cache_service.get("test-incr", version="1") == 1
         self.cache_service.incr("test-incr", 2, version="1")
@@ -41,7 +41,7 @@ class TestCacheService:
         assert self.cache_service.get("test-incr") == 6
 
     def test_decr(self):
-        self.cache_service.set("test-decr", 2, version="1", timeout=0.1)
+        self.cache_service.set("test-decr", 2, version="1", ttl=0.1)
         self.cache_service.decr("test-decr", version="1")
         assert self.cache_service.get("test-decr", version="1") == 1
 
@@ -87,9 +87,7 @@ class TestCacheServiceAsync:
         assert await self.cache_service.get_async("test-touch") == "1"
 
     async def test_incr_async(self, anyio_backend):
-        await self.cache_service.set_async(
-            "test-incr-async", 0, version="1", timeout=0.1
-        )
+        await self.cache_service.set_async("test-incr-async", 0, version="1", ttl=0.1)
         await self.cache_service.incr_async("test-incr-async", version="1")
         assert await self.cache_service.get_async("test-incr-async", version="1") == 1
         await self.cache_service.incr_async("test-incr-async", 2, version="1")
@@ -97,9 +95,7 @@ class TestCacheServiceAsync:
         assert await self.cache_service.get_async("test-incr-async") == 6
 
     async def test_decr_async(self, anyio_backend):
-        await self.cache_service.set_async(
-            "test-decr-async", 2, version="1", timeout=0.2
-        )
+        await self.cache_service.set_async("test-decr-async", 2, version="1", ttl=0.2)
         await self.cache_service.decr_async("test-decr-async", version="1")
         assert await self.cache_service.get_async("test-decr-async", version="1") == 1
 

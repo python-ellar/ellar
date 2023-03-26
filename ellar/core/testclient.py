@@ -9,6 +9,9 @@ from ellar.core.main import App
 from ellar.core.routing import ModuleRouter
 from ellar.di import ProviderConfig
 
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core import GuardCanActivate
+
 
 class _TestingModule:
     def __init__(self, app: App) -> None:
@@ -36,16 +39,21 @@ class TestClientFactory:
     @classmethod
     def create_test_module(
         cls,
+        modules: t.Sequence[t.Union[t.Type, t.Any]] = tuple(),
         controllers: t.Sequence[t.Union[t.Any]] = tuple(),
         routers: t.Sequence[ModuleRouter] = tuple(),
         providers: t.Sequence[ProviderConfig] = tuple(),
         template_folder: t.Optional[str] = None,
         base_directory: t.Optional[t.Union[str, Path]] = None,
         static_folder: str = "static",
-        config_module: str = None,
+        global_guards: t.List[
+            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        ] = None,
+        config_module: t.Union[str, t.Dict] = None,
     ) -> _TestingModule:
         """
         Create a TestingModule to test controllers and services in isolation
+        :param modules:
         :param controllers:
         :param routers:
         :param providers:
@@ -53,9 +61,11 @@ class TestClientFactory:
         :param base_directory:
         :param static_folder:
         :param config_module:
+        :param global_guards:
         :return:
         """
         app = AppFactory.create_app(
+            modules=modules,
             controllers=controllers,
             routers=routers,
             providers=providers,
@@ -63,6 +73,7 @@ class TestClientFactory:
             base_directory=base_directory,
             static_folder=static_folder,
             config_module=config_module,
+            global_guards=global_guards,
         )
         return _TestingModule(app=app)
 

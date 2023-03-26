@@ -13,7 +13,6 @@ from ellar.types import ASGIApp, TReceive, TScope, TSend
 
 from .mixins import (
     ConfigDefaultTypesMixin,
-    TBaseCacheBackend,
     TEventHandler,
     TExceptionHandler,
     TMiddleware,
@@ -121,7 +120,7 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     TEMPLATE_GLOBAL_FILTERS: t.Dict[str, t.Callable[..., t.Any]] = {}
 
     LOGGING: t.Optional[t.Dict[str, t.Any]] = None
-    CACHES: t.Dict[str, TBaseCacheBackend] = {}
+    CACHES: t.Dict[str, t.Any] = {}
 
     @validator("MIDDLEWARE", pre=True)
     def pre_middleware_validate(cls, value: t.Any) -> t.Any:

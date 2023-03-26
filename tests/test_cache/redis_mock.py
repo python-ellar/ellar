@@ -12,14 +12,14 @@ class MockAsyncMemCacheClient:
     def _cache(self):
         return self._cache_default
 
-    def get_backend_timeout(self, timeout):
-        return timeout
+    def get_backend_ttl(self, ttl):
+        return ttl
 
     async def set(self, *args, **kwargs):
         key, value = args
         self._cache[key] = (
             value,
-            self.get_backend_timeout(kwargs.get(self._time_lookup)),
+            self.get_backend_ttl(kwargs.get(self._time_lookup)),
         )
         return True
 
@@ -41,7 +41,7 @@ class MockAsyncMemCacheClient:
                 {
                     key: (
                         _res[0],
-                        self.get_backend_timeout(kwargs.get(self._time_lookup)),
+                        self.get_backend_ttl(kwargs.get(self._time_lookup)),
                     )
                 }
             )
@@ -84,8 +84,8 @@ class MockRedisClient(MockAsyncMemCacheClient):
     def _cache(self):
         return self._cache_static
 
-    def get_backend_timeout(self, timeout):
-        return time.time() + int(timeout)
+    def get_backend_ttl(self, ttl):
+        return time.time() + int(ttl)
 
     async def persist(self, key):
         return self._cache.get(key) is not None

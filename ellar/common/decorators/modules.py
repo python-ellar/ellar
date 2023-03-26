@@ -82,11 +82,11 @@ def Module(
 
     :param static_folder: Module static folder name
 
-    :param modules: List of Module Types - t.Type[MODULEBASE]
+    :param modules: List of Module Types - t.Type[ModuleBase]
 
     :param commands: List of Command Decorated functions and EllarTyper
 
-    :return: t.TYPE[MODULEBASE]
+    :return: t.TYPE[ModuleBase]
     """
     kwargs = AttributeDict(
         name=name,

@@ -28,7 +28,7 @@ class IBaseCacheBackendAsync(ABC):
         self,
         key: str,
         value: t.Any,
-        timeout: t.Union[float, int] = None,
+        ttl: t.Union[float, int] = None,
         version: str = None,
     ) -> bool:
         """Add a new key/value to the cache (overwrites value, if key already
@@ -36,8 +36,8 @@ class IBaseCacheBackendAsync(ABC):
         :param key: the key to set
         :param value: the value for the key
         :param version: the version for the key
-        :param timeout: the cache timeout for the key in seconds (if not
-                        specified, it uses the default timeout). A timeout of
+        :param ttl: the cache ttl for the key in seconds (if not
+                        specified, it uses the default ttl). A ttl of
                         0 indicates that the cache never expires.
         :returns: ``True`` if key has been updated, ``False`` for backend
                   errors. Pickling errors, however, will raise a subclass of
@@ -47,10 +47,10 @@ class IBaseCacheBackendAsync(ABC):
 
     @abstractmethod
     async def touch_async(
-        self, key: str, timeout: t.Union[float, int] = None, version: str = None
+        self, key: str, ttl: t.Union[float, int] = None, version: str = None
     ) -> bool:
         """
-        Update the key's expiry time using timeout. Return True if successful
+        Update the key's expiry time using ttl. Return True if successful
         or False if the key does not exist.
         """
 
@@ -95,7 +95,7 @@ class IBaseCacheBackendSync(ABC):
         self,
         key: str,
         value: t.Any,
-        timeout: t.Union[float, int] = None,
+        ttl: t.Union[float, int] = None,
         version: str = None,
     ) -> bool:
         """Add a new key/value to the cache (overwrites value, if key already
@@ -103,8 +103,8 @@ class IBaseCacheBackendSync(ABC):
         :param key: the key to set
         :param value: the value for the key
         :param version: the version for the key
-        :param timeout: the cache timeout for the key in seconds (if not
-                        specified, it uses the default timeout). A timeout of
+        :param ttl: the cache ttl for the key in seconds (if not
+                        specified, it uses the default ttl). A ttl of
                         0 indicates that the cache never expires.
         :returns: ``True`` if key has been updated, ``False`` for backend
                   errors. Pickling errors, however, will raise a subclass of
@@ -114,10 +114,10 @@ class IBaseCacheBackendSync(ABC):
 
     @abstractmethod
     def touch(
-        self, key: str, timeout: t.Union[float, int] = None, version: str = None
+        self, key: str, ttl: t.Union[float, int] = None, version: str = None
     ) -> bool:
         """
-        Update the key's expiry time using timeout. Return True if successful
+        Update the key's expiry time using ttl. Return True if successful
         or False if the key does not exist.
         """
 
@@ -164,7 +164,7 @@ class ICacheServiceSync(ABC):
         self,
         key: str,
         value: t.Any,
-        timeout: t.Union[float, int] = None,
+        ttl: t.Union[float, int] = None,
         version: str = None,
         backend: str = None,
     ) -> bool:
@@ -174,8 +174,8 @@ class ICacheServiceSync(ABC):
         :param value: the value for the key
         :param version: the version for the key
         :param backend: a backend service name
-        :param timeout: the cache timeout for the key in seconds (if not
-                        specified, it uses the default timeout). A timeout of
+        :param ttl: the cache ttl for the key in seconds (if not
+                        specified, it uses the default ttl). A ttl of
                         0 indicates that the cache never expires.
         :returns: ``True`` if key has been updated, ``False`` for backend
                   errors. Pickling errors, however, will raise a subclass of
@@ -187,12 +187,12 @@ class ICacheServiceSync(ABC):
     def touch(
         self,
         key: str,
-        timeout: t.Union[float, int] = None,
+        ttl: t.Union[float, int] = None,
         version: str = None,
         backend: str = None,
     ) -> bool:
         """
-        Update the key's expiry time using timeout. Return True if successful
+        Update the key's expiry time using ttl. Return True if successful
         or False if the key does not exist.
         """
 
@@ -248,7 +248,7 @@ class ICacheServiceAsync(ABC):
         self,
         key: str,
         value: t.Any,
-        timeout: t.Union[float, int] = None,
+        ttl: t.Union[float, int] = None,
         version: str = None,
         backend: str = None,
     ) -> bool:
@@ -258,8 +258,8 @@ class ICacheServiceAsync(ABC):
         :param value: the value for the key
         :param version: the version for the key
         :param backend: a backend service name
-        :param timeout: the cache timeout for the key in seconds (if not
-                        specified, it uses the default timeout). A timeout of
+        :param ttl: the cache ttl for the key in seconds (if not
+                        specified, it uses the default ttl). A ttl of
                         0 indicates that the cache never expires.
         :returns: ``True`` if key has been updated, ``False`` for backend
                   errors. Pickling errors, however, will raise a subclass of
@@ -271,12 +271,12 @@ class ICacheServiceAsync(ABC):
     async def touch_async(
         self,
         key: str,
-        timeout: t.Union[float, int] = None,
+        ttl: t.Union[float, int] = None,
         version: str = None,
         backend: str = None,
     ) -> bool:
         """
-        Update the key's expiry time using timeout. Return True if successful
+        Update the key's expiry time using ttl. Return True if successful
         or False if the key does not exist.
         """
 

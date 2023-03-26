@@ -19,12 +19,10 @@ class _BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
         self,
         key: str,
         value: t.Any,
-        timeout: t.Union[float, int] = None,
+        ttl: t.Union[float, int] = None,
         version: str = None,
     ) -> bool:
-        result = self._cache_client.set(
-            key, value, int(self.get_backend_timeout(timeout))
-        )
+        result = self._cache_client.set(key, value, int(self.get_backend_ttl(ttl)))
         if not result:
             # Make sure the key doesn't keep its old value in case of failure
             # to set (memcached's 1MB limit).
@@ -39,9 +37,9 @@ class _BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
 
     @make_key_decorator
     def touch(
-        self, key: str, timeout: t.Union[float, int] = None, version: str = None
+        self, key: str, ttl: t.Union[float, int] = None, version: str = None
     ) -> bool:
-        result = self._cache_client.touch(key, self.get_backend_timeout(timeout))
+        result = self._cache_client.touch(key, self.get_backend_ttl(ttl))
         return bool(result)
 
     @make_key_decorator
@@ -92,12 +90,10 @@ class BasePylibMemcachedCache(_BasePylibMemcachedCacheSync):
         self,
         key: str,
         value: t.Any,
-        timeout: t.Union[float, int] = None,
+        ttl: t.Union[float, int] = None,
         version: str = None,
     ) -> bool:
-        result = await self.executor(
-            self.set, key, value, timeout=timeout, version=version
-        )
+        result = await self.executor(self.set, key, value, ttl=ttl, version=version)
         return bool(result)
 
     async def delete_async(self, key: str, version: str = None) -> bool:
@@ -105,9 +101,9 @@ class BasePylibMemcachedCache(_BasePylibMemcachedCacheSync):
         return bool(result)
 
     async def touch_async(
-        self, key: str, timeout: t.Union[float, int] = None, version: str = None
+        self, key: str, ttl: t.Union[float, int] = None, version: str = None
     ) -> bool:
-        result = await self.executor(self.touch, key, timeout=timeout, version=version)
+        result = await self.executor(self.touch, key, ttl=ttl, version=version)
         return bool(result)
 
     async def close_async(self, **kwargs: t.Any) -> None:

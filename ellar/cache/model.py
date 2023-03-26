@@ -17,11 +17,11 @@ class BaseCacheBackend(IBaseCacheBackendSync, IBaseCacheBackendAsync, ABC):
         self,
         key_prefix: str = None,
         version: int = None,
-        timeout: int = None,
+        ttl: int = None,
     ) -> None:
         self._key_prefix = key_prefix or ""
         self._version = version or 1
-        self._default_timeout = int(timeout) if timeout else 300
+        self._default_ttl = int(ttl) if ttl else 300
 
     @property
     def key_prefix(self) -> str:
@@ -65,16 +65,14 @@ class BaseCacheBackend(IBaseCacheBackendSync, IBaseCacheBackendAsync, ABC):
         """
         return "%s:%s:%s" % (self._key_prefix, version or self._version, key)
 
-    def get_backend_timeout(
-        self, timeout: t.Union[float, int] = None
-    ) -> t.Union[float, int]:
+    def get_backend_ttl(self, ttl: t.Union[float, int] = None) -> t.Union[float, int]:
         """
         Return the timeout value usable by this backend based upon the provided
         timeout.
         """
-        if timeout is None:
-            timeout = self._default_timeout
-        elif timeout == 0:
+        if ttl is None:
+            ttl = self._default_ttl
+        elif ttl == 0:
             # avoid time.time() related precision issues
-            timeout = -1
-        return time.time() + timeout
+            ttl = -1
+        return time.time() + ttl

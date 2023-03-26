@@ -1,7 +1,8 @@
+import pytest
 from starlette.routing import Host, Mount
 
 from ellar.common import Module
-from ellar.core import AppFactory, Config, ModuleBase, TestClient
+from ellar.core import AppFactory, Config, ModuleBase, ModuleSetup, TestClient
 from ellar.di import EllarInjector
 
 from .sample import (
@@ -26,17 +27,17 @@ class BModule:
 
 
 def test_factory__read_all_module():
-    modules_dict = AppFactory.read_all_module(module=BModule)
+    modules_dict = AppFactory.read_all_module(ModuleSetup(BModule))
     assert len(modules_dict) == 2
-    assert list(modules_dict.values())[0] is AModule
-    assert list(modules_dict.values())[1] is ApplicationModule
+    assert list(modules_dict.values())[0].module is AModule
+    assert list(modules_dict.values())[1].module is ApplicationModule
 
-    modules_list = AppFactory.get_all_modules(module=AModule)
+    modules_list = AppFactory.get_all_modules(ModuleSetup(AModule))
     assert len(modules_list) == 2
-    assert modules_list[0] is AModule
-    assert modules_list[1] is ApplicationModule
+    assert modules_list[0].module is AModule
+    assert modules_list[1].module is ApplicationModule
 
-    modules_dict = AppFactory.read_all_module(module=ApplicationModule)
+    modules_dict = AppFactory.read_all_module(ModuleSetup(ApplicationModule))
     assert len(modules_dict) == 0
 
 
@@ -105,3 +106,10 @@ def test_factory_create_app_works(tmpdir):
     template = app.jinja_environment.get_template("example.html")
     result = template.render()
     assert result == "<html>Hello World<html/>"
+
+
+def test_invalid_config_module_raise_exception():
+    with pytest.raises(Exception) as ex:
+        AppFactory.create_app(config_module=set())
+
+    assert str(ex.value) == "config_module should be a importable str or a dict object"

@@ -4,12 +4,25 @@ site_url: https://github.com/eadwinCode/ellar
 repo_name: eadwinCode/ellar
 repo_url: https://github.com/eadwinCode/ellar
 edit_uri: blob/master/docs
+copyright: |
+  Copyright &copy; 2021 - 2023 <a href="https://github.com/eadwinCode"  target="_blank" rel="noopener">Eadwin Ezeudoh</a>
 
 docs_dir: docs
 site_dir: site
 
 theme:
   name: material
+  features:
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    - content.tooltips
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -26,7 +39,9 @@ theme:
       toggle:
         icon: material/lightbulb-outline
         name: Switch to light mode
-
+  font:
+    text: Roboto
+    code: Roboto Mono
   language: en
   logo: img/Icon.svg
   favicon: img/Icon.svg
@@ -34,7 +49,12 @@ theme:
     repo: fontawesome/brands/git-alt
 
 plugins:
-- search
+  - search:
+        separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - minify:
+        minify_html: true
+  - git-revision-date-localized:
+      enable_creation_date: false
 
 nav:
   - Introduction: index.md
@@ -45,7 +65,7 @@ nav:
       - Modules:  overview/modules.md
       - Middlewares:  overview/middleware.md
       - Exception Handling:  overview/exception_handling.md
-#      - Guards:  overview/guards.md
+      - Guards:  overview/guards.md
       - Custom Decorators:  overview/custom_decorators.md
       - Module Router:  overview/module-router.md
   - Configuration: configurations.md
@@ -66,11 +86,20 @@ nav:
     - Static Files: templating/staticfiles.md
 
   - Caching: caching.md
+  - Rate Limiting: throttling.md
 #  - Injection Scopes: basics/injection-scope.md
 #  - Model View Controller: basics/model-view-controller.md
 #  - Events: basics/events.md
+  - Commands:
+    - Introduction: commands/index.md
+    - Commands:
+        - new: commands/new-command.md
+        - create project: commands/create-project-command.md
+        - create module: commands/create-module-command.md
+        - runserver: commands/runserver-command.md
+    - Custom Commands: commands/custom-commands.md
+    - Command Grouping: commands/command-grouping.md
   - Versioning: basics/versioning.md
-  - Commands: basics/commands.md
   - Testing: basics/testing.md
   - OpenAPI: openapi/index.md
   - WebSockets: websockets.md
@@ -93,7 +122,6 @@ markdown_extensions:
       custom_fences:
       - name: mermaid
         class: mermaid
-        format: !!python/name:pymdownx.superfences.fence_code_format ''
   - pymdownx.details
   - pymdownx.tabbed:
       alternate_style: true

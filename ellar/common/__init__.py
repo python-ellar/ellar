@@ -3,7 +3,6 @@ import typing as t
 from ellar.core.params.params import Param, ParamTypes
 from ellar.core.routing import ModuleRouter
 
-from .cache import cache
 from .decorators import (
     Controller,
     Module,
@@ -55,7 +54,6 @@ from .routing import (
 
 __all__ = [
     "command",
-    "cache",
     "ModuleRouter",
     "render",
     "Module",

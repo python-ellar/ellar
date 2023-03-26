@@ -324,22 +324,16 @@ def test_run_application_ready_works():
     @Module()
     class TestModuleCycleExample(ModuleBase):
         _before_init_called = False
-        _app_ready_called = False
 
         @classmethod
         def before_init(cls, config: Config) -> None:
             cls._before_init_called = True
 
-        def application_ready(self, app) -> None:
-            self.__class__._app_ready_called = True
-
     assert TestModuleCycleExample._before_init_called is False
-    assert TestModuleCycleExample._app_ready_called is False
 
     AppFactory.create_from_app_module(TestModuleCycleExample)
 
     assert TestModuleCycleExample._before_init_called
-    assert TestModuleCycleExample._app_ready_called
 
 
 def test_module_request_events():

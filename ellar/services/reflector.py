@@ -11,7 +11,7 @@ class Reflector:
         return reflect.get_metadata(metadata_key, target)
 
     def get_all(
-        self, metadata_key: str, *targets: t.Union[t.Type, t.Callable]
+        self, metadata_key: str, *targets: t.Union[t.Type, t.Callable, t.Any]
     ) -> t.List[t.Any]:
         results = []
         for target in targets:
@@ -20,7 +20,7 @@ class Reflector:
         return results
 
     def get_all_and_merge(
-        self, metadata_key: str, *targets: t.Union[t.Type, t.Callable]
+        self, metadata_key: str, *targets: t.Union[t.Type, t.Callable, t.Any]
     ) -> t.Any:
         metadata_collection = [
             item for item in self.get_all(metadata_key, *targets) if item
@@ -51,7 +51,7 @@ class Reflector:
         return functools.reduce(inline_function, metadata_collection)
 
     def get_all_and_override(
-        self, metadata_key: str, *targets: t.Union[t.Type, t.Callable]
+        self, metadata_key: str, *targets: t.Union[t.Type, t.Callable, t.Any]
     ) -> t.Optional[t.Any]:
         for target in targets:
             value = self.get(metadata_key, target)

@@ -39,12 +39,6 @@ Some shells may treat square braces (`[` and `]`) as special characters. If that
 pip install "ellar[standard]"
 ```
 
-### Py36 Support
-For python3.6 users, 
-```shell
-$(venv) pip install ellar==0.2.2
-```
-
 then, start the app with:
 ```shell
 $(venv) ellar runserver --reload
@@ -78,4 +72,3 @@ Project is still in development
 - Documentation - in progress
 - Interceptors  -  [Aspect Oriented Programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming) (AOP) technique
 - Database Plugin with [Encode/ORM](https://github.com/encode/orm)
-- API Throttling

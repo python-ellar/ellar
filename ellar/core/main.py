@@ -20,8 +20,13 @@ from ellar.core.middleware import (
     RequestVersioningMiddleware,
     TrustedHostMiddleware,
 )
-from ellar.core.modules import ModuleBase, ModuleTemplateRef
-from ellar.core.modules.ref import create_module_ref_factor
+from ellar.core.modules import (
+    DynamicModule,
+    ModuleBase,
+    ModuleRefBase,
+    ModuleSetup,
+    ModuleTemplateRef,
+)
 from ellar.core.routing import ApplicationRouter
 from ellar.core.templating import AppTemplating, Environment
 from ellar.core.versioning import VERSIONING, BaseAPIVersioning
@@ -111,7 +116,7 @@ class App(AppTemplating):
         return _statics_func_wrapper
 
     def _get_module_routes(self) -> t.List[BaseRoute]:
-        _routes: t.List[BaseRoute] = []
+        _routes: t.List[BaseRoute] = list()
         if self.has_static_files:
             self._static_app = self.create_static_app()
             _routes.append(
@@ -123,31 +128,37 @@ class App(AppTemplating):
             )
 
         for _, module_ref in self._injector.get_modules().items():
-            module_ref.run_module_register_services()
             _routes.extend(module_ref.routes)
 
         return _routes
 
     def install_module(
         self,
-        module: t.Union[t.Type[T], t.Type[ModuleBase]],
+        module: t.Union[t.Type[T], t.Type[ModuleBase], DynamicModule],
         **init_kwargs: t.Any,
     ) -> t.Union[T, ModuleBase]:
-        module_ref = self.injector.get_module(module)
+        if isinstance(module, DynamicModule):
+            module_config = ModuleSetup(module.module, init_kwargs=init_kwargs)
+        else:
+            module_config = ModuleSetup(module, init_kwargs=init_kwargs)
+
+        module_ref = self.injector.get_module(module_config.module)
         if module_ref:
             return module_ref.get_module_instance()
 
-        module_ref = create_module_ref_factor(
-            module, container=self.injector.container, config=self.config, **init_kwargs
+        module_ref = module_config.get_module_ref(  # type: ignore[assignment]
+            config=self.config,
+            container=self.injector.container,
         )
+        assert isinstance(module_ref, ModuleRefBase)
         self.injector.add_module(module_ref)
-        self.rebuild_middleware_stack()
 
+        module_ref.run_module_register_services()
         if isinstance(module_ref, ModuleTemplateRef):
-            module_ref.run_module_register_services()
             self.router.extend(module_ref.routes)
             self.reload_static_app()
-            module_ref.run_application_ready(self)
+
+        self.rebuild_middleware_stack()
 
         return t.cast(T, module_ref.get_module_instance())
 
@@ -252,17 +263,10 @@ class App(AppTemplating):
             **init_kwargs,
         )
 
-    def _run_module_application_ready(
-        self,
-    ) -> None:
-        for _, module_ref in self.injector.get_templating_modules().items():
-            module_ref.run_application_ready(self)
-
     def _finalize_app_initialization(self) -> None:
         self.injector.container.register_instance(self)
         self.injector.container.register_instance(self.config, Config)
         self.injector.container.register_instance(self.jinja_environment, Environment)
-        self._run_module_application_ready()
 
     def add_exception_handler(
         self,

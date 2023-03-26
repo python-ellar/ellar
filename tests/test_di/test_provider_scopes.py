@@ -53,6 +53,33 @@ def test_invalid_use_of_provider_config():
         ProviderConfig(IContext, use_class=AnyContext, use_value=AnyContext())
 
 
+def test_provider_config_use_value():
+    injector = EllarInjector(auto_bind=False)
+    ProviderConfig(IContext, use_value=AnyContext()).register(injector.container)
+
+    # IContext is now registered as a singleton
+    assert injector.get(IContext) == injector.get(IContext)
+
+
+def test_provider_config():
+    injector = EllarInjector(auto_bind=False)
+    ProviderConfig(AnyContext).register(injector.container)
+
+    assert injector.get(AnyContext) != injector.get(AnyContext)  # RequestScope
+
+
+def test_invalid_use_provider_config():
+    injector = EllarInjector(auto_bind=False)
+    any_ctx = AnyContext()
+    with pytest.raises(DIImproperConfiguration) as ex:
+        ProviderConfig(any_ctx).register(injector.container)
+
+    assert (
+        str(ex.value)
+        == f"couldn't determine provider setup for {any_ctx}. Please use `ProviderConfig` or `register_services` function in a Module to configure the provider"
+    )
+
+
 def test_has_binding_works():
     @inject
     def inject_function(a: IContext):

@@ -59,7 +59,7 @@ class TestPyLibMCCacheBackend:
         assert self.backend.close() is None
 
     def test_incr(self):
-        self.backend.set("test-incr-sync", 0, version="1", timeout=1)
+        self.backend.set("test-incr-sync", 0, version="1", ttl=1)
         self.backend.incr("test-incr-sync", version="1")
         assert self.backend.get("test-incr-sync", version="1") == 1
 
@@ -68,7 +68,7 @@ class TestPyLibMCCacheBackend:
         assert self.backend.get("test-incr-sync") == 6
 
     def test_decr(self):
-        self.backend.set("test-decr-sync", 2, version="1", timeout=1)
+        self.backend.set("test-decr-sync", 2, version="1", ttl=1)
         self.backend.decr("test-decr-sync", version="1")
         assert self.backend.get("test-decr-sync", version="1") == 1
 
@@ -146,7 +146,7 @@ class TestPyLibMCCacheBackendAsync:
 
     async def test_incr_async(self, anyio_backend):
         await self.backend.set_async(
-            f"test-incr-async-{anyio_backend}", 0, version="1", timeout=1
+            f"test-incr-async-{anyio_backend}", 0, version="1", ttl=1
         )
         await self.backend.incr_async(f"test-incr-async-{anyio_backend}", version="1")
         assert (
@@ -164,7 +164,7 @@ class TestPyLibMCCacheBackendAsync:
         assert await self.backend.get_async(f"test-incr-async-{anyio_backend}") == 6
 
     async def test_decr_async(self, anyio_backend):
-        await self.backend.set_async("test-decr-async-pylib", 2, version="1", timeout=1)
+        await self.backend.set_async("test-decr-async-pylib", 2, version="1", ttl=1)
         await self.backend.decr_async("test-decr-async-pylib", version="1")
         assert await self.backend.get_async("test-decr-async-pylib", version="1") == 1
 

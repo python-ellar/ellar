@@ -33,88 +33,88 @@ class UserController(ControllerBase):
     def __init__(self, user_repo: UserRepository) -> None:
         self.user_repo = user_repo
 ```
-Let's refactor our `DogsController` and move some actions to a service.
+Let's refactor our `CarController` and move some actions to a service.
 
 ```python
-# project_name/apps/dogs/services.py
+# project_name/apps/car/services.py
 import uuid
 import typing as t
 from ellar.di import injectable, singleton_scope
-from .schemas import CreateDogSerializer, DogSerializer
+from .schemas import CreateCarSerializer, CarSerializer
 
 
 @injectable(scope=singleton_scope)
-class DogsRepository:
+class CarRepository:
     def __init__(self):
-        self._dogs: t.List[DogSerializer] = []
+        self._cars: t.List[CarSerializer] = []
 
-    def create_dog(self, data: CreateDogSerializer) -> None:
-        self._dogs.append(
-            DogSerializer(id=str(uuid.uuid4()), **data.dict())
+    def create_car(self, data: CreateCarSerializer) -> None:
+        self._cars.append(
+            CarSerializer(id=str(uuid.uuid4()), **data.dict())
         )
     
-    def get_all(self) -> t.List[DogSerializer]:
-        return self._dogs
+    def get_all(self) -> t.List[CarSerializer]:
+        return self._cars
 
 ```
 
-We have successfully created a `DogsRepository` with a `singleton` scope.
+We have successfully created a `CarRepository` with a `singleton` scope.
 
-Let's wire it up to `DogsController`. And rewrite some route handles.
+Let's wire it up to `CarController`. And rewrite some route handles.
 
 ```python
-# project_name/apps/dogs/controllers.py
+# project_name/apps/car/controllers.py
 
 from ellar.common import Body, Controller, get, post, Query
 from ellar.core import ControllerBase
-from .schemas import CreateDogSerializer, DogListFilter
-from .services import DogsRepository
+from .schemas import CreateCarSerializer, CarListFilter
+from .services import CarRepository
 
 
-@Controller('/dogs')
-class DogsController(ControllerBase):
-    def __init__(self, dog_repo: DogsRepository):
-        self.dog_repo = dog_repo
+@Controller('/car')
+class CarController(ControllerBase):
+    def __init__(self, repo: CarRepository):
+        self.repo = repo
     
     @post()
-    async def create(self, payload: CreateDogSerializer = Body()):
-        self.dog_repo.create_dog(payload)
-        return 'This action adds a new dog'
+    async def create(self, payload: CreateCarSerializer = Body()):
+        self.repo.create_car(payload)
+        return 'This action adds a new car'
 
     @get()
-    async def get_all(self, query: DogListFilter = Query()):
+    async def get_all(self, query: CarListFilter = Query()):
         res = dict(
-            dogs=self.dog_repo.get_all(), 
-            message=f'This action returns all dogs at limit={query.limit}, offset={query.offset}')
+            cars=self.repo.get_all(), 
+            message=f'This action returns all cars at limit={query.limit}, offset={query.offset}')
         return res
 
     ...
 ```
 
-We have defined `DogsRepository` as a dependency to `DogsController` and Ellar will resolve the `DogsRepository` instance when creating the `DogsController` instance.
+We have defined `CarRepository` as a dependency to `CarController` and Ellar will resolve the `CarRepository` instance when creating the `CarController` instance.
 
 !!! info
     Every class dependency should be defined in the class **constructor**  as a type annotation or Ellar won't be aware of the dependencies required for an object instantiation.
 
 ## **Provider Registration**
-To get this working, we need to expose the `DogsRepository` to the `DogsModule` module just like we did for the `DogsController`.
+To get this working, we need to expose the `CarRepository` to the `CarModule` module just like we did for the `CarController`.
 
 ```python
-# project_name/apps/dogs/module.py
+# project_name/apps/car/module.py
 
 from ellar.common import Module
 from ellar.core import ModuleBase
 from ellar.di import Container
-from .services import DogsRepository
-from .controllers import DogsController
+from .services import CarRepository
+from .controllers import CarController
 
 
 @Module(
-    controllers=[DogsController],
-    providers=[DogsRepository],
+    controllers=[CarController],
+    providers=[CarRepository],
     routers=[],
 )
-class DogsModule(ModuleBase):
+class CarModule(ModuleBase):
     def register_providers(self, container: Container) -> None:
         # for more complicated provider registrations
         # container.register_instance(...)

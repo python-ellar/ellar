@@ -40,19 +40,15 @@ If you are familiar with these frameworks, you will find it easy to understand a
 ## Installation
 ### Poetry Installation
 For [Poetry](https://python-poetry.org/) usages
+
 ```shell
-poetry add ellar[standard]
+poetry add ellar-cli
 ```
 
 ### Pip Installation
 For normal pip installation
 ```shell
-pip install ellar[standard]
-```
-### NB:
-Some shells may treat square braces (`[` and `]`) as special characters. If that's the case here, then use a quote around the characters to prevent unexpected shell expansion.
-```shell
-pip install "ellar[standard]"
+pip install ellar-cli
 ```
 
 ## Create a project
@@ -234,7 +230,6 @@ Ellar is not aware of `CarModule` yet, so we need to add it to the `modules` lis
 ```python
 from ellar.common import Module, exception_handler
 from ellar.core import IHostContext, ModuleBase
-from ellar.core.connection import Request
 from ellar.core.response import JSONResponse, Response
 
 from ellar.samples.modules import HomeModule
@@ -256,7 +251,7 @@ import os
 
 from ellar.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
-from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder
+from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerDocumentGenerator
 from .root_module import ApplicationModule
 
 application = AppFactory.create_from_app_module(
@@ -273,8 +268,12 @@ document_builder.set_title('CarSite API') \
     .set_license('MIT Licence', url='https://www.google.com')
 
 document = document_builder.build_document(application)
-module = application.install_module(OpenAPIDocumentModule, document=document)
-module.setup_swagger_doc()
+module = OpenAPIDocumentModule.setup(
+    document=document,
+    document_generator=SwaggerDocumentGenerator(),
+    guards=[]
+)
+application.install_module(module)
 ```
 
 Now we can test our API at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs#/)
@@ -303,4 +302,3 @@ Project is still in development
 - Documentation - (in progress)
 - Interceptors  -  [Aspect Oriented Programming](https://en.wikipedia.org/wiki/Aspect-oriented_programming) (AOP) technique
 - Database Plugin with [Encode/ORM](https://github.com/encode/orm)
-- API Throttling
