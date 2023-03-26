@@ -13,6 +13,7 @@ from .base import ModuleBase
 from .ref import ModuleRefBase, create_module_ref_factor
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.commands import EllarTyper
     from ellar.core import ControllerBase
 
 
@@ -28,7 +29,12 @@ class DynamicModule:
     controllers: t.Sequence[
         t.Union[t.Type["ControllerBase"], t.Type]
     ] = dataclasses.field(default_factory=lambda: tuple())
+
     routers: t.Sequence[t.Union[BaseRoute]] = dataclasses.field(
+        default_factory=lambda: tuple()
+    )
+
+    commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = dataclasses.field(
         default_factory=lambda: tuple()
     )
 
@@ -40,11 +46,13 @@ class DynamicModule:
             controllers=list(self.controllers),
             routers=list(self.routers),
             providers=list(self.providers),
+            commands=list(self.commands),
         )
         for key in [
             MODULE_METADATA.CONTROLLERS,
             MODULE_METADATA.ROUTERS,
             MODULE_METADATA.PROVIDERS,
+            MODULE_METADATA.COMMANDS,
         ]:
             value = kwargs[key]
             if value:
@@ -55,17 +63,18 @@ class DynamicModule:
 @dataclasses.dataclass
 class ModuleSetup:
     """
-    ModuleSetup is a way to configure a module after the application has started.
+    ModuleSetup is a way to configure a module based on its dependencies.
     This is necessary for Module that requires some services available to configure them.
     For example:
 
+     @Module()
      class MyModule(ModuleBase, IModuleSetup):
         @classmethod
         def setup(cls, param1: Any, param2: Any, foo: str) -> DynamicModule:
-            return DynamicModule(module, provider=[], controllers=[], routers=[])
+            return DynamicModule(cls, providers=[], controllers=[], routers=[])
 
 
-    def module_a_configuration_factory(module: t.Type[MyModule], config: Config, foo: Foo):
+    def module_a_configuration_factory(module: Type[MyModule], config: Config, foo: Foo):
         return module.setup(param1=config.param1, param2=config.param2, foo=foo.foo)
 
 

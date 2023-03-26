@@ -3,7 +3,7 @@ from collections import OrderedDict
 from pathlib import Path
 from uuid import uuid4
 
-from starlette.routing import BaseRoute, Host, Mount
+from starlette.routing import Host, Mount
 
 from ellar.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.core import Config
@@ -66,7 +66,7 @@ class AppFactory:
         app_module: t.Type[t.Union[ModuleBase, t.Any]],
         config: Config,
         injector: EllarInjector,
-    ) -> t.List[BaseRoute]:
+    ) -> None:
         """
         builds application module and registers them to EllarInjector
         :param app_module: Root App Module
@@ -80,7 +80,6 @@ class AppFactory:
 
         app_module_config = ModuleSetup(app_module)
         module_dependency = cls.get_all_modules(app_module_config)
-        routes = []
 
         for module_config in reversed(module_dependency):
             if injector.get_module(module_config.module):  # pragma: no cover
@@ -92,7 +91,6 @@ class AppFactory:
 
             if not isinstance(module_ref, ModuleSetup):
                 module_ref.run_module_register_services()
-                routes.extend(module_ref.routes)
 
             injector.add_module(module_ref)
 
@@ -106,8 +104,6 @@ class AppFactory:
             module_ref.run_module_register_services()
 
             injector.add_module(module_ref)
-            routes.extend(module_ref.routes)
-        return routes
 
     @classmethod
     def _create_app(
@@ -138,7 +134,7 @@ class AppFactory:
         injector.container.register_instance(config, concrete_type=Config)
         CoreServiceRegistration(injector, config).register_all()
 
-        routes = cls._build_modules(app_module=module, injector=injector, config=config)
+        cls._build_modules(app_module=module, injector=injector, config=config)
 
         shutdown_event = config.ON_REQUEST_STARTUP
         startup_event = config.ON_REQUEST_SHUTDOWN
@@ -146,7 +142,6 @@ class AppFactory:
         app = App(
             config=config,
             injector=injector,
-            routes=routes,
             on_shutdown_event_handlers=shutdown_event if shutdown_event else None,
             on_startup_event_handlers=startup_event if startup_event else None,
             lifespan=config.DEFAULT_LIFESPAN_HANDLER,

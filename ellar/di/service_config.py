@@ -33,7 +33,7 @@ class ProviderConfig(t.Generic[T]):
         base_type: t.Union[t.Type[T], t.Type],
         *,
         use_value: T = None,
-        use_class: t.Union[t.Type[T], t.Any] = None
+        use_class: t.Union[t.Type[T], t.Any] = None,
     ):
         if use_value and use_class:
             raise DIImproperConfiguration(
@@ -54,6 +54,12 @@ class ProviderConfig(t.Generic[T]):
         elif self.use_value:
             container.register_singleton(
                 base_type=self.base_type, concrete_type=self.use_value
+            )
+        elif not isinstance(self.base_type, type):
+            raise DIImproperConfiguration(
+                f"couldn't determine provider setup for {self.base_type}. "
+                f"Please use `ProviderConfig` or `register_services` function in a "
+                f"Module to configure the provider"
             )
         else:
             container.register(base_type=self.base_type, scope=scope)

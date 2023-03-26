@@ -40,7 +40,6 @@ class App(AppTemplating):
         self,
         config: Config,
         injector: EllarInjector,
-        routes: t.List[BaseRoute],
         on_startup_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
         on_shutdown_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
         lifespan: t.Optional[t.Callable[["App"], t.AsyncContextManager]] = None,
@@ -83,7 +82,7 @@ class App(AppTemplating):
             lifespan or self.config.DEFAULT_LIFESPAN_HANDLER
         )
         self.router = ApplicationRouter(
-            routes=self._get_module_routes(routes),
+            routes=self._get_module_routes(),
             redirect_slashes=self.config.REDIRECT_SLASHES,
             on_startup=[self.on_startup.async_run]
             if self.config.DEFAULT_LIFESPAN_HANDLER is None
@@ -116,8 +115,8 @@ class App(AppTemplating):
 
         return _statics_func_wrapper
 
-    def _get_module_routes(self, routes: t.List[BaseRoute]) -> t.List[BaseRoute]:
-        _routes: t.List[BaseRoute] = list(routes)
+    def _get_module_routes(self) -> t.List[BaseRoute]:
+        _routes: t.List[BaseRoute] = list()
         if self.has_static_files:
             self._static_app = self.create_static_app()
             _routes.append(
@@ -128,9 +127,8 @@ class App(AppTemplating):
                 )
             )
 
-        # for _, module_ref in self._injector.get_modules().items():
-        #     _routes.extend(module_ref.routes)
-        #     module_ref.run_module_register_services()
+        for _, module_ref in self._injector.get_modules().items():
+            _routes.extend(module_ref.routes)
 
         return _routes
 
