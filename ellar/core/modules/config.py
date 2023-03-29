@@ -37,10 +37,15 @@ class DynamicModule:
     commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = dataclasses.field(
         default_factory=lambda: tuple()
     )
+    _is_configured: bool = False
 
     def __post_init__(self) -> None:
         if not isinstance(self.module, type) or not issubclass(self.module, ModuleBase):
             raise Exception(f"{self.module.__name__} is not a valid Module")
+
+    def apply_configuration(self) -> None:
+        if self._is_configured:
+            return
 
         kwargs = dict(
             controllers=list(self.controllers),
@@ -58,6 +63,8 @@ class DynamicModule:
             if value:
                 reflect.delete_metadata(key, self.module)
                 reflect.define_metadata(key, value, self.module)
+
+        self._is_configured = True
 
 
 @dataclasses.dataclass
@@ -143,6 +150,7 @@ class ModuleSetup:
                 f"Factory function for {self.module.__name__} module "
                 f"configuration must return `DynamicModule` instance"
             )
+        res.apply_configuration()
 
         init_kwargs = dict(self.init_kwargs)
         return create_module_ref_factor(self.module, config, container, **init_kwargs)

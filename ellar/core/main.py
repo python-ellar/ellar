@@ -138,6 +138,7 @@ class App(AppTemplating):
         **init_kwargs: t.Any,
     ) -> t.Union[T, ModuleBase]:
         if isinstance(module, DynamicModule):
+            module.apply_configuration()
             module_config = ModuleSetup(module.module, init_kwargs=init_kwargs)
         else:
             module_config = ModuleSetup(module, init_kwargs=init_kwargs)
