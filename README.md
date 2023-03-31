@@ -19,12 +19,6 @@ Ellar is based on [Starlette (ASGI toolkit)](https://www.starlette.io/), a light
 While Ellar provides a high level of abstraction on top of Starlette, it still incorporates some of its features, as well as those of FastAPI. 
 If you are familiar with these frameworks, you will find it easy to understand and use Ellar.
 
-## Dependencies
-- Python >= 3.7
-- Starlette
-- Injector
-- Pydantic
-
 ## Features Summary
 
 - **Easy to Use**: Ellar has a simple and intuitive API that makes it easy to get started with building a fast and scalable web applications or web APIs in Python.
@@ -36,6 +30,12 @@ If you are familiar with these frameworks, you will find it easy to understand a
 - **Guards for Authentication and Authorization**: It provides built-in support for guards, allowing you to easily implement authentication and authorization in your application.
 - **Modularity**: Ellar follows a modular architecture inspired by NestJS, making it easy to organize your code into reusable modules.
 - **Asynchronous programming**: It allows you to takes advantage of Python's `async/await` feature to write efficient and fast code that can handle large numbers of concurrent requests
+
+## Dependencies
+- Python >= 3.7
+- Starlette
+- Injector
+- Pydantic
 
 ## Installation
 ### Poetry Installation
