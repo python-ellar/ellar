@@ -5,12 +5,13 @@ from ellar.core.routing import ModuleRouter
 
 from .decorators import (
     Controller,
+    Guards,
     Module,
+    Version,
     command,
     exception_handler,
     extra_args,
     file,
-    guards,
     middleware,
     on_shutdown,
     on_startup,
@@ -20,7 +21,6 @@ from .decorators import (
     set_metadata,
     template_filter,
     template_global,
-    version,
 )
 from .routing import (
     Body,
@@ -57,13 +57,13 @@ __all__ = [
     "ModuleRouter",
     "render",
     "Module",
-    "guards",
+    "Guards",
     "Param",
     "ParamTypes",
     "set_metadata",
     "Controller",
     "openapi_info",
-    "version",
+    "Version",
     "delete",
     "get",
     "head",

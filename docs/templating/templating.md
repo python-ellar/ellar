@@ -73,10 +73,10 @@ This example also shows manual setup of using `jinja2` in Ellar.
 
 ## **Jinja2 usage in Ellar**
 
-In Ellar, we use the `@render` decorator to convert the responses returned by the view to a Templated Response by creating an `HTMLResponseModel` with a status code of 200 to handle the response.
-Also, each registered `Module` is a `TemplateLoader` for loading templates available at `templates_folder`. And, a `Module` TemplateLoader object is created when the `template_folder` folder exists.
+In Ellar, the `@render` decorator transforms the route handler response into a Templated Response via an `HTMLResponseModel` with a status code of 200. 
+And the route handler is required to return a `dictionary` object which serves as the template's context.
 
-When using the `@render` decorator on a route handler, the function is expected to return a `dictionary` object which will be used as a template `context` to be generated.
+Additionally, each registered `Module` functions as a jinja2 `TemplateLoader` for loading templates, but only when a templates_folder is provided and exists.
 
 ### In Controller
 
@@ -359,4 +359,4 @@ This allows for greater control and readability when reversing URLs, and makes i
 
 
 ### Adding template filters and template globals.
-Jinja template filter and global functions can be defined at module level as shown here: [Module Templating Filters](../overview/modules/#module-templating-filters)
+Jinja template filter and global functions can be defined at module level as shown here: [Module Templating Filters](/ellar/overview/modules/#module-templating-filters)
