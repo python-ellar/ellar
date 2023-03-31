@@ -105,7 +105,7 @@ for _path, auth in [
 
 client = TestClient(app)
 
-BODY_UNAUTHORIZED_DEFAULT = {"detail": "Not authenticated"}
+BODY_UNAUTHORIZED_DEFAULT = {"detail": "Forbidden"}
 
 
 @pytest.mark.parametrize(

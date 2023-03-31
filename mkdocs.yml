@@ -68,6 +68,7 @@ nav:
       - Guards:  overview/guards.md
       - Custom Decorators:  overview/custom_decorators.md
       - Module Router:  overview/module-router.md
+  - Execution Context: basics/execution-context.md
   - Configuration: configurations.md
   - How-to Guides:
       - Input Parsing: parsing-inputs/index.md
@@ -88,7 +89,6 @@ nav:
   - Caching: caching.md
   - Rate Limiting: throttling.md
 #  - Injection Scopes: basics/injection-scope.md
-  - Execution Context: basics/execution-context.md
 #  - Events: basics/events.md
   - Commands:
     - Introduction: commands/index.md
