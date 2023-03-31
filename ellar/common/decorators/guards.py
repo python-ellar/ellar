@@ -8,11 +8,11 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
 
 
-def guards(
+def Guards(
     *_guards: t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
 ) -> t.Callable:
     """
-    =========ROUTE FUNCTION DECORATOR ==============
+    =========CONTROLLER AND ROUTE FUNCTION DECORATOR ==============
 
     Defines list of guards for a route function
     :param _guards: Guard Type or Instance

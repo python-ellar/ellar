@@ -15,7 +15,7 @@ class GuardCanActivate(ABC, metaclass=ABCMeta):
         t.Type[HTTPException], t.Type[APIException]
     ] = HTTPException
     status_code: int = HTTP_403_FORBIDDEN
-    detail: str = "Not authenticated"
+    detail: str = "Forbidden"
 
     @abstractmethod
     async def can_activate(self, context: IExecutionContext) -> bool:

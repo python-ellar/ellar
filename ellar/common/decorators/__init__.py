@@ -6,20 +6,20 @@ from .controller import Controller
 from .exception import exception_handler
 from .extra_args import extra_args
 from .file import file
-from .guards import guards
+from .guards import Guards
 from .html import render, template_filter, template_global
 from .middleware import middleware
 from .modules import Module
 from .openapi import openapi_info
 from .request import on_shutdown, on_startup
 from .serializer import serializer_filter
-from .versioning import version
+from .versioning import Version
 
 __all__ = [
     "serializer_filter",
     "Controller",
-    "version",
-    "guards",
+    "Version",
+    "Guards",
     "template_filter",
     "template_global",
     "file",

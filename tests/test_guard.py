@@ -1,7 +1,7 @@
 import pytest
 from starlette.status import HTTP_401_UNAUTHORIZED
 
-from ellar.common import Req, get, guards
+from ellar.common import Guards, Req, get
 from ellar.core import AppFactory, TestClient
 from ellar.core.exceptions import APIException
 from ellar.core.guard import (
@@ -97,7 +97,7 @@ for _path, auth in [
 ]:
 
     @get(f"/{_path}")
-    @guards(auth)
+    @Guards(auth)
     def auth_demo_endpoint(request=Req()):
         return {"authentication": request.user}
 
@@ -105,7 +105,7 @@ for _path, auth in [
 
 client = TestClient(app)
 
-BODY_UNAUTHORIZED_DEFAULT = {"detail": "Not authenticated"}
+BODY_UNAUTHORIZED_DEFAULT = {"detail": "Forbidden"}
 
 
 @pytest.mark.parametrize(

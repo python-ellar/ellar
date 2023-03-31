@@ -9,11 +9,9 @@ from ellar.constants import (
     CONTROLLER_METADATA,
     CONTROLLER_OPERATION_HANDLER_KEY,
     CONTROLLER_WATERMARK,
-    GUARDS_KEY,
     NOT_SET,
     OPERATION_ENDPOINT_KEY,
     REFLECT_TYPE,
-    VERSIONING_KEY,
 )
 from ellar.core import ControllerBase
 from ellar.core.controller import ControllerType
@@ -21,9 +19,6 @@ from ellar.core.exceptions import ImproperConfiguration
 from ellar.core.routing.controller import ControllerRouteOperationBase
 from ellar.di import RequestScope, injectable
 from ellar.reflect import reflect
-
-if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.guard import GuardCanActivate
 
 
 def get_route_functions(
@@ -79,8 +74,6 @@ def Controller(
     external_doc_description: str = None,
     external_doc_url: str = None,
     name: str = None,
-    version: t.Union[t.Tuple, str] = (),
-    guards: t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]] = None,
     include_in_schema: bool = True,
 ) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:  # pragma: no cover
     """
@@ -109,8 +102,6 @@ def Controller(
     external_doc_description: str = None,
     external_doc_url: str = None,
     name: str = None,
-    version: t.Union[t.Tuple, str] = (),
-    guards: t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]] = None,
     include_in_schema: bool = True,
 ) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:
     """
@@ -121,8 +112,6 @@ def Controller(
     :param external_doc_description: OPENAPI External Doc Description
     :param external_doc_url: OPENAPI External Document URL
     :param name: route name prefix for url reversing, eg name:route_name default=controller_name
-    :param version: default URL versioning for all defined route in a controller
-    :param guards: default guard for all routes defined under this controller
     :param include_in_schema: include controller in OPENAPI schema
     :return: t.Type[ControllerBase]
     """
@@ -144,8 +133,6 @@ def Controller(
         ),
         path=_prefix,
         name=name,
-        version=set([version] if isinstance(version, str) else version),
-        guards=guards or [],
         include_in_schema=include_in_schema,
     )
 
@@ -189,9 +176,6 @@ def Controller(
 
             for key in CONTROLLER_METADATA.keys:
                 reflect.define_metadata(key, kwargs[key], _controller_type)
-
-            reflect.define_metadata(VERSIONING_KEY, kwargs.version, _controller_type)
-            reflect.define_metadata(GUARDS_KEY, kwargs.guards, _controller_type)
 
         if new_cls:
             # if we forced cls to inherit from ControllerBase, we need to block it from been processed
