@@ -1,6 +1,6 @@
 import pytest
 
-from ellar.common import Controller, set_metadata
+from ellar.common import Controller, Guards, Version, set_metadata
 from ellar.constants import CONTROLLER_METADATA, GUARDS_KEY, NOT_SET, VERSIONING_KEY
 from ellar.core import ControllerBase
 from ellar.core.exceptions import ImproperConfiguration
@@ -12,12 +12,12 @@ from ellar.reflect import reflect
     prefix="/decorator",
     description="Some description",
     external_doc_description="external",
-    guards=[],
-    version=("v1",),
     tag="dec",
     external_doc_url="https://example.com",
     name="test",
 )
+@Version("v1")
+@Guards()
 class ControllerDecorationTest:
     pass
 
@@ -51,8 +51,8 @@ def test_controller_decoration_default():
         "external_doc_description": None,
         "external_doc_url": None,
     }
-    assert reflect.get_metadata(GUARDS_KEY, ControllerDefaultTest) == []
-    assert reflect.get_metadata(VERSIONING_KEY, ControllerDefaultTest) == set()
+    assert reflect.get_metadata(GUARDS_KEY, ControllerDefaultTest) is None
+    assert reflect.get_metadata(VERSIONING_KEY, ControllerDefaultTest) is None
     assert (
         reflect.get_metadata(CONTROLLER_METADATA.PATH, ControllerDefaultTest)
         == "/defaulttest"

@@ -1,9 +1,9 @@
-from ellar.common import version
+from ellar.common import Version
 from ellar.constants import VERSIONING_KEY
 from ellar.reflect import reflect
 
 
-@version(1, 2, 3)
+@Version(1, 2, 3)
 def endpoint_versioning_func():
     pass  # pragma: no cover
 

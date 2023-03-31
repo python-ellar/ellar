@@ -1,4 +1,4 @@
-from ellar.common import Controller, ModuleRouter, get, version
+from ellar.common import Controller, ModuleRouter, Version, get
 
 mr = ModuleRouter("")
 
@@ -9,19 +9,19 @@ def default_version():
 
 
 @mr.get("/version")
-@version("1", 1)
+@Version("1", 1)
 def default_version_1():
     return dict(version="v1")
 
 
 @mr.get("/version")
-@version("2", 2)
+@Version("2", 2)
 def default_version_2():
     return dict(version="v2")
 
 
 @mr.get("/version")
-@version("3", 3)
+@Version("3", 3)
 def default_version_3():
     return dict(version="v3")
 
@@ -35,7 +35,7 @@ def default_version():
 
 
 @mr_with_version.get("/version")
-@version("2", "3")
+@Version("2", "3")
 def default_version_1():
     return dict(version="v2 and v3 only")
 
@@ -55,40 +55,42 @@ class ControllerIndividualVersioning:
         return dict(version="default")
 
     @get("/version")
-    @version("1", 1)
+    @Version("1", 1)
     def default_version_1(self):
         return dict(version="v1")
 
     @get("/version")
-    @version("2", 2)
+    @Version("2", 2)
     def default_version_2(self):
         return dict(version="v2")
 
     @get("/version")
-    @version("3", 3)
+    @Version("3", 3)
     def default_version_3(self):
         return dict(version="v3")
 
 
-@Controller("/controller-versioning", version="1")
+@Controller("/controller-versioning")
+@Version("1")
 class ControllerVersioning:
     @get("/version")
     def default_version(self):
         return dict(version="default")
 
     @get("/version")
-    @version("2")
+    @Version("2")
     def default_version_2(self):
         return dict(version="v2")
 
 
-@Controller("/controller-versioning-list", version=["1", "2"])
+@Version("1", "2")
+@Controller("/controller-versioning-list")
 class ControllerListVersioning:
     @get("/version")
     def default_version(self):
         return dict(version="default")
 
     @get("/version")
-    @version("3")
+    @Version("3")
     def default_version_3(self):
         return dict(version="v3")

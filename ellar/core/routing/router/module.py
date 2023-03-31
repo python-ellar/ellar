@@ -42,7 +42,6 @@ def controller_router_factory(
     app = Router()
     app.routes = RouteCollection(routes)  # type:ignore
 
-    reflect.get_metadata_or_raise_exception(VERSIONING_KEY, controller)
     include_in_schema = reflect.get_metadata_or_raise_exception(
         CONTROLLER_METADATA.INCLUDE_IN_SCHEMA, controller
     )
