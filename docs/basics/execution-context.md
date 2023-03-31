@@ -194,20 +194,20 @@ Ellar provides the ability to attach **custom metadata** to route handlers throu
 We can then access this metadata from within our class to make certain decisions.
 
 ```python
-# project_name/apps/dogs/controllers.py
+# project_name/apps/cars/controllers.py
 
 from ellar.common import Body, Controller, post, set_metadata
 from ellar.core import ControllerBase
-from .schemas import CreateDogSerializer, DogListFilter
+from .schemas import CreateCarSerializer
 
 
-@Controller('/dogs')
-class DogsController(ControllerBase):
+@Controller('/car')
+class CarController(ControllerBase):
     @post()
     @set_metadata('role', ['admin'])
-    async def create(self, payload: CreateDogSerializer = Body()):
+    async def create(self, payload: CreateCarSerializer = Body()):
         result = payload.dict()
-        result.update(message='This action adds a new dog')
+        result.update(message='This action adds a new car')
         return result
 ```
 
@@ -216,24 +216,24 @@ to the `create()` method. While this works, it's not good practice to use `@set_
 Instead, create your own decorators, as shown below:
 
 ```python
-# project_name/apps/dogs/controllers.py
+# project_name/apps/cars/controllers.py
 import typing
 from ellar.common import Body, Controller, post, set_metadata
 from ellar.core import ControllerBase
-from .schemas import CreateDogSerializer, DogListFilter
+from .schemas import CreateCarSerializer
 
 
 def roles(*_roles: str) -> typing.Callable:
     return set_metadata('roles', list(_roles))
 
 
-@Controller('/dogs')
-class DogsController(ControllerBase):
+@Controller('/car')
+class CarController(ControllerBase):
     @post()
     @roles('admin', 'is_staff')
-    async def create(self, payload: CreateDogSerializer = Body()):
+    async def create(self, payload: CreateCarSerializer = Body()):
         result = payload.dict()
-        result.update(message='This action adds a new dog')
+        result.update(message='This action adds a new car')
         return result
 ```
 
@@ -244,7 +244,7 @@ To access the route's role(s) (custom metadata), we'll use the `Reflector` helpe
 `Reflector` can be injected into a class in the normal way:
 
 ```python
-# project_name/apps/dogs/guards.py
+# project_name/apps/cars/guards.py
 from ellar.di import injectable
 from ellar.core import GuardCanActivate, IExecutionContext
 from ellar.services import Reflector
@@ -259,30 +259,33 @@ class RoleGuard(GuardCanActivate):
         roles = self.reflector.get('roles', context.get_handler())
         # request = context.switch_to_http_connection().get_request()
         # check if user in request object has role
+        if not roles:
+            return True
         return 'user' in roles
 ```
 
-Next, we apply the `RoleGuard` to `DogsController`
+Next, we apply the `RoleGuard` to `CarController`
 
 ```python
-# project_name/apps/dogs/controllers.py
+# project_name/apps/cars/controllers.py
 import typing
-from ellar.common import Body, Controller, post, set_metadata
+from ellar.common import Body, Controller, post, set_metadata, Guards
 from ellar.core import ControllerBase
-from .schemas import CreateDogSerializer, DogListFilter
+from .schemas import CreateCarSerializer
 from .guards import RoleGuard
 
 def roles(*_roles: str) -> typing.Callable:
     return set_metadata('roles', list(_roles))
 
 
-@Controller('/dogs', guards=[RoleGuard, ])
-class DogsController(ControllerBase):
+@Controller('/car')
+@Guards(RoleGuard)
+class CarController(ControllerBase):
     @post()
     @roles('admin', 'is_staff')
-    async def create(self, payload: CreateDogSerializer = Body()):
+    async def create(self, payload: CreateCarSerializer = Body()):
         result = payload.dict()
-        result.update(message='This action adds a new dog')
+        result.update(message='This action adds a new car')
         return result
 ```
 

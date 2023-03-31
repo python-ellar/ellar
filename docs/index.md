@@ -31,23 +31,13 @@ To get started, you need to scaffold a project using [Ellar-CLI](https://eadwinc
 The scaffolded project is more like a guide to project setup.
 
 ```shell
-$(venv) pip install ellar[standard]
-```
-OR
-```shell
-$(venv) pip install ellar ellar-cli
+$(venv) pip install ellar
 ```
 
 After that, lets create a new project. 
 Run the command below and change the `project-name` with whatever name you decide.
 ```shell
 $(venv) ellar new project-name
-```
-
-### NB:
-Some shells may treat square braces (`[` and `]`) as special characters. If that's the case here, then use a quote around the characters to prevent unexpected shell expansion.
-```shell
-pip install "ellar[standard]"
 ```
 
 then, start the app with:

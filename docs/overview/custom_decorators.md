@@ -388,10 +388,10 @@ More information on how to use this decorator can be found in the [Versioning do
 
 A quick example on how to use `version` decorator:
 ```python
-from ellar.common import post, version
+from ellar.common import post, Version
 
 @post("/create", name='v2_v3_list')
-@version('2', '3')
+@Version('2', '3')
 async def get_item_v2_v3(self):
     return {'message': 'for v2 and v3 request'}
 ```
@@ -401,7 +401,7 @@ This indicates that the `get_item_v2_v3` route function will handle version 2 an
 This allows for multiple versions of the same endpoint to be handled by different route functions, each with their own logic and implementation.
 
 ### GUARDS
-**@guards()**  is a decorator that applies a protection class of type `GuardCanActivate` to a route function. 
+**@Guards()**  is a decorator that applies a protection class of type `GuardCanActivate` to a route function. 
 These protection classes have a `can_execute` function that is called to determine whether a route function should be executed. 
 
 This decorator allows you to apply certain conditions or checks before a route function is executed, such as `authentication` or `authorization` checks. 
@@ -409,10 +409,10 @@ This can help to ensure that only authorized users can access certain resources.
 
 More information on how to use this decorator can be found in the [Guard Documentation]()
 
-A quick example on how to use `guards` decorator:
+A quick example on how to use `Guards` decorator:
 ```python
 import typing as t
-from ellar.common import get, guards
+from ellar.common import get, Guards
 from ellar.core.guard import APIKeyQuery
 from ellar.core.connection import HTTPConnection
 
@@ -425,11 +425,11 @@ class MyAPIKeyQuery(APIKeyQuery):
 
 
 @get("/")
-@guards(MyAPIKeyQuery(), )
+@Guards(MyAPIKeyQuery(), )
 async def get_guarded_items(self):
     return {'message': 'worked fine with `key`=`supersecret`'}
 ```
-The `guards` decorator, like the `version` decorator, takes a list of values as an argument. 
+The `Guards` decorator, like the `version` decorator, takes a list of values as an argument. 
 During a request, the provided guards are called in the order in which they are provided. 
 
 This allows you to apply multiple guards to a single route function and have them executed in a specific order. 
