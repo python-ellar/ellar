@@ -50,6 +50,7 @@ class AppFactory:
         module_dependency = OrderedDict()
         for module in modules:
             if isinstance(module, DynamicModule):
+                module.apply_configuration()
                 module_config = ModuleSetup(module.module)
             elif isinstance(module, ModuleSetup):
                 module_config = module

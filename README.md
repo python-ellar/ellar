@@ -19,23 +19,23 @@ Ellar is based on [Starlette (ASGI toolkit)](https://www.starlette.io/), a light
 While Ellar provides a high level of abstraction on top of Starlette, it still incorporates some of its features, as well as those of FastAPI. 
 If you are familiar with these frameworks, you will find it easy to understand and use Ellar.
 
+## Features Summary
+
+- **Easy to Use**: Ellar has a simple and intuitive API that makes it easy to get started with building a fast and scalable web applications or web APIs in Python.
+- **Dependency Injection (DI)**: It comes with DI system makes it easy to manage dependencies and reduce coupling between components.
+- **Pydantic Integration**: It is properly integrated with Pydantic, a popular Python library for data validation, to ensure that input data is valid.
+- **Templating with Jinja2**: Ellar provides built-in support for Jinja2 templates, making it easy to create dynamic web pages.
+- **OpenAPI Documentation**: It comes with built-in support for OpenAPI documentation, making it easy to generate `Swagger` or `ReDoc` documentation for your API. And more can be added with ease if necessary.
+- **Controller (MVC) Architecture**: Ellar's controller architecture follows the Model-View-Controller (MVC) pattern, making it easy to organize your code.
+- **Guards for Authentication and Authorization**: It provides built-in support for guards, allowing you to easily implement authentication and authorization in your application.
+- **Modularity**: Ellar follows a modular architecture inspired by NestJS, making it easy to organize your code into reusable modules.
+- **Asynchronous programming**: It allows you to takes advantage of Python's `async/await` feature to write efficient and fast code that can handle large numbers of concurrent requests
+
 ## Dependencies
 - Python >= 3.7
 - Starlette
 - Injector
 - Pydantic
-
-## Features Summary
-- `Pydantic integration`
-- `Dependency Injection (DI)`
-- `Templating with Jinja2`
-- `OpenAPI Documentation (Swagger and ReDoc)`
-- `Controller (MVC)`
-- `Guards (authentications, roles and permissions)`
-- `Modularization (eg: flask blueprint)`
-- `Websocket support`
-- `Session and Cookie support`
-- `CORS, GZip, Static Files, Streaming responses`
 
 ## Installation
 ### Poetry Installation

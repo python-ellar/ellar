@@ -1,4 +1,5 @@
 from abc import ABC
+from unittest.mock import patch
 
 import pytest
 
@@ -188,3 +189,18 @@ def test_invalid_dynamic_module_setup():
     with pytest.raises(Exception) as ex:
         DynamicModule(module=IDynamic)
     assert str(ex.value) == "IDynamic is not a valid Module"
+
+
+def test_can_not_apply_dynamic_module_twice():
+    dynamic_type = type("DynamicSample", (IDynamic,), {"a": "1222", "b": "121212"})
+    with patch.object(reflect.__class__, "define_metadata") as mock_define_metadata:
+        dynamic_module = DynamicModule(
+            module=DynamicInstantiatedModule,
+            providers=[ProviderConfig(IDynamic, use_class=dynamic_type)],
+        )
+        dynamic_module.apply_configuration()
+        assert mock_define_metadata.called
+
+    with patch.object(reflect.__class__, "define_metadata") as mock_define_metadata:
+        dynamic_module.apply_configuration()
+        assert mock_define_metadata.called is False
