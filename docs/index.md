@@ -29,7 +29,7 @@ the ability to adapt to any desired software architecture, and ultimately, speed
 
 ## Features Summary
 
-- **Easy to Use**: Ellar has a simple and intuitive API that makes it easy to get started with building a fast and scalable web applications or web APIs in Python.
+- **Easy to Use**: Ellar has a simple and intuitive API that makes it easy to get started with building a fast and scalable web applications or web APIs with Python.
 - **Dependency Injection (DI)**: It comes with DI system makes it easy to manage dependencies and reduce coupling between components.
 - **Pydantic Integration**: It is properly integrated with Pydantic, a popular Python library for data validation, to ensure that input data is valid.
 - **Templating with Jinja2**: Ellar provides built-in support for Jinja2 templates, making it easy to create dynamic web pages.
