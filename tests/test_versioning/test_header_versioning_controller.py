@@ -2,7 +2,7 @@ import pytest
 
 from ellar.constants import NOT_SET
 from ellar.core import TestClientFactory
-from ellar.core.versioning import VERSIONING
+from ellar.core.versioning import VersioningSchemes as VERSIONING
 
 from .operations import (
     ControllerIndividualVersioning,
