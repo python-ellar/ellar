@@ -29,7 +29,7 @@ from ellar.core.modules import (
 )
 from ellar.core.routing import ApplicationRouter
 from ellar.core.templating import AppTemplating, Environment
-from ellar.core.versioning import VERSIONING, BaseAPIVersioning
+from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
 from ellar.di.injector import EllarInjector
 from ellar.logger import logger
 from ellar.types import ASGIApp, T, TReceive, TScope, TSend
@@ -253,7 +253,7 @@ class App(AppTemplating):
 
     def enable_versioning(
         self,
-        schema: VERSIONING,
+        schema: VersioningSchemes,
         version_parameter: str = "version",
         default_version: t.Optional[str] = None,
         **init_kwargs: t.Any,

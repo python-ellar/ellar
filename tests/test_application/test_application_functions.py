@@ -21,7 +21,11 @@ from ellar.core.modules import ModuleTemplateRef
 from ellar.core.services import CoreServiceRegistration
 from ellar.core.staticfiles import StaticFiles
 from ellar.core.templating import Environment
-from ellar.core.versioning import VERSIONING, DefaultAPIVersioning, UrlPathAPIVersioning
+from ellar.core.versioning import (
+    DefaultAPIVersioning,
+    UrlPathAPIVersioning,
+    VersioningSchemes as VERSIONING,
+)
 from ellar.di import EllarInjector
 from ellar.helper.importer import get_class_import
 from ellar.openapi import OpenAPIDocumentModule

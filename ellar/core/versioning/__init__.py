@@ -10,7 +10,7 @@ from .base import (  # noqa
 )
 
 
-class VERSIONING(Enum):
+class VersioningSchemes(Enum):
     URL = UrlPathAPIVersioning
     QUERY = QueryParameterAPIVersioning
     HEADER = HeaderAPIVersioning
