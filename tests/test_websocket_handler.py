@@ -2,8 +2,10 @@ import pytest
 from starlette.websockets import WebSocket, WebSocketState
 
 from ellar.common import Controller, ModuleRouter, WsBody, ws_route
+from ellar.constants import CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.core import TestClientFactory
 from ellar.core.exceptions import ImproperConfiguration
+from ellar.reflect import reflect
 
 from .schema import Item
 
@@ -19,12 +21,12 @@ async def websocket_with_handler(
     await websocket.close()
 
 
-@websocket_with_handler.connect
+@router.ws_route.connect(websocket_with_handler)
 async def websocket_with_handler_connect(websocket: WebSocket):
     await websocket.accept()
 
 
-@websocket_with_handler.disconnect
+@router.ws_route.disconnect(websocket_with_handler)
 async def websocket_with_handler_connect(websocket: WebSocket, code: int):
     # await websocket.close(code=code)
     assert websocket.client_state == WebSocketState.DISCONNECTED
@@ -49,11 +51,11 @@ class WebsocketController:
         await websocket.send_json(data.dict())
         await websocket.close()
 
-    @websocket_with_handler_c.connect
+    @ws_route.connect(websocket_with_handler_c)
     async def websocket_with_handler_connect(self, websocket: WebSocket):
         await websocket.accept()
 
-    @websocket_with_handler_c.disconnect
+    @ws_route.disconnect(websocket_with_handler_c)
     async def websocket_with_handler_connect(self, websocket: WebSocket, code: int):
         # await websocket.close(code=code)
         assert websocket.client_state == WebSocketState.DISCONNECTED
@@ -159,7 +161,7 @@ def test_websocket_endpoint_on_connect():
         async def ws(self, websocket: WebSocket):
             pass
 
-        @ws.connect
+        @ws_route.connect(ws)
         async def on_connect(self, websocket):
             assert websocket["subprotocols"] == ["soap", "wamp"]
             await websocket.accept(subprotocol="wamp")
@@ -274,7 +276,7 @@ def test_websocket_endpoint_on_disconnect():
         async def ws(self, websocket: WebSocket, data: str = WsBody()):
             await websocket.send_text(f"Message text was: {data}")
 
-        @ws.disconnect
+        @ws_route.disconnect(ws)
         async def on_disconnect(self, websocket: WebSocket, close_code):
             assert close_code == 1001
             await websocket.close(code=close_code)
@@ -286,3 +288,39 @@ def test_websocket_endpoint_on_disconnect():
     with _client.websocket_connect("/ws/") as websocket:
         websocket.send_text("Hello, world!")
         websocket.close(code=1001)
+
+
+def test_ws_route_connect_raise_exception_for_invalid_type():
+    with pytest.raises(
+        Exception,
+        match="Invalid type. Please make sure you passed the websocket handler.",
+    ):
+
+        @router.ws_route.connect(ModuleRouter)
+        def some_example_connect():
+            pass
+
+
+def test_ws_route_connect_raise_exception_for_invalid_operation():
+    with pytest.raises(
+        Exception,
+        match="Invalid type. Please make sure you passed the websocket handler.",
+    ):
+
+        @router.ws_route.connect(websocket_with_handler_connect)
+        def some_example_connect():
+            pass
+
+
+def test_add_websocket_handler_raise_exception_for_wrong_handler_name():
+    websocket_operation = reflect.get_metadata(
+        CONTROLLER_OPERATION_HANDLER_KEY, websocket_with_handler
+    )
+    with pytest.raises(Exception) as ex:
+        websocket_operation.add_websocket_handler(
+            handler_name="mycustomname", handler=websocket_with_handler_connect
+        )
+    assert (
+        str(ex.value)
+        == "Invalid Handler Name. Handler Name must be in ['encoding', 'on_receive', 'on_connect', 'on_disconnect']"
+    )

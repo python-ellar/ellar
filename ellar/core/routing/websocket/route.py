@@ -9,7 +9,6 @@ from ellar.constants import (
     EXTRA_ROUTE_ARGS_KEY,
     NOT_SET,
 )
-from ellar.core.connection import WebSocket
 from ellar.core.context import IExecutionContext
 from ellar.core.exceptions import ImproperConfiguration, WebSocketRequestValidationError
 from ellar.core.params import WebsocketEndpointArgsModel
@@ -23,21 +22,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.params import ExtraEndpointArg
 
 
-class WebSocketOperationMixin:
-    _handlers_kwargs: t.Dict
-
-    def connect(self, func: t.Callable[[WebSocket], None]) -> t.Callable:
-        self._handlers_kwargs.update(on_connect=func)
-        return func
-
-    def disconnect(self, func: t.Callable[[WebSocket, int], None]) -> t.Callable:
-        self._handlers_kwargs.update(on_disconnect=func)
-        return func
-
-
-class WebsocketRouteOperation(
-    WebSocketOperationMixin, WebsocketRouteOperationBase, StarletteWebSocketRoute
-):
+class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRoute):
     websocket_endpoint_args_model: t.Type[
         WebsocketEndpointArgsModel
     ] = WebsocketEndpointArgsModel
@@ -91,6 +76,13 @@ class WebsocketRouteOperation(
     @classmethod
     def get_websocket_handler(cls) -> t.Type[WebSocketExtraHandler]:
         return WebSocketExtraHandler
+
+    def add_websocket_handler(self, handler_name: str, handler: t.Callable) -> None:
+        if handler_name not in self._handlers_kwargs:
+            raise Exception(
+                f"Invalid Handler Name. Handler Name must be in {list(self._handlers_kwargs.keys())}"
+            )
+        self._handlers_kwargs.update({handler_name: handler})
 
     async def _handle_request(self, context: IExecutionContext) -> None:
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(

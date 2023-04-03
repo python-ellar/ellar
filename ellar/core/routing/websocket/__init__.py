@@ -1,8 +1,7 @@
 from .handler import WebSocketExtraHandler
-from .route import WebSocketOperationMixin, WebsocketRouteOperation
+from .route import WebsocketRouteOperation
 
 __all__ = [
     "WebSocketExtraHandler",
     "WebsocketRouteOperation",
-    "WebSocketOperationMixin",
 ]
