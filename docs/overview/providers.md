@@ -37,7 +37,6 @@ Let's refactor our `CarController` and move some actions to a service.
 
 ```python
 # project_name/apps/car/services.py
-import uuid
 import typing as t
 from ellar.di import injectable, singleton_scope
 from .schemas import CreateCarSerializer, CarSerializer
@@ -48,11 +47,12 @@ class CarRepository:
     def __init__(self):
         self._cars: t.List[CarSerializer] = []
 
-    def create_car(self, data: CreateCarSerializer) -> None:
-        self._cars.append(
-            CarSerializer(id=str(uuid.uuid4()), **data.dict())
-        )
-    
+    def create_car(self, data: CreateCarSerializer) -> dict:
+        data = CarSerializer(id=len(self._cars) + 1, **data.dict())
+        self._cars.append(data)
+        return data.dict()
+
+
     def get_all(self) -> t.List[CarSerializer]:
         return self._cars
 
@@ -78,8 +78,9 @@ class CarController(ControllerBase):
     
     @post()
     async def create(self, payload: CreateCarSerializer = Body()):
-        self.repo.create_car(payload)
-        return 'This action adds a new car'
+        result = self.repo.create_car(payload)
+        result.update(message='This action adds a new car')
+        return result
 
     @get()
     async def get_all(self, query: CarListFilter = Query()):
