@@ -1,19 +1,17 @@
 from ellar.cache import CacheModule, ICacheService
 from ellar.cache.backends.local_cache import LocalMemCacheBackend
-from ellar.core import TestClientFactory
+from ellar.testing import Test
 
 
 def test_cache_module_setup_works():
-    tm = TestClientFactory.create_test_module(
-        modules=[
-            CacheModule.setup(
-                default=LocalMemCacheBackend(),
-                local=LocalMemCacheBackend(version=2, ttl=400),
-            )
-        ]
+    tm = Test.create_test_module_from_module(
+        CacheModule.setup(
+            default=LocalMemCacheBackend(),
+            local=LocalMemCacheBackend(version=2, ttl=400),
+        )
     )
 
-    cache_service = tm.app.injector.get(ICacheService)
+    cache_service = tm.get(ICacheService)
     assert cache_service
     local = cache_service.get_backend("local")
 

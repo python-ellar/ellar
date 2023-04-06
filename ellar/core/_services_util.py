@@ -15,7 +15,7 @@ from .exceptions.interfaces import IExceptionMiddlewareService
 from .exceptions.service import ExceptionMiddlewareService
 
 
-class CoreServiceRegistration:
+class _CoreServiceRegistration:
     """Create Binding for all application service"""
 
     __slots__ = ("injector", "config")

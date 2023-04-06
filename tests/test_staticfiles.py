@@ -11,8 +11,9 @@ import pytest
 from starlette.exceptions import HTTPException
 from starlette.routing import Mount
 
-from ellar.core import AppFactory, TestClient
+from ellar.core import AppFactory
 from ellar.core.staticfiles import StaticFiles
+from ellar.testing import TestClient
 
 
 def test_staticfiles(tmpdir):

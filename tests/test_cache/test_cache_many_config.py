@@ -1,8 +1,8 @@
 from ellar.cache import CacheModule, ICacheService, cache
 from ellar.cache.backends.local_cache import LocalMemCacheBackend
 from ellar.common import Controller, get
-from ellar.core import TestClientFactory
 from ellar.core.response import PlainTextResponse
+from ellar.testing import Test
 
 
 @Controller("")
@@ -18,7 +18,7 @@ class ExampleController:
         return dict(message="ExampleController cache 2")
 
 
-tm = TestClientFactory.create_test_module(
+tm = Test.create_test_module(
     controllers=[ExampleController],
     modules=(CacheModule.register_setup(),),
     config_module=dict(
@@ -31,14 +31,14 @@ tm = TestClientFactory.create_test_module(
 
 
 def test_cache_backend_has_many_cache_backend():
-    cache_service = tm.app.injector.get(ICacheService)
+    cache_service = tm.get(ICacheService)
     assert isinstance(cache_service.get_backend("another"), LocalMemCacheBackend)
     assert isinstance(cache_service.get_backend("default"), LocalMemCacheBackend)
 
 
 def test_cache_operation_with_backend_works():
-    cache_service = tm.app.injector.get(ICacheService)
-    client = tm.get_client(base_url="http://testserver")
+    cache_service = tm.get(ICacheService)
+    client = tm.get_test_client(base_url="http://testserver")
 
     response = client.get("/index-1")
     assert response.text == "ExampleController cache 1"

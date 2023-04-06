@@ -1,13 +1,13 @@
 from typing import Union
 
 from ellar.common import post
-from ellar.core import TestClientFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
+from ellar.testing import Test
 
 from .sample import Item, OtherItem
 
-tm = TestClientFactory.create_test_module()
+tm = Test.create_test_module()
 
 
 @post("/items/")
@@ -15,8 +15,10 @@ def save_union_body(item: Union[OtherItem, Item]):
     return {"item": item}
 
 
-tm.app.router.append(save_union_body)
-client = tm.get_client()
+app = tm.create_application()
+app.router.append(save_union_body)
+
+client = tm.get_test_client()
 
 
 item_openapi_schema = {
@@ -109,7 +111,7 @@ item_openapi_schema = {
 
 
 def test_item_openapi_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(tm.app))
+    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
     assert document == item_openapi_schema
 
 

@@ -12,7 +12,7 @@ from ellar.core.modules import DynamicModule, ModuleBase, ModuleSetup
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
 
-from .services import CoreServiceRegistration
+from ._services_util import _CoreServiceRegistration
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.commands import EllarTyper
@@ -133,7 +133,7 @@ class AppFactory:
         config = Config(app_configured=True, **_get_config_kwargs())
         injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND)
         injector.container.register_instance(config, concrete_type=Config)
-        CoreServiceRegistration(injector, config).register_all()
+        _CoreServiceRegistration(injector, config).register_all()
 
         cls._build_modules(app_module=module, injector=injector, config=config)
 

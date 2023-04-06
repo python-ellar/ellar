@@ -2,13 +2,7 @@ import os
 
 import pytest
 
-from ellar.core import (
-    AppFactory,
-    Config,
-    ExecutionContext,
-    GuardCanActivate,
-    TestClient,
-)
+from ellar.core import AppFactory, Config, ExecutionContext, GuardCanActivate
 from ellar.core.modules.ref import create_module_ref_factor
 from ellar.di import EllarInjector
 from ellar.openapi import (
@@ -17,6 +11,7 @@ from ellar.openapi import (
     ReDocDocumentGenerator,
     SwaggerDocumentGenerator,
 )
+from ellar.testing import TestClient
 
 
 class CustomDocsGuard(GuardCanActivate):

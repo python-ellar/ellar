@@ -6,11 +6,11 @@ from jinja2 import TemplateNotFound
 
 from ellar.common import Controller, get, render
 from ellar.constants import CONTROLLER_OPERATION_HANDLER_KEY
-from ellar.core import TestClientFactory
 from ellar.core.response.model import HTMLResponseModel
 from ellar.core.response.model.html import HTMLResponseModelRuntimeError
 from ellar.core.routing import ModuleRouter
 from ellar.reflect import reflect
+from ellar.testing import Test
 
 BASEDIR = Path(__file__).resolve().parent.parent
 
@@ -62,7 +62,7 @@ def render_template():
     return {}
 
 
-test_module = TestClientFactory.create_test_module(
+test_module = Test.create_test_module(
     template_folder="templates",
     base_directory=BASEDIR,
     controllers=(EllarController,),
@@ -80,7 +80,7 @@ test_module = TestClientFactory.create_test_module(
     ],
 )
 def test_ellar_index_should_use_controller_name_with_function_name(path, template):
-    client = test_module.get_client()
+    client = test_module.get_test_client()
     response = client.get(path)
     response.raise_for_status()
     content = re.sub("\\s+", " ", response.text).strip()
@@ -101,7 +101,7 @@ def test_ellar_index_should_use_controller_name_with_function_name(path, templat
     ],
 )
 def test_function_template_rendering(path, template):
-    client = test_module.get_client()
+    client = test_module.get_test_client()
     response = client.get(path)
     response.raise_for_status()
     content = re.sub("\\s+", " ", response.text).strip()
@@ -149,7 +149,7 @@ def test_runtime_exception_works():
     def runtime_controller_error_1():
         pass
 
-    test_module.app.router.extend(
+    test_module.create_application().router.extend(
         [runtime_error_1, runtime_error_2, runtime_controller_error_1]
     )
     runtime_error_1_handler = reflect.get_metadata(
@@ -165,7 +165,7 @@ def test_runtime_exception_works():
     assert isinstance(
         runtime_error_2_handler.response_model.models[200], HTMLResponseModel
     )
-    client = test_module.get_client()
+    client = test_module.get_test_client()
 
     with pytest.raises(TemplateNotFound):
         client.get("/runtime_error_1")

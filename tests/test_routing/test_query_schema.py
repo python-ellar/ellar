@@ -1,12 +1,12 @@
 import pytest
 
 from ellar.common import Query, get
-from ellar.core import TestClientFactory
 from ellar.core.connection import Request
 from ellar.core.exceptions import ImproperConfiguration
 from ellar.core.routing import ModuleRouter
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
+from ellar.testing import Test
 
 from .sample import Data, Filter, NonPrimitiveSchema
 
@@ -32,11 +32,12 @@ def query_params_mixed_schema(
     return dict(query1=query1, query2=query2, filters=filters.dict(), data=data.dict())
 
 
-tm = TestClientFactory.create_test_module(routers=(mr,))
+tm = Test.create_test_module(routers=(mr,))
+app = tm.create_application()
 
 
 def test_request():
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.get("/test?from=1&to=2&range=20&foo=1&range2=50")
     assert response.json() == {
         "to_datetime": "1970-01-01T00:00:02+00:00",
@@ -49,7 +50,7 @@ def test_request():
 
 
 def test_request_mixed():
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.get(
         "/test-mixed?from=1&to=2&range=20&foo=1&range2=50&query1=2&int=3&float=1.6"
     )
@@ -83,7 +84,7 @@ def test_request_mixed():
 
 
 def test_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(tm.app))
+    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
     params = document["paths"]["/test"]["get"]["parameters"]
     assert params == [
         {

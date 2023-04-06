@@ -6,9 +6,9 @@ import pytest
 from starlette.formparsers import UploadFile as StarletteUploadFile
 
 from ellar.common import File, Form
-from ellar.core import TestClientFactory
 from ellar.core.datastructures import UploadFile
 from ellar.core.routing import ModuleRouter
+from ellar.testing import Test
 
 router = ModuleRouter("")
 
@@ -93,7 +93,7 @@ async def form_upload_multiple(
     )
 
 
-tm = TestClientFactory.create_test_module(routers=(router,))
+tm = Test.create_test_module(routers=(router,))
 
 
 @pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python >= 3.7")
@@ -102,7 +102,7 @@ def test_multipart_request_files(tmpdir):
     with open(path, "wb") as file:
         file.write(b"<file content>")
 
-    client = tm.get_client()
+    client = tm.get_test_client()
     with open(path, "rb") as f:
         response = client.post("/", files={"test": f})
         assert response.json() == {
@@ -119,7 +119,7 @@ def test_multipart_request_files_with_content_type(tmpdir):
     with open(path, "wb") as file:
         file.write(b"<file content>")
 
-    client = tm.get_client()
+    client = tm.get_test_client()
     with open(path, "rb") as f:
         response = client.post("/", files={"test": ("test.txt", f, "text/plain")})
         assert response.json() == {
@@ -141,7 +141,7 @@ def test_multipart_request_multiple_files(tmpdir):
     with open(path2, "wb") as file:
         file.write(b"<file2 content>")
 
-    client = tm.get_client()
+    client = tm.get_test_client()
     with open(path1, "rb") as f1, open(path2, "rb") as f2:
         response = client.post(
             "/mixed", files={"test1": f1, "test2": ("test2.txt", f2, "text/plain")}
@@ -170,7 +170,7 @@ def test_multi_items(tmpdir):
     with open(path2, "wb") as file:
         file.write(b"<file2 content>")
 
-    client = tm.get_client()
+    client = tm.get_test_client()
     with open(path1, "rb") as f1, open(path2, "rb") as f2:
         response = client.post(
             "/multiple",
@@ -195,7 +195,7 @@ def test_multi_items(tmpdir):
 
 
 def test_multipart_request_mixed_files_and_data(tmpdir):
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.post(
         "/mixed-optional",
         data=(
@@ -232,7 +232,7 @@ def test_multipart_request_mixed_files_and_data(tmpdir):
 
 
 def test_multipart_request_with_charset_for_filename(tmpdir):
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.post(
         "/mixed-optional",
         data=(
@@ -262,7 +262,7 @@ def test_multipart_request_with_charset_for_filename(tmpdir):
 
 
 def test_multipart_request_without_charset_for_filename(tmpdir):
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.post(
         "/mixed-optional",
         data=(
@@ -291,7 +291,7 @@ def test_multipart_request_without_charset_for_filename(tmpdir):
 
 
 def test_multipart_request_with_encoded_value(tmpdir):
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.post(
         "/multiple",
         data=(
@@ -312,25 +312,25 @@ def test_multipart_request_with_encoded_value(tmpdir):
 
 
 def test_urlencoded_request_data(tmpdir):
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.post("/multiple", data={"test1": "data"})
     assert response.json() == {"test1": ["data"]}
 
 
 def test_no_request_data(tmpdir):
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.post("/mixed-optional")
     assert response.json() == {"file": None, "field0": "", "field1": None}
 
 
 def test_urlencoded_percent_encoding(tmpdir):
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.post("/multiple", data={"test1": "da ta"})
     assert response.json() == {"test1": ["da ta"]}
 
 
 def test_multipart_multi_field_app_reads_body(tmpdir):
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.post(
         "/multiple", data={"test1": "key pair"}, files=FORCE_MULTIPART
     )

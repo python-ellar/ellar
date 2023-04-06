@@ -13,11 +13,11 @@ from ellar.core import (
     IModuleSetup,
     ModuleBase,
     ModuleSetup,
-    TestClientFactory,
 )
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
 from ellar.services import Reflector
+from ellar.testing import Test
 
 from ..main import router
 
@@ -81,28 +81,29 @@ def test_dynamic_module_haves_routes():
     routers = reflect.get_metadata(MODULE_METADATA.ROUTERS, DynamicInstantiatedModule)
     assert len(routers) == 1
     assert len(routers[0].routes) == 39
-    TestClientFactory.create_test_module(
+    tm = Test.create_test_module(
         modules=(DynamicInstantiatedModule.setup(a=233, b=344),)
     )
+    tm.create_application()
     routers = reflect.get_metadata(MODULE_METADATA.ROUTERS, DynamicInstantiatedModule)
     assert len(routers) == 1
     assert len(routers[0].routes) == 1
 
 
 def test_dynamic_module_setup_providers_works():
-    test_module = TestClientFactory.create_test_module(
+    test_module = Test.create_test_module(
         modules=(DynamicInstantiatedModule.setup(a=233, b=344),)
     )
-    dynamic_object = test_module.app.injector.get(IDynamic)
+    dynamic_object = test_module.get(IDynamic)
     assert dynamic_object.a == 233 and dynamic_object.b == 344
 
 
 def test_dynamic_module_setup_router_controllers_works():
-    test_module = TestClientFactory.create_test_module(
+    test_module = Test.create_test_module(
         modules=(DynamicInstantiatedModule.setup(a=233, b=344),)
     )
-    assert len(test_module.app.routes) == 2
-    client = test_module.get_client()
+    assert len(test_module.create_application().routes) == 2
+    client = test_module.get_test_client()
 
     res = client.get("/dynamic/index")
     assert res.status_code == 200
@@ -115,12 +116,12 @@ def test_dynamic_module_setup_router_controllers_works():
 
 def test_dynamic_module_setup_register_works():
     with reflect.context():
-        test_module = TestClientFactory.create_test_module(
+        test_module = Test.create_test_module(
             modules=(DynamicModuleSetupRegisterModule.setup_register(),),
             config_module=dict(a=24555, b=8899900),
         )
-        assert len(test_module.app.routes) == 0
-        dynamic_instance = test_module.app.injector.get(IDynamic)
+        assert len(test_module.create_application().routes) == 0
+        dynamic_instance = test_module.get(IDynamic)
         assert dynamic_instance.a == 24555
         assert dynamic_instance.b == 8899900
 
@@ -143,7 +144,7 @@ def test_module_setup_with_factory_works(name, dependencies):
             assert isinstance(instance, _type)
         return module.setup(a=233, b=344)
 
-    test_module = TestClientFactory.create_test_module(
+    test_module = Test.create_test_module(
         modules=[
             ModuleSetup(
                 DynamicInstantiatedModule,
@@ -153,9 +154,9 @@ def test_module_setup_with_factory_works(name, dependencies):
         ]
     )
 
-    dynamic_object = test_module.app.injector.get(IDynamic)
+    dynamic_object = test_module.get(IDynamic)
     assert dynamic_object.a == 233 and dynamic_object.b == 344
-    client = test_module.get_client()
+    client = test_module.get_test_client()
 
     res = client.get("/dynamic/index")
     assert res.status_code == 200

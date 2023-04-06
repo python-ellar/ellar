@@ -4,7 +4,6 @@ from pathlib import Path
 import pytest
 
 from ellar.common import Controller, file, get
-from ellar.core import TestClientFactory
 from ellar.core.response.model import (
     StreamingResponseModel,
     StreamingResponseModelInvalidContent,
@@ -12,6 +11,7 @@ from ellar.core.response.model import (
 from ellar.core.routing import ModuleRouter
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
+from ellar.testing import Test
 
 BASEDIR = Path(__file__).resolve().parent.parent
 FILE_RESPONSE_SCHEMA = {
@@ -73,11 +73,12 @@ class EllarController:
         }
 
 
-test_module = TestClientFactory.create_test_module(
+test_module = Test.create_test_module(
     controllers=(EllarController,),
     routers=(streaming_mr,),
 )
-document = serialize_object(OpenAPIDocumentBuilder().build_document(test_module.app))
+app = test_module.create_application()
+document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
 
 
 @pytest.mark.parametrize(
@@ -90,7 +91,7 @@ document = serialize_object(OpenAPIDocumentBuilder().build_document(test_module.
     ],
 )
 def test_file_stream_response_for_module_router_and_controller(path):
-    client = test_module.get_client()
+    client = test_module.get_test_client()
     response = client.get(path)
     response.raise_for_status()
     assert response.status_code == 200
@@ -115,7 +116,7 @@ def test_response_schema(path):
 
 
 def test_invalid_parameter_returned():
-    client = test_module.get_client()
+    client = test_module.get_test_client()
     with pytest.raises(
         StreamingResponseModelInvalidContent,
         match="Content must typing.AsyncIterable OR typing.Iterable",

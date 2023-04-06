@@ -2,7 +2,7 @@ import pytest
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from ellar.common import Guards, Req, get
-from ellar.core import AppFactory, TestClient
+from ellar.core import AppFactory
 from ellar.core.exceptions import APIException
 from ellar.core.guard import (
     APIKeyCookie,
@@ -16,6 +16,7 @@ from ellar.di import injectable
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
 from ellar.services import Reflector
+from ellar.testing import TestClient
 
 
 class CustomException(APIException):

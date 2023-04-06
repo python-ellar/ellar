@@ -3,11 +3,11 @@ from typing import Dict
 from pydantic import BaseModel
 
 from ellar.common import post
-from ellar.core import TestClientFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
+from ellar.testing import Test
 
-tm = TestClientFactory.create_test_module()
+tm = Test.create_test_module()
 
 
 class Items_(BaseModel):
@@ -19,8 +19,9 @@ def foo(items: Items_):
     return items.items
 
 
-tm.app.router.append(foo)
-client = tm.get_client()
+app = tm.create_application()
+app.router.append(foo)
+client = tm.get_test_client()
 
 
 item_openapi_schema = {
@@ -108,7 +109,7 @@ item_openapi_schema = {
 
 
 def test_body_extra_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(tm.app))
+    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
     assert document == item_openapi_schema
 
 

@@ -7,13 +7,14 @@ from starlette.exceptions import HTTPException
 from starlette.responses import JSONResponse, Response
 
 from ellar.common import get
-from ellar.core import Config, TestClientFactory
+from ellar.core import Config
 from ellar.core.context import IHostContext
 from ellar.core.exceptions.callable_exceptions import CallableExceptionHandler
 from ellar.core.exceptions.handlers import APIException, APIExceptionHandler
 from ellar.core.exceptions.interfaces import IExceptionHandler
 from ellar.core.exceptions.service import ExceptionMiddlewareService
 from ellar.core.middleware import ExceptionMiddleware
+from ellar.testing import Test
 
 
 class InvalidExceptionHandler:
@@ -136,11 +137,12 @@ def test_custom_exception_works():
     def homepage():
         raise NewException("New Exception")
 
-    tm = TestClientFactory.create_test_module()
-    tm.app.router.append(homepage)
-    tm.app.add_exception_handler(NewExceptionHandler())
+    tm = Test.create_test_module()
+    app = tm.create_application()
+    app.router.append(homepage)
+    app.add_exception_handler(NewExceptionHandler())
 
-    client = tm.get_client()
+    client = tm.get_test_client()
     res = client.get("/")
     assert res.status_code == 400
     assert res.json() == {"detail": "New Exception"}
@@ -151,11 +153,12 @@ def test_exception_override_works():
     def homepage():
         raise APIException("New APIException")
 
-    tm = TestClientFactory.create_test_module()
-    tm.app.router.append(homepage)
-    tm.app.add_exception_handler(OverrideAPIExceptionHandler())
+    tm = Test.create_test_module()
+    app = tm.create_application()
+    app.router.append(homepage)
+    app.add_exception_handler(OverrideAPIExceptionHandler())
 
-    client = tm.get_client()
+    client = tm.get_test_client()
     res = client.get("/")
     assert res.status_code == 404
     assert res.json() == {"detail": "New APIException"}
@@ -175,11 +178,13 @@ def test_500_error_as_a_function(exception_handler):
     def homepage():
         raise RuntimeError("Server Error")
 
-    tm = TestClientFactory.create_test_module()
-    tm.app.router.append(homepage)
-    tm.app.add_exception_handler(exception_handler)
+    tm = Test.create_test_module()
+    app = tm.create_application()
 
-    client = tm.get_client(raise_server_exceptions=False)
+    app.router.append(homepage)
+    app.add_exception_handler(exception_handler)
+
+    client = tm.get_test_client(raise_server_exceptions=False)
     res = client.get("/")
     assert res.status_code == 500
     assert res.json() == {"detail": "Server Error"}
@@ -190,9 +195,11 @@ def test_raise_default_http_exception():
     def homepage():
         raise HTTPException(detail="Bad Request", status_code=400)
 
-    tm = TestClientFactory.create_test_module()
-    tm.app.router.append(homepage)
-    client = tm.get_client()
+    tm = Test.create_test_module()
+    app = tm.create_application()
+
+    app.router.append(homepage)
+    client = tm.get_test_client()
     res = client.get("/")
     assert res.status_code == 400
     assert res.json() == {"detail": "Bad Request", "status_code": 400}
@@ -204,10 +211,12 @@ def test_raise_default_http_exception_for_204_and_304(status_code):
     def homepage():
         raise HTTPException(detail="Server Error", status_code=status_code)
 
-    tm = TestClientFactory.create_test_module()
-    tm.app.router.append(homepage)
+    tm = Test.create_test_module()
+    app = tm.create_application()
 
-    client = tm.get_client()
+    app.router.append(homepage)
+
+    client = tm.get_test_client()
     res = client.get("/")
     assert res.status_code == status_code
     assert res.text == ""
@@ -234,11 +243,13 @@ def test_application_add_exception_handler():
     def homepage():
         raise HTTPException(detail="Bad Request", status_code=400)
 
-    tm = TestClientFactory.create_test_module()
-    tm.app.router.append(homepage)
-    tm.app.add_exception_handler(OverrideHTTPException())
+    tm = Test.create_test_module()
+    app = tm.create_application()
 
-    client = tm.get_client()
+    app.router.append(homepage)
+    app.add_exception_handler(OverrideHTTPException())
+
+    client = tm.get_test_client()
     res = client.get("/")
 
     assert res.status_code == 400
@@ -250,25 +261,28 @@ def test_application_http_exception_handler_raise_exception_for_returning_none()
     def homepage():
         raise HTTPException(detail="Bad Request", status_code=400)
 
-    tm = TestClientFactory.create_test_module()
-    tm.app.router.append(homepage)
-    tm.app.add_exception_handler(RuntimeHTTPException())
+    tm = Test.create_test_module()
+    app = tm.create_application()
+
+    app.router.append(homepage)
+    app.add_exception_handler(RuntimeHTTPException())
     with pytest.raises(
         RuntimeError, match="HTTP ExceptionHandler must return a response."
     ):
-        tm.get_client().get("/")
+        tm.get_test_client().get("/")
 
 
 def test_application_adding_same_exception_twice():
-    tm = TestClientFactory.create_test_module()
+    tm = Test.create_test_module()
+    app = tm.create_application()
     with patch.object(
-        tm.app.__class__, "rebuild_middleware_stack"
+        app.__class__, "rebuild_middleware_stack"
     ) as rebuild_middleware_stack_mock:
-        tm.app.add_exception_handler(OverrideHTTPException())
+        app.add_exception_handler(OverrideHTTPException())
     rebuild_middleware_stack_mock.assert_called()
 
     with patch.object(
-        tm.app.__class__, "rebuild_middleware_stack"
+        app.__class__, "rebuild_middleware_stack"
     ) as rebuild_middleware_stack_mock:
-        tm.app.add_exception_handler(OverrideHTTPException())
+        app.add_exception_handler(OverrideHTTPException())
     assert rebuild_middleware_stack_mock.call_count == 0

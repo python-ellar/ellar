@@ -1,14 +1,14 @@
 import pytest
 
 from ellar.constants import NOT_SET
-from ellar.core import TestClientFactory
 from ellar.core.versioning import VersioningSchemes as VERSIONING
+from ellar.testing import Test
 
 from .operations import mr
 
-tm = TestClientFactory.create_test_module(routers=(mr,))
-
-tm.app.enable_versioning(VERSIONING.QUERY, version_parameter="v")
+tm = Test.create_test_module(routers=(mr,))
+app = tm.create_application()
+app.enable_versioning(VERSIONING.QUERY, version_parameter="v")
 
 
 @pytest.mark.parametrize(
@@ -21,7 +21,7 @@ tm.app.enable_versioning(VERSIONING.QUERY, version_parameter="v")
     ],
 )
 def test_query_route_versioning(path, expected_result):
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.get(path)
     assert response.status_code == 200
     assert response.json() == expected_result
@@ -53,18 +53,18 @@ def test_query_route_versioning(path, expected_result):
     ],
 )
 def test_query_route_versioning_with_default_version(path, default, expected_result):
-    tm.app.enable_versioning(
+    app.enable_versioning(
         VERSIONING.QUERY, version_parameter="v", default_version=default
     )
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.get(path)
     assert response.status_code == 200
     assert response.json() == expected_result
 
 
 def test_query_versioning_version_parameter():
-    tm.app.enable_versioning(VERSIONING.QUERY)
-    client = tm.get_client()
+    app.enable_versioning(VERSIONING.QUERY)
+    client = tm.get_test_client()
 
     response = client.get(
         "/version?v=4"
@@ -91,8 +91,8 @@ def test_query_versioning_version_parameter():
     ],
 )
 def test_query_route_versioning_not_found(path):
-    tm.app.enable_versioning(VERSIONING.QUERY, version_parameter="v")
-    client = tm.get_client()
+    app.enable_versioning(VERSIONING.QUERY, version_parameter="v")
+    client = tm.get_test_client()
 
     response = client.get(path)
     assert response.status_code == 404

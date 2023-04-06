@@ -3,9 +3,9 @@ from starlette.websockets import WebSocket, WebSocketState
 
 from ellar.common import Controller, ModuleRouter, WsBody, ws_route
 from ellar.constants import CONTROLLER_OPERATION_HANDLER_KEY
-from ellar.core import TestClientFactory
 from ellar.core.exceptions import ImproperConfiguration
 from ellar.reflect import reflect
+from ellar.testing import Test
 
 from .schema import Item
 
@@ -69,10 +69,8 @@ class WebsocketController:
         await websocket.close()
 
 
-tm = TestClientFactory.create_test_module(
-    routers=[router], controllers=(WebsocketController,)
-)
-client = tm.get_client()
+tm = Test.create_test_module(routers=[router], controllers=(WebsocketController,))
+client = tm.get_test_client()
 
 
 @pytest.mark.parametrize("prefix", ["/router", "/controller"])
@@ -166,9 +164,7 @@ def test_websocket_endpoint_on_connect():
             assert websocket["subprotocols"] == ["soap", "wamp"]
             await websocket.accept(subprotocol="wamp")
 
-    _client = TestClientFactory.create_test_module(
-        controllers=(WebSocketSample,)
-    ).get_client()
+    _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
     with _client.websocket_connect("/ws/", subprotocols=["soap", "wamp"]) as websocket:
         assert websocket.accepted_subprotocol == "wamp"
 
@@ -180,9 +176,7 @@ def test_websocket_endpoint_on_receive_bytes():
         async def ws(self, websocket: WebSocket, data: bytes = WsBody()):
             await websocket.send_bytes(b"Message bytes was: " + data)
 
-    _client = TestClientFactory.create_test_module(
-        controllers=(WebSocketSample,)
-    ).get_client()
+    _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
     with _client.websocket_connect("/ws/") as websocket:
         websocket.send_bytes(b"Hello, world!")
         _bytes = websocket.receive_bytes()
@@ -200,9 +194,7 @@ def test_websocket_endpoint_on_receive_json():
         async def ws(self, websocket: WebSocket, data=WsBody()):
             await websocket.send_json({"message": data})
 
-    _client = TestClientFactory.create_test_module(
-        controllers=(WebSocketSample,)
-    ).get_client()
+    _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
 
     with _client.websocket_connect("/ws/") as websocket:
         websocket.send_json({"hello": "world"})
@@ -221,9 +213,7 @@ def test_websocket_endpoint_on_receive_json_binary():
         async def ws(self, websocket: WebSocket, data=WsBody()):
             await websocket.send_json({"message": data}, mode="binary")
 
-    _client = TestClientFactory.create_test_module(
-        controllers=(WebSocketSample,)
-    ).get_client()
+    _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
 
     with _client.websocket_connect("/ws/") as websocket:
         websocket.send_json({"hello": "world"}, mode="binary")
@@ -238,9 +228,7 @@ def test_websocket_endpoint_on_receive_text():
         async def ws(self, websocket: WebSocket, data: str = WsBody()):
             await websocket.send_text(f"Message text was: {data}")
 
-    _client = TestClientFactory.create_test_module(
-        controllers=(WebSocketSample,)
-    ).get_client()
+    _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
 
     with _client.websocket_connect("/ws/") as websocket:
         websocket.send_text("Hello, world!")
@@ -259,9 +247,7 @@ def test_websocket_endpoint_on_default():
         async def ws(self, websocket: WebSocket, data: str = WsBody()):
             await websocket.send_text(f"Message text was: {data}")
 
-    _client = TestClientFactory.create_test_module(
-        controllers=(WebSocketSample,)
-    ).get_client()
+    _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
 
     with _client.websocket_connect("/ws/") as websocket:
         websocket.send_text("Hello, world!")
@@ -281,9 +267,7 @@ def test_websocket_endpoint_on_disconnect():
             assert close_code == 1001
             await websocket.close(code=close_code)
 
-    _client = TestClientFactory.create_test_module(
-        controllers=(WebSocketSample,)
-    ).get_client()
+    _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
 
     with _client.websocket_connect("/ws/") as websocket:
         websocket.send_text("Hello, world!")

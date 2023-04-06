@@ -1,6 +1,6 @@
 import pytest
 
-from ellar.core.testclient import TestClient
+from ellar.testing import TestClient
 
 from ..main import app
 

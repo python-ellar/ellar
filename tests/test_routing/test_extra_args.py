@@ -3,16 +3,17 @@ from functools import wraps
 from starlette.responses import Response
 
 from ellar.common import Context, Query, Res, extra_args, get
-from ellar.core import TestClientFactory
 from ellar.core.connection import Request
 from ellar.core.context import IExecutionContext
 from ellar.core.params import ExtraEndpointArg
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
+from ellar.testing import Test
 
 from .sample import Filter
 
-tm = TestClientFactory.create_test_module()
+tm = Test.create_test_module()
+app = tm.create_application()
 
 
 def add_additional_signature_to_endpoint(func):
@@ -74,7 +75,7 @@ def query_params_extra(
     return filters.dict()
 
 
-tm.app.router.append(query_params_extra)
+app.router.append(query_params_extra)
 
 openapi_schema = {
     "openapi": "3.0.2",
@@ -190,12 +191,12 @@ openapi_schema = {
 
 
 def test_openapi_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(tm.app))
+    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
     assert document == openapi_schema
 
 
 def test_query_params_extra():
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.get(
         "/test?from=1&to=2&range=20&foo=1&range2=50&query1=somequery1&query2=somequery2"
     )

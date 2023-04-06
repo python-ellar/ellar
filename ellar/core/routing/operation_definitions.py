@@ -124,7 +124,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [GET]
@@ -144,7 +144,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [POST]
@@ -164,7 +164,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [PUT]
@@ -184,7 +184,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [PATCH]
@@ -204,7 +204,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [DELETE]
@@ -224,7 +224,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [HEAD]
@@ -244,7 +244,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [OPTIONS]
@@ -264,7 +264,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [TRACE]
@@ -285,7 +285,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         def _decorator(endpoint_handler: TCallable) -> TCallable:

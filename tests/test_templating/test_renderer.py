@@ -2,12 +2,13 @@ import re
 from pathlib import Path
 
 from ellar.common import Controller, get, render
-from ellar.core import ControllerBase, TestClientFactory
+from ellar.core import ControllerBase
 from ellar.core.templating import (
     TemplateResponse,
     render_template,
     render_template_string,
 )
+from ellar.testing import Test
 
 BASEDIR = Path(__file__).resolve().parent.parent
 
@@ -41,13 +42,13 @@ class TemplateWithStaticsController(ControllerBase):
         return {}
 
 
-tm = TestClientFactory.create_test_module(
+tm = Test.create_test_module(
     controllers=(EllarController,), base_directory=BASEDIR, template_folder="templates"
 )
 
 
 def test_render_template_string():
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.get("/ellar/another_index2?first_name=Eadwin&last_name=Eadwin")
     assert response.status_code == 200
     content = re.sub("\\s+", " ", response.text).strip()
@@ -55,7 +56,7 @@ def test_render_template_string():
 
 
 def test_render_template():
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.get("/ellar/index")
     assert response.status_code == 200
     content = re.sub("\\s+", " ", response.text).strip()
@@ -66,12 +67,12 @@ def test_render_template():
 
 
 def test_render_template_with_static_ref():
-    test_module = TestClientFactory.create_test_module(
+    test_module = Test.create_test_module(
         controllers=(TemplateWithStaticsController,),
         template_folder="templates",
         base_directory=Path(__file__).resolve().parent,
     )
-    client = test_module.get_client()
+    client = test_module.get_test_client()
     response = client.get("/template-static/index")
     assert response.status_code == 200
     content = re.sub("\\s+", " ", response.text).strip()
