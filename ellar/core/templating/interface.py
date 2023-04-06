@@ -13,11 +13,11 @@ from ellar.core.connection import Request
 from ellar.core.staticfiles import StaticFiles
 from ellar.types import ASGIApp, TemplateFilterCallable, TemplateGlobalCallable
 
-from ..conf import Config
 from .environment import Environment
 from .loader import JinjaLoader
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core.conf import Config
     from ellar.core.main import App
     from ellar.di import EllarInjector
 
@@ -131,7 +131,7 @@ class ModuleTemplating(IModuleTemplateLoader):
 
 
 class AppTemplating(JinjaTemplating):
-    config: Config
+    config: "Config"
     _static_app: t.Optional[ASGIApp]
     _injector: "EllarInjector"
     has_static_files: bool

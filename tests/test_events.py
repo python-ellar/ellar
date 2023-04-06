@@ -2,7 +2,7 @@ import pytest
 
 from ellar.constants import NOT_SET
 from ellar.core import Config
-from ellar.core.events import EventHandler, RouterEventManager
+from ellar.events import EventHandler, RouterEventManager
 
 
 @pytest.mark.anyio

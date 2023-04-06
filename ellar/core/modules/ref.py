@@ -25,10 +25,10 @@ from ellar.di import Container, ProviderConfig, injectable, is_decorated_with_in
 from ellar.di.providers import ModuleProvider
 from ellar.reflect import reflect
 
-from .. import Config
 from .base import ModuleBase, ModuleBaseMeta
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.conf import Config
     from ellar.core import ControllerBase
 
 
@@ -38,7 +38,7 @@ class InvalidModuleTypeException(Exception):
 
 def create_module_ref_factor(
     module_type: t.Union[t.Type, t.Type[ModuleBase]],
-    config: Config,
+    config: "Config",
     container: Container,
     **init_kwargs: t.Any,
 ) -> t.Union["ModuleRefBase", "ModuleTemplateRef"]:
@@ -74,7 +74,7 @@ class ModuleRefBase(ABC):
 
     @property
     @abstractmethod
-    def config(self) -> Config:
+    def config(self) -> "Config":
         """gets module ref config"""
 
     @property
@@ -121,7 +121,7 @@ class ModulePlainRef(ModuleRefBase):
         module_type: t.Union[t.Type[ModuleBase], t.Type],
         *,
         container: Container,
-        config: Config,
+        config: "Config",
         **kwargs: t.Any,
     ) -> None:
         assert (
@@ -142,7 +142,7 @@ class ModulePlainRef(ModuleRefBase):
         return self._container
 
     @property
-    def config(self) -> Config:
+    def config(self) -> "Config":
         return self._config
 
     def _register_module(self) -> None:
@@ -162,7 +162,7 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         module_type: t.Union[t.Type[ModuleBase], t.Type],
         *,
         container: Container,
-        config: Config,
+        config: "Config",
         **kwargs: t.Any,
     ) -> None:
         assert (
@@ -210,7 +210,7 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         return self._container
 
     @property
-    def config(self) -> Config:
+    def config(self) -> "Config":
         return self._config
 
     @property

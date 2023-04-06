@@ -8,10 +8,11 @@ from starlette.exceptions import (
 from starlette.responses import Response
 
 from ellar.core.context import IHostContext
-from ellar.core.exceptions import APIException, RequestValidationError
 from ellar.serializer import serialize_object
 
+from .base import APIException
 from .interfaces import IExceptionHandler
+from .validation import RequestValidationError
 
 
 class HTTPExceptionHandler(IExceptionHandler):

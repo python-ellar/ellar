@@ -3,9 +3,11 @@ import typing as t
 from injector import Binder, Module as _InjectorModule
 
 from ellar.constants import MODULE_FIELDS
-from ellar.core.conf import Config
 from ellar.core.modules.builder import ModuleBaseBuilder
 from ellar.di.injector import Container
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.conf import Config
 
 
 class ModuleBaseMeta(type):
@@ -23,7 +25,7 @@ class ModuleBaseMeta(type):
 
 class ModuleBase(_InjectorModule, metaclass=ModuleBaseMeta):
     @classmethod
-    def before_init(cls, config: Config) -> t.Dict:
+    def before_init(cls, config: "Config") -> t.Dict:
         """Before Module initialisation. Whatever value that is returned here will be passed
         to the Module constructor during initialisation"""
         return {}

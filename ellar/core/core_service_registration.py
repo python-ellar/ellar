@@ -1,7 +1,8 @@
+import typing as t
+
 from ellar.di import EllarInjector
 from ellar.services.reflector import Reflector
 
-from .conf import Config
 from .context import (
     ExecutionContextFactory,
     HostContextFactory,
@@ -14,13 +15,16 @@ from .context.factory import HTTPConnectionContextFactory, WebSocketContextFacto
 from .exceptions.interfaces import IExceptionMiddlewareService
 from .exceptions.service import ExceptionMiddlewareService
 
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core.conf import Config
 
-class _CoreServiceRegistration:
+
+class CoreServiceRegistration:
     """Create Binding for all application service"""
 
     __slots__ = ("injector", "config")
 
-    def __init__(self, injector: EllarInjector, config: Config) -> None:
+    def __init__(self, injector: EllarInjector, config: "Config") -> None:
         self.injector = injector
         self.config = config
 
@@ -42,4 +46,4 @@ class _CoreServiceRegistration:
             IWebSocketContextFactory, WebSocketContextFactory
         )
 
-        self.injector.container.register_instance(Reflector())
+        self.injector.container.register(Reflector)

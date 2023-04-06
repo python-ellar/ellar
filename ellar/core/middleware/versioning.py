@@ -7,7 +7,7 @@ from ellar.core.versioning import BaseAPIVersioning
 from ellar.types import TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.conf import Config
+    from ellar.conf import Config
 
 
 class RequestVersioningMiddleware:

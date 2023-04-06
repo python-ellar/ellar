@@ -9,7 +9,7 @@ from ellar.constants import (
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
-from ellar.core.events import EventHandler
+from ellar.events import EventHandler
 from ellar.reflect import reflect
 
 from ..exceptions.callable_exceptions import CallableExceptionHandler

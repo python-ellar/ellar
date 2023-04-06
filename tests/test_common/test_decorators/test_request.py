@@ -1,6 +1,6 @@
 from ellar.common import on_shutdown, on_startup
 from ellar.constants import ON_REQUEST_SHUTDOWN_KEY, ON_REQUEST_STARTUP_KEY
-from ellar.core.events import EventHandler
+from ellar.events import EventHandler
 
 
 @on_startup

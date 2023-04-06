@@ -1,9 +1,11 @@
 import functools
 import typing as t
 
+from ellar.di import injectable
 from ellar.reflect import reflect
 
 
+@injectable()
 class Reflector:
     __slots__ = ()
 
