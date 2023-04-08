@@ -6,13 +6,13 @@ from uuid import uuid4
 from starlette.routing import Host, Mount
 
 from ellar.constants import MODULE_METADATA, MODULE_WATERMARK
-from ellar.core import Config
 from ellar.core.main import App
 from ellar.core.modules import DynamicModule, ModuleBase, ModuleSetup
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
 
-from .services import CoreServiceRegistration
+from .conf import Config
+from .core_service_registration import CoreServiceRegistration
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.commands import EllarTyper
@@ -65,7 +65,7 @@ class AppFactory:
     def _build_modules(
         cls,
         app_module: t.Type[t.Union[ModuleBase, t.Any]],
-        config: Config,
+        config: "Config",
         injector: EllarInjector,
     ) -> None:
         """

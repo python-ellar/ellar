@@ -1,6 +1,6 @@
 from ellar.common import Form
-from ellar.core import TestClientFactory
 from ellar.core.routing import ModuleRouter
+from ellar.testing import Test
 
 router = ModuleRouter("")
 
@@ -20,8 +20,8 @@ def post_form_param_tuple(items: tuple = Form(...)):
     return items
 
 
-tm = TestClientFactory.create_test_module(routers=(router,))
-client = tm.get_client()
+tm = Test.create_test_module(routers=(router,))
+client = tm.get_test_client()
 
 
 def test_python_list_param_as_form():

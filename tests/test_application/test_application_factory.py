@@ -2,8 +2,9 @@ import pytest
 from starlette.routing import Host, Mount
 
 from ellar.common import Module
-from ellar.core import AppFactory, Config, ModuleBase, ModuleSetup, TestClient
+from ellar.core import AppFactory, Config, ModuleBase, ModuleSetup
 from ellar.di import EllarInjector
+from ellar.testing import TestClient
 
 from .sample import (
     AppAPIKey,

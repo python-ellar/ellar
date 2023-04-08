@@ -19,7 +19,7 @@ from ellar.constants import (
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
-from ellar.core import AppFactory, Config, ModuleBase, TestClientFactory
+from ellar.core import AppFactory, Config, ModuleBase
 from ellar.core.modules.ref import (
     InvalidModuleTypeException,
     ModulePlainRef,
@@ -30,6 +30,7 @@ from ellar.core.modules.ref import (
 from ellar.di import EllarInjector, TransientScope, injectable
 from ellar.helper import get_name
 from ellar.reflect import reflect
+from ellar.testing import Test
 
 from .sample import AnotherUserService, ModuleBaseExample, SampleController, UserService
 
@@ -353,9 +354,9 @@ def test_module_request_events():
     assert RouterEventsModuleExample._on_shutdown_handler_called is False
     assert RouterEventsModuleExample._on_startup_handler_called is False
 
-    tm = TestClientFactory.create_test_module_from_module(RouterEventsModuleExample)
+    tm = Test.create_test_module(modules=[RouterEventsModuleExample])
 
-    test_client = tm.get_client()
+    test_client = tm.get_test_client()
     with test_client as client:
         client.get("/")
 

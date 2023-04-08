@@ -2,7 +2,6 @@ from starlette.exceptions import HTTPException
 from starlette.responses import PlainTextResponse
 
 from ellar.common import Controller, Module, exception_handler, get
-from ellar.core import TestClientFactory
 from ellar.core.context import (
     ExecutionContext,
     HostContext,
@@ -15,6 +14,7 @@ from ellar.core.exceptions import IExceptionMiddlewareService
 from ellar.core.exceptions.service import ExceptionMiddlewareService
 from ellar.di import ProviderConfig, injectable
 from ellar.services import Reflector
+from ellar.testing import Test
 
 
 @Controller
@@ -79,11 +79,12 @@ class NewExceptionMiddlewareService(ExceptionMiddlewareService):
 
 
 def test_can_replace_host_context():
-    tm = TestClientFactory.create_test_module(controllers=[ExampleController])
-    tm.app.injector.container.register(IHostContextFactory, NewHostContextFactory)
+    tm = Test.create_test_module(controllers=[ExampleController]).override_provider(
+        IHostContextFactory, use_class=NewHostContextFactory
+    )
 
     assert hasattr(NewHostContext, "worked") is False
-    client = tm.get_client()
+    client = tm.get_test_client()
     res = client.get("/example/exception")
     assert res.json() == {"detail": "Bad Request", "status_code": 400}
 
@@ -107,10 +108,10 @@ def test_can_replace_exception_service():
                 "Exception 400 handled by ExampleModule.exception_400"
             )
 
-    tm = TestClientFactory.create_test_module_from_module(ExampleModule)
+    tm = Test.create_test_module(modules=[ExampleModule])
 
     assert hasattr(NewExceptionMiddlewareService, "worked") is False
-    client = tm.get_client()
+    client = tm.get_test_client()
     res = client.get("/example/exception")
     assert res.status_code == 200
     assert res.text == "Exception 400 handled by ExampleModule.exception_400"
@@ -120,13 +121,12 @@ def test_can_replace_exception_service():
 
 
 def test_can_replace_execution_context():
-    tm = TestClientFactory.create_test_module(controllers=[ExampleController])
-    tm.app.injector.container.register(
-        IExecutionContextFactory, NewExecutionHostFactory
+    tm = Test.create_test_module(controllers=[ExampleController]).override_provider(
+        IExecutionContextFactory, use_class=NewExecutionHostFactory
     )
 
     assert hasattr(NewExecutionContext, "worked") is False
-    client = tm.get_client()
+    client = tm.get_test_client()
     res = client.get("/example/")
     assert res.status_code == 200
     assert res.text == '"NewExecutionContext"'

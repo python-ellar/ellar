@@ -1,12 +1,12 @@
 import pytest
 
 from ellar.common import Path, get
-from ellar.core import TestClientFactory
 from ellar.core.connection import Request
 from ellar.core.exceptions import ImproperConfiguration
 from ellar.core.routing import ModuleRouter
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
+from ellar.testing import Test
 
 from .sample import Filter, ListOfPrimitiveSchema, NonPrimitiveSchema
 
@@ -21,11 +21,12 @@ def path_params_schema(
     return filters.dict()
 
 
-test_module = TestClientFactory.create_test_module(routers=(mr,))
+test_module = Test.create_test_module(routers=(mr,))
+app = test_module.create_application()
 
 
 def test_request():
-    client = test_module.get_client()
+    client = test_module.get_test_client()
     response = client.get("/path-with-schema/1/2/20")
     assert response.json() == {
         "to_datetime": "1970-01-01T00:00:02+00:00",
@@ -48,9 +49,7 @@ def test_request():
 
 
 def test_schema():
-    document = serialize_object(
-        OpenAPIDocumentBuilder().build_document(test_module.app)
-    )
+    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
     params = document["paths"]["/path-with-schema/{from}/{to}/{range}"]["get"][
         "parameters"
     ]

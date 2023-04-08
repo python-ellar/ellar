@@ -1,11 +1,12 @@
 from typing import List
 
 from ellar.common import Query, get
-from ellar.core import TestClientFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
+from ellar.testing import Test
 
-tm = TestClientFactory.create_test_module()
+tm = Test.create_test_module()
+app = tm.create_application()
 
 
 @get("/items/")
@@ -13,8 +14,8 @@ def read_items(q: List[int] = Query(None)):
     return {"q": q}
 
 
-tm.app.router.append(read_items)
-client = tm.get_client()
+app.router.append(read_items)
+client = tm.get_test_client()
 
 
 openapi_schema = {
@@ -109,7 +110,7 @@ multiple_errors = {
 
 
 def test_openapi_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(tm.app))
+    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
     assert document == openapi_schema
 
 

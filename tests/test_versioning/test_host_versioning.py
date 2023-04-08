@@ -1,14 +1,14 @@
 import pytest
 
 from ellar.constants import NOT_SET
-from ellar.core import TestClientFactory
 from ellar.core.versioning import VersioningSchemes as VERSIONING
+from ellar.testing import Test
 
 from .operations import mr
 
-tm = TestClientFactory.create_test_module(routers=(mr,))
-
-tm.app.enable_versioning(VERSIONING.HOST, version_parameter="v")
+tm = Test.create_test_module(routers=(mr,))
+app = tm.create_application()
+app.enable_versioning(VERSIONING.HOST, version_parameter="v")
 
 
 @pytest.mark.parametrize(
@@ -21,7 +21,7 @@ tm.app.enable_versioning(VERSIONING.HOST, version_parameter="v")
     ],
 )
 def test_host_route_versioning(path, host, expected_result):
-    client = tm.get_client(base_url=f"http://{host}")
+    client = tm.get_test_client(base_url=f"http://{host}")
     response = client.get(path)
     assert response.status_code == 200
     assert response.json() == expected_result
@@ -55,8 +55,8 @@ def test_host_route_versioning(path, host, expected_result):
 def test_host_route_versioning_with_default_version(
     path, host, default, expected_result
 ):
-    tm.app.enable_versioning(VERSIONING.HOST, default_version=default)
-    client = tm.get_client(base_url=f"http://{host}")
+    app.enable_versioning(VERSIONING.HOST, default_version=default)
+    client = tm.get_test_client(base_url=f"http://{host}")
     response = client.get(path)
     assert response.status_code == 200
     assert response.json() == expected_result
@@ -73,8 +73,8 @@ def test_host_route_versioning_with_default_version(
     ],
 )
 def test_host_route_versioning_not_found(host, version_parameter):
-    tm.app.enable_versioning(VERSIONING.HOST, version_parameter=version_parameter)
-    client = tm.get_client(base_url=host)
+    app.enable_versioning(VERSIONING.HOST, version_parameter=version_parameter)
+    client = tm.get_test_client(base_url=host)
 
     response = client.get("/version")
     assert response.status_code == 404
@@ -92,8 +92,8 @@ def test_host_route_versioning_not_found(host, version_parameter):
 def test_host_route_versioning_different_version_parameter(
     host, version_parameter, expected_result
 ):
-    tm.app.enable_versioning(VERSIONING.HOST, version_parameter=version_parameter)
-    client = tm.get_client(base_url=host)
+    app.enable_versioning(VERSIONING.HOST, version_parameter=version_parameter)
+    client = tm.get_test_client(base_url=host)
 
     response = client.get("/version")
     assert response.status_code == 200

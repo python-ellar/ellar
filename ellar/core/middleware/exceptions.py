@@ -7,8 +7,8 @@ from ellar.core.context import IHostContextFactory
 from ellar.types import ASGIApp, TMessage, TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.exceptions.service import ExceptionMiddlewareService
     from ellar.di import EllarInjector
+    from ellar.exceptions.service import ExceptionMiddlewareService
 
 
 class ExceptionMiddleware:

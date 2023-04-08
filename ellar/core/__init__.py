@@ -20,7 +20,6 @@ from .response import (
     UJSONResponse,
 )
 from .templating import render_template, render_template_string
-from .testclient import TestClient, TestClientFactory
 
 __all__ = [
     "App",
@@ -40,8 +39,6 @@ __all__ = [
     "BaseHttpAuth",
     "GuardCanActivate",
     "Config",
-    "TestClientFactory",
-    "TestClient",
     "JSONResponse",
     "UJSONResponse",
     "ORJSONResponse",

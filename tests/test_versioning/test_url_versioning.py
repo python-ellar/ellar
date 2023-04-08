@@ -1,14 +1,14 @@
 import pytest
 
 from ellar.constants import NOT_SET
-from ellar.core import TestClientFactory
 from ellar.core.versioning import UrlPathAPIVersioning, VersioningSchemes as VERSIONING
+from ellar.testing import Test
 
 from .operations import mr
 
-tm = TestClientFactory.create_test_module(routers=(mr,))
-
-tm.app.enable_versioning(VERSIONING.URL, version_parameter="v")
+tm = Test.create_test_module(routers=(mr,))
+app = tm.create_application()
+app.enable_versioning(VERSIONING.URL, version_parameter="v")
 
 
 @pytest.mark.parametrize(
@@ -24,8 +24,8 @@ tm.app.enable_versioning(VERSIONING.URL, version_parameter="v")
     ],
 )
 def test_url_route_versioning(path, expected_result):
-    assert isinstance(tm.app.versioning_scheme, UrlPathAPIVersioning)
-    client = tm.get_client()
+    assert isinstance(app.versioning_scheme, UrlPathAPIVersioning)
+    client = tm.get_test_client()
     response = client.get(path)
     assert response.status_code == 200
     assert response.json() == expected_result
@@ -57,11 +57,11 @@ def test_url_route_versioning(path, expected_result):
     ],
 )
 def test_url_route_versioning_with_default_version(path, default, expected_result):
-    tm.app.enable_versioning(
+    app.enable_versioning(
         VERSIONING.URL,
         default_version=default,
     )
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.get(path)
     assert response.status_code == 200
     assert response.json() == expected_result
@@ -80,8 +80,8 @@ def test_url_route_versioning_with_default_version(path, default, expected_resul
     ],
 )
 def test_url_route_versioning_not_found(path):
-    tm.app.enable_versioning(VERSIONING.URL, version_parameter="v")
-    client = tm.get_client()
+    app.enable_versioning(VERSIONING.URL, version_parameter="v")
+    client = tm.get_test_client()
 
     response = client.get(path)
     assert response.status_code == 404

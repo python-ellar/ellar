@@ -5,8 +5,8 @@ import pytest
 from ellar.constants import SCOPE_SERVICE_PROVIDER
 from ellar.core import Config
 from ellar.core.context import HostContextException, IHostContextFactory
+from ellar.core.core_service_registration import CoreServiceRegistration
 from ellar.core.middleware import RequestServiceProviderMiddleware
-from ellar.core.services import CoreServiceRegistration
 from ellar.di import EllarInjector
 
 from ..injector_module import Configuration, DummyModule

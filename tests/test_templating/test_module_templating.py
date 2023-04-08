@@ -3,9 +3,10 @@ import os
 import pytest
 
 from ellar.common import Module, template_filter, template_global
-from ellar.core import Config, TestClientFactory
+from ellar.core import Config
 from ellar.core.modules import ModuleBase, ModuleTemplateRef
 from ellar.di import EllarInjector
+from ellar.testing import Test
 
 
 @Module(template_folder="views")
@@ -40,11 +41,11 @@ class SomeModule2:
         return n * 2
 
 
-tm = TestClientFactory.create_test_module_from_module(module=SomeModule)
+tm = Test.create_test_module(modules=[SomeModule])
+app = tm.create_application()
 
 
 def test_template_globals_and_template_filters_computation():
-    app = tm.app
     app.install_module(SomeModule2)
     environment = app.jinja_environment
 

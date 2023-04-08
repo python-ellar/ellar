@@ -1,8 +1,8 @@
 import pytest
 
 from ellar.constants import NOT_SET
-from ellar.core import TestClientFactory
 from ellar.core.versioning import VersioningSchemes as VERSIONING
+from ellar.testing import Test
 
 from .operations import (
     ControllerIndividualVersioning,
@@ -12,15 +12,15 @@ from .operations import (
     mr_with_version_list,
 )
 
-tm = TestClientFactory.create_test_module(
+tm = Test.create_test_module(
     controllers=[
         ControllerVersioning,
         ControllerIndividualVersioning,
         ControllerListVersioning,
     ]
 )
-
-tm.app.enable_versioning(
+app = tm.create_application()
+app.enable_versioning(
     VERSIONING.HEADER, version_parameter="v", header_parameter="accept"
 )
 
@@ -39,7 +39,7 @@ tm.app.enable_versioning(
     ],
 )
 def test_header_route_versioning(path, header, expected_result):
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.get(path, headers={"accept": f"application/json; {header}"})
     assert response.status_code == 200
     assert response.json() == expected_result
@@ -73,13 +73,13 @@ def test_header_route_versioning(path, header, expected_result):
 def test_header_route_versioning_with_default_version(
     path, header, default, expected_result
 ):
-    tm.app.enable_versioning(
+    app.enable_versioning(
         VERSIONING.HEADER,
         version_parameter="v",
         header_parameter="accept",
         default_version=default,
     )
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.get(path, headers={"accept": f"application/json; {header}"})
     assert response.status_code == 200
     assert response.json() == expected_result
@@ -120,8 +120,8 @@ def test_header_route_versioning_with_default_version(
     ],
 )
 def test_header_versioning_version_parameter(path, header, expected_result, status):
-    tm.app.enable_versioning(VERSIONING.HEADER)
-    client = tm.get_client()
+    app.enable_versioning(VERSIONING.HEADER)
+    client = tm.get_test_client()
 
     response = client.get(
         path, headers={"accept": f"application/json; {header}"}
@@ -140,8 +140,8 @@ def test_header_versioning_version_parameter(path, header, expected_result, stat
     ],
 )
 def test_header_route_versioning_fails_for_float_versions(headers):
-    tm.app.enable_versioning(VERSIONING.HEADER, version_parameter="v")
-    client = tm.get_client()
+    app.enable_versioning(VERSIONING.HEADER, version_parameter="v")
+    client = tm.get_test_client()
     response = client.get("/individual/version", headers=headers)
     assert response.status_code == 406
     assert response.json() == {"detail": 'Invalid version in "accept" header.'}
@@ -183,17 +183,16 @@ def test_header_route_versioning_fails_for_float_versions(headers):
 def test_header_route_versioning_with_different_header_key(
     path, header, expected_result
 ):
-    tm.app.enable_versioning(VERSIONING.HEADER, header_parameter="custom_parameter")
-    client = tm.get_client()
+    app.enable_versioning(VERSIONING.HEADER, header_parameter="custom_parameter")
+    client = tm.get_test_client()
     response = client.get(path, headers=header)
     assert response.status_code == 200
     assert response.json() == expected_result
 
 
-new_tm = TestClientFactory.create_test_module(
-    routers=(mr_with_version, mr_with_version_list)
-)
-new_tm.app.enable_versioning(
+new_tm = Test.create_test_module(routers=(mr_with_version, mr_with_version_list))
+new_app = new_tm.create_application()
+new_app.enable_versioning(
     VERSIONING.HEADER, version_parameter="v", header_parameter="accept"
 )
 
@@ -211,7 +210,7 @@ new_tm.app.enable_versioning(
 def test_header_route_versioning_for_module_router_versions_and_version_list(
     path, header, expected_result
 ):
-    client = new_tm.get_client()
+    client = new_tm.get_test_client()
     response = client.get(path, headers={"accept": f"application/json; {header}"})
     assert response.status_code == 200
     assert response.json() == expected_result

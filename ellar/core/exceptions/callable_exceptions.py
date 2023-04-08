@@ -3,9 +3,9 @@ import typing as t
 from starlette.concurrency import run_in_threadpool
 from starlette.responses import Response
 
+from ellar.core.context import IHostContext
 from ellar.helper import is_async_callable
 
-from ..context import IHostContext
 from .interfaces import IExceptionHandler
 
 

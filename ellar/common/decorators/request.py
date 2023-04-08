@@ -1,7 +1,7 @@
 import typing as t
 
 from ellar.constants import ON_REQUEST_SHUTDOWN_KEY, ON_REQUEST_STARTUP_KEY
-from ellar.core.events import EventHandler
+from ellar.events import EventHandler
 
 
 def set_attr_key(handle: t.Callable, key: str, value: t.Any) -> None:

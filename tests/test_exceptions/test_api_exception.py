@@ -3,7 +3,6 @@ import http
 import pytest
 
 from ellar.common import get
-from ellar.core import TestClientFactory
 from ellar.core.exceptions import (
     APIException,
     AuthenticationFailed,
@@ -14,10 +13,11 @@ from ellar.core.exceptions import (
     PermissionDenied,
     UnsupportedMediaType,
 )
+from ellar.testing import Test
 
 from .exception_runner import ExceptionRunner
 
-test_module = TestClientFactory.create_test_module()
+test_module = Test.create_test_module()
 
 
 _exception_runner = ExceptionRunner(APIException)
@@ -28,8 +28,8 @@ def exception_():
     _exception_runner.run()
 
 
-test_module.app.router.append(exception_)
-client = test_module.get_client()
+test_module.create_application().router.append(exception_)
+client = test_module.get_test_client()
 
 
 @pytest.mark.parametrize(

@@ -6,12 +6,12 @@ from starlette.routing import Host, Mount
 
 from ellar.common import Version as version_decorator, get, http_route, ws_route
 from ellar.constants import CONTROLLER_CLASS_KEY, CONTROLLER_OPERATION_HANDLER_KEY
-from ellar.core import TestClientFactory
 from ellar.core.routing import RouteOperation, WebsocketRouteOperation
 from ellar.core.routing.router import RouteCollection
 from ellar.core.versioning import UrlPathAPIVersioning
 from ellar.helper import generate_controller_operation_unique_id
 from ellar.reflect import reflect
+from ellar.testing import Test
 
 
 class Configuration:
@@ -72,9 +72,9 @@ def test_module_route_collection_for_same_path_but_different_version(collection_
     for route in routes:
         assert route.path == "/sample"
 
-    tm = TestClientFactory.create_test_module(config_module=config_path)
-    tm.app.router.extend(routes)
-    client = tm.get_client()
+    tm = Test.create_test_module(config_module=config_path)
+    tm.create_application().router.extend(routes)
+    client = tm.get_test_client()
 
     response = client.post("/sample")
     assert response.status_code == 200
@@ -171,9 +171,9 @@ def test_module_route_collection_for_same_path_different_method(
 
     assert len(routes) == 2
 
-    tm = TestClientFactory.create_test_module(config_module=config_path)
-    tm.app.router.extend(routes)
-    client = tm.get_client()
+    tm = Test.create_test_module(config_module=config_path)
+    tm.create_application().router.extend(routes)
+    client = tm.get_test_client()
 
     response = client.get("/sample")
     assert response.status_code == 200

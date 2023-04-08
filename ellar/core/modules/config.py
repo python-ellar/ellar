@@ -3,10 +3,10 @@ import typing as t
 
 from starlette.routing import BaseRoute
 
-import ellar.core.conf as conf
 import ellar.core.main as main
 import ellar.di as di
 from ellar.constants import MODULE_METADATA, MODULE_REF_TYPES
+from ellar.core.conf import Config
 from ellar.reflect import reflect
 
 from .base import ModuleBase
@@ -122,12 +122,12 @@ class ModuleSetup:
             if inject_size == 0:
                 return False
 
-            if inject_size == 1 and self.inject[0] == conf.Config:
+            if inject_size == 1 and self.inject[0] == Config:
                 return False
             return True
 
     def get_module_ref(
-        self, config: conf.Config, container: di.Container
+        self, config: "Config", container: di.Container
     ) -> t.Union[ModuleRefBase, "ModuleSetup"]:
         if self.has_factory_function or self.ref_type == MODULE_REF_TYPES.APP_DEPENDENT:
             return self
@@ -140,7 +140,7 @@ class ModuleSetup:
         )
 
     def configure_with_factory(
-        self, config: conf.Config, container: di.Container
+        self, config: "Config", container: di.Container
     ) -> ModuleRefBase:
         services = self._get_services(container.injector)
 

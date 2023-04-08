@@ -1,9 +1,10 @@
 from ellar.common import put
-from ellar.core import TestClientFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
+from ellar.testing import Test
 
-tm = TestClientFactory.create_test_module()
+tm = Test.create_test_module()
+app = tm.create_application()
 
 
 @put("/items/{item_id}")
@@ -11,8 +12,8 @@ def save_item_no_body(item_id: str):
     return {"item_id": item_id}
 
 
-tm.app.router.append(save_item_no_body)
-client = tm.get_client()
+app.router.append(save_item_no_body)
+client = tm.get_test_client()
 
 
 openapi_schema = {
@@ -88,7 +89,7 @@ openapi_schema = {
 
 
 def test_openapi_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(tm.app))
+    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
     assert document == openapi_schema
 
 

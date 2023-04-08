@@ -2,8 +2,8 @@ from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 
 from ellar.common import Module, ModuleRouter, middleware
-from ellar.core import TestClientFactory
 from ellar.core.context import IHostContext
+from ellar.testing import Test
 
 mr = ModuleRouter()
 
@@ -43,8 +43,8 @@ class ModuleMiddleware:
 
 
 def test_middleware_modifying_response():
-    tm = TestClientFactory.create_test_module_from_module(ModuleMiddleware)
-    client = tm.get_client()
+    tm = Test.create_test_module(modules=[ModuleMiddleware])
+    client = tm.get_test_client()
 
     response = client.get("/")
     assert response.status_code == 200
@@ -52,8 +52,8 @@ def test_middleware_modifying_response():
 
 
 def test_middleware_modifying_request():
-    tm = TestClientFactory.create_test_module_from_module(ModuleMiddleware)
-    client = tm.get_client()
+    tm = Test.create_test_module(modules=[ModuleMiddleware])
+    client = tm.get_test_client()
 
     response = client.get("/", headers={"set-user": "set"})
     assert response.status_code == 200
@@ -61,8 +61,8 @@ def test_middleware_modifying_request():
 
 
 def test_middleware_returns_response():
-    tm = TestClientFactory.create_test_module_from_module(ModuleMiddleware)
-    client = tm.get_client()
+    tm = Test.create_test_module(modules=[ModuleMiddleware])
+    client = tm.get_test_client()
 
     response = client.get("/", headers={"ellar": "set"})
     assert response.status_code == 200

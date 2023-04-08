@@ -1,8 +1,8 @@
-from ellar.core import TestClientFactory
 from ellar.samples.modules import HomeModule
+from ellar.testing import Test
 
-tm = TestClientFactory.create_test_module_from_module(HomeModule)
-client = tm.get_client()
+tm = Test.create_test_module(modules=[HomeModule])
+client = tm.get_test_client()
 
 
 def test_home_module_works():

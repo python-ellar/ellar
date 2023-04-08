@@ -4,9 +4,7 @@ import typing as t
 from starlette.routing import BaseRoute, Mount
 
 from ellar.constants import LOG_LEVELS
-from ellar.core.conf import Config
 from ellar.core.datastructures import State, URLPath
-from ellar.core.events import EventHandler, RouterEventManager
 from ellar.core.exceptions.interfaces import (
     IExceptionHandler,
     IExceptionMiddlewareService,
@@ -31,14 +29,17 @@ from ellar.core.routing import ApplicationRouter
 from ellar.core.templating import AppTemplating, Environment
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
 from ellar.di.injector import EllarInjector
+from ellar.events import EventHandler, RouterEventManager
 from ellar.logger import logger
 from ellar.types import ASGIApp, T, TReceive, TScope, TSend
+
+from .conf import Config
 
 
 class App(AppTemplating):
     def __init__(
         self,
-        config: Config,
+        config: "Config",
         injector: EllarInjector,
         on_startup_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
         on_shutdown_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
@@ -186,7 +187,7 @@ class App(AppTemplating):
         )
 
     @property
-    def config(self) -> Config:  # type: ignore
+    def config(self) -> "Config":  # type: ignore
         return self._config
 
     def build_middleware_stack(self) -> ASGIApp:

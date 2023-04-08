@@ -1,9 +1,9 @@
 import pytest
 
 from ellar.common import Cookie, Header
-from ellar.core import TestClientFactory
 from ellar.core.connection import Request
 from ellar.core.routing import ModuleRouter
+from ellar.testing import Test
 
 mr = ModuleRouter("")
 
@@ -43,8 +43,8 @@ def cookies2(request: Request, wpn: str = Cookie(..., alias="weapon")):
     return wpn
 
 
-tm = TestClientFactory.create_test_module(routers=(mr,))
-client = tm.get_client()
+tm = Test.create_test_module(routers=(mr,))
+client = tm.get_test_client()
 
 
 @pytest.mark.parametrize(

@@ -1,12 +1,12 @@
 import pytest
 
 from ellar.common import Cookie, get
-from ellar.core import TestClientFactory
 from ellar.core.connection import Request
 from ellar.core.exceptions import ImproperConfiguration
 from ellar.core.routing import ModuleRouter
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
+from ellar.testing import Test
 
 from .sample import Data, Filter, ListOfPrimitiveSchema, NonPrimitiveSchema
 
@@ -30,11 +30,12 @@ def cookie_params_mixed_schema(
     return dict(filters=filters.dict(), data=data.dict())
 
 
-tm = TestClientFactory.create_test_module(routers=(router,))
+tm = Test.create_test_module(routers=(router,))
+app = tm.create_application()
 
 
 def test_cookie_request():
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.get(
         "/test/cookie",
         cookies={"from": "1", "to": "2", "range": "20", "foo": "1", "range2": "50"},
@@ -53,7 +54,7 @@ def test_cookie_request():
 
 
 def test_cookie_request_mixed():
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.get(
         "/test-mixed/cookie",
         cookies={
@@ -83,7 +84,7 @@ def test_cookie_request_mixed():
 
 
 def test_cookie_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(tm.app))
+    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
     params = document["paths"]["/test/cookie"]["get"]["parameters"]
     assert params == [
         {

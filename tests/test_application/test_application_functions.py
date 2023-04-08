@@ -5,20 +5,12 @@ from starlette.responses import JSONResponse, PlainTextResponse, Response
 
 from ellar.common import Module, get, template_filter, template_global
 from ellar.compatible import asynccontextmanager
-from ellar.core import (
-    App,
-    AppFactory,
-    Config,
-    ModuleBase,
-    TestClient,
-    TestClientFactory,
-)
+from ellar.core import App, AppFactory, Config, ModuleBase
 from ellar.core.connection import Request
 from ellar.core.context import IExecutionContext
-from ellar.core.events import EventHandler
+from ellar.core.core_service_registration import CoreServiceRegistration
 from ellar.core.exceptions.interfaces import IExceptionHandler
 from ellar.core.modules import ModuleTemplateRef
-from ellar.core.services import CoreServiceRegistration
 from ellar.core.staticfiles import StaticFiles
 from ellar.core.templating import Environment
 from ellar.core.versioning import (
@@ -27,21 +19,24 @@ from ellar.core.versioning import (
     VersioningSchemes as VERSIONING,
 )
 from ellar.di import EllarInjector
+from ellar.events import EventHandler
 from ellar.helper.importer import get_class_import
 from ellar.openapi import OpenAPIDocumentModule
 from ellar.services.reflector import Reflector
+from ellar.testing import Test, TestClient
 
 from .config import ConfigTrustHostConfigure
 from .sample import AppAPIKey, ApplicationModule
 
-test_module = TestClientFactory.create_test_module_from_module(
-    module=ApplicationModule, config_module=get_class_import(ConfigTrustHostConfigure)
+test_module = Test.create_test_module(
+    modules=(ApplicationModule,),
+    config_module=get_class_import(ConfigTrustHostConfigure),
 )
 
 
 class TestStarletteCompatibility:
     def test_func_route(self):
-        client = test_module.get_client()
+        client = test_module.get_test_client()
         response = client.get("/func")
         assert response.status_code == 200
         assert response.text == "Hello, world!"
@@ -51,50 +46,50 @@ class TestStarletteCompatibility:
         assert response.text == ""
 
     def test_async_route(self):
-        client = test_module.get_client()
+        client = test_module.get_test_client()
         response = client.get("/async")
         assert response.status_code == 200
         assert response.text == "Hello, world!"
 
     def test_class_route(self):
-        client = test_module.get_client()
+        client = test_module.get_test_client()
         response = client.get("/classbase/class")
         assert response.status_code == 200
         assert response.text == "Hello, world!"
 
     def test_mounted_route(self):
-        client = test_module.get_client()
+        client = test_module.get_test_client()
         response = client.get("/users/")
         assert response.status_code == 200
         assert response.text == "Hello, everyone!"
 
     def test_mounted_route_path_params(self):
-        client = test_module.get_client()
+        client = test_module.get_test_client()
         response = client.get("/users/tomchristie")
         assert response.status_code == 200
         assert response.text == "Hello, tomchristie!"
 
     def test_subdomain_route(self):
-        client = test_module.get_client(base_url="https://foo.example.org/")
+        client = test_module.get_test_client(base_url="https://foo.example.org/")
 
         response = client.get("/")
         assert response.status_code == 200
         assert response.text == "Subdomain: foo"
 
     def test_websocket_route(self):
-        client = test_module.get_client()
+        client = test_module.get_test_client()
         with client.websocket_connect("/ws") as session:
             text = session.receive_text()
             assert text == "Hello, world!"
 
     def test_400(self):
-        client = test_module.get_client()
+        client = test_module.get_test_client()
         response = client.get("/404")
         assert response.status_code == 404
         assert response.json() == {"detail": "Not Found"}
 
     def test_405(self):
-        client = test_module.get_client()
+        client = test_module.get_test_client()
         response = client.post("/func")
         assert response.status_code == 405
         assert response.json() == {"detail": "Custom message"}
@@ -104,13 +99,13 @@ class TestStarletteCompatibility:
         assert response.json() == {"detail": "Custom message"}
 
     def test_500(self):
-        client = test_module.get_client(raise_server_exceptions=False)
+        client = test_module.get_test_client(raise_server_exceptions=False)
         response = client.get("/classbase/500")
         assert response.status_code == 500
         assert response.json() == {"detail": "Server Error"}
 
     def test_middleware(self):
-        client = test_module.get_client(base_url="http://incorrecthost")
+        client = test_module.get_test_client(base_url="http://incorrecthost")
         response = client.get("/func")
         assert response.status_code == 400
         assert response.text == "Invalid host header"

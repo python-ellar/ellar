@@ -2,8 +2,10 @@ import pytest
 from starlette.websockets import WebSocket, WebSocketState
 
 from ellar.common import Controller, ModuleRouter, WsBody, ws_route
-from ellar.core import TestClientFactory
+from ellar.constants import CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.core.exceptions import ImproperConfiguration
+from ellar.reflect import reflect
+from ellar.testing import Test
 
 from .schema import Item
 
@@ -19,12 +21,12 @@ async def websocket_with_handler(
     await websocket.close()
 
 
-@websocket_with_handler.connect
+@router.ws_route.connect(websocket_with_handler)
 async def websocket_with_handler_connect(websocket: WebSocket):
     await websocket.accept()
 
 
-@websocket_with_handler.disconnect
+@router.ws_route.disconnect(websocket_with_handler)
 async def websocket_with_handler_connect(websocket: WebSocket, code: int):
     # await websocket.close(code=code)
     assert websocket.client_state == WebSocketState.DISCONNECTED
@@ -49,11 +51,11 @@ class WebsocketController:
         await websocket.send_json(data.dict())
         await websocket.close()
 
-    @websocket_with_handler_c.connect
+    @ws_route.connect(websocket_with_handler_c)
     async def websocket_with_handler_connect(self, websocket: WebSocket):
         await websocket.accept()
 
-    @websocket_with_handler_c.disconnect
+    @ws_route.disconnect(websocket_with_handler_c)
     async def websocket_with_handler_connect(self, websocket: WebSocket, code: int):
         # await websocket.close(code=code)
         assert websocket.client_state == WebSocketState.DISCONNECTED
@@ -67,10 +69,8 @@ class WebsocketController:
         await websocket.close()
 
 
-tm = TestClientFactory.create_test_module(
-    routers=[router], controllers=(WebsocketController,)
-)
-client = tm.get_client()
+tm = Test.create_test_module(routers=[router], controllers=(WebsocketController,))
+client = tm.get_test_client()
 
 
 @pytest.mark.parametrize("prefix", ["/router", "/controller"])
@@ -159,14 +159,12 @@ def test_websocket_endpoint_on_connect():
         async def ws(self, websocket: WebSocket):
             pass
 
-        @ws.connect
+        @ws_route.connect(ws)
         async def on_connect(self, websocket):
             assert websocket["subprotocols"] == ["soap", "wamp"]
             await websocket.accept(subprotocol="wamp")
 
-    _client = TestClientFactory.create_test_module(
-        controllers=(WebSocketSample,)
-    ).get_client()
+    _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
     with _client.websocket_connect("/ws/", subprotocols=["soap", "wamp"]) as websocket:
         assert websocket.accepted_subprotocol == "wamp"
 
@@ -178,9 +176,7 @@ def test_websocket_endpoint_on_receive_bytes():
         async def ws(self, websocket: WebSocket, data: bytes = WsBody()):
             await websocket.send_bytes(b"Message bytes was: " + data)
 
-    _client = TestClientFactory.create_test_module(
-        controllers=(WebSocketSample,)
-    ).get_client()
+    _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
     with _client.websocket_connect("/ws/") as websocket:
         websocket.send_bytes(b"Hello, world!")
         _bytes = websocket.receive_bytes()
@@ -198,9 +194,7 @@ def test_websocket_endpoint_on_receive_json():
         async def ws(self, websocket: WebSocket, data=WsBody()):
             await websocket.send_json({"message": data})
 
-    _client = TestClientFactory.create_test_module(
-        controllers=(WebSocketSample,)
-    ).get_client()
+    _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
 
     with _client.websocket_connect("/ws/") as websocket:
         websocket.send_json({"hello": "world"})
@@ -219,9 +213,7 @@ def test_websocket_endpoint_on_receive_json_binary():
         async def ws(self, websocket: WebSocket, data=WsBody()):
             await websocket.send_json({"message": data}, mode="binary")
 
-    _client = TestClientFactory.create_test_module(
-        controllers=(WebSocketSample,)
-    ).get_client()
+    _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
 
     with _client.websocket_connect("/ws/") as websocket:
         websocket.send_json({"hello": "world"}, mode="binary")
@@ -236,9 +228,7 @@ def test_websocket_endpoint_on_receive_text():
         async def ws(self, websocket: WebSocket, data: str = WsBody()):
             await websocket.send_text(f"Message text was: {data}")
 
-    _client = TestClientFactory.create_test_module(
-        controllers=(WebSocketSample,)
-    ).get_client()
+    _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
 
     with _client.websocket_connect("/ws/") as websocket:
         websocket.send_text("Hello, world!")
@@ -257,9 +247,7 @@ def test_websocket_endpoint_on_default():
         async def ws(self, websocket: WebSocket, data: str = WsBody()):
             await websocket.send_text(f"Message text was: {data}")
 
-    _client = TestClientFactory.create_test_module(
-        controllers=(WebSocketSample,)
-    ).get_client()
+    _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
 
     with _client.websocket_connect("/ws/") as websocket:
         websocket.send_text("Hello, world!")
@@ -274,15 +262,49 @@ def test_websocket_endpoint_on_disconnect():
         async def ws(self, websocket: WebSocket, data: str = WsBody()):
             await websocket.send_text(f"Message text was: {data}")
 
-        @ws.disconnect
+        @ws_route.disconnect(ws)
         async def on_disconnect(self, websocket: WebSocket, close_code):
             assert close_code == 1001
             await websocket.close(code=close_code)
 
-    _client = TestClientFactory.create_test_module(
-        controllers=(WebSocketSample,)
-    ).get_client()
+    _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
 
     with _client.websocket_connect("/ws/") as websocket:
         websocket.send_text("Hello, world!")
         websocket.close(code=1001)
+
+
+def test_ws_route_connect_raise_exception_for_invalid_type():
+    with pytest.raises(
+        Exception,
+        match="Invalid type. Please make sure you passed the websocket handler.",
+    ):
+
+        @router.ws_route.connect(ModuleRouter)
+        def some_example_connect():
+            pass
+
+
+def test_ws_route_connect_raise_exception_for_invalid_operation():
+    with pytest.raises(
+        Exception,
+        match="Invalid type. Please make sure you passed the websocket handler.",
+    ):
+
+        @router.ws_route.connect(websocket_with_handler_connect)
+        def some_example_connect():
+            pass
+
+
+def test_add_websocket_handler_raise_exception_for_wrong_handler_name():
+    websocket_operation = reflect.get_metadata(
+        CONTROLLER_OPERATION_HANDLER_KEY, websocket_with_handler
+    )
+    with pytest.raises(Exception) as ex:
+        websocket_operation.add_websocket_handler(
+            handler_name="mycustomname", handler=websocket_with_handler_connect
+        )
+    assert (
+        str(ex.value)
+        == "Invalid Handler Name. Handler Name must be in ['encoding', 'on_receive', 'on_connect', 'on_disconnect']"
+    )

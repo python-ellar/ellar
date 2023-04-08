@@ -4,11 +4,12 @@ from typing import List
 from pydantic import BaseModel, condecimal
 
 from ellar.common import post
-from ellar.core import TestClientFactory
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
+from ellar.testing import Test
 
-tm = TestClientFactory.create_test_module()
+tm = Test.create_test_module()
+app = tm.create_application()
 
 
 class Item2(BaseModel):
@@ -21,8 +22,8 @@ def save_item_no_body(item: List[Item2]):
     return {"item": item}
 
 
-tm.app.router.append(save_item_no_body)
-client = tm.get_client()
+app.router.append(save_item_no_body)
+client = tm.get_test_client()
 
 
 openapi_schema = {
@@ -147,7 +148,7 @@ multiple_errors = {
 
 
 def test_openapi_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(tm.app))
+    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
     assert document == openapi_schema
 
 

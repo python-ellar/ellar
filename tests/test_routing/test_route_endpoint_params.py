@@ -6,7 +6,7 @@ from starlette.responses import Response as StarletteResponse
 from starlette.websockets import WebSocket as StarletteWebSocket
 
 from ellar.common import Context, Host, Http, Provide, Req, Res, Session, Ws
-from ellar.core import Config, ExecutionContext, TestClientFactory
+from ellar.core import Config, ExecutionContext
 from ellar.core.connection import (
     HTTPConnection as EllarHTTPConnection,
     Request as EllarRequest,
@@ -16,6 +16,7 @@ from ellar.core.context import IExecutionContext
 from ellar.core.middleware import Middleware
 from ellar.core.middleware.sessions import SessionMiddleware
 from ellar.core.routing import ModuleRouter
+from ellar.testing import Test
 
 router = ModuleRouter()
 
@@ -65,14 +66,14 @@ async def get_websockets(websocket: StarletteWebSocket, ws=Ws()):
 
 
 SECRET_KEY = "ellar_cf303596-e51a-441a-ba67-5da42dbffb07"
-tm = TestClientFactory.create_test_module(
+tm = Test.create_test_module(
     routers=[router],
     config_module=dict(
         SECRET_KEY=SECRET_KEY,
         MIDDLEWARE=[Middleware(SessionMiddleware, secret_key=SECRET_KEY)],
     ),
 )
-client = tm.get_client()
+client = tm.get_test_client()
 
 
 def test_get_connections():

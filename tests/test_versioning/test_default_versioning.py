@@ -1,7 +1,7 @@
 import pytest
 
-from ellar.core import TestClientFactory
 from ellar.core.versioning import VersioningSchemes as VERSIONING
+from ellar.testing import Test
 
 from .operations import (
     ControllerIndividualVersioning,
@@ -10,7 +10,7 @@ from .operations import (
     mr,
 )
 
-tm = TestClientFactory.create_test_module(
+tm = Test.create_test_module(
     routers=(mr,),
     controllers=[
         ControllerVersioning,
@@ -18,7 +18,8 @@ tm = TestClientFactory.create_test_module(
         ControllerListVersioning,
     ],
 )
-tm.app.enable_versioning(VERSIONING.NONE)
+app = tm.create_application()
+app.enable_versioning(VERSIONING.NONE)
 
 
 @pytest.mark.parametrize(
@@ -31,7 +32,7 @@ tm.app.enable_versioning(VERSIONING.NONE)
     ],
 )
 def test_default_route_versioning_query(path, expected_result):
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.get(path)
     assert response.status_code == 200
     assert response.json() == expected_result
@@ -47,7 +48,7 @@ def test_default_route_versioning_query(path, expected_result):
     ],
 )
 def test_default_route_versioning_header(path, header, expected_result):
-    client = tm.get_client()
+    client = tm.get_test_client()
     response = client.get(path, headers={"accept": f"application/json; {header}"})
     assert response.status_code == 200
     assert response.json() == expected_result
@@ -63,7 +64,7 @@ def test_default_route_versioning_header(path, header, expected_result):
     ],
 )
 def test_default_route_versioning_host(path, host, expected_result):
-    client = tm.get_client(base_url=f"http://{host}")
+    client = tm.get_test_client(base_url=f"http://{host}")
     response = client.get(path)
     assert response.status_code == 200
     assert response.json() == expected_result

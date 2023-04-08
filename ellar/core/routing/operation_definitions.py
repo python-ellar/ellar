@@ -1,7 +1,10 @@
+import functools
 import typing as t
 from functools import partial
+from types import FunctionType
 
 from ellar.constants import (
+    CONTROLLER_OPERATION_HANDLER_KEY,
     DELETE,
     GET,
     HEAD,
@@ -14,6 +17,7 @@ from ellar.constants import (
 )
 from ellar.core.schema import RouteParameters, WsRouteParameters
 from ellar.helper import class_base_function_regex
+from ellar.reflect import reflect
 from ellar.types import TCallable
 
 from .controller.route import ControllerRouteOperation
@@ -25,6 +29,46 @@ TOperation = t.Union[RouteOperation, ControllerRouteOperation]
 TWebsocketOperation = t.Union[
     WebsocketRouteOperation, ControllerWebsocketRouteOperation
 ]
+
+
+def _websocket_connection_attributes(func: t.Callable) -> t.Callable:
+    def _advance_function(
+        websocket_handler: t.Callable, handler_name: str
+    ) -> t.Callable:
+        def _wrap(connect_handler: t.Callable) -> t.Callable:
+            if not (
+                callable(websocket_handler) and type(websocket_handler) == FunctionType
+            ):
+                raise Exception(
+                    "Invalid type. Please make sure you passed the websocket handler."
+                )
+
+            _item: t.Optional[WebsocketRouteOperation] = reflect.get_metadata(
+                CONTROLLER_OPERATION_HANDLER_KEY, websocket_handler
+            )
+
+            if not _item or not isinstance(_item, WebsocketRouteOperation):
+                raise Exception(
+                    "Invalid type. Please make sure you passed the websocket handler."
+                )
+
+            _item.add_websocket_handler(
+                handler_name=handler_name, handler=connect_handler
+            )
+
+            return connect_handler
+
+        return _wrap
+
+    setattr(
+        func, "connect", functools.partial(_advance_function, handler_name="on_connect")
+    )
+    setattr(
+        func,
+        "disconnect",
+        functools.partial(_advance_function, handler_name="on_disconnect"),
+    )
+    return func
 
 
 class OperationDefinitions:
@@ -80,7 +124,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [GET]
@@ -100,7 +144,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [POST]
@@ -120,7 +164,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [PUT]
@@ -140,7 +184,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [PATCH]
@@ -160,7 +204,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [DELETE]
@@ -180,7 +224,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [HEAD]
@@ -200,7 +244,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [OPTIONS]
@@ -220,7 +264,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         methods = [TRACE]
@@ -241,7 +285,7 @@ class OperationDefinitions:
         name: str = None,
         include_in_schema: bool = True,
         response: t.Union[
-            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, None
+            t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
     ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
         def _decorator(endpoint_handler: TCallable) -> TCallable:
@@ -258,6 +302,7 @@ class OperationDefinitions:
 
         return _decorator
 
+    @_websocket_connection_attributes
     def ws_route(
         self,
         path: str = "/",
@@ -278,9 +323,7 @@ class OperationDefinitions:
                 use_extra_handler=use_extra_handler,
                 extra_handler_type=extra_handler_type,
             )
-            operation = self._get_ws_operation(ws_route_parameters=endpoint_parameter)
-            if use_extra_handler:
-                return operation
+            self._get_ws_operation(ws_route_parameters=endpoint_parameter)
             return endpoint_handler
 
         return _decorator
