@@ -10,6 +10,7 @@ from starlette.templating import pass_context
 from ellar.compatible import cached_property
 from ellar.constants import TEMPLATE_FILTER_KEY, TEMPLATE_GLOBAL_KEY
 from ellar.core.connection import Request
+from ellar.core.datastructures import URL
 from ellar.core.staticfiles import StaticFiles
 from ellar.types import ASGIApp, TemplateFilterCallable, TemplateGlobalCallable
 
@@ -182,7 +183,7 @@ class AppTemplating(JinjaTemplating):
             jinja_options.setdefault(k, v)
 
         @pass_context
-        def url_for(context: dict, name: str, **path_params: t.Any) -> str:
+        def url_for(context: dict, name: str, **path_params: t.Any) -> URL:
             request = t.cast(Request, context["request"])
             return request.url_for(name, **path_params)
 

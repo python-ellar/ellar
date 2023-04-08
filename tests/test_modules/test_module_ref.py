@@ -5,8 +5,6 @@ from ellar.common import (
     Module,
     exception_handler,
     middleware,
-    on_shutdown,
-    on_startup,
     template_filter,
     template_global,
 )
@@ -14,8 +12,6 @@ from ellar.constants import (
     EXCEPTION_HANDLERS_KEY,
     MIDDLEWARE_HANDLERS_KEY,
     MODULE_METADATA,
-    ON_REQUEST_SHUTDOWN_KEY,
-    ON_REQUEST_STARTUP_KEY,
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
@@ -30,7 +26,6 @@ from ellar.core.modules.ref import (
 from ellar.di import EllarInjector, TransientScope, injectable
 from ellar.helper import get_name
 from ellar.reflect import reflect
-from ellar.testing import Test
 
 from .sample import AnotherUserService, ModuleBaseExample, SampleController, UserService
 
@@ -137,36 +132,6 @@ def test_module_template_ref_template_filters():
     )
     assert "some_template_global" in template_global_filter_functions
     assert "some_template_filter" in template_filter_functions
-
-
-def test_module_template_ref_scan_starlette_app_events():
-    @Module()
-    class RouterEventsModuleExample:
-        @on_startup
-        async def on_startup_handler(cls):
-            pass
-
-        @on_shutdown
-        def on_shutdown_handler(cls):
-            pass
-
-    config = Config()
-    container = EllarInjector(auto_bind=False).container
-
-    request_startup = config[ON_REQUEST_STARTUP_KEY]
-    request_shutdown = config[ON_REQUEST_SHUTDOWN_KEY]
-
-    assert len(request_startup) == 0 and len(request_shutdown) == 0
-
-    create_module_ref_factor(
-        RouterEventsModuleExample, config=config, container=container
-    )
-    request_startup = config[ON_REQUEST_STARTUP_KEY]
-    request_shutdown = config[ON_REQUEST_SHUTDOWN_KEY]
-
-    assert isinstance(request_startup, list) and isinstance(request_shutdown, list)
-    assert "on_startup_handler" == get_name(request_startup[0].handler)
-    assert "on_shutdown_handler" == get_name(request_shutdown[0].handler)
 
 
 def test_module_template_ref_scan_exceptions_handlers():
@@ -335,30 +300,3 @@ def test_run_application_ready_works():
     AppFactory.create_from_app_module(TestModuleCycleExample)
 
     assert TestModuleCycleExample._before_init_called
-
-
-def test_module_request_events():
-    @Module()
-    class RouterEventsModuleExample:
-        _on_shutdown_handler_called = False
-        _on_startup_handler_called = False
-
-        @on_startup
-        async def on_startup_handler(cls):
-            cls._on_startup_handler_called = True
-
-        @on_shutdown
-        def on_shutdown_handler(cls):
-            cls._on_shutdown_handler_called = True
-
-    assert RouterEventsModuleExample._on_shutdown_handler_called is False
-    assert RouterEventsModuleExample._on_startup_handler_called is False
-
-    tm = Test.create_test_module(modules=[RouterEventsModuleExample])
-
-    test_client = tm.get_test_client()
-    with test_client as client:
-        client.get("/")
-
-    assert RouterEventsModuleExample._on_shutdown_handler_called
-    assert RouterEventsModuleExample._on_startup_handler_called

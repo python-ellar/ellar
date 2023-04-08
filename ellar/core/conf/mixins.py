@@ -126,12 +126,6 @@ class ConfigDefaultTypesMixin:
     # defines other custom json encoders
     SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]]
 
-    # will be set automatically when @on_startup is found in a Module class
-    ON_REQUEST_STARTUP: t.List[TEventHandler]
-
-    # will be set automatically when @on_shutdown is found in a Module class
-    ON_REQUEST_SHUTDOWN: t.List[TEventHandler]
-
     # will be set automatically when @template_filter is found in a Module class
     TEMPLATE_FILTERS: t.Dict[str, t.Callable[..., t.Any]]
 

@@ -19,7 +19,6 @@ from ellar.core.versioning import (
     VersioningSchemes as VERSIONING,
 )
 from ellar.di import EllarInjector
-from ellar.events import EventHandler
 from ellar.helper.importer import get_class_import
 from ellar.openapi import OpenAPIDocumentModule
 from ellar.services.reflector import Reflector
@@ -109,33 +108,6 @@ class TestStarletteCompatibility:
         response = client.get("/func")
         assert response.status_code == 400
         assert response.text == "Invalid host header"
-
-    def test_app_add_event_handler(self, test_client_factory):
-        startup_complete = False
-        cleanup_complete = False
-
-        def run_startup():
-            nonlocal startup_complete
-            startup_complete = True
-
-        def run_cleanup():
-            nonlocal cleanup_complete
-            cleanup_complete = True
-
-        app = App(
-            config=Config(),
-            injector=EllarInjector(),
-            on_startup_event_handlers=[EventHandler(run_startup)],
-            on_shutdown_event_handlers=[EventHandler(run_cleanup)],
-        )
-
-        assert not startup_complete
-        assert not cleanup_complete
-        with test_client_factory(app):
-            assert startup_complete
-            assert not cleanup_complete
-        assert startup_complete
-        assert cleanup_complete
 
     def test_app_async_cm_lifespan(self, test_client_factory):
         startup_complete = False
