@@ -354,7 +354,7 @@ def test_module_request_events():
     assert RouterEventsModuleExample._on_shutdown_handler_called is False
     assert RouterEventsModuleExample._on_startup_handler_called is False
 
-    tm = Test.create_test_module_from_module(RouterEventsModuleExample)
+    tm = Test.create_test_module(modules=[RouterEventsModuleExample])
 
     test_client = tm.get_test_client()
     with test_client as client:

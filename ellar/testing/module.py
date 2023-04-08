@@ -121,14 +121,3 @@ class Test:
         return cls.TESTING_MODULE(
             testing_module, global_guards=global_guards, config_module=config_module
         )
-
-    @classmethod
-    def create_test_module_from_module(
-        cls,
-        module: t.Type[t.Union[ModuleBase, t.Any]],
-        config_module: str = None,
-    ) -> TestingModule:
-        """
-        Create a TestingModule from an existing module
-        """
-        return cls.TESTING_MODULE(module, global_guards=[], config_module=config_module)

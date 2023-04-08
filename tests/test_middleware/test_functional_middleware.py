@@ -43,7 +43,7 @@ class ModuleMiddleware:
 
 
 def test_middleware_modifying_response():
-    tm = Test.create_test_module_from_module(ModuleMiddleware)
+    tm = Test.create_test_module(modules=[ModuleMiddleware])
     client = tm.get_test_client()
 
     response = client.get("/")
@@ -52,7 +52,7 @@ def test_middleware_modifying_response():
 
 
 def test_middleware_modifying_request():
-    tm = Test.create_test_module_from_module(ModuleMiddleware)
+    tm = Test.create_test_module(modules=[ModuleMiddleware])
     client = tm.get_test_client()
 
     response = client.get("/", headers={"set-user": "set"})
@@ -61,7 +61,7 @@ def test_middleware_modifying_request():
 
 
 def test_middleware_returns_response():
-    tm = Test.create_test_module_from_module(ModuleMiddleware)
+    tm = Test.create_test_module(modules=[ModuleMiddleware])
     client = tm.get_test_client()
 
     response = client.get("/", headers={"ellar": "set"})

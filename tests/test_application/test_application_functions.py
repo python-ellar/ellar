@@ -28,8 +28,9 @@ from ellar.testing import Test, TestClient
 from .config import ConfigTrustHostConfigure
 from .sample import AppAPIKey, ApplicationModule
 
-test_module = Test.create_test_module_from_module(
-    module=ApplicationModule, config_module=get_class_import(ConfigTrustHostConfigure)
+test_module = Test.create_test_module(
+    modules=(ApplicationModule,),
+    config_module=get_class_import(ConfigTrustHostConfigure),
 )
 
 

@@ -81,8 +81,8 @@ def test_client_factory_create_test_module_from_module():
         ApplicationModule
     )  # dynamically add IFoo to ApplicationModule Providers
 
-    tm = Test.create_test_module_from_module(
-        module=ApplicationModule,
+    tm = Test.create_test_module(
+        modules=[ApplicationModule],
     ).override_provider(IFoo, use_value=MockFoo())
 
     client = tm.get_test_client(base_url="https://foo.example.org/")

@@ -4,11 +4,13 @@ from ellar.testing import Test
 
 
 def test_cache_module_setup_works():
-    tm = Test.create_test_module_from_module(
-        CacheModule.setup(
-            default=LocalMemCacheBackend(),
-            local=LocalMemCacheBackend(version=2, ttl=400),
-        )
+    tm = Test.create_test_module(
+        modules=[
+            CacheModule.setup(
+                default=LocalMemCacheBackend(),
+                local=LocalMemCacheBackend(version=2, ttl=400),
+            )
+        ]
     )
 
     cache_service = tm.get(ICacheService)

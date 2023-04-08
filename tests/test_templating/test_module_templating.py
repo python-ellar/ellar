@@ -41,7 +41,7 @@ class SomeModule2:
         return n * 2
 
 
-tm = Test.create_test_module_from_module(module=SomeModule)
+tm = Test.create_test_module(modules=[SomeModule])
 app = tm.create_application()
 
 

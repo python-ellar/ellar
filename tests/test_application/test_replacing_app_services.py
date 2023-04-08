@@ -108,7 +108,7 @@ def test_can_replace_exception_service():
                 "Exception 400 handled by ExampleModule.exception_400"
             )
 
-    tm = Test.create_test_module_from_module(ExampleModule)
+    tm = Test.create_test_module(modules=[ExampleModule])
 
     assert hasattr(NewExceptionMiddlewareService, "worked") is False
     client = tm.get_test_client()

@@ -1,7 +1,7 @@
 from ellar.samples.modules import HomeModule
 from ellar.testing import Test
 
-tm = Test.create_test_module_from_module(HomeModule)
+tm = Test.create_test_module(modules=[HomeModule])
 client = tm.get_test_client()
 
 
