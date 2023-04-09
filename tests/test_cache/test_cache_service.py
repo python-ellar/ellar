@@ -7,7 +7,7 @@ from ellar.cache.service import CacheService, InvalidCacheBackendKeyException
 
 
 class TestCacheService:
-    def setup(self):
+    def setup_method(self):
         self.cache_service = CacheService(dict(default=LocalMemCacheBackend()))
 
     def test_set(self):
@@ -61,7 +61,7 @@ class TestCacheService:
 
 
 class TestCacheServiceAsync:
-    def setup(self):
+    def setup_method(self):
         self.cache_service = CacheService(dict(default=LocalMemCacheBackend()))
 
     async def test_set_async(self, anyio_backend):

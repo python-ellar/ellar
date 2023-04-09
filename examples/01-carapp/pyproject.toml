@@ -1,0 +1,8 @@
+[ellar]
+default = "carapp"
+[ellar.projects.carapp]
+project-name = "carapp"
+application = "carapp.server:application"
+config = "carapp.config:DevelopmentConfig"
+root-module = "carapp.root_module:ApplicationModule"
+apps-module = "carapp.apps"

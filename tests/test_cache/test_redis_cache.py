@@ -24,7 +24,7 @@ async def test_redis_backend() -> None:
 
 
 class TestRedisCacheBackend:
-    def setup(self):
+    def setup_method(self):
         self.backend = RedisCacheBackendMock(
             servers=[
                 "redis://localhost:6379/0",
@@ -92,7 +92,7 @@ class TestRedisCacheBackend:
 
 
 class TestRedisCacheBackendAsync:
-    def setup(self):
+    def setup_method(self):
         self.backend = RedisCacheBackendMock(
             servers=[
                 "redis://localhost:6379/0",

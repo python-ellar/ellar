@@ -246,10 +246,19 @@ During testing, there two ways to apply or modify configuration.
             test_module = Test.create_test_module(
                 controllers=[CarController,], 
                 providers=[ProviderConfig(CarRepository, use_class=CarRepository)],
-                config_module='project_name.config.TestingConfiguration'
+                config_module='project_name.config:TestingConfiguration'
             )
             self.controller: CarController = test_module.get(CarController)
     ```
+    Also, we can expose the testing config to environment for more global scope, for example:
+    
+    ```python
+    # project_name/tests/conftest.py
+    import os
+    from ellar.constants import ELLAR_CONFIG_MODULE
+    os.environ.setdefault(ELLAR_CONFIG_MODULE, 'project_name.config:TestingConfiguration')
+    ```
+
 === "Inline"
     This method doesn't require configuration file, we simply go ahead and define the configuration variables in a dictionary type set to `config_module`. 
 
