@@ -12,8 +12,6 @@ from ellar.constants import (
     MODULE_METADATA,
     MODULE_REF_TYPES,
     MODULE_WATERMARK,
-    ON_REQUEST_SHUTDOWN_KEY,
-    ON_REQUEST_STARTUP_KEY,
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
@@ -28,8 +26,7 @@ from ellar.reflect import reflect
 from .base import ModuleBase, ModuleBaseMeta
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.conf import Config
-    from ellar.core import ControllerBase
+    from ellar.core import Config, ControllerBase
 
 
 class InvalidModuleTypeException(Exception):
@@ -194,7 +191,6 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         self._flatten_routes: t.List[BaseRoute] = []
 
         self.scan_templating_filters()
-        self.scan_request_events()
         self.scan_exceptions_handlers()
         self.scan_middleware()
         self.register_providers()
@@ -301,22 +297,3 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
             ) and isinstance(controller, ControllerType), "Invalid Controller Type."
             _routers.append(controller_router_factory(controller))
         return _routers
-
-    def scan_request_events(self) -> None:
-        request_startup = (
-            reflect.get_metadata(ON_REQUEST_STARTUP_KEY, self._module_type) or []
-        )
-        if not self._config.get(ON_REQUEST_STARTUP_KEY) or not isinstance(
-            self._config[ON_REQUEST_STARTUP_KEY], list
-        ):
-            self._config[ON_REQUEST_STARTUP_KEY] = []
-        self._config[ON_REQUEST_STARTUP_KEY].extend(request_startup)
-
-        request_shutdown = (
-            reflect.get_metadata(ON_REQUEST_SHUTDOWN_KEY, self._module_type) or []
-        )
-        if not self._config.get(ON_REQUEST_SHUTDOWN_KEY) or not isinstance(
-            self._config[ON_REQUEST_SHUTDOWN_KEY], list
-        ):
-            self._config[ON_REQUEST_SHUTDOWN_KEY] = []
-        self._config[ON_REQUEST_SHUTDOWN_KEY].extend(request_shutdown)

@@ -137,14 +137,9 @@ class AppFactory:
 
         cls._build_modules(app_module=module, injector=injector, config=config)
 
-        shutdown_event = config.ON_REQUEST_STARTUP
-        startup_event = config.ON_REQUEST_SHUTDOWN
-
         app = App(
             config=config,
             injector=injector,
-            on_shutdown_event_handlers=shutdown_event if shutdown_event else None,
-            on_startup_event_handlers=startup_event if startup_event else None,
             lifespan=config.DEFAULT_LIFESPAN_HANDLER,
             global_guards=global_guards,
         )

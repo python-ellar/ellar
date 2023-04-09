@@ -6,7 +6,7 @@ from ellar.cache.backends.local_cache import LocalMemCacheBackend
 
 
 class TestLocalMemCacheBackend:
-    def setup(self):
+    def setup_method(self):
         self.backend = LocalMemCacheBackend()
 
     def test_set(self):
@@ -54,7 +54,7 @@ class TestLocalMemCacheBackend:
 
 
 class TestLocalMemCacheBackendAsync:
-    def setup(self):
+    def setup_method(self):
         self.backend = LocalMemCacheBackend()
 
     async def test_set_async(self, anyio_backend):

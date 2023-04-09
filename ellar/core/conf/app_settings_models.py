@@ -11,19 +11,15 @@ from ellar.core.versioning import DefaultAPIVersioning
 from ellar.serializer import Serializer, SerializerFilter
 from ellar.types import ASGIApp, TReceive, TScope, TSend
 
-from .mixins import (
-    ConfigDefaultTypesMixin,
-    TEventHandler,
-    TExceptionHandler,
-    TMiddleware,
-    TVersioning,
-)
+from .mixins import ConfigDefaultTypesMixin, TExceptionHandler, TMiddleware, TVersioning
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
 
 
-async def _not_found(scope: TScope, receive: TReceive, send: TSend) -> None:
+async def _not_found(
+    scope: TScope, receive: TReceive, send: TSend
+) -> None:  # pragma: no cover
     if scope["type"] == "websocket":
         websocket_close = WebSocketClose()
         await websocket_close(scope, receive, send)
@@ -112,9 +108,6 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     LOGGING_CONFIG: t.Optional[t.Dict[str, t.Any]] = default_logging
     # logging Level
     LOG_LEVEL: t.Optional[log_levels] = log_levels.info
-
-    ON_REQUEST_STARTUP: t.List[TEventHandler] = []
-    ON_REQUEST_SHUTDOWN: t.List[TEventHandler] = []
 
     TEMPLATE_FILTERS: t.Dict[str, t.Callable[..., t.Any]] = {}
     TEMPLATE_GLOBAL_FILTERS: t.Dict[str, t.Callable[..., t.Any]] = {}

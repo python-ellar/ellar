@@ -29,7 +29,6 @@ from ellar.core.routing import ApplicationRouter
 from ellar.core.templating import AppTemplating, Environment
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
 from ellar.di.injector import EllarInjector
-from ellar.events import EventHandler, RouterEventManager
 from ellar.logger import logger
 from ellar.types import ASGIApp, T, TReceive, TScope, TSend
 
@@ -41,8 +40,6 @@ class App(AppTemplating):
         self,
         config: "Config",
         injector: EllarInjector,
-        on_startup_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
-        on_shutdown_event_handlers: t.Optional[t.Sequence[EventHandler]] = None,
         lifespan: t.Optional[t.Callable[["App"], t.AsyncContextManager]] = None,
         global_guards: t.List[
             t.Union[t.Type[GuardCanActivate], GuardCanActivate]
@@ -53,12 +50,6 @@ class App(AppTemplating):
             injector, EllarInjector
         ), "injector must instance of EllarInjector"
 
-        # The lifespan context function is a newer style that replaces
-        # on_startup / on_shutdown handlers. Use one or the other, not both.
-        assert lifespan is None or (
-            on_startup_event_handlers is None and on_shutdown_event_handlers is None
-        ), "Use either 'lifespan' or 'on_startup'/'on_shutdown', not both."
-
         self._config = config
         self._injector: EllarInjector = injector
 
@@ -66,15 +57,6 @@ class App(AppTemplating):
         self._exception_handlers = list(self.config.EXCEPTION_HANDLERS)
 
         self._user_middleware = list(t.cast(list, self.config.MIDDLEWARE))
-
-        self.on_startup = RouterEventManager(
-            [] if on_startup_event_handlers is None else list(on_startup_event_handlers)
-        )
-        self.on_shutdown = RouterEventManager(
-            []
-            if on_shutdown_event_handlers is None
-            else list(on_shutdown_event_handlers)
-        )
 
         self._static_app: t.Optional[ASGIApp] = None
 
@@ -85,12 +67,6 @@ class App(AppTemplating):
         self.router = ApplicationRouter(
             routes=self._get_module_routes(),
             redirect_slashes=self.config.REDIRECT_SLASHES,
-            on_startup=[self.on_startup.async_run]
-            if self.config.DEFAULT_LIFESPAN_HANDLER is None
-            else None,
-            on_shutdown=[self.on_shutdown.async_run]
-            if self.config.DEFAULT_LIFESPAN_HANDLER is None
-            else None,
             default=self.config.DEFAULT_NOT_FOUND_HANDLER,  # type: ignore
             lifespan=self.config.DEFAULT_LIFESPAN_HANDLER,
         )

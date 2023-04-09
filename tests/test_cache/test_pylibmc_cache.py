@@ -32,7 +32,7 @@ async def test_simple_cache_backend() -> None:
 
 
 class TestPyLibMCCacheBackend:
-    def setup(self):
+    def setup_method(self):
         self.backend = PyLibMCCacheBackendMock(servers=["127.0.0.1:11211"])
 
     def test_set(self):
@@ -113,7 +113,7 @@ class TestPyLibMCCacheBackend:
 
 
 class TestPyLibMCCacheBackendAsync:
-    def setup(self):
+    def setup_method(self):
         self.backend = PyLibMCCacheBackendMock(servers=["127.0.0.1:11211"])
 
     async def test_set_async(self, anyio_backend):

@@ -107,7 +107,7 @@ async def test_injector_update_scoped_context():
 
 
 class TestInjectorModuleFunctions:
-    def setup(self):
+    def setup_method(self):
         self.injector = EllarInjector()
         config = Config()
 

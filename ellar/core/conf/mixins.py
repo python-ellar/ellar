@@ -8,7 +8,6 @@ from ellar.constants import LOG_LEVELS as log_levels
 from ellar.core.exceptions.interfaces import IExceptionHandler
 from ellar.core.middleware import Middleware
 from ellar.core.versioning import BaseAPIVersioning
-from ellar.events import EventHandler
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import App
@@ -17,7 +16,6 @@ __all__ = [
     "ConfigDefaultTypesMixin",
     "TVersioning",
     "TMiddleware",
-    "TEventHandler",
     "TExceptionHandler",
 ]
 
@@ -70,18 +68,18 @@ class TMiddleware(Middleware):
         return v
 
 
-class TEventHandler(EventHandler):
-    @classmethod
-    def __get_validators__(
-        cls: t.Type["TEventHandler"],
-    ) -> t.Iterable[t.Callable[..., t.Any]]:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls: t.Type["EventHandler"], v: t.Any) -> t.Any:
-        if not isinstance(v, EventHandler):
-            raise ValueError(f"Expected EventHandler, received: {type(v)}")
-        return v
+# class TEventHandler(EventHandler):
+#     @classmethod
+#     def __get_validators__(
+#         cls: t.Type["TEventHandler"],
+#     ) -> t.Iterable[t.Callable[..., t.Any]]:
+#         yield cls.validate
+#
+#     @classmethod
+#     def validate(cls: t.Type["EventHandler"], v: t.Any) -> t.Any:
+#         if not isinstance(v, EventHandler):
+#             raise ValueError(f"Expected EventHandler, received: {type(v)}")
+#         return v
 
 
 class ConfigDefaultTypesMixin:
@@ -125,12 +123,6 @@ class ConfigDefaultTypesMixin:
 
     # defines other custom json encoders
     SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]]
-
-    # will be set automatically when @on_startup is found in a Module class
-    ON_REQUEST_STARTUP: t.List[TEventHandler]
-
-    # will be set automatically when @on_shutdown is found in a Module class
-    ON_REQUEST_SHUTDOWN: t.List[TEventHandler]
 
     # will be set automatically when @template_filter is found in a Module class
     TEMPLATE_FILTERS: t.Dict[str, t.Callable[..., t.Any]]
