@@ -176,6 +176,17 @@ class TestEllarApp:
         assert response.status_code == 200
         assert response.text == "Ellar Route Handler as an ASGI app"
 
+    def test_ellar_app_url_for(self):
+        @get("/homepage-url", name="homepage")
+        async def homepage(request: Request, ctx: IExecutionContext):
+            res = PlainTextResponse("Ellar Route Handler as an ASGI app")
+            return res
+
+        app = AppFactory.create_app()
+        app.router.append(homepage)
+        result = app.url_path_for("homepage")
+        assert result == "/homepage-url"
+
     def test_app_staticfiles_route(self, tmpdir):
         path = os.path.join(tmpdir, "example.txt")
         with open(path, "w") as file:

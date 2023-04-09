@@ -17,7 +17,9 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
 
 
-async def _not_found(scope: TScope, receive: TReceive, send: TSend) -> None:
+async def _not_found(
+    scope: TScope, receive: TReceive, send: TSend
+) -> None:  # pragma: no cover
     if scope["type"] == "websocket":
         websocket_close = WebSocketClose()
         await websocket_close(scope, receive, send)
