@@ -6,7 +6,7 @@ To get started, you'll need to install the `ellar-throttler` package.
 $(venv) pip install ellar-throttler
 ```
 
-## ThrottlerModule
+## **ThrottlerModule**
 
 The `ThrottlerModule` is the main entry point for this package, and can be used in a synchronous or asynchronous manner. 
 All the needs to be passed is the `ttl`, the time to live in seconds for the request tracker, and the `limit`, 

@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="#" target="blank"><img src="img/EllarLogoIconOnly.png" width="200" alt="Ellar Logo" /></a>
+  <a href="#" target="blank"><img src="img/EllarLogoB.png" width="200" alt="Ellar Logo" /></a>
 </p>
 
 <p align="center"> Ellar - Python ASGI web framework for building fast, efficient and scalable RESTAPIs and server-side application. </p>
@@ -11,7 +11,7 @@
 [![PyPI version](https://img.shields.io/pypi/pyversions/ellar.svg)](https://pypi.python.org/pypi/ellar)
 
 ---
-## Introduction
+## **Introduction**
 Ellar is a lightweight ASGI framework for building efficient and scalable server-side python applications.
 It supports both OOP (Object-Oriented Programming) and FP (Functional Programming)
 
@@ -19,7 +19,7 @@ Ellar is based on [Starlette (ASGI toolkit)](https://www.starlette.io/), a light
 And while Ellar provides a high level of abstraction on top of Starlette, it still incorporates some of its features, as well as those of FastAPI. 
 If you are familiar with these frameworks, you will find it easy to understand and use Ellar.
 
-## Inspiration
+## **Inspiration**
 Ellar was deeply influenced by [NestJS](https://docs.nestjs.com/) for its ease of use and ability to handle complex project structures and applications. 
 Additionally, it took some concepts from [FastAPI](https://fastapi.tiangolo.com/) in terms of request parameter handling and data serialization with Pydantic. 
 
@@ -27,7 +27,7 @@ With that said, the objective of Ellar is to offer a high level of abstraction i
 the ability to adapt to any desired software architecture, and ultimately, speedy request handling.
 
 
-## Features Summary
+## **Features Summary**
 
 - **Easy to Use**: Ellar has a simple and intuitive API that makes it easy to get started with building a fast and scalable web applications or web APIs with Python.
 - **Dependency Injection (DI)**: It comes with DI system makes it easy to manage dependencies and reduce coupling between components.
@@ -39,7 +39,7 @@ the ability to adapt to any desired software architecture, and ultimately, speed
 - **Modularity**: Ellar follows a modular architecture inspired by NestJS, making it easy to organize your code into reusable modules.
 - **Asynchronous programming**: It allows you to takes advantage of Python's `async/await` feature to write efficient and fast code that can handle large numbers of concurrent requests
 
-## Installation
+## **Installation**
 To get started, you need to scaffold a project using [Ellar-CLI](https://eadwincode.github.io/ellar-cli/) toolkit. This is recommended for a first-time user.
 The scaffolded project is more like a guide to project setup.
 
@@ -61,13 +61,13 @@ $(venv) ellar runserver --reload
 Open your browser and navigate to [`http://localhost:8000/`](http://localhost:8000/).
 ![Swagger UI](img/ellar_framework.png)
 
-## Dependency Summary
+## **Dependency Summary**
 - `Python >= 3.7`
 - `Starlette`
 - `Pydantic`
 - `Injector`
 
-## Status
+## **Status**
 
 Project is still in development
 

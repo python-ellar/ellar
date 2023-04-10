@@ -10,7 +10,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/ellar.svg)](https://pypi.python.org/pypi/ellar)
 [![PyPI version](https://img.shields.io/pypi/pyversions/ellar.svg)](https://pypi.python.org/pypi/ellar)
 
-## Introduction
+## **Introduction**
 
 Ellar is a lightweight ASGI framework for building efficient and scalable server-side python applications.
 It supports both OOP (Object-Oriented Programming) and FP (Functional Programming)
@@ -19,7 +19,7 @@ Ellar is based on [Starlette (ASGI toolkit)](https://www.starlette.io/), a light
 While Ellar provides a high level of abstraction on top of Starlette, it still incorporates some of its features, as well as those of FastAPI. 
 If you are familiar with these frameworks, you will find it easy to understand and use Ellar.
 
-## Features Summary
+## **Features Summary**
 
 - **Easy to Use**: Ellar has a simple and intuitive API that makes it easy to get started with building a fast and scalable web applications or web APIs in Python.
 - **Dependency Injection (DI)**: It comes with DI system makes it easy to manage dependencies and reduce coupling between components.
@@ -31,13 +31,13 @@ If you are familiar with these frameworks, you will find it easy to understand a
 - **Modularity**: Ellar follows a modular architecture inspired by NestJS, making it easy to organize your code into reusable modules.
 - **Asynchronous programming**: It allows you to takes advantage of Python's `async/await` feature to write efficient and fast code that can handle large numbers of concurrent requests
 
-## Dependencies
+## **Dependencies**
 - Python >= 3.7
 - Starlette
 - Injector
 - Pydantic
 
-## Installation
+## **Installation**
 ### Poetry Installation
 For [Poetry](https://python-poetry.org/) usages
 
@@ -51,11 +51,10 @@ For normal pip installation
 pip install ellar-cli
 ```
 
-## Create a project
+## Creating a project
 To create an ellar project, you need to have a `pyproject.toml` available on your root directory.
 This is necessary for ellar to store some `metadata` about your project. 
 
-### Create a project
 For Pip Users, you need to create `pyproject.toml` file
 ```shell
 ellar new carsite
@@ -66,7 +65,7 @@ run the ellar create project cli command,
 ellar create-project carsite
 ```
 
-## Run your project
+## **Run your project**
 Ellar runs [UVICORN - ASGI Server](https://www.uvicorn.org/) under the hood.
 ```shell
 ellar runserver --reload
@@ -78,14 +77,14 @@ Now go to [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 For more info on Ellar CLI, click [here](https://github.com/eadwinCode/ellar-cli)
 
-## Create a project module
+## **Adding a project module**
 A project module is a project app defining a group of controllers or services including templates and static files.
 So, now we have a project created, lets add an app to the project.
 ```shell
 ellar create-module car
 ```
 
-## Add Schema
+## **Add Schema**
 In `car/schema.py`, lets add some serializer for car input and output data
 ```python
 from ellar.serializer import Serializer
@@ -100,7 +99,7 @@ class RetrieveCarSerializer(CarSerializer):
     pk: str
 ```
 
-## Add Services
+## **Add Services**
 In `car/services.py`, lets create a dummy repository `CarDummyDB` to manage our car data.
 ```python
 import typing as t
@@ -153,7 +152,7 @@ class CarDummyDB:
         if idx >= 0:
             return self._data.pop(idx)
 ```
-## Add Controller
+## **Add Controller**
 In `car/controllers.py`, lets create `CarController`
 
 ```python
@@ -201,7 +200,7 @@ class CarController(ControllerBase):
         return self.car_db.list()
 
 ```
-## Register Service and Controller
+## **Register Service and Controller**
 In `car/module.py`, lets register `CarController` and `CarDummyDB`
 
 ```python
@@ -225,7 +224,7 @@ class CarModule(ModuleBase):
         pass
 ```
 
-## Registering Module
+## **Registering Module**
 Ellar is not aware of `CarModule` yet, so we need to add it to the `modules` list of `ApplicationModule` at the `carsite/root_module.py`.
 ```python
 from ellar.common import Module, exception_handler
@@ -243,7 +242,7 @@ class ApplicationModule(ModuleBase):
         return JSONResponse(dict(detail="Resource not found."))
 
 ```
-## Enabling OpenAPI Docs
+## **Enabling OpenAPI Docs**
 To start up openapi, we need to go back to project folder in the `server.py`
 then add the following below.
 ```python
@@ -280,7 +279,7 @@ Now we can test our API at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/do
 Please ensure your server is running
 ![Swagger UI](docs/img/car_api.png)
 
-## HTML Templating
+## **HTML Templating**
 Ellar has built-in support for Jinja2, which is a popular template engine for HTML. This feature allows for easy and efficient HTML templating similar to that of Flask. Jinja2 can be used to create reusable templates, and to insert dynamic data into HTML pages. It also has support for template inheritance, control structures, and other useful features that can help to simplify and streamline the process of creating HTML templates.
 
 ```html
