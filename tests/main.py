@@ -6,7 +6,7 @@ from pydantic import Field
 from ellar.common import ModuleRouter, Path, Query
 from ellar.core.connection import Request
 from ellar.core.factory import AppFactory
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 
 router = ModuleRouter("")
 

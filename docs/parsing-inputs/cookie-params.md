@@ -37,7 +37,7 @@ You can also use Schema to encapsulate `Cookies` parameters:
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import get, Controller, Cookie
 from ellar.core import ControllerBase
 

@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 from pydantic import BaseModel, Field
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 
 
 class BlogObjectDTO:

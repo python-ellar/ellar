@@ -2,7 +2,7 @@ import typing as t
 
 from starlette.middleware import Middleware
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 
 from .function import FunctionBasedMiddleware
 

@@ -215,7 +215,7 @@ Before that, we need to define our data input/output serializers
 
 ```python
 # project_name/apps/car/schema.py
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from pydantic import Field
 
 

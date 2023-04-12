@@ -253,7 +253,7 @@ And the route function is required to return a dictionary object that follows a 
 ```python
 import typing as t
 from enum import Enum
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 
 
 class ContentDispositionType(str, Enum):
@@ -361,7 +361,7 @@ For example:
 ```python
 import typing as t
 from ellar.common import serializer_filter, get
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 
 class UserSchema(Serializer):
     username: str

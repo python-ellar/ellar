@@ -8,7 +8,7 @@ from ellar.core.response.model import (
     IResponseModel,
     create_response_model,
 )
-from ellar.serializer import BaseSerializer
+from ellar.core.serializer import BaseSerializer
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.routing.websocket import WebSocketExtraHandler

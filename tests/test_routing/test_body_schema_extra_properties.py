@@ -3,8 +3,8 @@ from typing import Dict
 from pydantic import BaseModel
 
 from ellar.common import post
+from ellar.core.serializer import serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
-from ellar.serializer import serialize_object
 from ellar.testing import Test
 
 tm = Test.create_test_module()

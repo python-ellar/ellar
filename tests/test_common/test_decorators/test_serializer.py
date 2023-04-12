@@ -1,7 +1,7 @@
 from ellar.common import serializer_filter
 from ellar.constants import SERIALIZER_FILTER_KEY
+from ellar.core.serializer import SerializerFilter
 from ellar.reflect import reflect
-from ellar.serializer import SerializerFilter
 
 
 @serializer_filter(

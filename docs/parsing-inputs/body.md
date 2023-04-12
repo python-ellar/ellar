@@ -14,7 +14,7 @@ First, you need to import `Serializer` from `ella.serializer`:
 
 ```python
 # project_name/apps/items/controllers.py
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 
 # class Item(Serializer):
 #     name: str
@@ -33,7 +33,7 @@ Use standard Python types for all the attributes:
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, post
 from ellar.core import ControllerBase
 
@@ -81,7 +81,7 @@ To add it to your *path operation*, declare it the same way you declared the pat
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, post
 from ellar.core import ControllerBase
 
@@ -137,7 +137,7 @@ You can declare path parameters **and** body requests at the same time.
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, post, put
 from ellar.core import ControllerBase
 
@@ -168,7 +168,7 @@ You can also declare **body**, **path** and **query** parameters, all at the sam
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, post, put
 from ellar.core import ControllerBase
 
@@ -213,7 +213,7 @@ But you can instruct **Ellar** to treat it as another body key using Body:
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, Body, post, put
 from ellar.core import ControllerBase
 from pydantic import BaseModel
@@ -274,7 +274,7 @@ For example:
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, Body, post, put
 from ellar.core import ControllerBase
 from pydantic import BaseModel

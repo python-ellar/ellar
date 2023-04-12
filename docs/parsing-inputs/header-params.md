@@ -120,7 +120,7 @@ You can also use Schema to encapsulate `Header` parameters:
 # project_name/apps/items/controllers.py
 
 from typing import List
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import get, Controller, Header
 from ellar.core import ControllerBase
 

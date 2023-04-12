@@ -8,8 +8,8 @@ from starlette.websockets import WebSocketClose
 from ellar.common_types import ASGIApp, TReceive, TScope, TSend
 from ellar.constants import DEFAULT_LOGGING as default_logging, LOG_LEVELS as log_levels
 from ellar.core.response import JSONResponse, PlainTextResponse
+from ellar.core.serializer import Serializer, SerializerFilter
 from ellar.core.versioning import DefaultAPIVersioning
-from ellar.serializer import Serializer, SerializerFilter
 
 from .mixins import ConfigDefaultTypesMixin, TExceptionHandler, TMiddleware, TVersioning
 

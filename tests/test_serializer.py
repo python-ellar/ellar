@@ -7,7 +7,7 @@ from pathlib import PureWindowsPath
 import pytest
 from pydantic import BaseModel, Field, dataclasses as pydantic_dataclasses
 
-from ellar.serializer import (
+from ellar.core.serializer import (
     DataclassSerializer,
     Serializer,
     SerializerFilter,

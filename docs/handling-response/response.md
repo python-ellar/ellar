@@ -5,7 +5,7 @@ To use `Serializer` in Ellar, you simply need to create a class that inherits fr
 Here's an example of how you could define a serializer class for a user model:
 
 ```python
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 
 class UserSerializer(Serializer):
     name: str
@@ -27,7 +27,7 @@ For example:
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, get
 from ellar.core import ControllerBase
 
@@ -80,7 +80,7 @@ For instance, we can convert the `UserSchema` to a dataclass by defining `UserDa
 
 ```python
 from dataclasses import dataclass
-from ellar.serializer import DataclassSerializer
+from ellar.core.serializer import DataclassSerializer
 
 
 @dataclass
@@ -101,7 +101,7 @@ The `response` parameter takes different shape. Let's see how to return a differ
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, get
 from ellar.core import ControllerBase
 
@@ -185,7 +185,7 @@ Also, we can return response object from endpoint functions, and it will overrid
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, get
 from ellar.core import ControllerBase
 from starlette.responses import PlainTextResponse

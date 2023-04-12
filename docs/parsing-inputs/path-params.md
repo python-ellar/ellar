@@ -163,7 +163,7 @@ You can also use Schema to encapsulate path parameters that depend on each other
 # project_name/apps/items/controllers.py
 
 import datetime
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import get, Controller, Path
 from ellar.core import ControllerBase
 

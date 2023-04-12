@@ -1,4 +1,4 @@
-from ellar.serializer import (
+from ellar.core.serializer import (
     BaseSerializer,
     DataclassSerializer,
     Serializer,
