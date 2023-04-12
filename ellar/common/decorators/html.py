@@ -3,6 +3,7 @@ import inspect
 import typing as t
 import warnings
 
+from ellar.common_types import TemplateFilterCallable, TemplateGlobalCallable
 from ellar.constants import (
     NOT_SET,
     RESPONSE_OVERRIDE_KEY,
@@ -14,7 +15,6 @@ from ellar.core.response.model import HTMLResponseModel
 from ellar.core.templating import TemplateFunctionData
 from ellar.helper import class_base_function_regex, get_name
 from ellar.shortcuts import fail_silently
-from ellar.types import TemplateFilterCallable, TemplateGlobalCallable
 
 from .base import set_metadata as set_meta
 

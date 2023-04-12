@@ -12,10 +12,10 @@ from ellar.core.guard import (
     HttpBearerAuth,
     HttpDigestAuth,
 )
+from ellar.core.services import Reflector
 from ellar.di import injectable
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.serializer import serialize_object
-from ellar.services import Reflector
 from ellar.testing import TestClient
 
 

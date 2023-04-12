@@ -143,7 +143,7 @@ class ConfigDefaultTypesMixin:
     # logging Level
     LOG_LEVEL: t.Optional[log_levels]
 
-    # CORS Middleware setup (ellar.core.middleware.CORSMiddleware)
+    # CORS Middleware setup (ellar.middleware.CORSMiddleware)
     CORS_ALLOW_ORIGINS: t.List[str]
     CORS_ALLOW_METHODS: t.List[str]
     CORS_ALLOW_HEADERS: t.List[str]

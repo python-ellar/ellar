@@ -3,8 +3,8 @@ from pydantic import BaseModel
 
 from ellar.compatible import AttributeDict
 from ellar.core.response.model import EmptyAPIResponseModel
+from ellar.core.routing.schema import RouteParameters, WsRouteParameters
 from ellar.core.routing.websocket import WebSocketExtraHandler
-from ellar.core.schema import RouteParameters, WsRouteParameters
 
 
 class Item(BaseModel):

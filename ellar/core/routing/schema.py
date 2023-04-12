@@ -8,7 +8,7 @@ from ellar.core.response.model import (
     IResponseModel,
     create_response_model,
 )
-from ellar.serializer import BaseSerializer, Serializer
+from ellar.serializer import BaseSerializer
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.routing.websocket import WebSocketExtraHandler
@@ -18,11 +18,11 @@ class TResponseModel:
     @classmethod
     def __get_validators__(
         cls: t.Type["TResponseModel"],
-    ) -> t.Iterable[t.Callable[..., t.Any]]:
-        yield cls.validate
+    ) -> t.Any:
+        yield cls.validate  # type:ignore[misc]
 
     @classmethod
-    def validate(cls: t.Type["IResponseModel"], v: t.Any) -> t.Any:
+    def validate(cls: t.Type["IResponseModel"], v: t.Any) -> t.Any:  # type:ignore[misc]
         if not isinstance(v, IResponseModel):
             raise ValueError(f"Expected ResponseModel, received: {type(v)}")
         return v
@@ -49,8 +49,8 @@ class RouteParameters(BaseModel):
     ]
 
     @validator("methods")
-    def validate_methods(cls, value: t.Any):
-        methods = list(map(lambda m: m.upper(), value))
+    def validate_methods(cls, value: t.Any) -> t.List[str]:
+        methods = list(map(lambda m: m.upper(), value))  # type:ignore[no-any-return]
         not_valid_methods = list(set(methods) - set(ROUTE_METHODS))
 
         if not_valid_methods:
@@ -58,13 +58,13 @@ class RouteParameters(BaseModel):
         return methods
 
     @validator("endpoint")
-    def validate_endpoint(cls, value: t.Any):
+    def validate_endpoint(cls, value: t.Any) -> t.Any:
         if not callable(value):
             raise ValueError("An endpoint must be a callable")
         return value
 
     @root_validator
-    def validate_root(cls, values: t.Any):
+    def validate_root(cls, values: t.Any) -> t.Any:
         if "response" not in values:
             raise ValueError(
                 "Expected "
@@ -89,27 +89,13 @@ class WsRouteParameters(BaseModel):
     extra_handler_type: t.Optional[t.Type["WebSocketExtraHandler"]] = None
 
     @validator("endpoint")
-    def validate_endpoint(cls, value: t.Any):
+    def validate_endpoint(cls, value: t.Any) -> t.Any:
         return value
 
     @validator("encoding")
-    def validate_encoding(cls, value: t.Any):
+    def validate_encoding(cls, value: t.Any) -> t.Any:
         if value not in ["json", "text", "bytes", None]:
             raise ValueError(
                 f"Encoding type not supported. Once [json | text | bytes]. Received: {value}"
             )
         return value
-
-
-class ValidationError(BaseModel):
-    loc: t.List[str] = Field(..., title="Location")
-    msg: str = Field(..., title="Message")
-    type: str = Field(..., title="Error Type")
-
-
-class HTTPValidationError(BaseModel):
-    detail: t.List[ValidationError] = Field(..., title="Details")
-
-
-class Schema(Serializer):
-    pass

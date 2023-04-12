@@ -2,12 +2,12 @@ import typing as t
 
 from starlette.middleware import Middleware
 
-from ellar.core.schema import Schema
+from ellar.serializer import Serializer
 
 from .function import FunctionBasedMiddleware
 
 
-class MiddlewareSchema(Schema):
+class MiddlewareSchema(Serializer):
     middleware_class: t.Type[FunctionBasedMiddleware]
     dispatch: t.Callable[[t.Any, t.Callable], t.Any]
     options: t.Dict

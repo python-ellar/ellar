@@ -7,7 +7,7 @@ from ellar.core.modules.builder import ModuleBaseBuilder
 from ellar.di.injector import Container
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.conf import Config
+    from ellar.core.conf import Config
 
 
 class ModuleBaseMeta(type):

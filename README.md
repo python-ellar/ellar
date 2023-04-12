@@ -158,8 +158,8 @@ In `car/controllers.py`, lets create `CarController`
 ```python
 import typing as t
 from ellar.common import Controller, delete, get, put, post
-from ellar.core import ControllerBase
-from ellar.core.exceptions import NotFound
+from ellar import ControllerBase
+from ellar.exceptions import NotFound
 from .schemas import CarSerializer, RetrieveCarSerializer
 from .services import CarDummyDB
 
@@ -205,7 +205,7 @@ In `car/module.py`, lets register `CarController` and `CarDummyDB`
 
 ```python
 from ellar.common import Module
-from ellar.core import ModuleBase
+from ellar import ModuleBase
 from ellar.di import Container
 
 from .controllers import CarController
@@ -228,8 +228,8 @@ class CarModule(ModuleBase):
 Ellar is not aware of `CarModule` yet, so we need to add it to the `modules` list of `ApplicationModule` at the `carsite/root_module.py`.
 ```python
 from ellar.common import Module, exception_handler
-from ellar.core import IHostContext, ModuleBase
-from ellar.core.response import JSONResponse, Response
+from ellar import IHostContext, ModuleBase
+from ellar.response import JSONResponse, Response
 
 from ellar.samples.modules import HomeModule
 from .apps.car.module import CarModule
@@ -249,7 +249,7 @@ then add the following below.
 import os
 
 from ellar.constants import ELLAR_CONFIG_MODULE
-from ellar.core.factory import AppFactory
+from ellar.factory import AppFactory
 from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerDocumentGenerator
 from .root_module import ApplicationModule
 

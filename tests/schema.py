@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 from pydantic import BaseModel, Field
 
-from ellar.core.schema import Schema
+from ellar.serializer import Serializer
 
 
 class BlogObjectDTO:
@@ -31,12 +31,12 @@ class User(BaseModel):
     full_name: Optional[str] = None
 
 
-class Filter(Schema):
+class Filter(Serializer):
     to_datetime: datetime = Field(alias="to")
     from_datetime: datetime = Field(alias="from")
 
 
-class CreateCarSchema(Schema):
+class CreateCarSchema(Serializer):
     name: str
     model: str
     brand: str

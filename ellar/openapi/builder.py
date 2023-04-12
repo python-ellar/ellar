@@ -12,15 +12,14 @@ from pydantic.schema import (
 from starlette.routing import BaseRoute, Mount
 
 from ellar.compatible import cached_property
-from ellar.constants import GUARDS_KEY, OPENAPI_KEY
+from ellar.constants import GUARDS_KEY, OPENAPI_KEY, REF_PREFIX
 from ellar.core.main import App
 from ellar.core.routing import ModuleMount, RouteOperation
 from ellar.core.routing.controller.route import ControllerRouteOperation
-from ellar.core.schema import HTTPValidationError, ValidationError
+from ellar.core.services.reflector import Reflector
+from ellar.core.validation_schema import HTTPValidationError, ValidationError
 from ellar.helper.modelfield import create_model_field
-from ellar.services.reflector import Reflector
 
-from ..constants import REF_PREFIX
 from .openapi_v3 import OpenAPI
 from .route_doc_models import (
     OpenAPIMountDocumentation,

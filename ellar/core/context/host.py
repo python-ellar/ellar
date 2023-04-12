@@ -1,8 +1,8 @@
 import typing as t
 
+from ellar.common_types import TReceive, TScope, TSend
 from ellar.compatible import cached_property
 from ellar.constants import SCOPE_SERVICE_PROVIDER
-from ellar.types import TReceive, TScope, TSend
 
 from .interface import (
     IHostContext,
