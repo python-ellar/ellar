@@ -8,14 +8,11 @@ from ellar.common_types import TReceive, TScope, TSend
 from ellar.compatible import AttributeDict
 from ellar.constants import (
     CONTROLLER_CLASS_KEY,
-    CONTROLLER_METADATA,
-    CONTROLLER_OPERATION_HANDLER_KEY,
     GUARDS_KEY,
     NOT_SET,
     OPERATION_ENDPOINT_KEY,
     VERSIONING_KEY,
 )
-from ellar.core.controller import ControllerBase
 from ellar.core.routing.route import RouteOperation
 from ellar.helper import get_unique_control_type
 from ellar.reflect import reflect
@@ -31,33 +28,7 @@ from .route_collections import RouteCollection
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate
 
-__all__ = ["ModuleMount", "ModuleRouter", "controller_router_factory"]
-
-
-def controller_router_factory(
-    controller: t.Union[t.Type[ControllerBase], t.Any]
-) -> "ModuleMount":
-    openapi = reflect.get_metadata(CONTROLLER_METADATA.OPENAPI, controller) or dict()
-    routes = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, controller) or []
-    app = Router()
-    app.routes = RouteCollection(routes)  # type:ignore
-
-    include_in_schema = reflect.get_metadata_or_raise_exception(
-        CONTROLLER_METADATA.INCLUDE_IN_SCHEMA, controller
-    )
-    router = ModuleMount(
-        app=app,
-        path=reflect.get_metadata_or_raise_exception(
-            CONTROLLER_METADATA.PATH, controller
-        ),
-        name=reflect.get_metadata_or_raise_exception(
-            CONTROLLER_METADATA.NAME, controller
-        ),
-        include_in_schema=include_in_schema if include_in_schema is not None else True,
-        control_type=controller,
-        **openapi,
-    )
-    return router
+__all__ = ["ModuleMount", "ModuleRouter"]
 
 
 class ModuleMount(StarletteMount):
