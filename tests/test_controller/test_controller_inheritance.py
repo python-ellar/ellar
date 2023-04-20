@@ -3,7 +3,7 @@ import pytest
 from ellar.common import Controller, get, ws_route
 from ellar.constants import CONTROLLER_CLASS_KEY
 from ellar.core import AppFactory
-from ellar.core.routing.router.module import controller_router_factory
+from ellar.core.routing import ControllerRouterFactory
 from ellar.reflect import reflect
 
 
@@ -49,7 +49,7 @@ def test_control_type_with_more_than_one_type_fails():
     )
 
     with pytest.raises(Exception, match=r"Operation must have a single control type."):
-        controller_router_factory(AnotherSampleController)
+        ControllerRouterFactory.build(AnotherSampleController)
 
 
 def test_controller_raise_exception_for_controller_operation_without_controller_class(

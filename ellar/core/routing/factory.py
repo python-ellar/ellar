@@ -7,16 +7,15 @@ from ellar.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,
     CONTROLLER_WATERMARK,
 )
-from ellar.core.routing import ModuleMount, RouteCollection
+from ellar.core.controller.model import ControllerBase, ControllerType
 from ellar.reflect import reflect
 
-from .builder import ControllerRouterBuilder
-from .model import ControllerBase, ControllerType
+from .builder import RouterBuilder
+from .mount import ModuleMount
+from .route_collections import RouteCollection
 
 
-class ControllerRouterFactory(
-    ControllerRouterBuilder, controller_type=type(ControllerBase)
-):
+class ControllerRouterFactory(RouterBuilder, controller_type=type(ControllerBase)):
     @classmethod
     def build(
         cls, controller_type: t.Union[t.Type[ControllerBase], t.Any]

@@ -10,9 +10,7 @@ from ellar.core.routing.route import RouteOperation
 from .base import ControllerRouteOperationBase
 
 
-class ControllerRouteOperation(  # type:ignore[misc]
-    ControllerRouteOperationBase, RouteOperation
-):
+class ControllerRouteOperation(ControllerRouteOperationBase, RouteOperation):
     methods: t.Set[str]
 
     async def _handle_request(self, context: IExecutionContext) -> t.Any:

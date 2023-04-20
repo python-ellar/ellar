@@ -17,13 +17,9 @@ from ellar.core.routing.route import RouteOperation
 from ellar.helper import get_unique_control_type
 from ellar.reflect import reflect
 
-from ..operation_definitions import (
-    OperationDefinitions,
-    TOperation,
-    TWebsocketOperation,
-)
-from ..schema import RouteParameters, WsRouteParameters
+from .operation_definitions import OperationDefinitions, TOperation, TWebsocketOperation
 from .route_collections import RouteCollection
+from .schema import RouteParameters, WsRouteParameters
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.guard import GuardCanActivate

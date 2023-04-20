@@ -6,8 +6,7 @@ from starlette.routing import Host, Mount
 
 from ellar.common import Version as version_decorator, get, http_route, ws_route
 from ellar.constants import CONTROLLER_CLASS_KEY, CONTROLLER_OPERATION_HANDLER_KEY
-from ellar.core.routing import RouteOperation, WebsocketRouteOperation
-from ellar.core.routing.router import RouteCollection
+from ellar.core.routing import RouteCollection, RouteOperation, WebsocketRouteOperation
 from ellar.core.versioning import UrlPathAPIVersioning
 from ellar.helper import generate_controller_operation_unique_id
 from ellar.reflect import reflect

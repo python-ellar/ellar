@@ -5,14 +5,16 @@ from collections import OrderedDict
 from starlette.routing import BaseRoute, Host, Mount
 
 from ellar.constants import CONTROLLER_CLASS_KEY
-from ellar.core.routing import RouteOperation, RouteOperationBase
-from ellar.core.routing.websocket.route import WebsocketRouteOperation
 from ellar.helper import (
     generate_controller_operation_unique_id,
     get_unique_control_type,
 )
 from ellar.logger import logger
 from ellar.reflect import reflect
+
+from .base import RouteOperationBase
+from .route import RouteOperation
+from .websocket.route import WebsocketRouteOperation
 
 
 class RouteCollection(t.Sequence[BaseRoute]):
