@@ -18,6 +18,8 @@ from ellar.socket_io.constants import (
 from ellar.socket_io.gateway import SocketMessageOperation, SocketOperationConnection
 from ellar.socket_io.model import GatewayBase, GatewayType
 
+_socket_servers: t.Dict[str, socketio.AsyncServer] = {}
+
 
 class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
     @classmethod
@@ -35,7 +37,11 @@ class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
             reflect.get_metadata(GATEWAY_MESSAGE_HANDLER_KEY, controller_type) or []
         )
 
-        socket_server = socketio.AsyncServer(**options)
+        socket_server = _socket_servers.get(path)
+
+        if not socket_server:
+            socket_server = socketio.AsyncServer(**options)
+            _socket_servers.update({path: socket_server})
 
         for handler in message_handlers:
             is_connection_handler = reflect.get_metadata(CONNECTION_EVENT, handler)
