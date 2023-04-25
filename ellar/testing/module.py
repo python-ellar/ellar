@@ -93,7 +93,7 @@ class Test:
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
         ] = None,
         config_module: t.Union[str, t.Dict] = None,
-    ) -> TestingModule:
+    ) -> TESTING_MODULE:  # type: ignore[valid-type]
         """
         Create a TestingModule to test controllers and services in isolation
         :param modules:
