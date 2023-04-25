@@ -51,15 +51,11 @@ def WebSocketGateway(
     kwargs.setdefault("async_mode", "asgi")
     kwargs.setdefault("cors_allowed_origins", "*")
 
-    _path = path
-
-    if path and isinstance(path, type):
-        _path = "/socket.io"
-
     def _decorator(cls: t.Type) -> t.Type:
+        assert path == "" or path.startswith("/"), "Routed paths must start with '/'"
         _kwargs = AttributeDict(
             socket_init_kwargs=dict(kwargs),
-            path=_path,
+            path=path,
             name=name,
             include_in_schema=False,
         )
@@ -105,5 +101,7 @@ def WebSocketGateway(
         return _gateway_type
 
     if callable(path):
-        return _decorator(path)  # type:ignore[arg-type]
+        func = path
+        path = "/socket.io"
+        return _decorator(func)  # type:ignore[arg-type]
     return _decorator
