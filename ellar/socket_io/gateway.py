@@ -2,7 +2,9 @@ import inspect
 import typing as t
 
 from socketio import AsyncServer
+from starlette import status
 from starlette.concurrency import run_in_threadpool
+from starlette.exceptions import WebSocketException
 from starlette.routing import compile_path
 
 from ellar.constants import (
@@ -12,18 +14,20 @@ from ellar.constants import (
     NOT_SET,
     SCOPE_SERVICE_PROVIDER,
 )
-from ellar.core import IExecutionContext
+from ellar.core import Config, IExecutionContext
 from ellar.core.context import IExecutionContextFactory
 from ellar.core.exceptions import WebSocketRequestValidationError
 from ellar.core.params import WebsocketEndpointArgsModel
+from ellar.core.serializer import serialize_object
 from ellar.core.services import Reflector
 from ellar.di import EllarInjector
 from ellar.helper import get_name
 from ellar.reflect import reflect
-from ellar.socket_io.model import GatewayBase, GatewayContext
+from ellar.socket_io.context import GatewayContext
+from ellar.socket_io.model import GatewayBase
 from ellar.socket_io.responses import WsResponse
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import GuardCanActivate
     from ellar.core.params import ExtraEndpointArg
 
@@ -61,7 +65,7 @@ class SocketOperationConnection:
         extra_route_args: t.Union[t.List["ExtraEndpointArg"], "ExtraEndpointArg"] = (
             reflect.get_metadata(EXTRA_ROUTE_ARGS_KEY, self.endpoint) or []
         )
-        if not isinstance(extra_route_args, list):
+        if not isinstance(extra_route_args, list):  # pragma: no cover
             extra_route_args = [extra_route_args]
 
         if self.endpoint_parameter_model is NOT_SET:
@@ -72,6 +76,39 @@ class SocketOperationConnection:
                 extra_endpoint_args=extra_route_args,
             )
             self.endpoint_parameter_model.build_model()
+
+    async def _run_with_exception_handling(
+        self, gateway_instance: GatewayBase, sid: str
+    ) -> None:
+        config = gateway_instance.context.get_service_provider().get(Config)
+        try:
+            await self.run_route_guards(context=gateway_instance.context)
+            await self._run_handler(
+                context=gateway_instance.context, gateway_instance=gateway_instance
+            )
+
+        except WebSocketException as aex:
+            await self._handle_error(
+                sid=sid,
+                code=aex.code,
+                reason=serialize_object(aex.reason),
+            )
+        except WebSocketRequestValidationError as wex:
+            await self._handle_error(
+                sid=sid,
+                code=status.WS_1007_INVALID_FRAME_PAYLOAD_DATA,
+                reason=serialize_object(wex.errors()),
+            )
+        except Exception as ex:
+            await self._handle_error(
+                sid=sid,
+                code=status.WS_1011_INTERNAL_ERROR,
+                reason=str(ex) if config.DEBUG else "Something went wrong",
+            )
+
+    async def _handle_error(self, sid: str, code: int, reason: t.Any) -> None:
+        await self._server.emit("error", {"code": code, "reason": reason}, room=sid)
+        await self._server.disconnect(sid=sid)
 
     async def _context_handler(self, sid: str, environment: t.Dict) -> t.Any:
         service_provider = t.cast(
@@ -86,9 +123,7 @@ class SocketOperationConnection:
             send=environment["asgi.send"],
         )
         gateway_instance = self._get_gateway_instance_and_context(ctx=context, sid=sid)
-
-        await self.run_route_guards(context=context)
-        await self._run_handler(context=context, gateway_instance=gateway_instance)
+        await self._run_with_exception_handling(gateway_instance, sid=sid)
 
     def _register_handler(self) -> None:
         @self._server.on(self._event)
@@ -129,7 +164,7 @@ class SocketOperationConnection:
             await self._server.emit(**res.dict())
 
     @t.no_type_check
-    async def run_route_guards(self, context: IExecutionContext) -> None:
+    async def run_route_guards(self, context: GatewayContext) -> None:
         reflector = context.get_service_provider().get(Reflector)
         app = context.get_app()
 
@@ -149,7 +184,15 @@ class SocketOperationConnection:
 
                 result = await guard.can_activate(context)
                 if not result:
-                    guard.raise_exception()
+                    await self._server.emit(
+                        "error",
+                        {
+                            "code": status.WS_1011_INTERNAL_ERROR,
+                            "reason": "Authorization Failed",
+                        },
+                        room=context.sid,
+                    )
+                    await self._server.disconnect(sid=context.sid)
 
     def get_control_type(self) -> t.Type[GatewayBase]:
         """
@@ -159,19 +202,17 @@ class SocketOperationConnection:
         """
         if not hasattr(self, "_control_type"):
             _control_type = reflect.get_metadata(CONTROLLER_CLASS_KEY, self.endpoint)
-            if _control_type is None:
+            if _control_type is None:  # pragma: no cover
                 raise Exception("Operation must have a single control type.")
             self._control_type = t.cast(t.Type[GatewayBase], _control_type)
 
         return self._control_type
 
     def _get_gateway_instance(self, ctx: IExecutionContext) -> GatewayBase:
-        gateway_type: t.Optional[t.Type] = reflect.get_metadata(
-            CONTROLLER_CLASS_KEY, self.endpoint
-        )
+        gateway_type = self.get_control_type()
         if not gateway_type or (
             gateway_type and not issubclass(gateway_type, GatewayBase)
-        ):
+        ):  # pragma: no cover
             raise RuntimeError("GatewayBase Type was not found")
 
         service_provider = ctx.get_service_provider()
@@ -197,8 +238,6 @@ class SocketOperationConnection:
 class SocketMessageOperation(SocketOperationConnection):
     async def _context_handler(self, sid: str, message: t.Any) -> t.Any:
         sid_environ = self._server.get_environ(sid)
-        if not sid_environ:
-            raise Exception("Socket Environment not found.")
 
         service_provider = t.cast(
             EllarInjector, sid_environ["asgi.scope"][SCOPE_SERVICE_PROVIDER]
@@ -216,8 +255,7 @@ class SocketMessageOperation(SocketOperationConnection):
             ctx=context, sid=sid, message=message
         )
 
-        await self.run_route_guards(context=context)
-        await self._run_handler(context=context, gateway_instance=gateway_instance)
+        await self._run_with_exception_handling(gateway_instance, sid)
 
     def _register_handler(self) -> None:
         @self._server.on(self._event)
