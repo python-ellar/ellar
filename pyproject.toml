@@ -83,6 +83,7 @@ test = [
     "types-dataclasses ==0.6.6",
     "python-socketio",
     "uvicorn[standard] == 0.20.0",
+    "aiohttp == 3.8.4",
 ]
 dev = [
     "pre-commit"
