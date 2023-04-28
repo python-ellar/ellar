@@ -1,6 +1,6 @@
 import typing as t
 
-from engineio import AsyncServer
+from socketio import AsyncServer
 
 from ellar.common_types import TReceive, TScope, TSend
 from ellar.core import App, IExecutionContext

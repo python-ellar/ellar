@@ -81,7 +81,7 @@ test = [
     "types-ujson ==5.7.0.1",
     "types-orjson ==3.6.2",
     "types-dataclasses ==0.6.6",
-    "socketio"
+    "python-socketio"
 ]
 dev = [
     "pre-commit"
