@@ -146,11 +146,11 @@ Brief overview of the generated files:
 |-------------------|---------------------------------------------------|
 | `car.controllers` | A basic controller with an `index` route.         |
 | `car.module.py`   | car module/app `Module` metadata definition.      |
-| `car.services.py` | For Dogs module service declarations.             |
+| `car.services.py` | For Car module service declarations.              |
 | `car.schemas.py`  | Data-transfer-object or Serializers declarations. |
-| `car.tests/`      | testing directory for the dogs module.            |
+| `car.tests/`      | testing directory for the car module.             |
 
-To finish up with the created `dogs` module, we need to register it to the 
+To finish up with the created `car` module, we need to register it to the 
 `project_name.root_module.py`
 
 ```python
@@ -167,7 +167,7 @@ class ApplicationModule(ModuleBase):
 ```
 That's it.
 
-Goto your browser and visit: [http://localhost:8000/dogs/](http://localhost:8000/car/)
+Goto your browser and visit: [http://localhost:8000/car/](http://localhost:8000/car/)
 ```json
 {
   "detail": "Welcome Car Resource"

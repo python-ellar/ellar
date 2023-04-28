@@ -258,7 +258,7 @@ Ellar will compute values for all the route handler parameters and validates the
 !!! info
     if a parameter is not annotated, it will be assumed as a `string` type
 
-![CreateDogSchema](../img/create-car-schema.png)
+![CreateCarSchema](../img/create-car-schema.png)
 
 Let's add other endpoints
 

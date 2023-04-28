@@ -30,11 +30,11 @@ it becomes easier to manage and maintain.
 This approach allows for clear organization and separation of static assets, 
 making it more manageable in a large project.
 
-In our previous project, within the `dogs` module folder, we can create a following directories, `my_static/dogs`. 
-Inside this folder `my_static/dogs`, we can create a file named `example.txt`. 
-This allows us to keep all of the static files related to the dogs module organized in one location `my_static`.
+In our previous project, within the `car` module folder, we can create a following directories, `my_static/car`. 
+Inside this folder `my_static/car`, we can create a file named `example.txt`. 
+This allows us to keep all of the static files related to the car module organized in one location `my_static`.
 
-Next, we tell `DogModule` about our static folder.
+Next, we tell `CarModule` about our static folder.
 
 ```python
 # project_name/apps/car/module.py
