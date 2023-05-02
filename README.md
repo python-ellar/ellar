@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="#" target="blank"><img src="docs/img/EllarLogoIconOnly.png" width="200" alt="Ellar Logo" /></a>
+  <a href="#" target="blank"><img src="docs/img/EllarLogoB.png" width="200" alt="Ellar Logo" /></a>
 </p>
 
 <p align="center"> Ellar - Python ASGI web framework for building fast, efficient and scalable RESTAPIs and server-side application. </p>
@@ -16,8 +16,6 @@ Ellar is a lightweight ASGI framework for building efficient and scalable server
 It supports both OOP (Object-Oriented Programming) and FP (Functional Programming)
 
 Ellar is based on [Starlette (ASGI toolkit)](https://www.starlette.io/), a lightweight ASGI framework/toolkit well-suited for developing asynchronous web services with Python. 
-While Ellar provides a high level of abstraction on top of Starlette, it still incorporates some of its features, as well as those of FastAPI. 
-If you are familiar with these frameworks, you will find it easy to understand and use Ellar.
 
 ## **Features Summary**
 
