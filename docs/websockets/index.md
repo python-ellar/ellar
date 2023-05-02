@@ -185,12 +185,13 @@ The `ws_route` offers more than just defining a websocket route. It can also be 
 By setting `use_extra_handler=True` in `ws_route` decorator, we activate an in-built handler that gives the ability to 
 manage different sessions of websocket differently like `on_connect`, `on_message` and `on_disconnect`
 
-- `on_connect(websocket, **kwargs)`: handler to handles client connection with the server.
-- `on_message(websocket, data)`: handler for messages received from the client
-- `on_disconnect(websocket, close_code)`: handler that handles client disconnecting from websocket server
+- `on_connect(websocket, **kwargs)`: handles client connection with the server.
+- `on_message(websocket, data)`: handles messages sent from the client
+- `on_disconnect(websocket, close_code)`: handles server disconnecting from client
 
-This approach also enables message data type validation using `WsBody`. 
-`WsBody` is similar to [`Body`](../parsing-inputs/body) but for websockets.
+!!! info
+    This approach also enables message data type validation using `WsBody`. 
+    `WsBody` is similar to [`Body`](../parsing-inputs/body) but for websockets.
 
 Let's rewrite the previous example, `/live-support` websocket route.
 ```python
@@ -224,13 +225,15 @@ class CarController(ControllerBase):
         await websocket.close(code)
 ```
 In the construct above, we created `def live_support_connect` to handle connection to the `'/live-support'` websocket route and
-`def live_support_disconnect` to handle disconnection from it. `def live_support_connect` and `def live_support_disconnect` takes `websocket` instance as only parameter and must be an asynchronous function.
+`def live_support_disconnect` to handle disconnection from it. `def live_support_connect` and `def live_support_disconnect` 
+takes `websocket` instance as only parameter and must be an **asynchronous** function.
 
-On the other hand,`def live_support` function is now a **message receiver handler** and so, there is need to define a parameter with `WsBody`, in this case `data:str = WsBody()`. And message sent from client will be passed to `data` parameter and validated as `str` data type.
+On the other hand,`def live_support` function is now a **message receiver handler** and so, there is need to define a parameter with `WsBody`, 
+in this case `data:str = WsBody()`. Message sent from client will be passed to `data` parameter after validation and procession by `WsBody`.
 If validation fails, an error will be sent to the client and connection will be destroyed.
 
-The **`encoding` = 'text'** states the **message** data structure expected from client to the server.
-There are 3 different **`encoding`** types.
+The **`encoding` = 'text'** states the **message** data structure that is required of the client when sending messages to the server.
+There are other **`encoding`** types supported:
 
 - `text`: allows only simple text messages as in the case above, e.g. `@ws_route('/path', use_extra_handler=True, encoding='text')` 
 - `json`: allows json messages e.g. `@ws_route('/path', use_extra_handler=True, encoding='json')`
@@ -238,8 +241,8 @@ There are 3 different **`encoding`** types.
 
 **Simplifying the example above**
 
-We can further simplify the example above by getting rid of the `live_support_connect` and `live_support_disconnect` 
-and let the inbuilt handler manage that for us as shown below: 
+We can further simplify the example above by getting rid of the `live_support_connect` and `live_support_disconnect`
+and let the inbuilt handler apply the default `connection` and `disconnection` actions. 
 
 ```python
 # project_name/apps/car/controller.py
