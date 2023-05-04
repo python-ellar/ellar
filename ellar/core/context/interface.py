@@ -1,9 +1,9 @@
 import typing as t
 from abc import ABC, ABCMeta, abstractmethod
 
+from ellar.common_types import T, TMessage, TReceive, TScope, TSend
 from ellar.core.connection import HTTPConnection, Request, WebSocket
 from ellar.core.response import Response
-from ellar.types import T, TMessage, TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import ControllerBase

@@ -86,8 +86,6 @@ def Controller(
     :param external_doc_description: OPENAPI External Doc Description
     :param external_doc_url: OPENAPI External Document URL
     :param name: route name prefix for url reversing, eg name:route_name default=''
-    :param version: default URL versioning for all defined route in a controller
-    :param guards: default guard for all routes defined under this controller
     :param include_in_schema: include controller in OPENAPI schema
     :return: t.Type[ControllerBase]
     """

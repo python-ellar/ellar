@@ -4,8 +4,8 @@ from ellar.common import Cookie, get
 from ellar.core.connection import Request
 from ellar.core.exceptions import ImproperConfiguration
 from ellar.core.routing import ModuleRouter
+from ellar.core.serializer import serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
-from ellar.serializer import serialize_object
 from ellar.testing import Test
 
 from .sample import Data, Filter, ListOfPrimitiveSchema, NonPrimitiveSchema

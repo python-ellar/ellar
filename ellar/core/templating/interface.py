@@ -7,12 +7,12 @@ from pathlib import Path
 from jinja2 import Environment as BaseEnvironment, FileSystemLoader
 from starlette.templating import pass_context
 
+from ellar.common_types import ASGIApp, TemplateFilterCallable, TemplateGlobalCallable
 from ellar.compatible import cached_property
 from ellar.constants import TEMPLATE_FILTER_KEY, TEMPLATE_GLOBAL_KEY
 from ellar.core.connection import Request
 from ellar.core.datastructures import URL
 from ellar.core.staticfiles import StaticFiles
-from ellar.types import ASGIApp, TemplateFilterCallable, TemplateGlobalCallable
 
 from .environment import Environment
 from .loader import JinjaLoader

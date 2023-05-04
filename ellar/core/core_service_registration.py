@@ -1,7 +1,7 @@
 import typing as t
 
+from ellar.core.services import Reflector
 from ellar.di import EllarInjector
-from ellar.services.reflector import Reflector
 
 from .context import (
     ExecutionContextFactory,

@@ -6,7 +6,7 @@ This response model holds information on the type of response to be returned.
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, get
 from ellar.core import ControllerBase
 
@@ -30,7 +30,7 @@ During route response computation, the `me` route handler response will evaluate
 The resulting route responses will be:
 
 ```python
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.core.response.model import JSONResponseModel
 
 
@@ -76,7 +76,7 @@ For example:
 from ellar.common import Controller, get
 from ellar.core import ControllerBase
 from starlette.responses import PlainTextResponse
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 
 
 class UserSchema(Serializer):

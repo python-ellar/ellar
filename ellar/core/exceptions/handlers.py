@@ -8,7 +8,7 @@ from starlette.exceptions import (
 from starlette.responses import Response
 
 from ellar.core.context import IHostContext
-from ellar.serializer import serialize_object
+from ellar.core.serializer import serialize_object
 
 from .base import APIException
 from .interfaces import IExceptionHandler

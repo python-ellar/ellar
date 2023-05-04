@@ -15,16 +15,17 @@
 Ellar is a lightweight ASGI framework for building efficient and scalable server-side python applications.
 It supports both OOP (Object-Oriented Programming) and FP (Functional Programming)
 
-Ellar is based on [Starlette (ASGI toolkit)](https://www.starlette.io/), a lightweight ASGI framework/toolkit well-suited for developing asynchronous web services in Python. 
-And while Ellar provides a high level of abstraction on top of Starlette, it still incorporates some of its features, as well as those of FastAPI. 
-If you are familiar with these frameworks, you will find it easy to understand and use Ellar.
+Ellar is also a higher level of abstraction of [Starlette (ASGI toolkit)](https://www.starlette.io/), a lightweight ASGI framework/toolkit well-suited for developing asynchronous web services in Python.
 
 ## **Inspiration**
-Ellar was deeply influenced by [NestJS](https://docs.nestjs.com/) for its ease of use and ability to handle complex project structures and applications. 
-Additionally, it took some concepts from [FastAPI](https://fastapi.tiangolo.com/) in terms of request parameter handling and data serialization with Pydantic. 
+Ellar was deeply influenced by [NestJS](https://docs.nestjs.com/) for its ease of use, project structures and patterns that aids in building small or complex project applications.
+Also, Ellar took some concepts from [FastAPI](https://fastapi.tiangolo.com/) in terms of request parameter handling and data serialization with Pydantic. 
 
-With that said, the objective of Ellar is to offer a high level of abstraction in its framework APIs, along with a well-structured project setup, an object-oriented approach to web application design, 
-the ability to adapt to any desired software architecture, and ultimately, speedy request handling.
+The objective of Ellar is to provide a high level of abstracted interface to the web, along with a well-structured project setup, give room for object-oriented approach to web application design, 
+allow you chose your desired application architecture, and ultimately, deliver speedy handling to requests.
+
+As developers, we never know how big a project can become or evolve over time but following some design patterns and architecture makes it easier to build a more testable and maintainable application.
+
 
 
 ## **Features Summary**

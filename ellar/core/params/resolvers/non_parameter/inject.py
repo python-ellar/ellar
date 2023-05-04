@@ -1,8 +1,8 @@
 import inspect
 import typing as t
 
+from ellar.common_types import T
 from ellar.core.context import IExecutionContext
-from ellar.types import T
 
 from .base import NonParameterResolver
 

@@ -6,9 +6,9 @@ from injector import (
     is_decorated_with_inject as injector_is_decorated_with_inject,
 )
 
+from ellar.common_types import T
 from ellar.constants import INJECTABLE_ATTRIBUTE
 from ellar.shortcuts import fail_silently
-from ellar.types import T
 
 from .exceptions import DIImproperConfiguration
 from .scopes import DIScope, ScopeDecorator, SingletonScope

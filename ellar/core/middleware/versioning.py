@@ -2,12 +2,12 @@ import typing as t
 
 from starlette.types import ASGIApp
 
+from ellar.common_types import TReceive, TScope, TSend
 from ellar.constants import SCOPE_API_VERSIONING_RESOLVER
 from ellar.core.versioning import BaseAPIVersioning
-from ellar.types import TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.conf import Config
+    from ellar.core.conf import Config
 
 
 class RequestVersioningMiddleware:

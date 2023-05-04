@@ -1,8 +1,8 @@
 from typing import List
 
 from ellar.common import Query, get
+from ellar.core.serializer import serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
-from ellar.serializer import serialize_object
 from ellar.testing import Test
 
 tm = Test.create_test_module()

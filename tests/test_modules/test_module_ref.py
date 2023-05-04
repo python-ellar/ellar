@@ -205,10 +205,14 @@ def test_module_template_ref_get_all_routers_fails_for_invalid_controller():
         config = Config()
         container = EllarInjector(auto_bind=False).container
 
-        with pytest.raises(AssertionError, match="Invalid Controller Type."):
+        with pytest.raises(Exception) as ex:
             create_module_ref_factor(
                 ModuleBaseExample, config=config, container=container
             )
+        assert (
+            str(ex.value)
+            == "Router Factory Builder was not found.\nUse `ControllerRouterBuilderFactory` as an example create a FactoryBuilder for this type: <class 'type'>"
+        )
 
 
 def test_invalid_module_template_ref():

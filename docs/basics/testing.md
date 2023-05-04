@@ -322,11 +322,16 @@ from project_name.apps.car.schemas import CreateCarSerializer, CarListFilter
 from project_name.apps.car.services import CarRepository
 
 
+class MockCarRepository(CarRepository):
+    def get_all(self):
+        return [dict(id=2, model='CLS',name='Mercedes', year=2023)]
+
+
 class TestCarControllerE2E:
     def setup(self):
         test_module = Test.create_test_module(
             controllers=[CarController,],
-            providers=[ProviderConfig(CarRepository, use_class=CarRepository)],
+            providers=[ProviderConfig(CarRepository, use_class=MockCarRepository)],
             config_module=dict(
                 REDIRECT_SLASHES=True
             )
@@ -346,8 +351,7 @@ class TestCarControllerE2E:
             "year": 2022,
         }
 
-    @patch.object(CarRepository, 'get_all', return_value=[dict(id=2, model='CLS',name='Mercedes', year=2023)])
-    def test_get_all_action(self, mock_get_all):
+    def test_get_all_action(self):
         res = self.client.get('/car?offset=0&limit=10')
         assert res.status_code == 200
         assert res.json() == {

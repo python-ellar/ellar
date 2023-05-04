@@ -31,7 +31,7 @@ def serializer_filter(
     :param exclude_none:
     :return:
     """
-    from ellar.serializer import SerializerFilter
+    from ellar.core.serializer import SerializerFilter
 
     return set_meta(
         SERIALIZER_FILTER_KEY,

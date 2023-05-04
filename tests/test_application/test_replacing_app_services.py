@@ -12,8 +12,8 @@ from ellar.core.context import (
 )
 from ellar.core.exceptions import IExceptionMiddlewareService
 from ellar.core.exceptions.service import ExceptionMiddlewareService
+from ellar.core.services import Reflector
 from ellar.di import ProviderConfig, injectable
-from ellar.services import Reflector
 from ellar.testing import Test
 
 

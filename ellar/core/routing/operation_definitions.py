@@ -3,6 +3,7 @@ import typing as t
 from functools import partial
 from types import FunctionType
 
+from ellar.common_types import TCallable
 from ellar.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,
     DELETE,
@@ -15,14 +16,13 @@ from ellar.constants import (
     PUT,
     TRACE,
 )
-from ellar.core.schema import RouteParameters, WsRouteParameters
 from ellar.helper import class_base_function_regex
 from ellar.reflect import reflect
-from ellar.types import TCallable
 
 from .controller.route import ControllerRouteOperation
 from .controller.websocket.route import ControllerWebsocketRouteOperation
 from .route import RouteOperation
+from .schema import RouteParameters, WsRouteParameters
 from .websocket import WebsocketRouteOperation
 
 TOperation = t.Union[RouteOperation, ControllerRouteOperation]

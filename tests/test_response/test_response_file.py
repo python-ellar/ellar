@@ -5,8 +5,8 @@ import pytest
 from ellar.common import Controller, file, get
 from ellar.core.response.model import FileResponseModel
 from ellar.core.routing import ModuleRouter
+from ellar.core.serializer import serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
-from ellar.serializer import serialize_object
 from ellar.testing import Test
 
 BASEDIR = Path(__file__).resolve().parent.parent

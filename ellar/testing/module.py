@@ -5,12 +5,12 @@ from uuid import uuid4
 from starlette.testclient import TestClient as TestClient
 
 from ellar.common import Module
+from ellar.common_types import T
 from ellar.core import ModuleBase
 from ellar.core.factory import AppFactory
 from ellar.core.main import App
 from ellar.core.routing import ModuleRouter
 from ellar.di import ProviderConfig
-from ellar.types import T
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import GuardCanActivate
@@ -93,7 +93,7 @@ class Test:
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
         ] = None,
         config_module: t.Union[str, t.Dict] = None,
-    ) -> TestingModule:
+    ) -> TESTING_MODULE:  # type: ignore[valid-type]
         """
         Create a TestingModule to test controllers and services in isolation
         :param modules:

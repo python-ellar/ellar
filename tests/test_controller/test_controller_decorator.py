@@ -3,7 +3,7 @@ import pytest
 from ellar.common import Controller, get, http_route, ws_route
 from ellar.constants import CONTROLLER_CLASS_KEY, CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.core import ControllerBase
-from ellar.core.routing.router.module import controller_router_factory
+from ellar.core.routing import ControllerRouterFactory
 from ellar.di import has_binding, is_decorated_with_injectable
 from ellar.reflect import reflect
 
@@ -58,7 +58,7 @@ def test_controller_computed_properties():
     assert isinstance(SampleController, type) and issubclass(
         SampleController, ControllerBase
     )
-    router = controller_router_factory(SampleController)
+    router = ControllerRouterFactory.build(SampleController)
 
     assert is_decorated_with_injectable(SampleController)
     assert not has_binding(SampleController)
@@ -81,7 +81,7 @@ def test_controller_computed_properties():
         def __init__(self, a: str):
             self.a = a
 
-    router = controller_router_factory(SomeControllerB)
+    router = ControllerRouterFactory.build(SomeControllerB)
     assert router.get_meta() == {
         "tag": "Item",
         "description": "Some Controller",
@@ -96,7 +96,7 @@ def test_tag_configuration_controller_decorator():
     new_controller = Controller(
         prefix="/items/{orgID:int}", name="override_name", tag="new_tag"
     )(type("SomeControllerX", (ControllerBase,), {}))
-    router = controller_router_factory(new_controller)
+    router = ControllerRouterFactory.build(new_controller)
     assert router.get_meta()["tag"] == "new_tag"
     assert router.name == "override_name"
 
@@ -104,14 +104,14 @@ def test_tag_configuration_controller_decorator():
     new_controller = Controller(
         prefix="/items/{orgID:int}",
     )(type("SomeControllerY", (ControllerBase,), {}))
-    router = controller_router_factory(new_controller)
+    router = ControllerRouterFactory.build(new_controller)
     assert router.get_meta()["tag"] == "somey"
     assert router.name == "somey"
 
     new_controller = Controller(prefix="/items/{orgID:int}", tag="new_tag")(
         type("SomeControllerZ", (ControllerBase,), {})
     )
-    router = controller_router_factory(new_controller)
+    router = ControllerRouterFactory.build(new_controller)
     assert router.get_meta()["tag"] == "new_tag"
     assert router.name == "somez"
 
@@ -129,7 +129,7 @@ def test_tag_configuration_controller_decorator():
     ],
 )
 def test_controller_url_reverse(controller_type, tag, prefix, name):
-    router = controller_router_factory(controller_type)
+    router = ControllerRouterFactory.build(controller_type)
     for route in router.routes:
         reversed_path = router.url_path_for(f"{name}:{route.name}")
         assert reversed_path == router.path_format.replace("/{path}", route.path)

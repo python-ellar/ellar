@@ -10,8 +10,7 @@ The path can be modified by providing a new value for the `STATIC_MOUNT_PATH` co
 
 1. In your config file, define `STATIC_MOUNT_PATH`, for example:
     ```python
-    
-   class Config:
+    class Config:
         STATIC_MOUNT_PATH = '/static'
     ```
 
@@ -31,26 +30,26 @@ it becomes easier to manage and maintain.
 This approach allows for clear organization and separation of static assets, 
 making it more manageable in a large project.
 
-In our previous project, within the `dogs` module folder, we can create a following directories, `my_static/dogs`. 
-Inside this folder `my_static/dogs`, we can create a file named `example.txt`. 
-This allows us to keep all of the static files related to the dogs module organized in one location `my_static`.
+In our previous project, within the `car` module folder, we can create a following directories, `my_static/car`. 
+Inside this folder `my_static/car`, we can create a file named `example.txt`. 
+This allows us to keep all of the static files related to the car module organized in one location `my_static`.
 
-Next, we tell `DogModule` about our static folder.
+Next, we tell `CarModule` about our static folder.
 
 ```python
-# project_name/apps/dogs/module.py
+# project_name/apps/car/module.py
 
 from ellar.common import Module
 from ellar.core import ModuleBase
 from ellar.di import Container
 
-from .controllers import DogsController
+from .controllers import CarController
 
 
 @Module(
-    controllers=[DogsController], static_folder='my_static'
+    controllers=[CarController], static_folder='my_static'
 )
-class DogsModule(ModuleBase):
+class CarModule(ModuleBase):
     def register_providers(self, container: Container) -> None:
         # for more complicated provider registrations
         # container.register_instance(...)
@@ -64,7 +63,7 @@ it is also possible to manually specify additional static directories that are n
 These variables allow for even more flexibility in organizing and managing static files in a project. 
 These directories will be served by the StaticFiles ASGI class along with the module-scoped static files.
 
-### `STATIC_DIRECTORIES`
+### **`STATIC_DIRECTORIES`**
 `STATIC_DIRECTORIES` variable is a list of directories within the project that contain static files. 
 These directories are not necessarily scoped to a specific module and can be used to serve static files from any location within the project. 
 These directories can be added to the `STATIC_DIRECTORIES` list in the application's configuration.
@@ -73,7 +72,7 @@ These directories can be added to the `STATIC_DIRECTORIES` list in the applicati
 STATIC_DIRECTORIES =  ['project_name/static-files', 'project_name/path/to/static/files']
 ```
 
-### `STATIC_FOLDER_PACKAGES`
+### **`STATIC_FOLDER_PACKAGES`**
 `STATIC_FOLDER_PACKAGES` variable is a list of tuples that contain python packages that hold some static files. 
 These packages should have a `static` folder and the **package name** should be passed as tuple `(package_name, package_path)`, 
 **package_path** is the relative path of static folder.

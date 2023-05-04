@@ -2,7 +2,7 @@ import asyncio
 import typing as t
 from abc import abstractmethod
 
-from ellar.types import T
+from ellar.common_types import T
 
 
 class EventHandler:

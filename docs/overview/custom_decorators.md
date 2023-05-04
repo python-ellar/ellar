@@ -46,12 +46,14 @@ from ellar.core import WebSocket
 def sample_endpoint_ws(self, websocket: WebSocket, data_schema: str = WsBody()):
     pass
 
-@sample_endpoint_ws.connect
+@ws_route.connect(sample_endpoint_ws)
 async def on_connect(self, websocket: WebSocket):
+    # Called when there is a connection to `sample_endpoint_ws`
     await websocket.accept()
 
-@sample_endpoint_ws.disconnect
-async def on_connect(self, websocket: WebSocket, code: int):
+@ws_route.disconnect(sample_endpoint_ws)
+async def on_disconnect(self, websocket: WebSocket, code: int):
+    # Called when there is a disconnect from `sample_endpoint_ws`
     await websocket.close(code)
 ```
 
@@ -253,7 +255,7 @@ And the route function is required to return a dictionary object that follows a 
 ```python
 import typing as t
 from enum import Enum
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 
 
 class ContentDispositionType(str, Enum):
@@ -361,7 +363,7 @@ For example:
 ```python
 import typing as t
 from ellar.common import serializer_filter, get
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 
 class UserSchema(Serializer):
     username: str

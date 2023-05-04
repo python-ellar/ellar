@@ -1,7 +1,7 @@
 import inspect
 import typing as t
 
-from ellar.types import T
+from ellar.common_types import T
 
 
 class ExtraEndpointArg(t.Generic[T]):

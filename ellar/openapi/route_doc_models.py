@@ -20,7 +20,7 @@ from ellar.core.params.resolvers import (
     RouteParameterModelField,
 )
 from ellar.core.routing import ModuleMount, RouteOperation
-from ellar.services.reflector import Reflector
+from ellar.core.services.reflector import Reflector
 from ellar.shortcuts import normalize_path
 
 if t.TYPE_CHECKING:  # pragma: no cover

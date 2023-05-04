@@ -5,10 +5,10 @@ from abc import abstractmethod
 
 from starlette.routing import compile_path
 
+from ellar.common_types import TScope
 from ellar.constants import NOT_SET
 from ellar.core.connection import HTTPConnection
 from ellar.core.exceptions import NotAcceptable, NotFound
-from ellar.types import TScope
 
 
 class BaseAPIVersioningResolver:

@@ -3,6 +3,7 @@ import typing as t
 
 from starlette.routing import BaseRoute, Mount
 
+from ellar.common_types import ASGIApp, T, TReceive, TScope, TSend
 from ellar.constants import LOG_LEVELS
 from ellar.core.datastructures import State, URLPath
 from ellar.core.exceptions.interfaces import (
@@ -30,7 +31,6 @@ from ellar.core.templating import AppTemplating, Environment
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
 from ellar.di.injector import EllarInjector
 from ellar.logger import logger
-from ellar.types import ASGIApp, T, TReceive, TScope, TSend
 
 from .conf import Config
 

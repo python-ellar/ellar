@@ -1,4 +1,4 @@
-site_name: ellar
+site_name: Ellar
 site_description: Ellar - Python ASGI web framework for building fast, efficient and scalable RESTAPIs and server-side application.
 site_url: https://github.com/eadwinCode/ellar
 repo_name: eadwinCode/ellar
@@ -40,7 +40,7 @@ theme:
         icon: material/lightbulb-outline
         name: Switch to light mode
   font:
-    text: Noto Sans
+    text: Source Sans Pro
     code: Fira Code
   language: en
   logo: img/Icon.svg
@@ -101,7 +101,9 @@ nav:
     - Command Grouping: commands/command-grouping.md
   - Versioning: basics/versioning.md
   - Testing: basics/testing.md
-  - WebSockets: websockets.md
+  - WebSockets:
+      - index: websockets/index.md
+      - socketio: websockets/socketio.md
   - Mount: mount.md
   - Background Tasks: background-task.md
   - Release Notes: release-notes.md

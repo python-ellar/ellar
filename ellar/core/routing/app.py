@@ -4,12 +4,12 @@ from types import FunctionType
 
 from starlette.routing import BaseRoute, Router as StarletteRouter
 
+from ellar.common_types import ASGIApp, TReceive, TScope, TSend
 from ellar.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,
     SCOPE_API_VERSIONING_RESOLVER,
 )
 from ellar.reflect import reflect
-from ellar.types import ASGIApp, TReceive, TScope, TSend
 
 from .route_collections import RouteCollection
 

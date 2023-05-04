@@ -1,7 +1,7 @@
 from ellar.common import Controller, get, put
 from ellar.core import AppFactory
+from ellar.core.serializer import serialize_object
 from ellar.openapi.builder import OpenAPIDocumentBuilder
-from ellar.serializer import serialize_object
 
 
 @Controller

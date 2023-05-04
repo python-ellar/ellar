@@ -2,9 +2,9 @@ import typing as t
 
 from starlette.responses import Response
 
+from ellar.common_types import ASGIApp, TReceive, TScope, TSend
 from ellar.core.connection import HTTPConnection
 from ellar.core.context import IHostContext, IHostContextFactory
-from ellar.types import ASGIApp, TReceive, TScope, TSend
 
 AwaitableCallable = t.Callable[..., t.Awaitable]
 DispatchFunction = t.Callable[

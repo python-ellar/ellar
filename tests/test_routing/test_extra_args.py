@@ -6,8 +6,8 @@ from ellar.common import Context, Query, Res, extra_args, get
 from ellar.core.connection import Request
 from ellar.core.context import IExecutionContext
 from ellar.core.params import ExtraEndpointArg
+from ellar.core.serializer import serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
-from ellar.serializer import serialize_object
 from ellar.testing import Test
 
 from .sample import Filter

@@ -2,7 +2,7 @@ import typing as t
 from enum import Enum
 
 from ellar.core.context import IExecutionContext
-from ellar.serializer import Serializer, SerializerFilter, serialize_object
+from ellar.core.serializer import Serializer, SerializerFilter, serialize_object
 
 from ..response_types import FileResponse, Response, StreamingResponse
 from .base import ResponseModel, ResponseModelField

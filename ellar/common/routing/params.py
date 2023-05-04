@@ -3,6 +3,7 @@ import typing as t
 from pydantic.fields import Undefined
 from starlette.responses import Response
 
+from ellar.common_types import T
 from ellar.core.connection import HTTPConnection, Request, WebSocket
 from ellar.core.context import IExecutionContext
 from ellar.core.params import params
@@ -16,7 +17,6 @@ from ellar.core.params.resolvers.non_parameter import (
     SessionRequestParam,
     WebSocketParameter,
 )
-from ellar.types import T
 
 
 def Path(

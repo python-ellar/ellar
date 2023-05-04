@@ -6,7 +6,6 @@ from pathlib import Path
 from starlette.routing import BaseRoute, Mount
 
 from ellar.constants import (
-    CONTROLLER_WATERMARK,
     EXCEPTION_HANDLERS_KEY,
     MIDDLEWARE_HANDLERS_KEY,
     MODULE_METADATA,
@@ -15,9 +14,8 @@ from ellar.constants import (
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
-from ellar.core.controller import ControllerType
 from ellar.core.routing import ModuleMount
-from ellar.core.routing.router.module import controller_router_factory
+from ellar.core.routing.builder import get_controller_builder_factory
 from ellar.core.templating import ModuleTemplating
 from ellar.di import Container, ProviderConfig, injectable, is_decorated_with_injectable
 from ellar.di.providers import ModuleProvider
@@ -292,8 +290,7 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
             reflect.get_metadata(MODULE_METADATA.ROUTERS, self._module_type) or []
         )
         for controller in self._controllers:
-            assert reflect.get_metadata(
-                CONTROLLER_WATERMARK, controller
-            ) and isinstance(controller, ControllerType), "Invalid Controller Type."
-            _routers.append(controller_router_factory(controller))
+            factory_builder = get_controller_builder_factory(type(controller))
+            factory_builder.check_type(controller)
+            _routers.append(factory_builder.build(controller))
         return _routers

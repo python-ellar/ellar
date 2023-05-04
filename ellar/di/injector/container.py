@@ -11,9 +11,9 @@ from injector import (
     _is_specialization,
 )
 
+from ellar.common_types import T
 from ellar.constants import NOT_SET
 from ellar.helper import get_name
-from ellar.types import T
 
 from ..providers import Provider
 from ..scopes import (

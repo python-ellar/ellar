@@ -165,7 +165,7 @@ You can also use Schema to encapsulate GET parameters:
 
 from typing import List
 from pydantic import Field
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import get, Controller, Query
 from ellar.core import ControllerBase
 

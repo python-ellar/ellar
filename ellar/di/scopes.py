@@ -8,7 +8,7 @@ from injector import (
     SingletonScope as InjectorSingletonScope,
 )
 
-from ellar.types import T
+from ellar.common_types import T
 
 from .providers import InstanceProvider, Provider
 

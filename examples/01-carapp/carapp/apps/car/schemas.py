@@ -13,7 +13,7 @@ class ASampleDTO(DataclassSerializer):
     name: str
     age: t.Optional[int] = None
 """
-from ellar.serializer import DataclassSerializer, Serializer
+from ellar.core.serializer import DataclassSerializer, Serializer
 from pydantic import Field
 
 

@@ -139,7 +139,7 @@ To send files along with some extra attributes you need to send bodies in multip
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, Form, File, UploadFile, post
 from ellar.core import ControllerBase
 from datetime import date
@@ -166,7 +166,7 @@ You can as well send payload in single field as JSON - just remove the Form mark
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, File, UploadFile, post
 from ellar.core import ControllerBase
 from datetime import date

@@ -4,10 +4,10 @@ from collections import OrderedDict, defaultdict
 from injector import Injector
 
 from ellar.asgi_args import RequestScopeContext
+from ellar.common_types import T
 from ellar.compatible import asynccontextmanager
 from ellar.constants import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR
 from ellar.logger import logger as log
-from ellar.types import T
 
 from ..providers import InstanceProvider, Provider
 from ..scopes import DIScope, ScopeDecorator

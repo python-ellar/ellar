@@ -3,10 +3,10 @@ import typing as t
 from starlette.background import BackgroundTasks
 from starlette.responses import Response
 
+from ellar.common_types import TReceive, TScope, TSend
 from ellar.compatible import cached_property
 from ellar.constants import SCOPED_RESPONSE
 from ellar.core.connection import HTTPConnection, Request
-from ellar.types import TReceive, TScope, TSend
 
 from .exceptions import HostContextException
 from .interface import IHTTPHostContext

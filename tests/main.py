@@ -6,7 +6,7 @@ from pydantic import Field
 from ellar.common import ModuleRouter, Path, Query
 from ellar.core.connection import Request
 from ellar.core.factory import AppFactory
-from ellar.core.schema import Schema
+from ellar.core.serializer import Serializer
 
 router = ModuleRouter("")
 
@@ -205,7 +205,7 @@ def get_query_param_required_type(query: int = Query(...)):
     return f"foo bar {query}"
 
 
-class AliasedSchema(Schema):
+class AliasedSchema(Serializer):
     query: str = Field(..., alias="aliased.-_~name")
 
 

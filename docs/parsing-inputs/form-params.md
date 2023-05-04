@@ -48,7 +48,7 @@ a Schema to organize your parameters.
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, post, Form
 from ellar.core import ControllerBase
 
@@ -83,7 +83,7 @@ are declared with `Form(...)` should be **taken from the request form fields**, 
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, Form, post, put
 from ellar.core import ControllerBase
 
@@ -117,7 +117,7 @@ This can be fixed, as described in the Pydantic docs, by using
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from ellar.common import Controller, Form, post, put
 from ellar.core import ControllerBase
 from pydantic.fields import ModelField

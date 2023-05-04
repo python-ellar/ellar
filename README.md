@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="#" target="blank"><img src="docs/img/EllarLogoIconOnly.png" width="200" alt="Ellar Logo" /></a>
+  <a href="#" target="blank"><img src="docs/img/EllarLogoB.png" width="200" alt="Ellar Logo" /></a>
 </p>
 
 <p align="center"> Ellar - Python ASGI web framework for building fast, efficient and scalable RESTAPIs and server-side application. </p>
@@ -16,8 +16,6 @@ Ellar is a lightweight ASGI framework for building efficient and scalable server
 It supports both OOP (Object-Oriented Programming) and FP (Functional Programming)
 
 Ellar is based on [Starlette (ASGI toolkit)](https://www.starlette.io/), a lightweight ASGI framework/toolkit well-suited for developing asynchronous web services with Python. 
-While Ellar provides a high level of abstraction on top of Starlette, it still incorporates some of its features, as well as those of FastAPI. 
-If you are familiar with these frameworks, you will find it easy to understand and use Ellar.
 
 ## **Features Summary**
 
@@ -87,7 +85,7 @@ ellar create-module car
 ## **Add Schema**
 In `car/schema.py`, lets add some serializer for car input and output data
 ```python
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 
 class CarSerializer(Serializer):
     name: str
@@ -228,8 +226,7 @@ class CarModule(ModuleBase):
 Ellar is not aware of `CarModule` yet, so we need to add it to the `modules` list of `ApplicationModule` at the `carsite/root_module.py`.
 ```python
 from ellar.common import Module, exception_handler
-from ellar.core import IHostContext, ModuleBase
-from ellar.core.response import JSONResponse, Response
+from ellar.core import IHostContext, ModuleBase, JSONResponse, Response
 
 from ellar.samples.modules import HomeModule
 from .apps.car.module import CarModule
@@ -249,7 +246,7 @@ then add the following below.
 import os
 
 from ellar.constants import ELLAR_CONFIG_MODULE
-from ellar.core.factory import AppFactory
+from ellar.core import AppFactory
 from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerDocumentGenerator
 from .root_module import ApplicationModule
 

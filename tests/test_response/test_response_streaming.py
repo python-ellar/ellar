@@ -9,8 +9,8 @@ from ellar.core.response.model import (
     StreamingResponseModelInvalidContent,
 )
 from ellar.core.routing import ModuleRouter
+from ellar.core.serializer import serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
-from ellar.serializer import serialize_object
 from ellar.testing import Test
 
 BASEDIR = Path(__file__).resolve().parent.parent

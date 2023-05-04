@@ -11,6 +11,7 @@ from ellar.core.context import IExecutionContext
 from ellar.core.core_service_registration import CoreServiceRegistration
 from ellar.core.exceptions.interfaces import IExceptionHandler
 from ellar.core.modules import ModuleTemplateRef
+from ellar.core.services.reflector import Reflector
 from ellar.core.staticfiles import StaticFiles
 from ellar.core.templating import Environment
 from ellar.core.versioning import (
@@ -21,7 +22,6 @@ from ellar.core.versioning import (
 from ellar.di import EllarInjector
 from ellar.helper.importer import get_class_import
 from ellar.openapi import OpenAPIDocumentModule
-from ellar.services.reflector import Reflector
 from ellar.testing import Test, TestClient
 
 from .config import ConfigTrustHostConfigure

@@ -14,9 +14,9 @@ from ellar.core import (
     ModuleBase,
     ModuleSetup,
 )
+from ellar.core.services import Reflector
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
-from ellar.services import Reflector
 from ellar.testing import Test
 
 from ..main import router

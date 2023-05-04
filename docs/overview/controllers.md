@@ -215,7 +215,7 @@ Before that, we need to define our data input/output serializers
 
 ```python
 # project_name/apps/car/schema.py
-from ellar.serializer import Serializer
+from ellar.core.serializer import Serializer
 from pydantic import Field
 
 
@@ -258,7 +258,7 @@ Ellar will compute values for all the route handler parameters and validates the
 !!! info
     if a parameter is not annotated, it will be assumed as a `string` type
 
-![CreateDogSchema](../img/create-car-schema.png)
+![CreateCarSchema](../img/create-car-schema.png)
 
 Let's add other endpoints
 

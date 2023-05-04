@@ -1,8 +1,8 @@
 from typing import Union
 
 from ellar.common import post
+from ellar.core.serializer import serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
-from ellar.serializer import serialize_object
 from ellar.testing import Test
 
 from .sample import Item, OtherItem
