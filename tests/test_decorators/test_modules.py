@@ -47,7 +47,7 @@ def test_base_directory_is_dynamically_set_when_none():
     base_path = reflect.get_metadata(
         MODULE_METADATA.BASE_DIRECTORY, ModuleDecoratorTest
     )
-    assert "/test_common/test_decorators" in str(base_path)
+    assert "/test_decorators" in str(base_path)
 
 
 def test_cannot_decorate_module_class_twice():
