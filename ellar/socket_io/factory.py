@@ -3,7 +3,7 @@ import typing as t
 import socketio
 from starlette.routing import Mount
 
-from ellar.core.routing.builder import RouterBuilder
+from ellar.common.routing.builder import RouterBuilder
 from ellar.reflect import reflect
 from ellar.socket_io.adapter import SocketIOASGIApp
 from ellar.socket_io.constants import (

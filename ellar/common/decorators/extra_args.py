@@ -1,12 +1,14 @@
 import typing as t
 
-from ellar.constants import EXTRA_ROUTE_ARGS_KEY
-from ellar.core.params import ExtraEndpointArg
+from ellar.common.constants import EXTRA_ROUTE_ARGS_KEY
 
 from .base import set_metadata as set_meta
 
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.common.params import ExtraEndpointArg
 
-def extra_args(*args: ExtraEndpointArg) -> t.Callable:
+
+def extra_args(*args: "ExtraEndpointArg") -> t.Callable:
     """
     =========FUNCTION DECORATOR ==============
 

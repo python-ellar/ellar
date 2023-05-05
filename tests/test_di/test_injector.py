@@ -4,10 +4,9 @@ import pytest
 from injector import Binder, Injector, UnsatisfiedRequirement
 
 from ellar.common import Module
-from ellar.constants import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR
 from ellar.core import Config, ModuleBase
 from ellar.core.modules.ref import create_module_ref_factor
-from ellar.di import Container, EllarInjector
+from ellar.di import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR, Container, EllarInjector
 from ellar.di.providers import ClassProvider, InstanceProvider
 
 from .examples import Foo, Foo1, Foo2
@@ -22,7 +21,7 @@ class EllarTestTemplateModule(ModuleBase):
     pass
 
 
-def test_container_install_module():
+def test_container_install_module_case_1():
     called = False
     app_container = EllarInjector().container
 
@@ -32,7 +31,7 @@ def test_container_install_module():
             called = True
 
     @Module()
-    class DecoratedModule:
+    class DecoratedModuleWithBase(ModuleBase):
         def register_services(self, container: Container) -> None:
             nonlocal called
             called = True
@@ -43,8 +42,23 @@ def test_container_install_module():
 
     called = False
 
-    decorated_module = app_container.install(DecoratedModule)
+    decorated_module = app_container.install(DecoratedModuleWithBase)
     assert called
+    assert isinstance(decorated_module, DecoratedModuleWithBase)
+
+
+def test_container_install_module_return_case_2():
+    called = False
+    app_container = EllarInjector().container
+
+    @Module()
+    class DecoratedModule:
+        def register_services(self, container: Container) -> None:
+            nonlocal called
+            called = True
+
+    decorated_module = app_container.install(DecoratedModule)
+    assert called is False
     assert isinstance(decorated_module, DecoratedModule)
 
 

@@ -1,8 +1,7 @@
-from ellar.common_types import TReceive, TScope, TSend
-from ellar.compatible import cached_property
+from ellar.common.compatible import cached_property
+from ellar.common.interfaces import IWebSocketHostContext
+from ellar.common.types import TReceive, TScope, TSend
 from ellar.core.connection import WebSocket
-
-from .interface import IWebSocketHostContext
 
 
 class WebSocketHostContext(IWebSocketHostContext):

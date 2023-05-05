@@ -2,7 +2,8 @@ import os
 
 import pytest
 
-from ellar.core import AppFactory, Config, ExecutionContext, GuardCanActivate
+from ellar.common import GuardCanActivate
+from ellar.core import AppFactory, Config, ExecutionContext
 from ellar.core.modules.ref import create_module_ref_factor
 from ellar.di import EllarInjector
 from ellar.openapi import (

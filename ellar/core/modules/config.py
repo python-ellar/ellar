@@ -4,17 +4,18 @@ import typing as t
 from starlette.routing import BaseRoute
 
 import ellar.core.main as main
-import ellar.di as di
-from ellar.constants import MODULE_METADATA, MODULE_REF_TYPES
+from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
+from ellar.common.models import ControllerBase
 from ellar.core.conf import Config
+from ellar.di import MODULE_REF_TYPES, Container, EllarInjector
 from ellar.reflect import reflect
 
-from .base import ModuleBase
 from .ref import ModuleRefBase, create_module_ref_factor
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.commands import EllarTyper
-    from ellar.core import ControllerBase
+    from ellar.common import EllarTyper, IModuleSetup
+
+    from .base import ModuleBase
 
 
 @dataclasses.dataclass
@@ -40,7 +41,7 @@ class DynamicModule:
     _is_configured: bool = False
 
     def __post_init__(self) -> None:
-        if not isinstance(self.module, type) or not issubclass(self.module, ModuleBase):
+        if not reflect.get_metadata(MODULE_WATERMARK, self.module):
             raise Exception(f"{self.module.__name__} is not a valid Module")
 
     def apply_configuration(self) -> None:
@@ -91,7 +92,7 @@ class ModuleSetup:
     """
 
     # Module type to be configured
-    module: t.Type[t.Union[ModuleBase, "IModuleSetup", t.Any]]
+    module: t.Type[t.Union["ModuleBase", "IModuleSetup", t.Any]]
 
     # `inject` property holds collection types to be injected to `use_factory` method.
     # the order at which the types are defined becomes the order at which they are injected.
@@ -106,7 +107,7 @@ class ModuleSetup:
     factory: t.Callable[..., DynamicModule] = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
-        if not isinstance(self.module, type) or not issubclass(self.module, ModuleBase):
+        if not reflect.get_metadata(MODULE_WATERMARK, self.module):
             raise Exception(f"{self.module.__name__} is not a valid Module")
 
         if main.App in self.inject:
@@ -127,7 +128,7 @@ class ModuleSetup:
             return True
 
     def get_module_ref(
-        self, config: "Config", container: di.Container
+        self, config: "Config", container: Container
     ) -> t.Union[ModuleRefBase, "ModuleSetup"]:
         if self.has_factory_function or self.ref_type == MODULE_REF_TYPES.APP_DEPENDENT:
             return self
@@ -140,7 +141,7 @@ class ModuleSetup:
         )
 
     def configure_with_factory(
-        self, config: "Config", container: di.Container
+        self, config: "Config", container: Container
     ) -> ModuleRefBase:
         services = self._get_services(container.injector)
 
@@ -155,7 +156,7 @@ class ModuleSetup:
         init_kwargs = dict(self.init_kwargs)
         return create_module_ref_factor(self.module, config, container, **init_kwargs)
 
-    def _get_services(self, injector: di.EllarInjector) -> t.List:
+    def _get_services(self, injector: EllarInjector) -> t.List:
         """
         Get list of services to be injected to the factory function.
         :param injector:
@@ -168,54 +169,3 @@ class ModuleSetup:
 
     def __hash__(self) -> int:  # pragma: no cover
         return hash(self.module)
-
-
-class IModuleSetup:
-    """Modules that must have a custom setup should inherit from IModuleSetup"""
-
-    @classmethod
-    @t.no_type_check
-    def setup(cls, *args: t.Any, **kwargs: t.Any) -> DynamicModule:
-        """
-        Provides Dynamic set up for a module.
-
-        Usage:
-
-        class MyModule(ModuleBase, IModuleSetup):
-            @classmethod
-            def setup(cls, param1: Any, param2: Any) -> DynamicModule:
-                :return DynamicModule(module, provider=[], controllers=[], routers=[])
-
-
-        @Module(modules=[MyModule.setup(param1='xyz', param2='abc')])
-        class ApplicationModule(ModuleBase):
-            pass
-        """
-
-    @classmethod
-    @t.no_type_check
-    def register_setup(cls, *args: t.Any, **kwargs: t.Any) -> ModuleSetup:
-        """
-        The module defines all the dependencies its needs for its setup.
-        Allowing parameters needed for setting up the module to come from app Config.
-
-        Usage:
-
-        class MyModule(ModuleBase, IModuleSetup):
-            @classmethod
-            def register_setup(cls) -> ModuleSetup:
-                :return ModuleSetup(cls, inject=[Config, OtherServices], factory=cls.setup_module_factory)
-
-            @staticmethod
-            def setup_module_factory(module: t.Type['MyModule'], config: Config, others: OtherServices) -> DynamicModule:
-                param1 = config.param1
-                param2 = config.param2
-
-                :return DynamicModule(module, provider=[], controllers=[], routers=[])
-
-
-        @Module(modules=[MyModule.register_setup()])
-        class ApplicationModule(ModuleBase):
-            pass
-
-        """

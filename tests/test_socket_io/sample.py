@@ -4,11 +4,10 @@ from functools import wraps
 from starlette import status
 from starlette.exceptions import WebSocketException
 
-from ellar.common import Guards, Header, Query, WsBody, extra_args
+from ellar.common import Guards, Header, Query, Serializer, WsBody, extra_args
+from ellar.common.params import ExtraEndpointArg
 from ellar.core.connection import HTTPConnection
 from ellar.core.guard import APIKeyHeader
-from ellar.core.params import ExtraEndpointArg
-from ellar.core.serializer import Serializer
 from ellar.di import injectable
 from ellar.socket_io import (
     WebSocketGateway,

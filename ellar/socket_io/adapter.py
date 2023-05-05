@@ -2,7 +2,7 @@ import typing as t
 
 from socketio import AsyncServer
 
-from ellar.common_types import TReceive, TScope, TSend
+from ellar.common.types import TReceive, TScope, TSend
 
 
 class SocketIOASGIApp:

@@ -3,16 +3,16 @@ from typing import List, Union
 import pytest
 from starlette.responses import JSONResponse
 
-from ellar.constants import RESPONSE_OVERRIDE_KEY
-from ellar.core.exceptions import ImproperConfiguration
-from ellar.core.response.model import (
+from ellar.common.constants import RESPONSE_OVERRIDE_KEY
+from ellar.common.exceptions import ImproperConfiguration
+from ellar.common.responses.response_models import (
     EmptyAPIResponseModel,
     JSONResponseModel,
     ResponseModel,
     RouteResponseExecution,
     RouteResponseModel,
 )
-from ellar.core.routing import RouteOperation
+from ellar.common.routing import RouteOperation
 from ellar.reflect import reflect
 
 from ..schema import BlogObjectDTO, NoteSchemaDC

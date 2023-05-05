@@ -1,4 +1,4 @@
-from ellar.shortcuts import fail_silently, normalize_path
+from ellar.common.shortcuts import fail_silently, normalize_path
 
 
 def test_fail_silently():

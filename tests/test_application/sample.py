@@ -5,8 +5,7 @@ from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Host, Mount, Route, Router
 
 from ellar.common import Controller, Module, ModuleRouter, exception_handler, get
-from ellar.core.connection import Request, WebSocket
-from ellar.core.guard import APIKeyQuery
+from ellar.core import APIKeyQuery, ModuleBase, Request, WebSocket
 
 
 def create_tmp_template_and_static_dir(tmpdir):
@@ -96,7 +95,7 @@ class ClassBaseController:
     ],
     controllers=[ClassBaseController],
 )
-class ApplicationModule:
+class ApplicationModule(ModuleBase):
     @exception_handler(405)
     async def method_not_allow_exception(self, ctx, exec):
         return JSONResponse({"detail": "Custom message"}, status_code=405)

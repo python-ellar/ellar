@@ -3,22 +3,20 @@ import typing as t
 from abc import ABC
 from types import FunctionType
 
-from ellar.compatible import AttributeDict
-from ellar.constants import (
+from ellar.common.compatible import AttributeDict
+from ellar.common.constants import (
     CONTROLLER_CLASS_KEY,
     CONTROLLER_METADATA,
     CONTROLLER_OPERATION_HANDLER_KEY,
     CONTROLLER_WATERMARK,
     NOT_SET,
     OPERATION_ENDPOINT_KEY,
-    REFLECT_TYPE,
 )
-from ellar.core import ControllerBase
-from ellar.core.controller import ControllerType
-from ellar.core.exceptions import ImproperConfiguration
-from ellar.core.routing.controller import ControllerRouteOperationBase
+from ellar.common.exceptions import ImproperConfiguration
+from ellar.common.models import ControllerBase, ControllerType
+from ellar.common.routing.controller import ControllerRouteOperationBase
 from ellar.di import RequestScope, injectable
-from ellar.reflect import reflect
+from ellar.reflect import REFLECT_TYPE, reflect
 
 
 def get_route_functions(

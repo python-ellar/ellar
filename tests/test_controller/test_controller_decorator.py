@@ -1,9 +1,11 @@
 import pytest
 
-from ellar.common import Controller, get, http_route, ws_route
-from ellar.constants import CONTROLLER_CLASS_KEY, CONTROLLER_OPERATION_HANDLER_KEY
-from ellar.core import ControllerBase
-from ellar.core.routing import ControllerRouterFactory
+from ellar.common import Controller, ControllerBase, get, http_route, ws_route
+from ellar.common.constants import (
+    CONTROLLER_CLASS_KEY,
+    CONTROLLER_OPERATION_HANDLER_KEY,
+)
+from ellar.common.routing import ControllerRouterFactory
 from ellar.di import has_binding, is_decorated_with_injectable
 from ellar.reflect import reflect
 

@@ -3,10 +3,9 @@ from uuid import UUID
 
 from pydantic import Field
 
-from ellar.common import ModuleRouter, Path, Query
+from ellar.common import ModuleRouter, Path, Query, Serializer
 from ellar.core.connection import Request
 from ellar.core.factory import AppFactory
-from ellar.core.serializer import Serializer
 
 router = ModuleRouter("")
 

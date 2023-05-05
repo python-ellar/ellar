@@ -1,10 +1,10 @@
 import pytest
 from pydantic import BaseModel
 
-from ellar.compatible import AttributeDict
-from ellar.core.response.model import EmptyAPIResponseModel
-from ellar.core.routing.schema import RouteParameters, WsRouteParameters
-from ellar.core.routing.websocket import WebSocketExtraHandler
+from ellar.common.compatible import AttributeDict
+from ellar.common.responses.response_models import EmptyAPIResponseModel
+from ellar.common.routing.schema import RouteParameters, WsRouteParameters
+from ellar.common.routing.websocket import WebSocketExtraHandler
 
 
 class Item(BaseModel):

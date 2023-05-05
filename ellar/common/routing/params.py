@@ -3,11 +3,8 @@ import typing as t
 from pydantic.fields import Undefined
 from starlette.responses import Response
 
-from ellar.common_types import T
-from ellar.core.connection import HTTPConnection, Request, WebSocket
-from ellar.core.context import IExecutionContext
-from ellar.core.params import params
-from ellar.core.params.resolvers.non_parameter import (
+from ellar.common.interfaces import IExecutionContext
+from ellar.common.params.resolvers.non_parameter import (
     ConnectionParam,
     ExecutionContextParameter,
     HostRequestParam,
@@ -17,6 +14,12 @@ from ellar.core.params.resolvers.non_parameter import (
     SessionRequestParam,
     WebSocketParameter,
 )
+
+from ..params import params
+from ..types import T
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.core import HTTPConnection, Request, WebSocket
 
 
 def Path(
@@ -40,7 +43,7 @@ def Path(
     """
     Defines expected path in Route Function Parameter
     """
-    return params.Path(
+    return params.PathFieldInfo(
         default=default,
         alias=alias,
         title=title,
@@ -80,7 +83,7 @@ def Query(
     """
     Defines expected query in Route Function Parameter
     """
-    return params.Query(
+    return params.QueryFieldInfo(
         default,
         alias=alias,
         title=title,
@@ -121,7 +124,7 @@ def Header(
     """
     Defines expected header in Route Function Parameter
     """
-    return params.Header(
+    return params.HeaderFieldInfo(
         default,
         alias=alias,
         convert_underscores=convert_underscores,
@@ -162,7 +165,7 @@ def Cookie(
     """
     Defines expected cookie in Route Function Parameter
     """
-    return params.Cookie(
+    return params.CookieFieldInfo(
         default,
         alias=alias,
         title=title,
@@ -203,7 +206,7 @@ def Body(
     """
     Defines expected body object in Route Function Parameter
     """
-    return params.Body(
+    return params.BodyFieldInfo(
         default,
         embed=embed,
         media_type=media_type,
@@ -244,7 +247,7 @@ def Form(
     """
     Defines expected form parameter in Route Function Parameter
     """
-    return params.Form(
+    return params.FormFieldInfo(
         default,
         media_type=media_type,
         alias=alias,
@@ -284,7 +287,7 @@ def File(
     """
     Defines expected file data in Route Function Parameter
     """
-    return params.File(
+    return params.FileFieldInfo(
         default,
         media_type=media_type,
         alias=alias,
@@ -325,7 +328,7 @@ def WsBody(
     """
     Defines expected body object in websocket Route Function Parameter
     """
-    return params.WsBody(
+    return params.WsBodyFieldInfo(
         default,
         embed=embed,
         media_type=media_type,
@@ -345,28 +348,28 @@ def WsBody(
     )
 
 
-def Http() -> HTTPConnection:
+def Http() -> "HTTPConnection":
     """
     Route Function Parameter for retrieving Current Request Instance
     :return: Request
     """
-    return t.cast(Request, ConnectionParam())
+    return ConnectionParam()  # type: ignore[return-value]
 
 
-def Req() -> Request:
+def Req() -> "Request":
     """
     Route Function Parameter for retrieving Current Request Instance
     :return: Request
     """
-    return t.cast(Request, RequestParameter())
+    return RequestParameter()  # type: ignore[return-value]
 
 
-def Ws() -> WebSocket:
+def Ws() -> "WebSocket":
     """
     Route Function Parameter for retrieving Current WebSocket Instance
     :return: WebSocket
     """
-    return t.cast(WebSocket, WebSocketParameter())
+    return WebSocketParameter()  # type: ignore[return-value]
 
 
 def Context() -> IExecutionContext:

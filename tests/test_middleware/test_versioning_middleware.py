@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from ellar.constants import SCOPE_API_VERSIONING_RESOLVER
+from ellar.common.constants import SCOPE_API_VERSIONING_RESOLVER
 from ellar.core import Config
 from ellar.core.middleware import RequestVersioningMiddleware
 from ellar.core.versioning import (

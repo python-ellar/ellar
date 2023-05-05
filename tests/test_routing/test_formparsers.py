@@ -5,9 +5,7 @@ from typing import List, Union
 import pytest
 from starlette.formparsers import UploadFile as StarletteUploadFile
 
-from ellar.common import File, Form
-from ellar.core.datastructures import UploadFile
-from ellar.core.routing import ModuleRouter
+from ellar.common import File, Form, ModuleRouter, UploadFile
 from ellar.testing import Test
 
 router = ModuleRouter("")

@@ -5,7 +5,9 @@ from uuid import uuid4
 
 from starlette.routing import Host, Mount
 
-from ellar.constants import MODULE_METADATA, MODULE_WATERMARK
+from ellar.common import EllarTyper
+from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
+from ellar.common.models import GuardCanActivate
 from ellar.core.main import App
 from ellar.core.modules import DynamicModule, ModuleBase, ModuleSetup
 from ellar.di import EllarInjector, ProviderConfig
@@ -15,9 +17,7 @@ from .conf import Config
 from .core_service_registration import CoreServiceRegistration
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.commands import EllarTyper
-    from ellar.core import GuardCanActivate
-    from ellar.core.routing import ModuleMount, ModuleRouter
+    from ellar.common.routing import ModuleMount, ModuleRouter
 
 
 class AppFactory:
@@ -197,7 +197,7 @@ class AppFactory:
             modules=modules,
             commands=commands,
         )
-        app_factory_module = type(f"Module{uuid4().hex[:6]}", (ModuleBase,), {})
+        app_factory_module = type(f"Module{uuid4().hex[:6]}", (), {})
         module(app_factory_module)
         return cls._create_app(
             module=app_factory_module,

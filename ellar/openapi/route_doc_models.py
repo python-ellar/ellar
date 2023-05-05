@@ -8,23 +8,28 @@ from pydantic.schema import field_schema
 from starlette.routing import Mount, compile_path
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
-from ellar.compatible import AttributeDict, cached_property
-from ellar.constants import GUARDS_KEY, METHODS_WITH_BODY, OPENAPI_KEY, REF_PREFIX
-from ellar.core.guard import BaseAuthGuard
-from ellar.core.params.args import EndpointArgsModel
-from ellar.core.params.params import Body, Param
-from ellar.core.params.resolvers import (
+from ellar.common.compatible import AttributeDict, cached_property
+from ellar.common.constants import (
+    GUARDS_KEY,
+    METHODS_WITH_BODY,
+    OPENAPI_KEY,
+    REF_PREFIX,
+)
+from ellar.common.models import BaseAuthGuard
+from ellar.common.params.args import EndpointArgsModel
+from ellar.common.params.params import BodyFieldInfo as Body, ParamFieldInfo as Param
+from ellar.common.params.resolvers import (
     BaseRouteParameterResolver,
     BodyParameterResolver,
     BulkParameterResolver,
     RouteParameterModelField,
 )
-from ellar.core.routing import ModuleMount, RouteOperation
+from ellar.common.routing import ModuleMount, RouteOperation
+from ellar.common.shortcuts import normalize_path
 from ellar.core.services.reflector import Reflector
-from ellar.shortcuts import normalize_path
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.guard import GuardCanActivate
+    from ellar.common import GuardCanActivate
 
 
 class OpenAPIRoute(ABC):

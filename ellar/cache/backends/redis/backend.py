@@ -2,7 +2,7 @@ import random
 import typing as t
 from abc import ABC
 
-from ellar.helper.event_loop import get_or_create_eventloop
+from ellar.common.helper.event_loop import get_or_create_eventloop
 
 try:
     from redis.asyncio import Redis  # type: ignore

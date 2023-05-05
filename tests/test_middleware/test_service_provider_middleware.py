@@ -2,9 +2,10 @@ import json
 
 import pytest
 
-from ellar.constants import SCOPE_SERVICE_PROVIDER
+from ellar.common import IHostContextFactory
+from ellar.common.constants import SCOPE_SERVICE_PROVIDER
+from ellar.common.exceptions import HostContextException
 from ellar.core import Config
-from ellar.core.context import HostContextException, IHostContextFactory
 from ellar.core.core_service_registration import CoreServiceRegistration
 from ellar.core.middleware import RequestServiceProviderMiddleware
 from ellar.di import EllarInjector

@@ -1,9 +1,8 @@
 import typing as t
 from abc import ABC
 
+from ellar.common.models import BaseAPIKey
 from ellar.core.connection import HTTPConnection
-
-from .base import BaseAPIKey
 
 
 class APIKeyQuery(BaseAPIKey, ABC):

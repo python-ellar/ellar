@@ -3,17 +3,16 @@ from unittest.mock import patch
 
 import pytest
 
-from ellar.common import Controller, Module, ModuleRouter, get
-from ellar.constants import MODULE_METADATA
-from ellar.core import (
-    App,
-    Config,
+from ellar.common import (
+    Controller,
     ControllerBase,
-    DynamicModule,
     IModuleSetup,
-    ModuleBase,
-    ModuleSetup,
+    Module,
+    ModuleRouter,
+    get,
 )
+from ellar.common.constants import MODULE_METADATA
+from ellar.core import App, Config, DynamicModule, ModuleBase, ModuleSetup
 from ellar.core.services import Reflector
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect

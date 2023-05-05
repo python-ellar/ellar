@@ -2,9 +2,9 @@ import typing as t
 
 from socketio import AsyncServer
 
-from ellar.common_types import TReceive, TScope, TSend
-from ellar.core import App, IExecutionContext
-from ellar.core.context import IHTTPHostContext, IWebSocketHostContext
+from ellar.common import IExecutionContext, IHTTPHostContext, IWebSocketHostContext
+from ellar.common.types import TReceive, TScope, TSend
+from ellar.core import App
 from ellar.di import EllarInjector
 
 if t.TYPE_CHECKING:  # pragma: no cover

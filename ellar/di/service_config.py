@@ -6,12 +6,11 @@ from injector import (
     is_decorated_with_inject as injector_is_decorated_with_inject,
 )
 
-from ellar.common_types import T
-from ellar.constants import INJECTABLE_ATTRIBUTE
-from ellar.shortcuts import fail_silently
-
+from .constants import INJECTABLE_ATTRIBUTE
 from .exceptions import DIImproperConfiguration
 from .scopes import DIScope, ScopeDecorator, SingletonScope
+from .types import T
+from .utils import fail_silently
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from .injector import Container

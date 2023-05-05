@@ -8,9 +8,8 @@ from injector import (
     SingletonScope as InjectorSingletonScope,
 )
 
-from ellar.common_types import T
-
 from .providers import InstanceProvider, Provider
+from .types import T
 
 
 class DIScope(InjectorScope):

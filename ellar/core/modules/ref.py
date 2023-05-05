@@ -5,26 +5,32 @@ from pathlib import Path
 
 from starlette.routing import BaseRoute, Mount
 
-from ellar.constants import (
+from ellar.common.constants import (
     EXCEPTION_HANDLERS_KEY,
     MIDDLEWARE_HANDLERS_KEY,
     MODULE_METADATA,
-    MODULE_REF_TYPES,
     MODULE_WATERMARK,
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
-from ellar.core.routing import ModuleMount
-from ellar.core.routing.builder import get_controller_builder_factory
-from ellar.core.templating import ModuleTemplating
-from ellar.di import Container, ProviderConfig, injectable, is_decorated_with_injectable
+from ellar.common.models import ControllerBase
+from ellar.common.routing import ModuleMount
+from ellar.common.routing.builder import get_controller_builder_factory
+from ellar.common.templating import ModuleTemplating
+from ellar.di import (
+    MODULE_REF_TYPES,
+    Container,
+    ProviderConfig,
+    injectable,
+    is_decorated_with_injectable,
+)
 from ellar.di.providers import ModuleProvider
 from ellar.reflect import reflect
 
 from .base import ModuleBase, ModuleBaseMeta
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core import Config, ControllerBase
+    from ellar.core import Config
 
 
 class InvalidModuleTypeException(Exception):
@@ -82,7 +88,8 @@ class ModuleRefBase(ABC):
         return []
 
     def run_module_register_services(self) -> None:
-        self.module.before_init(config=self.config)
+        if hasattr(self.module, "before_init"):
+            self.module.before_init(config=self.config)
         _module_type_instance = self.get_module_instance()
         self.container.install(_module_type_instance)  # support for injector module
         # _module_type_instance.register_services(self.container)
@@ -141,11 +148,10 @@ class ModulePlainRef(ModuleRefBase):
         return self._config
 
     def _register_module(self) -> None:
-        _module = self.module
         if not is_decorated_with_injectable(self.module):
-            _module = injectable()(self.module)
+            self._module_type = injectable()(self.module)
         self.container.register(
-            _module, ModuleProvider(self.module, **self._init_kwargs)
+            self._module_type, ModuleProvider(self.module, **self._init_kwargs)
         )
 
 
@@ -160,10 +166,6 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         config: "Config",
         **kwargs: t.Any,
     ) -> None:
-        assert (
-            type(module_type) == ModuleBaseMeta
-        ), f"Module Type must be a subclass of ModuleBase;\n Invalid Type[{module_type}]"
-
         self._module_type: t.Type[ModuleBase] = module_type
         self._container = container
         self._config = config
@@ -188,9 +190,11 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         ] = self._get_all_routers()
         self._flatten_routes: t.List[BaseRoute] = []
 
-        self.scan_templating_filters()
-        self.scan_exceptions_handlers()
-        self.scan_middleware()
+        if isinstance(self.module, type) and issubclass(self.module, ModuleBase):
+            self.scan_templating_filters()
+            self.scan_exceptions_handlers()
+            self.scan_middleware()
+
         self.register_providers()
         self.register_controllers()
         self._build_flatten_routes()
@@ -228,6 +232,8 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
                 self._flatten_routes.append(router)
 
     def _register_module(self) -> None:
+        if not is_decorated_with_injectable(self.module):
+            self._module_type = injectable()(self.module)
         self.container.register(
             self.module, ModuleProvider(self.module, **self._init_kwargs)
         )

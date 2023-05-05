@@ -4,8 +4,8 @@ import typing as t
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp
 
-from ellar.constants import LOG_LEVELS as log_levels
-from ellar.core.exceptions.interfaces import IExceptionHandler
+from ellar.common.constants import LOG_LEVELS as log_levels
+from ellar.common.interfaces import IExceptionHandler
 from ellar.core.middleware import Middleware
 from ellar.core.versioning import BaseAPIVersioning
 

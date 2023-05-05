@@ -1,6 +1,4 @@
-from ellar.common import Controller, get, ws_route
-from ellar.core import ControllerBase
-from ellar.core.routing import ModuleRouter
+from ellar.common import Controller, ControllerBase, ModuleRouter, get, ws_route
 
 
 @Controller("/prefix")

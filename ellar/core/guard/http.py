@@ -3,10 +3,13 @@ import typing as t
 from abc import ABC
 from base64 import b64decode
 
+from ellar.common.exceptions import APIException, AuthenticationFailed
+from ellar.common.models import BaseHttpAuth
+from ellar.common.serializer.guard import (
+    HTTPAuthorizationCredentials,
+    HTTPBasicCredentials,
+)
 from ellar.core.connection import HTTPConnection
-from ellar.core.exceptions import APIException, AuthenticationFailed
-
-from .base import BaseHttpAuth, HTTPAuthorizationCredentials, HTTPBasicCredentials
 
 
 class HttpBearerAuth(BaseHttpAuth, ABC):

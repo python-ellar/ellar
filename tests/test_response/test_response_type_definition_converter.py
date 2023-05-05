@@ -3,13 +3,13 @@ from typing import Dict, List, Union, cast
 import pytest
 from pydantic.typing import get_args
 
-from ellar.core.exceptions import RequestValidationError
-from ellar.core.response.model import (
+from ellar.common.exceptions import RequestValidationError
+from ellar.common.helper.modelfield import create_model_field
+from ellar.common.responses.response_models import (
     ResponseModelField,
     ResponseTypeDefinitionConverter,
 )
-from ellar.core.serializer import BaseSerializer
-from ellar.helper.modelfield import create_model_field
+from ellar.common.serializer import BaseSerializer
 
 from ..schema import BlogObjectDTO, NoteSchemaDC
 

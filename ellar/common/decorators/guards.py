@@ -1,11 +1,11 @@
 import typing as t
 
-from ellar.constants import GUARDS_KEY
+from ellar.common.constants import GUARDS_KEY
 
 from .base import set_metadata as set_meta
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.guard import GuardCanActivate
+    from ellar.common.models import GuardCanActivate
 
 
 def Guards(

@@ -2,9 +2,10 @@ import typing as t
 
 from injector import Binder, Module as _InjectorModule
 
-from ellar.constants import MODULE_FIELDS
-from ellar.core.modules.builder import ModuleBaseBuilder
+from ellar.common.constants import MODULE_FIELDS
 from ellar.di.injector import Container
+
+from .builder import ModuleBaseBuilder
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.conf import Config

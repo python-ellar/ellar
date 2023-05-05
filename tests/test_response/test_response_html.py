@@ -4,11 +4,10 @@ from pathlib import Path
 import pytest
 from jinja2 import TemplateNotFound
 
-from ellar.common import Controller, get, render
-from ellar.constants import CONTROLLER_OPERATION_HANDLER_KEY
-from ellar.core.response.model import HTMLResponseModel
-from ellar.core.response.model.html import HTMLResponseModelRuntimeError
-from ellar.core.routing import ModuleRouter
+from ellar.common import Controller, ModuleRouter, get, render
+from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
+from ellar.common.responses.response_models import HTMLResponseModel
+from ellar.common.responses.response_models.html import HTMLResponseModelRuntimeError
 from ellar.reflect import reflect
 from ellar.testing import Test
 

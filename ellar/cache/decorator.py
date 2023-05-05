@@ -3,10 +3,9 @@ import uuid
 from functools import wraps
 
 from ellar.cache.interface import ICacheService
-from ellar.common import Context, Provide, extra_args
-from ellar.core import ExecutionContext, IExecutionContext
-from ellar.core.params import ExtraEndpointArg
-from ellar.helper import is_async_callable
+from ellar.common import Context, IExecutionContext, Provide, extra_args
+from ellar.common.helper import is_async_callable
+from ellar.common.params import ExtraEndpointArg
 
 
 class _CacheDecorator:
@@ -41,10 +40,14 @@ class _CacheDecorator:
 
         # create extra args
         self._cache_service_arg = ExtraEndpointArg(
-            name=f"cache_service_{uuid.uuid4().hex[:4]}", annotation=ICacheService, default_value=Provide()  # type: ignore
+            name=f"cache_service_{uuid.uuid4().hex[:4]}",
+            annotation=ICacheService,  # type:ignore[misc]
+            default_value=Provide(),
         )
         self._context_arg = ExtraEndpointArg(
-            name=f"route_context_{uuid.uuid4().hex[:4]}", annotation=IExecutionContext, default_value=Context()  # type: ignore
+            name=f"route_context_{uuid.uuid4().hex[:4]}",
+            annotation=IExecutionContext,  # type:ignore[misc]
+            default_value=Context(),
         )
         # apply extra_args to endpoint
         extra_args(self._cache_service_arg, self._context_arg)(func)
@@ -129,9 +132,7 @@ def cache(
     key_prefix: str = "",
     version: str = None,
     backend: str = "default",
-    make_key_callback: t.Callable[
-        [t.Union[ExecutionContext, IExecutionContext], str], str
-    ] = None,
+    make_key_callback: t.Callable[[IExecutionContext, str], str] = None,
 ) -> t.Callable:
     """
 

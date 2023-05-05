@@ -1,21 +1,24 @@
 import typing as t
 
-from ellar.constants import (
+from starlette.middleware import Middleware
+
+from ellar.common.compatible import AttributeDict
+from ellar.common.constants import (
     EXCEPTION_HANDLERS_KEY,
     MIDDLEWARE_HANDLERS_KEY,
     MODULE_FIELDS,
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
+from ellar.common.exceptions.callable_exceptions import CallableExceptionHandler
+from ellar.core.middleware import FunctionBasedMiddleware
 from ellar.reflect import reflect
 
-from ..exceptions.callable_exceptions import CallableExceptionHandler
 from .helper import module_callable_factory
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.middleware.schema import MiddlewareSchema
-    from ellar.core.modules.base import ModuleBase, ModuleBaseMeta
-    from ellar.core.templating import TemplateFunctionData
+    from ellar.common.templating import TemplateFunctionData
+    from ellar.core.modules import ModuleBase, ModuleBaseMeta
 
 
 class ModuleBaseBuilder:
@@ -44,11 +47,15 @@ class ModuleBaseBuilder:
             reflect.define_metadata(EXCEPTION_HANDLERS_KEY, [func], self._cls)
 
     @t.no_type_check
-    def middleware_config(self, middleware: "MiddlewareSchema") -> None:
-        middleware.dispatch = module_callable_factory(middleware.dispatch, self._cls)
+    def middleware_config(self, middleware: AttributeDict) -> None:
+        dispatch = module_callable_factory(middleware.dispatch, self._cls)
         reflect.define_metadata(
             MIDDLEWARE_HANDLERS_KEY,
-            [middleware.create_middleware()],
+            [
+                Middleware(
+                    FunctionBasedMiddleware, dispatch=dispatch, **middleware.options
+                )
+            ],
             self._cls,
         )
 

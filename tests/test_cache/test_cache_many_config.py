@@ -1,7 +1,6 @@
 from ellar.cache import CacheModule, ICacheService, cache
 from ellar.cache.backends.local_cache import LocalMemCacheBackend
-from ellar.common import Controller, get
-from ellar.core.response import PlainTextResponse
+from ellar.common import Controller, PlainTextResponse, get
 from ellar.testing import Test
 
 

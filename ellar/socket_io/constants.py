@@ -1,4 +1,4 @@
-from ellar.constants import _AnnotationToValue
+from ellar.di import AnnotationToValue
 
 NAMESPACE_METADATA = "namespace"
 GATEWAY_OPTIONS = "websockets:gateway_options"
@@ -13,7 +13,7 @@ MESSAGE_MAPPING_METADATA = "websockets:message_mapping"
 MESSAGE_METADATA = "message"
 
 
-class GATEWAY_METADATA(metaclass=_AnnotationToValue):
+class GATEWAY_METADATA(metaclass=AnnotationToValue):
     PATH: str
     NAME: str
     INCLUDE_IN_SCHEMA: str

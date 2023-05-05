@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.constants import VERSIONING_KEY
+from ellar.common.constants import VERSIONING_KEY
 
 from .base import set_metadata as set_meta
 

@@ -27,7 +27,7 @@ class SomeModule(ModuleBase):
 @Module(
     static_folder="module_statics",
 )
-class SomeModule2:
+class SomeModule2(ModuleBase):
     @template_filter()
     def double_filter(cls, n):
         return n * 2

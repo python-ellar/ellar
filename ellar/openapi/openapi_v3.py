@@ -3,8 +3,8 @@ from enum import Enum
 
 from pydantic import AnyUrl, BaseModel, Field
 
-from ellar.compatible import EmailStr
-from ellar.core.serializer import Serializer, SerializerFilter
+from ellar.common.compatible import EmailStr
+from ellar.common.serializer import Serializer, SerializerFilter
 
 
 class Contact(BaseModel):
