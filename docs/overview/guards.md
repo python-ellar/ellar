@@ -14,12 +14,12 @@ Authorization is a great example of a guard because some routes should be availa
 Let's assume we have a `AuthGard` which checks if a making a request is authenticated.
 
 ```python
-from ellar.core import GuardCanActivate, ExecutionContext
+from ellar.common import GuardCanActivate, IExecutionContext
 from ellar.di import injectable
 
 @injectable()
 class AuthGuard(GuardCanActivate):
-  async def can_activate(self,context: ExecutionContext) -> bool: 
+  async def can_activate(self,context: IExecutionContext) -> bool: 
     request = context.switch_to_http_connection().get_request()
     return self.validate_request(request)
 
@@ -44,12 +44,12 @@ For now, it allows all requests to proceed:
 ```python
 # project_name/cars/guards.py
 
-from ellar.core import GuardCanActivate, ExecutionContext
+from ellar.common import GuardCanActivate, IExecutionContext
 from ellar.di import injectable
 
 @injectable()
 class RoleGuard(GuardCanActivate):
-  async def can_activate(self,context: ExecutionContext) -> bool: 
+  async def can_activate(self,context: IExecutionContext) -> bool: 
     return True
 ```
 
@@ -109,7 +109,7 @@ Global guards are applied at the `global_guards` parameter of the `AppFactory` c
 # project_name/server.py
 import os
 
-from ellar.constants import ELLAR_CONFIG_MODULE
+from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
 from .apps.cars.guards import RoleGuard
 from .root_module import ApplicationModule
@@ -173,8 +173,8 @@ In order to access the route's function `role(s)` **(custom metadata)**, we'll u
 # project_name/apps/cars/guards.py
 import typing as t
 from ellar.di import injectable
-from ellar.core import GuardCanActivate, IExecutionContext
-from ellar.services import Reflector
+from ellar.common import GuardCanActivate, IExecutionContext
+from ellar.core.services import Reflector
 
 
 @injectable()
@@ -214,7 +214,9 @@ When a user with insufficient privileges requests an endpoint, Ellar automatical
 Note that behind the scenes, when a guard returns `false`, the framework throws a `HTTPException` with status code **403** . 
 If you want to return a different error response, you should throw your own specific exception by override `raise_exception` function as shown below:
 ```python
-from ellar.core.exceptions import APIException
+from ellar.common import APIException, GuardCanActivate
+from ellar.di import injectable
+from ellar.core import Reflector
 
 @injectable()
 class RoleGuard(GuardCanActivate):

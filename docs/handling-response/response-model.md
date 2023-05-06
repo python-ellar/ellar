@@ -6,9 +6,7 @@ This response model holds information on the type of response to be returned.
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.core.serializer import Serializer
-from ellar.common import Controller, get
-from ellar.core import ControllerBase
+from ellar.common import Controller, get, Serializer, ControllerBase
 
 class UserSchema(Serializer):
     username: str
@@ -30,8 +28,8 @@ During route response computation, the `me` route handler response will evaluate
 The resulting route responses will be:
 
 ```python
-from ellar.core.serializer import Serializer
-from ellar.core.response.model import JSONResponseModel
+from ellar.common import Serializer
+from ellar.common.responses.models import JSONResponseModel
 
 
 class UserSchema(Serializer):
@@ -73,10 +71,7 @@ For example:
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import Controller, get
-from ellar.core import ControllerBase
-from starlette.responses import PlainTextResponse
-from ellar.core.serializer import Serializer
+from ellar.common import Controller, get, ControllerBase,PlainTextResponse, Serializer
 
 
 class UserSchema(Serializer):
@@ -95,8 +90,8 @@ class ItemsController(ControllerBase):
 This will be translated to:
 
 ```python
-from ellar.core.response.model import ResponseModel, JSONResponseModel
-from starlette.responses import PlainTextResponse
+from ellar.common.responses.models import ResponseModel, JSONResponseModel
+from ellar.common import PlainTextResponse
 
 response = {200: ResponseModel(response_type=PlainTextResponse), 201: JSONResponseModel(model_field_or_schema=UserSchema)}
 ```
@@ -109,8 +104,7 @@ All response model follows `IResponseModel` contract.
 import typing as t
 
 from pydantic.fields import ModelField
-from ellar.core.context import IExecutionContext
-from ellar.core.response import Response
+from ellar.common import IExecutionContext, Response
 
 
 class IResponseModel:
@@ -197,10 +191,8 @@ Lets create a new JSON response model.
 # project_name/apps/items/controllers.py
 
 import typing as t
-from ellar.common import Controller, get
-from ellar.core import ControllerBase
-from ellar.core.response.model.base import ResponseModel
-from ellar.core.response import JSONResponse
+from ellar.common import Controller, get, ControllerBase, JSONResponse
+from ellar.common.responses.models import ResponseModel
 from dataclasses import dataclass
 
 

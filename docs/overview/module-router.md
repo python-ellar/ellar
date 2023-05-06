@@ -79,8 +79,8 @@ In functional route handle, we can access request object and response object thr
 Let's inject request and response object in `addition` route handler function from our previous example
 
 ```python
-from ellar.core import Request, Response
-from ellar.common import ModuleRouter
+from ellar.core import Request
+from ellar.common import ModuleRouter, Response
 
 
 math_router = ModuleRouter('/math', tag='Math')
@@ -96,8 +96,8 @@ def addition(request: Request, res: Response, a:int, b:int):
 You can also achieve the same result by using custom decorator.
 
 ```python
-from ellar.core import Request, Response
-from ellar.common import ModuleRouter, Req, Res
+from ellar.core import Request
+from ellar.common import ModuleRouter, Req, Res, Response
 
 
 math_router = ModuleRouter('/math', tag='Math')
@@ -115,8 +115,8 @@ def addition(*, request=Req(), res=Res(), a:int, b:int):
 We can also inject service providers just like controller routes using the `Provide` function.
 
 ```python
-from ellar.core import Response, Config
-from ellar.common import ModuleRouter, Provide
+from ellar.core import Config
+from ellar.common import ModuleRouter, Provide, Response
 
 
 math_router = ModuleRouter('/math', tag='Math')

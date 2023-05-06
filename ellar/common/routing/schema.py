@@ -4,10 +4,7 @@ from pydantic import BaseModel, Field, root_validator, validator
 
 from ellar.common.constants import ROUTE_METHODS
 from ellar.common.interfaces import IResponseModel
-from ellar.common.responses.response_models import (
-    EmptyAPIResponseModel,
-    create_response_model,
-)
+from ellar.common.responses.models import EmptyAPIResponseModel, create_response_model
 from ellar.common.serializer import BaseSerializer
 
 if t.TYPE_CHECKING:  # pragma: no cover

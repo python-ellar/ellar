@@ -6,8 +6,8 @@ from jinja2 import TemplateNotFound
 
 from ellar.common import Controller, ModuleRouter, get, render
 from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
-from ellar.common.responses.response_models import HTMLResponseModel
-from ellar.common.responses.response_models.html import HTMLResponseModelRuntimeError
+from ellar.common.responses.models import HTMLResponseModel
+from ellar.common.responses.models.html import HTMLResponseModelRuntimeError
 from ellar.reflect import reflect
 from ellar.testing import Test
 

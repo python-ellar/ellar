@@ -5,7 +5,7 @@ from starlette.responses import JSONResponse
 
 from ellar.common.constants import RESPONSE_OVERRIDE_KEY
 from ellar.common.exceptions import ImproperConfiguration
-from ellar.common.responses.response_models import (
+from ellar.common.responses.models import (
     EmptyAPIResponseModel,
     JSONResponseModel,
     ResponseModel,

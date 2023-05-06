@@ -85,7 +85,7 @@ ellar create-module car
 ## **Add Schema**
 In `car/schema.py`, lets add some serializer for car input and output data
 ```python
-from ellar.core.serializer import Serializer
+from ellar.common import Serializer
 
 class CarSerializer(Serializer):
     name: str
@@ -155,9 +155,8 @@ In `car/controllers.py`, lets create `CarController`
 
 ```python
 import typing as t
-from ellar.common import Controller, delete, get, put, post
-from ellar.core import ControllerBase
-from ellar.core.exceptions import NotFound
+from ellar.common import Controller, delete, get, put, post, ControllerBase
+from ellar.common.exceptions import NotFound
 from .schemas import CarSerializer, RetrieveCarSerializer
 from .services import CarDummyDB
 
@@ -225,8 +224,8 @@ class CarModule(ModuleBase):
 ## **Registering Module**
 Ellar is not aware of `CarModule` yet, so we need to add it to the `modules` list of `ApplicationModule` at the `carsite/root_module.py`.
 ```python
-from ellar.common import Module, exception_handler
-from ellar.core import IHostContext, ModuleBase, JSONResponse, Response
+from ellar.common import Module, exception_handler, JSONResponse, Response, IHostContext
+from ellar.core import ModuleBase
 
 from ellar.samples.modules import HomeModule
 from .apps.car.module import CarModule

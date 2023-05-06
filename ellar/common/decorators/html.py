@@ -11,7 +11,7 @@ from ellar.common.constants import (
 )
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.helper import class_base_function_regex, get_name
-from ellar.common.responses.response_models import HTMLResponseModel
+from ellar.common.responses.models import HTMLResponseModel
 from ellar.common.shortcuts import fail_silently
 from ellar.common.templating import TemplateFunctionData
 from ellar.common.types import TemplateFilterCallable, TemplateGlobalCallable

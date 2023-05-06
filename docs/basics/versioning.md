@@ -21,7 +21,7 @@ To enable **URL Versioning** for your application, do the following:
 ```python
 # project_name/server.py
 import os
-from ellar.constants import ELLAR_CONFIG_MODULE
+from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
 from ellar.core.versioning import VersioningSchemes
 from .root_module import ApplicationModule
@@ -55,7 +55,7 @@ To enable **Header Versioning** for your application, do the following:
 ```python
 # project_name/server.py
 import os
-from ellar.constants import ELLAR_CONFIG_MODULE
+from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
 from ellar.core.versioning import VersioningSchemes
 from .root_module import ApplicationModule
@@ -110,7 +110,7 @@ To enable **Query Versioning** for your application, do the following:
 ```python
 # project_name/server.py
 import os
-from ellar.constants import ELLAR_CONFIG_MODULE
+from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
 from ellar.core.versioning import VersioningSchemes
 from .root_module import ApplicationModule
@@ -143,7 +143,7 @@ To enable **Host Versioning** for your application, do the following:
 ```python
 # project_name/server.py
 import os
-from ellar.constants import ELLAR_CONFIG_MODULE
+from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
 from ellar.core.versioning import VersioningSchemes
 from .root_module import ApplicationModule

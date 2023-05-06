@@ -4,7 +4,7 @@ import pytest
 from pydantic import BaseModel
 
 from ellar.common import ModuleRouter
-from ellar.common.responses.response_models import RouteResponseExecution
+from ellar.common.responses.models import RouteResponseExecution
 from ellar.core import AppFactory
 
 mr = ModuleRouter("")

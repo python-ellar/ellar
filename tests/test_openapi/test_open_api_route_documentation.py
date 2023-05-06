@@ -4,7 +4,7 @@ from pydantic.schema import get_flat_models_from_fields, get_model_name_map
 
 from ellar.common import Body, ModuleRouter, Query, openapi_info
 from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY, OPENAPI_KEY
-from ellar.common.responses.response_models import ResponseModel, ResponseModelField
+from ellar.common.responses.models import ResponseModel, ResponseModelField
 from ellar.core.connection import HTTPConnection
 from ellar.core.guard import APIKeyCookie
 from ellar.openapi import OpenAPIRouteDocumentation

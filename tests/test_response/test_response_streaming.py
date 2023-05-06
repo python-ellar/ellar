@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from ellar.common import Controller, ModuleRouter, file, get, serialize_object
-from ellar.common.responses.response_models import (
+from ellar.common.responses.models import (
     StreamingResponseModel,
     StreamingResponseModelInvalidContent,
 )

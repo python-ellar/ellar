@@ -20,9 +20,7 @@ Create file parameters the same way you would for `Body` or `Form`:
 
 ```python
 # project_name/apps/items/controllers.py
-from ellar.common import File
-from ellar.common import Controller, post
-from ellar.core import ControllerBase
+from ellar.common import File, Controller, post, ControllerBase
 
 
 @Controller
@@ -46,9 +44,7 @@ Define a `File` parameter with a type of `UploadFile`:
 
 ```python
 # project_name/apps/items/controllers.py
-from ellar.common import File, UploadFile
-from ellar.common import Controller, post
-from ellar.core import ControllerBase
+from ellar.common import File, UploadFile, Controller, post, ControllerBase
 
 
 @Controller
@@ -118,9 +114,7 @@ To **upload several files** at the same time, just declare a `List` of `UploadFi
 ```python
 # project_name/apps/items/controllers.py
 from typing import List
-from ellar.common import File, UploadFile
-from ellar.common import Controller, post
-from ellar.core import ControllerBase
+from ellar.common import File, UploadFile, Controller, post, ControllerBase
 
 
 @Controller
@@ -139,9 +133,7 @@ To send files along with some extra attributes you need to send bodies in multip
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.core.serializer import Serializer
-from ellar.common import Controller, Form, File, UploadFile, post
-from ellar.core import ControllerBase
+from ellar.common import Serializer, Controller, Form, File, UploadFile, post, ControllerBase
 from datetime import date
 
 
@@ -166,9 +158,7 @@ You can as well send payload in single field as JSON - just remove the Form mark
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.core.serializer import Serializer
-from ellar.common import Controller, File, UploadFile, post
-from ellar.core import ControllerBase
+from ellar.common import Serializer, Controller, File, UploadFile, post, ControllerBase
 from datetime import date
 
 

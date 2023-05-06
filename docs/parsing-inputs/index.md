@@ -13,10 +13,8 @@ $(venv) ellar create-module items
 Next, goto `project_name/root_module.py` and add `ItemsModule` to list of modules.
 
 ```python
-from ellar.common import Module, exception_handler
+from ellar.common import Module, exception_handler, IExecutionContext, JSONResponse, Response
 from ellar.core import ModuleBase
-from ellar.core.context import IExecutionContext
-from ellar.core.response import JSONResponse, Response
 from ellar.samples.modules import HomeModule
 from .apps.car.module import CarModule
 from .apps.items.module import ItemsModule

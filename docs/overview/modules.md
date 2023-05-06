@@ -92,44 +92,12 @@ class ModuleEventSample(ModuleBase):
 ```
 `before_init` receives current app `Config` as a parameter and `application_ready` function receives `App` instance as parameter.
 
-####  **Starlette Application Events**
-We can register multiple event handlers for dealing with `tasks` that need to run before
-the application starts `up`, or when the application is shutting `down`.
-This is the way we support `Starlette` start-up events in `Ellar`
-
-```python
-
-from ellar.common import Module, on_shutdown, on_startup
-from ellar.core import ModuleBase
-
-@Module()
-class ModuleRequestEventsSample(ModuleBase):
-    @on_startup
-    def on_startup_func(cls):
-        pass
-    
-    @on_startup()
-    async def on_startup_func_2(cls):
-        pass
-    
-    @on_shutdown
-    def on_shutdown_func(cls):
-        pass
-    
-    @on_shutdown()
-    async def on_shutdown_func_2(cls):
-        pass
-```
-These will be registered to the application router during the `ModuleRequestEventsSample` computation at runtime.
-Also, the events can be `async` as in the case of `on_shutdown_func_2` and `on_startup_func_2`
-
 ### **Module Exceptions**
 Custom exception handlers can be registered through modules.
 
 ```python
-from ellar.common import Module, exception_handler
-from ellar.core import  ModuleBase, JSONResponse, Response
-from ellar.core.context import IHostContext
+from ellar.common import Module, exception_handler, JSONResponse, Response, IHostContext
+from ellar.core import ModuleBase
 
 @Module()
 class ModuleExceptionSample(ModuleBase):
@@ -200,10 +168,8 @@ Middlewares functions can be defined at Module level with `@middleware()` functi
 For example:
 
 ```python
-from ellar.common import Module, middleware
+from ellar.common import Module, middleware, IHostContext, PlainTextResponse
 from ellar.core import ModuleBase
-from ellar.core.context import IHostContext
-from starlette.responses import PlainTextResponse
 
 
 @Module()
@@ -353,9 +319,9 @@ how we used `my_module_configuration_factory` to dynamically build `MyModule` mo
 
 ```python
 import typing as t
-from ellar.common import Module
+from ellar.common import Module, IModuleSetup
 from ellar.di import ProviderConfig
-from ellar.core import DynamicModule, ModuleBase, IModuleSetup, Config, ModuleSetup, AppFactory
+from ellar.core import DynamicModule, ModuleBase, Config, ModuleSetup, AppFactory
 
 
 class Foo:

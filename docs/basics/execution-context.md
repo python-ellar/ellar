@@ -15,9 +15,7 @@ For example, the `catch()` method of an **exception handlers** is called with an
 ```python
 # project_name/apps/custom_exceptions.py
 import typing as t
-from ellar.core.exceptions import IExceptionHandler
-from ellar.core.context import IHostContext
-from starlette.responses import Response
+from ellar.common import IExceptionHandler, IHostContext, Response
 
 class MyCustomException(Exception):
     pass
@@ -147,7 +145,8 @@ that will handler the current request.
 
 ```python
 import typing
-from ellar.core import HostContext, ControllerBase
+from ellar.common import ControllerBase
+from ellar.core import HostContext
 
 
 class ExecutionContext(HostContext):
@@ -196,8 +195,7 @@ We can then access this metadata from within our class to make certain decisions
 ```python
 # project_name/apps/cars/controllers.py
 
-from ellar.common import Body, Controller, post, set_metadata
-from ellar.core import ControllerBase
+from ellar.common import Body, Controller, post, set_metadata, ControllerBase
 from .schemas import CreateCarSerializer
 
 
@@ -218,8 +216,7 @@ Instead, create your own decorators, as shown below:
 ```python
 # project_name/apps/cars/controllers.py
 import typing
-from ellar.common import Body, Controller, post, set_metadata
-from ellar.core import ControllerBase
+from ellar.common import Body, Controller, post, set_metadata, ControllerBase
 from .schemas import CreateCarSerializer
 
 
@@ -246,8 +243,8 @@ To access the route's role(s) (custom metadata), we'll use the `Reflector` helpe
 ```python
 # project_name/apps/cars/guards.py
 from ellar.di import injectable
-from ellar.core import GuardCanActivate, IExecutionContext
-from ellar.services import Reflector
+from ellar.common import GuardCanActivate, IExecutionContext
+from ellar.core.services import Reflector
 
 
 @injectable()
@@ -269,8 +266,7 @@ Next, we apply the `RoleGuard` to `CarController`
 ```python
 # project_name/apps/cars/controllers.py
 import typing
-from ellar.common import Body, Controller, post, set_metadata, Guards
-from ellar.core import ControllerBase
+from ellar.common import Body, Controller, post, set_metadata, Guards, ControllerBase
 from .schemas import CreateCarSerializer
 from .guards import RoleGuard
 

@@ -15,7 +15,7 @@ from ellar.common.exceptions import ImproperConfiguration, RequestValidationErro
 from ellar.common.helper import generate_operation_unique_id, get_name
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.params import ExtraEndpointArg, RequestEndpointArgsModel
-from ellar.common.responses.response_models import RouteResponseModel
+from ellar.common.responses.models import RouteResponseModel
 from ellar.reflect import reflect
 
 from .base import RouteOperationBase

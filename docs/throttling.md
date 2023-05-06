@@ -202,7 +202,7 @@ To work with Websockets you can extend the `ThrottlerGuard` and override the `ha
 ```python
 from ellar_throttler import ThrottlerGuard
 from ellar.di import injectable
-from ellar.core import IExecutionContext
+from ellar.common import IExecutionContext
 from ellar_throttler import ThrottledException
 
 @injectable()

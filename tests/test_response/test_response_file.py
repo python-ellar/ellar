@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from ellar.common import Controller, ModuleRouter, file, get, serialize_object
-from ellar.common.responses.response_models import FileResponseModel
+from ellar.common.responses.models import FileResponseModel
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 

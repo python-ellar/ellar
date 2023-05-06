@@ -5,7 +5,7 @@ from ellar.common.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,
     RESPONSE_OVERRIDE_KEY,
 )
-from ellar.common.responses.response_models import (
+from ellar.common.responses.models import (
     FileResponseModel,
     ResponseModelField,
     StreamingResponseModel,

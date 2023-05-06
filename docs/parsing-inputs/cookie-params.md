@@ -16,8 +16,7 @@ The first value is the default value, you can pass all the extra validation or a
 # project_name/apps/items/controllers.py
 
 from typing import Optional
-from ellar.common import get, Controller, Cookie
-from ellar.core import ControllerBase
+from ellar.common import get, Controller, Cookie, ControllerBase
 
 
 @Controller
@@ -37,9 +36,7 @@ You can also use Schema to encapsulate `Cookies` parameters:
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.core.serializer import Serializer
-from ellar.common import get, Controller, Cookie
-from ellar.core import ControllerBase
+from ellar.common import Serializer, get, Controller, Cookie, ControllerBase
 
 
 

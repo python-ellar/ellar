@@ -2,7 +2,7 @@ import pytest
 from pydantic import BaseModel
 
 from ellar.common.compatible import AttributeDict
-from ellar.common.responses.response_models import EmptyAPIResponseModel
+from ellar.common.responses.models import EmptyAPIResponseModel
 from ellar.common.routing.schema import RouteParameters, WsRouteParameters
 from ellar.common.routing.websocket import WebSocketExtraHandler
 

@@ -5,8 +5,7 @@ When you declare other function parameters that are not part of the path paramet
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import get, Controller
-from ellar.core import ControllerBase
+from ellar.common import get, Controller, ControllerBase
 
 fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
 
@@ -38,8 +37,7 @@ Note: if you do not annotate your arguments, they will be treated as `str` types
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import get, Controller
-from ellar.core import ControllerBase
+from ellar.common import get, Controller, ControllerBase
 
 fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
 
@@ -60,8 +58,7 @@ As query parameters are not a fixed part of a path, they are optional and can ha
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import get, Controller
-from ellar.core import ControllerBase
+from ellar.common import get, Controller, ControllerBase
 
 fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
 
@@ -101,8 +98,7 @@ You can declare required or optional GET parameters in the same way as declaring
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import get, Controller
-from ellar.core import ControllerBase
+from ellar.common import get, Controller, ControllerBase
 
 weapons = ["Ninjato", "Shuriken", "Katana", "Kama", "Kunai", "Naginata", "Yari"]
 
@@ -124,8 +120,7 @@ Let's declare multiple type arguments:
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import get, Controller
-from ellar.core import ControllerBase
+from ellar.common import get, Controller, ControllerBase
 from datetime import date
 
 
@@ -165,9 +160,7 @@ You can also use Schema to encapsulate GET parameters:
 
 from typing import List
 from pydantic import Field
-from ellar.core.serializer import Serializer
-from ellar.common import get, Controller, Query
-from ellar.core import ControllerBase
+from ellar.common import Serializer, get, Controller, Query, ControllerBase
 
 
 

@@ -17,8 +17,7 @@ The first value is the default value, you can pass all the extra validation or a
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import Controller, get, Header
-from ellar.core import ControllerBase
+from ellar.common import Controller, get, Header, ControllerBase
 from typing import Optional
 
 
@@ -51,8 +50,7 @@ If for some reason you need to disable automatic conversion of underscores to hy
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import Controller, get, Header
-from ellar.core import ControllerBase
+from ellar.common import Controller, get, Header, ControllerBase
 from typing import Optional
 
 
@@ -82,8 +80,7 @@ For example, to declare a header of `X-Token` that can appear more than once, yo
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import Controller, get, Header
-from ellar.core import ControllerBase
+from ellar.common import Controller, get, Header, ControllerBase
 from typing import Optional, List
 
 
@@ -120,9 +117,7 @@ You can also use Schema to encapsulate `Header` parameters:
 # project_name/apps/items/controllers.py
 
 from typing import List
-from ellar.core.serializer import Serializer
-from ellar.common import get, Controller, Header
-from ellar.core import ControllerBase
+from ellar.common import Serializer, get, Controller, Header, ControllerBase
 
 
 

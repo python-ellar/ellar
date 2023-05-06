@@ -9,7 +9,7 @@ from ellar.common.constants import (
 )
 from ellar.common.decorators.html import RenderDecoratorException
 from ellar.common.exceptions import ImproperConfiguration
-from ellar.common.responses.response_models import HTMLResponseModel
+from ellar.common.responses.models import HTMLResponseModel
 from ellar.common.templating import TemplateFunctionData
 from ellar.core import Request
 from ellar.reflect import reflect

@@ -2,7 +2,7 @@ import pytest
 from pydantic.fields import ModelField
 
 from ellar.common.helper.modelfield import create_model_field
-from ellar.common.responses.response_models import ResponseModelField
+from ellar.common.responses.models import ResponseModelField
 
 
 def test_create_model_field_works():

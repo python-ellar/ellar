@@ -36,7 +36,7 @@ It is a type of exception for REST API based applications. It gives more concept
 For example,
 
 ```python
-from ellar.core.exceptions import APIException
+from ellar.common.exceptions import APIException
 from starlette import status
 
 class ServiceUnavailableException(APIException):
@@ -90,8 +90,7 @@ At the root project folder, create a file `custom_exceptions.py`,
 ```python
 # project_name/custom_exceptions.py
 import typing as t
-from ellar.core.exceptions import IExceptionHandler
-from ellar.core.context import IHostContext
+from ellar.common import IExceptionHandler, IHostContext
 from starlette.responses import Response
 
 
@@ -122,9 +121,7 @@ Let's create a handler for `MethodNotAllowedException` which, according to the H
 ```python
 # project_name/apps/custom_exceptions.py
 import typing as t
-from ellar.core.exceptions import IExceptionHandler
-from ellar.core.context import IHostContext
-from ellar.core import render_template
+from ellar.common import IExceptionHandler, IHostContext, render_template
 from starlette.responses import Response
 from starlette.exceptions import HTTPException
 
@@ -170,7 +167,7 @@ We have successfully created two exception handlers `ExceptionHandlerAction405` 
 # project_name/config.py
 import typing as t
 from ellar.core import ConfigDefaultTypesMixin
-from ellar.core.exceptions import IExceptionHandler
+from ellar.common import IExceptionHandler
 from .apps.custom_exceptions import MyCustomExceptionHandler, ExceptionHandlerAction405
 
 class BaseConfig(ConfigDefaultTypesMixin):
@@ -186,7 +183,7 @@ class BaseConfig(ConfigDefaultTypesMixin):
 
 import os
 
-from ellar.constants import ELLAR_CONFIG_MODULE
+from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
 from .root_module import ApplicationModule
 from .apps.custom_exceptions import MyCustomExceptionHandler, ExceptionHandlerAction405
@@ -213,8 +210,7 @@ For example:
 ```python
 # project_name/apps/custom_exceptions.py
 import typing as t
-from ellar.core.exceptions import IExceptionHandler, APIException
-from ellar.core.context import IHostContext
+from ellar.common import IHostContext, IExceptionHandler, APIException
 from starlette.responses import Response
 
 
