@@ -107,6 +107,14 @@ class GatewayWithGuards(GatewayBase):
     ):
         return WsResponse("my_response", {"data": data, "x_auth_key": x_auth_key})
 
+    @subscribe_message("my_plain_response")
+    async def my_plain_response(
+        self,
+        data: str = WsBody(..., embed=True),
+        x_auth_key: str = Header(alias="x-auth-key"),
+    ):
+        return {"data": data, "x_auth_key": x_auth_key}
+
 
 @WebSocketGateway(path="/ws-others")
 class GatewayOthers(GatewayBase):

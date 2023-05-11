@@ -18,7 +18,6 @@ from ellar.common.routing import ModuleMount, RouteOperation
 from ellar.common.routing.controller import ControllerRouteOperation
 from ellar.core.main import App
 from ellar.core.services.reflector import Reflector
-from ellar.core.validation_schema import HTTPValidationError, ValidationError
 
 from .openapi_v3 import OpenAPI
 from .route_doc_models import (
@@ -26,6 +25,7 @@ from .route_doc_models import (
     OpenAPIRoute,
     OpenAPIRouteDocumentation,
 )
+from .schemas import HTTPValidationError, ValidationError
 
 default_openapi_version = "3.0.2"
 

@@ -161,6 +161,8 @@ class SocketOperationConnection:
 
         if res and isinstance(res, WsResponse):
             await self._server.emit(**res.dict())
+        elif res:
+            await self._server.emit(self._event, res)
 
     @t.no_type_check
     async def run_route_guards(self, context: GatewayContext) -> None:

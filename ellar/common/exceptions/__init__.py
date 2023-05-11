@@ -1,4 +1,4 @@
-from starlette.exceptions import HTTPException
+from starlette.exceptions import HTTPException, WebSocketException
 
 from .api import (
     APIException,
@@ -18,6 +18,7 @@ __all__ = [
     "HostContextException",
     "ExecutionContextException",
     "HTTPException",
+    "WebSocketException",
     "ImproperConfiguration",
     "APIException",
     "WebSocketRequestValidationError",

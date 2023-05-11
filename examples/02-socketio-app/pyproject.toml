@@ -1,0 +1,8 @@
+[ellar]
+default = "socketio_app"
+[ellar.projects.socketio_app]
+project-name = "socketio_app"
+application = "socketio_app.server:application"
+config = "socketio_app.config:DevelopmentConfig"
+root-module = "socketio_app.root_module:ApplicationModule"
+apps-module = "socketio_app.apps"
