@@ -1,7 +1,7 @@
 import functools
 import typing as t
 
-from ellar.helper import is_async_callable
+from ellar.common.helper import is_async_callable
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from .model import BaseCacheBackend

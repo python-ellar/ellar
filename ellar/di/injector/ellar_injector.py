@@ -1,16 +1,16 @@
+import logging
 import typing as t
 from collections import OrderedDict, defaultdict
 
 from injector import Injector
 
-from ellar.asgi_args import RequestScopeContext
-from ellar.common_types import T
-from ellar.compatible import asynccontextmanager
-from ellar.constants import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR
-from ellar.logger import logger as log
+from ellar.reflect import asynccontextmanager
 
+from ..asgi_args import RequestScopeContext
+from ..constants import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR
 from ..providers import InstanceProvider, Provider
 from ..scopes import DIScope, ScopeDecorator
+from ..types import T
 from .container import Container
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -20,6 +20,8 @@ if t.TYPE_CHECKING:  # pragma: no cover
         ModuleSetup,
         ModuleTemplateRef,
     )
+
+log = logging.getLogger("ellar.di")
 
 
 class EllarInjector(Injector):

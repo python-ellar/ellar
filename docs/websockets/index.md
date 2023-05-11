@@ -9,8 +9,7 @@ In Ellar, you create websocket route using `ws_route` decorator.
 ```python
 # project_name/apps/car/controller.py
 
-from ellar.core import ControllerBase
-from ellar.common import Controller, ws_route
+from ellar.common import Controller, ControllerBase, ws_route
 
 
 @Controller('/car')
@@ -126,8 +125,7 @@ connect to the server. After a successful handshake between the server and the c
 
 ```python
 from ellar.di import injectable
-from ellar.common import Query, Guards
-from ellar.core import GuardCanActivate
+from ellar.common import Query, Guards, GuardCanActivate, IExecutionContext, ws_route
 
 ...
 @injectable
@@ -136,7 +134,7 @@ class MyGuard(GuardCanActivate):
         print('MyGuard was called.')
         return False
 
-
+...
 @ws_route('/live-support')
 @Guards(MyGuard)
 async def live_support(self, name: str = Query('John')):
@@ -160,7 +158,7 @@ Websocket handler supports all route [handler parameters](../parsing-inputs#tuto
 
 Let's use a `Query` parameter on the `/live-feed` WebSocket route.
 ```python
-from ellar.common import Query
+from ellar.common import Query, ws_route
 ...
 @ws_route('/live-support')
 async def live_support(self, name: str = Query('John')):
@@ -197,8 +195,7 @@ Let's rewrite the previous example, `/live-support` websocket route.
 ```python
 # project_name/apps/car/controller.py
 
-from ellar.core import ControllerBase
-from ellar.common import Controller, ws_route, get, render, WsBody, Guards
+from ellar.common import Controller, ControllerBase, ws_route, get, render, WsBody, Guards
 from starlette.websockets import WebSocket
 
 
@@ -247,8 +244,7 @@ and let the inbuilt handler apply the default `connection` and `disconnection` a
 ```python
 # project_name/apps/car/controller.py
 
-from ellar.core import ControllerBase
-from ellar.common import Controller, ws_route, get, render, WsBody
+from ellar.common import ControllerBase, Controller, ws_route, get, render, WsBody
 
 
 @Controller('/car')

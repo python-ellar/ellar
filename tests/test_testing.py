@@ -2,7 +2,7 @@ from abc import abstractmethod
 
 from starlette.routing import Host, Mount
 
-from ellar.constants import MODULE_METADATA
+from ellar.common.constants import MODULE_METADATA
 from ellar.di import ProviderConfig
 from ellar.reflect import reflect
 from ellar.testing import Test

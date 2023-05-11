@@ -6,8 +6,7 @@ which is similar to [OpenAPI path parameters](https://swagger.io/docs/specificat
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import get, Controller
-from ellar.core import ControllerBase
+from ellar.common import get, Controller, ControllerBase
 
 
 @Controller
@@ -33,8 +32,7 @@ You can declare the type of path parameter in the function using standard Python
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import get, Controller
-from ellar.core import ControllerBase
+from ellar.common import get, Controller, ControllerBase
 
 
 @Controller
@@ -87,8 +85,7 @@ You can use [Starlette Path Converters](https://www.starlette.io/routing/#path-p
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import get, Controller
-from ellar.core import ControllerBase
+from ellar.common import get, Controller, ControllerBase
 
 
 @Controller
@@ -123,8 +120,7 @@ What this means is that the parameter is `value`, and the last part, `:path`, te
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import get, Controller
-from ellar.core import ControllerBase
+from ellar.common import get, Controller, ControllerBase
 
 
 @Controller
@@ -143,8 +139,7 @@ You can pass as many variables as you want into `path`, just remember to have un
 ```Python
 # project_name/apps/items/controllers.py
 
-from ellar.common import get, Controller
-from ellar.core import ControllerBase
+from ellar.common import get, Controller, ControllerBase
 
 
 @Controller
@@ -163,9 +158,7 @@ You can also use Schema to encapsulate path parameters that depend on each other
 # project_name/apps/items/controllers.py
 
 import datetime
-from ellar.core.serializer import Serializer
-from ellar.common import get, Controller, Path
-from ellar.core import ControllerBase
+from ellar.common import Serializer, get, Controller, Path, ControllerBase
 
 
 class PathDate(Serializer):
@@ -201,8 +194,7 @@ For an example:
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import get, Controller
-from ellar.core import ControllerBase
+from ellar.common import get, Controller, ControllerBase
 from enum import Enum
 
 class ModelName(str, Enum):

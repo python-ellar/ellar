@@ -3,14 +3,14 @@ import typing as t
 
 from starlette.routing import BaseRoute, Mount
 
-from ellar.common_types import ASGIApp, T, TReceive, TScope, TSend
-from ellar.constants import LOG_LEVELS
-from ellar.core.datastructures import State, URLPath
-from ellar.core.exceptions.interfaces import (
-    IExceptionHandler,
-    IExceptionMiddlewareService,
-)
-from ellar.core.guard import GuardCanActivate
+from ellar.common.compatible import cached_property
+from ellar.common.constants import LOG_LEVELS
+from ellar.common.datastructures import State, URLPath
+from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
+from ellar.common.logger import logger
+from ellar.common.models import GuardCanActivate
+from ellar.common.templating import Environment
+from ellar.common.types import ASGIApp, T, TReceive, TScope, TSend
 from ellar.core.middleware import (
     CORSMiddleware,
     ExceptionMiddleware,
@@ -21,18 +21,18 @@ from ellar.core.middleware import (
 )
 from ellar.core.modules import (
     DynamicModule,
-    ModuleBase,
     ModuleRefBase,
     ModuleSetup,
     ModuleTemplateRef,
 )
 from ellar.core.routing import ApplicationRouter
-from ellar.core.templating import AppTemplating, Environment
+from ellar.core.services import Reflector
+from ellar.core.templating import AppTemplating
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
 from ellar.di.injector import EllarInjector
-from ellar.logger import logger
 
 from .conf import Config
+from .modules import ModuleBase
 
 
 class App(AppTemplating):
@@ -260,3 +260,7 @@ class App(AppTemplating):
 
     def rebuild_middleware_stack(self) -> None:
         self.middleware_stack = self.build_middleware_stack()
+
+    @cached_property
+    def reflector(self) -> Reflector:
+        return self.injector.get(Reflector)  # type: ignore[no-any-return]

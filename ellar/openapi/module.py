@@ -1,8 +1,8 @@
 import typing as t
 
-from ellar.common import Module, ModuleRouter, render
-from ellar.core import DynamicModule, IModuleSetup, ModuleBase
-from ellar.core.guard import GuardCanActivate
+from ellar.common import IModuleSetup, Module, ModuleRouter, render
+from ellar.common.models import GuardCanActivate
+from ellar.core import DynamicModule, ModuleBase
 from ellar.openapi.docs_generators import IDocumentationGenerator
 from ellar.openapi.openapi_v3 import OpenAPI
 

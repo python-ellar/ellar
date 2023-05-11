@@ -155,9 +155,8 @@ In same way, we can override `Guards` used in controllers during testing. For ex
 
 ```python
 import typing
-from ellar.compatible.dict import AttributeDict
-from ellar.common import Guards, Controller
-from ellar.core import ControllerBase
+from ellar.common.compatible import AttributeDict
+from ellar.common import Guards, Controller, ControllerBase
 from ellar.core.guard import HttpBearerAuth
 from ellar.di import injectable
 
@@ -314,11 +313,9 @@ Let's see how we can use `TestClient` in writing e2e testing for `CarController`
 
 ```python
 # project_name/car/tests/test_controllers.py
-from unittest.mock import patch
 from ellar.di import ProviderConfig
 from ellar.testing import Test, TestClient
 from project_name.apps.car.controllers import CarController
-from project_name.apps.car.schemas import CreateCarSerializer, CarListFilter
 from project_name.apps.car.services import CarRepository
 
 

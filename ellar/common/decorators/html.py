@@ -3,18 +3,18 @@ import inspect
 import typing as t
 import warnings
 
-from ellar.common_types import TemplateFilterCallable, TemplateGlobalCallable
-from ellar.constants import (
+from ellar.common.constants import (
     NOT_SET,
     RESPONSE_OVERRIDE_KEY,
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
-from ellar.core.exceptions import ImproperConfiguration
-from ellar.core.response.model import HTMLResponseModel
-from ellar.core.templating import TemplateFunctionData
-from ellar.helper import class_base_function_regex, get_name
-from ellar.shortcuts import fail_silently
+from ellar.common.exceptions import ImproperConfiguration
+from ellar.common.helper import class_base_function_regex, get_name
+from ellar.common.responses.models import HTMLResponseModel
+from ellar.common.shortcuts import fail_silently
+from ellar.common.templating import TemplateFunctionData
+from ellar.common.types import TemplateFilterCallable, TemplateGlobalCallable
 
 from .base import set_metadata as set_meta
 

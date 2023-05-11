@@ -1,7 +1,7 @@
 import typing as t
 from functools import partial
 
-from ellar.constants import NOT_SET
+from ellar.common.constants import NOT_SET
 from ellar.reflect import reflect
 
 

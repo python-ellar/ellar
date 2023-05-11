@@ -1,7 +1,6 @@
 import pytest
 
-from ellar.constants import REFLECT_TYPE
-from ellar.reflect import reflect
+from ellar.reflect import REFLECT_TYPE, reflect
 
 
 def test_define_metadata_creates_attribute_dict(random_type):

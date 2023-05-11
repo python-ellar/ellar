@@ -7,29 +7,28 @@ from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import WebSocketException
 from starlette.routing import compile_path
 
-from ellar.constants import (
+from ellar.common import IExecutionContext, IExecutionContextFactory, serialize_object
+from ellar.common.constants import (
     CONTROLLER_CLASS_KEY,
     EXTRA_ROUTE_ARGS_KEY,
     GUARDS_KEY,
     NOT_SET,
     SCOPE_SERVICE_PROVIDER,
 )
-from ellar.core import Config, IExecutionContext
-from ellar.core.context import IExecutionContextFactory
-from ellar.core.exceptions import WebSocketRequestValidationError
-from ellar.core.params import WebsocketEndpointArgsModel
-from ellar.core.serializer import serialize_object
+from ellar.common.exceptions import WebSocketRequestValidationError
+from ellar.common.helper import get_name
+from ellar.common.params import WebsocketEndpointArgsModel
+from ellar.core import Config
 from ellar.core.services import Reflector
 from ellar.di import EllarInjector
-from ellar.helper import get_name
 from ellar.reflect import reflect
 from ellar.socket_io.context import GatewayContext
 from ellar.socket_io.model import GatewayBase
 from ellar.socket_io.responses import WsResponse
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core import GuardCanActivate
-    from ellar.core.params import ExtraEndpointArg
+    from ellar.common import GuardCanActivate
+    from ellar.common.params import ExtraEndpointArg
 
 
 class SocketOperationConnection:
@@ -162,6 +161,8 @@ class SocketOperationConnection:
 
         if res and isinstance(res, WsResponse):
             await self._server.emit(**res.dict())
+        elif res:
+            await self._server.emit(self._event, res)
 
     @t.no_type_check
     async def run_route_guards(self, context: GatewayContext) -> None:

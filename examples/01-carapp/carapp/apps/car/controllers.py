@@ -9,8 +9,7 @@ class MyController(ControllerBase):
         return {'detail': "Welcome Dog's Resources"}
 """
 import typing_extensions as types
-from ellar.common import Body, Controller, Query, get, post, render, Version
-from ellar.core import ControllerBase
+from ellar.common import Body, Controller, Query, get, post, render, Version, ControllerBase
 
 from .schemas import CarListFilter, CreateCarSerializer
 from .services import CarRepository

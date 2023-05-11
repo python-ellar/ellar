@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from pydantic import Field
 
-from ellar.core.serializer import Serializer
+from ellar.common.serializer import Serializer
 
 
 class Product(Serializer):

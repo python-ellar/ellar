@@ -1,16 +1,19 @@
 from starlette.exceptions import HTTPException
 from starlette.responses import PlainTextResponse
 
-from ellar.common import Controller, Module, exception_handler, get
-from ellar.core.context import (
-    ExecutionContext,
-    HostContext,
+from ellar.common import (
+    Controller,
+    IExceptionMiddlewareService,
     IExecutionContext,
     IExecutionContextFactory,
     IHostContext,
     IHostContextFactory,
+    Module,
+    exception_handler,
+    get,
 )
-from ellar.core.exceptions import IExceptionMiddlewareService
+from ellar.core import ModuleBase
+from ellar.core.context import ExecutionContext, HostContext
 from ellar.core.exceptions.service import ExceptionMiddlewareService
 from ellar.core.services import Reflector
 from ellar.di import ProviderConfig, injectable
@@ -101,7 +104,7 @@ def test_can_replace_exception_service():
             )
         ],
     )
-    class ExampleModule:
+    class ExampleModule(ModuleBase):
         @exception_handler(400)
         def exception_400(self, context: IHostContext, exc: Exception):
             return PlainTextResponse(

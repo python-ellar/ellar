@@ -1,6 +1,6 @@
 import pytest
 
-from ellar.constants import NOT_SET
+from ellar.common.constants import NOT_SET
 from ellar.core.versioning import UrlPathAPIVersioning, VersioningSchemes as VERSIONING
 from ellar.testing import Test
 

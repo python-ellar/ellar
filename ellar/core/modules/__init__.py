@@ -1,5 +1,5 @@
-from .base import ModuleBase
-from .config import DynamicModule, IModuleSetup, ModuleSetup
+from .base import ModuleBase, ModuleBaseMeta
+from .config import DynamicModule, ModuleSetup
 from .ref import ModulePlainRef, ModuleRefBase, ModuleTemplateRef
 
 __all__ = [
@@ -7,7 +7,7 @@ __all__ = [
     "ModulePlainRef",
     "ModuleTemplateRef",
     "ModuleRefBase",
-    "IModuleSetup",
     "ModuleSetup",
     "DynamicModule",
+    "ModuleBaseMeta",
 ]

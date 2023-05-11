@@ -19,8 +19,7 @@ Let's add this service to a controller.
 
 ```python
 from ellar.di import injectable, singleton_scope
-from ellar.core import ControllerBase
-from ellar.common import Controller
+from ellar.common import Controller, ControllerBase
 
 
 @injectable(scope=singleton_scope)
@@ -65,8 +64,7 @@ Let's wire it up to `CarController`. And rewrite some route handles.
 ```python
 # project_name/apps/car/controllers.py
 
-from ellar.common import Body, Controller, get, post, Query
-from ellar.core import ControllerBase
+from ellar.common import Body, Controller, get, post, Query, ControllerBase
 from .schemas import CreateCarSerializer, CarListFilter
 from .services import CarRepository
 
@@ -296,7 +294,7 @@ For example:
 
 from ellar.common import Module
 from ellar.core import ModuleBase, Config
-from ellar.di import Container, EllarInjector, injectable, ProviderConfig
+from ellar.di import Container, EllarInjector, injectable
 from ellar.core.modules.ref import create_module_ref_factor
 
 injector = EllarInjector(auto_bind=False)

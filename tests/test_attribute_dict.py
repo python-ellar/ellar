@@ -1,4 +1,4 @@
-from ellar.compatible.dict import AttributeDict
+from ellar.common.compatible import AttributeDict
 
 
 class MyDict(AttributeDict):

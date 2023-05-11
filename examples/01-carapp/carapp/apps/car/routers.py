@@ -12,10 +12,7 @@ def index(request: Request):
 from dataclasses import dataclass
 from typing import List
 
-from ellar.common import Provide, render, Req
-from ellar.core.routing import ModuleRouter
-from ellar.core.templating import render_template
-from ellar.core.serializer import DataclassSerializer
+from ellar.common import Provide, render, Req, ModuleRouter, render_template, DataclassSerializer
 
 from .services import CarRepository
 

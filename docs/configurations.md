@@ -32,14 +32,14 @@ When turned on, `injector` can automatically bind to missing types as `singleton
 And when turned off, missing types will raise an `UnsatisfiedRequirement` exception.
 
 ### **DEFAULT_JSON_CLASS**
-Default: `JSONResponse` - (`starlette.response.JSONResponse`)
+Default: `JSONResponse` - (`starlette.common.JSONResponse`)
 
 **DEFAULT_JSON_CLASS** is used when sending JSON response to the client.
 
 There are other options for JSON available in Ellar:
 
-- **UJSONResponse**(`ellar.core.response.UJSONResponse`):  renders JSON response using [ujson](https://pypi.python.org/pypi/ujson). 
-- **ORJSONResponse**(`ellar.core.response.ORJSONResponse`):  renders JSON response using [orjson](https://pypi.org/project/orjson/). 
+- **UJSONResponse**(`ellar.common.UJSONResponse`):  renders JSON response using [ujson](https://pypi.python.org/pypi/ujson). 
+- **ORJSONResponse**(`ellar.common.ORJSONResponse`):  renders JSON response using [orjson](https://pypi.org/project/orjson/). 
 
 ### **JINJA_TEMPLATES_OPTIONS**
 Default: `{}`
@@ -152,10 +152,10 @@ Default: `not_found` (`not_found(scope: TScope, receive: TReceive, send: TSend)`
 Default is an ASGI function. **DEFAULT_NOT_FOUND_HANDLER** is used by the application router as a callback function to a resource not found.
 
 ```python
-from ellar.types import TScope, TReceive, TSend
+from ellar.common.types import TScope, TReceive, TSend
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.websockets import WebSocketClose
-from ellar.core.response import PlainTextResponse
+from ellar.common import PlainTextResponse
 
 
 async def _not_found(scope: TScope, receive: TReceive, send: TSend) -> None:

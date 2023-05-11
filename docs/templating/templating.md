@@ -34,9 +34,8 @@ To render the template, you'll need to use the Jinja2 API in your view function.
 
 import uvicorn
 from jinja2 import Environment, FileSystemLoader
-from ellar.core.response import HTMLResponse
 from ellar.core import Request, AppFactory
-from ellar.common import ModuleRouter
+from ellar.common import ModuleRouter, HTMLResponse
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent

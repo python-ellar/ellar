@@ -190,8 +190,8 @@ They are gotten from the application of the NonParameterResolver, like so - `def
 For example:
 ```python
 import typing as t
-from ellar.core.params import NonParameterResolver
-from ellar.core import IExecutionContext
+from ellar.common.params import NonParameterResolver
+from ellar.common import IExecutionContext
 from pydantic.error_wrappers import ErrorWrapper
 
 
@@ -255,7 +255,7 @@ And the route function is required to return a dictionary object that follows a 
 ```python
 import typing as t
 from enum import Enum
-from ellar.core.serializer import Serializer
+from ellar.common import Serializer
 
 
 class ContentDispositionType(str, Enum):
@@ -362,8 +362,7 @@ Parameters:
 For example:
 ```python
 import typing as t
-from ellar.common import serializer_filter, get
-from ellar.core.serializer import Serializer
+from ellar.common import serializer_filter, get, Serializer
 
 class UserSchema(Serializer):
     username: str
@@ -415,8 +414,7 @@ A quick example on how to use `Guards` decorator:
 ```python
 import typing as t
 from ellar.common import get, Guards
-from ellar.core.guard import APIKeyQuery
-from ellar.core.connection import HTTPConnection
+from ellar.core import APIKeyQuery, HTTPConnection
 
 
 class MyAPIKeyQuery(APIKeyQuery):

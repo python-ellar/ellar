@@ -132,6 +132,25 @@ class TestGatewayWithGuards:
             {"data": "Testing Broadcast", "x_auth_key": "supersecret"}
         ]
 
+    async def test_event_with_plain_response(self):
+        my_response_message = []
+
+        async with self.test_client.run_with_server() as ctx:
+
+            @ctx.sio.on("my_plain_response")
+            async def message_receive(message):
+                my_response_message.append(message)
+
+            await ctx.connect(
+                socketio_path="/ws-guard/", headers={"x-auth-key": "supersecret"}
+            )
+            await ctx.sio.emit("my_plain_response", {"data": "Testing Broadcast"})
+            await ctx.wait()
+
+        assert my_response_message == [
+            {"data": "Testing Broadcast", "x_auth_key": "supersecret"}
+        ]
+
     async def test_failed_to_connect(self):
         my_response_message = []
 

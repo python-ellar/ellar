@@ -2,8 +2,10 @@ import pytest
 from starlette.routing import Host, Mount
 
 from ellar.common import Module
+from ellar.common.constants import MODULE_WATERMARK
 from ellar.core import AppFactory, Config, ModuleBase, ModuleSetup
 from ellar.di import EllarInjector
+from ellar.reflect import reflect
 from ellar.testing import TestClient
 
 from .sample import (
@@ -73,7 +75,8 @@ def test_factory_create_app_dynamically_creates_module():
     app = AppFactory.create_app()
     first_module_ref = next(app.get_module_loaders())
     module_instance = first_module_ref.get_module_instance()
-    assert isinstance(module_instance, ModuleBase)
+    assert not isinstance(module_instance, ModuleBase)
+    assert reflect.get_metadata(MODULE_WATERMARK, type(module_instance))
     assert "ellar.core.factory.Module" in str(module_instance.__class__)
 
 

@@ -1,5 +1,4 @@
-from ellar.common import put
-from ellar.core.serializer import serialize_object
+from ellar.common import put, serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 

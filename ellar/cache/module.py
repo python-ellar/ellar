@@ -1,7 +1,7 @@
 import typing as t
 
-from ellar.common import Module
-from ellar.core import Config, DynamicModule, IModuleSetup, ModuleBase, ModuleSetup
+from ellar.common import IModuleSetup, Module
+from ellar.core import Config, DynamicModule, ModuleBase, ModuleSetup
 from ellar.di import ProviderConfig
 
 from .interface import ICacheService

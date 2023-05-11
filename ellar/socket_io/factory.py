@@ -3,7 +3,7 @@ import typing as t
 import socketio
 from starlette.routing import Mount
 
-from ellar.core.routing.builder import RouterBuilder
+from ellar.common.routing.builder import RouterBuilder
 from ellar.reflect import reflect
 from ellar.socket_io.adapter import SocketIOASGIApp
 from ellar.socket_io.constants import (
@@ -57,9 +57,6 @@ class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
                 )
                 SocketMessageOperation(message, socket_server, handler)
 
-        # include_in_schema = reflect.get_metadata_or_raise_exception(
-        #     GATEWAY_METADATA.INCLUDE_IN_SCHEMA, gateway_type
-        # )
         router = Mount(app=SocketIOASGIApp(socket_server), path=path, name=name)
         return router
 

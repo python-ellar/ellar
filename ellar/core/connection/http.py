@@ -5,7 +5,7 @@ from starlette.requests import (
     Request as StarletteRequest,
 )
 
-from ellar.constants import SCOPE_SERVICE_PROVIDER
+from ellar.common.constants import SCOPE_SERVICE_PROVIDER
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.di import EllarInjector

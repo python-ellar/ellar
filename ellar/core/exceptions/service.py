@@ -1,14 +1,13 @@
 import typing as t
 
-from ellar.di import injectable
-
-from .handlers import (
+from ellar.common.exceptions.handlers import (
     APIExceptionHandler,
     HTTPExceptionHandler,
     RequestValidationErrorHandler,
     WebSocketExceptionHandler,
 )
-from .interfaces import IExceptionHandler, IExceptionMiddlewareService
+from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
+from ellar.di import injectable
 
 
 @injectable()

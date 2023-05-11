@@ -11,10 +11,6 @@ from injector import (
     _is_specialization,
 )
 
-from ellar.common_types import T
-from ellar.constants import NOT_SET
-from ellar.helper import get_name
-
 from ..providers import Provider
 from ..scopes import (
     DIScope,
@@ -24,11 +20,14 @@ from ..scopes import (
     TransientScope,
 )
 from ..service_config import get_scope, is_decorated_with_injectable
+from ..types import T
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.modules import ModuleBase
 
     from .ellar_injector import EllarInjector
+
+NOT_SET = object()
 
 
 class Container(InjectorBinder):
@@ -94,8 +93,8 @@ class Container(InjectorBinder):
         try:
             if concrete_type and isinstance(concrete_type, type):
                 assert issubclass(concrete_type, base_type), (
-                    f"Cannot register {get_name(base_type)} for abstract class "
-                    f"{get_name(concrete_type)}"
+                    f"Cannot register {base_type.__name__} for abstract class "
+                    f"{concrete_type.__name__}"
                 )
         except TypeError:  # pragma: no cover
             # ignore generic types issues
@@ -240,6 +239,12 @@ class Container(InjectorBinder):
             t.cast(type, instance), InjectorModule
         ):
             instance = t.cast(type, instance)(**init_kwargs)
+        elif isinstance(instance, type) and not isinstance(instance, InjectorModule):
+            return self.injector.get(t.cast(type, instance))
+        elif not isinstance(instance, type) and not isinstance(
+            type(instance), InjectorModule
+        ):
+            return instance
 
         instance(self)
         return instance

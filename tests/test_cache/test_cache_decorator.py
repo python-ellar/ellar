@@ -1,8 +1,7 @@
 from time import sleep
 
 from ellar.cache import CacheModule, cache
-from ellar.common import ModuleRouter
-from ellar.core.response import PlainTextResponse
+from ellar.common import ModuleRouter, PlainTextResponse
 from ellar.testing import Test
 
 

@@ -3,9 +3,9 @@ from typing import List, Optional
 import pytest
 from pydantic import BaseModel
 
+from ellar.common import ModuleRouter
+from ellar.common.responses.models import RouteResponseExecution
 from ellar.core import AppFactory
-from ellar.core.response.model import RouteResponseExecution
-from ellar.core.routing import ModuleRouter
 
 mr = ModuleRouter("")
 

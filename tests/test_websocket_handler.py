@@ -2,8 +2,8 @@ import pytest
 from starlette.websockets import WebSocket, WebSocketState
 
 from ellar.common import Controller, ModuleRouter, WsBody, ws_route
-from ellar.constants import CONTROLLER_OPERATION_HANDLER_KEY
-from ellar.core.exceptions import ImproperConfiguration
+from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
+from ellar.common.exceptions import ImproperConfiguration
 from ellar.reflect import reflect
 from ellar.testing import Test
 

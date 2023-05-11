@@ -1,7 +1,7 @@
 import typing as t
 from abc import ABC
 
-from ellar.common_types import TScope
+from ellar.common.types import TScope
 
 from .resolver import (
     BaseAPIVersioningResolver,

@@ -2,7 +2,7 @@ import os
 
 from ellar.core.factory import AppFactory
 from ellar.openapi import OpenAPIDocumentModule, SwaggerDocumentGenerator, OpenAPIDocumentBuilder, ReDocDocumentGenerator
-from ellar.constants import ELLAR_CONFIG_MODULE
+from ellar.common.constants import ELLAR_CONFIG_MODULE
 from .root_module import ApplicationModule
 
 application = AppFactory.create_from_app_module(ApplicationModule, config_module=os.environ.get(

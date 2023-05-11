@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 from anyio import Lock
 
-from ellar.helper.event_loop import get_or_create_eventloop
+from ellar.common.helper.event_loop import get_or_create_eventloop
 
 from ..interface import IBaseCacheBackendAsync
 from ..make_key_decorator import make_key_decorator, make_key_decorator_and_validate

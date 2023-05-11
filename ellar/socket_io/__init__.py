@@ -10,6 +10,7 @@ from .decorators import (
     subscribe_message,
 )
 from .factory import GatewayRouterFactory
+from .model import GatewayBase
 from .responses import WsResponse
 from .testing import TestGateway
 
@@ -21,4 +22,5 @@ __all__ = [
     "subscribe_message",
     "WebSocketGateway",
     "TestGateway",
+    "GatewayBase",
 ]

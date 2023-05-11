@@ -11,8 +11,7 @@ To create a controller, we use classes and decorators. The `Controller` decorato
 `metadata` needed for Ellar to create a routing table
 
 ```python
-from ellar.common import Controller
-from ellar.core import ControllerBase
+from ellar.common import Controller, ControllerBase
 
 @Controller()
 class UserController(ControllerBase):
@@ -30,8 +29,7 @@ In that case, we could specify the path prefix `/user` in the `@Controller()` de
 ```python
 # project_name/apps/car/controllers.py
 
-from ellar.common import Controller, get
-from ellar.core import ControllerBase
+from ellar.common import Controller, get, ControllerBase
 
 @Controller('/car')
 class CarController(ControllerBase):
@@ -80,8 +78,8 @@ Ellar will resolve any parameter annotated as `Request` in the request handler s
 ```python
 # project_name/apps/car/controllers.py
 
-from ellar.common import Controller, get
-from ellar.core import ControllerBase, Request
+from ellar.common import Controller, get, ControllerBase
+from ellar.core import Request
 
 @Controller('/car')
 class CarController(ControllerBase):
@@ -99,8 +97,8 @@ We can also inject request object to any handler by using `@Req` decorator in ha
 ```python
 # project_name/apps/car/controllers.py
 
-from ellar.common import Controller, get, Req
-from ellar.core import ControllerBase, Request
+from ellar.common import Controller, ControllerBase, get, Req
+from ellar.core import Request
 
 @Controller('/car')
 class CarController(ControllerBase):
@@ -119,8 +117,8 @@ During request handler execution, `Execution Context` is available on the Contro
 ```python
 # project_name/apps/car/controllers.py
 
-from ellar.common import Controller, get
-from ellar.core import ControllerBase, Request
+from ellar.common import Controller, ControllerBase, get
+from ellar.core import Request
 
 @Controller('/car')
 class CarController(ControllerBase):
@@ -155,8 +153,8 @@ Let add create endpoint to our `CarController` resource.
 ```python
 # project_name/apps/car/controllers.py
 
-from ellar.common import Controller, get, post
-from ellar.core import ControllerBase, Request
+from ellar.common import Controller, ControllerBase, get, post
+from ellar.core import Request
 
 @Controller('/car')
 class CarController(ControllerBase):
@@ -192,8 +190,8 @@ Ellar supports modern asynchronous programming in python using `async` and `awai
 ```python
 # project_name/apps/car/controllers.py
 
-from ellar.common import Controller, get, post
-from ellar.core import ControllerBase, Request
+from ellar.common import Controller, ControllerBase, get, post
+from ellar.core import Request
 
 @Controller('/car')
 class CarController(ControllerBase):
@@ -215,7 +213,7 @@ Before that, we need to define our data input/output serializers
 
 ```python
 # project_name/apps/car/schema.py
-from ellar.core.serializer import Serializer
+from ellar.common import Serializer
 from pydantic import Field
 
 
@@ -241,7 +239,7 @@ Let's add the `CreateCarSerializer` to `create` endpoint,
 ```python
 # project_name/apps/car/controllers.py
 ...
-from ellar.common import Body
+from ellar.common import Body, post
 from .schemas import CreateCarSerializer
 
 
@@ -265,8 +263,8 @@ Let's add other endpoints
 ```python
 # project_name/apps/car/controllers.py
 
-from ellar.common import Body, Controller, delete, get, post, put, Query
-from ellar.core import ControllerBase, Request
+from ellar.common import Body, Controller, ControllerBase, delete, get, post, put, Query
+from ellar.core import Request
 from .schemas import CreateCarSerializer, CarListFilter
 
 

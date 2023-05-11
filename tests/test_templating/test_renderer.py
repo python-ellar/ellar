@@ -1,10 +1,12 @@
 import re
 from pathlib import Path
 
-from ellar.common import Controller, get, render
-from ellar.core import ControllerBase
-from ellar.core.templating import (
+from ellar.common import (
+    Controller,
+    ControllerBase,
     TemplateResponse,
+    get,
+    render,
     render_template,
     render_template_string,
 )

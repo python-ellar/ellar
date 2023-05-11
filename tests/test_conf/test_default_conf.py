@@ -4,7 +4,7 @@ import pytest
 from pydantic.json import ENCODERS_BY_TYPE
 from starlette.responses import JSONResponse
 
-from ellar.constants import ELLAR_CONFIG_MODULE
+from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.conf import Config, ConfigDefaultTypesMixin
 from ellar.core.conf.config import ConfigRuntimeError
 from ellar.core.versioning import DefaultAPIVersioning, UrlPathAPIVersioning

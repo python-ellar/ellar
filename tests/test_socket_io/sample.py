@@ -4,11 +4,10 @@ from functools import wraps
 from starlette import status
 from starlette.exceptions import WebSocketException
 
-from ellar.common import Guards, Header, Query, WsBody, extra_args
+from ellar.common import Guards, Header, Query, Serializer, WsBody, extra_args
+from ellar.common.params import ExtraEndpointArg
 from ellar.core.connection import HTTPConnection
 from ellar.core.guard import APIKeyHeader
-from ellar.core.params import ExtraEndpointArg
-from ellar.core.serializer import Serializer
 from ellar.di import injectable
 from ellar.socket_io import (
     WebSocketGateway,
@@ -107,6 +106,14 @@ class GatewayWithGuards(GatewayBase):
         x_auth_key: str = Header(alias="x-auth-key"),
     ):
         return WsResponse("my_response", {"data": data, "x_auth_key": x_auth_key})
+
+    @subscribe_message("my_plain_response")
+    async def my_plain_response(
+        self,
+        data: str = WsBody(..., embed=True),
+        x_auth_key: str = Header(alias="x-auth-key"),
+    ):
+        return {"data": data, "x_auth_key": x_auth_key}
 
 
 @WebSocketGateway(path="/ws-others")

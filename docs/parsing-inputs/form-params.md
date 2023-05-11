@@ -15,8 +15,7 @@ When you need to receive form fields instead of JSON, you can use `Form`.
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import Controller, Form, post
-from ellar.core import ControllerBase
+from ellar.common import Controller, Form, post, ControllerBase
 
 
 @Controller
@@ -48,9 +47,7 @@ a Schema to organize your parameters.
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.core.serializer import Serializer
-from ellar.common import Controller, post, Form
-from ellar.core import ControllerBase
+from ellar.common import Serializer, Controller, post, Form, ControllerBase
 
 
 class Item(Serializer):
@@ -83,9 +80,7 @@ are declared with `Form(...)` should be **taken from the request form fields**, 
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.core.serializer import Serializer
-from ellar.common import Controller, Form, post, put
-from ellar.core import ControllerBase
+from ellar.common import Serializer, Controller, Form, post, put, ControllerBase
 
 
 class Item(Serializer):
@@ -117,9 +112,7 @@ This can be fixed, as described in the Pydantic docs, by using
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.core.serializer import Serializer
-from ellar.common import Controller, Form, post, put
-from ellar.core import ControllerBase
+from ellar.common import Serializer, Controller, Form, post, put, ControllerBase
 from pydantic.fields import ModelField
 from typing import Generic, TypeVar
 

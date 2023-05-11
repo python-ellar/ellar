@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple
 import pytest
 from pydantic import BaseModel
 
-from ellar.core.routing import ModuleRouter
+from ellar.common import ModuleRouter
 
 mr = ModuleRouter("")
 

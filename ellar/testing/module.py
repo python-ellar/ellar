@@ -5,15 +5,15 @@ from uuid import uuid4
 from starlette.testclient import TestClient as TestClient
 
 from ellar.common import Module
-from ellar.common_types import T
+from ellar.common.routing import ModuleRouter
+from ellar.common.types import T
 from ellar.core import ModuleBase
 from ellar.core.factory import AppFactory
 from ellar.core.main import App
-from ellar.core.routing import ModuleRouter
 from ellar.di import ProviderConfig
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core import GuardCanActivate
+    from ellar.common import GuardCanActivate
 
 
 class TestingModule:

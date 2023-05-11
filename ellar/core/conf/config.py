@@ -2,10 +2,10 @@ import typing as t
 
 from starlette.config import environ
 
-from ellar.common_types import VT
-from ellar.compatible.dict import AttributeDictAccessMixin, DataMutableMapper
-from ellar.constants import ELLAR_CONFIG_MODULE
-from ellar.helper.importer import import_from_string
+from ellar.common.compatible.dict import AttributeDictAccessMixin, DataMutableMapper
+from ellar.common.constants import ELLAR_CONFIG_MODULE
+from ellar.common.helper.importer import import_from_string
+from ellar.common.types import VT
 
 from .app_settings_models import ConfigValidationSchema
 from .mixins import ConfigDefaultTypesMixin

@@ -1,6 +1,6 @@
 import pytest
 
-from ellar.core.routing import ModuleRouter
+from ellar.common.routing import ModuleRouter
 
 from .sample import router
 

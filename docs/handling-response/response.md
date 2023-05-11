@@ -5,7 +5,7 @@ To use `Serializer` in Ellar, you simply need to create a class that inherits fr
 Here's an example of how you could define a serializer class for a user model:
 
 ```python
-from ellar.core.serializer import Serializer
+from ellar.common import Serializer
 
 class UserSerializer(Serializer):
     name: str
@@ -27,9 +27,7 @@ For example:
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.core.serializer import Serializer
-from ellar.common import Controller, get
-from ellar.core import ControllerBase
+from ellar.common import Controller, get, Serializer, ControllerBase
 
 # Define a User class with username, email, first_name, and last_name attributes
 class User:
@@ -80,7 +78,7 @@ For instance, we can convert the `UserSchema` to a dataclass by defining `UserDa
 
 ```python
 from dataclasses import dataclass
-from ellar.core.serializer import DataclassSerializer
+from ellar.common import DataclassSerializer
 
 
 @dataclass
@@ -101,9 +99,7 @@ The `response` parameter takes different shape. Let's see how to return a differ
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.core.serializer import Serializer
-from ellar.common import Controller, get
-from ellar.core import ControllerBase
+from ellar.common import Controller, get, ControllerBase, Serializer
 
 class User:
     def __init__(self, username: str, email:str=None, first_name:str=None, last_name:str=None) -> None:
@@ -167,9 +163,7 @@ You can use `Response` type to change the format of data returned from endpoint 
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.common import Controller, get
-from ellar.core import ControllerBase
-from starlette.responses import PlainTextResponse
+from ellar.common import Controller, get, ControllerBase, PlainTextResponse
 
 
 @Controller
@@ -185,10 +179,7 @@ Also, we can return response object from endpoint functions, and it will overrid
 ```python
 # project_name/apps/items/controllers.py
 
-from ellar.core.serializer import Serializer
-from ellar.common import Controller, get
-from ellar.core import ControllerBase
-from starlette.responses import PlainTextResponse
+from ellar.common import Controller, get, Serializer, ControllerBase, PlainTextResponse
 
 class UserSchema(Serializer):
     username: str

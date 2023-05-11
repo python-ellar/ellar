@@ -1,7 +1,6 @@
 from typing import List
 
-from ellar.common import Query, get
-from ellar.core.serializer import serialize_object
+from ellar.common import Query, get, serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 

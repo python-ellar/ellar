@@ -1,8 +1,7 @@
 import pytest
 
-from ellar.common import Cookie, Header
+from ellar.common import Cookie, Header, ModuleRouter
 from ellar.core.connection import Request
-from ellar.core.routing import ModuleRouter
 from ellar.testing import Test
 
 mr = ModuleRouter("")

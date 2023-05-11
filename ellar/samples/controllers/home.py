@@ -1,5 +1,4 @@
-from ellar.common import Controller, get, render
-from ellar.core import ControllerBase
+from ellar.common import Controller, ControllerBase, get, render
 
 
 @Controller(prefix="", include_in_schema=False)

@@ -1,16 +1,15 @@
 import typing as t
 
-from ellar.common_types import TReceive, TScope, TSend
-from ellar.compatible import cached_property
-from ellar.constants import SCOPE_SERVICE_PROVIDER
-
-from .interface import (
-    IHostContext,
+from ellar.common import (
     IHTTPConnectionContextFactory,
     IHTTPHostContext,
     IWebSocketContextFactory,
     IWebSocketHostContext,
 )
+from ellar.common.compatible import cached_property
+from ellar.common.constants import SCOPE_SERVICE_PROVIDER
+from ellar.common.interfaces import IHostContext
+from ellar.common.types import TReceive, TScope, TSend
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App

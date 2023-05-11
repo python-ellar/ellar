@@ -1,19 +1,14 @@
 import typing as t
 
-from ellar.constants import MIDDLEWARE_HANDLERS_KEY
-from ellar.core.middleware import FunctionBasedMiddleware
-from ellar.core.middleware.schema import MiddlewareSchema
+from ellar.common.compatible import AttributeDict
+from ellar.common.constants import MIDDLEWARE_HANDLERS_KEY
 
 
-def _add_middleware(
-    middleware_class: type, dispatch: t.Callable, **options: t.Any
-) -> None:
+def _add_middleware(dispatch: t.Callable, **options: t.Any) -> None:
     setattr(
         dispatch,
         MIDDLEWARE_HANDLERS_KEY,
-        MiddlewareSchema(
-            middleware_class=middleware_class, dispatch=dispatch, options=options
-        ),
+        AttributeDict(dispatch=dispatch, options=options),
     )
 
 
@@ -26,7 +21,7 @@ def middleware() -> t.Callable:
     """
 
     def decorator(func: t.Callable) -> t.Callable:
-        _add_middleware(FunctionBasedMiddleware, dispatch=func)
+        _add_middleware(dispatch=func)
         return func
 
     return decorator

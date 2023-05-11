@@ -1,6 +1,7 @@
 import typing as t
 
-from ellar.constants import SERIALIZER_FILTER_KEY
+from ellar.common.constants import SERIALIZER_FILTER_KEY
+from ellar.common.serializer import SerializerFilter
 
 from .base import set_metadata as set_meta
 
@@ -31,7 +32,6 @@ def serializer_filter(
     :param exclude_none:
     :return:
     """
-    from ellar.core.serializer import SerializerFilter
 
     return set_meta(
         SERIALIZER_FILTER_KEY,

@@ -1,8 +1,8 @@
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 
-from ellar.common import Module, ModuleRouter, middleware
-from ellar.core.context import IHostContext
+from ellar.common import IHostContext, Module, ModuleRouter, middleware
+from ellar.core import ModuleBase
 from ellar.testing import Test
 
 mr = ModuleRouter()
@@ -19,7 +19,7 @@ def homepage(request: Request):
 
 
 @Module(routers=[mr])
-class ModuleMiddleware:
+class ModuleMiddleware(ModuleBase):
     @middleware()
     async def middleware_modify_response(cls, context: IHostContext, call_next):
         response = context.switch_to_http_connection().get_response()

@@ -1,5 +1,4 @@
-from ellar.common import Form
-from ellar.core.routing import ModuleRouter
+from ellar.common import Form, ModuleRouter
 from ellar.testing import Test
 
 router = ModuleRouter("")

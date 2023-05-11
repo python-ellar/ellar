@@ -1,6 +1,6 @@
 from ellar.common import post
+from ellar.common.serializer import serialize_object
 from ellar.core.factory import AppFactory
-from ellar.core.serializer import serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
 
 from .sample import Product

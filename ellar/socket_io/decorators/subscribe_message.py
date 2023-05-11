@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.helper import get_name
+from ellar.common.helper import get_name
 from ellar.reflect import reflect
 from ellar.socket_io.constants import MESSAGE_MAPPING_METADATA, MESSAGE_METADATA
 

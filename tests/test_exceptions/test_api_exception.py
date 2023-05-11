@@ -3,7 +3,7 @@ import http
 import pytest
 
 from ellar.common import get
-from ellar.core.exceptions import (
+from ellar.common.exceptions import (
     APIException,
     AuthenticationFailed,
     MethodNotAllowed,

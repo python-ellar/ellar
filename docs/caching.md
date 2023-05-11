@@ -457,7 +457,7 @@ Here's an example of how to use a custom `make_key_callback` function with the c
     ```python
     from ellar.common import get, cache
     from ellar.core import ExecutionContext
-    from ellar.helper import get_name
+    from ellar.common.helper import get_name
     
     def make_key_function(ctx: ExecutionContext, key_prefix: str) -> str:
         function_name = get_name(ctx.get_handler())
@@ -477,7 +477,7 @@ Here's an example of how to use a custom `make_key_callback` function with the c
     ```python
     from ellar.common import get, cache
     from ellar.core import ExecutionContext
-    from ellar.helper import get_name
+    from ellar.common.helper import get_name
     
     def make_key_function(ctx: ExecutionContext, key_prefix: str) -> str:
         function_name = get_name(ctx.get_handler())
