@@ -1,4 +1,4 @@
-
+# **Controllers**
 The Controller is responsible for handling incoming requests and returning responses to the client.
 The purpose of a controller is to receive specific requests for an application `ApplicationRouter`. `ApplicationRouter` on the other hand, decides which `controller` should handle an incoming request.
 

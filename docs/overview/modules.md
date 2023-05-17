@@ -1,3 +1,5 @@
+# **Modules**
+
 A module is a class annotated with a `@Module()` decorator.
 The `@Module()` decorator provides **metadata** that exports a `Module` data and defines the module structure.
 

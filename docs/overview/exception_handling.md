@@ -1,4 +1,4 @@
-
+# **Exceptions & Exception Handling**
 The `ExceptionMiddleware` and `ExceptionMiddlewareService` handle all unhandled exceptions throughout an application and provide user-friendly responses.
 
 ```json

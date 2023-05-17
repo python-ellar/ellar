@@ -1,3 +1,4 @@
+# **Caching**
 Caching refers to the process of storing frequently accessed data in a temporary storage area called a `cache`, 
 in order to speed up access to that data in the future.
 
@@ -6,7 +7,7 @@ By caching data in a faster, more local storage location, the system can quickly
 
 In Ellar, we provided several cache backends interface that interacts with different cache types to assist in cache endpoint responses or other relevant data.
 
-## Setting up the cache
+## **Setting up the cache**
 It's very simple to set up cache in Ellar but the crucial part is picking the cache type that is suitable for your application 
 because some cache type behave differently and perform better and faster than others.
 
@@ -296,7 +297,7 @@ class DevelopmentConfig(ConfigDefaultTypesMixin):
     }
 ```
 
-## Cache Arguments
+## **Cache Arguments**
 
 You can customize the behavior of each caching backend in Django by passing additional arguments when you configure the cache. The valid arguments that can be passed to each backend are as follows:
 
@@ -323,7 +324,7 @@ class DevelopmentConfig(ConfigDefaultTypesMixin):
     }
 ```
 
-## Setting up More than One Cache Backend
+## **Setting up More than One Cache Backend**
 To set up multiple cache backends in Django, you can add additional entries to the `CACHES` variable in your `config.py` file. 
 The `default` cache backend is typically defined first, followed by any additional cache backends you want to configure.
 
@@ -343,7 +344,7 @@ class DevelopmentConfig(ConfigDefaultTypesMixin):
     }
 ```
  
-## CacheService (ICacheService)
+## **CacheService (ICacheService)**
 Ellar does not provide cache backends directly, but instead offers a caching service that manages all the configured cache backends in your application. 
 The `CacheService` class serves as a wrapper for these cache backends and provides a uniform interface for interacting with them.
 
@@ -374,7 +375,7 @@ The CacheService class provides methods like:
 
 These methods are available for each of the configured cache backends and can be used interchangeably with any backend.
 
-## Injecting CacheService
+## **Injecting CacheService**
 `CacheService` is a core service registered in `EllarInjector` and can be injected as every other service.
 
 For example, lets make `CacheService` available in our route function.
@@ -411,7 +412,7 @@ For example, lets make `CacheService` available in our route function.
     ```
 
 
-## Using Cache Decorator
+## **Using Cache Decorator**
 Ellar provides a cache decorator that can be used to cache the responses of route functions. The cache decorator can be applied to a route function to automatically cache its response data for a specified amount of time.
 
 The cache decorator takes the following arguments:
@@ -425,8 +426,8 @@ The cache decorator takes the following arguments:
 We can rewrite the above example using `cache` decorator:
 === "Synchronous Route Function"
     ```python
-    from ellar.common import get, cache
-    
+    from ellar.common import get
+    from ellar.cache import cache
     ...
     @get('/cache-test')
     @cache(ttl=300, version='v1', key_prefix='project_name')
@@ -446,7 +447,7 @@ We can rewrite the above example using `cache` decorator:
         return processed_value
     ```
 
-### Adding Custom key gen function for cache Decorator
+### **Adding Custom key gen function for cache Decorator**
 By default, the `cache` decorator combines the route function's URL and the specified `key_prefix` value to generate the cache key used to store the response data. 
 However, you can customize this behavior by providing a `make_key_callback` function to the cache decorator.
 
@@ -455,7 +456,8 @@ The `make_key_callback` function takes an `ExecutionContext` instance (which con
 Here's an example of how to use a custom `make_key_callback` function with the cache decorator:
 === "Synchronous Route Function"
     ```python
-    from ellar.common import get, cache
+    from ellar.common import get
+    from ellar.cache import cache
     from ellar.core import ExecutionContext
     from ellar.common.helper import get_name
     
@@ -475,7 +477,8 @@ Here's an example of how to use a custom `make_key_callback` function with the c
 === "Asynchronous Route Function"
     
     ```python
-    from ellar.common import get, cache
+    from ellar.common import get
+    from ellar.cache import cache
     from ellar.core import ExecutionContext
     from ellar.common.helper import get_name
     

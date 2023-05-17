@@ -1,9 +1,9 @@
-
+# **Step One**
 You will learn the core fundamentals of Ellar with this set of articles. We are going to build a basic CRUD application
 with features that cover a lot of ground at an introductory level.
 
 
-## Library Dependencies
+## **Library Dependencies**
 Ellar core depends on:
 
 - `python >= 3.7`
@@ -11,7 +11,7 @@ Ellar core depends on:
 - `Injector`
 
 
-## Quick Step
+## **Quick Step**
 Using the Ellar CLI, you can easily set up a new project by running the following commands in your OS terminal:
 ```shell
 $(venv) pip install ellar-cli
@@ -71,7 +71,7 @@ application = AppFactory.create_from_app_module(
 There are two ways to create an Ellar application using the `AppFactory`, `create_from_app_module` and `create_app`.
 Both provides all necessary parameter for creating Ellar application
 
-## Run your project
+## **Run your project**
 Ellar runs [UVICORN - ASGI Server](https://www.uvicorn.org/) under the hood.
 
 ```shell
@@ -174,7 +174,7 @@ Goto your browser and visit: [http://localhost:8000/car/](http://localhost:8000/
 }
 ```
 
-## Enabling OpenAPI Docs
+## **Enabling OpenAPI Docs**
 To set up OPENAPI documentation, we need to go back to the project folder. In the `server.py`
 then add the below.
 ```python

@@ -1,4 +1,4 @@
-# Websocket
+# **Websocket**
 
 [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) is a powerful communication protocol that allows for two-way communication between a client and a server over a single, 
 long-lived connection, making it an ideal tool for building real-time applications.

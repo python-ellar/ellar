@@ -1,3 +1,4 @@
+# **Application Configurations**
 
 The `config.py` file contains all the configuration necessary in bootstrapping ellar application. 
 

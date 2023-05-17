@@ -1,3 +1,4 @@
+from .background import BackgroundTasksParameter
 from .base import BaseConnectionParameterResolver, NonParameterResolver
 from .connection import ConnectionParam
 from .context import ExecutionContextParameter
@@ -18,4 +19,5 @@ __all__ = [
     "ProviderParameterInjector",
     "HostRequestParam",
     "SessionRequestParam",
+    "BackgroundTasksParameter",
 ]

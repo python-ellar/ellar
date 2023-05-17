@@ -1,4 +1,4 @@
-
+# **Custom Decorators**
 Ellar provides a variety of function decorators in the `ellar.common` python module that can be used to modify the behavior of route functions. 
 
 These decorators can be used to change the response type of a route function, add filters to the response schema, define the OPENAPI context, and more. 
@@ -31,7 +31,7 @@ This helps to ensure that the application is receiving valid input and can proce
 
 Please refer to the "How-to-Guide" on parsing inputs [here](/ellar/parsing-inputs/) to see how this input decorators work. 
 
-### WsBody(..., embed=False)
+### **WsBody(..., embed=False)**
 
 `WsBody(...)` is a decorator that defines the message format that should be transmitted from the client in a WebSocket when there is a successful connection. 
 This decorator can be used to specify the structure of the message that is sent over the WebSocket, and to validate the message against a specified schema
@@ -64,7 +64,7 @@ These decorators, such as `Query`, `Form`, and `Body`, etc. are pydantic models 
 However, there are also some route parameters that are **system** dependent, such as the `request` or `websocket` object, and the `response` object. 
 These parameters are resolved by the application and supplied to the route function when needed, and are not specified with pydantic models or user input.
 
-### Provide(Type)
+### **Provide(Type)**
 The **Provide(Type)** decorator is used to resolve a service provider and inject it into a route function parameter. 
 This can be useful when using the ModuleRouter feature in Ellar. 
 
@@ -95,7 +95,7 @@ It also makes the code more modular and easier to test.
     Only types registered in the application can be resolved, but you can set `INJECTOR_AUTO_BIND = True` in configuration for the injector to register automatically that are not found. 
     please note that this automatic registration will be scoped to singleton by the `EllarInjector`.
 
-### Context
+### **Context**
 The **Context()** decorator injects the current `IExecutionContext` to route function parameter. See [ExecutionContext](/basics/execution-context)
 
 For example:
@@ -117,7 +117,7 @@ The `IExecutionContext` object provides access to various resources and informat
 In this example, the `switch_to_http_connection()` method is used to access the current HTTP connection and the `get_client()` method is used to get the client object for the connection. 
 The `query_params` attribute of the client object is then accessed and included in the response returned by the endpoint.
 
-### Req
+### **Req**
 **Req()** decorator injects current `Request` object to route function parameter.
 
 For example:
@@ -137,7 +137,7 @@ def example_endpoint(req = Req()):
 In this example, the `example_endpoint` function has a parameter req decorated with `Req()`, which will be automatically populated with the current `Request` object at runtime. 
 The `headers` and `query_params` attributes of the `req` object can then be accessed and used within the function.
 
-### Res
+### **Res**
 **Res()** decorator injects current `Response` object to route function parameter.
 
 For example:
@@ -156,7 +156,7 @@ def example_endpoint(res = Res()):
 In this example, the `Res()` decorator injects the current `Response` object to the `res` parameter of the `example_endpoint` function. 
 This will allow you to manipulate the headers of the response before it is sent back to the client.
 
-### Ws
+### **Ws**
 **Ws()** decorator injects current `WebSocket` object to route function parameter.
 
 For example:
@@ -223,7 +223,7 @@ def example_endpoint(user: UserParam()):
 These decorators are used to modify the output data of a route function, add filtering to the output schema, or add extra OPENAPI information about the route function.
 
 They include:
-### RENDER
+### **RENDER**
 **@render()** decorator converts a route function response to HTML template response. 
 
 for example: 
@@ -244,7 +244,7 @@ This allows the function to pass data to the template and have it rendered with 
 
 See [HTML Templating](/ellar/templating/templating) for more information on `render` and HTML templating with Ellar.
 
-### FILE
+### **FILE**
 **@file()** decorator converts a route function response to file or streaming response type. 
 Based on the value of `streaming` parameter, file decorator creates `FileResponseModel` or `StreamingResponseModel`.
 
@@ -289,7 +289,7 @@ def file_download(self):
 In the example, an additional parameter media_type is added to the @file(streaming=False) decorator to define the content-type of the file returned. This is helpful for creating the route function's OPENAPI documentation, as it allows the content-type to be defined upfront. Without this parameter, the content-type will be computed during runtime when returning a response for a request.
 It is a way to explicitly define the content-type of the file which will be returned.
 
-#### StreamingResponseModel as file(streaming=True)
+#### **StreamingResponseModel as file(streaming=True)**
 On the other hand, when `streaming` parameter in `@file(streaming=True)` decorator is set to `True`, a `StreamingResponseModel` is created as the response model for the decorated route function. 
 And the route function is required to return an `ContentStream`. `ContentStream` is an synchronous or asynchronous iterator of string or bytes. 
 Type definition is shown below.
@@ -319,7 +319,7 @@ def file_stream(self):
     return slow_numbers(1, 4)
 ```
 
-### OPENAPI-INFO
+### **OPENAPI-INFO**
 **@openapi_info()** decorator adds extra route function OPENAPI properties to route function OPENAPI documentation. They include:
 
 Parameters:
@@ -347,7 +347,7 @@ def openapi_info_function(self, query: str):
     return f"foo bar {query}"
 ```
 
-### SERIALIZER-FILTER
+### **SERIALIZER FILTER**
 **@serializer_filter()** decorator provides Pydantic filtering options to decorated route function output schema.
 
 Parameters:
@@ -380,7 +380,7 @@ def serialized_output_1(self):
 In example, `serializer_filter` to filter values that are `None` and also excluded `password` property from been returned.
 See [Pydantic Model Export](https://docs.pydantic.dev/usage/exporting_models/#modeldict) for more examples.
 
-### VERSION
+### **VERSION**
 **@version()**  is a decorator that provides endpoint versioning for a route function. 
 This decorator allows you to specify the version of the endpoint that the function is associated with. 
 
@@ -401,7 +401,7 @@ The `version` decorator takes a list of values as an argument, for example `@ver
 This indicates that the `get_item_v2_v3` route function will handle version 2 and version 3 requests of the /create endpoint. 
 This allows for multiple versions of the same endpoint to be handled by different route functions, each with their own logic and implementation.
 
-### GUARDS
+### **GUARDS**
 **@Guards()**  is a decorator that applies a protection class of type `GuardCanActivate` to a route function. 
 These protection classes have a `can_execute` function that is called to determine whether a route function should be executed. 
 
@@ -452,10 +452,6 @@ See [Ellar-CLI Custom Commands](https://eadwincode.github.io/ellar-cli/custom-co
 - `@template_filter`: This decorator is used to register a function as a Jinja2 template filter. The function should take one or more arguments and return a modified value.
 
 - `@template_global`: This decorator is used to register a function as a global variable available in all Jinja2 templates. The function can be called without any arguments and should return a value.
-
-- `@on_shutdown`: This decorator is used to register a function that will be called when the application is shutting down.
-
-- `@on_startup`: This decorator is used to register a function that will be called when the application is starting up.
 
 These decorators can be used to define functions that will be executed at specific points in the application's lifecycle. 
 They provide a way to separate and organize the different parts of an application. See [Module Additional Configuration](../modules/#additional-module-configurations) for examples on how these decorator functions are used.

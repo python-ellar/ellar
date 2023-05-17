@@ -8,6 +8,7 @@ from pydantic.error_wrappers import ErrorWrapper
 from pydantic.fields import FieldInfo, ModelField
 from pydantic.typing import ForwardRef, evaluate_forwardref  # type:ignore
 from pydantic.utils import Representation, lenient_issubclass
+from starlette.background import BackgroundTasks
 from starlette.convertors import Convertor
 from starlette.requests import (
     HTTPConnection as StarletteHTTPConnection,
@@ -32,6 +33,7 @@ from ..resolvers import (
     NonParameterResolver,
 )
 from ..resolvers.non_parameter import (
+    BackgroundTasksParameter,
     ConnectionParam,
     ExecutionContextParameter,
     RequestParameter,
@@ -53,6 +55,7 @@ DEFAULT_RESOLVERS: t.Dict[t.Type, t.Type[NonParameterResolver]] = {
     Response: ResponseRequestParam,
     StarletteHTTPConnection: ConnectionParam,
     IExecutionContext: ExecutionContextParameter,
+    BackgroundTasks: BackgroundTasksParameter,
 }
 
 

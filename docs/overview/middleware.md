@@ -1,3 +1,4 @@
+# **Middlewares**
 Middlewares are functions that are called during requests before hitting a specific route handler.
 Middleware functions can modify **request** and **response** objects during the `HTTP` or `WebSocket` connection. 
 
