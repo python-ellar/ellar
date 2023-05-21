@@ -1,3 +1,4 @@
+# **HTML Templating with [Jinja](https://jinja.palletsprojects.com/en/3.0.x/){target='_blank'}**
 Jinja2 is a powerful template engine for Python. It can be used in web applications to separate static and dynamic content, 
 making it easier to maintain and update the dynamic content. 
 
@@ -6,7 +7,7 @@ while the Model and Controller layers handle the data and logic of the applicati
 
 
 ## **Installation**
-[`Jinja2`](https://jinja.palletsprojects.com/en/3.0.x/) package is installed alongside with Ellar.
+[`Jinja2`](https://jinja.palletsprojects.com/en/3.0.x/){target='_blank'} package is installed alongside with Ellar.
 
 
 ## **Quick overview on jinja2 Usage**

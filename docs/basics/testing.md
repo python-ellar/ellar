@@ -1,3 +1,4 @@
+# **Testing**
 Automated testing is the practice of using software tools to automatically run tests on a software application or system, 
 rather than relying on manual testing by humans. It is considered an essential part of software development as it 
 helps increase productivity, ensure quality and performance goals are met, and provide faster feedback loops to developers. 
@@ -8,7 +9,7 @@ Ellar aims to encourage the use of development best practices, including effecti
 These features include:
 
 - automatically generated default unit tests files for components testing
-- offering a util, `TestClientFactory`, that constructs an isolated module/application setup
+- offering a util, `Test` Factory class, that constructs an isolated module/application setup
 - making the Ellar dependency injection system accessible in the testing environment for convenient component mocking.
 
 Ellar is compatible with `unittest` and `pytest` testing frameworks in python but in this documentation, we will be using `pytest`.

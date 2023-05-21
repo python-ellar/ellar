@@ -135,7 +135,7 @@ Let's see different `ResponseModel` available in Ellar and how you can create on
 ### **ResponseModel** 
 Response model that manages rendering of other response types.
 
-- Location: `ellar.core.response.model.base.ResponseModel`
+- Location: `ellar.common.responses.models.ResponseModel`
 - response_type: `Response`
 - model_field_or_schema: `None`
 - media_type: `text/plain`
@@ -143,7 +143,7 @@ Response model that manages rendering of other response types.
 ### **JSONResponseModel** 
 Response model that manages `JSON` response.
 
-- Location: `ellar.core.response.model.json.JSONResponseModel`
+- Location: `ellar.common.responses.models.json.JSONResponseModel`
 - response_type: `JSONResponse` OR `config.DEFAULT_JSON_CLASS`
 - model_field_or_schema: `Required`
 - media_type: `application/json`
@@ -151,7 +151,7 @@ Response model that manages `JSON` response.
 ### **HTMLResponseModel** 
 Response model that manages `HTML` templating response. see [`@render`]() decorator.
 
-- Location: `ellar.core.response.model.html.HTMLResponseModel`
+- Location: `ellar.common.responses.models.html.HTMLResponseModel`
 - response_type: `TemplateResponse`
 - model_field_or_schema: `None`
 - media_type: `text/html`
@@ -160,7 +160,7 @@ Response model that manages `HTML` templating response. see [`@render`]() decora
 ### **FileResponseModel** 
 Response model that manages `FILE` response. see [`@file`]() decorator.
 
-- Location: `ellar.core.response.model.file.FileResponseModel`
+- Location: `ellar.common.responses.models.file.FileResponseModel`
 - response_type: `FileResponse`
 - model_field_or_schema: `None`
 - media_type: `Required`
@@ -169,7 +169,7 @@ Response model that manages `FILE` response. see [`@file`]() decorator.
 ### **StreamingResponseModel** 
 Response model that manages `STREAMING` response. see [`@file`]() decorator.
 
-- Location: `ellar.core.response.model.file.StreamingResponseModel`
+- Location: `ellar.common.responses.models.file.StreamingResponseModel`
 - response_type: `StreamingResponse`
 - model_field_or_schema: `None`
 - media_type: `Required`
@@ -178,7 +178,7 @@ Response model that manages `STREAMING` response. see [`@file`]() decorator.
 ### **EmptyAPIResponseModel**
 Default `ResponseModel` applied when no response is defined.
 
-- Location: `ellar.core.response.model.html.EmptyAPIResponseModel`
+- Location: `ellar.common.responses.models.json.EmptyAPIResponseModel`
 - response_type: `JSONResponse` OR `config.DEFAULT_JSON_CLASS`
 - model_field_or_schema: `dict`
 - media_type: `application/json`

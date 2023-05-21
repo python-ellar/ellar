@@ -357,6 +357,6 @@ And both were used to test for message broadcast.
 
 ## **SocketIO Ellar Example**
 [python-socketio](https://python-socketio.readthedocs.io/en/latest/){target="_blank"} provided a sample project on how to integrate [python-socketio with django](https://github.com/miguelgrinberg/python-socketio/blob/main/examples/server/wsgi).
-The sample project was converted to ellar gateway and it can find it [here]()
+The sample project was converted to ellar gateway and it can find it [here](https://github.com/eadwinCode/ellar/tree/main/examples/02-socketio-app){target="_blank"}
 
 ![gateway_example_image](../img/live_support_websocket_3.gif)

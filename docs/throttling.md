@@ -1,3 +1,4 @@
+# **Rate Limiting**
 A common technique to protect applications from brute-force attacks is rate-limiting. 
 
 To get started, you'll need to install the `ellar-throttler` package.

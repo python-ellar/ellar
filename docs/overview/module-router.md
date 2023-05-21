@@ -1,4 +1,4 @@
-# Module Router
+# **Module Router**
 
 ModuleRouter allows you to define your route handlers as standalone functions, providing an alternative to using classes. 
 This can be beneficial for python developers who prefer using functions. 
