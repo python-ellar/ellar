@@ -2,8 +2,8 @@ import pytest
 
 from ellar.common import Controller, get, ws_route
 from ellar.common.constants import CONTROLLER_CLASS_KEY
-from ellar.common.routing import ControllerRouterFactory
 from ellar.core import AppFactory
+from ellar.core.routing import ControllerRouterFactory
 from ellar.reflect import reflect
 
 

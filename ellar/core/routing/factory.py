@@ -8,11 +8,10 @@ from ellar.common.constants import (
     CONTROLLER_WATERMARK,
 )
 from ellar.common.models import ControllerBase, ControllerType
+from ellar.common.routing import ModuleMount, RouteCollection
 from ellar.reflect import reflect
 
-from ..builder import RouterBuilder
-from ..mount import ModuleMount
-from ..route_collections import RouteCollection
+from .builder import RouterBuilder
 
 
 class ControllerRouterFactory(RouterBuilder, controller_type=type(ControllerBase)):

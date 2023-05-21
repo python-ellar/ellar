@@ -3,7 +3,7 @@ import typing as t
 from starlette.routing import Mount
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from .mount import ModuleMount
+    from ellar.common.routing.mount import ModuleMount
 
 _router_builder_factory: t.Dict[t.Type, t.Type["RouterBuilder"]] = {}
 

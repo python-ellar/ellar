@@ -15,7 +15,6 @@ from ellar.common.constants import (
 )
 from ellar.common.models import ControllerBase
 from ellar.common.routing import ModuleMount
-from ellar.common.routing.builder import get_controller_builder_factory
 from ellar.common.templating import ModuleTemplating
 from ellar.di import (
     MODULE_REF_TYPES,
@@ -27,6 +26,7 @@ from ellar.di import (
 from ellar.di.providers import ModuleProvider
 from ellar.reflect import reflect
 
+from ..routing import get_controller_builder_factory
 from .base import ModuleBase, ModuleBaseMeta
 
 if t.TYPE_CHECKING:  # pragma: no cover
