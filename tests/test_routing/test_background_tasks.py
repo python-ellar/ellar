@@ -37,6 +37,14 @@ def check_background_task_working(tasks: BackgroundTasks):
     return "testing background tasks"
 
 
+@router.get("/background-task-with-string-annotation")
+def check_background_task_working_with_string_annotation(tasks: "BackgroundTasks"):
+    tasks.add_task(background_task_2)
+    tasks.add_task(background_task_1)
+
+    return "testing background tasks"
+
+
 def test_background_tasks_works():
     global background_task_results
     background_task_results = {}
@@ -57,6 +65,22 @@ def test_any_existing_background_task():
 
     client = Test.create_test_module(modules=[ModuleSample]).get_test_client()
     res = client.get("/background-task")
+    assert res.status_code == 200
+    assert res.text == '"testing background tasks"'
+
+    assert background_task_results == {
+        "background_task_1": "Called",
+        "background_task_2": "Called",
+        "background_task_3": "Called",
+    }
+
+
+def test_any_existing_background_task_with_string_annotation():
+    global background_task_results
+    background_task_results = {}
+
+    client = Test.create_test_module(modules=[ModuleSample]).get_test_client()
+    res = client.get("/background-task-with-string-annotation")
     assert res.status_code == 200
     assert res.text == '"testing background tasks"'
 
