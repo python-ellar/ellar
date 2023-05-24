@@ -29,7 +29,9 @@ class JSONResponseModel(ResponseModel):
             t.Type[JSONResponse],
             context.get_app().config.DEFAULT_JSON_CLASS or self._response_type,
         )
-        response_args, headers = self.get_context_response(context=context)
+        response_args, headers = self.get_context_response(
+            context=context, status_code=status_code
+        )
         serializer_filter = reflect.get_metadata(
             SERIALIZER_FILTER_KEY, context.get_handler()
         )

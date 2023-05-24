@@ -106,16 +106,20 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
             name=self.name, path=self.path_format, methods=_methods
         )
 
-    async def _handle_request(self, context: IExecutionContext) -> None:
+    async def handle_request(self, context: IExecutionContext) -> t.Any:
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
             ctx=context
         )
         if errors:
             raise RequestValidationError(errors)
         if self._is_coroutine:
-            response_obj = await self.endpoint(**func_kwargs)
+            return await self.endpoint(**func_kwargs)
         else:
-            response_obj = await run_in_threadpool(self.endpoint, **func_kwargs)
+            return await run_in_threadpool(self.endpoint, **func_kwargs)
+
+    async def handle_response(
+        self, context: IExecutionContext, response_obj: t.Any
+    ) -> None:
         response = self.response_model.process_response(
             ctx=context, response_obj=response_obj
         )

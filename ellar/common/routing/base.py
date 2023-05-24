@@ -10,7 +10,11 @@ from ellar.common.constants import (
     SCOPE_SERVICE_PROVIDER,
     VERSIONING_KEY,
 )
-from ellar.common.interfaces import IExecutionContext, IExecutionContextFactory
+from ellar.common.interfaces import (
+    IExecutionContext,
+    IExecutionContextFactory,
+    InterceptorConsumer,
+)
 from ellar.common.models import GuardCanActivate
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.reflect import reflect
@@ -70,9 +74,11 @@ class RouteOperationBase:
         context = execution_context_factory.create_context(
             operation=self, scope=scope, receive=receive, send=send
         )
+        interceptor_consumer = service_provider.get(InterceptorConsumer)
 
         await self.run_route_guards(context=context)
-        await self._handle_request(context=context)
+        # await self._handle_request(context=context)
+        await interceptor_consumer.execute(context, self)
 
     def get_control_type(self) -> t.Type:
         """
@@ -89,8 +95,14 @@ class RouteOperationBase:
         return self._control_type
 
     @abstractmethod
-    async def _handle_request(self, *, context: IExecutionContext) -> None:
+    async def handle_request(self, *, context: IExecutionContext) -> t.Any:
         """return a context"""
+
+    @abstractmethod
+    async def handle_response(
+        self, context: IExecutionContext, response_obj: t.Any
+    ) -> None:
+        """returns a any"""
 
     def get_allowed_version(self) -> t.Set[t.Union[int, float, str]]:
         versions = reflect.get_metadata(VERSIONING_KEY, self.endpoint) or set()

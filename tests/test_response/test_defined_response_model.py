@@ -1,10 +1,8 @@
 from typing import List, Optional
 
-import pytest
 from pydantic import BaseModel
 
 from ellar.common import ModuleRouter
-from ellar.common.responses.models import RouteResponseExecution
 from ellar.core import AppFactory
 
 mr = ModuleRouter("")
@@ -55,10 +53,11 @@ def test_valid_tuple_return(test_client_factory):
     assert response.json() == {"name": "baz", "price": 2.0, "owner_ids": [1, 2, 3]}
 
 
-def test_get_not_found_res_model(test_client_factory):
+def test_get_not_found_res_model_uses_empty_model(test_client_factory):
     client = test_client_factory(app)
-    with pytest.raises(RouteResponseExecution):
-        client.get("/items/not_found_res_model")
+    res = client.get("/items/not_found_res_model")
+    assert res.status_code == 301
+    assert res.json() == {"name": "baz", "price": 2.0, "owner_ids": [1, 2, 3]}
 
 
 def test_valid(test_client_factory):

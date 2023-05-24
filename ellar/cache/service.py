@@ -60,7 +60,7 @@ class _CacheServiceSync(ICacheServiceSync):
         return _backend.has_key(key, version=version)
 
 
-@injectable  # type: ignore
+@injectable
 class CacheService(_CacheServiceSync, ICacheService):
     """
     A Cache Backend Service that wraps Ellar cache backends

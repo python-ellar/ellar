@@ -84,7 +84,7 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
             )
         self._handlers_kwargs.update({handler_name: handler})
 
-    async def _handle_request(self, context: IExecutionContext) -> None:
+    async def handle_request(self, context: IExecutionContext) -> t.Any:
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
             ctx=context
         )
@@ -107,9 +107,14 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
                 route_parameter_model=self.endpoint_parameter_model,
                 **self._handlers_kwargs,
             )
-            await ws_extra_handler.dispatch(context=context, **func_kwargs)
+            return await ws_extra_handler.dispatch(context=context, **func_kwargs)
         else:
-            await self.endpoint(**func_kwargs)
+            return await self.endpoint(**func_kwargs)
+
+    async def handle_response(
+        self, context: IExecutionContext, response_obj: t.Any
+    ) -> None:
+        """Websocket has no response"""
 
     def _load_model(self) -> None:
         extra_route_args: t.List["ExtraEndpointArg"] = (

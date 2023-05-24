@@ -12,6 +12,7 @@ from .decorators import (
     exception_handler,
     extra_args,
     file,
+    interceptors,
     middleware,
     openapi_info,
     render,
@@ -42,6 +43,7 @@ from .interfaces import (
     IHTTPHostContext,
     IModuleSetup,
     IModuleTemplateLoader,
+    InterceptorConsumer,
     IResponseModel,
     IWebSocketContextFactory,
     IWebSocketHostContext,
@@ -52,6 +54,7 @@ from .models import (
     BaseHttpAuth,
     ControllerBase,
     ControllerType,
+    EllarInterceptor,
     GuardCanActivate,
 )
 from .params.decorators import (
@@ -191,6 +194,9 @@ __all__ = [
     "IModuleSetup",
     "IResponseModel",
     "IModuleTemplateLoader",
+    "InterceptorConsumer",
+    "EllarInterceptor",
+    "interceptors",
 ]
 
 

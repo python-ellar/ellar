@@ -40,7 +40,7 @@ class RunWithServerContext:
 class SocketIOTestingModule(TestingModule):
     @asynccontextmanager
     async def run_with_server(
-        self, host: str = "127.0.0.1", port: int = 8000
+        self, host: str = "127.0.0.1", port: int = 4000
     ) -> t.AsyncIterator[RunWithServerContext]:
         base_url = f"http://{host}:{port}"
 

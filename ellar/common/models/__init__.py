@@ -1,5 +1,6 @@
 from .controller import ControllerBase, ControllerType
 from .guard import BaseAPIKey, BaseAuthGuard, BaseHttpAuth, GuardCanActivate
+from .interceptor import EllarInterceptor
 
 __all__ = [
     "ControllerBase",
@@ -8,4 +9,5 @@ __all__ = [
     "BaseAPIKey",
     "BaseHttpAuth",
     "GuardCanActivate",
+    "EllarInterceptor",
 ]
