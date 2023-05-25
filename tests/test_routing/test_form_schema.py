@@ -3,6 +3,7 @@ import pytest
 from ellar.common import Form, ModuleRouter, post, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
+from ellar.core.routing.helper import build_route_handler
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
@@ -68,6 +69,8 @@ def test_for_invalid_schema():
         @post("/test")
         def invalid_path_parameter(path: NonPrimitiveSchema = Form()):
             pass
+
+        build_route_handler(invalid_path_parameter)
 
     assert (
         str(ex.value)

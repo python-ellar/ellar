@@ -1,6 +1,7 @@
 import pytest
 
 from ellar.common.routing import ModuleRouter
+from ellar.core.routing import ModuleRouterFactory
 
 from .sample import router
 
@@ -81,6 +82,8 @@ def test_module_router_url_reverse():
     @new_router.get
     def some_route():
         pass
+
+    ModuleRouterFactory.build(new_router)
 
     reversed_path = new_router.url_path_for(
         f"{new_router.name}:{new_router.routes[0].name}"

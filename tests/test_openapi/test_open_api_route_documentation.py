@@ -7,6 +7,7 @@ from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY, OPENAPI_KEY
 from ellar.common.responses.models import ResponseModel, ResponseModelField
 from ellar.core.connection import HTTPConnection
 from ellar.core.guard import APIKeyCookie
+from ellar.core.routing import ModuleRouterFactory
 from ellar.openapi import OpenAPIRouteDocumentation
 from ellar.reflect import reflect
 
@@ -57,6 +58,9 @@ def create_car(car: CreateCarSchema):
 @router.http_route("/list", response={200: CreateCarSchema}, methods=["get", "post"])
 def list_and_create_car(car: CreateCarSchema = Body(default=None)):
     return car
+
+
+ModuleRouterFactory.build(router)
 
 
 def test_open_api_route_model_input_fields():

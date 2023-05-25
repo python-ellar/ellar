@@ -3,6 +3,7 @@ import pytest
 from ellar.common import Cookie, ModuleRouter, get, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
+from ellar.core.routing.helper import build_route_handler
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
@@ -116,6 +117,8 @@ def test_invalid_schema_cookie():
         def invalid_path_parameter(cookie: NonPrimitiveSchema = Cookie()):
             pass
 
+        build_route_handler(invalid_path_parameter)
+
     assert (
         str(ex.value)
         == "field: 'filter' with annotation:'<class 'tests.test_routing.sample.Filter'>' in "
@@ -128,6 +131,8 @@ def test_invalid_schema_cookie():
         @get("/test")
         def invalid_path_parameter(cookie: ListOfPrimitiveSchema = Cookie()):
             pass
+
+        build_route_handler(invalid_path_parameter)
 
     assert (
         str(ex.value) == "field: 'an_int' with annotation:'typing.List[int]' in "

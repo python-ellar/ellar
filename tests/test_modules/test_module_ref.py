@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 from starlette.routing import Route
 
@@ -196,7 +198,7 @@ def test_module_template_ref_get_all_routers():
     assert len(module_ref.routers) == 5
 
 
-def test_module_template_ref_get_all_routers_fails_for_invalid_controller():
+def test_module_template_ref_get_all_routers_fails_for_invalid_controller(caplog):
     some_invalid_controller = type("SomeInvalidController", (), {})
     with reflect.context():
         reflect.define_metadata(
@@ -205,13 +207,15 @@ def test_module_template_ref_get_all_routers_fails_for_invalid_controller():
         config = Config()
         container = EllarInjector(auto_bind=False).container
 
-        with pytest.raises(Exception) as ex:
+        with caplog.at_level(logging.WARNING):
             create_module_ref_factor(
                 ModuleBaseExample, config=config, container=container
             )
+
         assert (
-            str(ex.value)
-            == "Router Factory Builder was not found.\nUse `ControllerRouterBuilderFactory` as an example create a FactoryBuilder for this type: <class 'type'>"
+            "Router Factory Builder was not found.\nUse `ControllerRouterBuilderFactory` "
+            "as an example create a FactoryBuilder for this type: <class 'type'>"
+            in str(caplog.text)
         )
 
 
@@ -251,8 +255,11 @@ def test_module_template_ref_routes_returns_valid_routes():
         module_ref = create_module_ref_factor(
             ModuleBaseExample, config=config, container=container
         )
+
+        app = AppFactory.create_from_app_module(module=ModuleBaseExample)
     assert len(module_ref.routers) == 4
-    assert len(module_ref.routes) == 3
+    assert len(module_ref.routes) == 4
+    assert len(app.routes) == 3
 
 
 def test_module_template_ref_routes():

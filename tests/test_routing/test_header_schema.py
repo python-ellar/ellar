@@ -3,6 +3,7 @@ import pytest
 from ellar.common import Header, ModuleRouter, get, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
+from ellar.core.routing.helper import build_route_handler
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
@@ -115,6 +116,8 @@ def test_invalid_schema_header():
         @get("/test")
         def invalid_path_parameter(cookie: NonPrimitiveSchema = Header()):
             pass
+
+        build_route_handler(invalid_path_parameter)
 
     assert (
         str(ex.value)

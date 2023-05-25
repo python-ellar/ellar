@@ -1,6 +1,6 @@
 import typing as t
 
-from pydantic import BaseModel, Field, root_validator, validator
+from pydantic import BaseModel, Field, PrivateAttr, root_validator, validator
 
 from ellar.common.constants import ROUTE_METHODS
 from ellar.common.interfaces import IResponseModel
@@ -84,6 +84,11 @@ class WsRouteParameters(BaseModel):
     encoding: t.Optional[str] = Field("json")
     use_extra_handler: bool = Field(False)
     extra_handler_type: t.Optional[t.Type["WebSocketExtraHandler"]] = None
+    _kwargs: t.Dict = PrivateAttr()
+
+    def __init__(self, **data: t.Any) -> None:
+        super().__init__(**data)
+        self._kwargs = {}
 
     @validator("endpoint")
     def validate_endpoint(cls, value: t.Any) -> t.Any:
@@ -96,3 +101,11 @@ class WsRouteParameters(BaseModel):
                 f"Encoding type not supported. Once [json | text | bytes]. Received: {value}"
             )
         return value
+
+    def dict(self, *args: t.Any, **kwargs: t.Any) -> t.Dict:
+        data = super().dict(*args, **kwargs)
+        data.update(self._kwargs)
+        return data
+
+    def add_websocket_handler(self, handler_name: str, handler: t.Callable) -> None:
+        self._kwargs[handler_name] = handler

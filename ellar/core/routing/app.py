@@ -1,16 +1,13 @@
 import typing as t
 from functools import wraps
-from types import FunctionType
 
 from starlette.routing import BaseRoute, Router as StarletteRouter
 
-from ellar.common.constants import (
-    CONTROLLER_OPERATION_HANDLER_KEY,
-    SCOPE_API_VERSIONING_RESOLVER,
-)
+from ellar.common.constants import SCOPE_API_VERSIONING_RESOLVER
 from ellar.common.routing import RouteCollection
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
-from ellar.reflect import reflect
+
+from .helper import build_route_handler
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.versioning.resolver import BaseAPIVersioningResolver
@@ -56,9 +53,7 @@ class ApplicationRouter(StarletteRouter):
         self.routes: RouteCollection = RouteCollection(routes)
 
     def append(self, item: t.Union[BaseRoute, t.Callable]) -> None:
-        _item: t.Any = item
-        if callable(_item) and type(_item) == FunctionType:
-            _item = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, _item)
+        _item: t.Any = build_route_handler(item)
         self.routes.append(_item)
 
     def extend(self, routes: t.Sequence[t.Union[BaseRoute, t.Callable]]) -> None:

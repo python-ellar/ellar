@@ -3,6 +3,7 @@ import pytest
 from ellar.common import ModuleRouter, Path, get, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
+from ellar.core.routing.helper import build_route_handler
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
@@ -80,6 +81,8 @@ def test_for_invalid_schema():
         def invalid_path_parameter(path: NonPrimitiveSchema = Path()):
             pass
 
+        build_route_handler(invalid_path_parameter)
+
     assert (
         str(ex.value)
         == "Path params must be of one of the supported types. Only primitive types"
@@ -90,6 +93,8 @@ def test_for_invalid_schema():
         @get("/{int}/{float}")
         def invalid_path_parameter(path: ListOfPrimitiveSchema = Path()):
             pass
+
+        build_route_handler(invalid_path_parameter)
 
     assert (
         str(ex.value)
