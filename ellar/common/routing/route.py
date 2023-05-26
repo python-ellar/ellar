@@ -45,6 +45,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         name: t.Optional[str] = None,
         include_in_schema: bool = True,
     ) -> None:
+        super().__init__(endpoint=endpoint)
         self._is_coroutine = inspect.iscoroutinefunction(endpoint)
         self._defined_responses: t.Dict[int, t.Type] = dict(response)
 
@@ -53,7 +54,6 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         self.path_regex, self.path_format, self.param_convertors = compile_path(
             self.path
         )
-        self.endpoint = endpoint  # type: ignore
 
         self.name = get_name(endpoint) if name is None else name
         self.include_in_schema = include_in_schema

@@ -48,10 +48,14 @@ def test_control_type_with_more_than_one_type_fails():
     reflect.define_metadata(
         CONTROLLER_CLASS_KEY,
         None,
-        AnotherSampleController.endpoint_once,
+        AnotherSampleController().endpoint_once,
+    )
+    operation = reflect.get_metadata(
+        CONTROLLER_OPERATION_HANDLER_KEY, AnotherSampleController().endpoint_once
     )
 
     with pytest.raises(Exception, match=r"Operation must have a single control type."):
+        operation._controller_type = None
         ControllerRouterFactory.build(AnotherSampleController)
 
 
@@ -74,7 +78,7 @@ def test_controller_raise_exception_for_controller_operation_without_controller_
     client = test_client_factory(app)
 
     with pytest.raises(Exception, match=r"Operation must have a single control type"):
-        del operation._control_type
+        operation._controller_type = None
         client.get("/abcd/test")
 
 

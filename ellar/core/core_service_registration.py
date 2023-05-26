@@ -3,9 +3,10 @@ import typing as t
 from ellar.common import (
     IExceptionMiddlewareService,
     IExecutionContextFactory,
+    IGuardsConsumer,
     IHostContextFactory,
     IHTTPConnectionContextFactory,
-    InterceptorConsumer,
+    IInterceptorsConsumer,
     IWebSocketContextFactory,
 )
 from ellar.core.services import Reflector
@@ -14,6 +15,7 @@ from ellar.di import EllarInjector
 from .context import ExecutionContextFactory, HostContextFactory
 from .context.factory import HTTPConnectionContextFactory, WebSocketContextFactory
 from .exceptions.service import ExceptionMiddlewareService
+from .guard import GuardConsumer
 from .interceptors import EllarInterceptorConsumer
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -49,5 +51,6 @@ class CoreServiceRegistration:
 
         self.injector.container.register(Reflector)
         self.injector.container.register_singleton(
-            InterceptorConsumer, EllarInterceptorConsumer
+            IInterceptorsConsumer, EllarInterceptorConsumer
         )
+        self.injector.container.register_singleton(IGuardsConsumer, GuardConsumer)

@@ -7,7 +7,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common.routing import RouteOperationBase
 
 
-class IInterceptorsConsumer(ABC):
+class IGuardsConsumer(ABC):
     @abstractmethod
     async def execute(
         self, context: IExecutionContext, route_operation: "RouteOperationBase"

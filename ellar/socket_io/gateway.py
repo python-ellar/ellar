@@ -7,11 +7,15 @@ from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import WebSocketException
 from starlette.routing import compile_path
 
-from ellar.common import IExecutionContext, IExecutionContextFactory, serialize_object
+from ellar.common import (
+    IExecutionContext,
+    IExecutionContextFactory,
+    IGuardsConsumer,
+    serialize_object,
+)
 from ellar.common.constants import (
     CONTROLLER_CLASS_KEY,
     EXTRA_ROUTE_ARGS_KEY,
-    GUARDS_KEY,
     NOT_SET,
     SCOPE_SERVICE_PROVIDER,
 )
@@ -19,7 +23,6 @@ from ellar.common.exceptions import WebSocketRequestValidationError
 from ellar.common.helper import get_name
 from ellar.common.params import WebsocketEndpointArgsModel
 from ellar.core import Config
-from ellar.core.services import Reflector
 from ellar.di import EllarInjector
 from ellar.reflect import reflect
 from ellar.socket_io.context import GatewayContext
@@ -27,7 +30,6 @@ from ellar.socket_io.model import GatewayBase
 from ellar.socket_io.responses import WsResponse
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common import GuardCanActivate
     from ellar.common.params import ExtraEndpointArg
 
 
@@ -39,7 +41,7 @@ class SocketOperationConnection:
         "_name",
         "_is_coroutine",
         "endpoint_parameter_model",
-        "_control_type",
+        "_controller_type",
     )
 
     ws_endpoint_args_model: t.Type[
@@ -55,6 +57,9 @@ class SocketOperationConnection:
         self._name = get_name(self.endpoint)
         self._is_coroutine = inspect.iscoroutinefunction(message_handler)
         self.endpoint_parameter_model = NOT_SET
+        self._controller_type: t.Type[GatewayBase] = reflect.get_metadata(  # type: ignore[assignment]
+            CONTROLLER_CLASS_KEY, self.endpoint
+        )
         self._load_model()
         self._register_handler()
 
@@ -166,51 +171,36 @@ class SocketOperationConnection:
 
     @t.no_type_check
     async def run_route_guards(self, context: GatewayContext) -> None:
-        reflector = context.get_service_provider().get(Reflector)
-        app = context.get_app()
+        guard_consumer = context.get_service_provider().get(IGuardsConsumer)
+        try:
+            await guard_consumer.execute(context, self)
+        except Exception:
+            await self._server.emit(
+                "error",
+                {
+                    "code": status.WS_1011_INTERNAL_ERROR,
+                    "reason": "Authorization Failed",
+                },
+                room=context.sid,
+            )
+            await self._server.disconnect(sid=context.sid)
 
-        targets = [self.endpoint, self.get_control_type()]
-
-        _guards: t.Optional[
-            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
-        ] = reflector.get_all_and_override(GUARDS_KEY, *targets)
-
-        if not _guards:
-            _guards = app.get_guards()
-
-        if _guards:
-            for guard in _guards:
-                if isinstance(guard, type):
-                    guard = context.get_service_provider().get(guard)
-
-                result = await guard.can_activate(context)
-                if not result:
-                    await self._server.emit(
-                        "error",
-                        {
-                            "code": status.WS_1011_INTERNAL_ERROR,
-                            "reason": "Authorization Failed",
-                        },
-                        room=context.sid,
-                    )
-                    await self._server.disconnect(sid=context.sid)
-
-    def get_control_type(self) -> t.Type[GatewayBase]:
+    def get_controller_type(self) -> t.Type[GatewayBase]:
         """
         For operation under a controller, `get_control_type` and `get_class` will return the same result
         For operation under ModuleRouter, this will return a unique type created for the router for tracking some properties
         :return: a type that wraps the operation
         """
-        if not hasattr(self, "_control_type"):
-            _control_type = reflect.get_metadata(CONTROLLER_CLASS_KEY, self.endpoint)
-            if _control_type is None:  # pragma: no cover
+        if not self._controller_type:
+            _controller_type = reflect.get_metadata(CONTROLLER_CLASS_KEY, self.endpoint)
+            if _controller_type is None:  # pragma: no cover
                 raise Exception("Operation must have a single control type.")
-            self._control_type = t.cast(t.Type[GatewayBase], _control_type)
+            self._controller_type = t.cast(t.Type[GatewayBase], _controller_type)
 
-        return self._control_type
+        return self._controller_type
 
     def _get_gateway_instance(self, ctx: IExecutionContext) -> GatewayBase:
-        gateway_type = self.get_control_type()
+        gateway_type = self.get_controller_type()
         if not gateway_type or (
             gateway_type and not issubclass(gateway_type, GatewayBase)
         ):  # pragma: no cover

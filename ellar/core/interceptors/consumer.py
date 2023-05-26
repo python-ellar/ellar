@@ -1,9 +1,9 @@
 import functools
 import typing as t
 
-from ellar.common import EllarInterceptor, IExecutionContext, InterceptorConsumer
+from ellar.common import EllarInterceptor, IExecutionContext, IInterceptorsConsumer
 from ellar.common.constants import ROUTE_INTERCEPTORS, SCOPE_RESPONSE_STARTED
-from ellar.di import injectable
+from ellar.di import EllarInjector, injectable
 
 from ..services import Reflector
 
@@ -12,36 +12,35 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 
 @injectable
-class EllarInterceptorConsumer(InterceptorConsumer):
-    def __init__(self, reflector: Reflector) -> None:
+class EllarInterceptorConsumer(IInterceptorsConsumer):
+    def __init__(self, reflector: Reflector, injector: EllarInjector) -> None:
         self.reflector = reflector
+        self.injector = injector
 
     def get_interceptor(
         self,
-        context: IExecutionContext,
         interceptor: t.Union[t.Type[EllarInterceptor], EllarInterceptor],
     ) -> EllarInterceptor:
         if isinstance(interceptor, type):
-            return t.cast(
-                EllarInterceptor, context.get_service_provider().get(interceptor)
-            )
+            return t.cast(EllarInterceptor, self.injector.get(interceptor))
         return interceptor
 
     async def execute(
         self, context: IExecutionContext, route_operation: "RouteOperationBase"
     ) -> t.Any:
         interceptor_idx = 0
-        route_interceptors: t.List = (
-            self.reflector.get_all_and_override(  # type:ignore[assignment]
-                ROUTE_INTERCEPTORS, *[context.get_handler(), context.get_class()]
+        route_interceptors: t.List[EllarInterceptor] = list(
+            map(
+                self.get_interceptor,
+                self.reflector.get_all_and_override(
+                    ROUTE_INTERCEPTORS, *[context.get_handler(), context.get_class()]
+                )
+                or [],
             )
         )
         route_interceptors_length = len(route_interceptors or [])
 
         if route_interceptors:
-            route_interceptors = [
-                self.get_interceptor(context, item) for item in route_interceptors
-            ]
 
             async def handler(idx: int) -> t.Any:
                 if idx >= route_interceptors_length:

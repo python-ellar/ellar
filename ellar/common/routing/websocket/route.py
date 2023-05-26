@@ -45,6 +45,7 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
         extra_handler_type: t.Optional[t.Type[WebSocketExtraHandler]] = None,
         **handlers_kwargs: t.Any,
     ) -> None:
+        super().__init__(endpoint=endpoint)
         assert path.startswith("/"), "Routed paths must start with '/'"
         self._handlers_kwargs: t.Dict[str, t.Any] = dict(
             encoding=encoding,
@@ -62,7 +63,6 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
         self.path_regex, self.path_format, self.param_convertors = compile_path(
             self.path
         )
-        self.endpoint = endpoint  # type: ignore
         self.name = get_name(endpoint) if name is None else name
 
         self.endpoint_parameter_model: WebsocketEndpointArgsModel = NOT_SET

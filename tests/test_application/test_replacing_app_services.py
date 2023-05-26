@@ -51,7 +51,7 @@ class NewExecutionHostFactory(IExecutionContextFactory):
             receive=receive,
             send=send,
             operation_handler=operation.endpoint,
-            operation_handler_type=operation.get_control_type(),
+            operation_handler_type=operation.get_controller_type(),
             reflector=self.reflector,
         )
 

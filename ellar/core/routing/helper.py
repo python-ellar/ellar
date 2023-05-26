@@ -2,9 +2,11 @@ import typing as t
 from types import FunctionType
 
 from ellar.common.constants import (
+    CONTROLLER_CLASS_KEY,
     CONTROLLER_OPERATION_HANDLER_KEY,
     ROUTE_OPERATION_PARAMETERS,
 )
+from ellar.common.helper import get_unique_control_type
 from ellar.common.logger import logger
 from ellar.common.routing import (
     RouteOperation,
@@ -21,6 +23,9 @@ def build_route_handler(item: t.Callable) -> t.Optional[RouteOperationBase]:
 
     if callable(item) and type(item) == FunctionType:
         _item = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, item)
+
+    if not _item and not reflect.has_metadata(CONTROLLER_CLASS_KEY, item):
+        reflect.define_metadata(CONTROLLER_CLASS_KEY, get_unique_control_type(), item)
 
     if not _item and hasattr(item, ROUTE_OPERATION_PARAMETERS):
         operations = build_route_parameters([item.__dict__[ROUTE_OPERATION_PARAMETERS]])

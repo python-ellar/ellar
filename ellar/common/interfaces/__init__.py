@@ -9,7 +9,8 @@ from .context import (
     IWebSocketHostContext,
 )
 from .exceptions import IExceptionHandler, IExceptionMiddlewareService
-from .interceptor_consumer import InterceptorConsumer
+from .guard_consumer import IGuardsConsumer
+from .interceptor_consumer import IInterceptorsConsumer
 from .module import IModuleSetup
 from .response_model import IResponseModel
 from .templating import IModuleTemplateLoader
@@ -28,5 +29,6 @@ __all__ = [
     "IModuleSetup",
     "IResponseModel",
     "IModuleTemplateLoader",
-    "InterceptorConsumer",
+    "IInterceptorsConsumer",
+    "IGuardsConsumer",
 ]
