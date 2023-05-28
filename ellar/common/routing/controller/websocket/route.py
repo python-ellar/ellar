@@ -1,9 +1,5 @@
 import typing as t
 
-from starlette.status import WS_1008_POLICY_VIOLATION
-from starlette.websockets import WebSocketState
-
-from ellar.common.exceptions import WebSocketRequestValidationError
 from ellar.common.interfaces import IExecutionContext
 
 from ...websocket import WebsocketRouteOperation
@@ -20,22 +16,8 @@ class ControllerWebsocketRouteOperation(
     def get_websocket_handler(cls) -> t.Type[ControllerWebSocketExtraHandler]:
         return ControllerWebSocketExtraHandler
 
-    async def handle_request(self, context: IExecutionContext) -> t.Any:
+    async def run(self, context: IExecutionContext, **kwargs: t.Any) -> t.Any:
         controller_instance = self._get_controller_instance(ctx=context)
-        func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
-            ctx=context
-        )
-        if errors:
-            websocket = context.switch_to_websocket().get_client()
-            exc = WebSocketRequestValidationError(errors)
-            if websocket.client_state == WebSocketState.CONNECTING:
-                await websocket.accept()
-            await websocket.send_json(
-                dict(code=WS_1008_POLICY_VIOLATION, errors=exc.errors())
-            )
-            await websocket.close(code=WS_1008_POLICY_VIOLATION)
-            raise exc
-
         if self._use_extra_handler:
             ws_extra_handler_type = (
                 self._extra_handler_type or self.get_websocket_handler()
@@ -45,6 +27,6 @@ class ControllerWebsocketRouteOperation(
                 controller_instance=controller_instance,
                 **self._handlers_kwargs,
             )
-            return await ws_extra_handler.dispatch(context=context, **func_kwargs)
+            return await ws_extra_handler.dispatch(context=context, **kwargs)
         else:
-            return await self.endpoint(controller_instance, **func_kwargs)
+            return await self.endpoint(controller_instance, **kwargs)

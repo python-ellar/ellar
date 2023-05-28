@@ -53,10 +53,10 @@ class BaseAPIVersioningResolver:
 
 
 class DefaultAPIVersionResolver(BaseAPIVersioningResolver):
-    def raise_exception(self) -> None:
-        raise NotFound()
-
     invalid_version_message = "Invalid API version"
+
+    def raise_exception(self) -> None:
+        raise NotFound(self.invalid_version_message)
 
     def resolve_version(self) -> str:
         return str(NOT_SET)
@@ -64,9 +64,6 @@ class DefaultAPIVersionResolver(BaseAPIVersioningResolver):
 
 class UrlPathVersionResolver(DefaultAPIVersionResolver):
     invalid_version_message = "Invalid version in URL path."
-
-    def raise_exception(self) -> None:
-        raise NotFound(self.invalid_version_message)
 
     def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         super(UrlPathVersionResolver, self).__init__(*args, **kwargs)
@@ -136,9 +133,6 @@ class HeaderVersionResolver(BaseAPIVersioningResolver):
 
 class QueryParameterAPIVersionResolver(DefaultAPIVersionResolver):
     invalid_version_message = "Invalid version in query parameter."
-
-    def raise_exception(self) -> None:
-        raise NotFound(self.invalid_version_message)
 
     def resolve_version(self) -> str:
         version = (

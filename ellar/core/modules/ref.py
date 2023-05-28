@@ -230,8 +230,6 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
     #             self._flatten_routes.append(router)
 
     def _register_module(self) -> None:
-        if not is_decorated_with_injectable(self.module):
-            self._module_type = injectable()(self.module)
         self.container.register(
             self.module, ModuleProvider(self.module, **self._init_kwargs)
         )

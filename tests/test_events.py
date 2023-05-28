@@ -67,3 +67,16 @@ async def test_valid_event_config(anyio_backend):
     config = Config(ON_REQUEST_STARTUP=[EventHandler(valid_function_1)])
     await config.ON_REQUEST_STARTUP[0].run()
     assert called == 1
+
+
+async def test_events_reload(anyio_backend):
+    called = 0
+
+    def valid_function_1():
+        nonlocal called
+        called += 1
+
+    manager = RouterEventManager()
+    manager.reload([EventHandler(valid_function_1)])
+    await manager.async_run()
+    assert called == 1

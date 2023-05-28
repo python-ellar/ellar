@@ -69,7 +69,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         extra_route_args: t.Union[t.List["ExtraEndpointArg"], "ExtraEndpointArg"] = (
             reflect.get_metadata(EXTRA_ROUTE_ARGS_KEY, self.endpoint) or []
         )
-        if not isinstance(extra_route_args, list):
+        if not isinstance(extra_route_args, list):  # pragma: no cover
             extra_route_args = [extra_route_args]
 
         if self.endpoint_parameter_model is NOT_SET:
@@ -106,16 +106,20 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
             name=self.name, path=self.path_format, methods=_methods
         )
 
+    async def run(self, context: IExecutionContext, **kwargs: t.Any) -> t.Any:
+        if self._is_coroutine:
+            return await self.endpoint(**kwargs)
+        else:
+            return await run_in_threadpool(self.endpoint, **kwargs)
+
     async def handle_request(self, context: IExecutionContext) -> t.Any:
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
             ctx=context
         )
         if errors:
             raise RequestValidationError(errors)
-        if self._is_coroutine:
-            return await self.endpoint(**func_kwargs)
-        else:
-            return await run_in_threadpool(self.endpoint, **func_kwargs)
+
+        return await self.run(context, **func_kwargs)
 
     async def handle_response(
         self, context: IExecutionContext, response_obj: t.Any

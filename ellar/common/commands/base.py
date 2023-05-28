@@ -51,7 +51,7 @@ class EllarTyper(Typer):
         hidden: bool = Default(False),
         deprecated: bool = Default(False),
         add_completion: bool = True,
-    ) -> None:
+    ) -> None:  # pragma: no cover
         assert name is not None and name != "", "Typer name is required"
         super().__init__(
             name=name,

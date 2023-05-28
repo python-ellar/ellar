@@ -15,6 +15,7 @@ from ellar.common import (
 )
 from ellar.common.constants import (
     CONTROLLER_CLASS_KEY,
+    CONTROLLER_OPERATION_HANDLER_KEY,
     EXTRA_ROUTE_ARGS_KEY,
     NOT_SET,
     SCOPE_SERVICE_PROVIDER,
@@ -62,6 +63,7 @@ class SocketOperationConnection:
         )
         self._load_model()
         self._register_handler()
+        reflect.define_metadata(CONTROLLER_OPERATION_HANDLER_KEY, self, self.endpoint)
 
     def _load_model(self) -> None:
         path_regex, path_format, param_convertors = compile_path("/")
@@ -84,7 +86,7 @@ class SocketOperationConnection:
     async def _run_with_exception_handling(
         self, gateway_instance: GatewayBase, sid: str
     ) -> None:
-        config = gateway_instance.context.get_service_provider().get(Config)
+
         try:
             await self.run_route_guards(context=gateway_instance.context)
             await self._run_handler(
@@ -104,6 +106,7 @@ class SocketOperationConnection:
                 reason=serialize_object(wex.errors()),
             )
         except Exception as ex:
+            config = gateway_instance.context.get_service_provider().get(Config)
             await self._handle_error(
                 sid=sid,
                 code=status.WS_1011_INTERNAL_ERROR,
@@ -193,7 +196,7 @@ class SocketOperationConnection:
         """
         if not self._controller_type:
             _controller_type = reflect.get_metadata(CONTROLLER_CLASS_KEY, self.endpoint)
-            if _controller_type is None:  # pragma: no cover
+            if _controller_type is None or not isinstance(_controller_type, type):
                 raise Exception("Operation must have a single control type.")
             self._controller_type = t.cast(t.Type[GatewayBase], _controller_type)
 

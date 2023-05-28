@@ -56,13 +56,13 @@ class RouteParameters(BaseModel):
 
     @validator("endpoint")
     def validate_endpoint(cls, value: t.Any) -> t.Any:
-        if not callable(value):
+        if not callable(value):  # pragma: no cover
             raise ValueError("An endpoint must be a callable")
         return value
 
     @root_validator
     def validate_root(cls, values: t.Any) -> t.Any:
-        if "response" not in values:
+        if "response" not in values:  # pragma: no cover
             raise ValueError(
                 "Expected "
                 "IResponseModel | Dict[int, Any | Type[BaseModel] | "

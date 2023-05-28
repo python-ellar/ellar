@@ -84,6 +84,19 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
             )
         self._handlers_kwargs.update({handler_name: handler})
 
+    async def run(self, context: IExecutionContext, **kwargs: t.Any) -> t.Any:
+        if self._use_extra_handler:
+            ws_extra_handler_type = (
+                self._extra_handler_type or self.get_websocket_handler()
+            )
+            ws_extra_handler = ws_extra_handler_type(
+                route_parameter_model=self.endpoint_parameter_model,
+                **self._handlers_kwargs,
+            )
+            return await ws_extra_handler.dispatch(context=context, **kwargs)
+        else:
+            return await self.endpoint(**kwargs)
+
     async def handle_request(self, context: IExecutionContext) -> t.Any:
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
             ctx=context
@@ -99,17 +112,7 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
             await websocket.close(code=WS_1008_POLICY_VIOLATION)
             raise exc
 
-        if self._use_extra_handler:
-            ws_extra_handler_type = (
-                self._extra_handler_type or self.get_websocket_handler()
-            )
-            ws_extra_handler = ws_extra_handler_type(
-                route_parameter_model=self.endpoint_parameter_model,
-                **self._handlers_kwargs,
-            )
-            return await ws_extra_handler.dispatch(context=context, **func_kwargs)
-        else:
-            return await self.endpoint(**func_kwargs)
+        return await self.run(context, **func_kwargs)
 
     async def handle_response(
         self, context: IExecutionContext, response_obj: t.Any

@@ -2,7 +2,10 @@ from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 
 from ellar.common import IHostContext, Module, ModuleRouter, middleware
-from ellar.core import ModuleBase
+from ellar.core import App, Config, ModuleBase
+from ellar.core.middleware import FunctionBasedMiddleware
+from ellar.di import EllarInjector
+from ellar.reflect import asynccontextmanager
 from ellar.testing import Test
 
 mr = ModuleRouter()
@@ -67,3 +70,27 @@ def test_middleware_returns_response():
     response = client.get("/", headers={"ellar": "set"})
     assert response.status_code == 200
     assert response.text == "middleware_return_response returned a response"
+
+
+def test_functional_middleware_skips_lifespan(test_client_factory):
+    async def middleware_function(context: IHostContext, call_next):
+        pass
+
+    startup_complete = False
+    cleanup_complete = False
+
+    @asynccontextmanager
+    async def lifespan(app):
+        nonlocal startup_complete, cleanup_complete
+        startup_complete = True
+        yield
+        cleanup_complete = True
+
+    app = FunctionBasedMiddleware(
+        App(config=Config(), injector=EllarInjector(), lifespan=lifespan),
+        middleware_function,
+    )
+
+    with test_client_factory(app):
+        assert startup_complete
+        assert not cleanup_complete

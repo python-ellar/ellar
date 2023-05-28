@@ -71,10 +71,10 @@ class RouteOperationBase:
         :return: a type that wraps the operation
         """
         if not self._controller_type:
-            _control_type = reflect.get_metadata(CONTROLLER_CLASS_KEY, self.endpoint)
-            if _control_type is None:
+            _controller_type = reflect.get_metadata(CONTROLLER_CLASS_KEY, self.endpoint)
+            if _controller_type is None or not isinstance(_controller_type, type):
                 raise Exception("Operation must have a single control type.")
-            self._controller_type = t.cast(t.Type, _control_type)
+            self._controller_type = t.cast(t.Type, _controller_type)
 
         return self._controller_type
 

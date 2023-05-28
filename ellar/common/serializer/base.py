@@ -12,13 +12,13 @@ __pydantic_config__ = "__config__"
 __pydantic_root__ = "__root__"
 
 
+@t.no_type_check
 def get_dataclass_pydantic_model(
     dataclass_type: t.Type,
 ) -> t.Optional[t.Type[BaseModel]]:
 
     if hasattr(dataclass_type, __pydantic_model__):
         return t.cast(t.Type[BaseModel], dataclass_type.__dict__[__pydantic_model__])
-    return None
 
 
 class SerializerConfig(BaseConfig):

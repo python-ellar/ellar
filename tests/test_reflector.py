@@ -36,6 +36,9 @@ def test_should_reflect_metadata_of_all_targets_and_concat_arrays():
         value,
     ]
 
+    reflect.define_metadata("key1", value, SampleTarget)
+    assert reflector.get_all_and_merge("key1", *[SampleTarget]) == [value]
+
 
 def test_should_reflect_metadata_of_all_targets_in_an_arrays():
     key = "key"
