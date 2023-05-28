@@ -84,7 +84,7 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
             )
         self._handlers_kwargs.update({handler_name: handler})
 
-    async def run(self, context: IExecutionContext, **kwargs: t.Any) -> t.Any:
+    async def run(self, context: IExecutionContext, kwargs: t.Dict) -> t.Any:
         if self._use_extra_handler:
             ws_extra_handler_type = (
                 self._extra_handler_type or self.get_websocket_handler()
@@ -112,7 +112,7 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
             await websocket.close(code=WS_1008_POLICY_VIOLATION)
             raise exc
 
-        return await self.run(context, **func_kwargs)
+        return await self.run(context, func_kwargs)
 
     async def handle_response(
         self, context: IExecutionContext, response_obj: t.Any

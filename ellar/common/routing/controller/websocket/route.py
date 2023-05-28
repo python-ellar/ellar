@@ -16,7 +16,7 @@ class ControllerWebsocketRouteOperation(
     def get_websocket_handler(cls) -> t.Type[ControllerWebSocketExtraHandler]:
         return ControllerWebSocketExtraHandler
 
-    async def run(self, context: IExecutionContext, **kwargs: t.Any) -> t.Any:
+    async def run(self, context: IExecutionContext, kwargs: t.Dict) -> t.Any:
         controller_instance = self._get_controller_instance(ctx=context)
         if self._use_extra_handler:
             ws_extra_handler_type = (

@@ -106,7 +106,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
             name=self.name, path=self.path_format, methods=_methods
         )
 
-    async def run(self, context: IExecutionContext, **kwargs: t.Any) -> t.Any:
+    async def run(self, context: IExecutionContext, kwargs: t.Dict) -> t.Any:
         if self._is_coroutine:
             return await self.endpoint(**kwargs)
         else:
@@ -119,7 +119,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         if errors:
             raise RequestValidationError(errors)
 
-        return await self.run(context, **func_kwargs)
+        return await self.run(context, func_kwargs)
 
     async def handle_response(
         self, context: IExecutionContext, response_obj: t.Any
