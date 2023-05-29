@@ -85,3 +85,25 @@ def test_interceptor_works_ws():
     with client.websocket_connect("/interceptor-ws") as ws:
         data = ws.receive_text()
     assert data == "intercepted okay"
+
+
+def test_global_guard_works():
+    tm = Test.create_test_module()
+    app = tm.create_application()
+
+    @get("/global")
+    def _interceptor_demo_endpoint():
+        return {"message": "intercepted okay"}
+
+    app.router.append(_interceptor_demo_endpoint)
+    app.use_global_interceptors(Interceptor1(), InterceptCustomException)
+
+    _client = tm.get_test_client()
+
+    res = _client.get("/global")
+
+    assert res.status_code == 200
+    assert res.json() == {
+        "Interceptor1": "Interceptor1 modified returned resulted",
+        "message": "intercepted okay",
+    }

@@ -28,14 +28,13 @@ class EllarInterceptorConsumer(IInterceptorsConsumer):
     async def execute(
         self, context: IExecutionContext, route_operation: "RouteOperationBase"
     ) -> t.Any:
-        interceptor_idx = 0
         route_interceptors: t.List[EllarInterceptor] = list(
             map(
                 self.get_interceptor,
                 self.reflector.get_all_and_override(
                     ROUTE_INTERCEPTORS, *[context.get_handler(), context.get_class()]
                 )
-                or [],
+                or context.get_app().get_interceptors(),
             )
         )
         route_interceptors_length = len(route_interceptors or [])
@@ -46,7 +45,7 @@ class EllarInterceptorConsumer(IInterceptorsConsumer):
                 if idx >= route_interceptors_length:
                     return await route_operation.handle_request(context=context)
                 return await route_interceptors[idx].intercept(
-                    context, functools.partial(handler, interceptor_idx + 1)
+                    context, functools.partial(handler, idx + 1)
                 )
 
             res = await handler(0)

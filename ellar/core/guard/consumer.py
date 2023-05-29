@@ -24,9 +24,6 @@ class GuardConsumer(IGuardsConsumer):
 
         for guard in self._get_guards(context):
             await self.run_guard(context, guard)
-        else:
-            for guard in map(self.get_guard_instance, context.get_app().get_guards()):
-                await self.run_guard(context, guard)
 
     async def run_guard(
         self, context: IExecutionContext, guard_instance: "GuardCanActivate"
@@ -43,7 +40,8 @@ class GuardConsumer(IGuardsConsumer):
 
         return map(
             self.get_guard_instance,
-            reflector.get_all_and_override(GUARDS_KEY, *targets) or [],
+            reflector.get_all_and_override(GUARDS_KEY, *targets)
+            or context.get_app().get_guards(),
         )
 
     def get_guard_instance(
