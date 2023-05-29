@@ -1,129 +1,64 @@
+import dataclasses
 import typing as t
-import uuid
-from functools import wraps
 
 from ellar.cache.interface import ICacheService
-from ellar.common import Context, IExecutionContext, Provide, extra_args
-from ellar.common.helper import is_async_callable
-from ellar.common.params import ExtraEndpointArg
+from ellar.common import EllarInterceptor, IExecutionContext, set_metadata
+from ellar.common.constants import ROUTE_CACHE_OPTIONS, ROUTE_INTERCEPTORS
+from ellar.core import Reflector
+from ellar.di import injectable
 
 
-class _CacheDecorator:
+@dataclasses.dataclass
+class RouteCacheOptions:
+    ttl: t.Union[int, float]
+    key_prefix: str
+    make_key_callback: t.Callable[[IExecutionContext, str], str]
+    version: t.Optional[str] = None
+    backend: str = "default"
+
+
+def route_cache_make_key(context: IExecutionContext, key_prefix: str) -> str:
+    """Defaults key generator for caching view"""
+    connection = context.switch_to_http_connection()
+    return f"{connection.get_client().url}:{key_prefix or 'view'}"
+
+
+@injectable
+class CacheEllarInterceptor(EllarInterceptor):
     __slots__ = (
-        "_is_async",
-        "_key_prefix",
-        "_version",
-        "_backend",
-        "_func",
-        "_ttl",
-        "_cache_service_arg",
-        "_context_arg",
-        "_make_key_callback",
+        "_cache_service",
+        "_reflector",
     )
 
-    def __init__(
-        self,
-        func: t.Callable,
-        ttl: t.Union[int, float],
-        *,
-        key_prefix: str = "",
-        version: str = None,
-        backend: str = "default",
-        make_key_callback: t.Callable[[IExecutionContext, str], str] = None,
-    ) -> None:
-        self._is_async = is_async_callable(func)
-        self._key_prefix = key_prefix
-        self._version = version
-        self._backend = backend
-        self._func = func
-        self._ttl = ttl
+    def __init__(self, cache_service: ICacheService, reflector: "Reflector") -> None:
+        self._cache_service = cache_service
+        self._reflector = reflector
 
-        # create extra args
-        self._cache_service_arg = ExtraEndpointArg(
-            name=f"cache_service_{uuid.uuid4().hex[:4]}",
-            annotation=ICacheService,  # type:ignore[misc]
-            default_value=Provide(),
-        )
-        self._context_arg = ExtraEndpointArg(
-            name=f"route_context_{uuid.uuid4().hex[:4]}",
-            annotation=IExecutionContext,  # type:ignore[misc]
-            default_value=Context(),
-        )
-        # apply extra_args to endpoint
-        extra_args(self._cache_service_arg, self._context_arg)(func)
-        self._make_key_callback: t.Callable[[IExecutionContext, str], str] = (
-            make_key_callback or self.route_cache_make_key
+    async def intercept(
+        self, context: IExecutionContext, next_interceptor: t.Callable[..., t.Coroutine]
+    ) -> t.Any:
+        opts: RouteCacheOptions = self._reflector.get(
+            ROUTE_CACHE_OPTIONS, context.get_handler()
         )
 
-    def get_decorator_wrapper(self) -> t.Callable:
-        if self._is_async:
-            return self.get_async_cache_wrapper()
-        return self.get_cache_wrapper()
+        backend = self._cache_service.get_backend(backend=opts.backend)
+        key = opts.make_key_callback(context, opts.key_prefix or backend.key_prefix)
 
-    def route_cache_make_key(self, context: IExecutionContext, key_prefix: str) -> str:
-        """Defaults key generator for caching view"""
-        connection = context.switch_to_http_connection()
-        return f"{connection.get_client().url}:{key_prefix or 'view'}"
+        cached_value = await self._cache_service.get_async(
+            key, opts.version, backend=opts.backend
+        )
+        if cached_value:
+            return cached_value
 
-    def get_async_cache_wrapper(self) -> t.Callable:
-        """Gets endpoint asynchronous wrapper function"""
-
-        @wraps(self._func)
-        async def _async_wrapper(*args: t.Any, **kwargs: t.Any) -> t.Any:
-            cache_service: ICacheService = self._cache_service_arg.resolve(kwargs)
-            context: IExecutionContext = self._context_arg.resolve(kwargs)
-
-            backend = cache_service.get_backend(backend=self._backend)
-            key = self._make_key_callback(
-                context, self._key_prefix or backend.key_prefix
-            )
-
-            cached_value = await cache_service.get_async(
-                key, self._version, backend=self._backend
-            )
-            if cached_value:
-                return cached_value
-
-            response = await self._func(*args, **kwargs)
-            await cache_service.set_async(
-                key,
-                response,
-                ttl=self._ttl,
-                version=self._version,
-                backend=self._backend,
-            )
-            return response
-
-        return _async_wrapper
-
-    def get_cache_wrapper(self) -> t.Callable:
-        """Gets endpoint synchronous wrapper function"""
-
-        @wraps(self._func)
-        def _wrapper(*args: t.Any, **kwargs: t.Any) -> t.Any:
-            cache_service: ICacheService = self._cache_service_arg.resolve(kwargs)
-            context: IExecutionContext = self._context_arg.resolve(kwargs)
-
-            backend = cache_service.get_backend(backend=self._backend)
-            key = self._make_key_callback(
-                context, self._key_prefix or backend.key_prefix
-            )
-
-            cached_value = cache_service.get(key, self._version, backend=self._backend)
-            if cached_value:
-                return cached_value
-
-            response = self._func(*args, **kwargs)
-            cache_service.set(
-                key,
-                response,
-                ttl=self._ttl,
-                version=self._version,
-                backend=self._backend,
-            )
-            return response
-
-        return _wrapper
+        response = await next_interceptor()
+        await self._cache_service.set_async(
+            key,
+            response,
+            ttl=opts.ttl,
+            version=opts.version,
+            backend=opts.backend,
+        )
+        return response
 
 
 def cache(
@@ -145,14 +80,14 @@ def cache(
     """
 
     def _wraps(func: t.Callable) -> t.Callable:
-        cache_decorator = _CacheDecorator(
-            func,
-            ttl,
+        options = RouteCacheOptions(
+            ttl=ttl,
             key_prefix=key_prefix,
             version=version,
-            backend=backend,
-            make_key_callback=make_key_callback,
+            backend=backend or "default",
+            make_key_callback=make_key_callback or route_cache_make_key,
         )
-        return cache_decorator.get_decorator_wrapper()
+        func = set_metadata(ROUTE_CACHE_OPTIONS, options)(func)
+        return set_metadata(ROUTE_INTERCEPTORS, [CacheEllarInterceptor])(func)  # type: ignore[no-any-return]
 
     return _wraps
