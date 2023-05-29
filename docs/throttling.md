@@ -52,18 +52,18 @@ application = AppFactory.create_from_app_module(
 The above is also a valid configuration for `ThrottleModule` registration if you want to work with config.
 
 If you add the `ThrottlerGuard` to your application `global_guards`, then all the incoming requests will be throttled by default. 
-This can also be omitted in favor of `@Guards(ThrottlerGuard)`. The global guard check can be skipped using the `@skip_throttle()` decorator mentioned later.
+This can also be omitted in favor of `@UseGuards(ThrottlerGuard)`. The global guard check can be skipped using the `@skip_throttle()` decorator mentioned later.
 
-Example with `@Guards(ThrottlerGuard)`
+Example with `@UseGuards(ThrottlerGuard)`
 ```python
 # project_name/controller.py
-from ellar.common import Controller, Guards
+from ellar.common import Controller, UseGuards
 from ellar_throttler import throttle, ThrottlerGuard
 
 @Controller()
 class AppController:
 
-  @Guards(ThrottlerGuard)
+  @UseGuards(ThrottlerGuard)
   @throttle(limit=5, ttl=30)
   def normal(self):
       pass
@@ -95,12 +95,12 @@ a class that is skipped.
 
 ```python
 # project_name/controller.py
-from ellar.common import Controller, Guards
+from ellar.common import Controller, UseGuards
 from ellar_throttler import ThrottlerGuard, skip_throttle
 
 @skip_throttle()
 @Controller()
-@Guards(ThrottlerGuard)
+@UseGuards(ThrottlerGuard)
 class AppController:
   
     def do_skip(self):
@@ -193,7 +193,7 @@ class ThrottlerBehindProxyGuard(ThrottlerGuard):
 from .throttler_behind_proxy import ThrottlerBehindProxyGuard
 
 @Controller('')
-@Guards(ThrottlerBehindProxyGuard)
+@UseGuards(ThrottlerBehindProxyGuard)
 class AppController:
     pass
 ```

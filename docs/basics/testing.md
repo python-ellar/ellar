@@ -152,12 +152,12 @@ class TestCarController:
 ```
 We this, anywhere `CarRepository` is needed, a `MockCarRepository()` instance will be applied.
 
-In same way, we can override `Guards` used in controllers during testing. For example, lets assume `CarController` has a guard `JWTGuard`
+In same way, we can override `UseGuards` used in controllers during testing. For example, lets assume `CarController` has a guard `JWTGuard`
 
 ```python
 import typing
 from ellar.common.compatible import AttributeDict
-from ellar.common import Guards, Controller, ControllerBase
+from ellar.common import UseGuards, Controller, ControllerBase
 from ellar.core.guard import HttpBearerAuth
 from ellar.di import injectable
 
@@ -169,7 +169,7 @@ class JWTGuard(HttpBearerAuth):
         return AttributeDict(is_authenticated=True, first_name='Ellar', last_name='ASGI Framework') 
 
 
-@Guards(JWTGuard)
+@UseGuards(JWTGuard)
 @Controller('/car')
 class CarController(ControllerBase):
     ...

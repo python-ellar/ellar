@@ -1,7 +1,7 @@
 import pytest
 from starlette.status import HTTP_401_UNAUTHORIZED
 
-from ellar.common import APIException, Guards, Req, get, serialize_object
+from ellar.common import APIException, Req, UseGuards, get, serialize_object
 from ellar.core import AppFactory, Reflector
 from ellar.core.guard import (
     APIKeyCookie,
@@ -95,7 +95,7 @@ for _path, auth in [
 ]:
 
     @get(f"/{_path}")
-    @Guards(auth)
+    @UseGuards(auth)
     def auth_demo_endpoint(request=Req()):
         return {"authentication": request.user}
 
