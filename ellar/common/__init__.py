@@ -8,11 +8,11 @@ from .decorators import (
     Controller,
     Module,
     UseGuards,
+    UseInterceptors,
     Version,
     exception_handler,
     extra_args,
     file,
-    interceptors,
     middleware,
     openapi_info,
     render,
@@ -198,7 +198,7 @@ __all__ = [
     "IInterceptorsConsumer",
     "IGuardsConsumer",
     "EllarInterceptor",
-    "interceptors",
+    "UseInterceptors",
 ]
 
 

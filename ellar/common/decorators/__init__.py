@@ -7,7 +7,7 @@ from .extra_args import extra_args
 from .file import file
 from .guards import UseGuards
 from .html import render, template_filter, template_global
-from .interceptor import interceptors
+from .interceptor import UseInterceptors
 from .middleware import middleware
 from .modules import Module
 from .openapi import openapi_info
@@ -29,7 +29,7 @@ __all__ = [
     "openapi_info",
     "Module",
     "extra_args",
-    "interceptors",
+    "UseInterceptors",
 ]
 
 

@@ -5,8 +5,8 @@ from ellar.common import (
     ControllerBase,
     EllarInterceptor,
     IExecutionContext,
+    UseInterceptors,
     get,
-    interceptors,
     ws_route,
 )
 from ellar.di import injectable
@@ -41,19 +41,19 @@ class InterceptCustomException(EllarInterceptor):
             return {"message": str(cex)}
 
 
+@UseInterceptors(Interceptor1)
 @Controller("")
 class InterceptorControllerTest(ControllerBase):
-    @interceptors(Interceptor1)
+    @UseInterceptors(Interceptor1)
     @get("/interceptor-1")
     async def interceptor_1(self):
         return {"message": "intercepted okay"}
 
-    @interceptors(InterceptCustomException())
+    @UseInterceptors(InterceptCustomException())
     @get("/interceptor-exception")
     async def interceptor_exception(self):
         raise CustomException("Wrong data!!")
 
-    @interceptors(Interceptor1)
     @ws_route("/interceptor-ws")
     async def interceptor_1_ws(self):
         ws = self.context.switch_to_websocket().get_client()
