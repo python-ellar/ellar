@@ -8,7 +8,7 @@ from ellar.common.constants import LOG_LEVELS
 from ellar.common.datastructures import State, URLPath
 from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
 from ellar.common.logger import logger
-from ellar.common.models import GuardCanActivate
+from ellar.common.models import EllarInterceptor, GuardCanActivate
 from ellar.common.templating import Environment
 from ellar.common.types import ASGIApp, T, TReceive, TScope, TSend
 from ellar.core.middleware import (
@@ -54,6 +54,9 @@ class App(AppTemplating):
         self._injector: EllarInjector = injector
 
         self._global_guards = [] if global_guards is None else list(global_guards)
+        self._global_interceptors: t.List[
+            t.Union[EllarInterceptor, t.Type[EllarInterceptor]]
+        ] = []
         self._exception_handlers = list(self.config.EXCEPTION_HANDLERS)
 
         self._user_middleware = list(t.cast(list, self.config.MIDDLEWARE))
@@ -143,10 +146,20 @@ class App(AppTemplating):
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         return self._global_guards
 
+    def get_interceptors(
+        self,
+    ) -> t.List[t.Union[EllarInterceptor, t.Type[EllarInterceptor]]]:
+        return self._global_interceptors
+
     def use_global_guards(
         self, *guards: t.Union["GuardCanActivate", t.Type["GuardCanActivate"]]
     ) -> None:
         self._global_guards.extend(guards)
+
+    def use_global_interceptors(
+        self, *interceptors: t.Union[EllarInterceptor, t.Type[EllarInterceptor]]
+    ) -> None:
+        self._global_interceptors.extend(interceptors)
 
     @property
     def injector(self) -> EllarInjector:

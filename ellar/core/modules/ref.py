@@ -15,7 +15,6 @@ from ellar.common.constants import (
 )
 from ellar.common.models import ControllerBase
 from ellar.common.routing import ModuleMount
-from ellar.common.routing.builder import get_controller_builder_factory
 from ellar.common.templating import ModuleTemplating
 from ellar.di import (
     MODULE_REF_TYPES,
@@ -27,6 +26,7 @@ from ellar.di import (
 from ellar.di.providers import ModuleProvider
 from ellar.reflect import reflect
 
+from ..routing import get_controller_builder_factory
 from .base import ModuleBase, ModuleBaseMeta
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -185,10 +185,8 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
             reflect.get_metadata(MODULE_METADATA.CONTROLLERS, self._module_type) or []
         )
 
-        self._routers: t.Sequence[
-            t.Union[BaseRoute, ModuleMount, Mount]
-        ] = self._get_all_routers()
-        self._flatten_routes: t.List[BaseRoute] = []
+        self._routers: t.List[t.Union[BaseRoute]] = self._get_all_routers()
+        # self._flatten_routes: t.List[BaseRoute] = []
 
         if isinstance(self.module, type) and issubclass(self.module, ModuleBase):
             self.scan_templating_filters()
@@ -197,7 +195,7 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
 
         self.register_providers()
         self.register_controllers()
-        self._build_flatten_routes()
+        # self._build_flatten_routes()
 
     @property
     def module(self) -> t.Type[ModuleBase]:
@@ -217,23 +215,21 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
 
     @property
     def routes(self) -> t.List[BaseRoute]:
-        return self._flatten_routes
+        return self._routers
 
-    def _build_flatten_routes(self) -> None:
-        for router in self._routers:
-            # if isinstance(router, ModuleMount):
-            #     # TODO: Allow users to choose whether to run flatten route of group routes together
-            #     # router.build_child_routes()
-            #     self._flatten_routes.append(router)
-            #     continue
-            # if isinstance(router, BaseRoute):
-            #     self._flatten_routes.append(router)
-            if isinstance(router, BaseRoute):
-                self._flatten_routes.append(router)
+    # def _build_flatten_routes(self) -> None:
+    #     for router in self._routers:
+    #         # if isinstance(router, ModuleMount):
+    #         #     # TODO: Allow users to choose whether to run flatten route of group routes together
+    #         #     # router.build_child_routes()
+    #         #     self._flatten_routes.append(router)
+    #         #     continue
+    #         # if isinstance(router, BaseRoute):
+    #         #     self._flatten_routes.append(router)
+    #         if isinstance(router, BaseRoute):
+    #             self._flatten_routes.append(router)
 
     def _register_module(self) -> None:
-        if not is_decorated_with_injectable(self.module):
-            self._module_type = injectable()(self.module)
         self.container.register(
             self.module, ModuleProvider(self.module, **self._init_kwargs)
         )
@@ -287,16 +283,14 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         for controller in self._controllers:
             ProviderConfig(controller).register(self._container)
 
-    # def run_application_ready(self, app: "App") -> None:
-    #     _module_type_instance = self._container.injector.get(self._module_type)
-    #     _module_type_instance.application_ready(app)
-
-    def _get_all_routers(self) -> t.Sequence[t.Union[ModuleMount, Mount, BaseRoute]]:
+    def _get_all_routers(self) -> t.List[BaseRoute]:
         _routers = list(
             reflect.get_metadata(MODULE_METADATA.ROUTERS, self._module_type) or []
         )
-        for controller in self._controllers:
+        result = []
+
+        for controller in self._controllers + _routers:
             factory_builder = get_controller_builder_factory(type(controller))
             factory_builder.check_type(controller)
-            _routers.append(factory_builder.build(controller))
-        return _routers
+            result.append(factory_builder.build(controller))
+        return result  # type: ignore[return-value]

@@ -38,20 +38,21 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
         scope[SCOPE_RESPONSE_STARTED] = False
 
         async def sender(message: TMessage) -> None:
-            if message["type"] == "http.response.start":
+            if (
+                message["type"] == "http.response.start"
+                or message["type"] == "websocket.accept"
+            ):
                 scope[SCOPE_RESPONSE_STARTED] = True
             await send(message)
             return
-
-        _sender = sender if scope["type"] == "http" else send
 
         async with self.injector.create_asgi_args() as service_provider:
             scope[SCOPE_SERVICE_PROVIDER] = service_provider
 
             if scope["type"] == "http":
-                await super().__call__(scope, receive, _sender)
+                await super().__call__(scope, receive, sender)
             else:
-                await self.app(scope, receive, _sender)
+                await self.app(scope, receive, sender)
 
     async def error_handler(self, request: Request, exc: Exception) -> Response:
         host_context_factory: IHostContextFactory = request.scope[

@@ -16,7 +16,7 @@ def middleware() -> t.Callable:
     """
     ========= MODULE DECORATOR ==============
 
-    Defines middle functions at module level
+    Defines middleware functions at  @Module decorated class level
     :return: Function
     """
 

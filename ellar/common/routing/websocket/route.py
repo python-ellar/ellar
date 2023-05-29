@@ -45,6 +45,7 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
         extra_handler_type: t.Optional[t.Type[WebSocketExtraHandler]] = None,
         **handlers_kwargs: t.Any,
     ) -> None:
+        super().__init__(endpoint=endpoint)
         assert path.startswith("/"), "Routed paths must start with '/'"
         self._handlers_kwargs: t.Dict[str, t.Any] = dict(
             encoding=encoding,
@@ -62,7 +63,6 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
         self.path_regex, self.path_format, self.param_convertors = compile_path(
             self.path
         )
-        self.endpoint = endpoint  # type: ignore
         self.name = get_name(endpoint) if name is None else name
 
         self.endpoint_parameter_model: WebsocketEndpointArgsModel = NOT_SET
@@ -84,7 +84,20 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
             )
         self._handlers_kwargs.update({handler_name: handler})
 
-    async def _handle_request(self, context: IExecutionContext) -> None:
+    async def run(self, context: IExecutionContext, kwargs: t.Dict) -> t.Any:
+        if self._use_extra_handler:
+            ws_extra_handler_type = (
+                self._extra_handler_type or self.get_websocket_handler()
+            )
+            ws_extra_handler = ws_extra_handler_type(
+                route_parameter_model=self.endpoint_parameter_model,
+                **self._handlers_kwargs,
+            )
+            return await ws_extra_handler.dispatch(context=context, **kwargs)
+        else:
+            return await self.endpoint(**kwargs)
+
+    async def handle_request(self, context: IExecutionContext) -> t.Any:
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
             ctx=context
         )
@@ -99,17 +112,12 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
             await websocket.close(code=WS_1008_POLICY_VIOLATION)
             raise exc
 
-        if self._use_extra_handler:
-            ws_extra_handler_type = (
-                self._extra_handler_type or self.get_websocket_handler()
-            )
-            ws_extra_handler = ws_extra_handler_type(
-                route_parameter_model=self.endpoint_parameter_model,
-                **self._handlers_kwargs,
-            )
-            await ws_extra_handler.dispatch(context=context, **func_kwargs)
-        else:
-            await self.endpoint(**func_kwargs)
+        return await self.run(context, func_kwargs)
+
+    async def handle_response(
+        self, context: IExecutionContext, response_obj: t.Any
+    ) -> None:
+        """Websocket has no response"""
 
     def _load_model(self) -> None:
         extra_route_args: t.List["ExtraEndpointArg"] = (

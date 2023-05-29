@@ -4,7 +4,6 @@ from functools import partial
 from types import FunctionType
 
 from ellar.common.constants import (
-    CONTROLLER_OPERATION_HANDLER_KEY,
     DELETE,
     GET,
     HEAD,
@@ -13,22 +12,11 @@ from ellar.common.constants import (
     PATCH,
     POST,
     PUT,
+    ROUTE_OPERATION_PARAMETERS,
     TRACE,
 )
-from ellar.common.helper import class_base_function_regex
-from ellar.common.types import TCallable
-from ellar.reflect import reflect
 
-from .controller.route import ControllerRouteOperation
-from .controller.websocket.route import ControllerWebsocketRouteOperation
-from .route import RouteOperation
 from .schema import RouteParameters, WsRouteParameters
-from .websocket import WebsocketRouteOperation
-
-TOperation = t.Union[RouteOperation, ControllerRouteOperation]
-TWebsocketOperation = t.Union[
-    WebsocketRouteOperation, ControllerWebsocketRouteOperation
-]
 
 
 def _websocket_connection_attributes(func: t.Callable) -> t.Callable:
@@ -43,11 +31,11 @@ def _websocket_connection_attributes(func: t.Callable) -> t.Callable:
                     "Invalid type. Please make sure you passed the websocket handler."
                 )
 
-            _item: t.Optional[WebsocketRouteOperation] = reflect.get_metadata(
-                CONTROLLER_OPERATION_HANDLER_KEY, websocket_handler
+            _item: t.Optional[WsRouteParameters] = getattr(
+                websocket_handler, ROUTE_OPERATION_PARAMETERS, None
             )
 
-            if not _item or not isinstance(_item, WebsocketRouteOperation):
+            if not _item or not isinstance(_item, WsRouteParameters):
                 raise Exception(
                     "Invalid type. Please make sure you passed the websocket handler."
                 )
@@ -74,41 +62,43 @@ def _websocket_connection_attributes(func: t.Callable) -> t.Callable:
 class OperationDefinitions:
     __slots__ = ()
 
-    def _get_http_operations_class(self, func: t.Callable) -> t.Type[TOperation]:
-        if class_base_function_regex.match(repr(func)):
-            return ControllerRouteOperation
-        return RouteOperation
+    # def _get_http_operations_class(self, func: t.Callable) -> t.Type[TOperation]:
+    #     if class_base_function_regex.match(repr(func)):
+    #         return ControllerRouteOperation
+    #     return RouteOperation
+    #
+    # def _get_ws_operations_class(self, func: t.Callable) -> t.Type[TWebsocketOperation]:
+    #     if class_base_function_regex.match(repr(func)):
+    #         return ControllerWebsocketRouteOperation
+    #     return WebsocketRouteOperation
 
-    def _get_ws_operations_class(self, func: t.Callable) -> t.Type[TWebsocketOperation]:
-        if class_base_function_regex.match(repr(func)):
-            return ControllerWebsocketRouteOperation
-        return WebsocketRouteOperation
-
-    def _get_operation(self, route_parameter: RouteParameters) -> TOperation:
-        _operation_class = self._get_http_operations_class(route_parameter.endpoint)
-        _operation = _operation_class(**route_parameter.dict())
+    def _get_operation(self, route_parameter: RouteParameters) -> t.Callable:
         setattr(route_parameter.endpoint, OPERATION_ENDPOINT_KEY, True)
-        return _operation
+        setattr(route_parameter.endpoint, ROUTE_OPERATION_PARAMETERS, route_parameter)
+        return route_parameter.endpoint
 
-    def _get_ws_operation(
-        self, ws_route_parameters: WsRouteParameters
-    ) -> TWebsocketOperation:
-        _ws_operation_class = self._get_ws_operations_class(
-            ws_route_parameters.endpoint
-        )
-        _operation = _ws_operation_class(**ws_route_parameters.dict())
+    def _get_ws_operation(self, ws_route_parameters: WsRouteParameters) -> t.Callable:
+        # _ws_operation_class = self._get_ws_operations_class(
+        #     ws_route_parameters.endpoint
+        # )
+        # _operation = _ws_operation_class(**ws_route_parameters.dict())
         setattr(ws_route_parameters.endpoint, OPERATION_ENDPOINT_KEY, True)
-        return _operation
+        setattr(
+            ws_route_parameters.endpoint,
+            ROUTE_OPERATION_PARAMETERS,
+            ws_route_parameters,
+        )
+        return ws_route_parameters.endpoint
 
     def _get_decorator_or_operation(
         self, path: t.Union[str, t.Callable], endpoint_parameter_partial: t.Callable
-    ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
+    ) -> t.Callable:
         if callable(path):
             route_parameter = endpoint_parameter_partial(endpoint=path, path="/")
             self._get_operation(route_parameter=route_parameter)
             return path
 
-        def _decorator(endpoint_handler: TCallable) -> TCallable:
+        def _decorator(endpoint_handler: t.Callable) -> t.Callable:
             _route_parameter = endpoint_parameter_partial(
                 endpoint=endpoint_handler, path=path
             )
@@ -126,7 +116,7 @@ class OperationDefinitions:
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
-    ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
+    ) -> t.Callable:
         methods = [GET]
         endpoint_parameter_partial = partial(
             RouteParameters,
@@ -146,7 +136,7 @@ class OperationDefinitions:
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
-    ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
+    ) -> t.Callable:
         methods = [POST]
         endpoint_parameter_partial = partial(
             RouteParameters,
@@ -166,7 +156,7 @@ class OperationDefinitions:
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
-    ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
+    ) -> t.Callable:
         methods = [PUT]
         endpoint_parameter_partial = partial(
             RouteParameters,
@@ -186,7 +176,7 @@ class OperationDefinitions:
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
-    ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
+    ) -> t.Callable:
         methods = [PATCH]
         endpoint_parameter_partial = partial(
             RouteParameters,
@@ -206,7 +196,7 @@ class OperationDefinitions:
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
-    ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
+    ) -> t.Callable:
         methods = [DELETE]
         endpoint_parameter_partial = partial(
             RouteParameters,
@@ -226,7 +216,7 @@ class OperationDefinitions:
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
-    ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
+    ) -> t.Callable:
         methods = [HEAD]
         endpoint_parameter_partial = partial(
             RouteParameters,
@@ -246,7 +236,7 @@ class OperationDefinitions:
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
-    ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
+    ) -> t.Callable:
         methods = [OPTIONS]
         endpoint_parameter_partial = partial(
             RouteParameters,
@@ -266,7 +256,7 @@ class OperationDefinitions:
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
-    ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
+    ) -> t.Callable:
         methods = [TRACE]
         endpoint_parameter_partial = partial(
             RouteParameters,
@@ -287,8 +277,8 @@ class OperationDefinitions:
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
         ] = None,
-    ) -> t.Callable[[TCallable], t.Union[TOperation, TCallable]]:
-        def _decorator(endpoint_handler: TCallable) -> TCallable:
+    ) -> t.Callable:
+        def _decorator(endpoint_handler: t.Callable) -> t.Callable:
             endpoint_parameter = RouteParameters(
                 name=name,
                 path=path,
@@ -311,10 +301,10 @@ class OperationDefinitions:
         encoding: t.Optional[str] = "json",
         use_extra_handler: bool = False,
         extra_handler_type: t.Optional[t.Type] = None,
-    ) -> t.Callable[[TCallable], t.Union[TCallable, TWebsocketOperation]]:
+    ) -> t.Callable:
         def _decorator(
-            endpoint_handler: TCallable,
-        ) -> t.Union[TCallable, TWebsocketOperation]:
+            endpoint_handler: t.Callable,
+        ) -> t.Callable:
             endpoint_parameter = WsRouteParameters(
                 name=name,
                 path=path,

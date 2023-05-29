@@ -20,7 +20,7 @@ def command(
     no_args_is_help: bool = False,
     hidden: bool = False,
     deprecated: bool = False,
-) -> t.Callable[[CommandFunctionType], CommandFunctionType]:
+) -> t.Callable[[CommandFunctionType], CommandFunctionType]:  # pragma: no cover
     """
     ========= FUNCTION DECORATOR ==============
 

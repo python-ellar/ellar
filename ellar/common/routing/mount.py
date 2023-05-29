@@ -9,7 +9,6 @@ from ellar.common.constants import (
     CONTROLLER_CLASS_KEY,
     GUARDS_KEY,
     NOT_SET,
-    OPERATION_ENDPOINT_KEY,
     VERSIONING_KEY,
 )
 from ellar.common.helper import get_unique_control_type
@@ -17,7 +16,7 @@ from ellar.common.models import GuardCanActivate
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.reflect import reflect
 
-from .operation_definitions import OperationDefinitions, TOperation, TWebsocketOperation
+from .operation_definitions import OperationDefinitions
 from .route import RouteOperation
 from .route_collections import RouteCollection
 from .schema import RouteParameters, WsRouteParameters
@@ -146,33 +145,32 @@ class ModuleRouter(OperationDefinitions, ModuleMount):
         reflect.define_metadata(
             VERSIONING_KEY, set(version or []), self.get_control_type()
         )
+        self._pre_build_routes: t.List[t.Union[RouteParameters, WsRouteParameters]] = []
 
-    def _get_operation(self, route_parameter: RouteParameters) -> TOperation:
-        _operation_class = self._get_http_operations_class(route_parameter.endpoint)
-        _operation = _operation_class(**route_parameter.dict())
-        setattr(route_parameter.endpoint, OPERATION_ENDPOINT_KEY, True)
-        self._set_other_router_attributes(_operation)
-        return _operation
+    def get_pre_build_routes(
+        self,
+    ) -> t.List[t.Union[RouteParameters, WsRouteParameters]]:
+        return self._pre_build_routes
 
-    def _get_ws_operation(
-        self, ws_route_parameters: WsRouteParameters
-    ) -> TWebsocketOperation:
-        _ws_operation_class = self._get_ws_operations_class(
-            ws_route_parameters.endpoint
-        )
-        _operation = _ws_operation_class(**ws_route_parameters.dict())
-        setattr(ws_route_parameters.endpoint, OPERATION_ENDPOINT_KEY, True)
-        self._set_other_router_attributes(_operation)
-        return _operation
+    def clear_pre_build_routes(self) -> None:
+        self._pre_build_routes.clear()
 
-    def _set_other_router_attributes(
-        self, operation: t.Union[TWebsocketOperation, TOperation]
-    ) -> None:
-        if not reflect.has_metadata(CONTROLLER_CLASS_KEY, operation.endpoint):
+    def _get_operation(self, route_parameter: RouteParameters) -> t.Callable:
+        endpoint = super()._get_operation(route_parameter)
+        self._pre_build_routes.append(route_parameter)
+        self._set_other_router_attributes(endpoint)
+        return endpoint
+
+    def _get_ws_operation(self, ws_route_parameters: WsRouteParameters) -> t.Callable:
+        endpoint = super()._get_ws_operation(ws_route_parameters)
+        self._pre_build_routes.append(ws_route_parameters)
+        self._set_other_router_attributes(endpoint)
+        return endpoint
+
+    def _set_other_router_attributes(self, operation_handler: t.Callable) -> None:
+        if not reflect.has_metadata(CONTROLLER_CLASS_KEY, operation_handler):
             # this is need to happen before adding operation to router else we lose ability to
             # get extra information about operation that is set on the router.
             reflect.define_metadata(
-                CONTROLLER_CLASS_KEY, self.get_control_type(), operation.endpoint
+                CONTROLLER_CLASS_KEY, self.get_control_type(), operation_handler
             )
-
-        self.app.routes.append(operation)  # type:ignore

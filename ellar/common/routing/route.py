@@ -45,6 +45,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         name: t.Optional[str] = None,
         include_in_schema: bool = True,
     ) -> None:
+        super().__init__(endpoint=endpoint)
         self._is_coroutine = inspect.iscoroutinefunction(endpoint)
         self._defined_responses: t.Dict[int, t.Type] = dict(response)
 
@@ -53,7 +54,6 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         self.path_regex, self.path_format, self.param_convertors = compile_path(
             self.path
         )
-        self.endpoint = endpoint  # type: ignore
 
         self.name = get_name(endpoint) if name is None else name
         self.include_in_schema = include_in_schema
@@ -69,7 +69,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         extra_route_args: t.Union[t.List["ExtraEndpointArg"], "ExtraEndpointArg"] = (
             reflect.get_metadata(EXTRA_ROUTE_ARGS_KEY, self.endpoint) or []
         )
-        if not isinstance(extra_route_args, list):
+        if not isinstance(extra_route_args, list):  # pragma: no cover
             extra_route_args = [extra_route_args]
 
         if self.endpoint_parameter_model is NOT_SET:
@@ -106,16 +106,24 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
             name=self.name, path=self.path_format, methods=_methods
         )
 
-    async def _handle_request(self, context: IExecutionContext) -> None:
+    async def run(self, context: IExecutionContext, kwargs: t.Dict) -> t.Any:
+        if self._is_coroutine:
+            return await self.endpoint(**kwargs)
+        else:
+            return await run_in_threadpool(self.endpoint, **kwargs)
+
+    async def handle_request(self, context: IExecutionContext) -> t.Any:
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
             ctx=context
         )
         if errors:
             raise RequestValidationError(errors)
-        if self._is_coroutine:
-            response_obj = await self.endpoint(**func_kwargs)
-        else:
-            response_obj = await run_in_threadpool(self.endpoint, **func_kwargs)
+
+        return await self.run(context, func_kwargs)
+
+    async def handle_response(
+        self, context: IExecutionContext, response_obj: t.Any
+    ) -> None:
         response = self.response_model.process_response(
             ctx=context, response_obj=response_obj
         )

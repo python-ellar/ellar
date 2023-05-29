@@ -1,4 +1,5 @@
 from .apikey import APIKeyCookie, APIKeyHeader, APIKeyQuery
+from .consumer import GuardConsumer
 from .http import HttpBasicAuth, HttpBearerAuth, HttpDigestAuth
 
 __all__ = [
@@ -8,4 +9,5 @@ __all__ = [
     "HttpBasicAuth",
     "HttpBearerAuth",
     "HttpDigestAuth",
+    "GuardConsumer",
 ]

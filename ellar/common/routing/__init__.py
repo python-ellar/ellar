@@ -3,7 +3,6 @@ import typing as t
 from ellar.common.params.params import ParamFieldInfo as Param, ParamTypes
 
 from .base import RouteOperationBase
-from .controller.factory import ControllerRouterFactory
 from .mount import ModuleMount, ModuleRouter
 from .operation_definitions import OperationDefinitions
 from .route import RouteOperation
@@ -47,7 +46,6 @@ __all__ = [
     "RouteOperationBase",
     "OperationDefinitions",
     "WebsocketRouteOperation",
-    "ControllerRouterFactory",
 ]
 
 

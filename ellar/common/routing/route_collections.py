@@ -4,17 +4,8 @@ from collections import OrderedDict
 
 from starlette.routing import BaseRoute, Host, Mount
 
-from ellar.common.constants import CONTROLLER_CLASS_KEY
-from ellar.common.helper import (
-    generate_controller_operation_unique_id,
-    get_unique_control_type,
-)
+from ellar.common.helper import generate_controller_operation_unique_id
 from ellar.common.logger import logger
-from ellar.reflect import reflect
-
-from .base import RouteOperationBase
-from .route import RouteOperation
-from .websocket.route import WebsocketRouteOperation
 
 
 class RouteCollection(t.Sequence[BaseRoute]):
@@ -59,20 +50,11 @@ class RouteCollection(t.Sequence[BaseRoute]):
             key=lambda e: e.host if isinstance(e, Host) else e.path  # type: ignore
         )
 
-    def _add_operation(
-        self, operation: t.Union[RouteOperation, WebsocketRouteOperation, BaseRoute]
-    ) -> None:
+    def _add_operation(self, operation: t.Union[BaseRoute]) -> None:
 
         if not isinstance(operation, BaseRoute):
             logger.warning("Tried Adding an operation that is not supported.")
             return
-
-        if isinstance(operation, RouteOperationBase) and not reflect.has_metadata(
-            CONTROLLER_CLASS_KEY, operation.endpoint
-        ):
-            reflect.define_metadata(
-                CONTROLLER_CLASS_KEY, get_unique_control_type(), operation.endpoint
-            )
 
         _methods = getattr(operation, "methods", {"WS"})
         _versioning = list(

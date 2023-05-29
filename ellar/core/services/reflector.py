@@ -32,7 +32,7 @@ class Reflector:
             return []
 
         if len(metadata_collection) == 1:
-            return metadata_collection[0]
+            return [metadata_collection[0]]
 
         @t.no_type_check
         def inline_function(previous_item: t.Any, next_item: t.Any) -> t.Any:

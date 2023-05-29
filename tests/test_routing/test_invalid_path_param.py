@@ -4,6 +4,7 @@ import pytest
 from pydantic import BaseModel
 
 from ellar.common import ModuleRouter
+from ellar.core.routing import ModuleRouterFactory
 
 mr = ModuleRouter("")
 
@@ -18,6 +19,8 @@ def test_invalid_sequence():
         def read_items(id: List[Item]):
             pass  # pragma: no cover
 
+        ModuleRouterFactory.build(mr)
+
 
 def test_invalid_tuple():
     with pytest.raises(AssertionError):
@@ -28,6 +31,8 @@ def test_invalid_tuple():
         @mr.get("/items/{id}")
         def read_items(id: Tuple[Item, Item]):
             pass  # pragma: no cover
+
+        ModuleRouterFactory.build(mr)
 
 
 def test_invalid_dict():
@@ -40,6 +45,8 @@ def test_invalid_dict():
         def read_items(id: Dict[str, Item]):
             pass  # pragma: no cover
 
+        ModuleRouterFactory.build(mr)
+
 
 def test_invalid_simple_list():
     with pytest.raises(AssertionError):
@@ -47,6 +54,8 @@ def test_invalid_simple_list():
         @mr.get("/items/{id}")
         def read_items(id: list):
             pass  # pragma: no cover
+
+        ModuleRouterFactory.build(mr)
 
 
 def test_invalid_simple_tuple():
@@ -56,6 +65,8 @@ def test_invalid_simple_tuple():
         def read_items(id: tuple):
             pass  # pragma: no cover
 
+        ModuleRouterFactory.build(mr)
+
 
 def test_invalid_simple_set():
     with pytest.raises(AssertionError):
@@ -64,6 +75,8 @@ def test_invalid_simple_set():
         def read_items(id: set):
             pass  # pragma: no cover
 
+        ModuleRouterFactory.build(mr)
+
 
 def test_invalid_simple_dict():
     with pytest.raises(AssertionError):
@@ -71,3 +84,5 @@ def test_invalid_simple_dict():
         @mr.get("/items/{id}")
         def read_items(id: dict):
             pass  # pragma: no cover
+
+        ModuleRouterFactory.build(mr)

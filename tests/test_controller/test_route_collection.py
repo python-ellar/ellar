@@ -15,6 +15,7 @@ from ellar.common.routing import (
     RouteOperation,
     WebsocketRouteOperation,
 )
+from ellar.core.routing.helper import build_route_handler
 from ellar.core.versioning import UrlPathAPIVersioning
 from ellar.reflect import reflect
 from ellar.testing import Test
@@ -38,7 +39,7 @@ def create_route_operation(
         )
         return response
 
-    return reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, endpoint_sample)
+    return build_route_handler(endpoint_sample)
 
 
 def create_ws_route_operation(
@@ -50,7 +51,7 @@ def create_ws_route_operation(
         response = JSONResponse(content=dict(path=path, versioning=versions))
         return response
 
-    return reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, endpoint_sample)
+    return build_route_handler(endpoint_sample)
 
 
 class MockHostRouteOperation(Host):
@@ -72,8 +73,12 @@ class MockMountRouteOperation(Mount):
 @pytest.mark.parametrize("collection_model", [RouteCollection])
 def test_module_route_collection_for_same_path_but_different_version(collection_model):
     routes = collection_model()
-    routes.append(create_route_operation("/sample", methods=["post"], versions=[]))
-    routes.append(create_route_operation("/sample", methods=["post"], versions=["1"]))
+    routes.extend(
+        [
+            create_route_operation("/sample", methods=["post"], versions=[]),
+            create_route_operation("/sample", methods=["post"], versions=["1"]),
+        ]
+    )
     assert len(routes) == 2
     for route in routes:
         assert route.path == "/sample"

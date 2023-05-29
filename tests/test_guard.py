@@ -240,3 +240,20 @@ def test_auth_schema():
         },
         "DigestAuth": {"type": "http", "scheme": "digest", "name": "DigestAuth"},
     }
+
+
+def test_global_guard_works():
+    _app = AppFactory.create_app(global_guards=[DigestAuth])
+
+    @get("/global")
+    def _auth_demo_endpoint(request=Req()):
+        return {"authentication": request.user}
+
+    _app.router.append(_auth_demo_endpoint)
+    _client = TestClient(_app)
+    res = _client.get("/global")
+
+    assert res.status_code == 401
+    data = res.json()
+
+    assert data == {"detail": "Forbidden"}

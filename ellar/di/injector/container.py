@@ -20,7 +20,6 @@ from ..scopes import (
     TransientScope,
 )
 from ..service_config import get_scope, is_decorated_with_injectable
-from ..types import T
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.modules import ModuleBase
@@ -55,7 +54,7 @@ class Container(InjectorBinder):
             scope = scope.scope
         return Binding(interface, provider, scope)
 
-    def get_binding(self, interface: type) -> t.Tuple[Binding, InjectorBinder]:
+    def get_binding(self, interface: t.Type) -> t.Tuple[Binding, InjectorBinder]:
         is_scope = isinstance(interface, type) and issubclass(interface, InjectorScope)
         is_assisted_builder = _is_specialization(interface, AssistedBuilder)
         try:
@@ -87,7 +86,7 @@ class Container(InjectorBinder):
     def register(
         self,
         base_type: t.Type,
-        concrete_type: t.Union[t.Type[T], t.Type, T] = None,
+        concrete_type: t.Union[t.Type, t.Any] = None,
         scope: t.Union[t.Type[DIScope], ScopeDecorator] = None,
     ) -> None:
         try:
@@ -115,7 +114,7 @@ class Container(InjectorBinder):
         self.register_binding(base_type, Binding(base_type, provider, _scope))
 
     def register_instance(
-        self, instance: T, concrete_type: t.Union[t.Type[T], Provider] = None
+        self, instance: t.Any, concrete_type: t.Union[t.Type, Provider] = None
     ) -> None:
         assert not isinstance(instance, type)
         _concrete_type = instance.__class__ if not concrete_type else concrete_type
@@ -123,8 +122,8 @@ class Container(InjectorBinder):
 
     def register_singleton(
         self,
-        base_type: t.Type[T],
-        concrete_type: t.Union[t.Type[T], T, Provider] = None,
+        base_type: t.Type,
+        concrete_type: t.Union[t.Type, t.Any, Provider] = None,
     ) -> None:
         """
 

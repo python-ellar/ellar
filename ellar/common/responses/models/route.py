@@ -1,3 +1,4 @@
+import logging
 import typing as t
 
 from pydantic import BaseModel
@@ -9,7 +10,9 @@ from ..response_types import Response
 from .base import ResponseModel, ResponseResolver
 from .exceptions import RouteResponseExecution
 from .helper import create_response_model
-from .json import JSONResponseModel
+from .json import EmptyAPIResponseModel, JSONResponseModel
+
+logger = logging.getLogger("ellar")
 
 
 class RouteResponseModel:
@@ -80,9 +83,11 @@ class RouteResponseModel:
         elif Ellipsis in self.models:
             response_model = self.models[Ellipsis]  # type: ignore
         else:
-            raise RouteResponseExecution(
+            logger.warning(
                 f"No response Schema with status_code={status_code} in response {self.models.keys()}"
             )
+            response_model = create_response_model(EmptyAPIResponseModel)
+
         response_model = t.cast(ResponseModel, response_model)
         return ResponseResolver(status_code, response_model, response_obj)
 

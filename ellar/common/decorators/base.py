@@ -12,7 +12,7 @@ def set_metadata(
     if meta_value is NOT_SET:
         return partial(set_metadata, meta_key)
 
-    def _decorator(target: t.Union[t.Callable, t.Any]) -> t.Union[t.Callable, t.Any]:
+    def _decorator(target: t.Union[t.Callable, t.Any]) -> t.Callable:
         reflect.define_metadata(meta_key, meta_value, target)
         return target
 

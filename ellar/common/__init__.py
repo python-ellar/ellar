@@ -8,6 +8,7 @@ from .decorators import (
     Controller,
     Module,
     UseGuards,
+    UseInterceptors,
     Version,
     exception_handler,
     extra_args,
@@ -36,10 +37,12 @@ from .interfaces import (
     IExceptionMiddlewareService,
     IExecutionContext,
     IExecutionContextFactory,
+    IGuardsConsumer,
     IHostContext,
     IHostContextFactory,
     IHTTPConnectionContextFactory,
     IHTTPHostContext,
+    IInterceptorsConsumer,
     IModuleSetup,
     IModuleTemplateLoader,
     IResponseModel,
@@ -52,6 +55,7 @@ from .models import (
     BaseHttpAuth,
     ControllerBase,
     ControllerType,
+    EllarInterceptor,
     GuardCanActivate,
 )
 from .params.decorators import (
@@ -191,6 +195,10 @@ __all__ = [
     "IModuleSetup",
     "IResponseModel",
     "IModuleTemplateLoader",
+    "IInterceptorsConsumer",
+    "IGuardsConsumer",
+    "EllarInterceptor",
+    "UseInterceptors",
 ]
 
 

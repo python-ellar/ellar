@@ -1,7 +1,6 @@
 import inspect
 import typing as t
 from abc import ABC
-from types import FunctionType
 
 from ellar.common.compatible import AttributeDict
 from ellar.common.constants import (
@@ -11,21 +10,26 @@ from ellar.common.constants import (
     CONTROLLER_WATERMARK,
     NOT_SET,
     OPERATION_ENDPOINT_KEY,
+    ROUTE_OPERATION_PARAMETERS,
 )
 from ellar.common.exceptions import ImproperConfiguration
+from ellar.common.logger import logger
 from ellar.common.models import ControllerBase, ControllerType
-from ellar.common.routing.controller import ControllerRouteOperationBase
 from ellar.di import RequestScope, injectable
 from ellar.reflect import REFLECT_TYPE, reflect
+
+from ..routing.controller import (
+    ControllerRouteOperation,
+    ControllerWebsocketRouteOperation,
+)
+from ..routing.schema import RouteParameters, WsRouteParameters
 
 
 def get_route_functions(
     cls: t.Type,
-) -> t.Iterable[t.Union[t.Callable, ControllerRouteOperationBase]]:
+) -> t.Iterable[t.Callable]:
     for method in cls.__dict__.values():
-        if hasattr(method, OPERATION_ENDPOINT_KEY) or isinstance(
-            method, ControllerRouteOperationBase
-        ):
+        if hasattr(method, OPERATION_ENDPOINT_KEY):
             yield method
 
 
@@ -35,20 +39,30 @@ def reflect_all_controller_type_routes(cls: t.Type[ControllerBase]) -> None:
     for base_cls in reversed(bases):
         if base_cls not in [ABC, ControllerBase, object]:
             for item in get_route_functions(base_cls):
-                operation = item
-                if callable(item) and type(item) == FunctionType:
-                    operation = reflect.get_metadata(  # type: ignore
-                        CONTROLLER_OPERATION_HANDLER_KEY, item
-                    )
-                endpoint_func = operation.endpoint  # type:ignore
-                if reflect.has_metadata(CONTROLLER_CLASS_KEY, endpoint_func):
+                if reflect.has_metadata(CONTROLLER_CLASS_KEY, item):
                     raise Exception(
                         f"{cls.__name__} Controller route tried to be processed more than once."
-                        f"\n-RouteFunction - {endpoint_func}."
+                        f"\n-RouteFunction - {item}."
                         f"\n-Controller route function can not be reused once its under a `@Controller` decorator."
                     )
+                reflect.define_metadata(CONTROLLER_CLASS_KEY, cls, item)
 
-                reflect.define_metadata(CONTROLLER_CLASS_KEY, cls, endpoint_func)
+                parameter = item.__dict__[ROUTE_OPERATION_PARAMETERS]
+                operation: t.Union[
+                    ControllerRouteOperation, ControllerWebsocketRouteOperation
+                ]
+                if isinstance(parameter, RouteParameters):
+                    operation = ControllerRouteOperation(**parameter.dict())
+                elif isinstance(parameter, WsRouteParameters):
+                    operation = ControllerWebsocketRouteOperation(**parameter.dict())
+                else:  # pragma: no cover
+                    logger.warning(
+                        f"Parameter type is not recognized. {type(parameter) if not isinstance(parameter, type) else parameter}"
+                    )
+                    continue
+
+                del item.__dict__[ROUTE_OPERATION_PARAMETERS]
+
                 reflect.define_metadata(
                     CONTROLLER_OPERATION_HANDLER_KEY,
                     [operation],

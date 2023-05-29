@@ -140,6 +140,7 @@ def test_plain_websocket_route(prefix):
 
 
 def test_websocket_setup_fails_when_using_body_without_handler():
+    tm = Test.create_test_module()
     with pytest.raises(
         ImproperConfiguration,
         match=r"`WsBody` should only be used when `use_extra_handler` flag is set to True in WsRoute",
@@ -150,6 +151,8 @@ def test_websocket_setup_fails_when_using_body_without_handler():
             websocket: WebSocket, query: str, data: Item = WsBody()
         ):
             pass
+
+        tm.create_application().router.append(websocket_with_handler)
 
 
 def test_websocket_endpoint_on_connect():
