@@ -85,6 +85,6 @@ class ModuleBaseBuilder:
         for name, item in namespace.items():
             for k, func in self._actions.items():
                 if hasattr(item, k):
-                    value = getattr(item, k)
+                    value = item.__dict__.pop(k)
                     func(value)
                     self._cls.__MODULE_FIELDS__[name] = item
