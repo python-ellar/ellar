@@ -6,8 +6,8 @@ from .commands import EllarTyper, command
 from .datastructures import UploadFile
 from .decorators import (
     Controller,
-    Guards,
     Module,
+    UseGuards,
     Version,
     exception_handler,
     extra_args,
@@ -127,7 +127,7 @@ __all__ = [
     "ModuleRouter",
     "render",
     "Module",
-    "Guards",
+    "UseGuards",
     "Param",
     "ParamTypes",
     "set_metadata",

@@ -1,6 +1,6 @@
 import pytest
 
-from ellar.common import Guards
+from ellar.common import UseGuards
 from ellar.common.constants import CONTROLLER_CLASS_KEY, GUARDS_KEY
 from ellar.common.helper import get_name
 from ellar.core.guard import HttpBearerAuth
@@ -17,7 +17,7 @@ from ellar.socket_io.model import GatewayBase, GatewayType
 
 
 @WebSocketGateway(path="/ws", namespace="/some-namespace")
-@Guards(HttpBearerAuth)
+@UseGuards(HttpBearerAuth)
 class SampleWithoutGateway:
     pass
 

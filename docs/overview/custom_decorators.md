@@ -401,8 +401,8 @@ The `version` decorator takes a list of values as an argument, for example `@ver
 This indicates that the `get_item_v2_v3` route function will handle version 2 and version 3 requests of the /create endpoint. 
 This allows for multiple versions of the same endpoint to be handled by different route functions, each with their own logic and implementation.
 
-### **GUARDS**
-**@Guards()**  is a decorator that applies a protection class of type `GuardCanActivate` to a route function. 
+### **UseGuards**
+**@UseGuards()**  is a decorator that applies a protection class of type `GuardCanActivate` to a route function. 
 These protection classes have a `can_execute` function that is called to determine whether a route function should be executed. 
 
 This decorator allows you to apply certain conditions or checks before a route function is executed, such as `authentication` or `authorization` checks. 
@@ -410,10 +410,10 @@ This can help to ensure that only authorized users can access certain resources.
 
 More information on how to use this decorator can be found in the [Guard Documentation]()
 
-A quick example on how to use `Guards` decorator:
+A quick example on how to use `UseGuards` decorator:
 ```python
 import typing as t
-from ellar.common import get, Guards
+from ellar.common import get, UseGuards
 from ellar.core import APIKeyQuery, HTTPConnection
 
 
@@ -425,11 +425,11 @@ class MyAPIKeyQuery(APIKeyQuery):
 
 
 @get("/")
-@Guards(MyAPIKeyQuery(), )
+@UseGuards(MyAPIKeyQuery(), )
 async def get_guarded_items(self):
     return {'message': 'worked fine with `key`=`supersecret`'}
 ```
-The `Guards` decorator, like the `version` decorator, takes a list of values as an argument. 
+The `UseGuards` decorator, like the `version` decorator, takes a list of values as an argument. 
 During a request, the provided guards are called in the order in which they are provided. 
 
 This allows you to apply multiple guards to a single route function and have them executed in a specific order. 

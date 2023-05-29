@@ -267,7 +267,7 @@ Next, we apply the `RoleGuard` to `CarController`
 ```python
 # project_name/apps/cars/controllers.py
 import typing
-from ellar.common import Body, Controller, post, set_metadata, Guards, ControllerBase
+from ellar.common import Body, Controller, post, set_metadata, UseGuards, ControllerBase
 from .schemas import CreateCarSerializer
 from .guards import RoleGuard
 
@@ -276,7 +276,7 @@ def roles(*_roles: str) -> typing.Callable:
 
 
 @Controller('/car')
-@Guards(RoleGuard)
+@UseGuards(RoleGuard)
 class CarController(ControllerBase):
     @post()
     @roles('admin', 'is_staff')

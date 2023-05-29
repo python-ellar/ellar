@@ -1,6 +1,6 @@
 import pytest
 
-from ellar.common import Controller, ControllerBase, Guards, Version, set_metadata
+from ellar.common import Controller, ControllerBase, UseGuards, Version, set_metadata
 from ellar.common.constants import (
     CONTROLLER_METADATA,
     GUARDS_KEY,
@@ -21,7 +21,7 @@ from ellar.reflect import reflect
     name="test",
 )
 @Version("v1")
-@Guards()
+@UseGuards()
 class ControllerDecorationTest:
     pass
 

@@ -1,4 +1,4 @@
-from ellar.common import GuardCanActivate, Guards
+from ellar.common import GuardCanActivate, UseGuards
 from ellar.common.constants import GUARDS_KEY
 from ellar.core import ExecutionContext, Request
 from ellar.reflect import reflect
@@ -14,12 +14,12 @@ class SomeGuard2(SomeGuard):
         return False  # pragma: no cover
 
 
-@Guards(SomeGuard)
+@UseGuards(SomeGuard)
 def endpoint(request: Request):
     return "foo"  # pragma: no cover
 
 
-@Guards(SomeGuard, SomeGuard2)
+@UseGuards(SomeGuard, SomeGuard2)
 def endpoint2(request: Request):
     return "foo"  # pragma: no cover
 

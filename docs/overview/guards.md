@@ -57,54 +57,54 @@ class RoleGuard(GuardCanActivate):
 
 ## **Applying guards**
 Guards can be **`controller-scoped`**, **`method-scoped`**, or **`global-scoped`**. We apply guards to controllers or route function by using `@Guards`.
-The `@Guards` takes a single argument, or a comma-separated list of arguments of `GuardCanActivate` types or instances.
+The `@UseGuards` takes a single argument, or a comma-separated list of arguments of `GuardCanActivate` types or instances.
 
 ```python
 import typing as t
 
-def Guards(
+def UseGuards(
     *_guards: t.Type["GuardCanActivate"] | "GuardCanActivate"
 ) -> t.Callable:
     ...
 ```
 
 ### **Controller-scoped**
-We set up controller scoped guards on controller by using `@Guards` decorator. For example:
+We set up controller scoped guards on controller by using `@UseGuards` decorator. For example:
 ```python
 # project_name/cars/controllers.py
-from ellar.common import Controller, Guards
+from ellar.common import Controller, UseGuards
 from .guards import RoleGuard
 
 @Controller()
-@Guards(RoleGuard)
+@UseGuards(RoleGuard)
 class CarsController:
     ...
 
 ```
 The above example attaches the guard to every handler declared by this controller. 
-If we wish the guard to apply only to a single method, we apply the `@Guards()` decorator at the method level.
+If we wish the guard to apply only to a single method, we apply the `@UseGuards()` decorator at the method level.
 
 ### **Method-scoped**
-We can also use `@Guards()` on route-function when necessary.
+We can also use `@UseGuards()` on route-function when necessary.
 ```python
 # project_name/cars/controllers.py
-from ellar.common import Controller, Guards, get
+from ellar.common import Controller, UseGuards, get
 from .guards import RoleGuard
 
 @Controller()
-@Guards(RoleGuard)
+@UseGuards(RoleGuard)
 class CarsController:
-    @Guards(RoleGuard())
+    @UseGuards(RoleGuard())
     @get('/guarded-route')
     def guarded_route(self):
         return "Passed Guard"
 
 ```
-In the example, we decorated `guarded_route` with `@Guards(RoleGuard())` with an instance of `RoleGuard`. 
+In the example, we decorated `guarded_route` with `@UseGuards(RoleGuard())` with an instance of `RoleGuard`. 
 When request execution for `/guarded-route`, `guarded_route` guard definition will be precedence over `CarsController` guard definitions.
 
 ### **Global-scope**
-Global guards are used across the whole application, for every controller and every route function but individual controller or route function `@Guards` definition can override `global` scoped guards.
+Global guards are used across the whole application, for every controller and every route function but individual controller or route function `@UseGuards` definition can override `global` scoped guards.
 
 Global guards are applied at the `global_guards` parameter of the `AppFactory` creation level as shown below:
 ```python

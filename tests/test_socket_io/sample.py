@@ -4,7 +4,7 @@ from functools import wraps
 from starlette import status
 from starlette.exceptions import WebSocketException
 
-from ellar.common import Guards, Header, Query, Serializer, WsBody, extra_args
+from ellar.common import Header, Query, Serializer, UseGuards, WsBody, extra_args
 from ellar.common.params import ExtraEndpointArg
 from ellar.core.connection import HTTPConnection
 from ellar.core.guard import APIKeyHeader
@@ -86,7 +86,7 @@ class EventGateway:
         print("Client disconnected")
 
 
-@Guards(HeaderGuard)
+@UseGuards(HeaderGuard)
 @WebSocketGateway(path="/ws-guard")
 class GatewayWithGuards(GatewayBase):
     @subscribe_message("my_event")

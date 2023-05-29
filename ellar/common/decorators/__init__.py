@@ -5,7 +5,7 @@ from .controller import Controller
 from .exception import exception_handler
 from .extra_args import extra_args
 from .file import file
-from .guards import Guards
+from .guards import UseGuards
 from .html import render, template_filter, template_global
 from .middleware import middleware
 from .modules import Module
@@ -17,7 +17,7 @@ __all__ = [
     "serializer_filter",
     "Controller",
     "Version",
-    "Guards",
+    "UseGuards",
     "template_filter",
     "template_global",
     "file",
