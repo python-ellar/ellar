@@ -21,6 +21,7 @@ class Config(DataMutableMapper, AttributeDictAccessMixin, ConfigDefaultTypesMixi
     def __init__(
         self,
         config_module: str = None,
+        config_prefix: str = None,
         **mapping: t.Any,
     ):
         """
@@ -31,19 +32,23 @@ class Config(DataMutableMapper, AttributeDictAccessMixin, ConfigDefaultTypesMixi
 
         self._data.clear()
 
-        if self.config_module:
-            try:
-                mod = import_from_string(self.config_module)
-                for setting in dir(mod):
-                    if setting.isupper():
-                        self._data[setting] = getattr(mod, setting)
-            except Exception as ex:
-                raise ConfigRuntimeError(str(ex))
+        self._load_config_module(config_prefix or "")
 
         self._data.update(**mapping)
 
         validate_config = ConfigValidationSchema.parse_obj(self._data)
         self._data.update(validate_config.serialize())
+
+    def _load_config_module(self, prefix: str) -> None:
+        _prefix = prefix.upper()
+        if self.config_module:
+            try:
+                mod = import_from_string(self.config_module)
+                for setting in dir(mod):
+                    if setting.isupper() and setting.startswith(_prefix):
+                        self._data[setting.replace(_prefix, "")] = getattr(mod, setting)
+            except Exception as ex:
+                raise ConfigRuntimeError(str(ex))
 
     def set_defaults(self, **kwargs: t.Any) -> "Config":
         for k, v in kwargs.items():
