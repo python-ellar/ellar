@@ -1,4 +1,4 @@
-## Introduction
+## **Response and Serializers**
 The `Serializer` class in the Ellar, is a custom class based on `pydantic` models, which provides additional functionality specific to Ellar's requirements.
 
 To use `Serializer` in Ellar, you simply need to create a class that inherits from `Serializer` and define your data model using pydantic fields. 
@@ -17,7 +17,7 @@ class UserSerializer(Serializer):
 With this setup, you can use the `UserSerializer` class to validate incoming data and or serialize outgoing response data, 
 ensuring that it matches the expected format before saving it to the database or returning it to the client.
 
-## Handling Responses
+## **Handling Responses**
 
 Let's see how we can use **Serializer** as a responses schema which will help us validate out data output and also provide documentation on route function response.
 
@@ -71,7 +71,7 @@ that can be easily serialized to JSON.
 The resulting dictionary is then passed to the [`JSONResponseModel`](./response-model/#jsonresponsemodel) for serialization to a 
 JSON string and sending the response to the client.
 
-## Using Dataclass as Response Schema
+## **Using Dataclass as Response Schema**
 We can utilize the `dataclasses` feature as a response schema by utilizing the `DataclassSerializer` a base class. 
 
 For instance, we can convert the `UserSchema` to a dataclass by defining `UserDataclass` as follows:
@@ -92,7 +92,7 @@ class UserDataclass(DataclassSerializer):
 
 By replacing the `UserSchema` with `UserDataclass`, we can expect the same outcomes in the returned response, response validation, and documentation.
 
-### Multiple Response Types
+### **Multiple Response Types**
 
 The `response` parameter takes different shape. Let's see how to return a different response if the user is not authenticated.
 
@@ -156,7 +156,7 @@ Here, the `response` parameter takes a KeyValuePair of the `status` and response
 
 
 
-## Using Response Type/Object As Response
+## **Using Response Type/Object As Response**
 
 You can use `Response` type to change the format of data returned from endpoint functions.
 

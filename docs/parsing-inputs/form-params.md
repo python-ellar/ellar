@@ -1,4 +1,4 @@
-# Form data
+# **Form Data**
 
 **Ellar** also allows you to parse and validate `request.POST` data
 (aka `application x-www-form-urlencoded` or `multipart/form-data`).
@@ -10,7 +10,7 @@ When you need to receive form fields instead of JSON, you can use `Form`.
     E.g. `pip install python-multipart`.
 
 
-## Form Data as params 
+## **Form Data as params** 
 
 ```python
 # project_name/apps/items/controllers.py
@@ -39,7 +39,7 @@ from ellar.common import Form
 username: str = Form()
 ```
 
-## Using a Schema
+## **Using a Schema**
 
 In a similar manner to [Body](../body/#declare-it-as-a-parameter), you can use
 a Schema to organize your parameters.
@@ -66,7 +66,7 @@ class ItemsController(ControllerBase):
 
 ![Openapi schema](../img/form-schema-doc.png)
 
-## Request form + path + query parameters
+## **Request form + path + query parameters**
 
 In a similar manner to [Body](../body/#request-body-path-query-parameters), you can use
 Form data in combination with other parameter sources.
@@ -101,7 +101,7 @@ class ItemsController(ControllerBase):
         return {"item_id": item_id, "item": item.dict(), "q": q}
 ```
 
-## Mapping Empty Form Field to Default
+## **Mapping Empty Form Field to Default**
 
 Form fields that are optional, are often sent with an empty value. This value is
 interpreted as an empty string, and thus may fail validation for fields such as `int` or `bool`.

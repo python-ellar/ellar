@@ -1,4 +1,4 @@
-# Query parameters
+# **Query Parameters**
 
 When you declare other function parameters that are not part of the path parameters, they are automatically interpreted as "query" parameters.
 
@@ -51,7 +51,7 @@ class ItemsController(ControllerBase):
         return fake_items_db[offset: int(offset) + int(limit)]
 ```
 
-### Defaults
+## **Defaults**
 
 As query parameters are not a fixed part of a path, they are optional and can have default values:
 
@@ -91,7 +91,7 @@ the parameter values in your function will be:
  - `limit=10`  (because that was the default value)
 
 
-### Required and optional parameters
+## **Required and optional parameters**
 
 You can declare required or optional GET parameters in the same way as declaring Python function arguments:
 
@@ -114,7 +114,7 @@ class ItemsController(ControllerBase):
 
 In this case, **Ellar** will always validate that you pass the `q` param in the GET, and the `offset` param is an optional integer.
 
-### GET parameters type conversion
+## **GET parameters type conversion**
 
 Let's declare multiple type arguments:
 ```python
@@ -151,7 +151,7 @@ http://localhost:8000/items/example?d=1672286800
 http://localhost:8000/items/example?d=2022-12-29
 ```
 
-### Using Schema
+## **Using Schema**
 
 You can also use Schema to encapsulate GET parameters:
 

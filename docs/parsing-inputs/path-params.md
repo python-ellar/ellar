@@ -1,4 +1,4 @@
-# Path parameters
+# **Path Parameters**
 You can declare path "parameters" with the same syntax used by Python format-strings 
 which is similar to [OpenAPI path parameters](https://swagger.io/docs/specification/describing-parameters/#path-parameters)
 
@@ -26,7 +26,7 @@ So, if you run this example and go to [http://localhost:8000/items/foo](http://l
 }
 ```
 
-### Path parameters with types
+## **Path parameters with types**
 You can declare the type of path parameter in the function using standard Python type annotations:
 
 ```python
@@ -56,7 +56,7 @@ If you run this in your browser with [http://localhost:8000/api/items/3](http://
     So, with just that type declaration, **Ellar** gives you automatic request "parsing" and validation.
 
 
-### Data validation
+## **Data validation**
 On the other hand, if you go to the browser at [http://localhost:8000/items/foo](http://localhost:8000/items/foo), you will see an HTTP error like this:
 
 ```JSON
@@ -78,7 +78,7 @@ that is because the path parameter `item_id` had a value of `"foo"`, which is no
 The same error would appear if you provided a `float` instead of an `int`, as in:
 [http://localhost:8000/items/4.2](http://localhost:8000/items/4.2)
 
-### Path Converters
+## **Path Converters**
 
 You can use [Starlette Path Converters](https://www.starlette.io/routing/#path-parameters) to help parse the path:
 
@@ -110,7 +110,7 @@ match.  (e.g. if no other path matches, a *404 Not Found* will be returned)
         return {"item_id": item_id}
     ```
  
-#### Path params with slashes
+### Path params with slashes
 
 Starlette `path` converter allows you to handle path-like parameters:
 
@@ -132,7 +132,7 @@ class ItemsController(ControllerBase):
 You can query this operation with [http://localhost:8000/items/dir/some/path/with-slashes](http://localhost:8000/items/dir/some/path/with-slashes) 
 and your `value` will be equal to `"some/path/with-slashes"`
 
-### Multiple parameters
+## **Multiple parameters**
 
 You can pass as many variables as you want into `path`, just remember to have unique names and don't forget to use the same names in the function arguments.
 
@@ -150,7 +150,7 @@ class ItemsController(ControllerBase):
 ```
 
 
-### Using Schema
+## **Using Schema**
 
 You can also use Schema to encapsulate path parameters that depend on each other (and validate them as a group):
 
@@ -180,11 +180,11 @@ class ItemsController(ControllerBase):
 !!! note
     Notice that here we used a `Path` source hint to let **Ellar** know that this schema will be applied to path parameters.
 
-### Documentation
+## **Documentation**
 Now, when you open your browser at [http://localhost:8000/docs](http://localhost:8000/docs), you will see the automatic, interactive, API documentation.
 ![events Swagger doc](../img/event_docs_swagger.png)
 
-### Using Enum
+## **Using Enum**
 
 If you have a path operation that receives a path parameter, 
 but you want the possible valid path parameter values to be predefined, you can use a standard Python `Enum`.
@@ -216,7 +216,7 @@ class ItemsController(ControllerBase):
         return {"model_name": model_name, "message": "Have some residuals"}
 ```
 
-#### Check the docs
+### Check the docs
 Because the available values for the path parameter are predefined, the interactive docs can show them nicely:
 
 ![enum Swagger doc](../img/enum_docs_swagger.png)

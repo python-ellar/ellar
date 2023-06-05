@@ -1,4 +1,4 @@
-# File uploads
+# **File Uploads**
 
 Handling files are no different from other parameters.
 You can define files to be uploaded by using `File`.
@@ -10,11 +10,11 @@ You can define files to be uploaded by using `File`.
 
     This is because uploaded files are sent as "form data".
 
-## Import `File`
+## **Import `File`**
 
 First import `File` from `ellar.common` module
 
-## Define `File` parameters
+## **Define `File` parameters**
 
 Create file parameters the same way you would for `Body` or `Form`:
 
@@ -38,7 +38,7 @@ Have in mind that this means that the whole contents will be stored in memory. T
 
 But there are several cases in which you might benefit from using `UploadFile`.
 
-## `File` parameters with `UploadFile`
+## **`File` parameters with `UploadFile`**
 
 Define a `File` parameter with a type of `UploadFile`:
 
@@ -106,7 +106,7 @@ contents = myfile.file.read()
     **Ellar**'s `UploadFile` inherits directly from **Starlette**'s `UploadFile`, but adds some necessary parts to make it compatible with **Pydantic** and the other parts of Ellar.
 
 
-## Uploading array of files
+## **Uploading array of files**
 
 To **upload several files** at the same time, just declare a `List` of `UploadFile`:
 
@@ -124,7 +124,7 @@ class ItemsController(ControllerBase):
         return [f.filename for f in files]
 ```
 
-## Uploading files with extra fields
+## **Uploading files with extra fields**
 
 Note: HTTP protocol does not allow you to send files in application/json format by default (unless you encode it somehow to JSON on client side)
 

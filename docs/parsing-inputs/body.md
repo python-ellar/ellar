@@ -1,4 +1,4 @@
-# Request Body
+# **Request Body**
 
 Request bodies are typically used with “create” and “update” operations (POST, PUT, PATCH).
 For example, when creating a resource using POST or PUT, the request body usually contains the representation of the resource to be created.
@@ -8,7 +8,7 @@ To declare a **request body**, you need to use **Ellar `Serializer`**.
 !!! info
     Under the hood **Ellar** uses <a href="https://pydantic-docs.helpmanual.io/" class="external-link" target="_blank">Pydantic</a> models with all their power and benefits.
 
-## Import Serializer
+## **Import Serializer**
 
 First, you need to import `Serializer` from `ella.serializer`:
 
@@ -24,7 +24,7 @@ from ellar.common import Serializer
 
 ```
 
-## Create your data model
+## **Create your data model**
 
 Then you declare your data model as a class that inherits from `Serializer`.
 
@@ -71,7 +71,7 @@ For example, this model above declares a JSON "`object`" (or Python `dict`) like
 }
 ```
 
-## Declare it as a parameter
+## **Declare it as a parameter**
 
 To add it to your *path operation*, declare it the same way you declared the path and query parameters:
 
@@ -97,7 +97,7 @@ class ItemsController(ControllerBase):
 
 ... and declare its type as the model you created, `Item`.
 
-## Results
+## **Results**
 
 With just that Python type declaration, **Ellar** will:
 
@@ -112,7 +112,7 @@ With just that Python type declaration, **Ellar** will:
   your models, and you can also use them anywhere else you like if it makes sense for your project.
 * Those schemas will be part of the generated OpenAPI schema, and used by the automatic documentation <abbr title="User Interfaces">UI's</abbr>.
 
-## Automatic Docs
+## **Automatic Docs**
 
 The JSON Schemas of your models will be part of your OpenAPI generated schema, and will be shown in the interactive API docs:
 
@@ -123,7 +123,7 @@ The JSON Schemas of your models will be part of your OpenAPI generated schema, a
 ![Openapi schema](../img/body-schema-doc2.png)
 
 
-## Request Body + Path parameters
+## **Request Body + Path parameters**
 
 You can declare path parameters **and** body requests at the same time.
 
@@ -152,7 +152,7 @@ class ItemsController(ControllerBase):
         return {"item_id": item_id, "item": item.dict()}
 ```
 
-## Request Body + Path + Query parameters
+## **Request Body + Path + Query parameters**
 
 You can also declare **body**, **path** and **query** parameters, all at the same time.
 
@@ -191,7 +191,7 @@ The function parameters will be recognized as follows:
     In here, we have combined both `Serializers` and `Controllers` in one file. This is for the convenience of writing this documentation.
     It's advised to have all your serializers in `schemas.py` and then import them over to `controllers.py` if needed.
 
-## Singular values in body
+## **Singular values in body**
 The same way there is a `Query` and `Path` to define extra data for query and path parameters, 
 **Ellar** provides an equivalent `Body`.
 
@@ -253,7 +253,7 @@ In this case, **Ellar** will expect a body like:
 }
 ```
 
-## Multiple body params and query
+## **Multiple body params and query**
 Of course, you can also declare additional `query` parameters whenever you need, additional to anybody parameters.
 
 As, by default, singular values are interpreted as query parameters, you don't have to explicitly add a `Query`, you can just do:
