@@ -1,14 +1,14 @@
-# Header Parameters
+# **Header Parameters**
 
 You can define Header parameters the same way you define `Query`, `Path` and `Cookie` parameters.
 
 To query this operation, you use a URL like:
 
-## Import `Header`
+## **Import `Header`**
 
 First import `Header` from `ellar.common` module
 
-## Declare `Header` parameters
+## **Declare `Header` parameters**
 
 Then declare the header parameters using the same structure as with `Path`, `Query` and `Cookie`.
 
@@ -31,7 +31,7 @@ class ItemsController(ControllerBase):
 !!! info
     To declare headers, you need to use `Header`, because otherwise the parameters would be interpreted as query parameters.
 
-## Automatic conversion
+## **Automatic conversion**
 
 `Header` has a little extra functionality.
 
@@ -67,7 +67,7 @@ class ItemsController(ControllerBase):
     Before setting `convert_underscores` to `False`, bear in mind that some HTTP proxies and servers disallow the usage of headers with underscores.
 
 
-## Duplicate headers
+## **Duplicate headers**
 
 It is possible to receive duplicate headers. That means, the same header with multiple values.
 
@@ -109,7 +109,7 @@ The response would be like:
 }
 ```
 
-### Using Schema
+## **Using Schema**
 
 You can also use Schema to encapsulate `Header` parameters:
 

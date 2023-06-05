@@ -1,4 +1,4 @@
-# Response Model
+# **Response Models**
 
 Each route handler has key-value pair of status codes and a response model. 
 This response model holds information on the type of response to be returned.
@@ -62,7 +62,7 @@ response = {200: JSONResponseModel(model_field_or_schema=UserSchema, description
     Each route handler has its own `ResponseModel` computation and validation. If there is no response definition, Ellar default the route handler model to `EmptyAPIResponseModel`.
 
 
-## Override Response Type
+## **Override Response Type**
 
 When you use a `Response` class as response, a `ResponseModel` is used and the `response_type` is replaced with applied response class.
 
@@ -96,7 +96,7 @@ from ellar.common import PlainTextResponse
 response = {200: ResponseModel(response_type=PlainTextResponse), 201: JSONResponseModel(model_field_or_schema=UserSchema)}
 ```
 
-## Response Model Properties
+## **Response Model Properties**
 
 All response model follows `IResponseModel` contract.
 
@@ -129,7 +129,7 @@ They include:
 - `model_field_or_schema`: `Optional` property. For return data validation. Default: `None` **Optional**
 
 
-## Different Response Models 
+## **Different Response Models**
 Let's see different `ResponseModel` available in Ellar and how you can create one too.
 
 ### **ResponseModel** 
@@ -183,7 +183,7 @@ Default `ResponseModel` applied when no response is defined.
 - model_field_or_schema: `dict`
 - media_type: `application/json`
 
-## Custom Response Model
+## **Custom Response Model**
 
 Lets create a new JSON response model.
 

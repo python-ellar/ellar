@@ -1,12 +1,12 @@
-# Cookie Parameters
+# **Cookie Parameters**
 
 You can define Cookie parameters the same way you define `Path` parameters.
 
-## Import `Cookie`
+## **Import `Cookie`**
 
 First import `Cookie` from `ellar.common` module
 
-## Declare `Cookie` parameters
+## **Declare `Cookie` parameters**
 
 Then declare the cookie parameters using the same structure as with `Path` and `Query`.
 
@@ -29,7 +29,7 @@ class ItemsController(ControllerBase):
 !!! info
     To declare cookies, you need to use `Cookie`, because otherwise the parameters would be interpreted as `query` parameters.
 
-### Using Schema
+## **Using Schema**
 
 You can also use Schema to encapsulate `Cookies` parameters:
 

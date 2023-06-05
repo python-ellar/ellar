@@ -1,4 +1,4 @@
-# Intro
+# **Input Parsing Tutorial**
 
 In this section, we are going to learn how inputs are parsed in the Ellar route handle functions.
 
@@ -44,7 +44,7 @@ visit [http://localhost:8000/items/](http://localhost:8000/items/),
 All code example will be done on the `ItemController` in `project_name/apps/items/controllers.py`. 
 Please keep it open.
 
-## Tutorial
+## **Tutorial**
 You are going to learn how to use the following route handler parameter:
 
 - [Path](./path-params)

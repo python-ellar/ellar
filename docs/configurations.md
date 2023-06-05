@@ -251,3 +251,48 @@ To allow any hostname either use `allowed_hosts=["*"]` or omit the middleware.
 Default: `True`
 
 Indicates whether to append `www.` when redirecting host in `TrustedHostMiddleware`
+
+
+## **Configuration with prefix**
+Ellar configuration module also support loading of its configurations with appended prefix. for instance,
+we can have a file `my_settings.py` with some ellar's configurations set to it with some prefix `API_` as shown below.
+
+```python
+# my_settings.py
+API_DEBUG = True
+API_SECRET_KEY = "your-secret-key-changed"
+API_INJECTOR_AUTO_BIND = True
+API_JINJA_TEMPLATES_OPTIONS = {"auto_reload": True}
+
+OTHER_XYZ_CONFIGS_1 ='whatever'
+OTHER_XYZ_CONFIGS_2 ='whatever2'
+```
+To apply these configurations without having to load everything, you have to provide the prefix to be used to load configurations that
+belongs to ellar. For example,
+
+```python
+from ellar.core.factory import AppFactory
+from .root_module import ApplicationModule
+
+application = AppFactory.create_from_app_module(ApplicationModule, config_module=dict(
+    config_module='project_name:my_settings',
+    config_prefix='api_',
+))
+```
+In the above construct, we used a dict object to define the configuration module(`'project_name:my_settings'`) and prefix `api_`. 
+This will be applied to the configuration instance when the application is ready.
+
+## **Defining Configurations directly**
+During application bootstrapping with `AppFactory`, you can define app configurations directly under `config_module` as a dict object as some below.
+
+```python
+from ellar.core.factory import AppFactory
+from .root_module import ApplicationModule
+
+application = AppFactory.create_from_app_module(ApplicationModule, config_module=dict(
+    SECRET_KEY = "your-secret-key-changed",
+    INJECTOR_AUTO_BIND = True,
+    MIDDLEWARE=[],
+    EXCEPTION_HANDLERS=[]
+))
+```

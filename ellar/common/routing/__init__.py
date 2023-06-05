@@ -1,5 +1,7 @@
 import typing as t
 
+from starlette.routing import Host, Mount
+
 from ellar.common.params.params import ParamFieldInfo as Param, ParamTypes
 
 from .base import RouteOperationBase
@@ -46,6 +48,8 @@ __all__ = [
     "RouteOperationBase",
     "OperationDefinitions",
     "WebsocketRouteOperation",
+    "Host",
+    "Mount",
 ]
 
 
