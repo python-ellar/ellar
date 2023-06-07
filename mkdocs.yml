@@ -98,7 +98,7 @@ nav:
       - Versioning: techniques/versioning.md
       - Caching: techniques/caching.md
       - Templating:
-          - html: techniques/templating.md
+          - Html: techniques/templating.md
           - Static Files: techniques/staticfiles.md
       - Mount: techniques/mount.md
       - Background Tasks: techniques/background-task.md

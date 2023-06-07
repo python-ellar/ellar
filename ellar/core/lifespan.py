@@ -49,8 +49,9 @@ class EllarApplicationLifespan:
         async with create_task_group() as tg:
             tg.start_soon(self.run_all_startup_actions, app)
 
-        async with self._lifespan_context(app) as ctx:  # type:ignore[union-attr]
-            yield ctx
-
-        async with create_task_group() as tg:
-            tg.start_soon(self.run_all_shutdown_actions, app)
+        try:
+            async with self._lifespan_context(app) as ctx:  # type:ignore[union-attr]
+                yield ctx
+        finally:
+            async with create_task_group() as tg:
+                tg.start_soon(self.run_all_shutdown_actions, app)
