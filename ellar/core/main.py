@@ -11,6 +11,7 @@ from ellar.common.logger import logger
 from ellar.common.models import EllarInterceptor, GuardCanActivate
 from ellar.common.templating import Environment
 from ellar.common.types import ASGIApp, T, TReceive, TScope, TSend
+from ellar.core.lifespan import EllarApplicationLifespan
 from ellar.core.middleware import (
     CORSMiddleware,
     ExceptionMiddleware,
@@ -71,7 +72,9 @@ class App(AppTemplating):
             routes=self._get_module_routes(),
             redirect_slashes=self.config.REDIRECT_SLASHES,
             default=self.config.DEFAULT_NOT_FOUND_HANDLER,  # type: ignore
-            lifespan=self.config.DEFAULT_LIFESPAN_HANDLER,
+            lifespan=EllarApplicationLifespan(
+                self.config.DEFAULT_LIFESPAN_HANDLER  # type: ignore[arg-type]
+            ).lifespan,
         )
         self.middleware_stack = self.build_middleware_stack()
         self._finalize_app_initialization()

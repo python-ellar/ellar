@@ -1,3 +1,4 @@
+from .application import IApplicationShutdown, IApplicationStartup
 from .context import (
     IExecutionContext,
     IExecutionContextFactory,
@@ -31,4 +32,6 @@ __all__ = [
     "IModuleTemplateLoader",
     "IInterceptorsConsumer",
     "IGuardsConsumer",
+    "IApplicationShutdown",
+    "IApplicationStartup",
 ]
