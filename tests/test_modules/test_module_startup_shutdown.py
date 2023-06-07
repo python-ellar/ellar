@@ -29,13 +29,13 @@ class OnShutdownModule(IApplicationShutdown):
 
 
 @asynccontextmanager
-async def testing_life_span(app):
+async def _testing_life_span(app):
     yield {"life_span_testing": "Ellar"}
 
 
 tm = Test.create_test_module(
     modules=[OnShutdownModule, OnStartupModule],
-    config_module=dict(DEFAULT_LIFESPAN_HANDLER=testing_life_span),
+    config_module=dict(DEFAULT_LIFESPAN_HANDLER=_testing_life_span),
 )
 
 
