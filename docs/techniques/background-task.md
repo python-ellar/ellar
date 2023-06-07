@@ -29,7 +29,7 @@ Unlike the previous construct, `BackgroundTasks` can be injected into your route
 For example:
 ```python
 from starlette.background import BackgroundTasks
-from ellar.common import ModuleRouter, get, Res
+from ellar.common import ModuleRouter
 
 router = ModuleRouter('/background-test')
 

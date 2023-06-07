@@ -14,7 +14,7 @@ They make it possible to:
 
 ## **Basic**
 Each interceptor implements the `intercept()` method, which takes two arguments. 
-The first one is the `ExecutionContext` instance (exactly the same object as for [guards](./guards)) and 
+The first one is the `ExecutionContext` instance (exactly the same object as for [guards](../guards){target="_blank"}) and 
 `next_interceptor` awaitable function that executes the next interceptor in the execution chain.
 
 ```python
@@ -36,7 +36,7 @@ class EllarInterceptor(ABC):
 ## **Execution context**
 The `ExecutionContext` adds several new helper methods that provide additional details about the current execution process. 
 These details can be helpful in building more generic interceptors that can work across a broad set of controllers, methods, and execution contexts. 
-Learn more about `ExecutionContext` [here](../basics/execution-context).
+Learn more about `ExecutionContext` [here](../../basics/execution-context){target="_blank"}.
 
 ## **Next Interceptor Handler**
 The second argument, `next_interceptor`,  in `intercept` of EllarInterceptor class is used to invoke the route handler method at some point in your interceptor.

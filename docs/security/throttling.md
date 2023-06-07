@@ -175,7 +175,7 @@ class ApplicationModule:
 
 ### **Proxies**
 If you are working with multiple proxies, you can override the `get_tracker()` method to pull the value from the header or install 
-[`ProxyHeadersMiddleware`](https://github.com/encode/uvicorn/blob/master/uvicorn/middleware/proxy_headers.py)
+[`ProxyHeadersMiddleware`](https://github.com/encode/uvicorn/blob/master/uvicorn/middleware/proxy_headers.py){target="_blank"}
 
 ```python
 # throttler_behind_proxy.guard.py

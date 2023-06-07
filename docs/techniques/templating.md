@@ -172,11 +172,11 @@ if __name__ == "__main__":
 !!! info
     `Jinja2` supports async template rendering, however as a general rule we'd recommend that you keep your templates free from logic that invokes database lookups, or other I/O operations.
     Instead, we'd recommend that you ensure that your endpoints perform all I/O, for example, strictly evaluate any database queries within the view and include the final results in the context.'
-    - [`Starlette Recommendation`](https://www.starlette.io/templates/#asynchronous-template-rendering)
+    - [`Starlette Recommendation`](https://www.starlette.io/templates/#asynchronous-template-rendering){target="_blank"}
 
 
 ## **Jinja2 Configurations**
-If there are specific configurations you want to apply to your Jinja2 Environment, you can look at [JINJA_TEMPLATE_OPTIONS](https://eadwincode.github.io/ellar/configurations/#jinja_templates_options) configuration.
+If there are specific configurations you want to apply to your Jinja2 Environment, you can look at [JINJA_TEMPLATE_OPTIONS](../../techniques/configurations/#jinja_templates_options){target="_blank"} configuration.
 
 ## **Default Jinja Template Context**
 
@@ -205,7 +205,7 @@ The `url_for` takes `path` parameter, in the case of `static` files, to match th
 This `url_for('static', path='img/Icon.svg')` will search for `img/Icon.svg` in all registered static folders.
 
 
-### Reversing Controllers URLs
+### **Reversing Controllers URLs**
 It is common to need to generate URLs for specific routes, particularly when returning a redirect response. 
 This can be achieved by using the `request.url_for` method in the request object, or in the case of templating, by using the `url_for()` function.
 
@@ -285,7 +285,7 @@ we can see that the `parameter_a` is used as a keyword argument to satisfy the d
     If the `url_for` function is called with a path that does not exist or with insufficient parameters to resolve an existing URL, 
     it will raise a `starlette.routing.NoMatchFound` exception.
 
-### Reversing Module Router URLs
+### **Reversing Module Router URLs**
 
 Just like in controller, we can also reverse URLs that belongs to `ModuleRouter`. 
 
@@ -338,7 +338,7 @@ def profile(user_id: str, request=Req()):
 It's worth noting that providing a unique name to a router is useful if you have multiple routes with the same function name, or to make the URL reversing more readable or meaningful.
 
 
-### Overriding Reversing URL Function Name
+### **Overriding Reversing URL Function Name**
 You can override the `function_name` part of reversing the URL by providing a `name` on the **route method** decorator.
 Each route method has an optional name parameter, which, when set, is used in place of the function name when reversing the URL.
 For example, you could have the following code:
@@ -358,5 +358,5 @@ which will generate `http://127.0.0.1:5000/template-reversing/profile/value_of_u
 This allows for greater control and readability when reversing URLs, and makes it less prone to error if the function name of the route were to change in the future.
 
 
-### Adding template filters and template globals.
-Jinja template filter and global functions can be defined at module level as shown here: [Module Templating Filters](/ellar/overview/modules/#module-templating-filters)
+### **Adding template filters and template globals.**
+Jinja template filter and global functions can be defined at module level as shown here: [Module Templating Filters](../../overview/modules/#module-templating-filters){target="_blank"}

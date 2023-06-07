@@ -290,7 +290,7 @@ To execute e2e tests, we adopt a similar configuration to that of unit testing,
 and Ellar's use of **TestClient**, a tool provided by Starlette, to facilitates the simulation of HTTP requests
 
 ### **TestClient**
-Starlette provides a [TestClient](https://www.starlette.io/testclient/) for making requests ASGI Applications, and it's based on [httpx](https://www.python-httpx.org/) library similar to requests.
+Starlette provides a [TestClient](https://www.starlette.io/testclient/){target="_blank"} for making requests ASGI Applications, and it's based on [httpx](https://www.python-httpx.org/) library similar to requests.
 ```python
 from starlette.responses import HTMLResponse
 from starlette.testclient import TestClient

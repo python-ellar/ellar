@@ -170,7 +170,7 @@ By default, this implementation expects the hostname to match this simple regula
 Note that the first group is enclosed in brackets, indicating that this is the matched portion of the hostname.
 
 The `HostNameVersioning` scheme can be awkward to use in debug mode as you will typically be accessing a raw IP address such as 127.0.0.1. 
-There are various online tutorials on how to [access localhost with a custom subdomain](https://reinteractive.net/posts/199-developing-and-testing-rails-applications-with-subdomains) which you may find helpful in this case.
+There are various online tutorials on how to [access localhost with a custom subdomain](https://reinteractive.net/posts/199-developing-and-testing-rails-applications-with-subdomains){target="_blank"} which you may find helpful in this case.
 
 Hostname based versioning can be particularly useful if you have requirements to route incoming requests to different servers based on the version, as you can configure different DNS records for different API versions.
 

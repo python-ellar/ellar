@@ -23,6 +23,13 @@ theme:
     - search.share
     - search.suggest
     - toc.follow
+    - navigation.footer
+    - navigation.indexes
+    - navigation.instant
+    # - navigation.prune
+    - navigation.tabs
+    - navigation.left
+    - navigation.tracking
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -69,44 +76,56 @@ nav:
       - Custom Decorators:  overview/custom_decorators.md
       - Module Router:  overview/module-router.md
       - Interceptors:  overview/interceptors.md
-  - Execution Context: basics/execution-context.md
-  - Configuration: configurations.md
-  - How-to Guides:
-      - Input Parsing: parsing-inputs/index.md
-      - Path: parsing-inputs/path-params.md
-      - Query: parsing-inputs/query-params.md
-      - Header: parsing-inputs/header-params.md
-      - Cookie: parsing-inputs/cookie-params.md
-      - Body: parsing-inputs/body.md
-      - Form: parsing-inputs/form-params.md
-      - File: parsing-inputs/file-params.md
-      - Handling Response:
-          - Response Schema: handling-response/response.md
-          - Response Model: handling-response/response-model.md
-  - Templating:
-    - html: templating/templating.md
-    - Static Files: templating/staticfiles.md
+  - Essentials:
+      - Execution Context: basics/execution-context.md
+      - Dynamic Modules: basics/dynamic-modules.md
+      - Injector Scopes: basics/injector-scopes.md
+      - Lifespan: basics/lifespan.md
+      - Testing: basics/testing.md
+  - Techniques:
+      - Configuration: techniques/configurations.md
+      - Input Validations:
+          - Index: techniques/validations/index.md
+          - Path: techniques/validations/path-params.md
+          - Query: techniques/validations/query-params.md
+          - Header: techniques/validations/header-params.md
+          - Cookie: techniques/validations/cookie-params.md
+          - Body: techniques/validations/body.md
+          - Form: techniques/validations/form-params.md
+          - File: techniques/validations/file-params.md
+      - Serializers: techniques/serializers.md
+      - Response Model: techniques/response-model.md
+      - Versioning: techniques/versioning.md
+      - Caching: techniques/caching.md
+      - Templating:
+          - Html: techniques/templating.md
+          - Static Files: techniques/staticfiles.md
+      - Mount: techniques/mount.md
+      - Background Tasks: techniques/background-task.md
 
-  - Caching: caching.md
-  - Rate Limiting: throttling.md
-#  - Injection Scopes: basics/injection-scope.md
-#  - Events: basics/events.md
-  - Commands:
-    - Introduction: commands/index.md
-    - CLI Commands:
-        - new: commands/new-command.md
-        - create project: commands/create-project-command.md
-        - create module: commands/create-module-command.md
-        - runserver: commands/runserver-command.md
-    - Custom Commands: commands/custom-commands.md
-    - Command Grouping: commands/command-grouping.md
-  - Versioning: basics/versioning.md
-  - Testing: basics/testing.md
+  - Security:
+      - Authentication: security/authentication.md
+      - Authorization: security/authorization.md
+      - CSRF Protection: security/csrf.md
+      - Sessions: security/sessions.md
+      - Rate Limiting: security/throttling.md
+
+  - CLI:
+    - Introduction: cli/index.md
+    - Commands:
+        - new: cli/new-command.md
+        - create project: cli/create-project-command.md
+        - create module: cli/create-module-command.md
+        - runserver: cli/runserver-command.md
+    - Custom Commands: cli/custom-commands.md
+    - Command Grouping: cli/command-grouping.md
+
   - WebSockets:
       - index: websockets/index.md
       - socketio: websockets/socketio.md
-  - Mount: mount.md
-  - Background Tasks: background-task.md
+
+  - Contribution:
+      - index: contribution.md
   - Release Notes: release-notes.md
 
 markdown_extensions:
@@ -128,6 +147,7 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.saneheaders
+  - pymdownx.tilde
 
 extra_css:
   - stylesheets/extra.css

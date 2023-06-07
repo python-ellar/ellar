@@ -1,4 +1,4 @@
-## **Response and Serializers**
+# **Serializers**
 The `Serializer` class in the Ellar, is a custom class based on `pydantic` models, which provides additional functionality specific to Ellar's requirements.
 
 To use `Serializer` in Ellar, you simply need to create a class that inherits from `Serializer` and define your data model using pydantic fields. 
@@ -68,7 +68,7 @@ The `UserSerializer` class is used to define the expected format of the response
 When the `/me` endpoint is called, it returns the `current_user` object as the response. 
 The `UserSerializer` is then used to parse and validate the `current_user` object, converting it into a dictionary representation 
 that can be easily serialized to JSON. 
-The resulting dictionary is then passed to the [`JSONResponseModel`](./response-model/#jsonresponsemodel) for serialization to a 
+The resulting dictionary is then passed to the [`JSONResponseModel`](../response-model/#jsonresponsemodel) for serialization to a 
 JSON string and sending the response to the client.
 
 ## **Using Dataclass as Response Schema**

@@ -33,6 +33,8 @@ from .exceptions import (
     UnsupportedMediaType,
 )
 from .interfaces import (
+    IApplicationShutdown,
+    IApplicationStartup,
     IExceptionHandler,
     IExceptionMiddlewareService,
     IExecutionContext,
@@ -199,6 +201,8 @@ __all__ = [
     "IGuardsConsumer",
     "EllarInterceptor",
     "UseInterceptors",
+    "IApplicationStartup",
+    "IApplicationShutdown",
 ]
 
 

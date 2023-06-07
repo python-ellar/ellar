@@ -4,7 +4,7 @@ Middleware functions can modify **request** and **response** objects during the 
 
 ![middleware description image](../img/middleware.png)
 
-Ellar Middlewares follows the [`Starlette ASGI Middleware`](https://www.starlette.io/middleware/) contract. The middlewares are set up in a pipeline fashion that creates a chain of request-response cycles.
+Ellar Middlewares follows the [`Starlette ASGI Middleware`](https://www.starlette.io/middleware/){target="_blank"} contract. The middlewares are set up in a pipeline fashion that creates a chain of request-response cycles.
 
 During request, each `ASGI` Middleware must call another ASGI `app` passed to it during the middlewares instantiation and `await` its response. 
 
@@ -165,7 +165,7 @@ To allow any hostname either use `allowed_hosts=["*"]` or omit the middleware.
 If an incoming request does not validate correctly then a `400` response will be sent.
 
 ### **`CORSMiddleware`**
-Adds appropriate [`CORS headers`](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) to outgoing responses in order to allow cross-origin requests from browsers.
+Adds appropriate [`CORS headers`](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS){target="_blank"} to outgoing responses in order to allow cross-origin requests from browsers.
 
 Since `CORSMiddleware` is part of default application middleware, let's see how to configure CORS arguments in ellar application.
 
@@ -216,11 +216,11 @@ Any request with an `Origin` header. In this case the middleware will pass the r
 There are many other ASGI middlewares.
 For example:
 
-- [Sentry](https://docs.sentry.io/platforms/python/asgi/)
-- [Uvicorn's ProxyHeadersMiddleware](https://github.com/encode/uvicorn/blob/master/uvicorn/middleware/proxy_headers.py)
-- [MessagePack](https://github.com/florimondmanca/msgpack-asgi)
+- [Sentry](https://docs.sentry.io/platforms/python/asgi/){target="_blank"}
+- [Uvicorn's ProxyHeadersMiddleware](https://github.com/encode/uvicorn/blob/master/uvicorn/middleware/proxy_headers.py){target="_blank"}
+- [MessagePack](https://github.com/florimondmanca/msgpack-asgi){target="_blank"}
 
-To see other available middlewares check [Starlette's Middleware docs](https://www.starlette.io/middleware/)  and the [ASGI Awesome List](https://github.com/florimondmanca/awesome-asgi).
+To see other available middlewares check [Starlette's Middleware docs](https://www.starlette.io/middleware/){target="_blank"}  and the [ASGI Awesome List](https://github.com/florimondmanca/awesome-asgi){target="_blank"}.
 
 !!! note "Technical Details"
     Most of the available middlewares come directly from Starlette. Ellar provides few required for its basic functionalities

@@ -72,7 +72,7 @@ There are two ways to create an Ellar application using the `AppFactory`, `creat
 Both provides all necessary parameter for creating Ellar application
 
 ## **Run your project**
-Ellar runs [UVICORN - ASGI Server](https://www.uvicorn.org/) under the hood.
+Ellar runs [UVICORN - ASGI Server](https://www.uvicorn.org/){target="_blank"} under the hood.
 
 ```shell
 $(venv) cd project-name
@@ -90,10 +90,10 @@ INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 ```
 
-Now go to [http://127.0.0.1:8000](http://127.0.0.1:8000)
+Now go to [http://127.0.0.1:8000](http://127.0.0.1:8000){target="_blank"}
 ![Swagger UI](../img/ellar_framework.png)
 
-For more info on Ellar CLI, click [here](https://github.com/eadwinCode/ellar-cli)
+For more info on Ellar CLI, click [here](https://github.com/eadwinCode/ellar-cli){target="_blank"}
 
 To run the application with a different configuration,
 In `project_name/config`, Add a `ProductionConfig`
@@ -167,7 +167,7 @@ class ApplicationModule(ModuleBase):
 ```
 That's it.
 
-Goto your browser and visit: [http://localhost:8000/car/](http://localhost:8000/car/)
+Goto your browser and visit: [http://localhost:8000/car/](http://localhost:8000/car/){target="_blank"}
 ```json
 {
   "detail": "Welcome Car Resource"
@@ -208,4 +208,4 @@ module_config = OpenAPIDocumentModule.setup(
 application.install_module(module_config)
 ```
 
-Goto your browser and visit: [http://localhost:8000/docs/](http://localhost:8000/docs)
+Goto your browser and visit: [http://localhost:8000/docs/](http://localhost:8000/docs){target="_blank"}

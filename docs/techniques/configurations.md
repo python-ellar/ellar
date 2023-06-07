@@ -39,8 +39,8 @@ Default: `JSONResponse` - (`starlette.common.JSONResponse`)
 
 There are other options for JSON available in Ellar:
 
-- **UJSONResponse**(`ellar.common.UJSONResponse`):  renders JSON response using [ujson](https://pypi.python.org/pypi/ujson). 
-- **ORJSONResponse**(`ellar.common.ORJSONResponse`):  renders JSON response using [orjson](https://pypi.org/project/orjson/). 
+- **UJSONResponse**(`ellar.common.UJSONResponse`):  renders JSON response using [ujson](https://pypi.python.org/pypi/ujson){target="_blank"}. 
+- **ORJSONResponse**(`ellar.common.ORJSONResponse`):  renders JSON response using [orjson](https://pypi.org/project/orjson/){target="_blank"}. 
 
 ### **JINJA_TEMPLATES_OPTIONS**
 Default: `{}`
@@ -73,7 +73,7 @@ Different keys available:
 - `enable_async` (bool)
 
 !!! info
-    Check Jinja2 [environment option](https://jinja.palletsprojects.com/en/3.0.x/api/#high-level-api) for more information.
+    Check Jinja2 [environment option](https://jinja.palletsprojects.com/en/3.0.x/api/#high-level-api){target="_blank"} for more information.
 
 ### **VERSIONING_SCHEME**
 Default: `DefaultAPIVersioning()`

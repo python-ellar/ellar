@@ -68,14 +68,14 @@ To set up cache, we need to use `CacheModule`. `CacheModule` provides two method
     backends will be defined as keyword-arguments just like `local` and `others` incase you want to set up more than one cache backend.
 
 ### **Memcached**
-[Memcached](https://memcached.org/) is an entirely memory-based cache server, originally developed to handle high loads at LiveJournal.com and subsequently open-sourced by Danga Interactive.
+[Memcached](https://memcached.org/){target="_blank"} is an entirely memory-based cache server, originally developed to handle high loads at LiveJournal.com and subsequently open-sourced by Danga Interactive.
 
 Memcached runs as a daemon and is allotted a specified amount of RAM. All it does is provide a fast interface for adding, retrieving and deleting data in the cache. All data is stored directly in memory.
 
 After installing Memcached itself, you’ll need to install a Memcached binding. 
 There are several Python Memcached bindings available; 
 
-Ellar supports are [pylibmc](https://pypi.org/project/pylibmc/) and [pymemcache](https://pypi.org/project/pymemcache/)
+Ellar supports are [pylibmc](https://pypi.org/project/pylibmc/){target="_blank"} and [pymemcache](https://pypi.org/project/pymemcache/){target="_blank"}
 
 For an example, lets assume you have a Memcached is running on localhost (127.0.0.1) port 11211, using the `pymemcache` or `pylibmc` binding:
 
@@ -196,11 +196,11 @@ class DevelopmentConfig(ConfigDefaultTypesMixin):
 ```
 
 ### **Redis**
-[Redis](https://redis.io/) is a high-performance, in-memory database that is commonly used for caching data. 
+[Redis](https://redis.io/){target="_blank"} is a high-performance, in-memory database that is commonly used for caching data. 
 To get started with Redis, you will need to have a Redis server running on either your local machine or a remote server.
 
 Once you have set up the Redis server, 
-you will need to install the [Redis](https://pypi.org/project/redis/) Python client library to be able 
+you will need to install the [Redis](https://pypi.org/project/redis/){target="_blank"} Python client library to be able 
 to communicate with Redis from your Python code. 
 
 To use redis in Ellar, you need to import RedisCacheBackend from `ellar.cache.backend.redis`.

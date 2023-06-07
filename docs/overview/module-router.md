@@ -75,7 +75,7 @@ class CarModule(ModuleBase):
 ## **Accessing Other Request Object**
 In functional route handle, we can access request object and response object through custom decorators or type annotation as shown below.
 
-### By Type Annotation
+### **By Type Annotation**
 Let's inject request and response object in `addition` route handler function from our previous example
 
 ```python
