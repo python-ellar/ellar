@@ -28,7 +28,7 @@ You can use the `WebSocketException` class to raise errors inside WebSocket endp
 
 * `WebSocketException(code=1008, reason=None)`
 
-You can set any code valid as defined [in the specification](https://tools.ietf.org/html/rfc6455#section-7.4.1).
+You can set any code valid as defined [in the specification](https://tools.ietf.org/html/rfc6455#section-7.4.1){target="_blank"}.
 
 ## **APIException**
 It is a type of exception for REST API based applications. It gives more concept to error and provides a simple interface for creating other custom exception needs in your application without having to create an extra exception handler.
@@ -60,7 +60,7 @@ def get_all(self):
     raise ServiceUnavailableException()
 
 ```
-Now, when you visit [http://127.0.0.1/car/](http://127.0.0.1/car/), you will get a JSON response.
+Now, when you visit [http://127.0.0.1/car/](http://127.0.0.1/car/){target="_blank"}, you will get a JSON response.
 ```json
 {
   "detail": "Service Unavailable"

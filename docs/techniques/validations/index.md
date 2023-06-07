@@ -1,4 +1,4 @@
-# **Input Parsing Tutorial**
+# **Input Validation Tutorial**
 
 In this section, we are going to learn how inputs are parsed in the Ellar route handle functions.
 

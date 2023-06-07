@@ -29,7 +29,7 @@ This helps to ensure that the application is receiving valid input and can proce
 - `Header(...)`
 - `Cookie(...)`
 
-Please refer to the "How-to-Guide" on parsing inputs [here](/ellar/parsing-inputs/) to see how this input decorators work. 
+Please refer to the "How-to-Guide" on parsing inputs [here](../../techniques/validations){target="_blank"} to see how this input decorators work. 
 
 ### **WsBody(..., embed=False)**
 
@@ -96,7 +96,7 @@ It also makes the code more modular and easier to test.
     please note that this automatic registration will be scoped to singleton by the `EllarInjector`.
 
 ### **Context**
-The **Context()** decorator injects the current `IExecutionContext` to route function parameter. See [ExecutionContext](/basics/execution-context)
+The **Context()** decorator injects the current `IExecutionContext` to route function parameter. See [ExecutionContext](../../basics/execution-context){target="_blank"}
 
 For example:
 ```python
@@ -176,7 +176,7 @@ the `example_endpoint` function is executed. The `Ws` decorator injects the curr
 The same conditions and examples applies for:
 
 - **Host()** decorator injects current client host address to route function parameter.
-- **Session()** decorator injects current Session object to route function parameter. This requires [SessionMiddleware](https://www.starlette.io/middleware/#sessionmiddleware) module from Starlette added in application middleware and also `SessionMiddleware` module depends on [itsdangerous](https://pypi.org/project/itsdangerous/) package.
+- **Session()** decorator injects current Session object to route function parameter. This requires [SessionMiddleware](https://www.starlette.io/middleware/#sessionmiddleware){target="_blank"} module from Starlette added in application middleware and also `SessionMiddleware` module depends on [itsdangerous](https://pypi.org/project/itsdangerous/){target="_blank"} package.
 - **Http()** decorator injects current HTTP connection object to route function parameter.
 
 ## **Creating a Custom Parameter Decorators**
@@ -242,7 +242,7 @@ which will return a 200 status code and HTML content from my_template.
 The return object from the index function will be used as the templating context for `my_template` during the template rendering process. 
 This allows the function to pass data to the template and have it rendered with the provided context, the rendered template will be the response body.
 
-See [HTML Templating](/ellar/templating/templating) for more information on `render` and HTML templating with Ellar.
+See [HTML Templating](../../templating/templating){target="_blank"} for more information on `render` and HTML templating with Ellar.
 
 ### **FILE**
 **@file()** decorator converts a route function response to file or streaming response type. 
@@ -378,14 +378,14 @@ def serialized_output_1(self):
 
 ```
 In example, `serializer_filter` to filter values that are `None` and also excluded `password` property from been returned.
-See [Pydantic Model Export](https://docs.pydantic.dev/usage/exporting_models/#modeldict) for more examples.
+See [Pydantic Model Export](https://docs.pydantic.dev/usage/exporting_models/#modeldict){target="_blank"} for more examples.
 
 ### **VERSION**
 **@version()**  is a decorator that provides endpoint versioning for a route function. 
 This decorator allows you to specify the version of the endpoint that the function is associated with. 
 
 Based on the versioning scheme configuration in the application, versioned route functions are called. This can be useful for maintaining backward compatibility, or for rolling out new features to different versions of an application. 
-More information on how to use this decorator can be found in the [Versioning documentation]()
+More information on how to use this decorator can be found in the [Versioning documentation](../../techniques/versioning){target="_blank"}
 
 A quick example on how to use `version` decorator:
 ```python
@@ -408,7 +408,7 @@ These protection classes have a `can_execute` function that is called to determi
 This decorator allows you to apply certain conditions or checks before a route function is executed, such as `authentication` or `authorization` checks. 
 This can help to ensure that only authorized users can access certain resources. 
 
-More information on how to use this decorator can be found in the [Guard Documentation]()
+More information on how to use this decorator can be found in the [Guard Documentation](../guards){target="_blank"}
 
 A quick example on how to use `UseGuards` decorator:
 ```python
@@ -441,7 +441,7 @@ Each guard class has a `can_execute` function that is called in the order specif
 The `command` decorator is used to convert a decorated function into a command that can be executed through the Ellar command-line interface (CLI) actions. 
 This allows you to define custom commands that can be run from the command-line, which can be useful for tasks such as running database migrations, generating code, or other tasks that can be automated.
 
-See [Ellar-CLI Custom Commands](https://eadwincode.github.io/ellar-cli/custom-commands/)
+See [Ellar-CLI Custom Commands](../../cli){target="_blank"}
 
 ## **Module Function Decorators**
 
@@ -454,4 +454,4 @@ See [Ellar-CLI Custom Commands](https://eadwincode.github.io/ellar-cli/custom-co
 - `@template_global`: This decorator is used to register a function as a global variable available in all Jinja2 templates. The function can be called without any arguments and should return a value.
 
 These decorators can be used to define functions that will be executed at specific points in the application's lifecycle. 
-They provide a way to separate and organize the different parts of an application. See [Module Additional Configuration](../modules/#additional-module-configurations) for examples on how these decorator functions are used.
+They provide a way to separate and organize the different parts of an application. See [Module Additional Configuration](../modules/#additional-module-configurations){target="_blank"} for examples on how these decorator functions are used.

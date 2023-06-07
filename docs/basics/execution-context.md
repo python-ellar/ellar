@@ -163,7 +163,7 @@ class ExecutionContext(HostContext):
 
 These extra information are necessary for reading `metadata` properties set on controllers or the route handler function.
 
-### How to access the current execution context
+### **How to access the current execution context**
 You can access the current execution context using the `Context()` function. 
 This decorator can be applied to a parameter of a controller or service method, 
 and it will inject the current `ExecutionContext` object into the method.
