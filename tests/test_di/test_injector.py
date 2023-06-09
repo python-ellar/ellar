@@ -25,7 +25,7 @@ def test_container_install_module_case_1():
     called = False
     app_container = EllarInjector().container
 
-    class FakeModule(ModuleBase):
+    class PlainModule(ModuleBase):
         def register_services(self, container: Container) -> None:
             nonlocal called
             called = True
@@ -36,15 +36,24 @@ def test_container_install_module_case_1():
             nonlocal called
             called = True
 
-    fake_module = app_container.install(FakeModule)
+    plain_module = app_container.install(PlainModule)
     assert called
-    assert isinstance(fake_module, FakeModule)
+    assert isinstance(plain_module, PlainModule)
 
     called = False
 
     decorated_module = app_container.install(DecoratedModuleWithBase)
     assert called
     assert isinstance(decorated_module, DecoratedModuleWithBase)
+
+    called = False
+    app_container.install(PlainModule())
+    assert called
+
+    called = False
+
+    app_container.install(DecoratedModuleWithBase())
+    assert called
 
 
 def test_container_install_module_return_case_2():
@@ -58,6 +67,10 @@ def test_container_install_module_return_case_2():
             called = True
 
     decorated_module = app_container.install(DecoratedModule)
+    assert called is False
+    assert isinstance(decorated_module, DecoratedModule)
+
+    decorated_module = app_container.install(DecoratedModule())
     assert called is False
     assert isinstance(decorated_module, DecoratedModule)
 
