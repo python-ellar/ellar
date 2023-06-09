@@ -238,10 +238,10 @@ class Container(InjectorBinder):
             t.cast(type, instance), InjectorModule
         ):
             instance = t.cast(type, instance)(**init_kwargs)
-        elif isinstance(instance, type) and not isinstance(instance, InjectorModule):
+        elif isinstance(instance, type):
             return self.injector.get(t.cast(type, instance))
         elif not isinstance(instance, type) and not isinstance(
-            type(instance), InjectorModule
+            instance, InjectorModule
         ):
             return instance
 
