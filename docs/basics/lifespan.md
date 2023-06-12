@@ -1,6 +1,6 @@
 # **Lifespan**
 Ellar applications registers a lifespan manager. The manager handles lifespan handler registered in the configuration under the variable name
-**`DEFAULT_LIFESPAN_HANDLER`** and executes code that needs to run before the application starts up, or when the application is shutting down. 
+**`DEFAULT_LIFESPAN_HANDLER`** and also executes code that needs to run before the application starts up, or when the application is shutting down. 
 The lifespan manager must be run before ellar starts serving incoming request.
 
 ```python
