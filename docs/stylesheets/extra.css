@@ -1,3 +1,12 @@
 .md-header {
     background-color: #212529 !important;
 }
+nav.md-nav--primary ul.md-nav__list {
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+nav.md-nav--primary ul.md-nav__list nav.md-nav ul.md-nav__list{
+    text-transform: none;
+    font-weight: normal;
+}
