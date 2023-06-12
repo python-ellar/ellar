@@ -1,33 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" class="h-100" data-bs-theme="light">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Welcome - Ellar ASGI Python Framework</title>
-    <link rel="shortcut icon" type="image/x-icon"
-          href="{{ url_for('static', path='img/Icon.svg') }}"/>
-    <link rel="stylesheet" href="{{ url_for('static', path='css/bootstrap.min.css') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Ellar Congratulation Page">
+
+    <title>Ellar - Congratulation!</title>
     <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', path='img/Icon.svg') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/bootstrap.min.css') }}">
+
+    <!-- Custom styles for this template -->
+    <link href="{{ url_for('static', path='css/cover.css') }}" rel="stylesheet">
     <style>
+        .bg-ellar {
+            background-color: #d02424;
+        }
+        .border-ellar {
+            border-color: #d02424;
+        }
         body {
-            background-color: rgb(46, 48, 62);
-            color: whitesmoke;
             font-family: "PT Sans", Monaco, "Courier New", Courier, monospace;
+        }
+        .nav-masthead .active {
+            color: whitesmoke;
+            border-bottom-color: transparent;
+            font-size: 1.4rem;
+        }
+        .text-ellar {
+            color: rgba(208, 36, 36, 0.82) !important;
         }
     </style>
 </head>
-<body>
-<main>
-    <div class="px-4 py-5 my-5 text-center">
-        <img class="d-block mx-auto mb-4" src="{{ url_for('static', path='img/EllarLogoIconOnly.png') }}"
-             alt="" width="300" height="300">
-        <h1 class="display-5" style="font-weight: 700">Welcome to Ellar Web Framework</h1>
-        <div class="col-lg-6 mx-auto">
-            <a href="{{git_hub}}" target="_blank">Github</a> |
-            <a href="{{docs_url}}" target="_blank">Documentation</a>
+
+<body class="d-flex h-100 text-center text-bg-dark">
+  <div class="container d-flex w-100 h-100 p-3 mx-auto flex-column">
+    <header class="mb-auto">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex mb-0 align-items-end">
+            <img class="d-block mx-auto img-fluid" src="{{ url_for('static', path='img/EllarLogoB.png') }}"
+             alt="" width="200">
+            <div class="fw-bold"><span>v</span>{{version}}</div>
         </div>
-    </div>
-</main>
+
+        <nav class="nav nav-masthead justify-content-center float-md-end">
+          <a class="nav-link py-1 px-0 active text-ellar" href="{{docs_url}}" target="_blank">Documentation</a>
+          <a class="nav-link py-1 px-0 active text-ellar" href="{{release_url}}" target="_blank">Release Notes For {{version}}</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="px-3">
+      <h1>Congratulations! </h1>
+      <p class="lead">You have a working application.</p>
+      <p class="lead mt-5">
+        <a href="{{example_project_url}}" target="_blank" class="btn btn-lg btn-light fw-bold border-ellar bg-ellar">See Some Sample Projects</a>
+      </p>
+    </main>
+
+    <footer class="mt-auto text-white-50">
+      <hr>
+      <p>This is a sample template from <strong>HomeModule</strong>. <br>Remove this module whenever necessary.</p>
+    </footer>
+  </div>
+
 </body>
+
 </html>
