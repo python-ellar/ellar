@@ -182,7 +182,7 @@ class ItemsController(ControllerBase):
 
 ## **Documentation**
 Now, when you open your browser at [http://localhost:8000/docs](http://localhost:8000/docs), you will see the automatic, interactive, API documentation.
-![events Swagger doc](../img/event_docs_swagger.png)
+![events Swagger doc](../../img/event_docs_swagger.png)
 
 ## **Using Enum**
 
@@ -219,4 +219,4 @@ class ItemsController(ControllerBase):
 ### Check the docs
 Because the available values for the path parameter are predefined, the interactive docs can show them nicely:
 
-![enum Swagger doc](../img/enum_docs_swagger.png)
+![enum Swagger doc](../../img/enum_docs_swagger.png)

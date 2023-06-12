@@ -1,5 +1,5 @@
 # **Dynamic Modules**
-We have seen in many example given on how to statically configure a [module](../../overview/modules.md){_target='blank}. 
+We have seen in many example given on how to statically configure a [module](../overview/modules.md){_target='blank'}. 
 In this section we are going to look at different ways to dynamically set up a module.
 
 Why is this important? Consider a scenario where a general-purpose module needs to behave differently in different use cases, 

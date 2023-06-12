@@ -64,7 +64,7 @@ class ItemsController(ControllerBase):
         return item
 ```
 
-![Openapi schema](../img/form-schema-doc.png)
+![Openapi schema](../../img/form-schema-doc.png)
 
 ## **Request form + path + query parameters**
 

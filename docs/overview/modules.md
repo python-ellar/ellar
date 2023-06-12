@@ -237,5 +237,3 @@ class ExampleModule(ModuleBase):
 The `ExampleModule` has registered `Description` and `Name` type to the injector and can be resolved respectively if required by any object.
 
 Read more on injector module use cases - [Here](https://injector.readthedocs.io/en/latest/terminology.html#module).
-
-## **Module and Application Lifespan**
