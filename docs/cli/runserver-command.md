@@ -15,7 +15,7 @@ INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 ```
 
-### Runserver CLI Options
+## **Runserver CLI Options**
 ```shell
 ellar runserver --help
 ```

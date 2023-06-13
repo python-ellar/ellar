@@ -1,15 +1,15 @@
 
-# Ellar CLI
+# **Ellar CLI**
 Ellar CLI is an abstracted tool for the Ellar web framework that helps in the standard project scaffold of the 
 framework, module project scaffold, running the project local server using UVICORN, and running custom commands registered in the application module or any Ellar module.
 
-## Installation
+## **Installation**
 if you have [ellar](https://github.com/eadwinCode/ellar) install ready
 ```
 pip install ellar-cli
 ```
 
-## Usage
+## **Usage**
 To verify ellar-cli is working, run the command belove
 ```shell
 ellar --help

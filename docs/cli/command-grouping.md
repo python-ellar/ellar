@@ -20,7 +20,7 @@ def migrate():
     """Applies Migrations"""
 ```
 
-## Register EllarTyper Command
+## **Register EllarTyper Command**
 
 Lets, make the `db` visible on the CLI.
 

@@ -49,5 +49,5 @@ my-project/
 
 ```
 
-### New Command CLI Options
+## **New Command CLI Options**
 - `--project-name` Set the resulting project module name. Defaults to folder-name is not provided.

@@ -14,7 +14,7 @@ def my_new_command():
     """my_new_command cli description """
 ```
 
-## Custom Command with Context
+## **Custom Command with Context**
 
 Ellar CLI tools is a wrapper round [typer](https://typer.tiangolo.com/).
 So, therefore, we can easily get the command context by adding a parameter with the annotation of `typer.Context`
@@ -43,7 +43,7 @@ Some important method that may be of interest:
 - `import_application`: returns application instance.
 - `get_application_config`: gets current application config.
 
-## Register a Custom Command
+## **Register a Custom Command**
 
 Lets, make the `my_new_command` visible on the CLI.
 In other for Ellar CLI to identify custom command, its has to be registered to a `@Module` class.
