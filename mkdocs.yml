@@ -121,7 +121,7 @@ nav:
     - Command Grouping: cli/command-grouping.md
 
   - WebSockets:
-      - index: websockets/index.md
+      - websockets: websockets/websockets.md
       - socketio: websockets/socketio.md
 
   - Contribution:
