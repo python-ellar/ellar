@@ -124,8 +124,7 @@ nav:
       - websockets: websockets/websockets.md
       - socketio: websockets/socketio.md
 
-  - Contribution:
-      - index: contribution.md
+  - Contribution: contribution.md
   - Release Notes: release-notes.md
 
 markdown_extensions:

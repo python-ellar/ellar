@@ -1,7 +1,7 @@
-# **Custom Command**
+# **Custom Commands**
 In this section, we are going to go over how to create a custom command and throw more light on how Ella CLI works.
 
-## Create Custom Command
+## **Create Custom Command**
 Let's create a file called `commands.py` at the root level of the project.
 
 ```python
