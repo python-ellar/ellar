@@ -1,4 +1,4 @@
-
+# **Create New Project Command**
 This command will help you kickstart your new Ellar project. 
 
 It creates a new project for you with a directory structure and adds all required files for Ellar CLI to properly manage your project.

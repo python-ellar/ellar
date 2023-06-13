@@ -1,4 +1,4 @@
-
+# **Create Project Command**
 This command helps you create just an Ellar project provided the `"pyproject.toml"` file exists in the working directory(`CWD`)
 
 ```shell

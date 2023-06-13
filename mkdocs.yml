@@ -66,7 +66,7 @@ plugins:
 nav:
   - Introduction: index.md
   - Overview:
-      - Step One:  overview/index.md
+      - Step One:  overview/step-one.md
       - Controllers:  overview/controllers.md
       - Providers:  overview/providers.md
       - Modules:  overview/modules.md
@@ -111,7 +111,7 @@ nav:
       - Rate Limiting: security/throttling.md
 
   - CLI:
-    - Introduction: cli/index.md
+    - Introduction: cli/introduction.md
     - Commands:
         - new: cli/new-command.md
         - create project: cli/create-project-command.md

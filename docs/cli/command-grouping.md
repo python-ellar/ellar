@@ -1,4 +1,4 @@
-
+# **Command Grouping**
 Ella CLI provides a way by which commands can be grouped.
 
 For instance, a `db` command may have sub-commands like `makemigrations`, `migrate`, `reset-db` etc.
