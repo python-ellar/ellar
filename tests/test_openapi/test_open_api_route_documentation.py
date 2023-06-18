@@ -2,13 +2,14 @@ import typing as t
 
 from pydantic.schema import get_flat_models_from_fields, get_model_name_map
 
-from ellar.common import Body, ModuleRouter, Query, openapi_info
-from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY, OPENAPI_KEY
+from ellar.common import Body, ModuleRouter, Query
+from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.common.responses.models import ResponseModel, ResponseModelField
 from ellar.core.connection import HTTPConnection
-from ellar.core.guard import APIKeyCookie
+from ellar.core.guards import APIKeyCookie
 from ellar.core.routing import ModuleRouterFactory
-from ellar.openapi import OpenAPIRouteDocumentation
+from ellar.openapi import OpenAPIRouteDocumentation, openapi_info
+from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 from ellar.reflect import reflect
 
 from ..schema import BlogObjectDTO, CreateCarSchema, Filter, NoteSchemaDC
@@ -89,7 +90,7 @@ def test_open_api_route_model_get_openapi_operation_metadata():
     route_operation = reflect.get_metadata(
         CONTROLLER_OPERATION_HANDLER_KEY, get_car_by_id
     )
-    openapi = reflect.get_metadata(OPENAPI_KEY, get_car_by_id) or dict()
+    openapi = reflect.get_metadata(OPENAPI_OPERATION_KEY, get_car_by_id) or dict()
     openapi_route_doc = OpenAPIRouteDocumentation(route=route_operation, **openapi)
     result = openapi_route_doc.get_openapi_operation_metadata("post")
     assert result == {
@@ -112,7 +113,7 @@ def test_open_api_route_get_openapi_operation_parameters_works_for_empty_model_n
     route_operation = reflect.get_metadata(
         CONTROLLER_OPERATION_HANDLER_KEY, get_car_by_id
     )
-    openapi = reflect.get_metadata(OPENAPI_KEY, get_car_by_id) or dict()
+    openapi = reflect.get_metadata(OPENAPI_OPERATION_KEY, get_car_by_id) or dict()
     openapi_route_doc = OpenAPIRouteDocumentation(route=route_operation, **openapi)
     result = openapi_route_doc.get_openapi_operation_parameters(model_name_map=dict())
     assert result == [
@@ -352,7 +353,7 @@ def test_open_api_route_get_openapi_path_with_security():
             "type": "apiKey",
             "description": None,
             "in": "cookie",
-            "name": "CustomCookieAPIKey",
+            "name": "custom-key",
         }
     }
 
@@ -482,6 +483,6 @@ def test_open_api_route__get_openapi_path_object_works_for_routes_with_multiple_
             "type": "apiKey",
             "description": None,
             "in": "cookie",
-            "name": "CustomCookieAPIKey",
+            "name": "custom-key",
         }
     }

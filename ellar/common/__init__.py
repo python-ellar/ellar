@@ -5,16 +5,17 @@ from starlette.exceptions import WebSocketException
 from .commands import EllarTyper, command
 from .datastructures import UploadFile
 from .decorators import (
+    AllowAnyGuard,
     Controller,
     Module,
     UseGuards,
     UseInterceptors,
     Version,
+    allow_any_guard,
     exception_handler,
     extra_args,
     file,
     middleware,
-    openapi_info,
     render,
     serializer_filter,
     set_metadata,
@@ -138,7 +139,6 @@ __all__ = [
     "ParamTypes",
     "set_metadata",
     "Controller",
-    "openapi_info",
     "Version",
     "delete",
     "get",
@@ -203,6 +203,8 @@ __all__ = [
     "UseInterceptors",
     "IApplicationStartup",
     "IApplicationShutdown",
+    "AllowAnyGuard",
+    "allow_any_guard",
 ]
 
 

@@ -1,12 +1,7 @@
 import pytest
 
 from ellar.common import Controller, ControllerBase, UseGuards, Version, set_metadata
-from ellar.common.constants import (
-    CONTROLLER_METADATA,
-    GUARDS_KEY,
-    NOT_SET,
-    VERSIONING_KEY,
-)
+from ellar.common.constants import CONTROLLER_METADATA, GUARDS_KEY, VERSIONING_KEY
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.reflect import reflect
 
@@ -14,10 +9,6 @@ from ellar.reflect import reflect
 @set_metadata("OtherAttributes", "Something")
 @Controller(
     prefix="/decorator",
-    description="Some description",
-    external_doc_description="external",
-    tag="dec",
-    external_doc_url="https://example.com",
     name="test",
 )
 @Version("v1")
@@ -49,12 +40,6 @@ def test_controller_decoration_default():
         == "defaulttest"
     )
 
-    assert reflect.get_metadata(CONTROLLER_METADATA.OPENAPI, ControllerDefaultTest) == {
-        "tag": NOT_SET,
-        "description": None,
-        "external_doc_description": None,
-        "external_doc_url": None,
-    }
     assert reflect.get_metadata(GUARDS_KEY, ControllerDefaultTest) is None
     assert reflect.get_metadata(VERSIONING_KEY, ControllerDefaultTest) is None
     assert (
@@ -74,15 +59,6 @@ def test_controller_decoration_test():
         reflect.get_metadata(CONTROLLER_METADATA.NAME, ControllerDecorationTest)
         == "test"
     )
-
-    assert reflect.get_metadata(
-        CONTROLLER_METADATA.OPENAPI, ControllerDecorationTest
-    ) == {
-        "tag": "dec",
-        "description": "Some description",
-        "external_doc_description": "external",
-        "external_doc_url": "https://example.com",
-    }
     assert reflect.get_metadata(GUARDS_KEY, ControllerDecorationTest) == []
     assert reflect.get_metadata(VERSIONING_KEY, ControllerDecorationTest) == {
         "v1",

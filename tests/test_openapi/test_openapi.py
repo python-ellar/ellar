@@ -1,7 +1,7 @@
-from ellar.common import openapi_info
 from ellar.common.compatible import AttributeDict
-from ellar.common.constants import OPENAPI_KEY
 from ellar.core.connection import Request
+from ellar.openapi import openapi_info
+from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 from ellar.reflect import reflect
 
 
@@ -17,7 +17,7 @@ def endpoint(request: Request):
 
 
 def test_openapi_sets_endpoint_meta():
-    open_api_data = reflect.get_metadata(OPENAPI_KEY, endpoint)
+    open_api_data = reflect.get_metadata(OPENAPI_OPERATION_KEY, endpoint)
     assert isinstance(open_api_data, AttributeDict)
     assert open_api_data.summary == "Endpoint Summary"
     assert open_api_data.description == "Endpoint Description"

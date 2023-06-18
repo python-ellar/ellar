@@ -4,13 +4,7 @@ import uuid
 from starlette.routing import BaseRoute, Match, Mount as StarletteMount, Route, Router
 from starlette.types import ASGIApp
 
-from ellar.common.compatible import AttributeDict
-from ellar.common.constants import (
-    CONTROLLER_CLASS_KEY,
-    GUARDS_KEY,
-    NOT_SET,
-    VERSIONING_KEY,
-)
+from ellar.common.constants import CONTROLLER_CLASS_KEY, GUARDS_KEY, VERSIONING_KEY
 from ellar.common.helper import get_unique_control_type
 from ellar.common.models import GuardCanActivate
 from ellar.common.types import TReceive, TScope, TSend
@@ -32,44 +26,15 @@ class ModuleMount(StarletteMount):
         app: ASGIApp = None,
         routes: t.Sequence[BaseRoute] = None,
         name: str = None,
-        tag: t.Optional[str] = NOT_SET,
-        description: str = None,
-        external_doc_description: str = None,
-        external_doc_url: str = None,
         include_in_schema: bool = False,
     ) -> None:
         super(ModuleMount, self).__init__(path=path, routes=routes, name=name, app=app)
         self.include_in_schema = include_in_schema
-        self._meta: AttributeDict = AttributeDict(
-            tag=name or "Module Router" if tag is NOT_SET else tag,
-            external_doc_description=external_doc_description,
-            description=description,
-            external_doc_url=external_doc_url,
-        )
         self._current_found_route_key = f"{uuid.uuid4().hex:4}_ModuleMountRoute"
         self._control_type = control_type
 
     def get_control_type(self) -> t.Type:
         return self._control_type
-
-    def get_meta(self) -> t.Mapping:
-        return self._meta
-
-    def get_tag(self) -> t.Dict:
-        external_doc = None
-        if self._meta.external_doc_url:
-            external_doc = dict(
-                url=self._meta.external_doc_url,
-                description=self._meta.external_doc_description,
-            )
-
-        if self._meta.tag:
-            return dict(
-                name=self._meta.tag,
-                description=self._meta.description,
-                externalDocs=external_doc,
-            )
-        return dict()
 
     def matches(self, scope: TScope) -> t.Tuple[Match, TScope]:
         match, _child_scope = super().matches(scope)
@@ -119,10 +84,6 @@ class ModuleRouter(OperationDefinitions, ModuleMount):
         self,
         path: str = "",
         name: str = None,
-        tag: t.Optional[str] = NOT_SET,
-        description: str = None,
-        external_doc_description: str = None,
-        external_doc_url: str = None,
         version: t.Union[t.Sequence[str], str] = (),
         guards: t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]] = None,
         include_in_schema: bool = True,
@@ -132,11 +93,7 @@ class ModuleRouter(OperationDefinitions, ModuleMount):
 
         super(ModuleRouter, self).__init__(
             path=path,
-            tag=tag,
             name=name,
-            description=description,
-            external_doc_description=external_doc_description,
-            external_doc_url=external_doc_url,
             include_in_schema=include_in_schema,
             app=app,
             control_type=get_unique_control_type(),

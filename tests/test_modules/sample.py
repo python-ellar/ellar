@@ -19,10 +19,6 @@ class AnotherUserService(UserService):
 
 @Controller(
     "/items/{orgID:int}",
-    tag="Item",
-    description="Sample Controller",
-    external_doc_url="https://test.com",
-    external_doc_description="Find out more here",
 )
 class SampleController:
     def __init__(self, user_service: UserService):

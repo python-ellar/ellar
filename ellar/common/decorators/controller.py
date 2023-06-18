@@ -81,10 +81,6 @@ def Controller(
 def Controller(
     prefix: t.Optional[str] = None,
     *,
-    tag: str = NOT_SET,
-    description: str = None,
-    external_doc_description: str = None,
-    external_doc_url: str = None,
     name: str = None,
     include_in_schema: bool = True,
 ) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:  # pragma: no cover
@@ -93,10 +89,6 @@ def Controller(
 
     Controller Class Decorator
     :param prefix: Route Prefix default=[ControllerName]
-    :param tag: OPENAPI tag
-    :param description: OPENAPI description
-    :param external_doc_description: OPENAPI External Doc Description
-    :param external_doc_url: OPENAPI External Document URL
     :param name: route name prefix for url reversing, eg name:route_name default=''
     :param include_in_schema: include controller in OPENAPI schema
     :return: t.Type[ControllerBase]
@@ -107,20 +99,12 @@ def Controller(
 def Controller(
     prefix: t.Optional[str] = None,
     *,
-    tag: str = NOT_SET,
-    description: str = None,
-    external_doc_description: str = None,
-    external_doc_url: str = None,
     name: str = None,
     include_in_schema: bool = True,
 ) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:
     """
     Controller Class Decorator
     :param prefix: Route Prefix default=[ControllerName]
-    :param tag: OPENAPI tag
-    :param description: OPENAPI description
-    :param external_doc_description: OPENAPI External Doc Description
-    :param external_doc_url: OPENAPI External Document URL
     :param name: route name prefix for url reversing, eg name:route_name default=controller_name
     :param include_in_schema: include controller in OPENAPI schema
     :return: t.Type[ControllerBase]
@@ -135,12 +119,6 @@ def Controller(
         ), "Controller Prefix must start with '/'"
     # TODO: replace with a ControllerTypeDict and OpenAPITypeDict
     kwargs = AttributeDict(
-        openapi=AttributeDict(
-            tag=tag,
-            description=description,
-            external_doc_description=external_doc_description,
-            external_doc_url=external_doc_url,
-        ),
         path=_prefix,
         name=name,
         include_in_schema=include_in_schema,
@@ -163,9 +141,6 @@ def Controller(
             _controller_type = t.cast(t.Type[ControllerBase], new_cls)
 
         _tag = _controller_type.controller_class_name()
-
-        if not kwargs.openapi.tag:  # type: ignore
-            kwargs["openapi"]["tag"] = _tag  # type: ignore
 
         if kwargs["path"] is NOT_SET:
             kwargs["path"] = f"/{_tag}"

@@ -3,7 +3,7 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 
 from ellar.common import APIException, Req, UseGuards, get, serialize_object
 from ellar.core import AppFactory, Reflector
-from ellar.core.guard import (
+from ellar.core.guards import (
     APIKeyCookie,
     APIKeyHeader,
     APIKeyQuery,
@@ -211,17 +211,17 @@ def test_auth(path, kwargs, expected_code, expected_body):
 def test_auth_schema():
     document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
     assert document["components"]["securitySchemes"] == {
-        "API Key Auth": {"type": "apiKey", "in": "cookie", "name": "API Key Auth"},
+        "API Key Auth": {"type": "apiKey", "in": "cookie", "name": "key"},
         "HeaderSecretKey": {
             "type": "apiKey",
             "in": "header",
-            "name": "HeaderSecretKey",
+            "name": "key",
         },
-        "QuerySecretKey": {"type": "apiKey", "in": "query", "name": "QuerySecretKey"},
+        "QuerySecretKey": {"type": "apiKey", "in": "query", "name": "key"},
         "QuerySecretKeyInjectable": {
             "type": "apiKey",
             "in": "query",
-            "name": "QuerySecretKeyInjectable",
+            "name": "key",
         },
         "API Authentication": {
             "type": "http",
@@ -236,7 +236,7 @@ def test_auth_schema():
         "HeaderSecretKeyCustomException": {
             "type": "apiKey",
             "in": "header",
-            "name": "HeaderSecretKeyCustomException",
+            "name": "key",
         },
         "DigestAuth": {"type": "http", "scheme": "digest", "name": "DigestAuth"},
     }

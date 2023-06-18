@@ -21,7 +21,9 @@ class HttpBearerAuth(BaseHttpAuth, ABC):
     @classmethod
     def get_guard_scheme(cls) -> t.Dict:
         scheme = super().get_guard_scheme()
-        scheme.update(bearerFormat=cls.openapi_bearer_format)
+        scheme[cls.openapi_name or cls.__name__].update(
+            bearerFormat=cls.openapi_bearer_format
+        )
         return scheme
 
     def _get_credentials(

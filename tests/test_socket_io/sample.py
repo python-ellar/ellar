@@ -7,7 +7,7 @@ from starlette.exceptions import WebSocketException
 from ellar.common import Header, Query, Serializer, UseGuards, WsBody, extra_args
 from ellar.common.params import ExtraEndpointArg
 from ellar.core.connection import HTTPConnection
-from ellar.core.guard import APIKeyHeader
+from ellar.core.guards import APIKeyHeader
 from ellar.di import injectable
 from ellar.socket_io import (
     WebSocketGateway,

@@ -1,4 +1,5 @@
 from .builder import OpenAPIDocumentBuilder
+from .decorators import ApiTags, openapi_info
 from .docs_generators import (
     IDocumentationGenerator,
     ReDocDocumentGenerator,
@@ -20,4 +21,6 @@ __all__ = [
     "OpenAPIDocumentModule",
     "ReDocDocumentGenerator",
     "SwaggerDocumentGenerator",
+    "openapi_info",
+    "ApiTags",
 ]

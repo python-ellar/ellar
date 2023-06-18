@@ -1,9 +1,8 @@
 import typing as t
 
 from ellar.common.compatible import AttributeDict
-from ellar.common.constants import OPENAPI_KEY
-
-from .base import set_metadata as set_meta
+from ellar.common.decorators import set_metadata as set_meta
+from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 
 
 def openapi_info(
@@ -25,7 +24,7 @@ def openapi_info(
     :return:
     """
     return set_meta(
-        OPENAPI_KEY,
+        OPENAPI_OPERATION_KEY,
         AttributeDict(
             operation_id=operation_id,
             summary=summary,

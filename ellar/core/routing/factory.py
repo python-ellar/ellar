@@ -19,9 +19,6 @@ class ControllerRouterFactory(RouterBuilder, controller_type=type(ControllerBase
     def build(
         cls, controller_type: t.Union[t.Type[ControllerBase], t.Any]
     ) -> ModuleMount:
-        openapi = (
-            reflect.get_metadata(CONTROLLER_METADATA.OPENAPI, controller_type) or dict()
-        )
         routes = (
             reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, controller_type)
             or []
@@ -45,7 +42,6 @@ class ControllerRouterFactory(RouterBuilder, controller_type=type(ControllerBase
             if include_in_schema is not None
             else True,
             control_type=controller_type,
-            **openapi,
         )
         return router
 
