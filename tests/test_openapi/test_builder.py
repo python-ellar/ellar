@@ -102,6 +102,20 @@ def test_add_api_key():
     }
 
 
+def test_add_cookie_auth():
+    builder = OpenAPIDocumentBuilder().add_cookie_auth(
+        cookie_name="test-cookie", openapi_description="Cookie description"
+    )
+    assert builder._build["components"]["securitySchemes"] == {
+        "cookie": {
+            "description": "Cookie description",
+            "in": "cookie",
+            "name": "test-cookie",
+            "type": "apiKey",
+        }
+    }
+
+
 def test_add_basic_auth():
     builder = OpenAPIDocumentBuilder().add_basic_auth()
     assert builder._build["components"]["securitySchemes"] == {

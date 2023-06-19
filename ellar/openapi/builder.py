@@ -291,6 +291,22 @@ class OpenAPIDocumentBuilder:
             },
         )
 
+    def add_cookie_auth(
+        self,
+        cookie_name: str,
+        openapi_description: str = None,
+        security_name: str = "cookie",
+    ) -> "OpenAPIDocumentBuilder":
+        return self.add_security(
+            name=security_name,
+            options={
+                "type": "apiKey",
+                "description": openapi_description,
+                "in": APIKeyIn.cookie.value,
+                "name": cookie_name,
+            },
+        )
+
     def build_document(self, app: App) -> OpenAPI:
         build_action = self._build_action_class(document_dict=self._build)
         return build_action.build(app)
