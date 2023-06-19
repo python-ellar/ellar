@@ -2,19 +2,22 @@ import os
 
 import pytest
 
-from ellar.common import GuardCanActivate
+from ellar.common import AllowAnyGuard, GuardCanActivate
+from ellar.common.constants import GUARDS_KEY
 from ellar.core import AppFactory, Config, ExecutionContext
 from ellar.core.modules.ref import create_module_ref_factor
-from ellar.di import EllarInjector
+from ellar.di import EllarInjector, injectable
 from ellar.openapi import (
     OpenAPIDocumentBuilder,
     OpenAPIDocumentModule,
     ReDocDocumentGenerator,
     SwaggerDocumentGenerator,
 )
+from ellar.reflect import reflect
 from ellar.testing import TestClient
 
 
+@injectable
 class CustomDocsGuard(GuardCanActivate):
     detail: str = "Not Allowed"
 
@@ -165,6 +168,12 @@ def test_openapi_module_with_route_guards():
     app.install_module(module_config)
     client = TestClient(app)
 
+    guards = reflect.get_metadata(
+        GUARDS_KEY, module_config.routers[0].get_control_type()
+    )
+    assert len(guards) == 2
+    assert AllowAnyGuard in guards
+
     response = client.get("openapi.json")
     assert response.status_code == 403
     assert response.json() == {"detail": "Not Allowed", "status_code": 403}
@@ -198,3 +207,20 @@ def test_invalid_open_api_doc_setup():
             document_generator=(CustomDocsGuard,),
         )
     assert str(ex.value) == "CustomDocsGuard must be of type `IDocumentationGenerator`"
+
+
+def test_app_global_guard_blocks_openapi_doc_page():
+    app = AppFactory.create_app(global_guards=[CustomDocsGuard])
+    document = OpenAPIDocumentBuilder().build_document(app)
+    client = TestClient(app)
+
+    module_config = OpenAPIDocumentModule.setup(
+        document=document,
+        document_generator=SwaggerDocumentGenerator(),
+        allow_any=False,
+    )
+    app.install_module(module_config)
+    response = client.get("/docs")
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Not Allowed", "status_code": 403}
