@@ -4,7 +4,7 @@ from .conf import Config, ConfigDefaultTypesMixin
 from .connection import HTTPConnection, Request, WebSocket
 from .context import ExecutionContext, HostContext
 from .factory import AppFactory
-from .guard import (
+from .guards import (
     APIKeyCookie,
     APIKeyHeader,
     APIKeyQuery,

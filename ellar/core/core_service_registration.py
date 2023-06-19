@@ -15,7 +15,7 @@ from ellar.di import EllarInjector
 from .context import ExecutionContextFactory, HostContextFactory
 from .context.factory import HTTPConnectionContextFactory, WebSocketContextFactory
 from .exceptions.service import ExceptionMiddlewareService
-from .guard import GuardConsumer
+from .guards import GuardConsumer
 from .interceptors import EllarInterceptorConsumer
 
 if t.TYPE_CHECKING:  # pragma: no cover

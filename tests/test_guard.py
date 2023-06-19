@@ -1,9 +1,16 @@
 import pytest
 from starlette.status import HTTP_401_UNAUTHORIZED
 
-from ellar.common import APIException, Req, UseGuards, get, serialize_object
+from ellar.common import (
+    APIException,
+    Req,
+    UseGuards,
+    allow_any_guard,
+    get,
+    serialize_object,
+)
 from ellar.core import AppFactory, Reflector
-from ellar.core.guard import (
+from ellar.core.guards import (
     APIKeyCookie,
     APIKeyHeader,
     APIKeyQuery,
@@ -211,17 +218,17 @@ def test_auth(path, kwargs, expected_code, expected_body):
 def test_auth_schema():
     document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
     assert document["components"]["securitySchemes"] == {
-        "API Key Auth": {"type": "apiKey", "in": "cookie", "name": "API Key Auth"},
+        "API Key Auth": {"type": "apiKey", "in": "cookie", "name": "key"},
         "HeaderSecretKey": {
             "type": "apiKey",
             "in": "header",
-            "name": "HeaderSecretKey",
+            "name": "key",
         },
-        "QuerySecretKey": {"type": "apiKey", "in": "query", "name": "QuerySecretKey"},
+        "QuerySecretKey": {"type": "apiKey", "in": "query", "name": "key"},
         "QuerySecretKeyInjectable": {
             "type": "apiKey",
             "in": "query",
-            "name": "QuerySecretKeyInjectable",
+            "name": "key",
         },
         "API Authentication": {
             "type": "http",
@@ -236,7 +243,7 @@ def test_auth_schema():
         "HeaderSecretKeyCustomException": {
             "type": "apiKey",
             "in": "header",
-            "name": "HeaderSecretKeyCustomException",
+            "name": "key",
         },
         "DigestAuth": {"type": "http", "scheme": "digest", "name": "DigestAuth"},
     }
@@ -257,3 +264,21 @@ def test_global_guard_works():
     data = res.json()
 
     assert data == {"detail": "Forbidden"}
+
+
+def test_allow_any_guard():
+    _app = AppFactory.create_app(global_guards=[DigestAuth])
+
+    @get("/global")
+    @allow_any_guard
+    def _auth_demo_endpoint():
+        return {"message": "ok"}
+
+    _app.router.append(_auth_demo_endpoint)
+    _client = TestClient(_app)
+    res = _client.get("/global")
+
+    assert res.status_code == 200
+    data = res.json()
+
+    assert data == {"message": "ok"}

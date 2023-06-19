@@ -8,14 +8,8 @@ from pydantic.schema import field_schema
 from starlette.routing import Mount, compile_path
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
-from ellar.common.compatible import AttributeDict, cached_property
-from ellar.common.constants import (
-    GUARDS_KEY,
-    METHODS_WITH_BODY,
-    OPENAPI_KEY,
-    REF_PREFIX,
-)
-from ellar.common.models import BaseAuthGuard
+from ellar.common.compatible import cached_property
+from ellar.common.constants import GUARDS_KEY, METHODS_WITH_BODY, REF_PREFIX
 from ellar.common.params.args import EndpointArgsModel
 from ellar.common.params.params import BodyFieldInfo as Body, ParamFieldInfo as Param
 from ellar.common.params.resolvers import (
@@ -27,6 +21,7 @@ from ellar.common.params.resolvers import (
 from ellar.common.routing import ModuleMount, RouteOperation
 from ellar.common.shortcuts import normalize_path
 from ellar.core.services.reflector import Reflector
+from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common import GuardCanActivate
@@ -52,21 +47,12 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
     def __init__(
         self,
         mount: t.Union[ModuleMount, Mount],
-        tag: t.Optional[str] = None,
-        description: t.Optional[str] = None,
-        external_doc_description: t.Optional[str] = None,
-        external_doc_url: t.Optional[str] = None,
+        name: t.Optional[str] = None,
         global_guards: t.List[
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
         ] = None,
     ) -> None:
-        meta = mount.get_meta() if isinstance(mount, ModuleMount) else AttributeDict()
-        self.tag = tag or meta.tag  # type: ignore
-        self.description = description or meta.description  # type: ignore
-        self.external_doc_description = (
-            external_doc_description or meta.external_doc_description  # type: ignore
-        )
-        self.external_doc_url = external_doc_url or meta.external_doc_url  # type: ignore
+        self.tag = name
         self.mount = mount
         self.path_regex, self.path_format, self.param_convertors = compile_path(
             self.mount.path
@@ -80,26 +66,13 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
 
         self._routes: t.List["OpenAPIRouteDocumentation"] = self._build_routes()
 
-    def get_tag(self) -> t.Optional[t.Dict]:
-        external_doc = None
-        if self.external_doc_url:
-            external_doc = dict(
-                url=self.external_doc_url, description=self.external_doc_description
-            )
-
-        if self.tag:
-            return dict(
-                name=self.tag, description=self.description, externalDocs=external_doc
-            )
-        return None
-
     def _build_routes(self) -> t.List["OpenAPIRouteDocumentation"]:
         reflector: Reflector = Reflector()
         _routes: t.List[OpenAPIRouteDocumentation] = []
 
         for route in self.mount.routes:
             if isinstance(route, RouteOperation) and route.include_in_schema:
-                openapi = reflector.get(OPENAPI_KEY, route.endpoint) or dict()
+                openapi = reflector.get(OPENAPI_OPERATION_KEY, route.endpoint) or dict()
                 guards = reflector.get(GUARDS_KEY, route.endpoint)
                 openapi.setdefault("tags", [self.tag] if self.tag else ["default"])
                 _routes.append(
@@ -223,12 +196,12 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         security_definitions: t.Dict = {}
         operation_security: t.List = []
         for item in self.guards:
-            if isinstance(item, type) and not issubclass(item, BaseAuthGuard):
+            if not hasattr(item, "get_guard_scheme"):
                 continue
             security_scheme = item.get_guard_scheme()  # type: ignore
-            scheme_name = security_scheme["name"]
+            scheme_name = list(security_scheme.keys())[0]
             operation_security.append({scheme_name: item.openapi_scope})  # type: ignore
-            security_definitions[scheme_name] = security_scheme
+            security_definitions.update(security_scheme)
         return security_definitions, operation_security
 
     def get_openapi_operation_metadata(self, method: str) -> t.Dict[str, t.Any]:

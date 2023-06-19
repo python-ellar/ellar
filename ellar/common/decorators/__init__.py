@@ -1,5 +1,6 @@
 import typing as t
 
+from .allow_any import AllowAnyGuard, allow_any_guard
 from .base import set_metadata
 from .controller import Controller
 from .exception import exception_handler
@@ -10,7 +11,6 @@ from .html import render, template_filter, template_global
 from .interceptor import UseInterceptors
 from .middleware import middleware
 from .modules import Module
-from .openapi import openapi_info
 from .serializer import serializer_filter
 from .versioning import Version
 
@@ -26,10 +26,11 @@ __all__ = [
     "exception_handler",
     "set_metadata",
     "middleware",
-    "openapi_info",
     "Module",
     "extra_args",
     "UseInterceptors",
+    "AllowAnyGuard",
+    "allow_any_guard",
 ]
 
 

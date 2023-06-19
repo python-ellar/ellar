@@ -1,6 +1,7 @@
 from ellar.common import Controller, get, put, serialize_object
 from ellar.core import AppFactory
 from ellar.openapi.builder import OpenAPIDocumentBuilder
+from ellar.openapi.openapi_v3 import APIKeyIn
 
 
 @Controller
@@ -78,6 +79,66 @@ def test_builder_set_external_doc_works():
     )
     builder = OpenAPIDocumentBuilder().set_external_doc(**details)
     assert builder._build["externalDocs"] == details
+
+
+def test_add_security_requirements():
+    builder = OpenAPIDocumentBuilder().add_security_requirements(
+        name="a", requirements=["b", "c"]
+    )
+    assert builder._build["security"] == [{"a": ["b", "c"]}]
+
+
+def test_add_api_key():
+    builder = OpenAPIDocumentBuilder().add_api_key(
+        openapi_in=APIKeyIn.cookie, openapi_description="Cookie description"
+    )
+    assert builder._build["components"]["securitySchemes"] == {
+        "api_key": {
+            "description": "Cookie description",
+            "in": "cookie",
+            "name": "api_key",
+            "type": "apiKey",
+        }
+    }
+
+
+def test_add_cookie_auth():
+    builder = OpenAPIDocumentBuilder().add_cookie_auth(
+        cookie_name="test-cookie", openapi_description="Cookie description"
+    )
+    assert builder._build["components"]["securitySchemes"] == {
+        "cookie": {
+            "description": "Cookie description",
+            "in": "cookie",
+            "name": "test-cookie",
+            "type": "apiKey",
+        }
+    }
+
+
+def test_add_basic_auth():
+    builder = OpenAPIDocumentBuilder().add_basic_auth()
+    assert builder._build["components"]["securitySchemes"] == {
+        "basic": {
+            "description": None,
+            "name": "basic",
+            "scheme": "basic",
+            "type": "http",
+        }
+    }
+
+
+def test_add_bearer_auth():
+    builder = OpenAPIDocumentBuilder().add_bearer_auth()
+    assert builder._build["components"]["securitySchemes"] == {
+        "bearer": {
+            "bearerFormat": "JWT",
+            "description": None,
+            "name": "bearer",
+            "scheme": "bearer",
+            "type": "http",
+        }
+    }
 
 
 def test_builder_add_server_works():

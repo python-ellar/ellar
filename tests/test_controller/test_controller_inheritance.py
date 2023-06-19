@@ -20,7 +20,7 @@ class ControllerImplementationBase:
         pass
 
 
-@Controller(prefix="/items/{orgID:int}", name="override_name", tag="new_tag")
+@Controller(prefix="/items/{orgID:int}", name="override_name")
 class MyController(ControllerImplementationBase):
     pass
 

@@ -86,10 +86,13 @@ class BaseAPIKey(BaseAuthGuard, ABC, metaclass=ABCMeta):
     def get_guard_scheme(cls) -> t.Dict:
         assert cls.openapi_in, "openapi_in is required"
         return {
-            "type": "apiKey",
-            "description": cls.openapi_description,
-            "in": cls.openapi_in,
-            "name": cls.openapi_name or cls.__name__,
+            cls.openapi_name
+            or cls.__name__: {
+                "type": "apiKey",
+                "description": cls.openapi_description,
+                "in": cls.openapi_in,
+                "name": cls.parameter_name,
+            }
         }
 
 
@@ -127,8 +130,11 @@ class BaseHttpAuth(BaseAuthGuard, ABC, metaclass=ABCMeta):
     def get_guard_scheme(cls) -> t.Dict:
         assert cls.openapi_scheme, "openapi_scheme is required"
         return {
-            "type": "http",
-            "description": cls.openapi_description,
-            "scheme": cls.openapi_scheme,
-            "name": cls.openapi_name or cls.__name__,
+            cls.openapi_name
+            or cls.__name__: {
+                "type": "http",
+                "description": cls.openapi_description,
+                "scheme": cls.openapi_scheme,
+                "name": cls.openapi_name or cls.__name__,
+            }
         }

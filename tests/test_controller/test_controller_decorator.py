@@ -12,7 +12,7 @@ from ellar.reflect import reflect
 from .sample import SampleController
 
 
-@Controller(prefix="/items/{orgID:int}", name="override_name", tag="new_tag")
+@Controller(prefix="/items/{orgID:int}", name="override_name")
 class SomeController:
     def __init__(self, a: str):
         self.a = a
@@ -60,77 +60,35 @@ def test_controller_computed_properties():
     assert isinstance(SampleController, type) and issubclass(
         SampleController, ControllerBase
     )
-    router = ControllerRouterFactory.build(SampleController)
+    ControllerRouterFactory.build(SampleController)
 
     assert is_decorated_with_injectable(SampleController)
     assert not has_binding(SampleController)
 
-    assert router.get_meta() == {
-        "tag": "sample",
-        "external_doc_description": None,
-        "description": None,
-        "external_doc_url": None,
-    }
-
     @Controller(
         prefix="/items/{orgID:int}",
-        tag="Item",
-        description="Some Controller",
-        external_doc_url="https://test.com",
-        external_doc_description="Find out more here",
     )
     class SomeControllerB(ControllerBase):
         def __init__(self, a: str):
             self.a = a
 
-    router = ControllerRouterFactory.build(SomeControllerB)
-    assert router.get_meta() == {
-        "tag": "Item",
-        "description": "Some Controller",
-        "external_doc_description": "Find out more here",
-        "external_doc_url": "https://test.com",
-    }
+    ControllerRouterFactory.build(SomeControllerB)
     assert is_decorated_with_injectable(SomeControllerB)
     assert has_binding(SomeControllerB)
 
 
-def test_tag_configuration_controller_decorator():
-    new_controller = Controller(
-        prefix="/items/{orgID:int}", name="override_name", tag="new_tag"
-    )(type("SomeControllerX", (ControllerBase,), {}))
-    router = ControllerRouterFactory.build(new_controller)
-    assert router.get_meta()["tag"] == "new_tag"
-    assert router.name == "override_name"
-
-    # defaults to controller name
-    new_controller = Controller(
-        prefix="/items/{orgID:int}",
-    )(type("SomeControllerY", (ControllerBase,), {}))
-    router = ControllerRouterFactory.build(new_controller)
-    assert router.get_meta()["tag"] == "somey"
-    assert router.name == "somey"
-
-    new_controller = Controller(prefix="/items/{orgID:int}", tag="new_tag")(
-        type("SomeControllerZ", (ControllerBase,), {})
-    )
-    router = ControllerRouterFactory.build(new_controller)
-    assert router.get_meta()["tag"] == "new_tag"
-    assert router.name == "somez"
-
-
 @pytest.mark.parametrize(
-    "controller_type, tag, prefix, name",
+    "controller_type, prefix, name",
     [
-        (SampleController, "sample", "/prefix", "sample"),
+        (SampleController, "/prefix", "sample"),
         (
             SomeController,
-            "new_tag",
             "/items/{orgID:int}",
             "override_name",
         ),
     ],
 )
-def test_controller_url_reverse(controller_type, tag, prefix, name):
+def test_controller_url_reverse(controller_type, prefix, name):
     router = ControllerRouterFactory.build(controller_type)
     for route in router.routes:
         reversed_path = router.url_path_for(f"{name}:{route.name}")

@@ -5,7 +5,7 @@ from ellar.core.routing import ModuleRouterFactory
 
 from .sample import router
 
-another_router = ModuleRouter("/prefix/another", tag="another_router", name="arouter")
+another_router = ModuleRouter("/prefix/another", name="arouter")
 
 
 @another_router.get("/sample")
@@ -56,24 +56,6 @@ def test_build_routes(router_instance, prefix, tag, name):
         assert reversed_path == router_instance.path_format.replace(
             "/{path}", route.path
         )
-
-
-def test_tag_configuration_module_router():
-    new_router = ModuleRouter("/items/{orgID:int}", name="override_name", tag="new_tag")
-    assert new_router.get_meta()["tag"] == "new_tag"
-    assert new_router.name == "override_name"
-
-    new_router = ModuleRouter("/items/{orgID:int}", name="new_name")
-    assert new_router.get_meta()["tag"] == "new_name"
-    assert new_router.name == "new_name"
-
-    new_controller = ModuleRouter("/items/{orgID:int}", tag="new_tag")
-    assert new_controller.get_meta()["tag"] == "new_tag"
-    assert new_controller.name is None
-
-    new_router = ModuleRouter("/items/{orgID:int}")
-    assert new_router.get_meta()["tag"] == "Module Router"
-    assert new_router.name is None
 
 
 def test_module_router_url_reverse():

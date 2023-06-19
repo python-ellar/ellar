@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.common import IModuleSetup, Module, ModuleRouter, render
+from ellar.common import AllowAnyGuard, IModuleSetup, Module, ModuleRouter, render
 from ellar.common.models import GuardCanActivate
 from ellar.core import DynamicModule, ModuleBase
 from ellar.openapi.docs_generators import IDocumentationGenerator
@@ -20,11 +20,19 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
         document: OpenAPI = None,
         router_prefix: str = "",
         openapi_url: t.Optional[str] = None,
+        allow_any: bool = True,
         guards: t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]] = None,
     ) -> DynamicModule:
         _guards = list(guards) if guards else []
+        if allow_any:
+            _guards = [AllowAnyGuard] + _guards  # type:ignore
         _document_generator: t.List[IDocumentationGenerator] = []
-        router = ModuleRouter(router_prefix, guards=_guards, name="ellar-open-api")
+        router = ModuleRouter(
+            router_prefix,
+            guards=_guards,
+            name="ellar-open-api",
+            include_in_schema=False,
+        )
 
         if isinstance(document_generator, (list, tuple, set)):
             _document_generator = list(document_generator)

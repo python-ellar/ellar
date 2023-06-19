@@ -3,7 +3,7 @@ import pytest
 from ellar.common import UseGuards
 from ellar.common.constants import CONTROLLER_CLASS_KEY, GUARDS_KEY
 from ellar.common.helper import get_name
-from ellar.core.guard import HttpBearerAuth
+from ellar.core.guards import HttpBearerAuth
 from ellar.reflect import reflect
 from ellar.socket_io import WebSocketGateway, subscribe_message
 from ellar.socket_io.constants import (
