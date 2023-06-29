@@ -2,8 +2,13 @@ import dataclasses
 import typing as t
 
 from ellar.cache.interface import ICacheService
-from ellar.common import EllarInterceptor, IExecutionContext, set_metadata
-from ellar.common.constants import ROUTE_CACHE_OPTIONS, ROUTE_INTERCEPTORS
+from ellar.common import (
+    EllarInterceptor,
+    IExecutionContext,
+    UseInterceptors,
+    set_metadata,
+)
+from ellar.common.constants import ROUTE_CACHE_OPTIONS
 from ellar.core import Reflector
 from ellar.di import injectable
 
@@ -17,14 +22,14 @@ class RouteCacheOptions:
     backend: str = "default"
 
 
-def route_cache_make_key(context: IExecutionContext, key_prefix: str) -> str:
+def _route_cache_make_key(context: IExecutionContext, key_prefix: str) -> str:
     """Defaults key generator for caching view"""
     connection = context.switch_to_http_connection()
     return f"{connection.get_client().url}:{key_prefix or 'view'}"
 
 
 @injectable
-class CacheEllarInterceptor(EllarInterceptor):
+class _CacheEllarInterceptor(EllarInterceptor):
     __slots__ = (
         "_cache_service",
         "_reflector",
@@ -61,7 +66,7 @@ class CacheEllarInterceptor(EllarInterceptor):
         return response
 
 
-def cache(
+def Cache(
     ttl: t.Union[float, int],
     *,
     key_prefix: str = "",
@@ -70,6 +75,7 @@ def cache(
     make_key_callback: t.Callable[[IExecutionContext, str], str] = None,
 ) -> t.Callable:
     """
+    =========CONTROLLER AND ROUTE FUNCTION DECORATOR ==============
 
     :param ttl: the time to live
     :param key_prefix: cache key prefix
@@ -85,9 +91,9 @@ def cache(
             key_prefix=key_prefix,
             version=version,
             backend=backend or "default",
-            make_key_callback=make_key_callback or route_cache_make_key,
+            make_key_callback=make_key_callback or _route_cache_make_key,
         )
         func = set_metadata(ROUTE_CACHE_OPTIONS, options)(func)
-        return set_metadata(ROUTE_INTERCEPTORS, [CacheEllarInterceptor])(func)  # type: ignore[no-any-return]
+        return UseInterceptors(_CacheEllarInterceptor)(func)  # type: ignore[no-any-return]
 
     return _wraps
