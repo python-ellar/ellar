@@ -1,6 +1,11 @@
 import typing as t
 
-from ellar.auth import IAuthConfig, IAuthorizationConfig, IIdentityProvider, BaseIdentityProvider
+from ellar.auth import (
+    BaseIdentityProvider,
+    IAuthConfig,
+    IAuthorizationConfig,
+    IIdentityProvider,
+)
 from ellar.auth.configurations import AuthConfig, AuthorizationConfig
 from ellar.common import (
     IExceptionMiddlewareService,
@@ -60,4 +65,6 @@ class CoreServiceRegistration:
             IAuthorizationConfig, AuthorizationConfig
         )
         self.injector.container.register_singleton(IAuthConfig, AuthConfig)
-        self.injector.container.register_singleton(IIdentityProvider, BaseIdentityProvider)
+        self.injector.container.register_singleton(
+            IIdentityProvider, BaseIdentityProvider
+        )

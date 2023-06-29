@@ -28,6 +28,7 @@ from ellar.core.modules.ref import (
 )
 from ellar.di import EllarInjector, TransientScope, injectable
 from ellar.reflect import reflect
+from ellar.testing import Test
 
 from .sample import AnotherUserService, ModuleBaseExample, SampleController, UserService
 
@@ -308,6 +309,6 @@ def test_run_application_ready_works():
 
     assert TestModuleCycleExample._before_init_called is False
 
-    AppFactory.create_from_app_module(TestModuleCycleExample)
+    Test.create_test_module(modules=[TestModuleCycleExample]).create_application()
 
     assert TestModuleCycleExample._before_init_called

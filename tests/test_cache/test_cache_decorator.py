@@ -1,6 +1,6 @@
 from time import sleep
 
-from ellar.cache import CacheModule, cache
+from ellar.cache import Cache, CacheModule
 from ellar.common import ModuleRouter, PlainTextResponse
 from ellar.testing import Test
 
@@ -11,7 +11,7 @@ def test_cache_route_function_return_data():
     mr = ModuleRouter()
 
     @mr.get("/index")
-    @cache(ttl=0.12)  # cache for 3sec
+    @Cache(ttl=0.12)  # Cache for 3sec
     def homepage():
         nonlocal called_count
 
@@ -42,7 +42,7 @@ def test_cache_for_async_route_function_return_data():
     mr = ModuleRouter()
 
     @mr.get("/index")
-    @cache(ttl=3)  # cache for 3sec
+    @Cache(ttl=3)  # Cache for 3sec
     async def homepage():
         nonlocal called_count
 
@@ -70,7 +70,7 @@ def test_cache_for_async_route_function_return_response():
     mr = ModuleRouter()
 
     @mr.get("/index")
-    @cache(ttl=3)  # cache for 3sec
+    @Cache(ttl=3)  # Cache for 3sec
     async def homepage():
         nonlocal called_count
 
@@ -97,7 +97,7 @@ def test_cache_route_function_return_response():
     mr = ModuleRouter()
 
     @mr.get("/index")
-    @cache(ttl=2)  # cache for 3sec
+    @Cache(ttl=2)  # Cache for 3sec
     def homepage():
         nonlocal called_count
 

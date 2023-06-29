@@ -53,6 +53,11 @@ class TestingModule:
             config_module=self._config_module,
             providers=self._providers,
         )
+
+        for _, module_ref in self._app.injector.get_modules().items():
+            # setup module just in case lifespan function will not be called during testing.
+            module_ref.run_module_register_services()
+
         return self._app
 
     def get_test_client(

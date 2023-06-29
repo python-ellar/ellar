@@ -125,7 +125,9 @@ class TestStarletteCompatibility:
             yield
             cleanup_complete = True
 
-        app = App(config=Config(), injector=EllarInjector(), lifespan=lifespan)
+        app = Test.create_test_module(
+            config_module=dict(DEFAULT_LIFESPAN_HANDLER=lifespan)
+        ).create_application()
 
         assert not startup_complete
         assert not cleanup_complete
@@ -242,15 +244,16 @@ class TestEllarApp:
         assert module_instance is module_instance2
 
     def test_has_static_files(self, tmpdir):
-        app = App(injector=EllarInjector(), config=Config())
+        app = Test.create_test_module().create_application()
         assert app.has_static_files is False
 
-        config = Config(STATIC_DIRECTORIES=[tmpdir])
-        app = App(injector=EllarInjector(), config=config)
+        app = Test.create_test_module(
+            config_module=dict(STATIC_DIRECTORIES=[tmpdir])
+        ).create_application()
         assert app.has_static_files
 
     def test_app_enable_versioning_and_versioning_scheme(self):
-        app = App(injector=EllarInjector(), config=Config())
+        app = Test.create_test_module().create_application()
         assert app.config.VERSIONING_SCHEME
         assert isinstance(app.config.VERSIONING_SCHEME, DefaultAPIVersioning)
 
@@ -347,8 +350,9 @@ class TestAppTemplating:
         with open(path, "w") as file:
             file.write("<file content>")
 
-        config = Config(STATIC_DIRECTORIES=[tmpdir])
-        app = App(injector=EllarInjector(), config=config)
+        app = Test.create_test_module(
+            config_module=dict(STATIC_DIRECTORIES=[tmpdir])
+        ).create_application()
         static_app = app.create_static_app()
         assert isinstance(static_app, StaticFiles)
         client = TestClient(static_app)
@@ -369,8 +373,9 @@ class TestAppTemplating:
         with open(path, "w") as file:
             file.write("<file content>")
 
-        config = Config(STATIC_DIRECTORIES=[tmpdir])
-        app = App(injector=EllarInjector(), config=config)
+        app = Test.create_test_module(
+            config_module=dict(STATIC_DIRECTORIES=[tmpdir])
+        ).create_application()
         static_app_old = app._static_app
 
         app.reload_static_app()
@@ -383,7 +388,7 @@ class TestAppTemplating:
         assert res.text == "<file content>"
 
     def test_app_template_filter(self):
-        app = App(injector=EllarInjector(), config=Config())
+        app = Test.create_test_module().create_application()
 
         @app.template_filter()
         def square(value):
@@ -408,7 +413,7 @@ class TestAppTemplating:
         assert result == "<html>filter square: 4, filter triple_function: 27</html>"
 
     def test_app_template_global(self):
-        app = App(injector=EllarInjector(), config=Config())
+        app = Test.create_test_module().create_application()
 
         @app.template_global()
         def square(value):
