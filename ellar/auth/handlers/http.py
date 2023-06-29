@@ -30,7 +30,7 @@ class HttpBearerAuthenticationHandler(BaseHttpAuthenticationHandler, ABC):
         return scheme
 
     def _get_credentials(
-        self, connection: HTTPConnection
+        self, connection: "HTTPConnection"
     ) -> t.Optional[HTTPAuthorizationCredentials]:
         authorization: t.Optional[str] = connection.headers.get(self.header)
         scheme, _, credentials = self.authorization_partitioning(authorization)
@@ -64,7 +64,7 @@ class HttpBasicAuthenticationHandler(BaseHttpAuthenticationHandler, ABC):
         )
 
     def _get_credentials(
-        self, connection: HTTPConnection
+        self, connection: "HTTPConnection"
     ) -> t.Optional[HTTPBasicCredentials]:
         authorization: t.Optional[str] = connection.headers.get(self.header)
         parts = authorization.split(" ") if authorization else []

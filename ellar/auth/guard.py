@@ -10,9 +10,6 @@ from .constants import POLICY_KEYS
 from .policy import Policy
 from .services import AuthorizationService
 
-if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core import Reflector
-
 _PolicyType = t.Union[Policy, t.Type[Policy]]
 
 
@@ -23,16 +20,14 @@ class AuthorizationGuard(GuardCanActivate):
 
     __slots__ = ("authorization_service",)
 
-    def __init__(
-        self, authorization_service: AuthorizationService, reflector: "Reflector"
-    ) -> None:
+    def __init__(self, authorization_service: AuthorizationService) -> None:
         self.authorization_service = authorization_service
-        self.reflector = reflector
 
+    @t.no_type_check
     def get_route_handler_policy(
         self, context: IExecutionContext
     ) -> t.Optional[t.List[t.Union[_PolicyType, str]]]:
-        return self.reflector.get_all_and_override(
+        return context.get_app().reflector.get_all_and_override(
             POLICY_KEYS, context.get_handler(), context.get_class()
         )
 

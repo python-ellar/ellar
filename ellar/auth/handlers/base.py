@@ -88,7 +88,7 @@ class BaseHttpAuthenticationHandler(BaseAuthenticationHandler):
 
     @abstractmethod
     def _get_credentials(
-        self, connection: HTTPConnection
+        self, connection: "HTTPConnection"
     ) -> t.Optional[t.Union[HTTPBasicCredentials, HTTPAuthorizationCredentials]]:
         pass  # pragma: no cover
 
