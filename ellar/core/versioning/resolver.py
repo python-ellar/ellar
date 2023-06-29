@@ -7,11 +7,12 @@ from starlette.routing import compile_path
 
 from ellar.common.constants import NOT_SET
 from ellar.common.exceptions import NotAcceptable, NotFound
+from ellar.common.interfaces import IAPIVersioningResolver
 from ellar.common.types import TScope
 from ellar.core.connection import HTTPConnection
 
 
-class BaseAPIVersioningResolver:
+class BaseAPIVersioningResolver(IAPIVersioningResolver):
     def __init__(
         self, *, scope: TScope, version_parameter: str, default_version: t.Optional[str]
     ) -> None:

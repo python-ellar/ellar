@@ -5,9 +5,7 @@ from starlette.responses import JSONResponse
 from starlette.types import ASGIApp
 
 from ellar.common.constants import LOG_LEVELS as log_levels
-from ellar.common.interfaces import IExceptionHandler
-from ellar.core.middleware import Middleware
-from ellar.core.versioning import BaseAPIVersioning
+from ellar.common.interfaces import IAPIVersioning, IExceptionHandler
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import App
@@ -38,7 +36,7 @@ class TExceptionHandler:
         raise ValueError(f"Expected 'ExceptionHandler', received: {type(v)}")
 
 
-class TVersioning(BaseAPIVersioning):
+class TVersioning:
     @classmethod
     def __get_validators__(
         cls: t.Type["TVersioning"],
@@ -46,21 +44,23 @@ class TVersioning(BaseAPIVersioning):
         yield cls.validate
 
     @classmethod
-    def validate(cls: t.Type["BaseAPIVersioning"], v: t.Any) -> t.Any:
-        if not isinstance(v, BaseAPIVersioning):
+    def validate(cls, v: t.Any) -> t.Any:
+        if not isinstance(v, IAPIVersioning):
             raise ValueError(f"Expected BaseAPIVersioning, received: {type(v)}")
         return v
 
 
-class TMiddleware(Middleware):
+class TMiddleware:
     @classmethod
     def __get_validators__(
-        cls: t.Type["TMiddleware"],
+        cls,
     ) -> t.Iterable[t.Callable[..., t.Any]]:
         yield cls.validate
 
     @classmethod
-    def validate(cls: t.Type["Middleware"], v: t.Any) -> t.Any:
+    def validate(cls, v: t.Any) -> t.Any:
+        from ellar.core.middleware import Middleware
+
         if not isinstance(v, Middleware):
             raise ValueError(
                 f"Expected Type/instance of Middleware, received: {type(v)}"
