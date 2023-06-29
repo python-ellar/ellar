@@ -90,8 +90,8 @@ class AppFactory:
                 container=injector.container, config=config
             )
 
-            if not isinstance(module_ref, ModuleSetup):
-                module_ref.run_module_register_services()
+            # if not isinstance(module_ref, ModuleSetup):
+            #     module_ref.run_module_register_services()
 
             injector.add_module(module_ref)
 
@@ -102,7 +102,7 @@ class AppFactory:
             module_ref = module_config.configure_with_factory(
                 config, injector.container
             )
-            module_ref.run_module_register_services()
+            # module_ref.run_module_register_services()
 
             injector.add_module(module_ref)
 
@@ -154,7 +154,7 @@ class AppFactory:
             module_ref = module_config.configure_with_factory(
                 config, injector.container
             )
-            module_ref.run_module_register_services()
+            # module_ref.run_module_register_services()
 
             injector.add_module(module_ref)
             routes.extend(module_ref.routes)
