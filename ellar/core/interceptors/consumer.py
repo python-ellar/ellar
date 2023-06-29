@@ -3,7 +3,7 @@ import typing as t
 
 from ellar.common import EllarInterceptor, IExecutionContext, IInterceptorsConsumer
 from ellar.common.constants import ROUTE_INTERCEPTORS, SCOPE_RESPONSE_STARTED
-from ellar.di import EllarInjector, injectable
+from ellar.di import injectable
 
 from ..services import Reflector
 
@@ -13,16 +13,18 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 @injectable
 class EllarInterceptorConsumer(IInterceptorsConsumer):
-    def __init__(self, reflector: Reflector, injector: EllarInjector) -> None:
+    def __init__(self, reflector: Reflector) -> None:
         self.reflector = reflector
-        self.injector = injector
 
     def get_interceptor(
         self,
+        context: IExecutionContext,
         interceptor: t.Union[t.Type[EllarInterceptor], EllarInterceptor],
     ) -> EllarInterceptor:
         if isinstance(interceptor, type):
-            return t.cast(EllarInterceptor, self.injector.get(interceptor))
+            return t.cast(
+                EllarInterceptor, context.get_service_provider().get(interceptor)
+            )
         return interceptor
 
     async def execute(
@@ -30,7 +32,7 @@ class EllarInterceptorConsumer(IInterceptorsConsumer):
     ) -> t.Any:
         route_interceptors: t.List[EllarInterceptor] = list(
             map(
-                self.get_interceptor,
+                functools.partial(self.get_interceptor, context),
                 self.reflector.get_all_and_override(
                     ROUTE_INTERCEPTORS, *[context.get_handler(), context.get_class()]
                 )

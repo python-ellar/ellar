@@ -20,6 +20,7 @@ from ellar.core.middleware import (
     RequestVersioningMiddleware,
     TrustedHostMiddleware,
 )
+from ellar.core.middleware.authentication import IdentityMiddleware
 from ellar.core.modules import (
     DynamicModule,
     ModuleRefBase,
@@ -76,8 +77,8 @@ class App(AppTemplating):
                 self.config.DEFAULT_LIFESPAN_HANDLER  # type: ignore[arg-type]
             ).lifespan,
         )
-        self.middleware_stack = self.build_middleware_stack()
         self._finalize_app_initialization()
+        self.middleware_stack = self.build_middleware_stack()
         self._config_logging()
 
     def _config_logging(self) -> None:
@@ -194,6 +195,11 @@ class App(AppTemplating):
         middleware = (
             [
                 Middleware(
+                    TrustedHostMiddleware,
+                    allowed_hosts=allowed_hosts,
+                    www_redirect=self.config.REDIRECT_HOST,
+                ),
+                Middleware(
                     CORSMiddleware,
                     allow_origins=self.config.CORS_ALLOW_ORIGINS,
                     allow_credentials=self.config.CORS_ALLOW_CREDENTIALS,
@@ -204,18 +210,16 @@ class App(AppTemplating):
                     max_age=self.config.CORS_MAX_AGE,
                 ),
                 Middleware(
-                    TrustedHostMiddleware,
-                    allowed_hosts=allowed_hosts,
-                    www_redirect=self.config.REDIRECT_HOST,
-                ),
-                Middleware(
                     RequestServiceProviderMiddleware,
                     debug=self.debug,
-                    injector=self.injector,
                     handler=error_handler,
                 ),
                 Middleware(
-                    RequestVersioningMiddleware, debug=self.debug, config=self.config
+                    RequestVersioningMiddleware,
+                    debug=self.debug,
+                ),
+                Middleware(
+                    IdentityMiddleware,
                 ),
             ]
             + self._user_middleware
@@ -229,8 +233,8 @@ class App(AppTemplating):
         )
 
         app = self.router
-        for cls, options in reversed(middleware):
-            app = cls(app=app, **options)
+        for item in reversed(middleware):
+            app = item(app=app, injector=self.injector)
         return app
 
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
