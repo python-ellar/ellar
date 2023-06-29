@@ -1,5 +1,5 @@
 from .cache_properties import cached_property
-from .dict import AttributeDict, AttributeDictAccessMixin, DataMapper
+from .dict import AttributeDict, AttributeDictAccessMixin, DataMapper, DataMutableMapper
 from .emails import EmailStr
 
 __all__ = [
@@ -7,5 +7,6 @@ __all__ = [
     "EmailStr",
     "AttributeDictAccessMixin",
     "DataMapper",
+    "DataMutableMapper",
     "AttributeDict",
 ]

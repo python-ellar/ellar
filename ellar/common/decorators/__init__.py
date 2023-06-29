@@ -1,6 +1,5 @@
 import typing as t
 
-from .allow_any import AllowAnyGuard, allow_any_guard
 from .base import set_metadata
 from .controller import Controller
 from .exception import exception_handler
@@ -29,8 +28,6 @@ __all__ = [
     "Module",
     "extra_args",
     "UseInterceptors",
-    "AllowAnyGuard",
-    "allow_any_guard",
 ]
 
 

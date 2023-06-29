@@ -5,13 +5,11 @@ from starlette.exceptions import WebSocketException
 from .commands import EllarTyper, command
 from .datastructures import UploadFile
 from .decorators import (
-    AllowAnyGuard,
     Controller,
     Module,
     UseGuards,
     UseInterceptors,
     Version,
-    allow_any_guard,
     exception_handler,
     extra_args,
     file,
@@ -53,6 +51,7 @@ from .interfaces import (
     IWebSocketHostContext,
 )
 from .models import (
+    AnonymousIdentity,
     BaseAPIKey,
     BaseAuthGuard,
     BaseHttpAuth,
@@ -60,6 +59,7 @@ from .models import (
     ControllerType,
     EllarInterceptor,
     GuardCanActivate,
+    Identity,
 )
 from .params.decorators import (
     Body,
@@ -108,6 +108,7 @@ from .serializer import DataclassSerializer, Serializer, serialize_object
 from .templating import TemplateResponse, render_template, render_template_string
 
 __all__ = [
+    "AnonymousIdentity",
     "ControllerBase",
     "serialize_object",
     "ControllerType",
@@ -184,6 +185,7 @@ __all__ = [
     "RedirectResponse",
     "TemplateResponse",
     "Response",
+    "Identity",
     "IHostContext",
     "IExecutionContextFactory",
     "IExecutionContext",
@@ -203,8 +205,6 @@ __all__ = [
     "UseInterceptors",
     "IApplicationStartup",
     "IApplicationShutdown",
-    "AllowAnyGuard",
-    "allow_any_guard",
 ]
 
 
