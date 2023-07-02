@@ -5,17 +5,12 @@ from ellar.common import EllarInterceptor, IExecutionContext, IInterceptorsConsu
 from ellar.common.constants import ROUTE_INTERCEPTORS, SCOPE_RESPONSE_STARTED
 from ellar.di import injectable
 
-from ..services import Reflector
-
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common.routing import RouteOperationBase
 
 
 @injectable
 class EllarInterceptorConsumer(IInterceptorsConsumer):
-    def __init__(self, reflector: Reflector) -> None:
-        self.reflector = reflector
-
     def get_interceptor(
         self,
         context: IExecutionContext,
@@ -30,10 +25,11 @@ class EllarInterceptorConsumer(IInterceptorsConsumer):
     async def execute(
         self, context: IExecutionContext, route_operation: "RouteOperationBase"
     ) -> t.Any:
+        reflector = context.get_app().reflector
         route_interceptors: t.List[EllarInterceptor] = list(
             map(
                 functools.partial(self.get_interceptor, context),
-                self.reflector.get_all_and_override(
+                reflector.get_all_and_override(
                     ROUTE_INTERCEPTORS, *[context.get_handler(), context.get_class()]
                 )
                 or context.get_app().get_interceptors(),

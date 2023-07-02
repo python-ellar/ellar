@@ -3,10 +3,6 @@ from abc import ABC, abstractmethod
 
 from ellar.common import Identity, IHostContext
 
-AuthenticationHandlerType = t.Union[
-    "BaseAuthenticationHandler", t.Type["BaseAuthenticationHandler"]
-]
-
 
 class BaseAuthenticationHandler(ABC):
     scheme: str
@@ -22,3 +18,8 @@ class BaseAuthenticationHandler(ABC):
     @abstractmethod
     async def authenticate(self, context: IHostContext) -> t.Optional[Identity]:
         ...
+
+
+AuthenticationHandlerType = t.Union[
+    BaseAuthenticationHandler, t.Type[BaseAuthenticationHandler]
+]

@@ -1,7 +1,7 @@
 import typing as t
 
+from ..auth_handler import AuthenticationHandlerType
 from ..interfaces import IAuthConfig
-from ..models import AuthenticationHandlerType
 
 
 class AuthConfig(IAuthConfig):

@@ -2,14 +2,10 @@ import typing as t
 
 from ellar.common import IExecutionContext
 
-from .interfaces import IAuthorizationRequirement
-
-AuthorizationRequirementType = t.Union[
-    t.Type[IAuthorizationRequirement], IAuthorizationRequirement
-]
+from .base import BasePolicyHandler
 
 
-class RequiredRole(IAuthorizationRequirement):
+class RequiredRolePolicy(BasePolicyHandler):
     def __init__(self, *role: str):
         self.roles = list(role)
 
@@ -18,7 +14,7 @@ class RequiredRole(IAuthorizationRequirement):
         return all(role in user_roles for role in self.roles)
 
 
-class RequiredClaims(IAuthorizationRequirement):
+class RequiredClaimsPolicy(BasePolicyHandler):
     def __init__(self, claim_type: str, *claim_value: t.Any) -> None:
         self.claim_type = claim_type
         self.claim_values = list(claim_value)

@@ -28,7 +28,7 @@ class IdentityMiddleware:
 
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
         if scope["type"] == "lifespan":
-            await self.identity_service.setup_auth_shield_services()
+            await self.identity_service.setup_auth_services()
             await self.app(scope, receive, send)
             return
 

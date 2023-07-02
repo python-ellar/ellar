@@ -1,11 +1,8 @@
 import typing as t
 from abc import ABC, abstractmethod
 
-from ellar.common import IExecutionContext
-
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.auth.models import AuthenticationHandlerType
-    from ellar.auth.policy import Policy
+    from .auth_handler import AuthenticationHandlerType
 
 
 class IAuthConfig(ABC):
@@ -24,31 +21,11 @@ class IAuthConfig(ABC):
         ...
 
 
-class IAuthorizationConfig(ABC):
-    @abstractmethod
-    def add_authorization(self, name: str, policy: "Policy") -> None:
-        ...
-
-    @abstractmethod
-    def find_policy(self, name: str) -> "Policy":
-        ...
-
-
-class IAuthorizationRequirement(ABC):
-    @abstractmethod
-    async def handle(self, context: IExecutionContext) -> bool:
-        pass
-
-
 class IIdentityProvider(ABC):
     @abstractmethod
     def add_authentication(self, authentication: "AuthenticationHandlerType") -> None:
         ...
 
     @abstractmethod
-    def add_authorization(self, name: str, policy: "Policy") -> None:
-        ...
-
-    @abstractmethod
-    async def configure(self) -> None:
+    def configure(self) -> None:
         ...

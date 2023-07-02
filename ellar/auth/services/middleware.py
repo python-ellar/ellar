@@ -3,8 +3,8 @@ from functools import partial
 from ellar.common import AnonymousIdentity, Identity, IHostContext
 from ellar.di import injectable
 
+from ..auth_handler import AuthenticationHandlerType, BaseAuthenticationHandler
 from ..interfaces import IAuthConfig, IIdentityProvider
-from ..models import AuthenticationHandlerType, BaseAuthenticationHandler
 
 
 @injectable
@@ -16,9 +16,9 @@ class IdentityMiddlewareService:
         self.auth_config = auth_config
         self._configure = False
 
-    async def setup_auth_shield_services(self) -> None:
+    async def setup_auth_services(self) -> None:
         if not self._configure:
-            await self.identity_provider.configure()
+            self.identity_provider.configure()
             self._configure = True
 
     def _get_authentication_handler_object(
@@ -31,8 +31,8 @@ class IdentityMiddlewareService:
     async def authenticate(self, context: IHostContext) -> None:
         context.user = await self._authenticate_action(context)
 
-    async def _detect_authentication_scheme(self, context: IHostContext) -> str:
-        pass
+    # async def _detect_authentication_scheme(self, context: IHostContext) -> str:
+    #     pass
 
     async def _authenticate_action(self, context: IHostContext) -> Identity:
         partial_get_authentication_handler_object = partial(

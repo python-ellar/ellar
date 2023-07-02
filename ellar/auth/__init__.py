@@ -1,25 +1,17 @@
-from .decorators import Authorization
+from .auth_handler import BaseAuthenticationHandler
+from .decorators import CheckPolicies
 from .guard import AuthorizationGuard
-from .interfaces import (
-    IAuthConfig,
-    IAuthorizationConfig,
-    IAuthorizationRequirement,
-    IIdentityProvider,
-)
-from .models import BaseAuthenticationHandler, BaseIdentityProvider
-from .policy import Policy
+from .identity_provider import BaseIdentityProvider
+from .interfaces import IAuthConfig, IIdentityProvider
+from .policy import BasePolicyHandler
 
 __all__ = [
-    "Authorization",
+    "CheckPolicies",
     "BaseIdentityProvider",
     "AuthorizationGuard",
     "BaseAuthenticationHandler",
-    "IAuthorizationRequirement",
-    "IAuthorizationConfig",
-    "IAuthConfig",
-    "IAuthConfig",
-    "IAuthConfig",
+    "CheckPolicies",
+    "BasePolicyHandler",
     "IAuthConfig",
     "IIdentityProvider",
-    "Policy",
 ]

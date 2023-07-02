@@ -7,7 +7,7 @@ from ellar.common.serializer.guard import (
     HTTPBasicCredentials,
 )
 
-from ..models import BaseAuthenticationHandler
+from ..auth_handler import BaseAuthenticationHandler
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import HTTPConnection
