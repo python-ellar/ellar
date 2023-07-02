@@ -15,7 +15,7 @@ from ellar.common.helper.importer import get_class_import
 from ellar.common.templating import Environment
 from ellar.core import App, AppFactory, Config, ModuleBase
 from ellar.core.connection import Request
-from ellar.core.core_service_registration import CoreServiceRegistration
+from ellar.core.core_services import EllarCoreService
 from ellar.core.modules import ModuleTemplateRef
 from ellar.core.services.reflector import Reflector
 from ellar.core.staticfiles import StaticFiles
@@ -201,7 +201,7 @@ class TestEllarApp:
 
         config = Config(STATIC_DIRECTORIES=[tmpdir])
         injector = EllarInjector()
-        CoreServiceRegistration(injector, config=Config()).register_all()
+        EllarCoreService(injector, config=Config()).register_core_services()
         injector.container.register_instance(config)
         app = App(injector=injector, config=config)
         client = TestClient(app)
@@ -223,7 +223,7 @@ class TestEllarApp:
             STATIC_MOUNT_PATH="/static-modified", STATIC_DIRECTORIES=[tmpdir]
         )
         injector = EllarInjector()
-        CoreServiceRegistration(injector, config=Config()).register_all()
+        EllarCoreService(injector, config=Config()).register_core_services()
         injector.container.register_instance(config)
         app = App(injector=injector, config=config)
         client = TestClient(app)
@@ -274,7 +274,7 @@ class TestEllarApp:
         injector = EllarInjector(
             auto_bind=False
         )  # will raise an exception is service is not registered
-        CoreServiceRegistration(injector, config=Config()).register_all()
+        EllarCoreService(injector, config=Config()).register_core_services()
         injector.container.register_instance(config)
 
         app = App(config=config, injector=injector)
@@ -298,7 +298,7 @@ class TestEllarApp:
         injector = EllarInjector(
             auto_bind=False
         )  # will raise an exception is service is not registered
-        CoreServiceRegistration(injector, config=Config()).register_all()
+        EllarCoreService(injector, config=Config()).register_core_services()
         injector.container.register_instance(config)
         app = App(config=config, injector=injector)
         app.add_exception_handler(CustomExceptionHandler())
