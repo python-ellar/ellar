@@ -1,7 +1,7 @@
 from starlette.routing import compile_path
 from starlette.types import ASGIApp
 
-from ellar.auth.services import IdentityMiddlewareService
+from ellar.auth.services import IdentityAuthenticationService
 from ellar.common import AnonymousIdentity, IHostContextFactory
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.core.conf import Config
@@ -14,11 +14,11 @@ class IdentityMiddleware:
         app: ASGIApp,
         *,
         injector: EllarInjector,
-        config: "Config",
-        identity_service: IdentityMiddlewareService
+        config: Config,
+        identity_auth_service: IdentityAuthenticationService
     ) -> None:
         self.app = app
-        self.identity_service = identity_service
+        self.identity_auth_service = identity_auth_service
         self.injector = injector
         self._configure = False
 
@@ -28,7 +28,7 @@ class IdentityMiddleware:
 
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
         if scope["type"] == "lifespan":
-            await self.identity_service.setup_auth_services()
+            await self.identity_auth_service.setup_auth_services()
             await self.app(scope, receive, send)
             return
 
@@ -37,7 +37,7 @@ class IdentityMiddleware:
             context = context_factory.create_context(scope, receive, send)
 
             context.user = AnonymousIdentity()
-            await self.identity_service.authenticate(context)
+            await self.identity_auth_service.authenticate(context)
 
         await self.app(scope, receive, send)
 

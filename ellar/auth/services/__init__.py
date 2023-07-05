@@ -1,5 +1,5 @@
-from .middleware import IdentityMiddlewareService
+from .middleware import IdentityAuthenticationService
 
 __all__ = [
-    "IdentityMiddlewareService",
+    "IdentityAuthenticationService",
 ]

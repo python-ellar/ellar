@@ -1,15 +1,14 @@
 from ellar.di import injectable
 
-from .auth_handler import AuthenticationHandlerType
-from .interfaces import IAuthConfig, IIdentityProvider
+from .handlers import AuthenticationHandlerType
+from .interfaces import IAuthConfig, IIdentitySchemeProvider
 
 
 @injectable
-class BaseIdentityProvider(IIdentityProvider):
+class BaseIdentitySchemeProvider(IIdentitySchemeProvider):
     """
-    User should inherit from `BaseAuthenticationShieldConfiguration`
-    and override `configure_authentication` to configure Authentication Schemes
-    and configure_authorization to configure Authorization policies
+    User should inherit from `BaseIdentityProvider`
+    and override `configure` to configure Authentication Schemes
     """
 
     __slots__ = ("auth_config",)

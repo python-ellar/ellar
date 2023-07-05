@@ -21,7 +21,7 @@ class IAuthConfig(ABC):
         ...
 
 
-class IIdentityProvider(ABC):
+class IIdentitySchemeProvider(ABC):
     @abstractmethod
     def add_authentication(self, authentication: "AuthenticationHandlerType") -> None:
         ...

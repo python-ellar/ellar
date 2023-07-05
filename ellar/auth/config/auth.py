@@ -1,6 +1,6 @@
 import typing as t
 
-from ..auth_handler import AuthenticationHandlerType
+from ..handlers import AuthenticationHandlerType
 from ..interfaces import IAuthConfig
 
 

@@ -7,9 +7,7 @@ from ellar.common import APIException, GuardCanActivate, IExecutionContext
 from ellar.di import injectable
 
 from .constants import POLICY_KEYS
-from .policy import BasePolicyHandler
-
-_PolicyType = t.Union[BasePolicyHandler, t.Type[BasePolicyHandler]]
+from .policy import BasePolicyHandler, PolicyType
 
 
 @injectable
@@ -22,7 +20,7 @@ class AuthorizationGuard(GuardCanActivate):
     @t.no_type_check
     def get_route_handler_policy(
         self, context: IExecutionContext
-    ) -> t.Optional[t.List[t.Union[_PolicyType, str]]]:
+    ) -> t.Optional[t.List[t.Union[PolicyType, str]]]:
         return context.get_app().reflector.get_all_and_override(
             POLICY_KEYS, context.get_handler(), context.get_class()
         )

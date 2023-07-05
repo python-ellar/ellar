@@ -6,6 +6,18 @@ from ellar.common.compatible import AttributeDict
 
 
 class DefaultRequirementType(AttributeDict):
+    """
+    Stores Policy Requirement Arguments in `arg_[n]` value
+    example:
+        class MyPolicyHandler(BasePolicyHandlerWithRequirement):
+            ...
+
+        policy = MyPolicyHandler['req1', 'req2', 'req2']
+        policy.requirement.arg_1 = 'req1'
+        policy.requirement.arg_2 = 'req2'
+        policy.requirement.arg_3 = 'req2'
+    """
+
     def __init__(self, *args: t.Any) -> None:
         kwargs_args = {f"arg_{idx+1}": value for idx, value in enumerate(args)}
         super().__init__(kwargs_args)
@@ -51,7 +63,7 @@ class BasePolicyHandlerMetaclass(_PolicyOperandMixin, ABCMeta):
     pass
 
 
-class BasePolicyHandler(ABC, metaclass=BasePolicyHandlerMetaclass):
+class BasePolicyHandler(ABC, _PolicyOperandMixin, metaclass=BasePolicyHandlerMetaclass):
     @abstractmethod
     async def handle(self, context: IExecutionContext) -> bool:
         """Run Policy Actions and return true or false"""
@@ -61,6 +73,8 @@ class BasePolicyHandlerWithRequirement(
     BasePolicyHandler,
     ABC,
 ):
+    __requirements__: t.Dict[int, "BasePolicyHandler"] = {}
+
     requirement_type: t.Type = DefaultRequirementType
 
     @abstractmethod
@@ -68,11 +82,14 @@ class BasePolicyHandlerWithRequirement(
     async def handle(self, context: IExecutionContext, requirement: t.Any) -> bool:
         pass
 
-    def __class_getitem__(
-        cls, parameters: t.Union[str, t.Tuple[str]]
-    ) -> "BasePolicyHandler":
+    def __class_getitem__(cls, parameters: t.Any) -> "BasePolicyHandler":
         _parameters = parameters if isinstance(parameters, tuple) else (parameters,)
-        return _PolicyHandlerWithRequirement(cls, cls.requirement_type(*_parameters))
+        hash_id = hash(_parameters)
+        if hash_id not in cls.__requirements__:
+            cls.__requirements__[hash_id] = _PolicyHandlerWithRequirement(
+                cls, cls.requirement_type(*_parameters)
+            )
+        return cls.__requirements__[hash_id]
 
 
 PolicyType = t.Union[
@@ -83,7 +100,7 @@ PolicyType = t.Union[
 ]
 
 
-class _OperandResolvers:
+class _OperandResolversMixin:
     def _get_policy_object(
         self, context: IExecutionContext, policy: PolicyType
     ) -> t.Union[BasePolicyHandler, BasePolicyHandlerWithRequirement]:
@@ -92,7 +109,7 @@ class _OperandResolvers:
         return policy
 
 
-class _ORPolicy(BasePolicyHandler, _OperandResolvers):
+class _ORPolicy(BasePolicyHandler, _OperandResolversMixin):
     def __init__(self, policy_1: PolicyType, policy_2: PolicyType) -> None:
         self._policy_1 = policy_1
         self._policy_2 = policy_2
@@ -107,7 +124,7 @@ class _ORPolicy(BasePolicyHandler, _OperandResolvers):
         return _policy_1_result or _policy_2_result
 
 
-class _NOTPolicy(BasePolicyHandler, _OperandResolvers):
+class _NOTPolicy(BasePolicyHandler, _OperandResolversMixin):
     def __init__(self, policy_1: PolicyType) -> None:
         self._policy_1 = policy_1
 
@@ -130,9 +147,7 @@ class _ANDPolicy(_ORPolicy):
         return _policy_1_result and _policy_2_result
 
 
-class _PolicyHandlerWithRequirement(
-    BasePolicyHandler, _OperandResolvers, _PolicyOperandMixin
-):
+class _PolicyHandlerWithRequirement(BasePolicyHandler, _OperandResolversMixin):
     def __init__(self, policy_1: PolicyType, requirement: t.Any) -> None:
         self._policy_1 = policy_1
         self.requirement = requirement

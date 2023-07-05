@@ -1,14 +1,16 @@
-from ellar.auth import IIdentityProvider
+from ellar.auth import IIdentitySchemeProvider
 from ellar.common import Module
 from ellar.di import ProviderConfig
 
 from .controllers import ArticleController, MoviesControllers
-from .identity_setup import IdentityProvider
+from .identity_setup import IdentitySchemeProvider
 
 
 @Module(
     controllers=(ArticleController, MoviesControllers),
-    providers=[ProviderConfig(IIdentityProvider, use_class=IdentityProvider)],
+    providers=[
+        ProviderConfig(IIdentitySchemeProvider, use_class=IdentitySchemeProvider)
+    ],
 )
 class AppModule:
     pass

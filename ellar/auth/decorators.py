@@ -3,12 +3,10 @@ import typing as t
 from ellar.common import set_metadata as set_meta
 
 from .constants import POLICY_KEYS
-from .policy import BasePolicyHandler
-
-_PolicyType = t.Union[BasePolicyHandler, t.Type[BasePolicyHandler]]
+from .policy import PolicyType
 
 
-def CheckPolicies(*policies: t.Union[str, _PolicyType]) -> t.Callable:
+def CheckPolicies(*policies: t.Union[str, PolicyType]) -> t.Callable:
     """
     ========= CONTROLLER AND ROUTE FUNCTION DECORATOR ==============
 

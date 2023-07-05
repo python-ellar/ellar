@@ -3,22 +3,24 @@ from functools import partial
 from ellar.common import AnonymousIdentity, Identity, IHostContext
 from ellar.di import injectable
 
-from ..auth_handler import AuthenticationHandlerType, BaseAuthenticationHandler
-from ..interfaces import IAuthConfig, IIdentityProvider
+from ..handlers import AuthenticationHandlerType, BaseAuthenticationHandler
+from ..interfaces import IAuthConfig, IIdentitySchemeProvider
 
 
 @injectable
-class IdentityMiddlewareService:
+class IdentityAuthenticationService:
     def __init__(
-        self, identity_provider: IIdentityProvider, auth_config: IAuthConfig
+        self,
+        identity_scheme_provider: IIdentitySchemeProvider,
+        auth_config: IAuthConfig,
     ) -> None:
-        self.identity_provider = identity_provider
+        self.identity_scheme_provider = identity_scheme_provider
         self.auth_config = auth_config
         self._configure = False
 
     async def setup_auth_services(self) -> None:
         if not self._configure:
-            self.identity_provider.configure()
+            self.identity_scheme_provider.configure()
             self._configure = True
 
     def _get_authentication_handler_object(
