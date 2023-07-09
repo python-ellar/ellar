@@ -2,7 +2,7 @@ import typing as t
 from abc import ABC, abstractmethod
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from .auth_handler import AuthenticationHandlerType
+    from .handlers import AuthenticationHandlerType
 
 
 class IAuthConfig(ABC):

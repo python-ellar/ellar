@@ -18,6 +18,7 @@ from ellar.core.middleware import (
     Middleware,
     RequestServiceProviderMiddleware,
     RequestVersioningMiddleware,
+    SessionMiddleware,
     TrustedHostMiddleware,
 )
 from ellar.core.middleware.authentication import IdentityMiddleware
@@ -217,6 +218,9 @@ class App(AppTemplating):
                 Middleware(
                     RequestVersioningMiddleware,
                     debug=self.debug,
+                ),
+                Middleware(
+                    SessionMiddleware,
                 ),
                 Middleware(
                     IdentityMiddleware,
