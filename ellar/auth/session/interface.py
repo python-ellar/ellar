@@ -1,8 +1,6 @@
 import typing as t
 from abc import ABC, abstractmethod
 
-from starlette.datastructures import MutableHeaders
-
 from .cookie_dict import SessionCookieObject
 from .options import SessionCookieOption
 
@@ -16,11 +14,10 @@ class ISessionService(ABC):
         """
 
     @abstractmethod
-    def save_session(
+    def serialize_session(
         self,
-        response_headers: MutableHeaders,
         session: t.Union[str, SessionCookieObject],
-    ) -> None:
+    ) -> str:
         """
         :param response_headers:
         :param session: Collection ExtraEndpointArg
@@ -28,7 +25,7 @@ class ISessionService(ABC):
         """
 
     @abstractmethod
-    def load_session(self, session_data: t.Optional[str]) -> SessionCookieObject:
+    def deserialize_session(self, session_data: t.Optional[str]) -> SessionCookieObject:
         """
         :param session_data:
         :return: SessionCookieObject

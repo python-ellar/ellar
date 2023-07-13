@@ -1,36 +1,57 @@
 import typing as t
-from functools import partial
-
-from ellar.common.compatible import AttributeDict
+from functools import wraps
 
 
 @t.no_type_check
 def _on_update_callback(
     cls: t.Type["SessionCookieObject"],
 ) -> t.Type["SessionCookieObject"]:
-    def _wrap(func: t.Callable, self: "SessionCookieObject", *args, **kwargs) -> t.Any:
-        self.modified = True
-        self.accessed = True
-        return func(self, *args, **kwargs)
+    def _decor(func):
+        @wraps(func)
+        def _wrap(self: "SessionCookieObject", *args, **kwargs) -> t.Any:
+            self.modified = True
+            self.accessed = True
+            return func(self, *args, **kwargs)
 
-    cls.__setitem__ = partial(_wrap, cls.__setitem__)
+        return _wrap
 
-    cls.__delitem__ = partial(_wrap, cls.__delitem__)
-    cls.clear = partial(_wrap, cls.clear)
+    cls.__setitem__ = _decor(cls.__setitem__)
+    cls.__delitem__ = _decor(cls.__delitem__)
 
-    cls.popitem = partial(_wrap, cls.popitem)
-    cls.update = partial(_wrap, cls.update)
+    cls.clear = _decor(cls.clear)
+    cls.popitem = _decor(cls.popitem)
 
-    cls.pop = partial(_wrap, cls.pop)
-    cls.setdefault = partial(_wrap, cls.setdefault)
+    cls.update = _decor(cls.update)
+    cls.pop = _decor(cls.pop)
+
+    cls.setdefault = _decor(cls.setdefault)
 
     return cls
 
 
 @_on_update_callback
-class SessionCookieObject(AttributeDict):
-    modified = False
-    accessed = False
+class SessionCookieObject(dict):
+    __slots__ = ("modified", "accessed")
+
+    def __init__(self, *__n: t.Any, **__m: t.Any) -> None:
+        super().__init__(*__n, **__m)
+        self.modified: bool = False
+        self.accessed: bool = False
+
+    def __getattribute__(self, name: t.Any) -> t.Optional[t.Any]:
+        if name in self:
+            return self[name]
+        try:
+            return super(SessionCookieObject, self).__getattribute__(name)
+        except Exception:
+            return None
+
+    def __setattr__(self, key: t.Any, value: t.Any) -> None:
+        if key in self.__slots__:
+            super(SessionCookieObject, self).__setattr__(key, value)
+            return
+
+        self[key] = value
 
     def __getitem__(self, key: str) -> t.Any:
         self.accessed = True

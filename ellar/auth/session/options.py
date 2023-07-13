@@ -10,10 +10,10 @@ else:  # pragma: no cover
 
 
 class SessionCookieOption(BaseModel):
-    NAME: str = "connect.sid"
+    NAME: str = "session"
     DOMAIN: t.Optional[str] = None
     PATH: str = "/"
     HTTPONLY: bool = True
     SECURE: bool = False
     SAME_SITE: Literal["lax", "strict", "none"] = "lax"
-    MAX_AGE: int = 14 * 24 * 60 * 60  # 14 days, in seconds
+    MAX_AGE: t.Optional[int] = 14 * 24 * 60 * 60  # 14 days, in seconds

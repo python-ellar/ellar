@@ -1,10 +1,16 @@
+try:
+    import itsdangerous
+except Exception:  # pragma: no cover
+    raise RuntimeError(
+        "SessionClientStrategy requires itsdangerous package installed. Run `pip install itsdangerous`"
+    )
+
 import json
 import typing as t
 from base64 import b64decode, b64encode
 
 import itsdangerous
 from itsdangerous import BadSignature
-from starlette.datastructures import MutableHeaders
 
 from ellar.core import Config
 from ellar.di import injectable
@@ -20,14 +26,13 @@ class SessionClientStrategy(ISessionService):
         self._signer = itsdangerous.TimestampSigner(str(config.SECRET_KEY))
         self.config = config
         self._session_config = SessionCookieOption(
-            NAME=config.SESSION_COOKIE_NAME or "connect.sid",
+            NAME=config.SESSION_COOKIE_NAME,
             DOMAIN=config.SESSION_COOKIE_DOMAIN,
             PATH=config.SESSION_COOKIE_PATH or "/",
-            HTTPONLY=config.SESSION_COOKIE_HTTPONLY or True,
-            SECURE=config.SESSION_COOKIE_SECURE or False,
-            SAME_SITE=config.SESSION_COOKIE_SAME_SITE or "lax",
-            MAX_AGE=config.SESSION_COOKIE_MAX_AGE
-            or 14 * 24 * 60 * 60,  # 14 days, in seconds
+            HTTPONLY=config.SESSION_COOKIE_HTTPONLY,
+            SECURE=config.SESSION_COOKIE_SECURE,
+            SAME_SITE=config.SESSION_COOKIE_SAME_SITE,
+            MAX_AGE=config.SESSION_COOKIE_MAX_AGE,
         )
 
     @property
@@ -48,16 +53,15 @@ class SessionClientStrategy(ISessionService):
         )
         return header_value
 
-    def save_session(
+    def serialize_session(
         self,
-        response_headers: MutableHeaders,
         session: t.Union[str, SessionCookieObject],
-    ) -> None:
+    ) -> str:
         if isinstance(session, SessionCookieObject):
             data = b64encode(json.dumps(dict(session)).encode("utf-8"))
             data = self._signer.sign(data)
             header_value = self._get_header_value(
-                data,
+                data.decode("utf-8"),
                 max_age=f"Max-Age={self._session_config.MAX_AGE}; "
                 if self._session_config.MAX_AGE
                 else "",
@@ -65,9 +69,9 @@ class SessionClientStrategy(ISessionService):
         else:
             header_value = self._get_header_value(session, max_age="Max-Age=0; ")
 
-        response_headers.append("Set-Cookie", header_value)
+        return header_value
 
-    def load_session(self, session_data: t.Optional[str]) -> SessionCookieObject:
+    def deserialize_session(self, session_data: t.Optional[str]) -> SessionCookieObject:
         if session_data:
             data = session_data.encode("utf-8")
             try:
