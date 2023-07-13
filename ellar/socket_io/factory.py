@@ -23,7 +23,9 @@ _socket_servers: t.Dict[str, socketio.AsyncServer] = {}
 
 class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
     @classmethod
-    def build(cls, controller_type: t.Union[t.Type[GatewayBase], t.Any]) -> "Mount":
+    def build(
+        cls, controller_type: t.Union[t.Type[GatewayBase], t.Any], **kwargs: t.Any
+    ) -> "Mount":
         name = reflect.get_metadata_or_raise_exception(
             GATEWAY_METADATA.NAME, controller_type
         )

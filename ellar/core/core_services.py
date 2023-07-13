@@ -2,7 +2,7 @@ import typing as t
 
 from ellar.auth import BaseIdentitySchemeProvider, IAuthConfig, IIdentitySchemeProvider
 from ellar.auth.config import AuthConfig
-from ellar.auth.session import ISessionService, SessionServiceBasicStrategy
+from ellar.auth.session import ISessionService, SessionServiceNullStrategy
 from ellar.common import (
     IExceptionMiddlewareService,
     IExecutionContextFactory,
@@ -62,5 +62,5 @@ class EllarCoreService:
             IIdentitySchemeProvider, BaseIdentitySchemeProvider
         )
         self.injector.container.register_singleton(
-            ISessionService, SessionServiceBasicStrategy
+            ISessionService, SessionServiceNullStrategy
         )
