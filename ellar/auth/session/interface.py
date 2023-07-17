@@ -5,7 +5,7 @@ from .cookie_dict import SessionCookieObject
 from .options import SessionCookieOption
 
 
-class ISessionService(ABC):
+class ISessionStrategy(ABC):
     @property
     @abstractmethod
     def session_cookie_options(self) -> SessionCookieOption:

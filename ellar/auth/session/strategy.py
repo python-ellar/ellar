@@ -16,12 +16,12 @@ from ellar.core import Config
 from ellar.di import injectable
 
 from .cookie_dict import SessionCookieObject
-from .interface import ISessionService
+from .interface import ISessionStrategy
 from .options import SessionCookieOption
 
 
 @injectable
-class SessionClientStrategy(ISessionService):
+class SessionClientStrategy(ISessionStrategy):
     def __init__(self, config: Config) -> None:
         self._signer = itsdangerous.TimestampSigner(str(config.SECRET_KEY))
         self.config = config

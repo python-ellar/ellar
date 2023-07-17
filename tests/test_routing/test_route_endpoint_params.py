@@ -5,7 +5,7 @@ from starlette.requests import (
 from starlette.responses import Response as StarletteResponse
 from starlette.websockets import WebSocket as StarletteWebSocket
 
-from ellar.auth.session import ISessionService
+from ellar.auth.session import ISessionStrategy
 from ellar.auth.session.strategy import SessionClientStrategy
 from ellar.common import (
     Context,
@@ -80,7 +80,7 @@ tm = Test.create_test_module(
     config_module=dict(
         SECRET_KEY=SECRET_KEY,
     ),
-).override_provider(ISessionService, use_class=SessionClientStrategy)
+).override_provider(ISessionStrategy, use_class=SessionClientStrategy)
 client = tm.get_test_client()
 
 
