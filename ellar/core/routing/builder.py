@@ -32,7 +32,7 @@ def get_controller_builder_factory(
 class RouterBuilder:
     @classmethod
     def build(
-        cls, controller_type: t.Union[t.Type, t.Any]
+        cls, controller_type: t.Union[t.Type, t.Any], **kwargs: t.Any
     ) -> t.Union["ModuleMount", Mount]:
         """Build controller to Mount"""
 
@@ -53,7 +53,7 @@ class _DefaultRouterBuilder(RouterBuilder, controller_type=Mount):
 
     @classmethod
     def build(
-        cls, controller_type: t.Union[t.Type, t.Any]
+        cls, controller_type: t.Union[t.Type, t.Any], **kwargs: t.Any
     ) -> t.Union["ModuleMount", Mount, t.Any]:
         """Build controller to Mount"""
         return controller_type

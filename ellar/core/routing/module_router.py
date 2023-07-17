@@ -9,7 +9,9 @@ from .helper import build_route_parameters
 
 class ModuleRouterFactory(RouterBuilder, controller_type=ModuleRouter):
     @classmethod
-    def build(cls, controller_type: t.Union[ModuleRouter, t.Any]) -> ModuleMount:
+    def build(
+        cls, controller_type: t.Union[ModuleRouter, t.Any], **kwargs: t.Any
+    ) -> ModuleMount:
         if controller_type.get_pre_build_routes():
             results = build_route_parameters(controller_type.get_pre_build_routes())
             controller_type.app.routes.extend(results)  # type:ignore

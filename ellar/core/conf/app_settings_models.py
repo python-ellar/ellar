@@ -1,3 +1,4 @@
+import sys
 import typing as t
 
 from pydantic import Field, validator
@@ -16,6 +17,10 @@ from ellar.core.versioning import DefaultAPIVersioning
 
 from .mixins import ConfigDefaultTypesMixin, TExceptionHandler, TMiddleware, TVersioning
 
+if sys.version_info >= (3, 8):  # pragma: no cover
+    from typing import Literal
+else:  # pragma: no cover
+    from typing_extensions import Literal
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.main import App
 
@@ -117,6 +122,14 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
 
     LOGGING: t.Optional[t.Dict[str, t.Any]] = None
     CACHES: t.Dict[str, t.Any] = {}
+
+    SESSION_COOKIE_NAME: str = "session"
+    SESSION_COOKIE_DOMAIN: t.Optional[str] = None
+    SESSION_COOKIE_PATH: str = "/"
+    SESSION_COOKIE_HTTPONLY: bool = True
+    SESSION_COOKIE_SECURE: bool = False
+    SESSION_COOKIE_SAME_SITE: Literal["lax", "strict", "none"] = "lax"
+    SESSION_COOKIE_MAX_AGE: t.Optional[int] = 14 * 24 * 60 * 60  # 14 days, in seconds
 
     @validator("MIDDLEWARE", pre=True)
     def pre_middleware_validate(cls, value: t.Any) -> t.Any:

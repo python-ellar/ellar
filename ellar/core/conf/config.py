@@ -2,7 +2,7 @@ import typing as t
 
 from starlette.config import environ
 
-from ellar.common.compatible.dict import AttributeDictAccessMixin, DataMutableMapper
+from ellar.common.compatible.dict import AttributeDictAccessMixin
 from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.common.helper.importer import import_from_string
 from ellar.common.types import VT
@@ -15,8 +15,8 @@ class ConfigRuntimeError(RuntimeError):
     pass
 
 
-class Config(DataMutableMapper, AttributeDictAccessMixin, ConfigDefaultTypesMixin):
-    __slots__ = ("config_module", "_data")
+class Config(AttributeDictAccessMixin, dict, ConfigDefaultTypesMixin):
+    __slots__ = ("config_module",)
 
     def __init__(
         self,
@@ -30,14 +30,14 @@ class Config(DataMutableMapper, AttributeDictAccessMixin, ConfigDefaultTypesMixi
         super().__init__()
         self.config_module = config_module or environ.get(ELLAR_CONFIG_MODULE, None)
 
-        self._data.clear()
+        self.clear()
 
         self._load_config_module(config_prefix or "")
 
-        self._data.update(**mapping)
+        self.update(**mapping)
 
-        validate_config = ConfigValidationSchema.parse_obj(self._data)
-        self._data.update(validate_config.serialize())
+        validate_config = ConfigValidationSchema.parse_obj(self)
+        self.update(validate_config.serialize())
 
     def _load_config_module(self, prefix: str) -> None:
         _prefix = prefix.upper()
@@ -46,17 +46,17 @@ class Config(DataMutableMapper, AttributeDictAccessMixin, ConfigDefaultTypesMixi
                 mod = import_from_string(self.config_module)
                 for setting in dir(mod):
                     if setting.isupper() and setting.startswith(_prefix):
-                        self._data[setting.replace(_prefix, "")] = getattr(mod, setting)
+                        self[setting.replace(_prefix, "")] = getattr(mod, setting)
             except Exception as ex:
                 raise ConfigRuntimeError(str(ex))
 
     def set_defaults(self, **kwargs: t.Any) -> "Config":
         for k, v in kwargs.items():
-            self._data.setdefault(k, v)
+            self.setdefault(k, v)
         return self
 
     def __repr__(self) -> str:  # pragma: no cover
-        hidden_values = {key: "..." for key in self._data.keys()}
+        hidden_values = {key: "..." for key in self.keys()}
         return f"<Configuration {repr(hidden_values)}, settings_module: {self.config_module}>"
 
     def __setattr__(self, key: t.Any, value: t.Any) -> None:
@@ -64,11 +64,11 @@ class Config(DataMutableMapper, AttributeDictAccessMixin, ConfigDefaultTypesMixi
             super(Config, self).__setattr__(key, value)
             return
 
-        self._data[key] = value
+        self[key] = value
 
     @property
-    def values(self) -> t.ValuesView[VT]:
+    def config_values(self) -> t.ValuesView[VT]:
         """
         Returns a copy of the dictionary of current settings.
         """
-        return self._data.values()
+        return super().values()

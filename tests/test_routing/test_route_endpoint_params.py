@@ -5,6 +5,8 @@ from starlette.requests import (
 from starlette.responses import Response as StarletteResponse
 from starlette.websockets import WebSocket as StarletteWebSocket
 
+from ellar.auth.session import ISessionService
+from ellar.auth.session.strategy import SessionClientStrategy
 from ellar.common import (
     Context,
     Host,
@@ -23,8 +25,6 @@ from ellar.core.connection import (
     Request as EllarRequest,
     WebSocket as EllarWebSocket,
 )
-from ellar.core.middleware import Middleware
-from ellar.core.middleware.sessions import SessionMiddleware
 from ellar.testing import Test
 
 router = ModuleRouter()
@@ -79,9 +79,8 @@ tm = Test.create_test_module(
     routers=[router],
     config_module=dict(
         SECRET_KEY=SECRET_KEY,
-        MIDDLEWARE=[Middleware(SessionMiddleware, secret_key=SECRET_KEY)],
     ),
-)
+).override_provider(ISessionService, use_class=SessionClientStrategy)
 client = tm.get_test_client()
 
 

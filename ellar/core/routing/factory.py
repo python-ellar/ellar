@@ -17,7 +17,7 @@ from .builder import RouterBuilder
 class ControllerRouterFactory(RouterBuilder, controller_type=type(ControllerBase)):
     @classmethod
     def build(
-        cls, controller_type: t.Union[t.Type[ControllerBase], t.Any]
+        cls, controller_type: t.Union[t.Type[ControllerBase], t.Any], **kwargs: t.Any
     ) -> ModuleMount:
         routes = (
             reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, controller_type)
@@ -42,6 +42,7 @@ class ControllerRouterFactory(RouterBuilder, controller_type=type(ControllerBase
             if include_in_schema is not None
             else True,
             control_type=controller_type,
+            **kwargs
         )
         return router
 

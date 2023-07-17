@@ -14,6 +14,7 @@ from .di import RequestServiceProviderMiddleware
 from .exceptions import ExceptionMiddleware
 from .function import FunctionBasedMiddleware
 from .middleware import EllarMiddleware as Middleware
+from .sessions import SessionMiddleware
 from .versioning import RequestVersioningMiddleware
 
 __all__ = [
@@ -29,4 +30,5 @@ __all__ = [
     "WSGIMiddleware",
     "RequestVersioningMiddleware",
     "RequestServiceProviderMiddleware",
+    "SessionMiddleware",
 ]

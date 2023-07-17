@@ -2,10 +2,11 @@ import typing as t
 from pathlib import Path
 from uuid import uuid4
 
+from starlette.routing import Host, Mount
 from starlette.testclient import TestClient as TestClient
 
-from ellar.common import Module
-from ellar.common.routing import ModuleRouter
+from ellar.common import ControllerBase, Module
+from ellar.common.routing import ModuleMount, ModuleRouter
 from ellar.common.types import T
 from ellar.core import ModuleBase
 from ellar.core.factory import AppFactory
@@ -38,6 +39,10 @@ class TestingModule:
         use_value: T = None,
         use_class: t.Union[t.Type[T], t.Any] = None,
     ) -> "TestingModule":
+        """
+        Overrides Service at module level.
+        Use this function before creating an application instance.
+        """
         provider_config = ProviderConfig(
             base_type, use_class=use_class, use_value=use_value
         )
@@ -67,6 +72,7 @@ class TestingModule:
         root_path: str = "",
         backend: str = "asyncio",
         backend_options: t.Optional[t.Dict[str, t.Any]] = None,
+        **kwargs: t.Any,
     ) -> TestClient:
         return TestClient(
             app=self.create_application(),
@@ -75,6 +81,7 @@ class TestingModule:
             backend=backend,
             backend_options=backend_options,
             root_path=root_path,
+            **kwargs,
         )
 
     def get(self, interface: t.Type[T]) -> T:
@@ -87,13 +94,13 @@ class Test:
     @classmethod
     def create_test_module(
         cls,
-        modules: t.Sequence[t.Type[t.Union[ModuleBase, t.Any]]] = tuple(),
-        controllers: t.Sequence[t.Union[t.Any]] = tuple(),
-        routers: t.Sequence[ModuleRouter] = tuple(),
-        providers: t.Sequence[ProviderConfig] = tuple(),
-        template_folder: t.Optional[str] = None,
-        base_directory: t.Optional[t.Union[str, Path]] = None,
+        controllers: t.Sequence[t.Union[t.Type[ControllerBase], t.Type]] = tuple(),
+        routers: t.Sequence[t.Union[ModuleRouter, ModuleMount, Mount, Host]] = tuple(),
+        providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = tuple(),
+        template_folder: t.Optional[str] = "templates",
+        base_directory: t.Optional[t.Union[Path, str]] = None,
         static_folder: str = "static",
+        modules: t.Sequence[t.Union[t.Type, t.Any]] = tuple(),
         global_guards: t.List[
             t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
         ] = None,
