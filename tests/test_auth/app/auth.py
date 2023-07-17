@@ -10,7 +10,7 @@ from ellar.di import injectable
 
 @injectable
 class SimpleHeaderAuthHandler(HeaderAPIKeyAuthenticationHandler):
-    async def handle_authentication(
+    async def authentication_handler(
         self, context: IHostContext, key: str
     ) -> t.Optional[Identity]:
         data = pickle.loads(base64.b64decode(key))

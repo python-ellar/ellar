@@ -1,10 +1,10 @@
 import typing as t
 
 from ..handlers import AuthenticationHandlerType
-from ..interfaces import IAuthConfig
+from ..interfaces import IIdentitySchemes
 
 
-class AuthConfig(IAuthConfig):
+class AppIdentitySchemes(IIdentitySchemes):
     __slots__ = ("_authentication_schemes",)
 
     def __init__(self) -> None:

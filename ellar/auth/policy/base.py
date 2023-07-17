@@ -32,21 +32,7 @@ class _PolicyOperandMixin:
         return _ANDPolicy(cls, other)
 
     @t.no_type_check
-    def __rand__(
-        cls: t.Union["BasePolicyHandler", t.Type["BasePolicyHandler"]],
-        other: t.Union["BasePolicyHandler", t.Type["BasePolicyHandler"]],
-    ) -> "BasePolicyHandler":
-        return _ANDPolicy(cls, other)
-
-    @t.no_type_check
     def __or__(
-        cls: t.Union["BasePolicyHandler", t.Type["BasePolicyHandler"]],
-        other: t.Union["BasePolicyHandler", t.Type["BasePolicyHandler"]],
-    ) -> "BasePolicyHandler":
-        return _ORPolicy(cls, other)
-
-    @t.no_type_check
-    def __ror__(
         cls: t.Union["BasePolicyHandler", t.Type["BasePolicyHandler"]],
         other: t.Union["BasePolicyHandler", t.Type["BasePolicyHandler"]],
     ) -> "BasePolicyHandler":
@@ -80,7 +66,7 @@ class BasePolicyHandlerWithRequirement(
     @abstractmethod
     @t.no_type_check
     async def handle(self, context: IExecutionContext, requirement: t.Any) -> bool:
-        pass
+        """Handle Policy Action"""
 
     def __class_getitem__(cls, parameters: t.Any) -> "BasePolicyHandler":
         _parameters = parameters if isinstance(parameters, tuple) else (parameters,)
@@ -151,6 +137,13 @@ class _PolicyHandlerWithRequirement(BasePolicyHandler, _OperandResolversMixin):
     def __init__(self, policy_1: PolicyType, requirement: t.Any) -> None:
         self._policy_1 = policy_1
         self.requirement = requirement
+
+    @t.no_type_check
+    def __call__(
+        self, *args: t.Any, **kwargs: t.Any
+    ) -> "_PolicyHandlerWithRequirement":
+        self._policy_1 = self._policy_1(*args, **kwargs)
+        return self
 
     async def handle(self, context: IExecutionContext) -> bool:
         _policy_1 = self._get_policy_object(context, self._policy_1)

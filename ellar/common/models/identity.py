@@ -1,27 +1,22 @@
 import typing as t
 
-from ellar.common.compatible import AttributeDictAccessMixin, DataMutableMapper
+from ellar.common.compatible import AttributeDict
 
 
-class Identity(DataMutableMapper, AttributeDictAccessMixin):
+class Identity(AttributeDict):
     """Represent the user's identity."""
+
+    auth_type: t.Optional[str]
+    issuer: t.Optional[str]
 
     def __init__(self, auth_type: str = None, **kwargs: t.Any) -> None:
         kwargs.setdefault("id", kwargs.get("id", kwargs.get("sub")))
-        kwargs.update(dict(_auth_type=auth_type))
+        kwargs.update(dict(auth_type=auth_type))
         super().__init__(**kwargs)
 
     @property
     def is_authenticated(self) -> bool:
         return bool(self.id)
-
-    @property
-    def issuer(self) -> str:
-        return self.get("issuer", "")
-
-    @property
-    def auth_type(self) -> str:
-        return str(self._auth_type)
 
     def __repr__(self) -> str:  # pragma: no cover
         return '<{0} id="{1}" auth_type="{2}" is_authenticated={3}>'.format(

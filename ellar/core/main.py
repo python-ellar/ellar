@@ -3,6 +3,8 @@ import typing as t
 
 from starlette.routing import BaseRoute, Mount
 
+from ellar.auth import IIdentitySchemes
+from ellar.auth.handlers import AuthenticationHandlerType
 from ellar.common.compatible import cached_property
 from ellar.common.constants import LOG_LEVELS
 from ellar.common.datastructures import State, URLPath
@@ -269,6 +271,7 @@ class App(AppTemplating):
         self.injector.container.register_instance(self)
         self.injector.container.register_instance(self.config, Config)
         self.injector.container.register_instance(self.jinja_environment, Environment)
+        self.injector.container.register_instance(self.jinja_environment, Environment)
 
     def add_exception_handler(
         self,
@@ -288,3 +291,13 @@ class App(AppTemplating):
     @cached_property
     def reflector(self) -> Reflector:
         return self.injector.get(Reflector)  # type: ignore[no-any-return]
+
+    @cached_property
+    def __identity_scheme(self) -> IIdentitySchemes:
+        return self.injector.get(IIdentitySchemes)  # type: ignore[no-any-return]
+
+    def add_authentication_schemes(
+        self, *authentication: AuthenticationHandlerType
+    ) -> None:
+        for auth in authentication:
+            self.__identity_scheme.add_authentication(auth)

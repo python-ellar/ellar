@@ -7,7 +7,7 @@ from starlette.exceptions import WebSocketException
 from ellar.common import Header, Query, Serializer, UseGuards, WsBody, extra_args
 from ellar.common.params import ExtraEndpointArg
 from ellar.core.connection import HTTPConnection
-from ellar.core.guards import APIKeyHeader
+from ellar.core.guards import GuardAPIKeyHeader
 from ellar.di import injectable
 from ellar.socket_io import (
     WebSocketGateway,
@@ -42,10 +42,10 @@ def add_extra_args(func):
 
 
 @injectable()
-class HeaderGuard(APIKeyHeader):
+class HeaderGuard(GuardAPIKeyHeader):
     parameter_name = "x-auth-key"
 
-    async def authenticate(
+    async def authentication_handler(
         self, connection: HTTPConnection, key: t.Optional[t.Any]
     ) -> t.Optional[t.Any]:
         if key == "supersecret":

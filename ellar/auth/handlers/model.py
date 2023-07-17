@@ -8,8 +8,8 @@ class BaseAuthenticationHandler(ABC):
     scheme: str
 
     def __init_subclass__(cls, **kwargs: str) -> None:
-        if not cls.scheme:
-            raise Exception("Authentication Scheme is required")
+        if not hasattr(cls, "scheme"):
+            raise RuntimeError(f"'{cls.__name__}' has no attribute 'scheme'")
 
     @classmethod
     def openapi_security_scheme(cls) -> t.Optional[t.Dict]:
@@ -17,7 +17,7 @@ class BaseAuthenticationHandler(ABC):
 
     @abstractmethod
     async def authenticate(self, context: IHostContext) -> t.Optional[Identity]:
-        ...
+        """Authenticate Action goes here"""
 
 
 AuthenticationHandlerType = t.Union[

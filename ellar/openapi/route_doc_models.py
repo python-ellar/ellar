@@ -196,9 +196,9 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         security_definitions: t.Dict = {}
         operation_security: t.List = []
         for item in self.guards:
-            if not hasattr(item, "get_guard_scheme"):
+            if not hasattr(item, "openapi_security_scheme"):
                 continue
-            security_scheme = item.get_guard_scheme()  # type: ignore
+            security_scheme = item.openapi_security_scheme()  # type: ignore
             scheme_name = list(security_scheme.keys())[0]
             operation_security.append({scheme_name: item.openapi_scope})  # type: ignore
             security_definitions.update(security_scheme)

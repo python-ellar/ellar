@@ -5,7 +5,8 @@ from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Host, Mount, Route, Router
 
 from ellar.common import Controller, Module, ModuleRouter, exception_handler, get
-from ellar.core import APIKeyQuery, ModuleBase, Request, WebSocket
+from ellar.core import ModuleBase, Request, WebSocket
+from ellar.core.guards import GuardAPIKeyQuery
 
 
 def create_tmp_template_and_static_dir(tmpdir):
@@ -24,8 +25,8 @@ def create_tmp_template_and_static_dir(tmpdir):
     return template_folder, static_folder
 
 
-class AppAPIKey(APIKeyQuery):
-    async def authenticate(self, connection, key):
+class AppAPIKey(GuardAPIKeyQuery):
+    async def authentication_handler(self, connection, key):
         return key
 
 

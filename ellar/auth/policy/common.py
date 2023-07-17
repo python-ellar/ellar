@@ -23,7 +23,7 @@ class RequiredClaimsPolicy(BasePolicyHandler):
         _claim_value = context.user.get(self.claim_type)
 
         if _claim_value is None:
-            raise RuntimeError(f"User Identity has no claim type: {self.claim_type}")
+            return False
 
         if not isinstance(_claim_value, list):
             _claim_value = [_claim_value]

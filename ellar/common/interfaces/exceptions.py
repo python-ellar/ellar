@@ -20,7 +20,7 @@ class IExceptionHandler(ABC, t.Iterable):
 
     @abstractmethod
     async def catch(self, ctx: IHostContext, exc: t.Any) -> t.Union[Response, t.Any]:  #
-        pass
+        """Catch implementation"""
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
         assert (
@@ -35,10 +35,10 @@ class IExceptionHandler(ABC, t.Iterable):
 class IExceptionMiddlewareService:
     @abstractmethod
     def build_exception_handlers(self, *exception_handlers: IExceptionHandler) -> None:
-        pass
+        """Build Exception Handlers"""
 
     @abstractmethod
     def get_500_error_handler(
         self,
     ) -> t.Optional[IExceptionHandler]:
-        pass
+        """Gets 500 Error Handler"""

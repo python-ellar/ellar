@@ -1,13 +1,13 @@
-from .apikey import APIKeyCookie, APIKeyHeader, APIKeyQuery
+from .apikey import GuardAPIKeyCookie, GuardAPIKeyHeader, GuardAPIKeyQuery
 from .consumer import GuardConsumer
-from .http import HttpBasicAuth, HttpBearerAuth, HttpDigestAuth
+from .http import GuardHttpBasicAuth, GuardHttpBearerAuth, GuardHttpDigestAuth
 
 __all__ = [
-    "APIKeyCookie",
-    "APIKeyHeader",
-    "APIKeyQuery",
-    "HttpBasicAuth",
-    "HttpBearerAuth",
-    "HttpDigestAuth",
+    "GuardAPIKeyCookie",
+    "GuardAPIKeyHeader",
+    "GuardAPIKeyQuery",
+    "GuardHttpBasicAuth",
+    "GuardHttpBearerAuth",
+    "GuardHttpDigestAuth",
     "GuardConsumer",
 ]

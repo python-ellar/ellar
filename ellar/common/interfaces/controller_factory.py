@@ -8,4 +8,4 @@ if t.TYPE_CHECKING:  # pragma: no cover
 class IControllerBuildFactory(ABC):
     @abstractmethod
     def build(self, controller_type: t.Type) -> "ModuleMount":
-        ...
+        """Build Action"""

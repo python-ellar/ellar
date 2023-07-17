@@ -6,7 +6,7 @@ from ellar.common import Body, ModuleRouter, Query
 from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.common.responses.models import ResponseModel, ResponseModelField
 from ellar.core.connection import HTTPConnection
-from ellar.core.guards import APIKeyCookie
+from ellar.core.guards import GuardAPIKeyCookie
 from ellar.core.routing import ModuleRouterFactory
 from ellar.openapi import OpenAPIRouteDocumentation, openapi_info
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
@@ -15,10 +15,10 @@ from ellar.reflect import reflect
 from ..schema import BlogObjectDTO, CreateCarSchema, Filter, NoteSchemaDC
 
 
-class CustomCookieAPIKey(APIKeyCookie):
+class CustomCookieAPIKey(GuardAPIKeyCookie):
     parameter_name = "custom-key"
 
-    async def authenticate(
+    async def authentication_handler(
         self, connection: HTTPConnection, key: t.Optional[t.Any]
     ) -> t.Optional[t.Any]:
         return True

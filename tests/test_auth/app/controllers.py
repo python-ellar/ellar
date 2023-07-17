@@ -2,14 +2,14 @@ from ellar.auth import AuthorizationGuard, CheckPolicies
 from ellar.auth.policy import RequiredClaimsPolicy, RequiredRolePolicy
 from ellar.common import Controller, UseGuards, get
 
-from .policies import AtLeast21
+from .policies import AdultOnly, AtLeast21
 
 
 @Controller("/movies")
 @UseGuards(AuthorizationGuard)
 class MoviesControllers:
     @get("/")
-    @CheckPolicies(AtLeast21["me"])
+    @CheckPolicies(AdultOnly)
     async def fast_x(self):
         return "fast and furious 10"
 
@@ -22,7 +22,7 @@ class ArticleController:
     async def create_and_publish(self):
         return "fast and furious 10 Article"
 
-    @get("/create/list")
+    @get("/list")
     async def get_articles(self):
         return "List of articles"
 
@@ -42,6 +42,6 @@ class ArticleController:
         return "Only for Age of 21 or more"
 
     @get("/at-least-21-case-2")
-    @CheckPolicies(AtLeast21["chinelo", "udoh"] | AtLeast21["clara", "udoh"])
+    @CheckPolicies(AtLeast21["chinelo", "udoh"]() | AtLeast21["clara", "udoh"])
     async def at_least_21_case_2(self):
         return "Only for Age of 21 or more"

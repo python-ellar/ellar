@@ -1,26 +1,21 @@
-import typing as t
 from abc import ABC
 
-from ellar.common.models import BaseAPIKey
-from ellar.core.connection import HTTPConnection
+from ellar.auth.handlers.schemes import APIKeyCookie, APIKeyHeader, APIKeyQuery
+from ellar.common import APIException
+
+from .mixin import GuardAuthMixin
 
 
-class APIKeyQuery(BaseAPIKey, ABC):
+class GuardAPIKeyQuery(APIKeyQuery, GuardAuthMixin, ABC):
     openapi_in: str = "query"
-
-    def _get_key(self, connection: HTTPConnection) -> t.Optional[t.Any]:
-        return connection.query_params.get(self.parameter_name)
+    exception_class = APIException
 
 
-class APIKeyCookie(BaseAPIKey, ABC):
+class GuardAPIKeyCookie(APIKeyCookie, GuardAuthMixin, ABC):
     openapi_in: str = "cookie"
-
-    def _get_key(self, connection: HTTPConnection) -> t.Optional[t.Any]:
-        return connection.cookies.get(self.parameter_name)
+    exception_class = APIException
 
 
-class APIKeyHeader(BaseAPIKey, ABC):
+class GuardAPIKeyHeader(APIKeyHeader, GuardAuthMixin, ABC):
     openapi_in: str = "header"
-
-    def _get_key(self, connection: HTTPConnection) -> t.Optional[t.Any]:
-        return connection.headers.get(self.parameter_name)
+    exception_class = APIException

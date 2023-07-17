@@ -4,24 +4,20 @@ from ellar.common import AnonymousIdentity, Identity, IHostContext
 from ellar.di import injectable
 
 from ..handlers import AuthenticationHandlerType, BaseAuthenticationHandler
-from ..interfaces import IAuthConfig, IIdentitySchemeProvider
+from ..interfaces import IIdentitySchemes
 
 
 @injectable
 class IdentityAuthenticationService:
     def __init__(
         self,
-        identity_scheme_provider: IIdentitySchemeProvider,
-        auth_config: IAuthConfig,
+        identity_schemes: IIdentitySchemes,
     ) -> None:
-        self.identity_scheme_provider = identity_scheme_provider
-        self.auth_config = auth_config
+        self.identity_schemes = identity_schemes
         self._configure = False
 
     async def setup_auth_services(self) -> None:
-        if not self._configure:
-            self.identity_scheme_provider.configure()
-            self._configure = True
+        """Do Nothing for now"""
 
     def _get_authentication_handler_object(
         self, context: IHostContext, auth_handler: AuthenticationHandlerType
@@ -42,7 +38,7 @@ class IdentityAuthenticationService:
         )
         for authentication_scheme in map(
             partial_get_authentication_handler_object,
-            self.auth_config.get_authentication_schemes(),
+            self.identity_schemes.get_authentication_schemes(),
         ):
             identify = await authentication_scheme.authenticate(context)
 

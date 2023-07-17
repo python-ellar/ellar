@@ -3,7 +3,7 @@ import typing as t
 
 
 @t.no_type_check
-def module_dir(module: t.Any) -> str:
+def module_dir(module: t.Any) -> str:  # pragma: no cover
     """
     Django Module Loading Util
     Find the name of the directory that contains a module, if possible.

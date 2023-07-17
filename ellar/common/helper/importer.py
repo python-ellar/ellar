@@ -8,7 +8,7 @@ class ImportFromStringError(Exception):
     pass
 
 
-def import_from_string(import_str: t.Any) -> t.Any:
+def import_from_string(import_str: t.Any) -> t.Any:  # pragma: no cover
     """
     Uvicorn Util
     Import a dotted module path and return the attribute/class designated by the
@@ -41,7 +41,7 @@ def import_from_string(import_str: t.Any) -> t.Any:
     return instance
 
 
-def module_import(module_str: str) -> t.Any:
+def module_import(module_str: str) -> t.Any:  # pragma: no cover
     from importlib import import_module
 
     try:
@@ -55,7 +55,7 @@ def module_import(module_str: str) -> t.Any:
 
 
 @t.no_type_check
-def get_class_import(klass: t.Union[t.Type, t.Any]) -> str:
+def get_class_import(klass: t.Union[t.Type, t.Any]) -> str:  # pragma: no cover
     """
     Generates String to import a class object
     :param klass:

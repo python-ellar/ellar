@@ -72,9 +72,9 @@ class ModuleMount(StarletteMount):
         if route:
             del scope[self._current_found_route_key]
             await route.handle(scope, receive, send)
-            return
-        mount_router = t.cast(Router, self.app)
-        await mount_router.default(scope, receive, send)
+        else:
+            mount_router = t.cast(Router, self.app)
+            await mount_router.default(scope, receive, send)
 
 
 class ModuleRouter(OperationDefinitions, ModuleMount):

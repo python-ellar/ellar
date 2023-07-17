@@ -52,9 +52,6 @@ from .interfaces import (
 )
 from .models import (
     AnonymousIdentity,
-    BaseAPIKey,
-    BaseAuthGuard,
-    BaseHttpAuth,
     ControllerBase,
     ControllerType,
     EllarInterceptor,
@@ -112,9 +109,6 @@ __all__ = [
     "ControllerBase",
     "serialize_object",
     "ControllerType",
-    "BaseAuthGuard",
-    "BaseAPIKey",
-    "BaseHttpAuth",
     "GuardCanActivate",
     "EllarTyper",
     "Serializer",

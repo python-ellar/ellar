@@ -5,11 +5,13 @@ import pytest
 
 from ellar.testing import Test
 
-from .app import AppModule
+from .app import AppModule, SimpleHeaderAuthHandler
 
 
 class TestArticleController:
-    client = Test.create_test_module(modules=[AppModule]).get_test_client()
+    test_module = Test.create_test_module(modules=[AppModule])
+    test_module.create_application().add_authentication_schemes(SimpleHeaderAuthHandler)
+    client = test_module.get_test_client()
 
     @pytest.mark.parametrize(
         "roles, path, status",
@@ -85,3 +87,41 @@ class TestArticleController:
             assert res.status_code == status
             if status == 200:
                 assert res.text == '"Only for Age of 21 or more"'
+
+    def test_authorization_guard_without_policy_checks_for_authentication(self):
+        res = self.client.get("/article/list")
+
+        assert res.status_code == 401
+        auth = base64.b64encode(pickle.dumps(dict(age=19, id=23)))
+
+        res = self.client.get("/article/list", headers=dict(key=auth))
+        assert res.status_code == 200
+        assert res.text == '"List of articles"'
+
+
+class TestMovieController:
+    test_module = Test.create_test_module(modules=[AppModule])
+    test_module.create_application().add_authentication_schemes(
+        SimpleHeaderAuthHandler()
+    )
+    client = test_module.get_test_client()
+
+    def test_get_fast_x_fails_for_anonymous_users(self):
+        with self.client as client:
+            res = client.get("/movies/")
+            assert res.status_code == 401
+
+    @pytest.mark.parametrize(
+        "age, status",
+        [
+            (17, 403),
+            (16, 403),
+            (18, 200),
+            (22, 200),
+        ],
+    )
+    def test_get_fast_x_works(self, age, status):
+        with self.client as client:
+            auth = base64.b64encode(pickle.dumps(dict(age=age, id=23)))
+            res = client.get("/movies/", headers=dict(key=auth))
+            assert res.status_code == status

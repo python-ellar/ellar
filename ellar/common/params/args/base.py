@@ -372,7 +372,7 @@ class EndpointArgsModel:
     ) -> "EndpointArgsModel":  # pragma: no cover
         return self
 
-    def build_body_field(self) -> None:
+    def build_body_field(self) -> None:  # pragma: no cover
         raise NotImplementedError
 
     def _add_non_pydantic_field_to_dependency(

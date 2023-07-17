@@ -65,21 +65,7 @@ class TMiddleware:
             raise ValueError(
                 f"Expected Type/instance of Middleware, received: {type(v)}"
             )
-        return v
-
-
-# class TEventHandler(EventHandler):
-#     @classmethod
-#     def __get_validators__(
-#         cls: t.Type["TEventHandler"],
-#     ) -> t.Iterable[t.Callable[..., t.Any]]:
-#         yield cls.validate
-#
-#     @classmethod
-#     def validate(cls: t.Type["EventHandler"], v: t.Any) -> t.Any:
-#         if not isinstance(v, EventHandler):
-#             raise ValueError(f"Expected EventHandler, received: {type(v)}")
-#         return v
+        return v  # pragma: no cover
 
 
 class ConfigDefaultTypesMixin:
