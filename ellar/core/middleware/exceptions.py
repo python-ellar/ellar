@@ -5,9 +5,9 @@ from starlette.exceptions import HTTPException
 from ellar.common.constants import SCOPE_SERVICE_PROVIDER
 from ellar.common.interfaces import IHostContextFactory
 from ellar.common.types import ASGIApp, TMessage, TReceive, TScope, TSend
+from ellar.core.exceptions import ExceptionMiddlewareService
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.exceptions.service import ExceptionMiddlewareService
     from ellar.di import EllarInjector
 
 
@@ -15,7 +15,7 @@ class ExceptionMiddleware:
     def __init__(
         self,
         app: ASGIApp,
-        exception_middleware_service: "ExceptionMiddlewareService",
+        exception_middleware_service: ExceptionMiddlewareService,
         debug: bool = False,
     ) -> None:
         self.app = app

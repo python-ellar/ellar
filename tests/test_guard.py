@@ -1,22 +1,15 @@
 import pytest
 from starlette.status import HTTP_401_UNAUTHORIZED
 
-from ellar.common import (
-    APIException,
-    Req,
-    UseGuards,
-    allow_any_guard,
-    get,
-    serialize_object,
-)
+from ellar.common import APIException, Req, UseGuards, get, serialize_object
 from ellar.core import AppFactory, Reflector
 from ellar.core.guards import (
-    APIKeyCookie,
-    APIKeyHeader,
-    APIKeyQuery,
-    HttpBasicAuth,
-    HttpBearerAuth,
-    HttpDigestAuth,
+    GuardAPIKeyCookie,
+    GuardAPIKeyHeader,
+    GuardAPIKeyQuery,
+    GuardHttpBasicAuth,
+    GuardHttpBearerAuth,
+    GuardHttpDigestAuth,
 )
 from ellar.di import injectable
 from ellar.openapi import OpenAPIDocumentBuilder
@@ -28,24 +21,24 @@ class CustomException(APIException):
 
 
 @injectable()
-class QuerySecretKeyInjectable(APIKeyQuery):
+class QuerySecretKeyInjectable(GuardAPIKeyQuery):
     def __init__(self, reflector: Reflector) -> None:
         super().__init__()
         self.reflector = reflector
 
-    async def authenticate(self, connection, key):
+    async def authentication_handler(self, connection, key):
         if key == "querysecretkey":
             return key
 
 
-class QuerySecretKey(APIKeyQuery):
-    async def authenticate(self, connection, key):
+class QuerySecretKey(GuardAPIKeyQuery):
+    async def authentication_handler(self, connection, key):
         if key == "querysecretkey":
             return key
 
 
-class HeaderSecretKey(APIKeyHeader):
-    async def authenticate(self, connection, key):
+class HeaderSecretKey(GuardAPIKeyHeader):
+    async def authentication_handler(self, connection, key):
         if key == "headersecretkey":
             return key
 
@@ -55,34 +48,34 @@ class HeaderSecretKeyCustomException(HeaderSecretKey):
     exception_class = CustomException
 
 
-class CookieSecretKey(APIKeyCookie):
+class CookieSecretKey(GuardAPIKeyCookie):
     openapi_name = "API Key Auth"
 
-    async def authenticate(self, connection, key):
+    async def authentication_handler(self, connection, key):
         if key == "cookiesecretkey":
             return key
 
 
-class BasicAuth(HttpBasicAuth):
+class BasicAuth(GuardHttpBasicAuth):
     openapi_name = "API Authentication"
 
-    async def authenticate(self, connection, credentials):
+    async def authentication_handler(self, connection, credentials):
         if credentials.username == "admin" and credentials.password == "secret":
             return credentials.username
 
 
 @injectable()
-class BearerAuth(HttpBearerAuth):
+class BearerAuth(GuardHttpBearerAuth):
     openapi_name = "JWT Authentication"
 
-    async def authenticate(self, connection, credentials):
+    async def authentication_handler(self, connection, credentials):
         if credentials.credentials == "bearertoken":
             return credentials.credentials
 
 
 @injectable()
-class DigestAuth(HttpDigestAuth):
-    async def authenticate(self, connection, credentials):
+class DigestAuth(GuardHttpDigestAuth):
+    async def authentication_handler(self, connection, credentials):
         if credentials.credentials == "digesttoken":
             return credentials.credentials
 
@@ -155,6 +148,12 @@ BODY_UNAUTHORIZED_DEFAULT = {"detail": "Forbidden"}
             dict(headers={"Authorization": "Basic YWRtaW46c2VjcmV0"}),
             200,
             dict(authentication="admin"),
+        ),
+        (
+            "/basic",
+            dict(headers={"Authorization": "Basic d2hhdGV2ZXI="}),
+            HTTP_401_UNAUTHORIZED,
+            {"detail": "Invalid authentication credentials"},
         ),
         (
             "/basic",
@@ -264,21 +263,3 @@ def test_global_guard_works():
     data = res.json()
 
     assert data == {"detail": "Forbidden"}
-
-
-def test_allow_any_guard():
-    _app = AppFactory.create_app(global_guards=[DigestAuth])
-
-    @get("/global")
-    @allow_any_guard
-    def _auth_demo_endpoint():
-        return {"message": "ok"}
-
-    _app.router.append(_auth_demo_endpoint)
-    _client = TestClient(_app)
-    res = _client.get("/global")
-
-    assert res.status_code == 200
-    data = res.json()
-
-    assert data == {"message": "ok"}

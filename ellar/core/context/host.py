@@ -1,6 +1,7 @@
 import typing as t
 
 from ellar.common import (
+    Identity,
     IHTTPConnectionContextFactory,
     IHTTPHostContext,
     IWebSocketContextFactory,
@@ -69,3 +70,11 @@ class HostContext(IHostContext):
 
     def get_args(self) -> t.Tuple[TScope, TReceive, TSend]:
         return self.scope, self.receive, self.send
+
+    @property
+    def user(self) -> Identity:
+        return self.scope["user"]  # type: ignore[no-any-return]
+
+    @user.setter
+    def user(self, value: t.Any) -> None:
+        self.scope["user"] = value

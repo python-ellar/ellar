@@ -11,13 +11,13 @@ from pydantic.schema import (
 )
 from starlette.routing import BaseRoute, Mount
 
+from ellar.auth import IIdentitySchemes
 from ellar.common.compatible import AttributeDict, cached_property
 from ellar.common.constants import GUARDS_KEY, REF_PREFIX
 from ellar.common.helper.modelfield import create_model_field
 from ellar.common.routing import ModuleMount, RouteOperation
 from ellar.common.routing.controller import ControllerRouteOperation
 from ellar.core.main import App
-from ellar.core.services.reflector import Reflector
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY, OPENAPI_TAG
 
 from .openapi_v3 import APIKeyIn, OpenAPI
@@ -37,7 +37,9 @@ class OpenAPIDocumentBuilderAction:
 
     def _get_openapi_route_document_models(self, app: App) -> t.List[OpenAPIRoute]:
         openapi_route_models: t.List = []
-        reflector = app.injector.get(Reflector)
+        reflector = app.reflector
+        app_guards = list(app.get_guards())
+
         for route in app.routes:
             if (
                 isinstance(route, ModuleMount)
@@ -51,7 +53,6 @@ class OpenAPIDocumentBuilderAction:
                     openapi_tags.setdefault("name", route.name)
 
                 guards = reflector.get(GUARDS_KEY, route.get_control_type())
-                app_guards = app.get_guards()
 
                 openapi_route_models.append(
                     OpenAPIMountDocumentation(
@@ -135,6 +136,16 @@ class OpenAPIDocumentBuilderAction:
             )
             if security_schemes:
                 components.setdefault("securitySchemes", {}).update(security_schemes)
+
+        identity_schemes = app.injector.get(IIdentitySchemes)
+        for auth in identity_schemes.get_authentication_schemes():
+            security_scheme = auth.openapi_security_scheme()
+            if security_scheme:
+                scheme_name = list(security_scheme.keys())[0]
+                components.setdefault("securitySchemes", {}).update(security_scheme)
+                self._build.setdefault("security", []).append(
+                    {scheme_name: getattr(auth, "openapi_scope", [])}
+                )
 
         if definitions:
             components["schemas"] = {k: definitions[k] for k in sorted(definitions)}

@@ -413,7 +413,8 @@ For example, lets make `CacheService` available in our route function.
 
 
 ## **Using Cache Decorator**
-Ellar provides a cache decorator that can be used to cache the responses of route functions. The cache decorator can be applied to a route function to automatically cache its response data for a specified amount of time.
+Ellar provides a cache decorator that can be used to cache the responses of route functions. 
+The cache decorator can be applied to a route function to automatically cache its response data for a specified amount of time.
 
 The cache decorator takes the following arguments:
 
@@ -423,25 +424,30 @@ The cache decorator takes the following arguments:
 - `backend` (optional): the name of the cache backend to use for storing the cached data. By default, the `default` cache backend is used.
 - `make_key_callback` (optional): a callback function that can be used to generate a custom cache key. This function takes an `IExecutionContext` instance (which contains information about the request context) and key prefix, and should return the custom cache key to use.
 
+!!! info
+    `Cache` Decorator can also be applied to any controller class. 
+    When this is done, all the routes response of that controller will be cached
+
 We can rewrite the above example using `cache` decorator:
 === "Synchronous Route Function"
     ```python
     from ellar.common import get
-    from ellar.cache import cache
+    from ellar.cache import Cache
     ...
     @get('/cache-test')
-    @cache(ttl=300, version='v1', key_prefix='project_name')
+    @Cache(ttl=300, version='v1', key_prefix='project_name')
     def my_route_function(self):
         processed_value = 'some-value'
         return processed_value
     ```
 === "Asynchronous Route Function"
     ```python
-    from ellar.common import get, cache
+    from ellar.common import get
+    from ellar.cache import Cache
     
     ...
     @get('/cache-test')
-    @cache(ttl=300, version='v1', key_prefix='project_name')
+    @Cache(ttl=300, version='v1', key_prefix='project_name')
     async def my_route_function(self):
         processed_value = 'some-value'
         return processed_value
@@ -457,7 +463,7 @@ Here's an example of how to use a custom `make_key_callback` function with the c
 === "Synchronous Route Function"
     ```python
     from ellar.common import get
-    from ellar.cache import cache
+    from ellar.cache import Cache
     from ellar.core import ExecutionContext
     from ellar.common.helper import get_name
     
@@ -467,7 +473,7 @@ Here's an example of how to use a custom `make_key_callback` function with the c
     
     ...
     @get("/my_endpoint")
-    @cache(ttl=60, make_key_callback=make_key_function)
+    @Cache(ttl=60, make_key_callback=make_key_function)
     def my_endpoint(self):
         # Code to generate response data here
         processed_value = 'some-value'
@@ -478,7 +484,7 @@ Here's an example of how to use a custom `make_key_callback` function with the c
     
     ```python
     from ellar.common import get
-    from ellar.cache import cache
+    from ellar.cache import Cache
     from ellar.core import ExecutionContext
     from ellar.common.helper import get_name
     
@@ -488,7 +494,7 @@ Here's an example of how to use a custom `make_key_callback` function with the c
     
     ...
     @get("/my_endpoint")
-    @cache(ttl=60, make_key_callback=make_key_function)
+    @Cache(ttl=60, make_key_callback=make_key_function)
     async def my_endpoint(self):
         # Code to generate response data here
         processed_value = 'some-value'

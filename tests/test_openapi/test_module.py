@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from ellar.common import AllowAnyGuard, GuardCanActivate
+from ellar.common import GuardCanActivate
 from ellar.common.constants import GUARDS_KEY
 from ellar.core import AppFactory, Config, ExecutionContext
 from ellar.core.modules.ref import create_module_ref_factor
@@ -13,6 +13,7 @@ from ellar.openapi import (
     ReDocDocumentGenerator,
     SwaggerDocumentGenerator,
 )
+from ellar.openapi.module import AllowAnyGuard
 from ellar.reflect import reflect
 from ellar.testing import TestClient
 

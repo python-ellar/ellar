@@ -25,9 +25,6 @@ Also, Ellar took some concepts from [FastAPI](https://fastapi.tiangolo.com/){tar
 The objective of Ellar is to provide a high level of abstracted interface to the web, along with a well-structured project setup, give room for object-oriented approach to web application design, 
 allow you chose your desired application architecture, and ultimately, deliver speedy handling to requests.
 
-As developers, we never know how big a project can become or evolve over time but following some design patterns and architecture makes it easier to build a more testable and maintainable application.
-
-
 
 ## **Features Summary**
 

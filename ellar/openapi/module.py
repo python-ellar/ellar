@@ -1,12 +1,19 @@
 import typing as t
 
-from ellar.common import AllowAnyGuard, IModuleSetup, Module, ModuleRouter, render
+from ellar.common import IExecutionContext, IModuleSetup, Module, ModuleRouter, render
 from ellar.common.models import GuardCanActivate
 from ellar.core import DynamicModule, ModuleBase
+from ellar.di import injectable
 from ellar.openapi.docs_generators import IDocumentationGenerator
 from ellar.openapi.openapi_v3 import OpenAPI
 
 __all__ = ["OpenAPIDocumentModule"]
+
+
+@injectable
+class AllowAnyGuard(GuardCanActivate):
+    async def can_activate(self, context: "IExecutionContext") -> bool:
+        return True
 
 
 @Module(template_folder="templates")

@@ -1,5 +1,7 @@
 import typing as t
 
+from ellar.auth import AppIdentitySchemes, IIdentitySchemes
+from ellar.auth.session import ISessionStrategy, SessionServiceNullStrategy
 from ellar.common import (
     IExceptionMiddlewareService,
     IExecutionContextFactory,
@@ -22,7 +24,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.conf import Config
 
 
-class CoreServiceRegistration:
+class EllarCoreService:
     """Create Binding for all application service"""
 
     __slots__ = ("injector", "config")
@@ -31,7 +33,7 @@ class CoreServiceRegistration:
         self.injector = injector
         self.config = config
 
-    def register_all(self) -> None:
+    def register_core_services(self) -> None:
         self.injector.container.register(
             IExceptionMiddlewareService, ExceptionMiddlewareService
         )
@@ -54,3 +56,7 @@ class CoreServiceRegistration:
             IInterceptorsConsumer, EllarInterceptorConsumer
         )
         self.injector.container.register_singleton(IGuardsConsumer, GuardConsumer)
+        self.injector.container.register_singleton(IIdentitySchemes, AppIdentitySchemes)
+        self.injector.container.register_singleton(
+            ISessionStrategy, SessionServiceNullStrategy
+        )

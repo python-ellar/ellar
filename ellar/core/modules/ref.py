@@ -1,4 +1,3 @@
-import inspect
 import typing as t
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -13,6 +12,7 @@ from ellar.common.constants import (
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
+from ellar.common.helper import build_init_kwargs
 from ellar.common.models import ControllerBase
 from ellar.common.routing import ModuleMount
 from ellar.common.templating import ModuleTemplating
@@ -88,24 +88,14 @@ class ModuleRefBase(ABC):
         return []
 
     def run_module_register_services(self) -> None:
+        """
+        Defer module instantiation till lifespan call
+        """
         if hasattr(self.module, "before_init"):
             self.module.before_init(config=self.config)
         _module_type_instance = self.get_module_instance()
         self.container.install(_module_type_instance)  # support for injector module
         # _module_type_instance.register_services(self.container)
-
-    def _build_init_kwargs(self, kwargs: t.Dict) -> t.Dict:
-        _result = dict()
-        if hasattr(self.module, "__init__"):
-            signature = inspect.signature(self.module.__init__)
-            for k, v in signature.parameters.items():
-                if (
-                    v.kind == inspect.Parameter.KEYWORD_ONLY
-                    or v.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
-                ) and v.default != inspect.Parameter.empty:
-                    _result[k] = v.default
-        _result.update(kwargs)
-        return _result
 
     @abstractmethod
     def _register_module(self) -> None:
@@ -130,7 +120,7 @@ class ModulePlainRef(ModuleRefBase):
             type(module_type) == ModuleBaseMeta
         ), f"Module Type must be a subclass of ModuleBase;\n Invalid Type[{module_type}]"
         self._module_type: t.Type[ModuleBase] = module_type
-        self._init_kwargs = self._build_init_kwargs(kwargs)
+        self._init_kwargs = build_init_kwargs(self.module, kwargs)
         self._container = container
         self._config = config
         self._register_module()
@@ -169,7 +159,7 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         self._module_type: t.Type[ModuleBase] = module_type
         self._container = container
         self._config = config
-        self._init_kwargs = self._build_init_kwargs(kwargs)
+        self._init_kwargs = build_init_kwargs(self.module, kwargs)
         self._register_module()
 
         self._template_folder: t.Optional[str] = reflect.get_metadata(

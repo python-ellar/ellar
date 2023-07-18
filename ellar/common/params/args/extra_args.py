@@ -58,4 +58,6 @@ class ExtraEndpointArg(t.Generic[T]):
     def resolve(self, kwargs: t.Dict) -> T:
         if self.name in kwargs:
             return t.cast(T, kwargs.pop(self.name))
-        raise AttributeError(f"{self.name} ExtraOperationArg not found")
+        raise AttributeError(
+            f"{self.name} ExtraOperationArg not found"
+        )  # pragma: no cover

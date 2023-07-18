@@ -1,8 +1,11 @@
 import ellar
-from ellar.common import Controller, ControllerBase, get, render
+from ellar.common import Controller, ControllerBase, UseGuards, get, render
+
+from .guard import HomeGuard
 
 
 @Controller(prefix="", include_in_schema=False)
+@UseGuards(HomeGuard)
 class HomeController(ControllerBase):
     @get("/")
     @render()

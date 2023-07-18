@@ -143,12 +143,15 @@ def test_can_change_configuration_values_after_instantiation():
     config["SOME_NEW_CONFIGS"] = "some new configuration values changed"
     assert config.SOME_NEW_CONFIGS == "some new configuration values changed"
 
+    config.SOME_NEW_CONFIGS_2 = "some new configuration values changed"
+    assert config.SOME_NEW_CONFIGS_2 == "some new configuration values changed"
+
     config.config_module = "somethings"
     assert config.config_module == "somethings"
 
 
 def test_can_export_configuration_values():
     config = Config()
-    values = list(config.values)
+    values = list(config.config_values)
 
     assert len(values) > 7

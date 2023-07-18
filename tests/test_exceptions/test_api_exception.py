@@ -88,3 +88,22 @@ def test_method_not_allowed_api_exception():
     data = response.json()
     assert response.status_code == MethodNotAllowed.status_code
     assert data["detail"] == http.HTTPStatus(MethodNotAllowed.status_code).phrase
+
+
+def test_api_exception_details():
+    exc = APIException(
+        detail="Some error details", description="Some error description"
+    )
+    assert exc.get_details() == {
+        "description": "Some error description",
+        "detail": "Some error details",
+    }
+
+
+def test_api_exception_full_details():
+    exc = APIException(detail="Some error details")
+    assert exc.get_full_details() == {
+        "code": "bad_request",
+        "description": "Bad request syntax or unsupported method",
+        "detail": "Some error details",
+    }

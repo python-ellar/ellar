@@ -2,7 +2,12 @@ import typing as t
 
 from socketio import AsyncServer
 
-from ellar.common import IExecutionContext, IHTTPHostContext, IWebSocketHostContext
+from ellar.common import (
+    Identity,
+    IExecutionContext,
+    IHTTPHostContext,
+    IWebSocketHostContext,
+)
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.core import App
 from ellar.di import EllarInjector
@@ -49,3 +54,11 @@ class GatewayContext(IExecutionContext):
 
     def get_args(self) -> t.Tuple[TScope, TReceive, TSend]:  # pragma: no cover
         return self._context.get_args()
+
+    @property
+    def user(self) -> Identity:
+        return self._context.user
+
+    @user.setter
+    def user(self, value: Identity) -> None:
+        self._context.user = value
