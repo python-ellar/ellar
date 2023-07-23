@@ -78,7 +78,7 @@ test = [
     "redis",
     "itsdangerous >=1.1.0,<3.0.0",
     # types
-    "types-ujson ==5.7.0.5",
+    "types-ujson ==5.8.0.0",
     "types-orjson ==3.6.2",
     "types-dataclasses ==0.6.6",
     "python-socketio",
