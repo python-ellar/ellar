@@ -19,14 +19,12 @@ install-full: ## Install dependencies
 
 lint: ## Run code linters
 	black --check ellar tests
-	isort --check ellar tests
-	autoflake --remove-unused-variables --remove-unused-variables -r ellar tests
-	flake8 ellar tests
+	ruff check ellar tests
 	mypy ellar
 
 fmt format: ## Run code formatters
 	black ellar tests
-	isort ellar tests
+	ruff check --fix ellar tests
 
 test: ## Run tests
 	pytest tests
