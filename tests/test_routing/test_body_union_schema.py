@@ -29,12 +29,12 @@ item_openapi_schema = {
     "paths": {
         "/items/": {
             "post": {
-                "operationId": "save_union_body_items__post",
+                "operationId": "save_union_body_and_embedded_body_items__post",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/body_save_union_body_items__post"
+                                "$ref": "#/components/schemas/body_save_union_body_and_embedded_body_items__post"
                             }
                         }
                     },
@@ -102,8 +102,8 @@ item_openapi_schema = {
                     "type": {"title": "Error Type", "type": "string"},
                 },
             },
-            "body_save_union_body_items__post": {
-                "title": "body_save_union_body_items__post",
+            "body_save_union_body_and_embedded_body_items__post": {
+                "title": "body_save_union_body_and_embedded_body_items__post",
                 "required": ["item"],
                 "type": "object",
                 "properties": {
