@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.core.versioning import VersioningSchemes as VERSIONING
 from ellar.testing import Test
 
@@ -25,10 +24,10 @@ app.enable_versioning(VERSIONING.NONE)
 @pytest.mark.parametrize(
     "path, expected_result",
     [
-        ("/version", dict(version="default")),
-        ("/version?v=1", dict(version="default")),
-        ("/version?v=2", dict(version="default")),
-        ("/version?v=3", dict(version="default")),
+        ("/version", {"version": "default"}),
+        ("/version?v=1", {"version": "default"}),
+        ("/version?v=2", {"version": "default"}),
+        ("/version?v=3", {"version": "default"}),
     ],
 )
 def test_default_route_versioning_query(path, expected_result):
@@ -41,10 +40,10 @@ def test_default_route_versioning_query(path, expected_result):
 @pytest.mark.parametrize(
     "path, header, expected_result",
     [
-        ("/version", "", dict(version="default")),
-        ("/version", "v=1", dict(version="default")),
-        ("/version", "v=2", dict(version="default")),
-        ("/version", "v=3", dict(version="default")),
+        ("/version", "", {"version": "default"}),
+        ("/version", "v=1", {"version": "default"}),
+        ("/version", "v=2", {"version": "default"}),
+        ("/version", "v=3", {"version": "default"}),
     ],
 )
 def test_default_route_versioning_header(path, header, expected_result):
@@ -57,10 +56,10 @@ def test_default_route_versioning_header(path, header, expected_result):
 @pytest.mark.parametrize(
     "path, host, expected_result",
     [
-        ("/version", "testserver.org", dict(version="default")),
-        ("/version", "v1.testserver.org", dict(version="default")),
-        ("/version", "v2.testserver.org", dict(version="default")),
-        ("/version", "v3.testserver.org", dict(version="default")),
+        ("/version", "testserver.org", {"version": "default"}),
+        ("/version", "v1.testserver.org", {"version": "default"}),
+        ("/version", "v2.testserver.org", {"version": "default"}),
+        ("/version", "v3.testserver.org", {"version": "default"}),
     ],
 )
 def test_default_route_versioning_host(path, host, expected_result):

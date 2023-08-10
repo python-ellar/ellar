@@ -1,9 +1,8 @@
 import typing as t
 
+from ellar.common.interfaces import IExecutionContext
 from pydantic.error_wrappers import ErrorWrapper
 from pydantic.fields import ModelField
-
-from ellar.common.interfaces import IExecutionContext
 
 from .base import BaseRouteParameterResolver
 from .parameter import BodyParameterResolver, FormParameterResolver
@@ -14,7 +13,7 @@ class BulkParameterResolver(BaseRouteParameterResolver):
         self,
         *args: t.Any,
         resolvers: t.List[BaseRouteParameterResolver],
-        **kwargs: t.Any
+        **kwargs: t.Any,
     ):
         super().__init__(*args, **kwargs)
         self._resolvers = resolvers or []

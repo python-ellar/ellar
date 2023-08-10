@@ -19,7 +19,6 @@ class Client(HashClient):
     """
 
     def __init__(self, servers: t.List[str], *args: t.Any, **kwargs: t.Any) -> None:
-
         super(Client, self).__init__(
             self._split_host_and_port(servers), *args, **kwargs
         )
@@ -50,8 +49,9 @@ class PyMemcacheCacheBackend(BasePylibMemcachedCache):
 
     MEMCACHE_CLIENT = Client
 
-    def __init__(self, servers: t.List[str], options: t.Dict = None, **kwargs: t.Any):
-
+    def __init__(
+        self, servers: t.List[str], options: t.Optional[t.Dict] = None, **kwargs: t.Any
+    ):
         _default_options = options or {}
 
         _options = {

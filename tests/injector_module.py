@@ -1,7 +1,6 @@
-from injector import provider
-
 from ellar.core import ModuleBase
 from ellar.di import Container, singleton_scope
+from injector import provider
 
 
 class Configuration:

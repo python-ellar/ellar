@@ -1,7 +1,6 @@
 import typing as t
 
 import pytest
-
 from ellar.auth import AppIdentitySchemes, BaseAuthenticationHandler
 from ellar.common import Identity, IHostContext
 

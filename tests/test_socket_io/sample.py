@@ -1,9 +1,6 @@
 import typing as t
 from functools import wraps
 
-from starlette import status
-from starlette.exceptions import WebSocketException
-
 from ellar.common import Header, Query, Serializer, UseGuards, WsBody, extra_args
 from ellar.common.params import ExtraEndpointArg
 from ellar.core.connection import HTTPConnection
@@ -17,6 +14,8 @@ from ellar.socket_io import (
     subscribe_message,
 )
 from ellar.socket_io.model import GatewayBase
+from starlette import status
+from starlette.exceptions import WebSocketException
 
 
 def add_extra_args(func):

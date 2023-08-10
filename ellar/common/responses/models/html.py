@@ -31,12 +31,11 @@ class HTMLResponseModel(ResponseModel):
     def create_response(
         self, context: IExecutionContext, response_obj: t.Any, status_code: int
     ) -> Response:
-
         jinja_environment = context.get_service_provider().get(Environment)
         template_name = self._get_template_name(ctx=context)
-        template_context = dict(
-            request=context.switch_to_http_connection().get_request()
-        )
+        template_context = {
+            "request": context.switch_to_http_connection().get_request()
+        }
         template_context.update(**process_view_model(response_obj))
         template = jinja_environment.get_template(template_name)
 

@@ -2,7 +2,6 @@ import base64
 import pickle
 
 import pytest
-
 from ellar.testing import Test
 
 from .app import AppModule, SimpleHeaderAuthHandler
@@ -50,8 +49,8 @@ class TestArticleController:
     )
     def test_admin_and_staff_only_works(self, roles, path, status):
         with self.client as client:
-            auth = base64.b64encode(pickle.dumps(dict(roles=roles, id=23)))
-            res = client.get(f"/article/{path}", headers=dict(key=auth))
+            auth = base64.b64encode(pickle.dumps({"roles": roles, "id": 23}))
+            res = client.get(f"/article/{path}", headers={"key": auth})
             assert res.status_code == status
 
     @pytest.mark.parametrize(
@@ -59,8 +58,8 @@ class TestArticleController:
     )
     def test_create_and_publish_works(self, claim_value):
         with self.client as client:
-            auth = base64.b64encode(pickle.dumps(dict(article=claim_value, id=23)))
-            res = client.get("/article/create", headers=dict(key=auth))
+            auth = base64.b64encode(pickle.dumps({"article": claim_value, "id": 23}))
+            res = client.get("/article/create", headers={"key": auth})
             assert res.status_code == 200
             assert res.text == '"fast and furious 10 Article"'
 
@@ -81,8 +80,8 @@ class TestArticleController:
     )
     def test_at_least_21_works(self, age, route, status):
         with self.client as client:
-            auth = base64.b64encode(pickle.dumps(dict(age=age, id=23)))
-            res = client.get(f"/article/{route}", headers=dict(key=auth))
+            auth = base64.b64encode(pickle.dumps({"age": age, "id": 23}))
+            res = client.get(f"/article/{route}", headers={"key": auth})
 
             assert res.status_code == status
             if status == 200:
@@ -92,9 +91,9 @@ class TestArticleController:
         res = self.client.get("/article/list")
 
         assert res.status_code == 401
-        auth = base64.b64encode(pickle.dumps(dict(age=19, id=23)))
+        auth = base64.b64encode(pickle.dumps({"age": 19, "id": 23}))
 
-        res = self.client.get("/article/list", headers=dict(key=auth))
+        res = self.client.get("/article/list", headers={"key": auth})
         assert res.status_code == 200
         assert res.text == '"List of articles"'
 
@@ -122,6 +121,6 @@ class TestMovieController:
     )
     def test_get_fast_x_works(self, age, status):
         with self.client as client:
-            auth = base64.b64encode(pickle.dumps(dict(age=age, id=23)))
-            res = client.get("/movies/", headers=dict(key=auth))
+            auth = base64.b64encode(pickle.dumps({"age": age, "id": 23}))
+            res = client.get("/movies/", headers={"key": auth})
             assert res.status_code == status

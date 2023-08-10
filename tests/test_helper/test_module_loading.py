@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.common.helper.module_loading import module_dir
 from ellar.core import conf
 
@@ -10,5 +9,5 @@ def test_module_dir():
 
 
 def test_invalid_module_check():
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         module_dir({})

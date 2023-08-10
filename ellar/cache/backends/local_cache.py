@@ -5,7 +5,6 @@ from abc import ABC
 from collections import OrderedDict
 
 from anyio import Lock
-
 from ellar.common.helper.event_loop import get_or_create_eventloop
 
 from ..interface import IBaseCacheBackendAsync
@@ -17,10 +16,10 @@ class _LocalMemCacheBackendSync(IBaseCacheBackendAsync, ABC):
     def _async_executor(self, func: t.Awaitable) -> t.Any:
         return get_or_create_eventloop().run_until_complete(func)
 
-    def get(self, key: str, version: str = None) -> t.Any:
+    def get(self, key: str, version: t.Optional[str] = None) -> t.Any:
         return self._async_executor(self.get_async(key, version=version))
 
-    def delete(self, key: str, version: str = None) -> bool:
+    def delete(self, key: str, version: t.Optional[str] = None) -> bool:
         res = self._async_executor(self.delete_async(key, version=version))
         return bool(res)
 
@@ -28,23 +27,26 @@ class _LocalMemCacheBackendSync(IBaseCacheBackendAsync, ABC):
         self,
         key: str,
         value: t.Any,
-        ttl: t.Union[float, int] = None,
-        version: str = None,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
     ) -> bool:
         res = self._async_executor(self.set_async(key, value, ttl=ttl, version=version))
         return bool(res)
 
     def touch(
-        self, key: str, ttl: t.Union[float, int] = None, version: str = None
+        self,
+        key: str,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
     ) -> bool:
         res = self._async_executor(self.touch_async(key, ttl=ttl, version=version))
         return bool(res)
 
-    def incr(self, key: str, delta: int = 1, version: str = None) -> int:
+    def incr(self, key: str, delta: int = 1, version: t.Optional[str] = None) -> int:
         res = self._async_executor(self.incr_async(key, delta=delta, version=version))
         return t.cast(int, res)
 
-    def decr(self, key: str, delta: int = 1, version: str = None) -> int:
+    def decr(self, key: str, delta: int = 1, version: t.Optional[str] = None) -> int:
         res = self._async_executor(self.decr_async(key, delta=delta, version=version))
         return t.cast(int, res)
 
@@ -59,7 +61,7 @@ class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
         self._lock = Lock()
 
     @make_key_decorator
-    async def get_async(self, key: str, version: str = None) -> t.Any:
+    async def get_async(self, key: str, version: t.Optional[str] = None) -> t.Any:
         async with self._lock:
             if self._has_expired(key):
                 await self._delete(key)
@@ -77,7 +79,7 @@ class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
         return True
 
     @make_key_decorator
-    async def delete_async(self, key: str, version: str = None) -> bool:
+    async def delete_async(self, key: str, version: t.Optional[str] = None) -> bool:
         async with self._lock:
             return await self._delete(key)
 
@@ -86,8 +88,8 @@ class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
         self,
         key: str,
         value: t.Any,
-        ttl: t.Union[float, int] = None,
-        version: str = None,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
     ) -> bool:
         async with self._lock:
             self._cache[key] = pickle.dumps(value, self.pickle_protocol)
@@ -99,7 +101,7 @@ class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
         return exp is not None and exp <= time.time()
 
     @make_key_decorator
-    async def has_key_async(self, key: str, version: str = None) -> bool:
+    async def has_key_async(self, key: str, version: t.Optional[str] = None) -> bool:
         async with self._lock:
             if self._has_expired(key):
                 await self._delete(key)
@@ -108,7 +110,10 @@ class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
 
     @make_key_decorator
     async def touch_async(
-        self, key: str, ttl: t.Union[float, int] = None, version: str = None
+        self,
+        key: str,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
     ) -> bool:
         async with self._lock:
             if self._has_expired(key):
@@ -117,7 +122,7 @@ class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
             self._expire_track[key] = self.get_backend_ttl(ttl)
             return True
 
-    def has_key(self, key: str, version: str = None) -> bool:
+    def has_key(self, key: str, version: t.Optional[str] = None) -> bool:
         res = self._async_executor(self.has_key_async(key, version=version))
         return bool(res)
 
@@ -130,7 +135,9 @@ class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
         return new_value
 
     @make_key_decorator
-    async def incr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+    async def incr_async(
+        self, key: str, delta: int = 1, version: t.Optional[str] = None
+    ) -> int:
         async with self._lock:
             if self._has_expired(key):
                 await self._delete(key)
@@ -138,7 +145,9 @@ class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
             return self._incr_decr_action(key, delta)
 
     @make_key_decorator
-    async def decr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+    async def decr_async(
+        self, key: str, delta: int = 1, version: t.Optional[str] = None
+    ) -> int:
         async with self._lock:
             if self._has_expired(key):
                 await self._delete(key)

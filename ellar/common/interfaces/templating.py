@@ -3,9 +3,8 @@ import typing as t
 from abc import abstractmethod
 from pathlib import Path
 
-from jinja2 import FileSystemLoader
-
 from ellar.common.compatible import cached_property
+from jinja2 import FileSystemLoader
 
 
 class IModuleTemplateLoader:

@@ -2,11 +2,10 @@ import sys
 
 import anyio
 import pytest
-from starlette import status
-from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
-
 from ellar.common import Header, ws_route
 from ellar.core import AppFactory
+from starlette import status
+from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 
 
 def test_websocket_url(test_client_factory):
@@ -340,7 +339,7 @@ def test_no_additional_headers(test_client_factory):
 def test_websocket_exception(test_client_factory):
     @ws_route("/{path:path}")
     async def ws_function(websocket: WebSocket) -> None:
-        assert False
+        raise AssertionError()
 
     app = AppFactory.create_app()
     app.router.append(ws_function)

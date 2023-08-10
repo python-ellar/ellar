@@ -6,7 +6,11 @@ evolves to become better.
 ## Installation
 having setup up your virtual environment,
 ```shell
-$(venv) pip install ellar-cli
+$(venv) poetry
+```
+## Project Setup
+```shell
+$(venv) poetry install
 ```
 
 ## Start Development Server

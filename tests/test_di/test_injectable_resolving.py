@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.di import (
     EllarInjector,
     injectable,

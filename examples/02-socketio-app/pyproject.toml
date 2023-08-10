@@ -1,3 +1,21 @@
+[tool.poetry]
+name = "03-socketio-app"
+version = "0.1.0"
+description = "Example of ellar with socket io"
+authors = ["Ezeudoh Tochukwu <tochukwu.ezeudoh@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "03_socketio_app"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+ellar-cli = "^0.1.8"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [ellar]
 default = "socketio_app"
 [ellar.projects.socketio_app]

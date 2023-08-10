@@ -1,11 +1,10 @@
 import typing as t
 
-from pydantic import BaseModel, Field, PrivateAttr, root_validator, validator
-
 from ellar.common.constants import ROUTE_METHODS
 from ellar.common.interfaces import IResponseModel
 from ellar.common.responses.models import EmptyAPIResponseModel, create_response_model
 from ellar.common.serializer import BaseSerializer
+from pydantic import BaseModel, Field, PrivateAttr, root_validator, validator
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common.routing.websocket import WebSocketExtraHandler
@@ -47,7 +46,7 @@ class RouteParameters(BaseModel):
 
     @validator("methods")
     def validate_methods(cls, value: t.Any) -> t.List[str]:
-        methods = list(map(lambda m: m.upper(), value))  # type:ignore[no-any-return]
+        methods = [m.upper() for m in value]
         not_valid_methods = list(set(methods) - set(ROUTE_METHODS))
 
         if not_valid_methods:

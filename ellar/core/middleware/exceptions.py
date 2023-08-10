@@ -1,11 +1,10 @@
 import typing as t
 
-from starlette.exceptions import HTTPException
-
 from ellar.common.constants import SCOPE_SERVICE_PROVIDER
 from ellar.common.interfaces import IHostContextFactory
 from ellar.common.types import ASGIApp, TMessage, TReceive, TScope, TSend
 from ellar.core.exceptions import ExceptionMiddlewareService
+from starlette.exceptions import HTTPException
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.di import EllarInjector

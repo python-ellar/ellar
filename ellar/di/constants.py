@@ -18,7 +18,7 @@ class AnnotationToValue(type):
     @no_type_check
     def __new__(mcls, name, bases, namespace):
         cls = super().__new__(mcls, name, bases, namespace)
-        annotations = dict()
+        annotations = {}
         for base in reversed(bases):  # pragma: no cover
             annotations.update(getattr(base, "__annotations__", {}))
         annotations.update(namespace.get("__annotations__", {}))

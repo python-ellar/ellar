@@ -1,12 +1,6 @@
 import inspect
 import typing as t
 
-from socketio import AsyncServer
-from starlette import status
-from starlette.concurrency import run_in_threadpool
-from starlette.exceptions import WebSocketException
-from starlette.routing import compile_path
-
 from ellar.common import (
     IExecutionContext,
     IExecutionContextFactory,
@@ -29,6 +23,11 @@ from ellar.reflect import reflect
 from ellar.socket_io.context import GatewayContext
 from ellar.socket_io.model import GatewayBase
 from ellar.socket_io.responses import WsResponse
+from socketio import AsyncServer
+from starlette import status
+from starlette.concurrency import run_in_threadpool
+from starlette.exceptions import WebSocketException
+from starlette.routing import compile_path
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common.params import ExtraEndpointArg
@@ -86,7 +85,6 @@ class SocketOperationConnection:
     async def _run_with_exception_handling(
         self, gateway_instance: GatewayBase, sid: str
     ) -> None:
-
         try:
             await self.run_route_guards(context=gateway_instance.context)
             await self._run_handler(

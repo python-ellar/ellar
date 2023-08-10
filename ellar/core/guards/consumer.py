@@ -19,7 +19,6 @@ class GuardConsumer(IGuardsConsumer):
 
     @t.no_type_check
     async def run_route_guards(self, context: IExecutionContext) -> None:
-
         for guard in self._get_guards(context):
             await self.run_guard(context, guard)
 

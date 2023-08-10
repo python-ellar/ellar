@@ -12,10 +12,10 @@ class APIException(Exception):
 
     def __init__(
         self,
-        detail: t.Union[t.List, t.Dict, str] = None,
-        description: str = None,
-        headers: t.Dict[str, t.Any] = None,
-        status_code: int = None,
+        detail: t.Optional[t.Union[t.List, t.Dict, str]] = None,
+        description: t.Optional[str] = None,
+        headers: t.Optional[t.Dict[str, t.Any]] = None,
+        status_code: t.Optional[int] = None,
     ) -> None:
         assert self.status_code
         self.status_code = status_code or self.status_code
@@ -36,14 +36,14 @@ class APIException(Exception):
         """
         Return both the message & code parts of the error details.
         """
-        return dict(
-            detail=self.detail,
-            code=self.code,
-            description=self.description or self.http_status.description,
-        )
+        return {
+            "detail": self.detail,
+            "code": self.code,
+            "description": self.description or self.http_status.description,
+        }
 
     def get_details(self) -> t.Dict:
-        result = dict(detail=self.detail)
+        result = {"detail": self.detail}
         if self.description:
             result.update(description=self.description)
         return result

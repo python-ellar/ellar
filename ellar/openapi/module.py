@@ -24,15 +24,17 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
         document_generator: t.Union[
             t.Sequence[IDocumentationGenerator], IDocumentationGenerator
         ],
-        document: OpenAPI = None,
+        document: t.Optional[OpenAPI] = None,
         router_prefix: str = "",
         openapi_url: t.Optional[str] = None,
         allow_any: bool = True,
-        guards: t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]] = None,
+        guards: t.Optional[
+            t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]
+        ] = None,
     ) -> DynamicModule:
         _guards = list(guards) if guards else []
         if allow_any:
-            _guards = [AllowAnyGuard] + _guards  # type:ignore
+            _guards = [AllowAnyGuard] + _guards
         _document_generator: t.List[IDocumentationGenerator] = []
         router = ModuleRouter(
             router_prefix,

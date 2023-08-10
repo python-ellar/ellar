@@ -1,8 +1,5 @@
 import typing as t
 
-from pydantic.fields import Undefined
-from starlette.responses import Response
-
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.params.resolvers.non_parameter import (
     ConnectionParam,
@@ -14,6 +11,8 @@ from ellar.common.params.resolvers.non_parameter import (
     SessionRequestParam,
     WebSocketParameter,
 )
+from pydantic.fields import Undefined
+from starlette.responses import Response
 
 from ..params import params
 from ..types import T

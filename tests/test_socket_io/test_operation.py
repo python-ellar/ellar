@@ -1,7 +1,6 @@
 import typing
 
 import pytest
-
 from ellar.socket_io import TestGateway
 from ellar.socket_io.testing.module import RunWithServerContext
 
@@ -59,12 +58,12 @@ class TestEventGateway:
         async with self.test_client.run_with_server() as ctx:
             ctx_2 = ctx.new_socket_client_context()
 
-            @ctx.sio.event
-            async def my_response(message):
+            @ctx.sio.on("my_response")
+            async def my_response_case_1(message):
                 sio_1_response_message.append(message)
 
-            @ctx_2.sio.event
-            async def my_response(message):
+            @ctx_2.sio.on("my_response")
+            async def my_response_case_2(message):
                 sio_2_response_message.append(message)
 
             await ctx.connect(socketio_path="/ws/")
@@ -224,7 +223,7 @@ class TestGatewayExceptions:
     )
     async def test_exception_handling_works_debug_true_or_false(self, debug, result):
         test_client = TestGateway.create_test_module(
-            controllers=[GatewayOthers], config_module=dict(DEBUG=debug)
+            controllers=[GatewayOthers], config_module={"DEBUG": debug}
         )
         my_response_message = []
 

@@ -1,7 +1,5 @@
 import typing as t
 
-from socketio import AsyncServer
-
 from ellar.common import (
     Identity,
     IExecutionContext,
@@ -11,6 +9,7 @@ from ellar.common import (
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.core import App
 from ellar.di import EllarInjector
+from socketio import AsyncServer
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from .model import GatewayBase

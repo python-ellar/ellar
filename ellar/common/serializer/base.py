@@ -4,7 +4,8 @@ from enum import Enum
 from pathlib import PurePath
 from types import GeneratorType
 
-from pydantic import BaseConfig, BaseModel, dataclasses as PydanticDataclasses
+from pydantic import BaseConfig, BaseModel
+from pydantic import dataclasses as PydanticDataclasses
 from pydantic.json import ENCODERS_BY_TYPE
 
 __pydantic_model__ = "__pydantic_model__"
@@ -16,7 +17,6 @@ __pydantic_root__ = "__root__"
 def get_dataclass_pydantic_model(
     dataclass_type: t.Type,
 ) -> t.Optional[t.Type[BaseModel]]:
-
     if hasattr(dataclass_type, __pydantic_model__):
         return t.cast(t.Type[BaseModel], dataclass_type.__dict__[__pydantic_model__])
 
@@ -151,11 +151,11 @@ def serialize_object(
     errors = []
     try:
         data = dict(obj)
-    except Exception as e:
-        errors.append(e)
+    except Exception as e1:
+        errors.append(e1)
         try:
             data = vars(obj)
-        except Exception as e:
-            errors.append(e)
-            raise ValueError(errors)
+        except Exception as e2:
+            errors.append(e2)
+            raise ValueError(errors) from e2
     return serialize_object(data, encoders, serializer_filter)

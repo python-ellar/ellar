@@ -1,6 +1,7 @@
-from ellar.common import command, EllarTyper
+from ellar.common import command
+from ellar.common.commands import EllarTyper
 
-db = EllarTyper(name='db')
+db = EllarTyper(name="db")
 
 
 @db.command()

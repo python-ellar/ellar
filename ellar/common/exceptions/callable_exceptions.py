@@ -1,10 +1,9 @@
 import typing as t
 
-from starlette.concurrency import run_in_threadpool
-from starlette.responses import Response
-
 from ellar.common.helper import is_async_callable
 from ellar.common.interfaces import IExceptionHandler, IHostContext
+from starlette.concurrency import run_in_threadpool
+from starlette.responses import Response
 
 
 class CallableExceptionHandler(IExceptionHandler):
@@ -45,7 +44,7 @@ class CallableExceptionHandler(IExceptionHandler):
         callable_exception_handler: t.Callable[
             [IHostContext, Exception],
             t.Union[t.Awaitable[Response], Response, t.Any],
-        ]
+        ],
     ) -> None:
         self.callable_exception_handler = callable_exception_handler
         self.is_async = False

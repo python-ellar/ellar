@@ -1,9 +1,9 @@
 import typing as t
 
-from injector import Binder, Module as _InjectorModule
-
 from ellar.common.constants import MODULE_FIELDS
 from ellar.di.injector import Container
+from injector import Binder
+from injector import Module as _InjectorModule
 
 from .builder import ModuleBaseBuilder
 
@@ -20,7 +20,7 @@ class ModuleBaseMeta(type):
         cls.__MODULE_FIELDS__: t.Dict = {}
 
         for base in reversed(bases):
-            ModuleBaseBuilder(cls).build(getattr(base, MODULE_FIELDS, dict()))
+            ModuleBaseBuilder(cls).build(getattr(base, MODULE_FIELDS, {}))
         ModuleBaseBuilder(cls).build(namespace)
 
 

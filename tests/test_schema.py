@@ -1,10 +1,9 @@
 import pytest
-from pydantic import BaseModel
-
 from ellar.common.compatible import AttributeDict
 from ellar.common.responses.models import EmptyAPIResponseModel
 from ellar.common.routing.schema import RouteParameters, WsRouteParameters
 from ellar.common.routing.websocket import WebSocketExtraHandler
+from pydantic import BaseModel
 
 
 class Item(BaseModel):
@@ -30,7 +29,7 @@ def test_route_parameter_schema():
     assert data.include_in_schema
     assert data.name is None
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         RouteParameters(methods=["get"], path="/path", endpoint="testing")
 
     with pytest.raises(ValueError, match="Method SOMETHING_ELSE not allowed"):
@@ -66,10 +65,10 @@ def test_ws_route_parameter_schema():
     assert data.use_extra_handler is False
     assert data.extra_handler_type is None
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         WsRouteParameters(path="/path", endpoint="testing")
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         WsRouteParameters(
             path="/path", encoding="something_else", endpoint=lambda: "testing"
         )

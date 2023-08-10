@@ -28,8 +28,8 @@ class ReDocDocumentGenerator(IDocumentationGenerator):
     ):
         self._path = path
         self._title = title
-        self._template_context = dict(
-            redoc_js_url=redoc_js_url,
-            favicon_url=favicon_url,
-            with_google_fonts=with_google_fonts,
-        )
+        self._template_context = {
+            "redoc_js_url": redoc_js_url,
+            "favicon_url": favicon_url,
+            "with_google_fonts": with_google_fonts,
+        }
