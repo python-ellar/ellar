@@ -1,11 +1,10 @@
 from typing import Dict, List, Optional, Tuple
 
 import pytest
-from pydantic import BaseModel
-
 from ellar.common import Header, ModuleRouter, Query
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.routing import ModuleRouterFactory
+from pydantic import BaseModel
 
 mr = ModuleRouter("")
 

@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.common import Module
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration

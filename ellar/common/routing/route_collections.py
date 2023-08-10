@@ -2,10 +2,9 @@ import typing as t
 import uuid
 from collections import OrderedDict
 
-from starlette.routing import BaseRoute, Host, Mount
-
 from ellar.common.helper import generate_controller_operation_unique_id
 from ellar.common.logger import logger
+from starlette.routing import BaseRoute, Host, Mount
 
 
 class RouteCollection(t.Sequence[BaseRoute]):
@@ -51,14 +50,13 @@ class RouteCollection(t.Sequence[BaseRoute]):
         )
 
     def _add_operation(self, operation: t.Union[BaseRoute]) -> None:
-
         if not isinstance(operation, BaseRoute):
             logger.warning("Tried Adding an operation that is not supported.")
             return
 
         _methods = getattr(operation, "methods", {"WS"})
         _versioning = list(
-            operation.get_allowed_version()  # type: ignore
+            operation.get_allowed_version()
             if hasattr(operation, "get_allowed_version")
             else {}
         )

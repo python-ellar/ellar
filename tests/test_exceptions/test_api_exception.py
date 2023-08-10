@@ -1,7 +1,6 @@
 import http
 
 import pytest
-
 from ellar.common import get
 from ellar.common.exceptions import (
     APIException,

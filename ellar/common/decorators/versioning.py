@@ -13,4 +13,4 @@ def Version(*_version: str) -> t.Callable:
     :param _version: allowed versions
     :return:
     """
-    return set_meta(VERSIONING_KEY, set([str(i) for i in _version]))
+    return set_meta(VERSIONING_KEY, {str(i) for i in _version})

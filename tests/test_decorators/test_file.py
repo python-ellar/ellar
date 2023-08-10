@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.common import Controller, file, get
 from ellar.common.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,

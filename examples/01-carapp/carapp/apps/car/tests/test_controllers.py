@@ -1,10 +1,10 @@
 from unittest.mock import patch
 
-from ellar.testing import Test, TestClient
 from ellar.di import ProviderConfig
+from ellar.testing import Test, TestClient
 
 from ..controllers import CarController
-from ..schemas import CreateCarSerializer, CarListFilter
+from ..schemas import CarListFilter, CreateCarSerializer
 from ..services import CarRepository
 
 
@@ -29,38 +29,35 @@ class TestCarController:
             "year": 2022,
         }
 
-    @patch.object(CarRepository, 'get_all', return_value=[dict(id=2, model='CLS',name='Mercedes', year=2023)])
+    @patch.object(
+        CarRepository,
+        "get_all",
+        return_value=[{"id": 2, "model": "CLS", "name": "Mercedes", "year": 2023}],
+    )
     async def test_get_all_action(self, mock_get_all, anyio_backend):
         result = await self.controller.get_all(query=CarListFilter(offset=0, limit=10))
 
         assert result == {
-            'cars': [
-                {
-                    'id': 2,
-                    'model': 'CLS',
-                    'name': 'Mercedes',
-                    'year': 2023
-                }
-            ],
-            'message': 'This action returns all cars at limit=10, offset=0'
+            "cars": [{"id": 2, "model": "CLS", "name": "Mercedes", "year": 2023}],
+            "message": "This action returns all cars at limit=10, offset=0",
         }
 
 
 class TestCarControllerE2E:
     def setup_method(self):
         test_module = Test.create_test_module(
-            controllers=[CarController,],
+            controllers=[
+                CarController,
+            ],
             providers=[ProviderConfig(CarRepository, use_class=CarRepository)],
-            config_module=dict(
-                REDIRECT_SLASHES=True
-            )
+            config_module={"REDIRECT_SLASHES": True},
         )
         self.client: TestClient = test_module.get_test_client()
 
     def test_create_action(self):
-        res = self.client.post('/car', json=dict(
-            name="Mercedes", year=2022, model="CLS"
-        ))
+        res = self.client.post(
+            "/car", json={"name": "Mercedes", "year": 2022, "model": "CLS"}
+        )
         assert res.status_code == 200
         assert res.json() == {
             "id": "1",
@@ -70,18 +67,15 @@ class TestCarControllerE2E:
             "year": 2022,
         }
 
-    @patch.object(CarRepository, 'get_all', return_value=[dict(id=2, model='CLS',name='Mercedes', year=2023)])
+    @patch.object(
+        CarRepository,
+        "get_all",
+        return_value=[{"id": 2, "model": "CLS", "name": "Mercedes", "year": 2023}],
+    )
     def test_get_all_action(self, mock_get_all):
-        res = self.client.get('/car?offset=0&limit=10')
+        res = self.client.get("/car?offset=0&limit=10")
         assert res.status_code == 200
         assert res.json() == {
-            'cars': [
-                {
-                    'id': 2,
-                    'model': 'CLS',
-                    'name': 'Mercedes',
-                    'year': 2023
-                }
-            ],
-            'message': 'This action returns all cars at limit=10, offset=0'
+            "cars": [{"id": 2, "model": "CLS", "name": "Mercedes", "year": 2023}],
+            "message": "This action returns all cars at limit=10, offset=0",
         }

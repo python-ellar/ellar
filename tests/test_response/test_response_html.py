@@ -2,14 +2,13 @@ import re
 from pathlib import Path
 
 import pytest
-from jinja2 import TemplateNotFound
-
 from ellar.common import Controller, ModuleRouter, get, render
 from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.common.responses.models import HTMLResponseModel
 from ellar.common.responses.models.html import HTMLResponseModelRuntimeError
 from ellar.reflect import reflect
 from ellar.testing import Test
+from jinja2 import TemplateNotFound
 
 BASEDIR = Path(__file__).resolve().parent.parent
 
@@ -51,13 +50,13 @@ mr = ModuleRouter("")
 @mr.get(
     "/render_template", response=HTMLResponseModel(template_name="index", use_mvc=False)
 )
-def render_template():
+def render_template_case_1():
     return {}
 
 
 @mr.get("/render_template2")
 @render(template_name="index")
-def render_template():
+def render_template_case_2():
     return {}
 
 

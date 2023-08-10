@@ -1,8 +1,8 @@
 import typing as t
-
-from starlette.routing import Host, Mount
+from abc import abstractmethod
 
 from ellar.common.logger import logger
+from starlette.routing import Host, Mount
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common.routing.mount import ModuleMount
@@ -31,12 +31,14 @@ def get_controller_builder_factory(
 
 class RouterBuilder:
     @classmethod
+    @abstractmethod
     def build(
         cls, controller_type: t.Union[t.Type, t.Any], **kwargs: t.Any
     ) -> t.Union["ModuleMount", Mount]:
         """Build controller to Mount"""
 
     @classmethod
+    @abstractmethod
     def check_type(cls, controller_type: t.Union[t.Type, t.Any]) -> None:
         """Check controller type"""
 

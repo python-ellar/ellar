@@ -1,7 +1,6 @@
 import json
 
 import pytest
-
 from ellar.common import IHostContextFactory
 from ellar.common.constants import SCOPE_SERVICE_PROVIDER
 from ellar.common.exceptions import HostContextException
@@ -27,12 +26,12 @@ async def assert_service_provider_app(scope, receive, send):
     _config_repr = repr(service_provider.get(Configuration))
     str_provider = service_provider.get(str)
     await send(
-        dict(
-            type="http.response.body",
-            body=json.dumps(
+        {
+            "type": "http.response.body",
+            "body": json.dumps(
                 {"str": str_provider, "configuration": _config_repr}
             ).encode(),
-        )
+        }
     )
 
 
@@ -56,10 +55,10 @@ async def assert_iexecute_context_app(scope, receive, send):
         }
     )
     await send(
-        dict(
-            type="http.response.body",
-            body=json.dumps({"message": "execution context work"}).encode(),
-        )
+        {
+            "type": "http.response.body",
+            "body": json.dumps({"message": "execution context work"}).encode(),
+        }
     )
 
 

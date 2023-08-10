@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.common import Cookie, Header, ModuleRouter
 from ellar.core.connection import Request
 from ellar.testing import Test

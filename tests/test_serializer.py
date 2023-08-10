@@ -5,8 +5,6 @@ from enum import Enum
 from pathlib import PureWindowsPath
 
 import pytest
-from pydantic import BaseModel, Field, dataclasses as pydantic_dataclasses
-
 from ellar.common.serializer import (
     DataclassSerializer,
     Serializer,
@@ -15,6 +13,8 @@ from ellar.common.serializer import (
     get_dataclass_pydantic_model,
     serialize_object,
 )
+from pydantic import BaseModel, Field
+from pydantic import dataclasses as pydantic_dataclasses
 
 
 class Person:

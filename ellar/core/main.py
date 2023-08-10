@@ -1,8 +1,6 @@
 import logging
 import typing as t
 
-from starlette.routing import BaseRoute, Mount
-
 from ellar.auth import IIdentitySchemes
 from ellar.auth.handlers import AuthenticationHandlerType
 from ellar.common.compatible import cached_property
@@ -35,6 +33,7 @@ from ellar.core.services import Reflector
 from ellar.core.templating import AppTemplating
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
 from ellar.di.injector import EllarInjector
+from starlette.routing import BaseRoute, Mount
 
 from .conf import Config
 from .modules import ModuleBase
@@ -46,8 +45,8 @@ class App(AppTemplating):
         config: "Config",
         injector: EllarInjector,
         lifespan: t.Optional[t.Callable[["App"], t.AsyncContextManager]] = None,
-        global_guards: t.List[
-            t.Union[t.Type[GuardCanActivate], GuardCanActivate]
+        global_guards: t.Optional[
+            t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]
         ] = None,
     ):
         assert isinstance(config, Config), "config must instance of Config"
@@ -75,7 +74,7 @@ class App(AppTemplating):
         self.router = ApplicationRouter(
             routes=self._get_module_routes(),
             redirect_slashes=self.config.REDIRECT_SLASHES,
-            default=self.config.DEFAULT_NOT_FOUND_HANDLER,  # type: ignore
+            default=self.config.DEFAULT_NOT_FOUND_HANDLER,
             lifespan=EllarApplicationLifespan(
                 self.config.DEFAULT_LIFESPAN_HANDLER  # type: ignore[arg-type]
             ).lifespan,
@@ -103,7 +102,7 @@ class App(AppTemplating):
         return _statics_func_wrapper
 
     def _get_module_routes(self) -> t.List[BaseRoute]:
-        _routes: t.List[BaseRoute] = list()
+        _routes: t.List[BaseRoute] = []
         if self.has_static_files:
             self._static_app = self.create_static_app()
             _routes.append(

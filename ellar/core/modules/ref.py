@@ -2,8 +2,6 @@ import typing as t
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from starlette.routing import BaseRoute, Mount
-
 from ellar.common.constants import (
     EXCEPTION_HANDLERS_KEY,
     MIDDLEWARE_HANDLERS_KEY,
@@ -25,6 +23,7 @@ from ellar.di import (
 )
 from ellar.di.providers import ModuleProvider
 from ellar.reflect import reflect
+from starlette.routing import BaseRoute, Mount
 
 from ..routing import get_controller_builder_factory
 from .base import ModuleBase, ModuleBaseMeta
@@ -231,7 +230,7 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         if not self._config.get(TEMPLATE_FILTER_KEY) or not isinstance(
             self._config[TEMPLATE_FILTER_KEY], dict
         ):
-            self._config[TEMPLATE_FILTER_KEY] = dict()
+            self._config[TEMPLATE_FILTER_KEY] = {}
         self._config[TEMPLATE_FILTER_KEY].update(templating_filter)
 
         templating_global_filter = (
@@ -240,7 +239,7 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         if not self._config.get(TEMPLATE_GLOBAL_KEY) or not isinstance(
             self._config[TEMPLATE_GLOBAL_KEY], dict
         ):
-            self._config[TEMPLATE_GLOBAL_KEY] = dict()
+            self._config[TEMPLATE_GLOBAL_KEY] = {}
         self._config[TEMPLATE_GLOBAL_KEY].update(templating_global_filter)
 
     def scan_exceptions_handlers(self) -> None:

@@ -1,11 +1,12 @@
 import typing as t
 
+from ellar.common.constants import SCOPE_SERVICE_PROVIDER
 from starlette.requests import (
     HTTPConnection as StarletteHTTPConnection,
+)
+from starlette.requests import (
     Request as StarletteRequest,
 )
-
-from ellar.common.constants import SCOPE_SERVICE_PROVIDER
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.di import EllarInjector

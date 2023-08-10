@@ -91,7 +91,7 @@ class HttpBasicAuth(BaseHttpAuth, ABC):
 
         if not separator:
             self._not_unauthorized_exception("Invalid authentication credentials")
-        return HTTPBasicCredentials(username=username, password=password)
+        return HTTPBasicCredentials(username=username, password=password)  # type: ignore[arg-type]
 
 
 class HttpDigestAuth(HttpBearerAuth, ABC):

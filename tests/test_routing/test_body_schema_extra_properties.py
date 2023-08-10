@@ -1,11 +1,10 @@
 from typing import Dict
 
-from pydantic import BaseModel
-
 from ellar.common import post
 from ellar.common.serializer import serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
+from pydantic import BaseModel
 
 tm = Test.create_test_module()
 

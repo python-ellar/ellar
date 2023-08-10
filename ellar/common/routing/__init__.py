@@ -1,8 +1,8 @@
 import typing as t
 
+from ellar.common.params.params import ParamFieldInfo as Param
+from ellar.common.params.params import ParamTypes
 from starlette.routing import Host, Mount
-
-from ellar.common.params.params import ParamFieldInfo as Param, ParamTypes
 
 from .base import RouteOperationBase
 from .mount import ModuleMount, ModuleRouter

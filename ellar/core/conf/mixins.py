@@ -1,11 +1,10 @@
 import inspect
 import typing as t
 
-from starlette.responses import JSONResponse
-from starlette.types import ASGIApp
-
 from ellar.common.constants import LOG_LEVELS as log_levels
 from ellar.common.interfaces import IAPIVersioning, IExceptionHandler
+from starlette.responses import JSONResponse
+from starlette.types import ASGIApp
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import App

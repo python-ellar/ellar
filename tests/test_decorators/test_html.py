@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.common import Controller, get, render, template_filter, template_global
 from ellar.common.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,

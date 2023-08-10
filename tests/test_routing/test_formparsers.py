@@ -3,10 +3,9 @@ import sys
 from typing import List, Union
 
 import pytest
-from starlette.formparsers import UploadFile as StarletteUploadFile
-
 from ellar.common import File, Form, ModuleRouter, UploadFile
 from ellar.testing import Test
+from starlette.formparsers import UploadFile as StarletteUploadFile
 
 router = ModuleRouter("")
 
@@ -21,38 +20,40 @@ FORCE_MULTIPART = ForceMultipartDict()
 
 
 @router.post
-async def form_upload_single(test: UploadFile = File()):
+async def form_upload_single_case_1(test: UploadFile = File()):
     content = await test.read()
-    return dict(
-        test={
+    return {
+        "test": {
             "filename": test.filename,
             "content": content.decode(),
             "content_type": test.content_type,
         }
-    )
+    }
 
 
 @router.post("/mixed")
-async def form_upload_single(test1: UploadFile = File(), test2: UploadFile = File()):
+async def form_upload_single_case_2(
+    test1: UploadFile = File(), test2: UploadFile = File()
+):
     content1 = await test1.read()
     content2 = await test2.read()
 
-    return dict(
-        test1={
+    return {
+        "test1": {
             "filename": test1.filename,
             "content": content1.decode(),
             "content_type": test1.content_type,
         },
-        test2={
+        "test2": {
             "filename": test2.filename,
             "content": content2.decode(),
             "content_type": test2.content_type,
         },
-    )
+    }
 
 
 @router.post("/multiple")
-async def form_upload_multiple(test1: List[Union[UploadFile, str]] = File()):
+async def form_upload_multiple_case_1(test1: List[Union[UploadFile, str]] = File()):
     results = []
     for item in test1:
         if not isinstance(item, StarletteUploadFile):
@@ -67,11 +68,11 @@ async def form_upload_multiple(test1: List[Union[UploadFile, str]] = File()):
                 "content_type": item.content_type,
             }
         )
-    return dict(test1=results)
+    return {"test1": results}
 
 
 @router.post("/mixed-optional")
-async def form_upload_multiple(
+async def form_upload_multiple_case_2(
     file: UploadFile = File(None),
     field: str = Form("", alias="field0"),
     field_2: str = Form(None, alias="field1"),
@@ -84,11 +85,11 @@ async def form_upload_multiple(
             "content": content.decode(),
             "content_type": file.content_type,
         }
-    return dict(
-        file=_file,
-        field0=field,
-        field1=field_2,
-    )
+    return {
+        "file": _file,
+        "field0": field,
+        "field1": field_2,
+    }
 
 
 tm = Test.create_test_module(routers=(router,))

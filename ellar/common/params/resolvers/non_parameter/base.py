@@ -1,11 +1,10 @@
 import typing as t
 from abc import ABC, abstractmethod
 
-from pydantic.error_wrappers import ErrorWrapper
-
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import logger
 from ellar.common.types import T
+from pydantic.error_wrappers import ErrorWrapper
 
 from ..base import IRouteParameterResolver
 

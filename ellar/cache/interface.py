@@ -7,7 +7,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 class IBaseCacheBackendAsync(ABC):
     @abstractmethod
-    async def get_async(self, key: str, version: str = None) -> t.Any:
+    async def get_async(self, key: str, version: t.Optional[str] = None) -> t.Any:
         """Look up key in the cache and return the value for it.
         :param key: the key to be looked up.
         :param version: the version for the key
@@ -15,7 +15,7 @@ class IBaseCacheBackendAsync(ABC):
         """
 
     @abstractmethod
-    async def delete_async(self, key: str, version: str = None) -> bool:
+    async def delete_async(self, key: str, version: t.Optional[str] = None) -> bool:
         """Delete `key` from the cache.
         :param key: the key to delete.
         :param version: the version for the key
@@ -28,8 +28,8 @@ class IBaseCacheBackendAsync(ABC):
         self,
         key: str,
         value: t.Any,
-        ttl: t.Union[float, int] = None,
-        version: str = None,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
     ) -> bool:
         """Add a new key/value to the cache (overwrites value, if key already
         exists in the cache).
@@ -47,26 +47,34 @@ class IBaseCacheBackendAsync(ABC):
 
     @abstractmethod
     async def touch_async(
-        self, key: str, ttl: t.Union[float, int] = None, version: str = None
+        self,
+        key: str,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
     ) -> bool:
         """
         Update the key's expiry time using ttl. Return True if successful
         or False if the key does not exist.
         """
 
-    async def has_key_async(self, key: str, version: str = None) -> bool:
+    @abstractmethod
+    async def has_key_async(self, key: str, version: t.Optional[str] = None) -> bool:
         """
         Return True if the key is in the cache and has not expired.
         """
 
     @abstractmethod
-    async def incr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+    async def incr_async(
+        self, key: str, delta: int = 1, version: t.Optional[str] = None
+    ) -> int:
         """
         Increments the number stored at key by one. If the key does not exist, it is set to 0
         """
 
     @abstractmethod
-    async def decr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+    async def decr_async(
+        self, key: str, delta: int = 1, version: t.Optional[str] = None
+    ) -> int:
         """
         Decrements the number stored at key by one. If the key does not exist, it is set to 0
         """
@@ -74,7 +82,7 @@ class IBaseCacheBackendAsync(ABC):
 
 class IBaseCacheBackendSync(ABC):
     @abstractmethod
-    def get(self, key: str, version: str = None) -> t.Any:
+    def get(self, key: str, version: t.Optional[str] = None) -> t.Any:
         """Look up key in the cache and return the value for it.
         :param key: the key to be looked up.
         :param version: the version for the key
@@ -82,7 +90,7 @@ class IBaseCacheBackendSync(ABC):
         """
 
     @abstractmethod
-    def delete(self, key: str, version: str = None) -> bool:
+    def delete(self, key: str, version: t.Optional[str] = None) -> bool:
         """Delete `key` from the cache.
         :param key: the key to delete.
         :param version: the version for the key
@@ -95,8 +103,8 @@ class IBaseCacheBackendSync(ABC):
         self,
         key: str,
         value: t.Any,
-        ttl: t.Union[float, int] = None,
-        version: str = None,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
     ) -> bool:
         """Add a new key/value to the cache (overwrites value, if key already
         exists in the cache).
@@ -114,26 +122,30 @@ class IBaseCacheBackendSync(ABC):
 
     @abstractmethod
     def touch(
-        self, key: str, ttl: t.Union[float, int] = None, version: str = None
+        self,
+        key: str,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
     ) -> bool:
         """
         Update the key's expiry time using ttl. Return True if successful
         or False if the key does not exist.
         """
 
-    def has_key(self, key: str, version: str = None) -> bool:
+    @abstractmethod
+    def has_key(self, key: str, version: t.Optional[str] = None) -> bool:
         """
         Return True if the key is in the cache and has not expired.
         """
 
     @abstractmethod
-    def incr(self, key: str, delta: int = 1, version: str = None) -> int:
+    def incr(self, key: str, delta: int = 1, version: t.Optional[str] = None) -> int:
         """
         Increments the number stored at key by one. If the key does not exist, it is set to 0
         """
 
     @abstractmethod
-    def decr(self, key: str, delta: int = 1, version: str = None) -> int:
+    def decr(self, key: str, delta: int = 1, version: t.Optional[str] = None) -> int:
         """
         Decrements the number stored at key by one. If the key does not exist, it is set to 0
         """
@@ -141,7 +153,9 @@ class IBaseCacheBackendSync(ABC):
 
 class ICacheServiceSync(ABC):
     @abstractmethod
-    def get(self, key: str, version: str = None, backend: str = None) -> t.Any:
+    def get(
+        self, key: str, version: t.Optional[str] = None, backend: t.Optional[str] = None
+    ) -> t.Any:
         """Look up key in the cache and return the value for it.
         :param key: the key to be looked up.
         :param version: the version for the key
@@ -150,7 +164,9 @@ class ICacheServiceSync(ABC):
         """
 
     @abstractmethod
-    def delete(self, key: str, version: str = None, backend: str = None) -> bool:
+    def delete(
+        self, key: str, version: t.Optional[str] = None, backend: t.Optional[str] = None
+    ) -> bool:
         """Delete `key` from the cache.
         :param key: the key to delete.
         :param version: the version for the key
@@ -164,9 +180,9 @@ class ICacheServiceSync(ABC):
         self,
         key: str,
         value: t.Any,
-        ttl: t.Union[float, int] = None,
-        version: str = None,
-        backend: str = None,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
+        backend: t.Optional[str] = None,
     ) -> bool:
         """Add a new key/value to the cache (overwrites value, if key already
         exists in the cache).
@@ -187,9 +203,9 @@ class ICacheServiceSync(ABC):
     def touch(
         self,
         key: str,
-        ttl: t.Union[float, int] = None,
-        version: str = None,
-        backend: str = None,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
+        backend: t.Optional[str] = None,
     ) -> bool:
         """
         Update the key's expiry time using ttl. Return True if successful
@@ -197,14 +213,20 @@ class ICacheServiceSync(ABC):
         """
 
     @abstractmethod
-    def has_key(self, key: str, version: str = None, backend: str = None) -> bool:
+    def has_key(
+        self, key: str, version: t.Optional[str] = None, backend: t.Optional[str] = None
+    ) -> bool:
         """
         Return True if the key is in the cache and has not expired.
         """
 
     @abstractmethod
     def incr(
-        self, key: str, delta: int = 1, version: str = None, backend: str = None
+        self,
+        key: str,
+        delta: int = 1,
+        version: t.Optional[str] = None,
+        backend: t.Optional[str] = None,
     ) -> int:
         """
         Increments the number stored at key by one. If the key does not exist, it is set to 0
@@ -212,7 +234,11 @@ class ICacheServiceSync(ABC):
 
     @abstractmethod
     def decr(
-        self, key: str, delta: int = 1, version: str = None, backend: str = None
+        self,
+        key: str,
+        delta: int = 1,
+        version: t.Optional[str] = None,
+        backend: t.Optional[str] = None,
     ) -> int:
         """
         Decrements the number stored at key by one. If the key does not exist, it is set to 0
@@ -222,7 +248,7 @@ class ICacheServiceSync(ABC):
 class ICacheServiceAsync(ABC):
     @abstractmethod
     async def get_async(
-        self, key: str, version: str = None, backend: str = None
+        self, key: str, version: t.Optional[str] = None, backend: t.Optional[str] = None
     ) -> t.Any:
         """Look up key in the cache and return the value for it.
         :param key: the key to be looked up.
@@ -233,7 +259,7 @@ class ICacheServiceAsync(ABC):
 
     @abstractmethod
     async def delete_async(
-        self, key: str, version: str = None, backend: str = None
+        self, key: str, version: t.Optional[str] = None, backend: t.Optional[str] = None
     ) -> bool:
         """Delete `key` from the cache.
         :param key: the key to delete.
@@ -248,9 +274,9 @@ class ICacheServiceAsync(ABC):
         self,
         key: str,
         value: t.Any,
-        ttl: t.Union[float, int] = None,
-        version: str = None,
-        backend: str = None,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
+        backend: t.Optional[str] = None,
     ) -> bool:
         """Add a new key/value to the cache (overwrites value, if key already
         exists in the cache).
@@ -271,9 +297,9 @@ class ICacheServiceAsync(ABC):
     async def touch_async(
         self,
         key: str,
-        ttl: t.Union[float, int] = None,
-        version: str = None,
-        backend: str = None,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
+        backend: t.Optional[str] = None,
     ) -> bool:
         """
         Update the key's expiry time using ttl. Return True if successful
@@ -282,7 +308,7 @@ class ICacheServiceAsync(ABC):
 
     @abstractmethod
     async def has_key_async(
-        self, key: str, version: str = None, backend: str = None
+        self, key: str, version: t.Optional[str] = None, backend: t.Optional[str] = None
     ) -> bool:
         """
         Return True if the key is in the cache and has not expired.
@@ -290,7 +316,11 @@ class ICacheServiceAsync(ABC):
 
     @abstractmethod
     async def incr_async(
-        self, key: str, delta: int = 1, version: str = None, backend: str = None
+        self,
+        key: str,
+        delta: int = 1,
+        version: t.Optional[str] = None,
+        backend: t.Optional[str] = None,
     ) -> int:
         """
         Increments the number stored at key by one. If the key does not exist, it is set to 0
@@ -298,7 +328,11 @@ class ICacheServiceAsync(ABC):
 
     @abstractmethod
     async def decr_async(
-        self, key: str, delta: int = 1, version: str = None, backend: str = None
+        self,
+        key: str,
+        delta: int = 1,
+        version: t.Optional[str] = None,
+        backend: t.Optional[str] = None,
     ) -> int:
         """
         Decrements the number stored at key by one. If the key does not exist, it is set to 0
@@ -308,7 +342,8 @@ class ICacheServiceAsync(ABC):
 class ICacheService(ICacheServiceSync, ICacheServiceAsync, ABC):
     """Cache Service Interface"""
 
-    def get_backend(self, backend: str = None) -> "BaseCacheBackend":
+    @abstractmethod
+    def get_backend(self, backend: t.Optional[str] = None) -> "BaseCacheBackend":
         """
         Return a given Cache Backend configured by configuration backend name.
         :param backend: Cache Backend configuration name. If not set, 'default' backend will be returned

@@ -2,9 +2,6 @@ import typing as t
 from pathlib import Path
 from uuid import uuid4
 
-from starlette.routing import Host, Mount
-from starlette.testclient import TestClient as TestClient
-
 from ellar.common import ControllerBase, Module
 from ellar.common.routing import ModuleMount, ModuleRouter
 from ellar.common.types import T
@@ -12,6 +9,8 @@ from ellar.core import ModuleBase
 from ellar.core.factory import AppFactory
 from ellar.core.main import App
 from ellar.di import ProviderConfig
+from starlette.routing import Host, Mount
+from starlette.testclient import TestClient as TestClient
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common import GuardCanActivate
@@ -21,10 +20,10 @@ class TestingModule:
     def __init__(
         self,
         testing_module: t.Type[t.Union[ModuleBase, t.Any]],
-        global_guards: t.List[
-            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        global_guards: t.Optional[
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
-        config_module: t.Union[str, t.Dict] = None,
+        config_module: t.Optional[t.Union[str, t.Dict]] = None,
     ) -> None:
         self._testing_module = testing_module
         self._config_module = config_module
@@ -36,8 +35,8 @@ class TestingModule:
         self,
         base_type: t.Union[t.Type[T], t.Type],
         *,
-        use_value: T = None,
-        use_class: t.Union[t.Type[T], t.Any] = None,
+        use_value: t.Optional[T] = None,
+        use_class: t.Optional[t.Union[t.Type[T], t.Any]] = None,
     ) -> "TestingModule":
         """
         Overrides Service at module level.
@@ -94,17 +93,17 @@ class Test:
     @classmethod
     def create_test_module(
         cls,
-        controllers: t.Sequence[t.Union[t.Type[ControllerBase], t.Type]] = tuple(),
-        routers: t.Sequence[t.Union[ModuleRouter, ModuleMount, Mount, Host]] = tuple(),
-        providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = tuple(),
+        controllers: t.Sequence[t.Union[t.Type[ControllerBase], t.Type]] = (),
+        routers: t.Sequence[t.Union[ModuleRouter, ModuleMount, Mount, Host]] = (),
+        providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = (),
         template_folder: t.Optional[str] = "templates",
         base_directory: t.Optional[t.Union[Path, str]] = None,
         static_folder: str = "static",
-        modules: t.Sequence[t.Union[t.Type, t.Any]] = tuple(),
-        global_guards: t.List[
-            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        modules: t.Sequence[t.Union[t.Type, t.Any]] = (),
+        global_guards: t.Optional[
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
-        config_module: t.Union[str, t.Dict] = None,
+        config_module: t.Optional[t.Union[str, t.Dict]] = None,
     ) -> TESTING_MODULE:  # type: ignore[valid-type]
         """
         Create a TestingModule to test controllers and services in isolation

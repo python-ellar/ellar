@@ -1,11 +1,10 @@
 from decimal import Decimal
 from typing import List
 
-from pydantic import BaseModel, condecimal
-
 from ellar.common import post, serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
+from pydantic import BaseModel, condecimal
 
 tm = Test.create_test_module()
 app = tm.create_application()

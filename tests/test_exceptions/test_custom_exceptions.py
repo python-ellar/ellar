@@ -2,10 +2,6 @@ import typing as t
 from unittest.mock import patch
 
 import pytest
-from pydantic.error_wrappers import ValidationError
-from starlette.exceptions import HTTPException, WebSocketException
-from starlette.responses import JSONResponse, Response
-
 from ellar.common import IExceptionHandler, IHostContext, Ws, get, ws_route
 from ellar.common.exceptions.callable_exceptions import CallableExceptionHandler
 from ellar.common.exceptions.handlers import APIException, APIExceptionHandler
@@ -13,6 +9,9 @@ from ellar.core import Config
 from ellar.core.exceptions.service import ExceptionMiddlewareService
 from ellar.core.middleware import ExceptionMiddleware
 from ellar.testing import Test
+from pydantic.error_wrappers import ValidationError
+from starlette.exceptions import HTTPException, WebSocketException
+from starlette.responses import JSONResponse, Response
 
 
 class InvalidExceptionHandler:

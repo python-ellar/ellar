@@ -18,16 +18,16 @@ install-full: ## Install dependencies
 	pre-commit install -f
 
 lint: ## Run code linters
-	black --check ellar tests
-	ruff check ellar tests
+	black --check ellar tests examples
+	ruff check ellar tests examples
 	mypy ellar
 
 fmt format: ## Run code formatters
-	black ellar tests
-	ruff check --fix ellar tests
+	black ellar tests examples
+	ruff check --fix ellar tests examples
 
 test: ## Run tests
-	pytest tests
+	pytest
 
 test-cov: ## Run tests with coverage
 	pytest --cov=ellar --cov-report term-missing tests

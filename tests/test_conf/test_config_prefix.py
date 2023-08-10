@@ -19,9 +19,10 @@ def test_config_with_prefix():
 
 def test_for_app_factory():
     app = AppFactory.create_app(
-        config_module=dict(
-            config_prefix="ellar_", config_module="tests.test_conf:test_config_prefix"
-        )
+        config_module={
+            "config_prefix": "ellar_",
+            "config_module": "tests.test_conf:test_config_prefix",
+        }
     )
 
     assert app.config.DEBUG

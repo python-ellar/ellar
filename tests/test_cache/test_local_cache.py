@@ -1,7 +1,6 @@
 from time import sleep
 
 import pytest
-
 from ellar.cache.backends.local_cache import LocalMemCacheBackend
 
 

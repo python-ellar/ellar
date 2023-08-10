@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.common import Form, ModuleRouter, post, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request

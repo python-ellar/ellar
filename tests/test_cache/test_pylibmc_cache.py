@@ -2,7 +2,6 @@ from time import sleep
 from unittest.mock import patch
 
 import pytest
-
 from ellar.cache.backends.pylib_cache import PyLibMCCacheBackend
 from ellar.cache.backends.pymem_cache import PyMemcacheCacheBackend
 from ellar.cache.model import CacheKeyWarning
@@ -18,11 +17,12 @@ class PyLibMCCacheBackendMock(PyLibMCCacheBackend):
 async def test_simple_cache_backend() -> None:
     backend = PyLibMCCacheBackendMock(
         servers=["127.0.0.1:11211"],
-        options=dict(binary=True, behaviors={"tcp_nodelay": True, "ketama": True}),
+        options={"binary": True, "behaviors": {"tcp_nodelay": True, "ketama": True}},
     )
-    assert backend._cache_client.kwargs == dict(
-        binary=True, behaviors={"tcp_nodelay": True, "ketama": True}
-    )
+    assert backend._cache_client.kwargs == {
+        "binary": True,
+        "behaviors": {"tcp_nodelay": True, "ketama": True},
+    }
     await backend.set_async("test", "Wanaka", 1)
     value = await backend.get_async("test")
     assert value == "Wanaka"

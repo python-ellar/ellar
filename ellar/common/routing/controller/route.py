@@ -1,9 +1,8 @@
 import typing as t
 
-from starlette.concurrency import run_in_threadpool
-
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.routing.route import RouteOperation
+from starlette.concurrency import run_in_threadpool
 
 from .base import ControllerRouteOperationBase
 

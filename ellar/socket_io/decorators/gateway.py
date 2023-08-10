@@ -46,7 +46,7 @@ def _reflect_all_controller_type_routes(cls: t.Type[GatewayBase]) -> None:
 
 
 def WebSocketGateway(
-    path: str = "/socket.io", name: str = None, **kwargs: str
+    path: str = "/socket.io", name: t.Optional[str] = None, **kwargs: str
 ) -> t.Callable:
     kwargs.setdefault("async_mode", "asgi")
     kwargs.setdefault("cors_allowed_origins", "*")
@@ -96,7 +96,7 @@ def WebSocketGateway(
                 reflect.define_metadata(key, _kwargs[key], _gateway_type)
 
         if new_cls:
-            setattr(_gateway_type, "__GATEWAY_WATERMARK__", True)
+            _gateway_type.__GATEWAY_WATERMARK__ = True  # type:ignore[attr-defined]
 
         return _gateway_type
 

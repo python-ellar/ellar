@@ -1,19 +1,17 @@
 try:
     import itsdangerous
-except Exception:  # pragma: no cover
+except Exception as ex:  # pragma: no cover
     raise RuntimeError(
         "SessionClientStrategy requires itsdangerous package installed. Run `pip install itsdangerous`"
-    )
+    ) from ex
 
 import json
 import typing as t
 from base64 import b64decode, b64encode
 
-import itsdangerous
-from itsdangerous import BadSignature
-
 from ellar.core import Config
 from ellar.di import injectable
+from itsdangerous import BadSignature
 
 from .cookie_dict import SessionCookieObject
 from .interface import ISessionStrategy
@@ -26,12 +24,12 @@ class SessionClientStrategy(ISessionStrategy):
         self._signer = itsdangerous.TimestampSigner(str(config.SECRET_KEY))
         self.config = config
         self._session_config = SessionCookieOption(
-            NAME=config.SESSION_COOKIE_NAME,
+            NAME=config.SESSION_COOKIE_NAME or "",
             DOMAIN=config.SESSION_COOKIE_DOMAIN,
             PATH=config.SESSION_COOKIE_PATH or "/",
-            HTTPONLY=config.SESSION_COOKIE_HTTPONLY,
-            SECURE=config.SESSION_COOKIE_SECURE,
-            SAME_SITE=config.SESSION_COOKIE_SAME_SITE,
+            HTTPONLY=config.SESSION_COOKIE_HTTPONLY or False,
+            SECURE=config.SESSION_COOKIE_SECURE or False,
+            SAME_SITE=config.SESSION_COOKIE_SAME_SITE or "none",
             MAX_AGE=config.SESSION_COOKIE_MAX_AGE,
         )
 

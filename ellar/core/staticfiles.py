@@ -3,15 +3,16 @@ import stat
 import typing as t
 
 import anyio
-from starlette.staticfiles import PathLike, StaticFiles as StarletteStaticFiles
+from starlette.staticfiles import PathLike
+from starlette.staticfiles import StaticFiles as StarletteStaticFiles
 
 
 class StaticFiles(StarletteStaticFiles):
     def __init__(
         self,
         *,
-        directories: t.List[PathLike] = None,
-        packages: t.List[t.Union[str, t.Tuple[str, str]]] = None,
+        directories: t.Optional[t.List[PathLike]] = None,
+        packages: t.Optional[t.List[t.Union[str, t.Tuple[str, str]]]] = None,
         html: bool = False,  # TODO: expose to config
         check_dir: bool = True,  # TODO: expose to config
     ):
@@ -35,10 +36,10 @@ class StaticFiles(StarletteStaticFiles):
         for directory in self._directories:
             try:
                 stat_result = await anyio.to_thread.run_sync(os.stat, directory)
-            except FileNotFoundError:
+            except FileNotFoundError as fex:
                 raise RuntimeError(
                     f"StaticFiles directory '{directory}' does not exist."
-                )
+                ) from fex
             if not (
                 stat.S_ISDIR(stat_result.st_mode) or stat.S_ISLNK(stat_result.st_mode)
             ):

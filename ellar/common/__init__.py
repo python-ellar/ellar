@@ -76,7 +76,8 @@ from .params.decorators import (
     Ws,
     WsBody,
 )
-from .params.params import ParamFieldInfo as Param, ParamTypes
+from .params.params import ParamFieldInfo as Param
+from .params.params import ParamTypes
 from .responses import (
     FileResponse,
     HTMLResponse,

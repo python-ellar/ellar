@@ -3,8 +3,6 @@ import typing as t
 from functools import partial
 from pathlib import Path
 
-from starlette.routing import Host, Mount
-
 from ellar.common.compatible import AttributeDict
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
@@ -12,6 +10,7 @@ from ellar.common.models import ControllerBase
 from ellar.common.routing import ModuleMount, ModuleRouter
 from ellar.di import ProviderConfig, SingletonScope, injectable
 from ellar.reflect import reflect
+from starlette.routing import Host, Mount
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common.commands import EllarTyper
@@ -43,14 +42,14 @@ def _wrapper(
 def Module(
     *,
     name: t.Optional[str] = None,
-    controllers: t.Sequence[t.Union[t.Type[ControllerBase], t.Type]] = tuple(),
-    routers: t.Sequence[t.Union[ModuleRouter, ModuleMount, Mount, Host]] = tuple(),
-    providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = tuple(),
+    controllers: t.Sequence[t.Union[t.Type[ControllerBase], t.Type]] = (),
+    routers: t.Sequence[t.Union[ModuleRouter, ModuleMount, Mount, Host]] = (),
+    providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = (),
     template_folder: t.Optional[str] = "templates",
     base_directory: t.Optional[t.Union[Path, str]] = None,
     static_folder: str = "static",
-    modules: t.Sequence[t.Union[t.Type, t.Any]] = tuple(),
-    commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = tuple(),
+    modules: t.Sequence[t.Union[t.Type, t.Any]] = (),
+    commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = (),
 ) -> t.Callable:
     """
     ========= MODULE DECORATOR ==============

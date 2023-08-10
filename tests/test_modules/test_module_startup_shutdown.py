@@ -35,7 +35,7 @@ async def _testing_life_span(app):
 
 tm = Test.create_test_module(
     modules=[OnShutdownModule, OnStartupModule],
-    config_module=dict(DEFAULT_LIFESPAN_HANDLER=_testing_life_span),
+    config_module={"DEFAULT_LIFESPAN_HANDLER": _testing_life_span},
 )
 
 

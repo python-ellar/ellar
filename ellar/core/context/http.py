@@ -1,14 +1,13 @@
 import typing as t
 
-from starlette.background import BackgroundTasks
-from starlette.responses import Response
-
 from ellar.common.compatible import cached_property
 from ellar.common.constants import SCOPED_RESPONSE
 from ellar.common.exceptions import HostContextException
 from ellar.common.interfaces import IHTTPHostContext
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.core.connection import HTTPConnection, Request
+from starlette.background import BackgroundTasks
+from starlette.responses import Response
 
 
 class HTTPHostContext(IHTTPHostContext):
@@ -61,7 +60,7 @@ class HTTPHostContext(IHTTPHostContext):
         return t.cast(Response, self.scope[SCOPED_RESPONSE])
 
     def get_request(self) -> Request:
-        return self._request  # type: ignore
+        return self._request
 
     def get_client(self) -> HTTPConnection:
-        return self._http_connection  # type: ignore
+        return self._http_connection

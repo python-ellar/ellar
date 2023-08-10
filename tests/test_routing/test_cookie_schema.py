@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.common import Cookie, ModuleRouter, get, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
@@ -26,7 +25,7 @@ def cookie_params_mixed_schema(
     filters: Filter = Cookie(...),
     data: Data = Cookie(...),
 ):
-    return dict(filters=filters.dict(), data=data.dict())
+    return {"filters": filters.dict(), "data": data.dict()}
 
 
 tm = Test.create_test_module(routers=(router,))

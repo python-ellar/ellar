@@ -1,9 +1,8 @@
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, Field
-
 from ellar.common import ModuleRouter, serializer_filter
 from ellar.core import AppFactory
+from pydantic import BaseModel, Field
 
 mr = ModuleRouter("")
 

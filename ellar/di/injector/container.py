@@ -3,12 +3,18 @@ from inspect import isabstract
 
 from injector import (
     AssistedBuilder,
-    Binder as InjectorBinder,
     Binding,
-    Module as InjectorModule,
-    Scope as InjectorScope,
     UnsatisfiedRequirement,
     _is_specialization,
+)
+from injector import (
+    Binder as InjectorBinder,
+)
+from injector import (
+    Module as InjectorModule,
+)
+from injector import (
+    Scope as InjectorScope,
 )
 
 from ..providers import Provider
@@ -114,7 +120,9 @@ class Container(InjectorBinder):
         self.register_binding(base_type, Binding(base_type, provider, _scope))
 
     def register_instance(
-        self, instance: t.Any, concrete_type: t.Union[t.Type, Provider] = None
+        self,
+        instance: t.Any,
+        concrete_type: t.Optional[t.Union[t.Type, Provider]] = None,
     ) -> None:
         assert not isinstance(instance, type)
         _concrete_type = instance.__class__ if not concrete_type else concrete_type
@@ -138,7 +146,7 @@ class Container(InjectorBinder):
     def register_transient(
         self,
         base_type: t.Type,
-        concrete_type: t.Union[t.Type, Provider] = None,
+        concrete_type: t.Optional[t.Union[t.Type, Provider]] = None,
     ) -> None:
         """
 
@@ -153,7 +161,7 @@ class Container(InjectorBinder):
     def register_scoped(
         self,
         base_type: t.Type,
-        concrete_type: t.Union[t.Type, Provider] = None,
+        concrete_type: t.Optional[t.Union[t.Type, Provider]] = None,
     ) -> None:
         """
 

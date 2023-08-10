@@ -14,7 +14,7 @@ class AuthenticationFailed(APIException):
     code = "authentication_failed"
 
     def __init__(
-        self, detail: t.Union[t.List, t.Dict, str] = None, **kwargs: t.Any
+        self, detail: t.Optional[t.Union[t.List, t.Dict, str]] = None, **kwargs: t.Any
     ) -> None:
         if detail is None:
             detail = "Incorrect authentication credentials."

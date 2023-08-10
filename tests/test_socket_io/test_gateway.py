@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-
 from ellar.common.constants import CONTROLLER_CLASS_KEY
 from ellar.reflect import reflect
 from ellar.socket_io.gateway import SocketOperationConnection

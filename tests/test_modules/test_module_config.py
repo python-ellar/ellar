@@ -2,7 +2,6 @@ from abc import ABC
 from unittest.mock import patch
 
 import pytest
-
 from ellar.common import (
     Controller,
     ControllerBase,
@@ -117,7 +116,7 @@ def test_dynamic_module_setup_register_works():
     with reflect.context():
         test_module = Test.create_test_module(
             modules=(DynamicModuleSetupRegisterModule.setup_register(),),
-            config_module=dict(a=24555, b=8899900),
+            config_module={"a": 24555, "b": 8899900},
         )
         assert len(test_module.create_application().routes) == 0
         dynamic_instance = test_module.get(IDynamic)

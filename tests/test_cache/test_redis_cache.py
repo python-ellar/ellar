@@ -1,7 +1,6 @@
 from time import sleep
 
 import pytest
-
 from ellar.cache.backends.redis import RedisCacheBackend
 from ellar.cache.model import CacheKeyWarning
 

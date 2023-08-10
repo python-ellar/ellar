@@ -9,13 +9,26 @@ class MyController(ControllerBase):
         return {'detail': "Welcome Dog's Resources"}
 """
 import typing_extensions as types
-from ellar.common import Body, Controller, Query, get, post, render, Version, ControllerBase
+from ellar.common import (
+    Body,
+    Controller,
+    ControllerBase,
+    Query,
+    Version,
+    get,
+    post,
+    render,
+)
 
 from .schemas import CarListFilter, CreateCarSerializer
 from .services import CarRepository
 
 
-@Controller("/car", description='Example of Car Resource with <strong>Controller</strong>', tag='Controller')
+@Controller(
+    "/car",
+    description="Example of Car Resource with <strong>Controller</strong>",
+    tag="Controller",
+)
 class CarController(ControllerBase):
     def __init__(self, repo: CarRepository):
         self.repo = repo
@@ -37,14 +50,14 @@ class CarController(ControllerBase):
 
     @get()
     async def get_all(self, query: CarListFilter = Query()):
-        res = dict(
-            cars=self.repo.get_all(),
-            message=f"This action returns all cars at limit={query.limit}, offset={query.offset}",
-        )
+        res = {
+            "cars": self.repo.get_all(),
+            "message": f"This action returns all cars at limit={query.limit}, offset={query.offset}",
+        }
         return res
 
-    @post("/", name='v2_create')
-    @Version('v2')
+    @post("/", name="v2_create")
+    @Version("v2")
     async def create_v2(self, payload: CreateCarSerializer):
         result = self.repo.create_car(payload)
         result.update(message="This action adds a new car - version 2")
