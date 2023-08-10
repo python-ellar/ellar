@@ -18,7 +18,9 @@ class PyLibMCCacheBackend(BasePylibMemcachedCache):
 
     MEMCACHE_CLIENT = Client
 
-    def __init__(self, servers: t.List[str], options: t.Dict = None, **kwargs: t.Any):
+    def __init__(
+        self, servers: t.List[str], options: t.Optional[t.Dict] = None, **kwargs: t.Any
+    ):
         super().__init__(servers, options=options, **kwargs)
 
     async def close_async(self, **kwargs: t.Any) -> None:

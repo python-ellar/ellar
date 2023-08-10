@@ -1,8 +1,8 @@
 import logging
 import typing as t
 
-from starlette.routing import BaseRoute, Mount
-
+from ellar.auth import IIdentitySchemes
+from ellar.auth.handlers import AuthenticationHandlerType
 from ellar.common.compatible import cached_property
 from ellar.common.constants import LOG_LEVELS
 from ellar.common.datastructures import State, URLPath
@@ -18,8 +18,10 @@ from ellar.core.middleware import (
     Middleware,
     RequestServiceProviderMiddleware,
     RequestVersioningMiddleware,
+    SessionMiddleware,
     TrustedHostMiddleware,
 )
+from ellar.core.middleware.authentication import IdentityMiddleware
 from ellar.core.modules import (
     DynamicModule,
     ModuleRefBase,
@@ -31,6 +33,7 @@ from ellar.core.services import Reflector
 from ellar.core.templating import AppTemplating
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
 from ellar.di.injector import EllarInjector
+from starlette.routing import BaseRoute, Mount
 
 from .conf import Config
 from .modules import ModuleBase
@@ -42,8 +45,8 @@ class App(AppTemplating):
         config: "Config",
         injector: EllarInjector,
         lifespan: t.Optional[t.Callable[["App"], t.AsyncContextManager]] = None,
-        global_guards: t.List[
-            t.Union[t.Type[GuardCanActivate], GuardCanActivate]
+        global_guards: t.Optional[
+            t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]
         ] = None,
     ):
         assert isinstance(config, Config), "config must instance of Config"
@@ -71,13 +74,13 @@ class App(AppTemplating):
         self.router = ApplicationRouter(
             routes=self._get_module_routes(),
             redirect_slashes=self.config.REDIRECT_SLASHES,
-            default=self.config.DEFAULT_NOT_FOUND_HANDLER,  # type: ignore
+            default=self.config.DEFAULT_NOT_FOUND_HANDLER,
             lifespan=EllarApplicationLifespan(
                 self.config.DEFAULT_LIFESPAN_HANDLER  # type: ignore[arg-type]
             ).lifespan,
         )
-        self.middleware_stack = self.build_middleware_stack()
         self._finalize_app_initialization()
+        self.middleware_stack = self.build_middleware_stack()
         self._config_logging()
 
     def _config_logging(self) -> None:
@@ -99,7 +102,7 @@ class App(AppTemplating):
         return _statics_func_wrapper
 
     def _get_module_routes(self) -> t.List[BaseRoute]:
-        _routes: t.List[BaseRoute] = list()
+        _routes: t.List[BaseRoute] = []
         if self.has_static_files:
             self._static_app = self.create_static_app()
             _routes.append(
@@ -194,6 +197,11 @@ class App(AppTemplating):
         middleware = (
             [
                 Middleware(
+                    TrustedHostMiddleware,
+                    allowed_hosts=allowed_hosts,
+                    www_redirect=self.config.REDIRECT_HOST,
+                ),
+                Middleware(
                     CORSMiddleware,
                     allow_origins=self.config.CORS_ALLOW_ORIGINS,
                     allow_credentials=self.config.CORS_ALLOW_CREDENTIALS,
@@ -204,18 +212,19 @@ class App(AppTemplating):
                     max_age=self.config.CORS_MAX_AGE,
                 ),
                 Middleware(
-                    TrustedHostMiddleware,
-                    allowed_hosts=allowed_hosts,
-                    www_redirect=self.config.REDIRECT_HOST,
-                ),
-                Middleware(
                     RequestServiceProviderMiddleware,
                     debug=self.debug,
-                    injector=self.injector,
                     handler=error_handler,
                 ),
                 Middleware(
-                    RequestVersioningMiddleware, debug=self.debug, config=self.config
+                    RequestVersioningMiddleware,
+                    debug=self.debug,
+                ),
+                Middleware(
+                    SessionMiddleware,
+                ),
+                Middleware(
+                    IdentityMiddleware,
                 ),
             ]
             + self._user_middleware
@@ -229,8 +238,8 @@ class App(AppTemplating):
         )
 
         app = self.router
-        for cls, options in reversed(middleware):
-            app = cls(app=app, **options)
+        for item in reversed(middleware):
+            app = item(app=app, injector=self.injector)
         return app
 
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
@@ -261,6 +270,7 @@ class App(AppTemplating):
         self.injector.container.register_instance(self)
         self.injector.container.register_instance(self.config, Config)
         self.injector.container.register_instance(self.jinja_environment, Environment)
+        self.injector.container.register_instance(self.jinja_environment, Environment)
 
     def add_exception_handler(
         self,
@@ -280,3 +290,13 @@ class App(AppTemplating):
     @cached_property
     def reflector(self) -> Reflector:
         return self.injector.get(Reflector)  # type: ignore[no-any-return]
+
+    @cached_property
+    def __identity_scheme(self) -> IIdentitySchemes:
+        return self.injector.get(IIdentitySchemes)  # type: ignore[no-any-return]
+
+    def add_authentication_schemes(
+        self, *authentication: AuthenticationHandlerType
+    ) -> None:
+        for auth in authentication:
+            self.__identity_scheme.add_authentication(auth)

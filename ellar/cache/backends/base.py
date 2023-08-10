@@ -11,7 +11,7 @@ class _BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
     _cache_client: t.Any
 
     @make_key_decorator
-    def get(self, key: str, version: str = None) -> t.Any:
+    def get(self, key: str, version: t.Optional[str] = None) -> t.Any:
         return self._cache_client.get(key)
 
     @make_key_decorator_and_validate
@@ -19,8 +19,8 @@ class _BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
         self,
         key: str,
         value: t.Any,
-        ttl: t.Union[float, int] = None,
-        version: str = None,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
     ) -> bool:
         result = self._cache_client.set(key, value, int(self.get_backend_ttl(ttl)))
         if not result:
@@ -31,24 +31,27 @@ class _BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
         return bool(result)
 
     @make_key_decorator
-    def delete(self, key: str, version: str = None) -> bool:
+    def delete(self, key: str, version: t.Optional[str] = None) -> bool:
         result = self._cache_client.delete(key)
         return bool(result)
 
     @make_key_decorator
     def touch(
-        self, key: str, ttl: t.Union[float, int] = None, version: str = None
+        self,
+        key: str,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
     ) -> bool:
         result = self._cache_client.touch(key, self.get_backend_ttl(ttl))
         return bool(result)
 
     @make_key_decorator
-    def incr(self, key: str, delta: int = 1, version: str = None) -> int:
+    def incr(self, key: str, delta: int = 1, version: t.Optional[str] = None) -> int:
         result = self._cache_client.incr(key, abs(delta))
         return t.cast(int, result)
 
     @make_key_decorator
-    def decr(self, key: str, delta: int = 1, version: str = None) -> int:
+    def decr(self, key: str, delta: int = 1, version: t.Optional[str] = None) -> int:
         result = self._cache_client.decr(key, abs(delta))
         return t.cast(int, result)
 
@@ -62,7 +65,9 @@ class _BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
 class BasePylibMemcachedCache(_BasePylibMemcachedCacheSync):
     MEMCACHE_CLIENT: t.Type
 
-    def __init__(self, servers: t.List[str], options: t.Dict = None, **kwargs: t.Any):
+    def __init__(
+        self, servers: t.List[str], options: t.Optional[t.Dict] = None, **kwargs: t.Any
+    ):
         super().__init__(**kwargs)
         self._servers = servers
 
@@ -83,25 +88,28 @@ class BasePylibMemcachedCache(_BasePylibMemcachedCacheSync):
     async def executor(self, func: t.Callable, *args: t.Any, **kwargs: t.Any) -> t.Any:
         return await run_in_threadpool(func, *args, **kwargs)
 
-    async def get_async(self, key: str, version: str = None) -> t.Any:
+    async def get_async(self, key: str, version: t.Optional[str] = None) -> t.Any:
         return await self.executor(self.get, key, version=version)
 
     async def set_async(
         self,
         key: str,
         value: t.Any,
-        ttl: t.Union[float, int] = None,
-        version: str = None,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
     ) -> bool:
         result = await self.executor(self.set, key, value, ttl=ttl, version=version)
         return bool(result)
 
-    async def delete_async(self, key: str, version: str = None) -> bool:
+    async def delete_async(self, key: str, version: t.Optional[str] = None) -> bool:
         result = await self.executor(self.delete, key, version=version)
         return bool(result)
 
     async def touch_async(
-        self, key: str, ttl: t.Union[float, int] = None, version: str = None
+        self,
+        key: str,
+        ttl: t.Union[float, int, None] = None,
+        version: t.Optional[str] = None,
     ) -> bool:
         result = await self.executor(self.touch, key, ttl=ttl, version=version)
         return bool(result)
@@ -117,10 +125,14 @@ class BasePylibMemcachedCache(_BasePylibMemcachedCacheSync):
         super().validate_key(key)
         self._memcache_key_warnings(key)
 
-    async def incr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+    async def incr_async(
+        self, key: str, delta: int = 1, version: t.Optional[str] = None
+    ) -> int:
         res = await self.executor(self.incr, key, delta=delta, version=version)
         return t.cast(int, res)
 
-    async def decr_async(self, key: str, delta: int = 1, version: str = None) -> int:
+    async def decr_async(
+        self, key: str, delta: int = 1, version: t.Optional[str] = None
+    ) -> int:
         res = await self.executor(self.decr, key, delta=delta, version=version)
         return t.cast(int, res)

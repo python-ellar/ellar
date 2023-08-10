@@ -1,7 +1,5 @@
 import typing as t
 
-from starlette.middleware import Middleware
-
 from ellar.common.compatible import AttributeDict
 from ellar.common.constants import (
     EXCEPTION_HANDLERS_KEY,
@@ -11,7 +9,7 @@ from ellar.common.constants import (
     TEMPLATE_GLOBAL_KEY,
 )
 from ellar.common.exceptions.callable_exceptions import CallableExceptionHandler
-from ellar.core.middleware import FunctionBasedMiddleware
+from ellar.core.middleware import FunctionBasedMiddleware, Middleware
 from ellar.reflect import reflect
 
 from .helper import module_callable_factory
@@ -27,9 +25,9 @@ class ModuleBaseBuilder:
     def __init__(self, cls: t.Union[t.Type["ModuleBase"], "ModuleBaseMeta"]) -> None:
         self._cls = cls
         self._cls.__MODULE_FIELDS__ = t.cast(
-            t.Dict, getattr(self._cls, MODULE_FIELDS, None) or dict()
+            t.Dict, getattr(self._cls, MODULE_FIELDS, None) or {}
         )
-        self._actions: t.Dict[str, t.Callable[[t.Any], None]] = dict()
+        self._actions: t.Dict[str, t.Callable[[t.Any], None]] = {}
         self._actions.update(
             {
                 EXCEPTION_HANDLERS_KEY: self.exception_config,

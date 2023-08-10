@@ -1,8 +1,9 @@
+import functools
 import typing as t
 
 from ellar.common import IExecutionContext, IGuardsConsumer
 from ellar.common.constants import GUARDS_KEY
-from ellar.di import EllarInjector, injectable
+from ellar.di import injectable
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common import GuardCanActivate
@@ -11,9 +12,6 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 @injectable
 class GuardConsumer(IGuardsConsumer):
-    def __init__(self, injector: EllarInjector) -> None:
-        self.injector = injector
-
     async def execute(
         self, context: IExecutionContext, route_operation: "RouteOperationBase"
     ) -> None:
@@ -21,7 +19,6 @@ class GuardConsumer(IGuardsConsumer):
 
     @t.no_type_check
     async def run_route_guards(self, context: IExecutionContext) -> None:
-
         for guard in self._get_guards(context):
             await self.run_guard(context, guard)
 
@@ -39,14 +36,16 @@ class GuardConsumer(IGuardsConsumer):
         targets = [context.get_handler(), context.get_class()]
 
         return map(
-            self.get_guard_instance,
+            functools.partial(self.get_guard_instance, context),
             reflector.get_all_and_override(GUARDS_KEY, *targets)
             or context.get_app().get_guards(),
         )
 
     def get_guard_instance(
-        self, guard: t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        self,
+        context: IExecutionContext,
+        guard: t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"],
     ) -> "GuardCanActivate":
         if isinstance(guard, type):
-            return self.injector.get(guard)  # type: ignore[no-any-return]
+            return context.get_service_provider().get(guard)  # type: ignore[no-any-return]
         return guard

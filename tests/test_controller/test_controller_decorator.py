@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.common import Controller, ControllerBase, get, http_route, ws_route
 from ellar.common.constants import (
     CONTROLLER_CLASS_KEY,

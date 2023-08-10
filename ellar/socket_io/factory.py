@@ -1,8 +1,6 @@
 import typing as t
 
 import socketio
-from starlette.routing import Mount
-
 from ellar.core.routing import RouterBuilder
 from ellar.reflect import reflect
 from ellar.socket_io.adapter import SocketIOASGIApp
@@ -17,13 +15,16 @@ from ellar.socket_io.constants import (
 )
 from ellar.socket_io.gateway import SocketMessageOperation, SocketOperationConnection
 from ellar.socket_io.model import GatewayBase, GatewayType
+from starlette.routing import Mount
 
 _socket_servers: t.Dict[str, socketio.AsyncServer] = {}
 
 
 class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
     @classmethod
-    def build(cls, controller_type: t.Union[t.Type[GatewayBase], t.Any]) -> "Mount":
+    def build(
+        cls, controller_type: t.Union[t.Type[GatewayBase], t.Any], **kwargs: t.Any
+    ) -> "Mount":
         name = reflect.get_metadata_or_raise_exception(
             GATEWAY_METADATA.NAME, controller_type
         )

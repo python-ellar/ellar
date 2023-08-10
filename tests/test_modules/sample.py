@@ -32,7 +32,7 @@ class SampleController:
         item: Item,
         user: User,
         importance: int = Body(gt=0),
-        q: Optional[str] = None
+        q: Optional[str] = None,
     ):
         results = {
             "item_id": item_id,

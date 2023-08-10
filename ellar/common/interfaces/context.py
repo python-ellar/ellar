@@ -1,14 +1,13 @@
 import typing as t
-from abc import ABC, ABCMeta, abstractmethod
-
-from starlette.requests import empty_send
-from starlette.responses import Response
+from abc import ABC, ABCMeta, abstractmethod, abstractproperty
 
 from ellar.common.constants import empty_receive
 from ellar.common.types import T, TReceive, TScope, TSend
+from starlette.requests import empty_send
+from starlette.responses import Response
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common.models import ControllerBase
+    from ellar.common.models import ControllerBase, Identity
     from ellar.common.routing import RouteOperationBase
     from ellar.core import App, HTTPConnection, Request, WebSocket
     from ellar.di.injector import EllarInjector
@@ -64,6 +63,14 @@ class IHostContext(ABC, metaclass=ABCMeta):
     def get_args(self) -> t.Tuple[TScope, TReceive, TSend]:
         """returns all args passed to asgi function"""
 
+    @abstractproperty
+    def user(self) -> "Identity":
+        """gets user identity"""
+
+    @user.setter
+    def user(self, value: t.Any) -> None:
+        """Sets user identity"""
+
 
 class IExecutionContext(IHostContext, ABC):
     @abstractmethod
@@ -83,7 +90,7 @@ class IHostContextFactory(ABC):
         receive: TReceive = empty_receive,
         send: TSend = empty_send,
     ) -> IHostContext:
-        pass
+        """Create Context Action"""
 
 
 class IExecutionContextFactory(ABC):
@@ -95,7 +102,7 @@ class IExecutionContextFactory(ABC):
         receive: TReceive = empty_receive,
         send: TSend = empty_send,
     ) -> IExecutionContext:
-        pass
+        """Create Context Action"""
 
 
 class SubHostContextFactory(t.Generic[T], ABC):
@@ -113,7 +120,7 @@ class SubHostContextFactory(t.Generic[T], ABC):
 
     @abstractmethod
     def validate(self, context: IHostContext) -> None:
-        pass
+        """Validation Action"""
 
     def create_context_type(self, context: IHostContext) -> T:
         scope, receive, send = context.get_args()

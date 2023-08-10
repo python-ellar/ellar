@@ -2,10 +2,9 @@ import typing as t
 from functools import lru_cache
 
 import jinja2
+from ellar.common.templating import Environment
 from starlette.background import BackgroundTask
 from starlette.templating import _TemplateResponse as TemplateResponse
-
-from ellar.common.templating import Environment
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.connection import Request
@@ -21,7 +20,7 @@ def get_template_name(template_name: str) -> str:
 def process_view_model(view_response: t.Any) -> t.Dict:
     if isinstance(view_response, dict):
         return view_response
-    return dict(model=view_response)
+    return {"model": view_response}
 
 
 def _get_jinja_and_template_context(
@@ -52,8 +51,8 @@ def render_template_string(
 def render_template(
     template_name: str,
     request: "Request",
-    background: BackgroundTask = None,
-    **template_kwargs: t.Any
+    background: t.Optional[BackgroundTask] = None,
+    **template_kwargs: t.Any,
 ) -> TemplateResponse:
     """Renders a template from the template folder with the given context.
     :param request: Request instance

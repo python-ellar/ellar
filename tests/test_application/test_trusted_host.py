@@ -1,8 +1,7 @@
-from starlette.requests import Request
-from starlette.responses import PlainTextResponse
-
 from ellar.common import get
 from ellar.testing import Test
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse
 
 
 def test_trusted_host_middleware(test_client_factory):
@@ -11,7 +10,7 @@ def test_trusted_host_middleware(test_client_factory):
         return PlainTextResponse("OK", status_code=200)
 
     tm = Test.create_test_module(
-        config_module=dict(ALLOWED_HOSTS=["testserver", "*.testserver"])
+        config_module={"ALLOWED_HOSTS": ["testserver", "*.testserver"]}
     )
     app = tm.create_application()
     app.router.append(homepage)
@@ -38,7 +37,7 @@ def test_trusted_host_middleware_works_for_debug_true(test_client_factory):
         return PlainTextResponse("OK", status_code=200)
 
     tm = Test.create_test_module(
-        config_module=dict(ALLOWED_HOSTS=["testserver", "*.testserver"])
+        config_module={"ALLOWED_HOSTS": ["testserver", "*.testserver"]}
     )
     app = tm.create_application()
     app.router.append(homepage)
@@ -70,7 +69,7 @@ def test_www_redirect(test_client_factory):
     def homepage(request: Request):
         return PlainTextResponse("OK", status_code=200)
 
-    tm = Test.create_test_module(config_module=dict(ALLOWED_HOSTS=["www.example.com"]))
+    tm = Test.create_test_module(config_module={"ALLOWED_HOSTS": ["www.example.com"]})
     app = tm.create_application()
     app.router.append(homepage)
 

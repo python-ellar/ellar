@@ -2,9 +2,8 @@ from datetime import datetime
 from enum import IntEnum
 from typing import List, Optional
 
-from pydantic import Field
-
 from ellar.common.serializer import Serializer
+from pydantic import Field
 
 
 class Product(Serializer):

@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.common import ModuleRouter, Query, get, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
@@ -28,7 +27,12 @@ def query_params_mixed_schema(
     filters: Filter = Query(...),
     data: Data = Query(...),
 ):
-    return dict(query1=query1, query2=query2, filters=filters.dict(), data=data.dict())
+    return {
+        "query1": query1,
+        "query2": query2,
+        "filters": filters.dict(),
+        "data": data.dict(),
+    }
 
 
 tm = Test.create_test_module(routers=(mr,))

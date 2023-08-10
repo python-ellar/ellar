@@ -2,6 +2,7 @@ import os
 
 from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
+
 # from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerDocumentGenerator
 from .root_module import ApplicationModule
 
@@ -10,7 +11,7 @@ application = AppFactory.create_from_app_module(
     config_module=os.environ.get(
         ELLAR_CONFIG_MODULE, "socketio_app.config:DevelopmentConfig"
     ),
-    global_guards=[]
+    global_guards=[],
 )
 
 # uncomment this section if you want API documentation

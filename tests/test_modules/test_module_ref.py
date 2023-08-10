@@ -1,8 +1,6 @@
 import logging
 
 import pytest
-from starlette.routing import Route
-
 from ellar.common import (
     Module,
     exception_handler,
@@ -28,6 +26,9 @@ from ellar.core.modules.ref import (
 )
 from ellar.di import EllarInjector, TransientScope, injectable
 from ellar.reflect import reflect
+from ellar.testing import Test
+from injector import UnsatisfiedRequirement
+from starlette.routing import Route
 
 from .sample import AnotherUserService, ModuleBaseExample, SampleController, UserService
 
@@ -56,7 +57,6 @@ class NonTemplateModuleExample(ModuleBase):
 
 
 def test_create_module_ref_factor_creates_right_module_ref():
-
     config = Config()
     container = EllarInjector(auto_bind=False).container
 
@@ -64,13 +64,13 @@ def test_create_module_ref_factor_creates_right_module_ref():
         NonTemplateModuleExample, config=config, container=container, a="a", b="b"
     )
     assert isinstance(module_ref, ModulePlainRef)
-    assert module_ref._init_kwargs == dict(a="a", b="b")
+    assert module_ref._init_kwargs == {"a": "a", "b": "b"}
 
     module_ref = create_module_ref_factor(
         ModuleBaseExample, config=config, container=container
     )
     assert isinstance(module_ref, ModuleTemplateRef)
-    assert module_ref._init_kwargs == dict()
+    assert module_ref._init_kwargs == {}
 
 
 def test_module_init_kwargs_build_correctly():
@@ -80,7 +80,7 @@ def test_module_init_kwargs_build_correctly():
         InitKwargsModule, config=config, container=container
     )
     assert module_ref
-    assert module_ref._init_kwargs == dict(d=12.3, c="C")
+    assert module_ref._init_kwargs == {"d": 12.3, "c": "C"}
 
 
 def test_module_ref_registers_module_type():
@@ -278,13 +278,13 @@ def test_module_template_registers_providers_and_controllers():
     config = Config()
     container = EllarInjector(auto_bind=False).container
 
-    with pytest.raises(Exception):
+    with pytest.raises(UnsatisfiedRequirement):
         container.injector.get(UserService)
 
-    with pytest.raises(Exception):
+    with pytest.raises(UnsatisfiedRequirement):
         container.injector.get(AnotherUserService)
 
-    with pytest.raises(Exception):
+    with pytest.raises(UnsatisfiedRequirement):
         container.injector.get(SampleController)
 
     module_ref = create_module_ref_factor(
@@ -308,6 +308,6 @@ def test_run_application_ready_works():
 
     assert TestModuleCycleExample._before_init_called is False
 
-    AppFactory.create_from_app_module(TestModuleCycleExample)
+    Test.create_test_module(modules=[TestModuleCycleExample]).create_application()
 
     assert TestModuleCycleExample._before_init_called

@@ -2,16 +2,11 @@ import typing as t
 from abc import ABC, abstractmethod
 from enum import Enum
 
-from pydantic import BaseModel
-from pydantic.fields import ModelField, Undefined
-from pydantic.schema import field_schema
-from starlette.routing import Mount, compile_path
-from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
-
 from ellar.common.compatible import cached_property
 from ellar.common.constants import GUARDS_KEY, METHODS_WITH_BODY, REF_PREFIX
 from ellar.common.params.args import EndpointArgsModel
-from ellar.common.params.params import BodyFieldInfo as Body, ParamFieldInfo as Param
+from ellar.common.params.params import BodyFieldInfo as Body
+from ellar.common.params.params import ParamFieldInfo as Param
 from ellar.common.params.resolvers import (
     BaseRouteParameterResolver,
     BodyParameterResolver,
@@ -22,6 +17,11 @@ from ellar.common.routing import ModuleMount, RouteOperation
 from ellar.common.shortcuts import normalize_path
 from ellar.core.services.reflector import Reflector
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
+from pydantic import BaseModel
+from pydantic.fields import ModelField, Undefined
+from pydantic.schema import field_schema
+from starlette.routing import Mount, compile_path
+from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common import GuardCanActivate
@@ -48,8 +48,8 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
         self,
         mount: t.Union[ModuleMount, Mount],
         name: t.Optional[str] = None,
-        global_guards: t.List[
-            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        global_guards: t.Optional[
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
     ) -> None:
         self.tag = name
@@ -72,7 +72,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
 
         for route in self.mount.routes:
             if isinstance(route, RouteOperation) and route.include_in_schema:
-                openapi = reflector.get(OPENAPI_OPERATION_KEY, route.endpoint) or dict()
+                openapi = reflector.get(OPENAPI_OPERATION_KEY, route.endpoint) or {}
                 guards = reflector.get(GUARDS_KEY, route.endpoint)
                 openapi.setdefault("tags", [self.tag] if self.tag else ["default"])
                 _routes.append(
@@ -94,7 +94,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
 
     def get_route_models(self) -> t.List[t.Union[ModelField, RouteParameterModelField]]:
         """Should return input fields and output fields"""
-        return self._openapi_models  # type:ignore
+        return self._openapi_models
 
     def get_openapi_path(
         self,
@@ -127,8 +127,10 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         description: t.Optional[str] = None,
         tags: t.Optional[t.List[str]] = None,
         deprecated: t.Optional[bool] = None,
-        global_route_parameters: t.List[ModelField] = None,
-        guards: t.List[t.Union["GuardCanActivate", t.Type["GuardCanActivate"]]] = None,
+        global_route_parameters: t.Optional[t.List[ModelField]] = None,
+        guards: t.Optional[
+            t.List[t.Union["GuardCanActivate", t.Type["GuardCanActivate"]]]
+        ] = None,
     ) -> None:
         self.operation_id = operation_id
         self.summary = summary
@@ -188,7 +190,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
 
     def get_route_models(self) -> t.List[ModelField]:
         """Should return input fields and output fields"""
-        return self._openapi_models  # type:ignore
+        return self._openapi_models
 
     def _get_openapi_security_scheme(
         self,
@@ -196,9 +198,9 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         security_definitions: t.Dict = {}
         operation_security: t.List = []
         for item in self.guards:
-            if not hasattr(item, "get_guard_scheme"):
+            if not hasattr(item, "openapi_security_scheme"):
                 continue
-            security_scheme = item.get_guard_scheme()  # type: ignore
+            security_scheme = item.openapi_security_scheme()
             scheme_name = list(security_scheme.keys())[0]
             operation_security.append({scheme_name: item.openapi_scope})  # type: ignore
             security_definitions.update(security_scheme)
@@ -330,10 +332,8 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             if (
                 parameters or self.route.endpoint_parameter_model.body_resolver
             ) and not any(
-                [
-                    status in operation["responses"]
-                    for status in [http422, "4XX", "default"]
-                ]
+                status in operation["responses"]
+                for status in [http422, "4XX", "default"]
             ):
                 operation["responses"][http422] = {
                     "description": "Validation Error",
@@ -351,7 +351,6 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         self,
         model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
     ) -> t.Tuple:
-
         _path, _security_schemes = self._get_openapi_path_object(
             model_name_map=model_name_map
         )

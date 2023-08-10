@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.common.constants import NOT_SET
 from ellar.core.versioning import VersioningSchemes as VERSIONING
 from ellar.testing import Test
@@ -14,10 +13,10 @@ app.enable_versioning(VERSIONING.HOST, version_parameter="v")
 @pytest.mark.parametrize(
     "path, host, expected_result",
     [
-        ("/version", "testserver.org", dict(version="default")),
-        ("/version", "v1.testserver.org", dict(version="v1")),
-        ("/version", "v2.testserver.org", dict(version="v2")),
-        ("/version", "v3.testserver.org", dict(version="v3")),
+        ("/version", "testserver.org", {"version": "default"}),
+        ("/version", "v1.testserver.org", {"version": "v1"}),
+        ("/version", "v2.testserver.org", {"version": "v2"}),
+        ("/version", "v3.testserver.org", {"version": "v3"}),
     ],
 )
 def test_host_route_versioning(path, host, expected_result):
@@ -31,25 +30,25 @@ def test_host_route_versioning(path, host, expected_result):
     "path, host, default, expected_result",
     [
         # default is 1
-        ("/version", "testserver.org", "1", dict(version="default")),
-        ("/version", "v1.testserver.org", "1", dict(version="default")),
-        ("/version", "v2.testserver.org", "1", dict(version="v2")),
-        ("/version", "v3.testserver.org", "1", dict(version="v3")),
+        ("/version", "testserver.org", "1", {"version": "default"}),
+        ("/version", "v1.testserver.org", "1", {"version": "default"}),
+        ("/version", "v2.testserver.org", "1", {"version": "v2"}),
+        ("/version", "v3.testserver.org", "1", {"version": "v3"}),
         # default is 2
-        ("/version", "testserver.org", "2", dict(version="default")),
-        ("/version", "v1.testserver.org", "2", dict(version="v1")),
-        ("/version", "v2.testserver.org", "2", dict(version="default")),
-        ("/version", "v3.testserver.org", "2", dict(version="v3")),
+        ("/version", "testserver.org", "2", {"version": "default"}),
+        ("/version", "v1.testserver.org", "2", {"version": "v1"}),
+        ("/version", "v2.testserver.org", "2", {"version": "default"}),
+        ("/version", "v3.testserver.org", "2", {"version": "v3"}),
         # default is 3
-        ("/version", "testserver.org", "3", dict(version="default")),
-        ("/version", "v1.testserver.org", "3", dict(version="v1")),
-        ("/version", "v2.testserver.org", "3", dict(version="v2")),
-        ("/version", "v3.testserver.org", "3", dict(version="default")),
+        ("/version", "testserver.org", "3", {"version": "default"}),
+        ("/version", "v1.testserver.org", "3", {"version": "v1"}),
+        ("/version", "v2.testserver.org", "3", {"version": "v2"}),
+        ("/version", "v3.testserver.org", "3", {"version": "default"}),
         # default is None or NOT_SET
-        ("/version", "testserver.org", NOT_SET, dict(version="default")),
-        ("/version", "v1.testserver.org", NOT_SET, dict(version="v1")),
-        ("/version", "v2.testserver.org", NOT_SET, dict(version="v2")),
-        ("/version", "v3.testserver.org", NOT_SET, dict(version="v3")),
+        ("/version", "testserver.org", NOT_SET, {"version": "default"}),
+        ("/version", "v1.testserver.org", NOT_SET, {"version": "v1"}),
+        ("/version", "v2.testserver.org", NOT_SET, {"version": "v2"}),
+        ("/version", "v3.testserver.org", NOT_SET, {"version": "v3"}),
     ],
 )
 def test_host_route_versioning_with_default_version(
@@ -84,9 +83,9 @@ def test_host_route_versioning_not_found(host, version_parameter):
 @pytest.mark.parametrize(
     "host, version_parameter, expected_result",
     [
-        ("http://b1.testserver.org", "b", dict(version="v1")),
-        ("http://b2.testserver.org", "b", dict(version="v2")),
-        ("http://b3.testserver.org", "b", dict(version="v3")),
+        ("http://b1.testserver.org", "b", {"version": "v1"}),
+        ("http://b2.testserver.org", "b", {"version": "v2"}),
+        ("http://b3.testserver.org", "b", {"version": "v3"}),
     ],
 )
 def test_host_route_versioning_different_version_parameter(

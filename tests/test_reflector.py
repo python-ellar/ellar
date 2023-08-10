@@ -51,7 +51,7 @@ def test_should_reflect_metadata_of_all_targets_in_an_arrays():
 
 def test_should_reflect_metadata_of_all_targets_and_merge_an_object(random_type):
     key = "key"
-    value = dict(test="test")
+    value = {"test": "test"}
     reflect.define_metadata(key, value, SampleTarget)
     assert reflector.get_all_and_merge(key, *[SampleTarget, SampleTarget]) == value
 
@@ -60,12 +60,13 @@ def test_should_reflect_metadata_of_all_targets_and_merge_different_objects(
     random_type,
 ):
     key = "key"
-    value = dict(test="test")
+    value = {"test": "test"}
     reflect.define_metadata(key, value, SampleTarget)
-    reflect.define_metadata(key, dict(test_2="test_2"), SampleTarget)
-    assert reflector.get_all_and_merge(key, *[SampleTarget, SampleTarget]) == dict(
-        test="test", test_2="test_2"
-    )
+    reflect.define_metadata(key, {"test_2": "test_2"}, SampleTarget)
+    assert reflector.get_all_and_merge(key, *[SampleTarget, SampleTarget]) == {
+        "test": "test",
+        "test_2": "test_2",
+    }
 
 
 def test_should_reflect_metadata_of_all_targets_and_return_a_first_not_undefined_value():

@@ -1,8 +1,7 @@
-from starlette.background import BackgroundTask, BackgroundTasks
-
 from ellar.common import IHostContext, Module, ModuleRouter, middleware
 from ellar.core import ModuleBase
 from ellar.testing import Test
+from starlette.background import BackgroundTask, BackgroundTasks
 
 router = ModuleRouter()
 background_task_results = {}

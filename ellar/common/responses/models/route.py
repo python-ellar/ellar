@@ -1,10 +1,9 @@
 import logging
 import typing as t
 
-from pydantic import BaseModel
-
 from ellar.common.constants import SCOPE_RESPONSE_STARTED
 from ellar.common.interfaces import IExecutionContext, IResponseModel
+from pydantic import BaseModel
 
 from ..response_types import Response
 from .base import ResponseModel, ResponseResolver

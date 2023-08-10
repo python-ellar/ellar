@@ -1,9 +1,5 @@
 import typing as t
 
-from starlette.routing import WebSocketRoute as StarletteWebSocketRoute, compile_path
-from starlette.status import WS_1008_POLICY_VIOLATION
-from starlette.websockets import WebSocketState
-
 from ellar.common.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,
     EXTRA_ROUTE_ARGS_KEY,
@@ -17,6 +13,10 @@ from ellar.common.helper import get_name
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.params import ExtraEndpointArg, WebsocketEndpointArgsModel
 from ellar.reflect import reflect
+from starlette.routing import WebSocketRoute as StarletteWebSocketRoute
+from starlette.routing import compile_path
+from starlette.status import WS_1008_POLICY_VIOLATION
+from starlette.websockets import WebSocketState
 
 from ..base import WebsocketRouteOperationBase
 from .handler import WebSocketExtraHandler
@@ -47,12 +47,12 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
     ) -> None:
         super().__init__(endpoint=endpoint)
         assert path.startswith("/"), "Routed paths must start with '/'"
-        self._handlers_kwargs: t.Dict[str, t.Any] = dict(
-            encoding=encoding,
-            on_receive=None,
-            on_connect=None,
-            on_disconnect=None,
-        )
+        self._handlers_kwargs: t.Dict[str, t.Any] = {
+            "encoding": encoding,
+            "on_receive": None,
+            "on_connect": None,
+            "on_disconnect": None,
+        }
         self._handlers_kwargs.update(handlers_kwargs)
         self._use_extra_handler = use_extra_handler
         self._extra_handler_type: t.Optional[
@@ -107,7 +107,7 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
             if websocket.client_state == WebSocketState.CONNECTING:
                 await websocket.accept()
             await websocket.send_json(
-                dict(code=WS_1008_POLICY_VIOLATION, errors=exc.errors())
+                {"code": WS_1008_POLICY_VIOLATION, "errors": exc.errors()}
             )
             await websocket.close(code=WS_1008_POLICY_VIOLATION)
             raise exc

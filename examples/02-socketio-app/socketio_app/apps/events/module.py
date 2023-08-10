@@ -24,6 +24,7 @@ from ellar.di import Container
 from .controllers import EventsController
 from .gateways import EventsGateway
 
+
 @Module(
     controllers=[EventsController, EventsGateway],
     providers=[],
@@ -35,4 +36,4 @@ class EventsModule(ModuleBase):
     """
 
     def register_providers(self, container: Container) -> None:
-        """for more complicated provider registrations, use container.register_instance(...) """
+        """for more complicated provider registrations, use container.register_instance(...)"""

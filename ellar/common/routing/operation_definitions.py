@@ -48,14 +48,8 @@ def _websocket_connection_attributes(func: t.Callable) -> t.Callable:
 
         return _wrap
 
-    setattr(
-        func, "connect", functools.partial(_advance_function, handler_name="on_connect")
-    )
-    setattr(
-        func,
-        "disconnect",
-        functools.partial(_advance_function, handler_name="on_disconnect"),
-    )
+    func.connect = functools.partial(_advance_function, handler_name="on_connect")  # type: ignore[attr-defined]
+    func.disconnect = functools.partial(_advance_function, handler_name="on_disconnect")  # type: ignore[attr-defined]
     return func
 
 
@@ -111,7 +105,7 @@ class OperationDefinitions:
         self,
         path: str = "/",
         *,
-        name: str = None,
+        name: t.Optional[str] = None,
         include_in_schema: bool = True,
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
@@ -131,7 +125,7 @@ class OperationDefinitions:
         self,
         path: str = "/",
         *,
-        name: str = None,
+        name: t.Optional[str] = None,
         include_in_schema: bool = True,
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
@@ -151,7 +145,7 @@ class OperationDefinitions:
         self,
         path: str = "/",
         *,
-        name: str = None,
+        name: t.Optional[str] = None,
         include_in_schema: bool = True,
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
@@ -171,7 +165,7 @@ class OperationDefinitions:
         self,
         path: str = "/",
         *,
-        name: str = None,
+        name: t.Optional[str] = None,
         include_in_schema: bool = True,
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
@@ -191,7 +185,7 @@ class OperationDefinitions:
         self,
         path: str = "/",
         *,
-        name: str = None,
+        name: t.Optional[str] = None,
         include_in_schema: bool = True,
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
@@ -211,7 +205,7 @@ class OperationDefinitions:
         self,
         path: str = "/",
         *,
-        name: str = None,
+        name: t.Optional[str] = None,
         include_in_schema: bool = True,
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
@@ -231,7 +225,7 @@ class OperationDefinitions:
         self,
         path: str = "/",
         *,
-        name: str = None,
+        name: t.Optional[str] = None,
         include_in_schema: bool = True,
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
@@ -251,7 +245,7 @@ class OperationDefinitions:
         self,
         path: str = "/",
         *,
-        name: str = None,
+        name: t.Optional[str] = None,
         include_in_schema: bool = True,
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
@@ -272,7 +266,7 @@ class OperationDefinitions:
         path: str = "/",
         *,
         methods: t.List[str],
-        name: str = None,
+        name: t.Optional[str] = None,
         include_in_schema: bool = True,
         response: t.Union[
             t.Dict[int, t.Type], t.List[t.Tuple[int, t.Type]], t.Type, t.Any
@@ -297,7 +291,7 @@ class OperationDefinitions:
         self,
         path: str = "/",
         *,
-        name: str = None,
+        name: t.Optional[str] = None,
         encoding: t.Optional[str] = "json",
         use_extra_handler: bool = False,
         extra_handler_type: t.Optional[t.Type] = None,

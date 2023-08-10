@@ -3,8 +3,6 @@ from collections import OrderedDict
 from pathlib import Path
 from uuid import uuid4
 
-from starlette.routing import Host, Mount
-
 from ellar.common import EllarTyper
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.models import GuardCanActivate
@@ -12,9 +10,10 @@ from ellar.core.main import App
 from ellar.core.modules import DynamicModule, ModuleBase, ModuleSetup
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
+from starlette.routing import Host, Mount
 
 from .conf import Config
-from .core_service_registration import CoreServiceRegistration
+from .core_services import EllarCoreService
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common.routing import ModuleMount, ModuleRouter
@@ -90,8 +89,8 @@ class AppFactory:
                 container=injector.container, config=config
             )
 
-            if not isinstance(module_ref, ModuleSetup):
-                module_ref.run_module_register_services()
+            # if not isinstance(module_ref, ModuleSetup):
+            #     module_ref.run_module_register_services()
 
             injector.add_module(module_ref)
 
@@ -102,7 +101,7 @@ class AppFactory:
             module_ref = module_config.configure_with_factory(
                 config, injector.container
             )
-            module_ref.run_module_register_services()
+            # module_ref.run_module_register_services()
 
             injector.add_module(module_ref)
 
@@ -110,10 +109,10 @@ class AppFactory:
     def _create_app(
         cls,
         module: t.Type[t.Union[ModuleBase, t.Any]],
-        global_guards: t.List[
-            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        global_guards: t.Optional[
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
-        config_module: t.Union[str, t.Dict] = None,
+        config_module: t.Union[str, t.Dict, None] = None,
     ) -> App:
         def _get_config_kwargs() -> t.Dict:
             if config_module is None:
@@ -125,7 +124,7 @@ class AppFactory:
                 )
 
             if isinstance(config_module, str):
-                return dict(config_module=config_module)
+                return {"config_module": config_module}
             return dict(config_module)
 
         assert reflect.get_metadata(MODULE_WATERMARK, module), "Only Module is allowed"
@@ -133,7 +132,8 @@ class AppFactory:
         config = Config(app_configured=True, **_get_config_kwargs())
         injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND)
         injector.container.register_instance(config, concrete_type=Config)
-        CoreServiceRegistration(injector, config).register_all()
+        core_service = EllarCoreService(injector, config)
+        core_service.register_core_services()
 
         cls._build_modules(app_module=module, injector=injector, config=config)
 
@@ -154,7 +154,7 @@ class AppFactory:
             module_ref = module_config.configure_with_factory(
                 config, injector.container
             )
-            module_ref.run_module_register_services()
+            # module_ref.run_module_register_services()
 
             injector.add_module(module_ref)
             routes.extend(module_ref.routes)
@@ -170,20 +170,18 @@ class AppFactory:
     @classmethod
     def create_app(
         cls,
-        controllers: t.Sequence[t.Union[t.Type]] = tuple(),
-        routers: t.Sequence[
-            t.Union["ModuleRouter", "ModuleMount", Mount, Host]
-        ] = tuple(),
-        providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = tuple(),
-        modules: t.Sequence[t.Type[t.Union[ModuleBase, t.Any]]] = tuple(),
+        controllers: t.Sequence[t.Union[t.Type]] = (),
+        routers: t.Sequence[t.Union["ModuleRouter", "ModuleMount", Mount, Host]] = (),
+        providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = (),
+        modules: t.Sequence[t.Type[t.Union[ModuleBase, t.Any]]] = (),
         template_folder: t.Optional[str] = None,
         base_directory: t.Optional[t.Union[str, Path]] = None,
         static_folder: str = "static",
-        global_guards: t.List[
-            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        global_guards: t.Optional[
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
-        commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = tuple(),
-        config_module: t.Union[str, t.Dict] = None,
+        commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = (),
+        config_module: t.Union[str, t.Dict, None] = None,
     ) -> App:
         from ellar.common import Module
 
@@ -209,10 +207,10 @@ class AppFactory:
     def create_from_app_module(
         cls,
         module: t.Type[t.Union[ModuleBase, t.Any]],
-        global_guards: t.List[
-            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        global_guards: t.Optional[
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
-        config_module: t.Union[str, t.Dict] = None,
+        config_module: t.Union[str, t.Dict, None] = None,
     ) -> App:
         return cls._create_app(
             module, config_module=config_module, global_guards=global_guards

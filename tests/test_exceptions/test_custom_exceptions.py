@@ -2,17 +2,16 @@ import typing as t
 from unittest.mock import patch
 
 import pytest
-from pydantic.error_wrappers import ValidationError
-from starlette.exceptions import HTTPException
-from starlette.responses import JSONResponse, Response
-
-from ellar.common import IExceptionHandler, IHostContext, get
+from ellar.common import IExceptionHandler, IHostContext, Ws, get, ws_route
 from ellar.common.exceptions.callable_exceptions import CallableExceptionHandler
 from ellar.common.exceptions.handlers import APIException, APIExceptionHandler
 from ellar.core import Config
 from ellar.core.exceptions.service import ExceptionMiddlewareService
 from ellar.core.middleware import ExceptionMiddleware
 from ellar.testing import Test
+from pydantic.error_wrappers import ValidationError
+from starlette.exceptions import HTTPException, WebSocketException
+from starlette.responses import JSONResponse, Response
 
 
 class InvalidExceptionHandler:
@@ -69,6 +68,17 @@ class ServerErrorHandler(IExceptionHandler):
 def error_500(ctx: IHostContext, exc: Exception):
     assert isinstance(ctx, IHostContext)
     return JSONResponse({"detail": "Server Error"}, status_code=500)
+
+
+def test_exception_equality():
+    exc_1 = OverrideAPIExceptionHandler()
+    exc_2 = OverrideHTTPException()
+
+    assert exc_1 != exc_2
+    assert exc_1 != error_500
+    assert exc_2 != exc_1
+    assert exc_2 == exc_2
+    assert exc_1 == exc_1
 
 
 def test_invalid_handler_raise_exception():
@@ -284,3 +294,69 @@ def test_application_adding_same_exception_twice():
     ) as rebuild_middleware_stack_mock:
         app.add_exception_handler(OverrideHTTPException())
     assert rebuild_middleware_stack_mock.call_count == 0
+
+
+def test_callable_exception_handler_equality():
+    def exception_handler_fun(ctx, exc: Exception):
+        return "Bad Request"
+
+    exception_400_handler = CallableExceptionHandler(
+        exc_class_or_status_code=400, callable_exception_handler=exception_handler_fun
+    )
+    exception_500_handler = CallableExceptionHandler(
+        exc_class_or_status_code=500, callable_exception_handler=exception_handler_fun
+    )
+
+    assert exception_500_handler != exception_400_handler
+    assert exception_500_handler != exception_handler_fun
+    assert exception_400_handler == exception_400_handler
+    assert exception_500_handler == exception_500_handler
+
+
+@pytest.mark.parametrize("exc", [APIException, HTTPException])
+def test_http_exception_handler_case_1(exc):
+    @get("/case_1")
+    def homepage():
+        raise exc(detail=["Bad Request"], status_code=400)
+
+    @get("/case_2")
+    def homepage_2():
+        raise exc(detail={"message": "Bad Request"}, status_code=400)
+
+    tm = Test.create_test_module()
+    app = tm.create_application()
+
+    app.router.append(homepage)
+    app.router.append(homepage_2)
+    client = tm.get_test_client()
+
+    res = client.get("/case_1")
+    assert res.status_code == 400
+    assert res.json() == ["Bad Request"]
+
+    res = client.get("/case_2")
+    assert res.status_code == 400
+    assert res.json() == {"message": "Bad Request"}
+
+
+def test_ws_exception_handler():
+    homepage_3_called = False
+
+    @ws_route("/ws")
+    async def homepage_3(session=Ws()):
+        nonlocal homepage_3_called
+
+        homepage_3_called = True
+        await session.accept()
+        raise WebSocketException(reason="bad request", code=1001)
+
+    tm = Test.create_test_module()
+    app = tm.create_application()
+
+    app.router.append(homepage_3)
+    client = tm.get_test_client()
+
+    with client.websocket_connect("/ws"):
+        pass
+
+    assert homepage_3_called

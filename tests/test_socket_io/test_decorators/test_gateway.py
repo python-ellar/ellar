@@ -1,9 +1,8 @@
 import pytest
-
 from ellar.common import UseGuards
 from ellar.common.constants import CONTROLLER_CLASS_KEY, GUARDS_KEY
 from ellar.common.helper import get_name
-from ellar.core.guards import HttpBearerAuth
+from ellar.core.guards import GuardHttpBearerAuth
 from ellar.reflect import reflect
 from ellar.socket_io import WebSocketGateway, subscribe_message
 from ellar.socket_io.constants import (
@@ -17,7 +16,7 @@ from ellar.socket_io.model import GatewayBase, GatewayType
 
 
 @WebSocketGateway(path="/ws", namespace="/some-namespace")
-@UseGuards(HttpBearerAuth)
+@UseGuards(GuardHttpBearerAuth)
 class SampleWithoutGateway:
     pass
 
@@ -61,7 +60,6 @@ class SampleMarkAsGateway:
     ],
 )
 def test_websocket_gateway_works_without_gateway(gateway, watermark, options):
-
     assert isinstance(gateway, GatewayType)
     assert hasattr(gateway, "__GATEWAY_WATERMARK__") is watermark
 
@@ -75,7 +73,7 @@ def test_websocket_gateway_works_without_gateway(gateway, watermark, options):
 def test_gateway_guard():
     assert reflect.get_metadata_or_raise_exception(
         GUARDS_KEY, SampleWithoutGateway
-    ) == [HttpBearerAuth]
+    ) == [GuardHttpBearerAuth]
 
 
 def test_sub_message_building_works():

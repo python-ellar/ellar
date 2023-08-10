@@ -1,8 +1,6 @@
 import os
 import typing as t
 
-from starlette.responses import JSONResponse, PlainTextResponse, Response
-
 from ellar.common import (
     IExceptionHandler,
     IExecutionContext,
@@ -15,19 +13,22 @@ from ellar.common.helper.importer import get_class_import
 from ellar.common.templating import Environment
 from ellar.core import App, AppFactory, Config, ModuleBase
 from ellar.core.connection import Request
-from ellar.core.core_service_registration import CoreServiceRegistration
+from ellar.core.core_services import EllarCoreService
 from ellar.core.modules import ModuleTemplateRef
 from ellar.core.services.reflector import Reflector
 from ellar.core.staticfiles import StaticFiles
 from ellar.core.versioning import (
     DefaultAPIVersioning,
     UrlPathAPIVersioning,
+)
+from ellar.core.versioning import (
     VersioningSchemes as VERSIONING,
 )
 from ellar.di import EllarInjector
 from ellar.openapi import OpenAPIDocumentModule
 from ellar.reflect import asynccontextmanager
 from ellar.testing import Test, TestClient
+from starlette.responses import JSONResponse, PlainTextResponse, Response
 
 from .config import ConfigTrustHostConfigure
 from .sample import AppAPIKey, ApplicationModule
@@ -125,7 +126,9 @@ class TestStarletteCompatibility:
             yield
             cleanup_complete = True
 
-        app = App(config=Config(), injector=EllarInjector(), lifespan=lifespan)
+        app = Test.create_test_module(
+            config_module={"DEFAULT_LIFESPAN_HANDLER": lifespan}
+        ).create_application()
 
         assert not startup_complete
         assert not cleanup_complete
@@ -199,7 +202,7 @@ class TestEllarApp:
 
         config = Config(STATIC_DIRECTORIES=[tmpdir])
         injector = EllarInjector()
-        CoreServiceRegistration(injector, config=Config()).register_all()
+        EllarCoreService(injector, config=Config()).register_core_services()
         injector.container.register_instance(config)
         app = App(injector=injector, config=config)
         client = TestClient(app)
@@ -221,7 +224,7 @@ class TestEllarApp:
             STATIC_MOUNT_PATH="/static-modified", STATIC_DIRECTORIES=[tmpdir]
         )
         injector = EllarInjector()
-        CoreServiceRegistration(injector, config=Config()).register_all()
+        EllarCoreService(injector, config=Config()).register_core_services()
         injector.container.register_instance(config)
         app = App(injector=injector, config=config)
         client = TestClient(app)
@@ -242,15 +245,16 @@ class TestEllarApp:
         assert module_instance is module_instance2
 
     def test_has_static_files(self, tmpdir):
-        app = App(injector=EllarInjector(), config=Config())
+        app = Test.create_test_module().create_application()
         assert app.has_static_files is False
 
-        config = Config(STATIC_DIRECTORIES=[tmpdir])
-        app = App(injector=EllarInjector(), config=config)
+        app = Test.create_test_module(
+            config_module={"STATIC_DIRECTORIES": [tmpdir]}
+        ).create_application()
         assert app.has_static_files
 
     def test_app_enable_versioning_and_versioning_scheme(self):
-        app = App(injector=EllarInjector(), config=Config())
+        app = Test.create_test_module().create_application()
         assert app.config.VERSIONING_SCHEME
         assert isinstance(app.config.VERSIONING_SCHEME, DefaultAPIVersioning)
 
@@ -271,7 +275,7 @@ class TestEllarApp:
         injector = EllarInjector(
             auto_bind=False
         )  # will raise an exception is service is not registered
-        CoreServiceRegistration(injector, config=Config()).register_all()
+        EllarCoreService(injector, config=Config()).register_core_services()
         injector.container.register_instance(config)
 
         app = App(config=config, injector=injector)
@@ -289,13 +293,13 @@ class TestEllarApp:
             async def catch(
                 self, ctx: IExecutionContext, exc: t.Union[t.Any, Exception]
             ) -> t.Union[Response, t.Any]:
-                return JSONResponse(dict(detail=str(exc)), status_code=404)
+                return JSONResponse({"detail": str(exc)}, status_code=404)
 
         config = Config()
         injector = EllarInjector(
             auto_bind=False
         )  # will raise an exception is service is not registered
-        CoreServiceRegistration(injector, config=Config()).register_all()
+        EllarCoreService(injector, config=Config()).register_core_services()
         injector.container.register_instance(config)
         app = App(config=config, injector=injector)
         app.add_exception_handler(CustomExceptionHandler())
@@ -347,8 +351,9 @@ class TestAppTemplating:
         with open(path, "w") as file:
             file.write("<file content>")
 
-        config = Config(STATIC_DIRECTORIES=[tmpdir])
-        app = App(injector=EllarInjector(), config=config)
+        app = Test.create_test_module(
+            config_module={"STATIC_DIRECTORIES": [tmpdir]}
+        ).create_application()
         static_app = app.create_static_app()
         assert isinstance(static_app, StaticFiles)
         client = TestClient(static_app)
@@ -369,8 +374,9 @@ class TestAppTemplating:
         with open(path, "w") as file:
             file.write("<file content>")
 
-        config = Config(STATIC_DIRECTORIES=[tmpdir])
-        app = App(injector=EllarInjector(), config=config)
+        app = Test.create_test_module(
+            config_module={"STATIC_DIRECTORIES": [tmpdir]}
+        ).create_application()
         static_app_old = app._static_app
 
         app.reload_static_app()
@@ -383,7 +389,7 @@ class TestAppTemplating:
         assert res.text == "<file content>"
 
     def test_app_template_filter(self):
-        app = App(injector=EllarInjector(), config=Config())
+        app = Test.create_test_module().create_application()
 
         @app.template_filter()
         def square(value):
@@ -408,7 +414,7 @@ class TestAppTemplating:
         assert result == "<html>filter square: 4, filter triple_function: 27</html>"
 
     def test_app_template_global(self):
-        app = App(injector=EllarInjector(), config=Config())
+        app = Test.create_test_module().create_application()
 
         @app.template_global()
         def square(value):

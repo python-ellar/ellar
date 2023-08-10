@@ -1,12 +1,19 @@
 import typing as t
 
-from ellar.common import AllowAnyGuard, IModuleSetup, Module, ModuleRouter, render
+from ellar.common import IExecutionContext, IModuleSetup, Module, ModuleRouter, render
 from ellar.common.models import GuardCanActivate
 from ellar.core import DynamicModule, ModuleBase
+from ellar.di import injectable
 from ellar.openapi.docs_generators import IDocumentationGenerator
 from ellar.openapi.openapi_v3 import OpenAPI
 
 __all__ = ["OpenAPIDocumentModule"]
+
+
+@injectable
+class AllowAnyGuard(GuardCanActivate):
+    async def can_activate(self, context: "IExecutionContext") -> bool:
+        return True
 
 
 @Module(template_folder="templates")
@@ -17,15 +24,17 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
         document_generator: t.Union[
             t.Sequence[IDocumentationGenerator], IDocumentationGenerator
         ],
-        document: OpenAPI = None,
+        document: t.Optional[OpenAPI] = None,
         router_prefix: str = "",
         openapi_url: t.Optional[str] = None,
         allow_any: bool = True,
-        guards: t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]] = None,
+        guards: t.Optional[
+            t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]
+        ] = None,
     ) -> DynamicModule:
         _guards = list(guards) if guards else []
         if allow_any:
-            _guards = [AllowAnyGuard] + _guards  # type:ignore
+            _guards = [AllowAnyGuard] + _guards
         _document_generator: t.List[IDocumentationGenerator] = []
         router = ModuleRouter(
             router_prefix,

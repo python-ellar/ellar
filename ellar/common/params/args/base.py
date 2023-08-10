@@ -3,6 +3,13 @@ import re
 import typing as t
 from collections import defaultdict
 
+from ellar.common.constants import (
+    ROUTE_OPENAPI_PARAMETERS,
+    primitive_types,
+    sequence_types,
+)
+from ellar.common.exceptions import ImproperConfiguration
+from ellar.common.interfaces import IExecutionContext
 from pydantic import BaseModel
 from pydantic.error_wrappers import ErrorWrapper
 from pydantic.fields import FieldInfo, ModelField
@@ -12,18 +19,12 @@ from starlette.background import BackgroundTasks
 from starlette.convertors import Convertor
 from starlette.requests import (
     HTTPConnection as StarletteHTTPConnection,
+)
+from starlette.requests import (
     Request as StarletteRequest,
 )
 from starlette.responses import Response
 from starlette.websockets import WebSocket as StarletteWebSocket
-
-from ellar.common.constants import (
-    ROUTE_OPENAPI_PARAMETERS,
-    primitive_types,
-    sequence_types,
-)
-from ellar.common.exceptions import ImproperConfiguration
-from ellar.common.interfaces import IExecutionContext
 
 from .. import params
 from ..helpers import is_scalar_field, is_scalar_sequence_field
@@ -92,7 +93,7 @@ class EndpointArgsModel:
         path: str,
         endpoint: t.Callable,
         param_converters: t.Dict[str, Convertor],
-        extra_endpoint_args: t.Sequence[ExtraEndpointArg] = None,
+        extra_endpoint_args: t.Optional[t.Sequence[ExtraEndpointArg]] = None,
     ) -> None:
         self.path = path
         self.param_converters = param_converters
@@ -261,7 +262,7 @@ class EndpointArgsModel:
         param_default: t.Any,
         param_name: str,
         param_annotation: t.Optional[t.Type],
-        key: str = None,
+        key: t.Optional[str] = None,
     ) -> t.Optional[bool]:
         if isinstance(param_default, NonParameterResolver):
             model = param_default(param_name, param_annotation)  # type:ignore
@@ -299,7 +300,7 @@ class EndpointArgsModel:
             annotation = evaluate_forwardref(annotation, globalns, globalns)
         return annotation
 
-    def _add_to_model(self, *, field: ModelField, key: str = None) -> None:
+    def _add_to_model(self, *, field: ModelField, key: t.Optional[str] = None) -> None:
         field_info = t.cast(params.ParamFieldInfo, field.field_info)
         self._computation_models[str(key or field_info.in_.value)].append(
             field_info.create_resolver(model_field=field)
@@ -332,7 +333,7 @@ class EndpointArgsModel:
         self._add_extra_route_args(*self._extra_endpoint_args)
 
     def _add_extra_route_args(
-        self, *extra_operation_args: ExtraEndpointArg, key: str = None
+        self, *extra_operation_args: ExtraEndpointArg, key: t.Optional[str] = None
     ) -> None:
         for param in extra_operation_args:
             if self._add_non_field_param_to_dependency(
@@ -363,16 +364,20 @@ class EndpointArgsModel:
         """Body Resolver Implementation"""
 
     def __deepcopy__(
-        self, memodict: t.Dict = {}
+        self, memodict: t.Optional[t.Dict] = None
     ) -> "EndpointArgsModel":  # pragma: no cover
+        if memodict is None:
+            memodict = {}
         return self.__copy__(memodict)
 
     def __copy__(
-        self, memodict: t.Dict = {}
+        self, memodict: t.Optional[t.Dict] = None
     ) -> "EndpointArgsModel":  # pragma: no cover
+        if memodict is None:
+            memodict = {}
         return self
 
-    def build_body_field(self) -> None:
+    def build_body_field(self) -> None:  # pragma: no cover
         raise NotImplementedError
 
     def _add_non_pydantic_field_to_dependency(

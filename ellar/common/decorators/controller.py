@@ -81,7 +81,7 @@ def Controller(
 def Controller(
     prefix: t.Optional[str] = None,
     *,
-    name: str = None,
+    name: t.Optional[str] = None,
     include_in_schema: bool = True,
 ) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:  # pragma: no cover
     """
@@ -99,7 +99,7 @@ def Controller(
 def Controller(
     prefix: t.Optional[str] = None,
     *,
-    name: str = None,
+    name: t.Optional[str] = None,
     include_in_schema: bool = True,
 ) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:
     """
@@ -164,7 +164,7 @@ def Controller(
 
         if new_cls:
             # if we forced cls to inherit from ControllerBase, we need to block it from been processed
-            setattr(cls, "__CONTROLLER_WATERMARK__", True)
+            cls.__CONTROLLER_WATERMARK__ = True
 
         return _controller_type
 

@@ -1,8 +1,7 @@
-from pydantic import AnyUrl
-
 from ellar.common import Controller, ModuleRouter, get, serialize_object
 from ellar.openapi import ApiTags, OpenAPIDocumentBuilder
 from ellar.testing import Test
+from pydantic import AnyUrl
 
 another_router = ModuleRouter("/prefix/another", name="arouter")
 

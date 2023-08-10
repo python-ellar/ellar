@@ -6,12 +6,6 @@ from ..interfaces import IExecutionContext
 class ControllerType(type):
     _controller_name: t.Optional[str]
 
-    @t.no_type_check
-    def __new__(mcls, name, bases, namespace):
-        cls = super().__new__(mcls, name, bases, namespace)
-        cls._controller_name = None
-        return cls
-
     def controller_class_name(cls) -> str:
         """ """
         if cls._controller_name:
@@ -27,3 +21,7 @@ class ControllerBase(metaclass=ControllerType):
     # `context` variable will change based on the route function called on the APIController
     # that way we can get some specific items things that belong the route function during execution
     context: t.Optional[IExecutionContext] = None
+
+    @t.no_type_check
+    def __init_subclass__(cls, controller_name: str = None) -> None:
+        cls._controller_name = controller_name

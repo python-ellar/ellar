@@ -2,9 +2,8 @@ import logging
 import typing as t
 from collections import OrderedDict, defaultdict
 
-from injector import Injector
-
 from ellar.reflect import asynccontextmanager
+from injector import Injector
 
 from ..asgi_args import RequestScopeContext
 from ..constants import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR
@@ -35,15 +34,17 @@ class EllarInjector(Injector):
     def __init__(
         self,
         auto_bind: bool = True,
-        parent: "Injector" = None,
+        parent: t.Optional["Injector"] = None,
     ) -> None:
         self._stack = ()
-        self.parent = parent
+        self.parent = parent  # type:ignore[assignment]
         # Binder
         self.container = Container(
             self,
             auto_bind=auto_bind,
-            parent=parent.binder if parent is not None else None,
+            parent=parent.binder
+            if parent is not None
+            else None,  # type:ignore[arg-type]
         )
 
         # Bind some useful types
@@ -56,7 +57,7 @@ class EllarInjector(Injector):
         self._modules[MODULE_REF_TYPES.APP_DEPENDENT] = OrderedDict()
 
     @property  # type: ignore
-    def binder(self) -> Container:  # type: ignore
+    def binder(self) -> Container:
         return self.container
 
     @binder.setter

@@ -4,12 +4,6 @@ import json
 import typing as t
 
 import anyio
-from pydantic.error_wrappers import ErrorWrapper
-from pydantic.fields import Undefined
-from pydantic.utils import lenient_issubclass
-from starlette.datastructures import FormData, Headers, QueryParams
-from starlette.exceptions import HTTPException
-
 from ellar.common.constants import (
     sequence_shape_to_type,
     sequence_shapes,
@@ -18,6 +12,11 @@ from ellar.common.constants import (
 from ellar.common.datastructures import UploadFile
 from ellar.common.exceptions import RequestValidationError
 from ellar.common.interfaces import IExecutionContext
+from pydantic.error_wrappers import ErrorWrapper
+from pydantic.fields import Undefined
+from pydantic.utils import lenient_issubclass
+from starlette.datastructures import FormData, Headers, QueryParams
+from starlette.exceptions import HTTPException
 
 from .base import BaseRouteParameterResolver
 
@@ -143,8 +142,8 @@ class BodyParameterResolver(WsBodyParameterResolver):
                     body_bytes = json_body
             return body_bytes
         except json.JSONDecodeError as e:
-            raise RequestValidationError([ErrorWrapper(e, ("body", e.pos))])
-        except Exception as e:
+            raise RequestValidationError([ErrorWrapper(e, ("body", e.pos))]) from e
+        except Exception as e:  # pragma: no cover
             raise HTTPException(
                 status_code=400, detail="There was an error parsing the body"
             ) from e

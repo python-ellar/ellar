@@ -1,6 +1,6 @@
 import typing as t
-from abc import ABC
 
+from ellar.common.interfaces import IAPIVersioning
 from ellar.common.types import TScope
 
 from .resolver import (
@@ -13,14 +13,14 @@ from .resolver import (
 )
 
 
-class BaseAPIVersioning(ABC):
+class BaseAPIVersioning(IAPIVersioning):
     resolver_class: t.Type[BaseAPIVersioningResolver] = DefaultAPIVersionResolver
 
     def __init__(
         self,
         version_parameter: str = "version",
         default_version: t.Optional[str] = None,
-        **kwargs: t.Any
+        **kwargs: t.Any,
     ):
         self.version_parameter = version_parameter
         self.default_version = default_version

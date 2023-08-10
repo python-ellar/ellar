@@ -1,13 +1,12 @@
 from collections import OrderedDict
 
 import pytest
-from injector import Binder, Injector, UnsatisfiedRequirement
-
 from ellar.common import Module
 from ellar.core import Config, ModuleBase
 from ellar.core.modules.ref import create_module_ref_factor
 from ellar.di import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR, Container, EllarInjector
 from ellar.di.providers import ClassProvider, InstanceProvider
+from injector import Binder, Injector, UnsatisfiedRequirement
 
 from .examples import Foo, Foo1, Foo2
 

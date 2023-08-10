@@ -34,7 +34,7 @@ class ExecutionContext(HostContext, IExecutionContext):
         )
 
     def get_handler(self) -> t.Callable:
-        assert self._operation_handler, "Operation is not available yet."
+        assert self._operation_handler is not None, "Operation is not available yet."
         return self._operation_handler
 
     def get_class(self) -> t.Optional[t.Type["ControllerBase"]]:

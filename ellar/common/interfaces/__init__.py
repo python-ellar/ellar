@@ -15,6 +15,7 @@ from .interceptor_consumer import IInterceptorsConsumer
 from .module import IModuleSetup
 from .response_model import IResponseModel
 from .templating import IModuleTemplateLoader
+from .versioning import IAPIVersioning, IAPIVersioningResolver
 
 __all__ = [
     "IHostContext",
@@ -34,4 +35,6 @@ __all__ = [
     "IGuardsConsumer",
     "IApplicationShutdown",
     "IApplicationStartup",
+    "IAPIVersioning",
+    "IAPIVersioningResolver",
 ]

@@ -2,15 +2,15 @@ import typing as t
 from pathlib import Path
 from uuid import uuid4
 
-from starlette.testclient import TestClient as TestClient
-
-from ellar.common import Module
-from ellar.common.routing import ModuleRouter
+from ellar.common import ControllerBase, Module
+from ellar.common.routing import ModuleMount, ModuleRouter
 from ellar.common.types import T
 from ellar.core import ModuleBase
 from ellar.core.factory import AppFactory
 from ellar.core.main import App
 from ellar.di import ProviderConfig
+from starlette.routing import Host, Mount
+from starlette.testclient import TestClient as TestClient
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common import GuardCanActivate
@@ -20,10 +20,10 @@ class TestingModule:
     def __init__(
         self,
         testing_module: t.Type[t.Union[ModuleBase, t.Any]],
-        global_guards: t.List[
-            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        global_guards: t.Optional[
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
-        config_module: t.Union[str, t.Dict] = None,
+        config_module: t.Optional[t.Union[str, t.Dict]] = None,
     ) -> None:
         self._testing_module = testing_module
         self._config_module = config_module
@@ -35,9 +35,13 @@ class TestingModule:
         self,
         base_type: t.Union[t.Type[T], t.Type],
         *,
-        use_value: T = None,
-        use_class: t.Union[t.Type[T], t.Any] = None,
+        use_value: t.Optional[T] = None,
+        use_class: t.Optional[t.Union[t.Type[T], t.Any]] = None,
     ) -> "TestingModule":
+        """
+        Overrides Service at module level.
+        Use this function before creating an application instance.
+        """
         provider_config = ProviderConfig(
             base_type, use_class=use_class, use_value=use_value
         )
@@ -53,6 +57,11 @@ class TestingModule:
             config_module=self._config_module,
             providers=self._providers,
         )
+
+        for _, module_ref in self._app.injector.get_modules().items():
+            # setup module just in case lifespan function will not be called during testing.
+            module_ref.run_module_register_services()
+
         return self._app
 
     def get_test_client(
@@ -62,6 +71,7 @@ class TestingModule:
         root_path: str = "",
         backend: str = "asyncio",
         backend_options: t.Optional[t.Dict[str, t.Any]] = None,
+        **kwargs: t.Any,
     ) -> TestClient:
         return TestClient(
             app=self.create_application(),
@@ -70,6 +80,7 @@ class TestingModule:
             backend=backend,
             backend_options=backend_options,
             root_path=root_path,
+            **kwargs,
         )
 
     def get(self, interface: t.Type[T]) -> T:
@@ -82,17 +93,17 @@ class Test:
     @classmethod
     def create_test_module(
         cls,
-        modules: t.Sequence[t.Type[t.Union[ModuleBase, t.Any]]] = tuple(),
-        controllers: t.Sequence[t.Union[t.Any]] = tuple(),
-        routers: t.Sequence[ModuleRouter] = tuple(),
-        providers: t.Sequence[ProviderConfig] = tuple(),
-        template_folder: t.Optional[str] = None,
-        base_directory: t.Optional[t.Union[str, Path]] = None,
+        controllers: t.Sequence[t.Union[t.Type[ControllerBase], t.Type]] = (),
+        routers: t.Sequence[t.Union[ModuleRouter, ModuleMount, Mount, Host]] = (),
+        providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = (),
+        template_folder: t.Optional[str] = "templates",
+        base_directory: t.Optional[t.Union[Path, str]] = None,
         static_folder: str = "static",
-        global_guards: t.List[
-            t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+        modules: t.Sequence[t.Union[t.Type, t.Any]] = (),
+        global_guards: t.Optional[
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
-        config_module: t.Union[str, t.Dict] = None,
+        config_module: t.Optional[t.Union[str, t.Dict]] = None,
     ) -> TESTING_MODULE:  # type: ignore[valid-type]
         """
         Create a TestingModule to test controllers and services in isolation

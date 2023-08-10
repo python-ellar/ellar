@@ -1,8 +1,6 @@
 from typing import List, Union
 
 import pytest
-from starlette.responses import JSONResponse
-
 from ellar.common.constants import RESPONSE_OVERRIDE_KEY
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.responses.models import (
@@ -14,6 +12,7 @@ from ellar.common.responses.models import (
 )
 from ellar.common.routing import RouteOperation
 from ellar.reflect import reflect
+from starlette.responses import JSONResponse
 
 from ..schema import BlogObjectDTO, NoteSchemaDC
 
@@ -98,9 +97,9 @@ def test_route_response_model(
 @pytest.mark.parametrize(
     "inputs",
     [
-        list(),
+        [],
         set(),
-        tuple(),
+        (),
         ResponseModel,
         JsonApiResponseModel,
         EmptyAPIResponseModel,

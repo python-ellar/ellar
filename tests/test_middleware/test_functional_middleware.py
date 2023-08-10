@@ -1,12 +1,10 @@
-from starlette.requests import Request
-from starlette.responses import PlainTextResponse
-
 from ellar.common import IHostContext, Module, ModuleRouter, middleware
-from ellar.core import App, Config, ModuleBase
+from ellar.core import ModuleBase
 from ellar.core.middleware import FunctionBasedMiddleware
-from ellar.di import EllarInjector
 from ellar.reflect import asynccontextmanager
 from ellar.testing import Test
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse
 
 mr = ModuleRouter()
 
@@ -34,7 +32,7 @@ class ModuleMiddleware(ModuleBase):
         request = context.switch_to_http_connection().get_request()
         request.state.user = None
         if request.headers.get("set-user"):
-            request.state.user = dict(username="Ellar")
+            request.state.user = {"username": "Ellar"}
         await call_next()
 
     @middleware()
@@ -87,7 +85,9 @@ def test_functional_middleware_skips_lifespan(test_client_factory):
         cleanup_complete = True
 
     app = FunctionBasedMiddleware(
-        App(config=Config(), injector=EllarInjector(), lifespan=lifespan),
+        Test.create_test_module(
+            config_module={"DEFAULT_LIFESPAN_HANDLER": lifespan}
+        ).create_application(),
         middleware_function,
     )
 

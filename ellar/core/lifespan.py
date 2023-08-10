@@ -1,7 +1,6 @@
 import typing as t
 
 from anyio import create_task_group
-
 from ellar.common import IApplicationShutdown, IApplicationStartup
 from ellar.reflect import asynccontextmanager
 
@@ -20,12 +19,18 @@ class EllarApplicationLifespan:
     __slots__ = ("_lifespan_context",)
 
     def __init__(
-        self, lifespan_context: t.Callable[[t.Any], t.AsyncIterator[t.Any]] = None
+        self,
+        lifespan_context: t.Optional[
+            t.Callable[[t.Any], t.AsyncIterator[t.Any]]
+        ] = None,
     ) -> None:
-        self._lifespan_context = lifespan_context or _default_lifespan_context
+        self._lifespan_context = (
+            _default_lifespan_context if lifespan_context is None else lifespan_context
+        )
 
     def _get_startup_modules(self, app: "App") -> t.Iterator[IApplicationStartup]:
-        for module in app.injector.get_modules():
+        for module, module_ref in app.injector.get_modules().items():
+            module_ref.run_module_register_services()
             if issubclass(module, IApplicationStartup):
                 yield app.injector.get(module)
 
@@ -50,7 +55,7 @@ class EllarApplicationLifespan:
             tg.start_soon(self.run_all_startup_actions, app)
 
         try:
-            async with self._lifespan_context(app) as ctx:  # type:ignore[union-attr]
+            async with self._lifespan_context(app) as ctx:  # type:ignore[attr-defined]
                 yield ctx
         finally:
             async with create_task_group() as tg:

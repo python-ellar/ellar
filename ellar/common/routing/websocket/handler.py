@@ -1,14 +1,13 @@
 import json
 import typing as t
 
+from ellar.common.exceptions import WebSocketRequestValidationError
+from ellar.common.interfaces import IExecutionContext
+from ellar.common.params import WebsocketEndpointArgsModel
 from starlette import status
 from starlette.exceptions import WebSocketException
 from starlette.status import WS_1008_POLICY_VIOLATION
 from starlette.types import Message
-
-from ellar.common.exceptions import WebSocketRequestValidationError
-from ellar.common.interfaces import IExecutionContext
-from ellar.common.params import WebsocketEndpointArgsModel
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.connection import WebSocket
@@ -21,8 +20,8 @@ class WebSocketExtraHandler:
         *,
         route_parameter_model: WebsocketEndpointArgsModel,
         encoding: str = "json",  # May be "text", "bytes", or "json".
-        on_connect: t.Callable = None,
-        on_disconnect: t.Callable = None,
+        on_connect: t.Optional[t.Callable] = None,
+        on_disconnect: t.Optional[t.Callable] = None,
     ):
         self.on_receive = on_receive
         self.encoding = encoding
@@ -68,7 +67,7 @@ class WebSocketExtraHandler:
                     break
         except WebSocketException as wexc:
             await websocket.close(code=wexc.code)
-            raise RuntimeError(wexc.reason)
+            raise RuntimeError(wexc.reason) from wexc
         except Exception as exc:
             close_code = status.WS_1011_INTERNAL_ERROR
             raise exc
@@ -88,7 +87,7 @@ class WebSocketExtraHandler:
         if errors:
             exc = WebSocketRequestValidationError(errors)
             await context.switch_to_websocket().get_client().send_json(
-                dict(code=WS_1008_POLICY_VIOLATION, errors=exc.errors())
+                {"code": WS_1008_POLICY_VIOLATION, "errors": exc.errors()}
             )
             raise exc
         return extra_kwargs
@@ -104,7 +103,7 @@ class WebSocketExtraHandler:
         await self.on_receive(**receiver_kwargs)
 
     async def execute_on_connect(self, *, context: "IExecutionContext") -> None:
-        if self.on_connect:
+        if self.on_connect is not None:
             await self.on_connect(context.switch_to_websocket().get_client())
             return
         await context.switch_to_websocket().get_client().accept()
@@ -112,7 +111,7 @@ class WebSocketExtraHandler:
     async def execute_on_disconnect(
         self, *, context: "IExecutionContext", close_code: int
     ) -> None:
-        if self.on_disconnect:
+        if self.on_disconnect is not None:
             await self.on_disconnect(
                 context.switch_to_websocket().get_client(), close_code
             )
@@ -142,11 +141,11 @@ class WebSocketExtraHandler:
 
             try:
                 return json.loads(text)
-            except json.decoder.JSONDecodeError:
+            except json.decoder.JSONDecodeError as e:
                 raise WebSocketException(
                     code=status.WS_1003_UNSUPPORTED_DATA,
                     reason="Malformed JSON data received.",
-                )
+                ) from e
 
         assert (
             self.encoding is None

@@ -28,8 +28,8 @@ class SwaggerDocumentGenerator(IDocumentationGenerator):
     ):
         self._path = path
         self._title = title
-        self._template_context = dict(
-            swagger_js_url=swagger_js_url,
-            swagger_css_url=swagger_css_url,
-            favicon_url=favicon_url,
-        )
+        self._template_context = {
+            "swagger_js_url": swagger_js_url,
+            "swagger_css_url": swagger_css_url,
+            "favicon_url": favicon_url,
+        }

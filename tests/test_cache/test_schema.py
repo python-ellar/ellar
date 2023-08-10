@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.cache.backends.local_cache import LocalMemCacheBackend
 from ellar.cache.schema import CacheModuleSchemaSetup
 

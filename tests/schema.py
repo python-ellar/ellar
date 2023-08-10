@@ -2,9 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, Union
 
-from pydantic import BaseModel, Field
-
 from ellar.common import Serializer
+from pydantic import BaseModel, Field
 
 
 class BlogObjectDTO:

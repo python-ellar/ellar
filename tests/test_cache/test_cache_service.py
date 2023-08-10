@@ -1,14 +1,13 @@
 from time import sleep
 
 import pytest
-
 from ellar.cache.backends.local_cache import LocalMemCacheBackend
 from ellar.cache.service import CacheService, InvalidCacheBackendKeyException
 
 
 class TestCacheService:
     def setup_method(self):
-        self.cache_service = CacheService(dict(default=LocalMemCacheBackend()))
+        self.cache_service = CacheService({"default": LocalMemCacheBackend()})
 
     def test_set(self):
         assert self.cache_service.set("test", "1", 0.1)
@@ -62,7 +61,7 @@ class TestCacheService:
 
 class TestCacheServiceAsync:
     def setup_method(self):
-        self.cache_service = CacheService(dict(default=LocalMemCacheBackend()))
+        self.cache_service = CacheService({"default": LocalMemCacheBackend()})
 
     async def test_set_async(self, anyio_backend):
         assert await self.cache_service.set_async("test", "1", 0.1)

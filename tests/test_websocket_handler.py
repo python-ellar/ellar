@@ -1,11 +1,13 @@
 import pytest
-from starlette.websockets import WebSocket, WebSocketState
-
 from ellar.common import Controller, ModuleRouter, WsBody, ws_route
 from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
-from ellar.common.exceptions import ImproperConfiguration
+from ellar.common.exceptions import (
+    ImproperConfiguration,
+    WebSocketRequestValidationError,
+)
 from ellar.reflect import reflect
 from ellar.testing import Test
+from starlette.websockets import WebSocket, WebSocketState
 
 from .schema import Item
 
@@ -27,7 +29,7 @@ async def websocket_with_handler_connect(websocket: WebSocket):
 
 
 @router.ws_route.disconnect(websocket_with_handler)
-async def websocket_with_handler_connect(websocket: WebSocket, code: int):
+async def websocket_with_handler_disconnect(websocket: WebSocket, code: int):
     # await websocket.close(code=code)
     assert websocket.client_state == WebSocketState.DISCONNECTED
 
@@ -56,7 +58,7 @@ class WebsocketController:
         await websocket.accept()
 
     @ws_route.disconnect(websocket_with_handler_c)
-    async def websocket_with_handler_connect(self, websocket: WebSocket, code: int):
+    async def websocket_with_handler_disconnect(self, websocket: WebSocket, code: int):
         # await websocket.close(code=code)
         assert websocket.client_state == WebSocketState.DISCONNECTED
 
@@ -90,12 +92,13 @@ def test_websocket_with_handler_works(prefix):
 
 @pytest.mark.parametrize("prefix", ["/router", "/controller"])
 def test_websocket_with_handler_fails_for_invalid_input(prefix):
-    with pytest.raises(Exception):
+    with pytest.raises(AssertionError):
         with client.websocket_connect(
             f"{prefix}/ws-with-handler?query=my-query"
         ) as session:
             session.send_json({"framework": "Ellar is awesome"})
             message = session.receive_json()
+
     assert message == {
         "code": 1008,
         "errors": [
@@ -115,7 +118,7 @@ def test_websocket_with_handler_fails_for_invalid_input(prefix):
 
 @pytest.mark.parametrize("prefix", ["/router", "/controller"])
 def test_websocket_with_handler_fails_for_missing_route_parameter(prefix):
-    with pytest.raises(Exception):
+    with pytest.raises(WebSocketRequestValidationError):
         with client.websocket_connect(f"{prefix}/ws-with-handler") as session:
             session.send_json(Item(name="Ellar", price=23.34, tax=1.2).dict())
             message = session.receive_json()

@@ -1,10 +1,9 @@
 import typing as t
 
 import click
+from ellar.common.constants import CALLABLE_COMMAND_INFO
 from typer.core import TyperCommand
 from typer.models import CommandFunctionType, CommandInfo
-
-from ellar.common.constants import CALLABLE_COMMAND_INFO
 
 
 @t.no_type_check

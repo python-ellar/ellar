@@ -1,16 +1,15 @@
 import typing as t
 from abc import ABC, abstractmethod
 
-from pydantic import BaseModel
-from pydantic.fields import ModelField
-from starlette.responses import Response
-
 from ellar.common.constants import SERIALIZER_FILTER_KEY
 from ellar.common.exceptions import RequestValidationError
 from ellar.common.helper.modelfield import create_model_field
 from ellar.common.interfaces import IExecutionContext, IResponseModel
 from ellar.common.serializer import SerializerFilter, serialize_object
 from ellar.reflect import reflect
+from pydantic import BaseModel
+from pydantic.fields import ModelField
+from starlette.responses import Response
 
 from .type_converter import ResponseTypeDefinitionConverter
 
@@ -61,7 +60,7 @@ class BaseResponseModel(IResponseModel, ABC):
 
     def __init__(
         self,
-        description: str = None,
+        description: t.Optional[str] = None,
         model_field_or_schema: t.Union[ResponseModelField, t.Any] = None,
         **kwargs: t.Any,
     ) -> None:
@@ -147,7 +146,7 @@ class BaseResponseModel(IResponseModel, ABC):
         http_connection = context.switch_to_http_connection()
         if http_connection.has_response:
             endpoint_response = http_connection.get_response()
-            response_args = dict(background=endpoint_response.background)
+            response_args = {"background": endpoint_response.background}
             if endpoint_response.status_code > 0:
                 response_args["status_code"] = endpoint_response.status_code
             return response_args, dict(endpoint_response.headers)
