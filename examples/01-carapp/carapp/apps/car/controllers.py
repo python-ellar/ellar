@@ -19,15 +19,16 @@ from ellar.common import (
     post,
     render,
 )
+from ellar.openapi import ApiTags
 
 from .schemas import CarListFilter, CreateCarSerializer
 from .services import CarRepository
 
 
-@Controller(
-    "/car",
+@Controller("/car")
+@ApiTags(
     description="Example of Car Resource with <strong>Controller</strong>",
-    tag="Controller",
+    name="CarController",
 )
 class CarController(ControllerBase):
     def __init__(self, repo: CarRepository):

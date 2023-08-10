@@ -20,14 +20,16 @@ from ellar.common import (
     render,
     render_template,
 )
+from ellar.openapi import ApiTags
 
 from .services import CarRepository
 
-router = ModuleRouter(
-    "/car-as-router",
-    tag="Router",
+router = ModuleRouter("/car-as-router")
+tag = ApiTags(
+    name="Router",
     description="Example of car Resource from a <strong>ModuleRouter</strong>",
 )
+tag(router.get_control_type())
 
 
 @dataclass

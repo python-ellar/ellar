@@ -1,10 +1,5 @@
-from ellar.common import (
-    IExecutionContext,
-    JSONResponse,
-    Module,
-    Response,
-    exception_handler,
-)
+from ellar.common import IExecutionContext, Module, exception_handler
+from ellar.common.responses import JSONResponse, Response
 from ellar.core import ModuleBase
 from ellar.samples.modules import HomeModule
 
