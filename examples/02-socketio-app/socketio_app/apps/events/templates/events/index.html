@@ -19,6 +19,10 @@
                 $('#log').append('<br>Received: ' + msg.data);
             });
 
+            socket.on('error', function(msg) {
+                console.error("Error from server", {...msg})
+            });
+
             // event handler for server sent data
             // the data is displayed in the "Received" section of the page
             // handlers for the different forms in the page

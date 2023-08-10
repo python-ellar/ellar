@@ -1,10 +1,3 @@
-from starlette.requests import (
-    HTTPConnection as StarletteHTTPConnection,
-    Request as StarletteRequest,
-)
-from starlette.responses import Response as StarletteResponse
-from starlette.websockets import WebSocket as StarletteWebSocket
-
 from ellar.auth.session import ISessionStrategy
 from ellar.auth.session.strategy import SessionClientStrategy
 from ellar.common import (
@@ -22,23 +15,35 @@ from ellar.common import (
 from ellar.core import Config, ExecutionContext
 from ellar.core.connection import (
     HTTPConnection as EllarHTTPConnection,
+)
+from ellar.core.connection import (
     Request as EllarRequest,
+)
+from ellar.core.connection import (
     WebSocket as EllarWebSocket,
 )
 from ellar.testing import Test
+from starlette.requests import (
+    HTTPConnection as StarletteHTTPConnection,
+)
+from starlette.requests import (
+    Request as StarletteRequest,
+)
+from starlette.responses import Response as StarletteResponse
+from starlette.websockets import WebSocket as StarletteWebSocket
 
 router = ModuleRouter()
 
 
 @router.get("/starlette-request")
-def get_requests(request: StarletteRequest, req=Req()):
+def get_requests_case_1(request: StarletteRequest, req=Req()):
     assert isinstance(request, EllarRequest)  # True
     assert isinstance(req, EllarRequest)
     return req == request
 
 
 @router.get("/others")
-def get_requests(session=Session(), host=Host(), config=Provide(Config)):
+def get_requests_case_2(session=Session(), host=Host(), config=Provide(Config)):
     assert isinstance(config, Config)  # True
     assert host == "testclient"
     assert isinstance(session, dict) and len(session) == 0
@@ -77,9 +82,9 @@ async def get_websockets(websocket: StarletteWebSocket, ws=Ws()):
 SECRET_KEY = "ellar_cf303596-e51a-441a-ba67-5da42dbffb07"
 tm = Test.create_test_module(
     routers=[router],
-    config_module=dict(
-        SECRET_KEY=SECRET_KEY,
-    ),
+    config_module={
+        "SECRET_KEY": SECRET_KEY,
+    },
 ).override_provider(ISessionStrategy, use_class=SessionClientStrategy)
 client = tm.get_test_client()
 

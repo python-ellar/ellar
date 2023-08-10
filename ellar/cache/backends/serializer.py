@@ -16,7 +16,7 @@ class ICacheSerializer(ABC):
 
 
 class RedisSerializer(ICacheSerializer):
-    def __init__(self, protocol: int = None) -> None:
+    def __init__(self, protocol: t.Optional[int] = None) -> None:
         self._protocol = protocol or self.default_protocol
 
     def load(self, data: t.Any) -> t.Any:

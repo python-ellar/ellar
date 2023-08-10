@@ -1,9 +1,8 @@
 import pytest
-from injector import inject
-
 from ellar.di import EllarInjector, ProviderConfig, has_binding
 from ellar.di.exceptions import DIImproperConfiguration
 from ellar.di.scopes import RequestScope, SingletonScope, TransientScope
+from injector import inject
 
 from .examples import AnyContext, Foo, IContext
 

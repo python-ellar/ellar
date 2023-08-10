@@ -1,7 +1,5 @@
 import typing as t
 
-from starlette.routing import Router
-
 from ellar.common.constants import (
     CONTROLLER_METADATA,
     CONTROLLER_OPERATION_HANDLER_KEY,
@@ -10,6 +8,7 @@ from ellar.common.constants import (
 from ellar.common.models import ControllerBase, ControllerType
 from ellar.common.routing import ModuleMount, RouteCollection
 from ellar.reflect import reflect
+from starlette.routing import Router
 
 from .builder import RouterBuilder
 
@@ -42,7 +41,7 @@ class ControllerRouterFactory(RouterBuilder, controller_type=type(ControllerBase
             if include_in_schema is not None
             else True,
             control_type=controller_type,
-            **kwargs
+            **kwargs,
         )
         return router
 

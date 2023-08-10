@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.common.routing import ModuleRouter
 from ellar.core.routing import ModuleRouterFactory
 

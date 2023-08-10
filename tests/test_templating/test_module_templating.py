@@ -1,7 +1,6 @@
 import os
 
 import pytest
-
 from ellar.common import Module, template_filter, template_global
 from ellar.core import Config
 from ellar.core.modules import ModuleBase, ModuleTemplateRef

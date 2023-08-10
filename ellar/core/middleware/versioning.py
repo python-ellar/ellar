@@ -1,11 +1,10 @@
 import typing as t
 
-from starlette.types import ASGIApp
-
 from ellar.common.constants import SCOPE_API_VERSIONING_RESOLVER
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.core.conf import Config
 from ellar.core.versioning import BaseAPIVersioning
+from starlette.types import ASGIApp
 
 
 class RequestVersioningMiddleware:

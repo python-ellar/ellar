@@ -2,7 +2,6 @@ import asyncio
 from pathlib import Path
 
 import pytest
-
 from ellar.common import Controller, ModuleRouter, file, get, serialize_object
 from ellar.common.responses.models import (
     StreamingResponseModel,

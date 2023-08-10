@@ -1,8 +1,10 @@
 import logging
 import typing as t
 from enum import Enum
-from typing import Any, Dict
+from typing import Any
 
+from ellar.common.types import TMessage
+from ellar.di import AnnotationToValue
 from pydantic.fields import (
     SHAPE_LIST,
     SHAPE_SEQUENCE,
@@ -10,9 +12,6 @@ from pydantic.fields import (
     SHAPE_TUPLE,
     SHAPE_TUPLE_ELLIPSIS,
 )
-
-from ellar.common.types import TMessage
-from ellar.di import AnnotationToValue
 
 POST = "POST"
 PUT = "PUT"
@@ -119,7 +118,11 @@ class NOT_SET_TYPE:
     def __copy__(self) -> Any:  # pragma: no cover
         return NOT_SET
 
-    def __deepcopy__(self, memodict: Dict = {}) -> Any:  # pragma: no cover
+    def __deepcopy__(
+        self, memodict: t.Optional[t.Any] = None
+    ) -> Any:  # pragma: no cover
+        if memodict is None:
+            memodict = {}
         return NOT_SET
 
 

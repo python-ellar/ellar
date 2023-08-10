@@ -1,8 +1,6 @@
 from typing import Dict, List, Union, cast
 
 import pytest
-from pydantic.typing import get_args
-
 from ellar.common.exceptions import RequestValidationError
 from ellar.common.helper.modelfield import create_model_field
 from ellar.common.responses.models import (
@@ -10,6 +8,7 @@ from ellar.common.responses.models import (
     ResponseTypeDefinitionConverter,
 )
 from ellar.common.serializer import BaseSerializer
+from pydantic.typing import get_args
 
 from ..schema import BlogObjectDTO, NoteSchemaDC
 
@@ -63,12 +62,12 @@ def test_response_converted_types_with_response_model_field_works():
         ),
     )
 
-    values = model_field.serialize([dict(id=1, text="some text", completed=False)])
+    values = model_field.serialize([{"id": 1, "text": "some text", "completed": False}])
     assert values == [{"id": 1, "text": "some text", "completed": False}]
 
     with pytest.raises(RequestValidationError, match="value is not a valid list"):
         # invalid data
-        model_field.serialize(dict(id=1, text="some text", completed=False))
+        model_field.serialize({"id": 1, "text": "some text", "completed": False})
 
     defined_type = NoteSchemaDC
     converted_type = ResponseTypeDefinitionConverter(defined_type).re_group_outer_type()
@@ -82,12 +81,12 @@ def test_response_converted_types_with_response_model_field_works():
         ),
     )
 
-    values = model_field.serialize(dict(id=1, text="some text", completed=False))
+    values = model_field.serialize({"id": 1, "text": "some text", "completed": False})
     assert values == {"id": 1, "text": "some text", "completed": False}
 
     with pytest.raises(RequestValidationError, match="text"):
         # invalid data
-        model_field.serialize(dict(id=1, completed=False))
+        model_field.serialize({"id": 1, "completed": False})
 
     defined_type = Union[NoteSchemaDC, BlogObjectDTO]
     converted_type = ResponseTypeDefinitionConverter(defined_type).re_group_outer_type()
@@ -101,9 +100,9 @@ def test_response_converted_types_with_response_model_field_works():
         ),
     )
 
-    values = model_field.serialize(dict(title="some title", author="Eadwin"))
+    values = model_field.serialize({"title": "some title", "author": "Eadwin"})
     assert values == {"title": "some title", "author": "Eadwin"}
 
     with pytest.raises(RequestValidationError, match="author"):
         # invalid data
-        model_field.serialize(dict(title="some title"))
+        model_field.serialize({"title": "some title"})

@@ -5,7 +5,7 @@ from ..types import T
 
 try:
     from functools import cached_property
-except (Exception,):  # pragma: no cover
+except Exception:  # pragma: no cover
 
     class _CachedProperty(property, t.Generic[T]):
         def __init__(

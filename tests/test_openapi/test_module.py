@@ -1,7 +1,6 @@
 import os
 
 import pytest
-
 from ellar.common import GuardCanActivate
 from ellar.common.constants import GUARDS_KEY
 from ellar.core import AppFactory, Config, ExecutionContext
@@ -192,7 +191,6 @@ def test_invalid_open_api_doc_setup():
     app = AppFactory.create_app(providers=[CustomDocsGuard])
     document = OpenAPIDocumentBuilder().build_document(app)
     with pytest.raises(Exception) as ex:
-
         OpenAPIDocumentModule.setup(
             document=document,
             guards=[CustomDocsGuard],
@@ -201,7 +199,6 @@ def test_invalid_open_api_doc_setup():
     assert str(ex.value) == "CustomDocsGuard must be of type `IDocumentationGenerator`"
 
     with pytest.raises(Exception) as ex:
-
         OpenAPIDocumentModule.setup(
             document=document,
             guards=[CustomDocsGuard],

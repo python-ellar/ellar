@@ -1,14 +1,14 @@
 import typing as t
 import uuid
 
-from starlette.routing import BaseRoute, Match, Mount as StarletteMount, Route, Router
-from starlette.types import ASGIApp
-
 from ellar.common.constants import CONTROLLER_CLASS_KEY, GUARDS_KEY, VERSIONING_KEY
 from ellar.common.helper import get_unique_control_type
 from ellar.common.models import GuardCanActivate
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.reflect import reflect
+from starlette.routing import BaseRoute, Match, Route, Router
+from starlette.routing import Mount as StarletteMount
+from starlette.types import ASGIApp
 
 from .operation_definitions import OperationDefinitions
 from .route import RouteOperation
@@ -23,9 +23,9 @@ class ModuleMount(StarletteMount):
         self,
         path: str,
         control_type: t.Type,
-        app: ASGIApp = None,
-        routes: t.Sequence[BaseRoute] = None,
-        name: str = None,
+        app: t.Optional[ASGIApp] = None,
+        routes: t.Optional[t.Sequence[BaseRoute]] = None,
+        name: t.Optional[str] = None,
         include_in_schema: bool = False,
     ) -> None:
         super(ModuleMount, self).__init__(path=path, routes=routes, name=name, app=app)
@@ -42,7 +42,7 @@ class ModuleMount(StarletteMount):
             scope_copy = dict(scope)
             scope_copy.update(_child_scope)
             partial: t.Optional[RouteOperation] = None
-            partial_scope = dict()
+            partial_scope = {}
 
             for route in self.routes:
                 # Determine if any route matches the incoming scope,
@@ -83,9 +83,11 @@ class ModuleRouter(OperationDefinitions, ModuleMount):
     def __init__(
         self,
         path: str = "",
-        name: str = None,
+        name: t.Optional[str] = None,
         version: t.Union[t.Sequence[str], str] = (),
-        guards: t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]] = None,
+        guards: t.Optional[
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
+        ] = None,
         include_in_schema: bool = True,
     ) -> None:
         app = Router()

@@ -70,7 +70,6 @@ class ExecutionContextFactory(IExecutionContextFactory):
         receive: TReceive = empty_receive,
         send: TSend = empty_send,
     ) -> IExecutionContext:
-
         i_execution_context = ExecutionContext(
             scope=scope,
             receive=receive,

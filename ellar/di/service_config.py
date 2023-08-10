@@ -3,6 +3,8 @@ import typing as t
 from injector import (
     ConstructorOrClassT,
     inject,
+)
+from injector import (
     is_decorated_with_inject as injector_is_decorated_with_inject,
 )
 
@@ -31,7 +33,7 @@ class ProviderConfig(t.Generic[T]):
         self,
         base_type: t.Union[t.Type[T], t.Type],
         *,
-        use_value: T = None,
+        use_value: t.Optional[T] = None,
         use_class: t.Union[t.Type[T], t.Any] = None,
     ):
         if use_value and use_class:
@@ -128,7 +130,7 @@ def is_decorated_with_injectable(func_or_class: ConstructorOrClassT) -> bool:
 def has_binding(func_or_class: ConstructorOrClassT) -> bool:
     """See if given a Type __init__ or callable has __binding__."""
     if isinstance(func_or_class, type) and hasattr(func_or_class, "__init__"):
-        return injector_is_decorated_with_inject(getattr(func_or_class, "__init__"))
+        return injector_is_decorated_with_inject(func_or_class.__init__)  # type: ignore[misc]
     return injector_is_decorated_with_inject(func_or_class)
 
 

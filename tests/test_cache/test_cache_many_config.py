@@ -14,18 +14,18 @@ class ExampleController:
     @get("/index-2")
     @Cache(ttl=1, backend="default")
     def index_2(self):
-        return dict(message="ExampleController Cache 2")
+        return {"message": "ExampleController Cache 2"}
 
 
 tm = Test.create_test_module(
     controllers=[ExampleController],
     modules=(CacheModule.register_setup(),),
-    config_module=dict(
-        CACHES={
+    config_module={
+        "CACHES": {
             "default": LocalMemCacheBackend(),
             "another": LocalMemCacheBackend(key_prefix="another", version=2),
         }
-    ),
+    },
 )
 
 
@@ -45,6 +45,6 @@ def test_cache_operation_with_backend_works():
     assert result.body == b"ExampleController Cache 1"
 
     response = client.get("/index-2")
-    assert response.json() == dict(message="ExampleController Cache 2")
+    assert response.json() == {"message": "ExampleController Cache 2"}
     result = cache_service.get("http://testserver/index-2:view", backend="default")
-    assert result == dict(message="ExampleController Cache 2")
+    assert result == {"message": "ExampleController Cache 2"}

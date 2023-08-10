@@ -1,8 +1,6 @@
 import os
 import typing as t
 
-from starlette.responses import JSONResponse, PlainTextResponse, Response
-
 from ellar.common import (
     IExceptionHandler,
     IExecutionContext,
@@ -22,12 +20,15 @@ from ellar.core.staticfiles import StaticFiles
 from ellar.core.versioning import (
     DefaultAPIVersioning,
     UrlPathAPIVersioning,
+)
+from ellar.core.versioning import (
     VersioningSchemes as VERSIONING,
 )
 from ellar.di import EllarInjector
 from ellar.openapi import OpenAPIDocumentModule
 from ellar.reflect import asynccontextmanager
 from ellar.testing import Test, TestClient
+from starlette.responses import JSONResponse, PlainTextResponse, Response
 
 from .config import ConfigTrustHostConfigure
 from .sample import AppAPIKey, ApplicationModule
@@ -126,7 +127,7 @@ class TestStarletteCompatibility:
             cleanup_complete = True
 
         app = Test.create_test_module(
-            config_module=dict(DEFAULT_LIFESPAN_HANDLER=lifespan)
+            config_module={"DEFAULT_LIFESPAN_HANDLER": lifespan}
         ).create_application()
 
         assert not startup_complete
@@ -248,7 +249,7 @@ class TestEllarApp:
         assert app.has_static_files is False
 
         app = Test.create_test_module(
-            config_module=dict(STATIC_DIRECTORIES=[tmpdir])
+            config_module={"STATIC_DIRECTORIES": [tmpdir]}
         ).create_application()
         assert app.has_static_files
 
@@ -292,7 +293,7 @@ class TestEllarApp:
             async def catch(
                 self, ctx: IExecutionContext, exc: t.Union[t.Any, Exception]
             ) -> t.Union[Response, t.Any]:
-                return JSONResponse(dict(detail=str(exc)), status_code=404)
+                return JSONResponse({"detail": str(exc)}, status_code=404)
 
         config = Config()
         injector = EllarInjector(
@@ -351,7 +352,7 @@ class TestAppTemplating:
             file.write("<file content>")
 
         app = Test.create_test_module(
-            config_module=dict(STATIC_DIRECTORIES=[tmpdir])
+            config_module={"STATIC_DIRECTORIES": [tmpdir]}
         ).create_application()
         static_app = app.create_static_app()
         assert isinstance(static_app, StaticFiles)
@@ -374,7 +375,7 @@ class TestAppTemplating:
             file.write("<file content>")
 
         app = Test.create_test_module(
-            config_module=dict(STATIC_DIRECTORIES=[tmpdir])
+            config_module={"STATIC_DIRECTORIES": [tmpdir]}
         ).create_application()
         static_app_old = app._static_app
 

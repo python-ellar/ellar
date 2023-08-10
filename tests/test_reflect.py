@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.reflect import REFLECT_TYPE, reflect
 
 
@@ -47,14 +46,14 @@ def test_define_metadata_with_existing_list(random_type):
 
 
 def test_define_metadata_with_existing_dict(random_type):
-    reflect.define_metadata("C", dict(C="EllarC"), random_type)
-    assert reflect.get_metadata("C", random_type) == dict(C="EllarC")
+    reflect.define_metadata("C", {"C": "EllarC"}, random_type)
+    assert reflect.get_metadata("C", random_type) == {"C": "EllarC"}
 
-    reflect.define_metadata("C", dict(D="EllarD"), random_type)
-    assert reflect.get_metadata("C", random_type) == dict(
-        D="EllarD",
-        C="EllarC",
-    )
+    reflect.define_metadata("C", {"D": "EllarD"}, random_type)
+    assert reflect.get_metadata("C", random_type) == {
+        "D": "EllarD",
+        "C": "EllarC",
+    }
 
 
 def test_define_metadata_with_existing_set(random_type):

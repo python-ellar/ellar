@@ -45,12 +45,15 @@ class IRepository(ABC):
 
 
 class IDBContext(ABC):
-    pass
+    @abstractmethod
+    def context(self):
+        pass
 
 
 @injectable
 class AnyDBContext(IDBContext):
-    pass
+    def context(self):
+        pass
 
 
 @injectable

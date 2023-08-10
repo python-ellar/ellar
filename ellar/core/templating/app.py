@@ -2,9 +2,6 @@ import json
 import typing as t
 from abc import abstractmethod
 
-from jinja2 import Environment as BaseEnvironment
-from starlette.templating import pass_context
-
 from ellar.common.compatible import cached_property
 from ellar.common.constants import TEMPLATE_FILTER_KEY, TEMPLATE_GLOBAL_KEY
 from ellar.common.datastructures import URL
@@ -17,6 +14,8 @@ from ellar.common.templating import (
 from ellar.common.types import ASGIApp
 from ellar.core.connection import Request
 from ellar.core.staticfiles import StaticFiles
+from jinja2 import Environment as BaseEnvironment
+from starlette.templating import pass_context
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.conf import Config
@@ -54,7 +53,7 @@ class AppTemplating(JinjaTemplating):
         self.rebuild_middleware_stack()
 
     @cached_property
-    def jinja_environment(self) -> BaseEnvironment:
+    def jinja_environment(self) -> BaseEnvironment:  # type: ignore[override]
         _jinja_env = self._create_jinja_environment()
         self._update_jinja_env_filters(_jinja_env)
         return _jinja_env
@@ -65,9 +64,11 @@ class AppTemplating(JinjaTemplating):
                 return True
             return filename.endswith((".html", ".htm", ".xml", ".xhtml"))
 
-        options_defaults: t.Dict = dict(
-            extensions=[], auto_reload=self.debug, autoescape=select_jinja_auto_escape
-        )
+        options_defaults: t.Dict = {
+            "extensions": [],
+            "auto_reload": self.debug,
+            "autoescape": select_jinja_auto_escape,
+        }
         jinja_options: t.Dict = t.cast(
             t.Dict, self.config.JINJA_TEMPLATES_OPTIONS or {}
         )
@@ -95,7 +96,8 @@ class AppTemplating(JinjaTemplating):
 
     def create_static_app(self) -> ASGIApp:
         return StaticFiles(
-            directories=self.static_files, packages=self.config.STATIC_FOLDER_PACKAGES
+            directories=self.static_files,  # type: ignore[arg-type]
+            packages=self.config.STATIC_FOLDER_PACKAGES,
         )
 
     def reload_static_app(self) -> None:
@@ -104,7 +106,7 @@ class AppTemplating(JinjaTemplating):
             self._static_app = self.create_static_app()
         self._update_jinja_env_filters(self.jinja_environment)
 
-    def _update_jinja_env_filters(self, jinja_environment: Environment) -> None:
+    def _update_jinja_env_filters(self, jinja_environment: BaseEnvironment) -> None:
         jinja_environment.globals.update(self.config.get(TEMPLATE_GLOBAL_KEY, {}))
         jinja_environment.filters.update(self.config.get(TEMPLATE_FILTER_KEY, {}))
 

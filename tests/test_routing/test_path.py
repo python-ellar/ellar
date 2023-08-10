@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.testing import TestClient
 
 from ..main import app

@@ -1,9 +1,8 @@
 from typing import List, Optional
 
-from pydantic import BaseModel
-
 from ellar.common import ModuleRouter
 from ellar.core import AppFactory
+from pydantic import BaseModel
 
 mr = ModuleRouter("")
 

@@ -3,13 +3,12 @@ import re
 import typing as t
 from abc import abstractmethod
 
-from starlette.routing import compile_path
-
 from ellar.common.constants import NOT_SET
 from ellar.common.exceptions import NotAcceptable, NotFound
 from ellar.common.interfaces import IAPIVersioningResolver
 from ellar.common.types import TScope
 from ellar.core.connection import HTTPConnection
+from starlette.routing import compile_path
 
 
 class BaseAPIVersioningResolver(IAPIVersioningResolver):
@@ -127,7 +126,7 @@ class HeaderVersionResolver(BaseAPIVersioningResolver):
         message[self.header_parameter] = self.connection.headers.get(
             self.header_parameter
         )
-        accept = dict(message.get_params(header=self.header_parameter))
+        accept = dict(message.get_params(header=self.header_parameter))  # type: ignore[arg-type]
         version = accept.get(self.version_parameter, self.default_version)
         return str(version)
 

@@ -20,16 +20,18 @@ class MyModule(ModuleBase):
 from ellar.common import Module
 from ellar.core import ModuleBase
 from ellar.di import Container
-from .services import CarRepository
+
 from .controllers import CarController
 from .routers import router
+from .services import CarRepository
+
 
 @Module(
     controllers=[CarController],
     providers=[CarRepository],
     routers=[router],
-    template_folder='views',
-    static_folder='statics'
+    template_folder="views",
+    static_folder="statics",
 )
 class CarModule(ModuleBase):
     """

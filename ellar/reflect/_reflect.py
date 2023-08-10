@@ -115,7 +115,7 @@ class _Reflect:
             return self._meta_data[_target]
 
         if create:
-            self._meta_data[_target] = dict()
+            self._meta_data[_target] = {}
             return self._meta_data[_target]
         return None
 

@@ -8,5 +8,3 @@ my_router = ModuleRouter("/cats", tag="Cats", description="Cats Resource descrip
 def index(request: Request):
     return {'detail': 'Welcome to Cats Resource'}
 """
-
-from ellar.common import ModuleRouter

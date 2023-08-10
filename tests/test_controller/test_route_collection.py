@@ -1,10 +1,8 @@
 from typing import List
 
 import pytest
-from starlette.responses import JSONResponse
-from starlette.routing import Host, Mount
-
-from ellar.common import Version as version_decorator, get, http_route, ws_route
+from ellar.common import Version as version_decorator
+from ellar.common import get, http_route, ws_route
 from ellar.common.constants import (
     CONTROLLER_CLASS_KEY,
     CONTROLLER_OPERATION_HANDLER_KEY,
@@ -19,6 +17,8 @@ from ellar.core.routing.helper import build_route_handler
 from ellar.core.versioning import UrlPathAPIVersioning
 from ellar.reflect import reflect
 from ellar.testing import Test
+from starlette.responses import JSONResponse
+from starlette.routing import Host, Mount
 
 
 class Configuration:
@@ -29,13 +29,16 @@ config_path = "tests.test_controller.test_route_collection:Configuration"
 
 
 def create_route_operation(
-    path: str, methods: List[str], versions: List[str] = []
+    path: str, methods: List[str], versions: List[str] = None
 ) -> RouteOperation:
+    if versions is None:
+        versions = []
+
     @http_route(path, methods=methods)
     @version_decorator(*versions)
     def endpoint_sample():
         response = JSONResponse(
-            content=dict(path=path, methods=methods, versioning=versions)
+            content={"path": path, "methods": methods, "versioning": versions}
         )
         return response
 
@@ -43,12 +46,15 @@ def create_route_operation(
 
 
 def create_ws_route_operation(
-    path: str, versions: List[str] = []
+    path: str, versions: List[str] = None
 ) -> WebsocketRouteOperation:
+    if versions is None:
+        versions = []
+
     @ws_route(path)
     @version_decorator(*versions)
     def endpoint_sample():
-        response = JSONResponse(content=dict(path=path, versioning=versions))
+        response = JSONResponse(content={"path": path, "versioning": versions})
         return response
 
     return build_route_handler(endpoint_sample)
@@ -116,7 +122,6 @@ def test_module_route_collection_extend(collection_model):
 
 @pytest.mark.parametrize("collection_model", [RouteCollection])
 def test_module_route_collection_host(collection_model):
-
     routes = collection_model()
     routes.append(MockHostRouteOperation("{subdomain}.example.org"))
     _hash = generate_controller_operation_unique_id(

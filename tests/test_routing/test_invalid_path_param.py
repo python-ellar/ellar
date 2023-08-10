@@ -1,10 +1,9 @@
 from typing import Dict, List, Tuple
 
 import pytest
-from pydantic import BaseModel
-
 from ellar.common import ModuleRouter
 from ellar.core.routing import ModuleRouterFactory
+from pydantic import BaseModel
 
 mr = ModuleRouter("")
 

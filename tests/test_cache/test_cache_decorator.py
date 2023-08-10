@@ -16,7 +16,7 @@ def test_cache_route_function_return_data():
         nonlocal called_count
 
         called_count += 1
-        return dict(message="Response Information cached.")
+        return {"message": "Response Information cached."}
 
     client = Test.create_test_module(
         modules=[CacheModule.register_setup()],
@@ -25,13 +25,13 @@ def test_cache_route_function_return_data():
         ],
     ).get_test_client()
 
-    for i in range(2):
+    for _i in range(2):
         client.get("/index")
 
     sleep(0.22)
     res = client.get("/index")
 
-    assert res.json() == dict(message="Response Information cached.")
+    assert res.json() == {"message": "Response Information cached."}
     assert res.status_code == 200
     assert called_count == 2
 
@@ -47,7 +47,7 @@ def test_cache_for_async_route_function_return_data():
         nonlocal called_count
 
         called_count += 1
-        return dict(message="Response Information cached Async")
+        return {"message": "Response Information cached Async"}
 
     client = Test.create_test_module(
         modules=[CacheModule.register_setup()],
@@ -56,10 +56,10 @@ def test_cache_for_async_route_function_return_data():
         ],
     ).get_test_client()
     res = client.get("/index")
-    for i in range(2):
+    for _i in range(2):
         res = client.get("/index")
 
-    assert res.json() == dict(message="Response Information cached Async")
+    assert res.json() == {"message": "Response Information cached Async"}
     assert res.status_code == 200
     assert called_count == 1
 

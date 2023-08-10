@@ -1,12 +1,11 @@
 import os
 
-from starlette.exceptions import HTTPException
-from starlette.responses import JSONResponse, PlainTextResponse
-from starlette.routing import Host, Mount, Route, Router
-
 from ellar.common import Controller, Module, ModuleRouter, exception_handler, get
 from ellar.core import ModuleBase, Request, WebSocket
 from ellar.core.guards import GuardAPIKeyQuery
+from starlette.exceptions import HTTPException
+from starlette.responses import JSONResponse, PlainTextResponse
+from starlette.routing import Host, Mount, Route, Router
 
 
 def create_tmp_template_and_static_dir(tmpdir):
