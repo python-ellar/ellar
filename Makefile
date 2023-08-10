@@ -30,7 +30,7 @@ test: ## Run tests
 	pytest
 
 test-cov: ## Run tests with coverage
-	pytest --cov=ellar --cov-report term-missing tests
+	pytest --cov=ellar --cov-report term-missing
 
 doc-deploy: ## Run Deploy Documentation
 	make clean
