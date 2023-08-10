@@ -143,7 +143,7 @@ class BodyParameterResolver(WsBodyParameterResolver):
             return body_bytes
         except json.JSONDecodeError as e:
             raise RequestValidationError([ErrorWrapper(e, ("body", e.pos))]) from e
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             raise HTTPException(
                 status_code=400, detail="There was an error parsing the body"
             ) from e
