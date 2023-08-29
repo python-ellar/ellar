@@ -3,9 +3,12 @@ This command helps you create an Ellar project module, like a small app within a
 It depends on the existence of an Ellar project.
 
 ```shell
-ellar create-module my_project_module
+ellar create-module my_project_module directory
 ```
-
+for example:
+```shell
+ellar create-module my_project_module apps/
+```
 will create a folder as follows:
 ```angular2html
 john_doe/
@@ -29,3 +32,7 @@ john_doe/
 ├─ server.py
 
 ```
+
+## **New Command CLI Arguments**
+- `module-name` Set the resulting module name.
+- `directory` Path to dump the scaffolded files. `.` can be used to select current directory.

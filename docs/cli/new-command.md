@@ -28,12 +28,12 @@ my-project/
 If you want to name your project differently than the folder, you can pass the `--project-name` option.
 
 ```shell
-ellar new my-project --project-name john-doe
+ellar new my-project path/to/scaffold-the-new-project
 ```
 will create a folder as follows:
 ```angular2html
-my-project/
-├─ john_doe/
+path/to/scaffold-the-new-project/
+├─ my_project/
 │  ├─ apps/
 │  │  ├─ __init__.py
 │  ├─ core/
@@ -49,5 +49,6 @@ my-project/
 
 ```
 
-## **New Command CLI Options**
-- `--project-name` Set the resulting project module name. Defaults to folder-name is not provided.
+## **New Command CLI Arguments**
+- `project-name` Set the resulting project module name.
+- `directory` Path to dump the scaffolded files. `.` can be used to select current directory.
