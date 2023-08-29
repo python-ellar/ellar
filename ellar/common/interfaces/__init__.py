@@ -12,6 +12,7 @@ from .context import (
 from .exceptions import IExceptionHandler, IExceptionMiddlewareService
 from .guard_consumer import IGuardsConsumer
 from .interceptor_consumer import IInterceptorsConsumer
+from .middleware import IEllarMiddleware
 from .module import IModuleSetup
 from .response_model import IResponseModel
 from .templating import IModuleTemplateLoader
@@ -37,4 +38,5 @@ __all__ = [
     "IApplicationStartup",
     "IAPIVersioning",
     "IAPIVersioningResolver",
+    "IEllarMiddleware",
 ]

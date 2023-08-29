@@ -70,32 +70,6 @@ def reflect_all_controller_type_routes(cls: t.Type[ControllerBase]) -> None:
                 )
 
 
-@t.overload
-def Controller(
-    prefix: t.Optional[str] = None,
-) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:  # pragma: no cover
-    ...
-
-
-@t.overload
-def Controller(
-    prefix: t.Optional[str] = None,
-    *,
-    name: t.Optional[str] = None,
-    include_in_schema: bool = True,
-) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:  # pragma: no cover
-    """
-    ========= CLASS DECORATOR ==============
-
-    Controller Class Decorator
-    :param prefix: Route Prefix default=[ControllerName]
-    :param name: route name prefix for url reversing, eg name:route_name default=''
-    :param include_in_schema: include controller in OPENAPI schema
-    :return: t.Type[ControllerBase]
-    """
-    ...
-
-
 def Controller(
     prefix: t.Optional[str] = None,
     *,
@@ -103,9 +77,11 @@ def Controller(
     include_in_schema: bool = True,
 ) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:
     """
+    ========= CLASS DECORATOR ==============
+
     Controller Class Decorator
     :param prefix: Route Prefix default=[ControllerName]
-    :param name: route name prefix for url reversing, eg name:route_name default=controller_name
+    :param name: route name prefix for url reversing, eg name:route_name default=''
     :param include_in_schema: include controller in OPENAPI schema
     :return: t.Type[ControllerBase]
     """

@@ -1,6 +1,7 @@
 import typing as t
 
 from ellar.common.helper import build_init_kwargs
+from ellar.common.interfaces import IEllarMiddleware
 from ellar.common.types import ASGIApp
 from ellar.di import EllarInjector, injectable
 from starlette.middleware import Middleware
@@ -8,7 +9,7 @@ from starlette.middleware import Middleware
 T = t.TypeVar("T")
 
 
-class EllarMiddleware(Middleware):
+class EllarMiddleware(Middleware, IEllarMiddleware):
     def __init__(self, cls: t.Type[T], **options: t.Any) -> None:
         super().__init__(cls, **options)
         injectable()(self.cls)
