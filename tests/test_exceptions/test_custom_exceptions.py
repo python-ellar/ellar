@@ -90,7 +90,7 @@ def test_invalid_handler_raise_exception():
     assert ex.value.errors() == [
         {
             "loc": ("EXCEPTION_HANDLERS", 0),
-            "msg": "Expected 'ExceptionHandler', received: <class 'tests.test_exceptions.test_custom_exceptions.InvalidExceptionHandler'>",
+            "msg": "Expected IExceptionHandler object, received: <class 'type'>",
             "type": "value_error",
         }
     ]
@@ -101,8 +101,7 @@ def test_invalid_handler_raise_exception():
     assert ex.value.errors() == [
         {
             "loc": ("EXCEPTION_HANDLERS", 0),
-            "msg": "Expected 'ExceptionHandler', received: "
-            "<class 'tests.test_exceptions.test_custom_exceptions.InvalidExceptionHandler'>",
+            "msg": "Expected IExceptionHandler object, received: <class 'tests.test_exceptions.test_custom_exceptions.InvalidExceptionHandler'>",
             "type": "value_error",
         }
     ]

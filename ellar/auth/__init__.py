@@ -1,5 +1,5 @@
-from .decorators import CheckPolicies
-from .guard import AuthorizationGuard
+from .decorators import CheckPolicies, Authorize
+from .interceptor import AuthorizationInterceptor
 from .handlers import BaseAuthenticationHandler
 from .identity import UserIdentity
 from .interfaces import IIdentitySchemes
@@ -13,7 +13,8 @@ from .services import AppIdentitySchemes, IdentityAuthenticationService
 
 __all__ = [
     "CheckPolicies",
-    "AuthorizationGuard",
+    "AuthorizationInterceptor",
+    "Authorize",
     "BaseAuthenticationHandler",
     "CheckPolicies",
     "BasePolicyHandler",

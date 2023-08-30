@@ -53,7 +53,12 @@ class RequestEndpointArgsModel(EndpointArgsModel):
         if (
             body_resolvers
             and len(body_resolvers) == 1
-            and not body_resolvers[0].model_field.field_info.embed  # type: ignore[attr-defined]
+            and not (
+                body_resolvers[0].model_field.field_info.embed  # type: ignore[attr-defined]
+                and isinstance(
+                    body_resolvers[0].model_field.field_info, params.BodyFieldInfo  # type: ignore[attr-defined]
+                )
+            )
         ):
             self.body_resolver = body_resolvers[0]
         elif body_resolvers:
