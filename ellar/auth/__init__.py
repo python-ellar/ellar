@@ -1,7 +1,7 @@
-from .decorators import CheckPolicies, Authorize
-from .interceptor import AuthorizationInterceptor
+from .decorators import Authorize, CheckPolicies
 from .handlers import BaseAuthenticationHandler
 from .identity import UserIdentity
+from .interceptor import AuthorizationInterceptor
 from .interfaces import IIdentitySchemes
 from .policy import (
     BasePolicyHandler,

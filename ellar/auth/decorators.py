@@ -2,8 +2,9 @@ import typing as t
 
 from ellar.common import set_metadata as set_meta
 from ellar.common.constants import ROUTE_INTERCEPTORS
-from .interceptor import AuthorizationInterceptor
+
 from .constants import POLICY_KEYS
+from .interceptor import AuthorizationInterceptor
 from .policy import PolicyType
 
 

@@ -1,7 +1,7 @@
 import typing as t
 from functools import partial
 
-from ellar.common import APIException, IExecutionContext, EllarInterceptor
+from ellar.common import APIException, EllarInterceptor, IExecutionContext
 from ellar.di import injectable
 from starlette import status
 
