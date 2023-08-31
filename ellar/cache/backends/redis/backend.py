@@ -5,15 +5,13 @@ from abc import ABC
 from ellar.common.helper.event_loop import get_or_create_eventloop
 
 try:
-    import redis  # type:ignore[import]
+    from redis.asyncio import Redis
+    from redis.asyncio.connection import ConnectionPool
 except ImportError as e:  # pragma: no cover
     raise RuntimeError(
         "To use `RedisCacheBackend`, you have to install 'redis' package e.g. `pip install redis`"
     ) from e
 
-if redis:
-    from redis.asyncio import Redis  # type:ignore[import]
-    from redis.asyncio.connection import ConnectionPool  # type:ignore[import]
 
 from ...interface import IBaseCacheBackendAsync
 from ...make_key_decorator import make_key_decorator, make_key_decorator_and_validate
@@ -65,7 +63,7 @@ class _RedisCacheBackendSync(IBaseCacheBackendAsync, ABC):
 
 
 class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
-    MEMCACHE_CLIENT: t.Any = Redis
+    MEMCACHE_CLIENT: t.Type[Redis] = Redis
     """Redis-based cache backend.
 
     Redis Server Construct example::
@@ -148,8 +146,12 @@ class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
         value = self._serializer.dumps(value)
         if ttl == 0:
             await client.delete(key)
-        assert ttl is not None
-        return bool(await client.set(key, value, ex=self.get_backend_ttl(ttl)))
+
+        return bool(
+            await client.set(
+                key, value, ex=self.get_backend_ttl(ttl)  # type:ignore[arg-type]
+            )
+        )
 
     @make_key_decorator
     async def delete_async(self, key: str, version: t.Optional[str] = None) -> bool:
@@ -169,8 +171,9 @@ class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
             res = await client.persist(key)
             return bool(res)
 
-        assert ttl is not None
-        res = await client.expire(key, self.get_backend_ttl(ttl))
+        res = await client.expire(
+            key, self.get_backend_ttl(ttl)  # type:ignore[arg-type]
+        )
         return bool(res)
 
     @make_key_decorator
