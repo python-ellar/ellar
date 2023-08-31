@@ -13,4 +13,4 @@ class IEllarMiddleware:
     def __validate(cls, v: t.Any) -> t.Any:
         if not isinstance(v, cls):
             raise ValueError(f"Expected EllarMiddleware object, received: {type(v)}")
-        return v
+        return v  # pragma: no cover
