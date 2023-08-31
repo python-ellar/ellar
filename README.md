@@ -1,11 +1,11 @@
 <p align="center">
-  <a href="#" target="blank"><img src="https://eadwincode.github.io/ellar/img/EllarLogoB.png" width="200" alt="Ellar Logo" /></a>
+  <a href="#" target="blank"><img src="https://python-ellar.github.io/ellar/img/EllarLogoB.png" width="200" alt="Ellar Logo" /></a>
 </p>
 <p align="end">logo by: <a target="_blank" href="https://www.behance.net/azadvertised">Azad</a></p>
 
 <p align="center"> Ellar - Python ASGI web framework for building fast, efficient and scalable RESTful APIs and server-side application. </p>
 
-![Test](https://github.com/eadwinCode/ellar/actions/workflows/test_full.yml/badge.svg)
+![Test](https://github.com/python-ellar/ellar/actions/workflows/test_full.yml/badge.svg)
 ![Coverage](https://img.shields.io/codecov/c/github/eadwinCode/ellar)
 [![PyPI version](https://badge.fury.io/py/ellar.svg)](https://badge.fury.io/py/ellar)
 [![PyPI version](https://img.shields.io/pypi/v/ellar.svg)](https://pypi.python.org/pypi/ellar)
@@ -78,9 +78,9 @@ ellar runserver --reload
 `--reload` is to watch for file changes
 
 Now go to [http://127.0.0.1:8000](http://127.0.0.1:8000)
-![Swagger UI](https://eadwincode.github.io/ellar/img/ellar_framework.png)
+![Swagger UI](https://python-ellar.github.io/ellar/img/ellar_framework.png)
 
-For more info on Ellar CLI, click [here](https://github.com/eadwinCode/ellar-cli)
+For more info on Ellar CLI, click [here](https://github.com/python-ellar/ellar-cli)
 
 ## **Adding a project module**
 A project module is a project app defining a group of controllers or services including templates and static files.
@@ -280,7 +280,7 @@ application.install_module(module)
 
 Now we can test our API at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs#/)
 Please ensure your server is running
-![Swagger UI](https://eadwincode.github.io/ellar/img/car_api.png)
+![Swagger UI](https://python-ellar.github.io/ellar/img/car_api.png)
 
 ## **HTML Templating**
 Ellar has built-in support for Jinja2, which is a popular template engine for HTML. This feature allows for easy and efficient HTML templating similar to that of Flask. Jinja2 can be used to create reusable templates, and to insert dynamic data into HTML pages. It also has support for template inheritance, control structures, and other useful features that can help to simplify and streamline the process of creating HTML templates.
@@ -297,4 +297,4 @@ Ellar has built-in support for Jinja2, which is a popular template engine for HT
 </html>
 ```
 
-See the [Doc](https://eadwincode.github.io/ellar/templating/templating/) for more examples.
+See the [Doc](https://python-ellar.github.io/ellar/templating/templating/) for more examples.
