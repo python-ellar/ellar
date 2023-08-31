@@ -1,0 +1,16 @@
+.md-header {
+    background-color: #a50a3e !important;
+}
+nav.md-nav--primary ul.md-nav__list {
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+nav.md-nav--primary ul.md-nav__list nav.md-nav ul.md-nav__list{
+    text-transform: none;
+    font-weight: normal;
+}
+
+nav.md-nav--primary ul.md-nav__list li.md-nav__item--active.md-nav__item--nested > label.md-nav__link{
+    color: var(--md-typeset-a-color);
+}
