@@ -6,7 +6,7 @@ For instance, a `db` command may have sub-commands like `makemigrations`, `migra
 To achieve this use-case, let us create a file `commands.py` in the root level of the project.
 
 ```python
-from ellar.commands import EllarTyper
+from ellar.common import EllarTyper
 
 db = EllarTyper(name="db")
 

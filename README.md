@@ -235,7 +235,7 @@ from ellar.common import Module, exception_handler, JSONResponse, Response, IHos
 from ellar.core import ModuleBase
 
 from ellar.samples.modules import HomeModule
-from .apps.car.module import CarModule
+from .car.module import CarModule
 
 
 @Module(modules=[HomeModule, CarModule])

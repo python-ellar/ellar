@@ -9,6 +9,7 @@ clean: ## Removing cached python compiled files
 	find . -name \*pyo | xargs  rm -fv
 	find . -name \*~  | xargs  rm -fv
 	find . -name __pycache__  | xargs  rm -rfv
+	ruff --clean
 
 install: ## Install dependencies
 	flit install --deps develop --symlink
@@ -22,7 +23,7 @@ lint: ## Run code linters
 	ruff check ellar tests examples
 	mypy ellar
 
-fmt format: ## Run code formatters
+fmt format:clean ## Run code formatters
 	black ellar tests examples
 	ruff check --fix ellar tests examples
 

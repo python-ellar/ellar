@@ -12,7 +12,7 @@ from starlette.routing import BaseRoute
 from .ref import ModuleRefBase, create_module_ref_factor
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common import EllarTyper, IModuleSetup
+    from ellar.common import IModuleSetup
 
     from .base import ModuleBase
 
@@ -33,10 +33,6 @@ class DynamicModule:
     routers: t.Sequence[t.Union[BaseRoute]] = dataclasses.field(
         default_factory=lambda: ()
     )
-
-    commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = dataclasses.field(
-        default_factory=lambda: ()
-    )
     _is_configured: bool = False
 
     def __post_init__(self) -> None:
@@ -51,13 +47,11 @@ class DynamicModule:
             "controllers": list(self.controllers),
             "routers": list(self.routers),
             "providers": list(self.providers),
-            "commands": list(self.commands),
         }
         for key in [
             MODULE_METADATA.CONTROLLERS,
             MODULE_METADATA.ROUTERS,
             MODULE_METADATA.PROVIDERS,
-            MODULE_METADATA.COMMANDS,
         ]:
             value = kwargs[key]
             if value:

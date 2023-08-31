@@ -50,7 +50,16 @@ class RequestEndpointArgsModel(EndpointArgsModel):
         self.body_resolver = None
 
         body_resolvers = self._computation_models[params.BodyFieldInfo.in_.value]
-        if body_resolvers and len(body_resolvers) == 1:
+        if (
+            body_resolvers
+            and len(body_resolvers) == 1
+            and not (
+                body_resolvers[0].model_field.field_info.embed  # type: ignore[attr-defined]
+                and isinstance(
+                    body_resolvers[0].model_field.field_info, params.BodyFieldInfo  # type: ignore[attr-defined]
+                )
+            )
+        ):
             self.body_resolver = body_resolvers[0]
         elif body_resolvers:
             # if body_resolvers is more than one, we create a bulk_body_resolver instead

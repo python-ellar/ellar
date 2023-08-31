@@ -7,6 +7,19 @@ from .context import IHostContext
 
 
 class IExceptionHandler(ABC, t.Iterable):
+    @classmethod
+    def __get_validators__(
+        cls: t.Type["IExceptionHandler"],
+    ) -> t.Iterable[t.Callable[..., t.Any]]:
+        # for Pydantic Model Validation
+        yield cls.__validate
+
+    @classmethod
+    def __validate(cls, v: t.Any) -> t.Any:
+        if not isinstance(v, cls):
+            raise ValueError(f"Expected IExceptionHandler object, received: {type(v)}")
+        return v
+
     def __eq__(self, other: t.Any) -> bool:
         if isinstance(other, IExceptionHandler):
             return other.exception_type_or_code == self.exception_type_or_code

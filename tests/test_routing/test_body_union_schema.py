@@ -17,6 +17,11 @@ def save_union_body_and_embedded_body(
     return {"item": item, "qty": qty}
 
 
+@post("/items/embed")
+def embed_qty(qty: int = Body(12, embed=True)):
+    return {"qty": qty}
+
+
 app = tm.create_application()
 app.router.append(save_union_body_and_embedded_body)
 
@@ -138,3 +143,14 @@ def test_post_item():
     response = client.post("/items/", json={"item": {"name": "Foo"}})
     assert response.status_code == 200, response.text
     assert response.json() == {"item": {"name": "Foo"}, "qty": 12}
+
+
+def test_embed_body():
+    _tm = Test.create_test_module()
+    _app = _tm.create_application()
+    _app.router.append(embed_qty)
+
+    _client = _tm.get_test_client()
+    response = _client.post("/items/embed", json={"qty": 232})
+    assert response.status_code == 200, response.text
+    assert response.json() == {"qty": 232}

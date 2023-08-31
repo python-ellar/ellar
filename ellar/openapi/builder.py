@@ -196,14 +196,14 @@ class OpenAPIDocumentBuilder:
     def set_contact(
         self,
         name: str,
-        url: t.Optional[AnyUrl] = None,
-        email: t.Optional[EmailStr] = None,
+        url: t.Optional[t.Union[AnyUrl, str]] = None,
+        email: t.Optional[t.Union[EmailStr, str]] = None,
     ) -> "OpenAPIDocumentBuilder":
         self._build["info"]["contact"] = {"name": name, "url": url, "email": email}
         return self
 
     def set_license(
-        self, name: str, url: t.Optional[AnyUrl] = None
+        self, name: str, url: t.Optional[t.Union[AnyUrl, str]] = None
     ) -> "OpenAPIDocumentBuilder":
         self._build["info"]["license"] = {"name": name, "url": url}
         return self
@@ -229,7 +229,7 @@ class OpenAPIDocumentBuilder:
         self,
         name: str,
         description: t.Optional[str] = None,
-        external_doc_url: t.Optional[AnyUrl] = None,
+        external_doc_url: t.Optional[t.Union[AnyUrl, str]] = None,
         external_doc_description: t.Optional[str] = None,
     ) -> "OpenAPIDocumentBuilder":
         data: t.Dict = {"name": name, "description": description}

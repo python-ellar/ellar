@@ -1,12 +1,12 @@
-from ellar.auth import AuthorizationGuard, CheckPolicies
+from ellar.auth import Authorize, CheckPolicies
 from ellar.auth.policy import RequiredClaimsPolicy, RequiredRolePolicy
-from ellar.common import Controller, UseGuards, get
+from ellar.common import Controller, get
 
 from .policies import AdultOnly, AtLeast21
 
 
 @Controller("/movies")
-@UseGuards(AuthorizationGuard)
+@Authorize()
 class MoviesControllers:
     @get("/")
     @CheckPolicies(AdultOnly)
@@ -15,7 +15,7 @@ class MoviesControllers:
 
 
 @Controller("/article")
-@UseGuards(AuthorizationGuard)
+@Authorize()
 class ArticleController:
     @get("/create")
     @CheckPolicies(RequiredClaimsPolicy("article", "create", "publish"))
