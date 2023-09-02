@@ -37,14 +37,12 @@ class EllarInjector(Injector):
         parent: t.Optional["Injector"] = None,
     ) -> None:
         self._stack = ()
-        self.parent = parent  # type:ignore[assignment]
+        self.parent = parent
         # Binder
         self.container = Container(
             self,
             auto_bind=auto_bind,
-            parent=parent.binder
-            if parent is not None
-            else None,  # type:ignore[arg-type]
+            parent=parent.binder if parent is not None else None,
         )
 
         # Bind some useful types

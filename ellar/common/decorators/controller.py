@@ -70,6 +70,7 @@ def reflect_all_controller_type_routes(cls: t.Type[ControllerBase]) -> None:
                 )
 
 
+@t.no_type_check
 def Controller(
     prefix: t.Optional[str] = None,
     *,

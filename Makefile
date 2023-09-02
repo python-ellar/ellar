@@ -18,7 +18,7 @@ install-full: ## Install dependencies
 	make install
 	pre-commit install -f
 
-lint: ## Run code linters
+lint:fmt ## Run code linters
 	black --check ellar tests examples
 	ruff check ellar tests examples
 	mypy ellar

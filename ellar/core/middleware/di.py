@@ -26,7 +26,9 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
             _handler = self.error_handler
 
         super(RequestServiceProviderMiddleware, self).__init__(
-            debug=debug, handler=_handler, app=app
+            debug=debug,
+            handler=_handler,  # type:ignore[arg-type]
+            app=app,
         )
 
         self.injector = injector

@@ -38,5 +38,7 @@ class ModuleProvider(ClassProvider):
         super().__init__(cls)
         self._init_kwargs = init_kwargs
 
-    def get(self, injector: Injector) -> T:  # type:ignore[type-var]
-        return injector.create_object(self._cls, additional_kwargs=self._init_kwargs)
+    def get(self, injector: Injector) -> T:  # type: ignore[type-var]
+        return injector.create_object(  # type:ignore[no-any-return]
+            self._cls, additional_kwargs=self._init_kwargs
+        )
