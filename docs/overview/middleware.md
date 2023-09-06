@@ -107,6 +107,37 @@ class DevelopmentConfig(BaseConfig):
 In the example above, `Middleware` that wraps `CustomGZipMiddleware` with ensure dependent classes in `CustomGZipMiddleware` are resolved when
 instantiating `CustomGZipMiddleware` object. As you see, the `config` value was not provided but will be injected during runtime.
 
+## **Function as Middleware**
+In Modules middleware sections, we saw how you can define middlewares in module. 
+In similar fashion, we can define a function a register them as middleware.
+
+For example:
+```python
+# project_name/middleware_function.py
+from ellar.common import IHostContext
+from ellar.core.middleware import Middleware, FunctionBasedMiddleware
+
+
+async def my_middleware_function(context: IHostContext, call_next):
+    request = context.switch_to_http_connection().get_request() # for http response only
+    request.state.my_middleware_function_1 = True
+    await call_next()
+
+## And in Config.py
+...
+
+class DevelopmentConfig(BaseConfig):
+    DEBUG: bool = True
+    # Application middlewares
+    MIDDLEWARE: list[Middleware] = [
+        Middleware(FunctionBasedMiddleware, dispatch=my_middleware_function),
+    ]
+```
+
+In above, we created `my_middleware_function` function then registered as `FunctionBasedMiddleware` as a dispatch action to be called during request handling lifecycle.
+It is important to note that `dispatch` function must take `context` and `call_next` as function parameters.
+
+
 ## **Starlette Middlewares**
 Let's explore other Starlette middlewares and other third party `ASGI` Middlewares
 

@@ -176,7 +176,7 @@ if __name__ == "__main__":
 
 
 ## **Jinja2 Configurations**
-If there are specific configurations you want to apply to your Jinja2 Environment, you can look at [JINJA_TEMPLATE_OPTIONS](../../techniques/configurations/#jinja_templates_options){target="_blank"} configuration.
+If there are specific configurations you want to apply to your Jinja2 Environment, you can look at [JINJA_TEMPLATE_OPTIONS](configurations.md#jinja_templates_options){target="_blank"} configuration.
 
 ## **Default Jinja Template Context**
 
@@ -359,4 +359,4 @@ This allows for greater control and readability when reversing URLs, and makes i
 
 
 ### **Adding template filters and template globals.**
-Jinja template filter and global functions can be defined at module level as shown here: [Module Templating Filters](../../overview/modules/#module-templating-filters){target="_blank"}
+Jinja template filter and global functions can be defined at module level as shown here: [Module Templating Filters](../overview/modules.md#module-templating-filters){target="_blank"}

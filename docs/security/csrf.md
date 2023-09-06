@@ -7,7 +7,7 @@ into sending unauthorized requests to a website where the user is authenticated,
 - [Piccolo CSRF Middleware](https://piccolo-api.readthedocs.io/en/latest/csrf/usage.html)
 - [Starlette CSRF](https://pypi.org/project/starlette-csrf/)
 
-These middlewares can be configured as every other asgi middleware as shown in middleware [docs](../../overview/middleware/#applying-middleware) to work in Ellar
+These middlewares can be configured as every other asgi middleware as shown in middleware [docs](../overview/middleware.md#applying-middleware) to work in Ellar
 
 For example, using [Starlette CSRF](https://pypi.org/project/starlette-csrf/) Middleware
 ```python

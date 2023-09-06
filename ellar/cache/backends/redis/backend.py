@@ -147,11 +147,7 @@ class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
         if ttl == 0:
             await client.delete(key)
 
-        return bool(
-            await client.set(
-                key, value, ex=self.get_backend_ttl(ttl)  # type:ignore[arg-type]
-            )
-        )
+        return bool(await client.set(key, value, ex=self.get_backend_ttl(ttl)))
 
     @make_key_decorator
     async def delete_async(self, key: str, version: t.Optional[str] = None) -> bool:
@@ -171,9 +167,7 @@ class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
             res = await client.persist(key)
             return bool(res)
 
-        res = await client.expire(
-            key, self.get_backend_ttl(ttl)  # type:ignore[arg-type]
-        )
+        res = await client.expire(key, int(self.get_backend_ttl(ttl)))
         return bool(res)
 
     @make_key_decorator
@@ -188,7 +182,7 @@ class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
     ) -> int:
         client = self._get_client()
         res = await client.incr(key, amount=delta)
-        return t.cast(int, res)
+        return res
 
     @make_key_decorator
     async def decr_async(
@@ -196,4 +190,4 @@ class RedisCacheBackend(_RedisCacheBackendSync, BaseCacheBackend):
     ) -> int:
         client = self._get_client()
         res = await client.decr(key, amount=delta)
-        return t.cast(int, res)
+        return res

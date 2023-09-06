@@ -1,8 +1,8 @@
 site_name: ''
 site_description: Ellar - Python ASGI web framework for building fast, efficient and scalable RESTAPIs and server-side application.
-site_url: https://github.com/eadwinCode/ellar
+site_url: https://github.com/python-ellar/ellar
 repo_name: eadwinCode/ellar
-repo_url: https://github.com/eadwinCode/ellar
+repo_url: https://github.com/python-ellar/ellar
 edit_uri: blob/master/docs
 copyright: |
   Copyright &copy; 2021 - 2023 <a href="https://github.com/eadwinCode"  target="_blank" rel="noopener">Eadwin Ezeudoh</a>
@@ -26,8 +26,8 @@ theme:
     - navigation.footer
     - navigation.indexes
     - navigation.instant
-    # - navigation.prune
-#    - navigation.tabs
+    - navigation.prune
+    - navigation.tabs
     - navigation.left
     - navigation.tracking
   palette:
@@ -64,7 +64,11 @@ plugins:
       enable_creation_date: false
 
 nav:
-  - Introduction: index.md
+  - Get Started:
+      - Get Started: index.md
+      - Quick Setup: quick-project.md
+      - Contribution: contribution.md
+      - Release Notes: release-notes.md
   - Overview:
       - Step One:  overview/step-one.md
       - Controllers:  overview/controllers.md
@@ -123,9 +127,6 @@ nav:
   - WebSockets:
       - websockets: websockets/websockets.md
       - socketio: websockets/socketio.md
-
-  - Contribution: contribution.md
-  - Release Notes: release-notes.md
 
 markdown_extensions:
   - attr_list

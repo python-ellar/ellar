@@ -109,7 +109,7 @@ class BaseHttpAuth(BaseAuth, ABC):
     async def authentication_handler(
         self,
         connection: "HTTPConnection",
-        credentials: t.Union[HTTPBasicCredentials, HTTPAuthorizationCredentials],
+        credentials: t.Any,
     ) -> t.Optional[t.Any]:
         pass  # pragma: no cover
 

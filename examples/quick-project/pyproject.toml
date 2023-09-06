@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "quick-project"
+version = "0.1.0"
+description = "Quick project for demonstration purposes"
+authors = ["Ezeudoh Tochukwu <tochukwu.ezeudoh@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "quick_project"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+ellar-cli = "^0.2.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[ellar]
+default = "carsite"
+[ellar.projects.carsite]
+project-name = "carsite"
+application = "carsite.server:application"
+config = "carsite.config:DevelopmentConfig"
+root-module = "carsite.root_module:ApplicationModule"
