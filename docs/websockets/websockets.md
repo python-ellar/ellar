@@ -154,7 +154,7 @@ In the construction above, we applied `MyGuard` to `/live-suport` route function
 And for a connection to `/live-suport` to be successful, `MyGuard` can_activate must return `True`.
 
 ## **Websocket handler Dependencies**
-Websocket handler supports all route [handler parameters](../parsing-inputs#tutorial) except `Body` and `Forms`. 
+Websocket handler supports all route [handler parameters](../techniques/validations/index.md) except `Body` and `Forms`. 
 
 Let's use a `Query` parameter on the `/live-feed` WebSocket route.
 ```python
@@ -189,7 +189,7 @@ manage different sessions of websocket differently like `on_connect`, `on_messag
 
 !!! info
     This approach also enables message data type validation using `WsBody`. 
-    `WsBody` is similar to [`Body`](../parsing-inputs/body) but for websockets.
+    `WsBody` is similar to [`Body`](../techniques/validations/body.md) but for websockets.
 
 Let's rewrite the previous example, `/live-support` websocket route.
 ```python

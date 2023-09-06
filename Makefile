@@ -9,7 +9,6 @@ clean: ## Removing cached python compiled files
 	find . -name \*pyo | xargs  rm -fv
 	find . -name \*~  | xargs  rm -fv
 	find . -name __pycache__  | xargs  rm -rfv
-	ruff --clean
 
 install: ## Install dependencies
 	flit install --deps develop --symlink
@@ -33,8 +32,7 @@ test: ## Run tests
 test-cov: ## Run tests with coverage
 	pytest --cov=ellar --cov-report term-missing
 
-doc-deploy: ## Run Deploy Documentation
-	make clean
+doc-deploy:clean ## Run Deploy Documentation
 	mkdocs gh-deploy --force --ignore-version
 
 doc-serve: ## Launch doc local server
