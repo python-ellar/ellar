@@ -123,7 +123,6 @@ nav:
         - runserver: cli/runserver-command.md
     - Custom Commands: cli/custom-commands.md
     - Command Grouping: cli/command-grouping.md
-    - Click Commands: cli/command-grouping.md
 
   - WebSockets:
       - websockets: websockets/websockets.md

@@ -87,3 +87,25 @@ Commands:
   runserver       - Starts Uvicorn Server -
   say-hi 
 ```
+
+## **Using Click Commands**
+If prefer click commands, Ellar-CLI supports that too. Simply create a click command and register it to any module registered in
+the `ApplicationModule`. For example
+
+```python
+import click
+from ellar.common import JSONResponse, Module, Response, exception_handler
+from ellar.core import ModuleBase
+from ellar.core.connection import Request
+
+@click.command()
+def say_hello():
+    click.echo("Hello from ellar.")
+
+
+@Module(commands=[say_hello])
+class ApplicationModule(ModuleBase):
+    @exception_handler(404)
+    def exception_404_handler(cls, request: Request, exc: Exception) -> Response:
+        return JSONResponse({"detail": "Resource not found."})
+```
