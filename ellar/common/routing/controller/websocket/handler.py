@@ -1,6 +1,7 @@
 import typing as t
 
 from ellar.common.interfaces import IExecutionContext
+from ellar.common.logger import request_logger
 from ellar.common.models import ControllerBase
 
 from ...websocket import WebSocketExtraHandler
@@ -19,10 +20,16 @@ class ControllerWebSocketExtraHandler(WebSocketExtraHandler):
         )
 
         receiver_kwargs.update(extra_kwargs)
+        request_logger.debug(
+            f"Executing on_receive handler from {self.__class__.__name__}"
+        )
         await self.on_receive(self.controller_instance, **receiver_kwargs)
 
     async def execute_on_connect(self, *, context: IExecutionContext) -> None:
         if self.on_connect:
+            request_logger.debug(
+                f"Executing on_connect handler from {self.__class__.__name__}"
+            )
             await self.on_connect(
                 self.controller_instance, context.switch_to_websocket().get_client()
             )
@@ -33,6 +40,9 @@ class ControllerWebSocketExtraHandler(WebSocketExtraHandler):
         self, *, context: IExecutionContext, close_code: int
     ) -> None:
         if self.on_disconnect:
+            request_logger.debug(
+                f"Executing on_disconnect handler from {self.__class__.__name__}"
+            )
             await self.on_disconnect(
                 self.controller_instance,
                 context.switch_to_websocket().get_client(),

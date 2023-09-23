@@ -3,6 +3,7 @@ import uuid
 
 from ellar.common.constants import CONTROLLER_CLASS_KEY, GUARDS_KEY, VERSIONING_KEY
 from ellar.common.helper import get_unique_control_type
+from ellar.common.logger import request_logger
 from ellar.common.models import GuardCanActivate
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.reflect import reflect
@@ -37,6 +38,9 @@ class ModuleMount(StarletteMount):
         return self._control_type
 
     def matches(self, scope: TScope) -> t.Tuple[Match, TScope]:
+        request_logger.debug(
+            f"Matching URL Handler path={scope['path']} - '{self.__class__.__name__}'"
+        )
         match, _child_scope = super().matches(scope)
         if match == Match.FULL:
             scope_copy = dict(scope)
@@ -68,6 +72,9 @@ class ModuleMount(StarletteMount):
         return Match.NONE, {}
 
     async def handle(self, scope: TScope, receive: TReceive, send: TSend) -> None:
+        request_logger.debug(
+            f"Executing Matched URL Handler, path={scope['path']} - '{self.__class__.__name__}'"
+        )
         route = t.cast(t.Optional[Route], scope.get(self._current_found_route_key))
         if route:
             del scope[self._current_found_route_key]

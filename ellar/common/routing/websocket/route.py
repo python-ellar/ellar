@@ -11,6 +11,7 @@ from ellar.common.exceptions import (
 )
 from ellar.common.helper import get_name
 from ellar.common.interfaces import IExecutionContext
+from ellar.common.logger import request_logger
 from ellar.common.params import ExtraEndpointArg, WebsocketEndpointArgsModel
 from ellar.reflect import reflect
 from starlette.routing import WebSocketRoute as StarletteWebSocketRoute
@@ -85,7 +86,13 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
         self._handlers_kwargs.update({handler_name: handler})
 
     async def run(self, context: IExecutionContext, kwargs: t.Dict) -> t.Any:
+        request_logger.debug(
+            f"Running Websocket Endpoint handler from '{self.__class__.__name__}'"
+        )
         if self._use_extra_handler:
+            request_logger.debug(
+                f"Switched Websocket Extra Handler from '{self.__class__.__name__}'"
+            )
             ws_extra_handler_type = (
                 self._extra_handler_type or self.get_websocket_handler()
             )
@@ -98,6 +105,9 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
             return await self.endpoint(**kwargs)
 
     async def handle_request(self, context: IExecutionContext) -> t.Any:
+        request_logger.debug(
+            f"Resolving request handler dependencies '{self.__class__.__name__}'"
+        )
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
             ctx=context
         )

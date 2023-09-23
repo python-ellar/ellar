@@ -1,7 +1,7 @@
-import logging
 import typing as t
 from collections import OrderedDict, defaultdict
 
+from ellar.di.logger import log
 from ellar.reflect import asynccontextmanager
 from injector import Injector
 
@@ -19,8 +19,6 @@ if t.TYPE_CHECKING:  # pragma: no cover
         ModuleSetup,
         ModuleTemplateRef,
     )
-
-log = logging.getLogger("ellar.di")
 
 
 class EllarInjector(Injector):
@@ -129,17 +127,13 @@ class EllarInjector(Injector):
         scope_instance = t.cast(DIScope, scope_binding.provider.get(self))
 
         log.debug(
-            "%EllarInjector.get(%r, scope=%r) using %r",
-            self._log_prefix,
-            interface,
-            scope,
-            binding.provider,
+            f"{self._log_prefix}EllarInjector.get({interface}, scope={scope}) using {binding.provider}"
         )
 
         result = scope_instance.get(interface, binding.provider, context=context).get(
             self.container.injector
         )
-        log.debug("%s -> %r", self._log_prefix, result)
+        log.debug(f"{self._log_prefix} -> {result}")
         return t.cast(T, result)
 
     def update_scoped_context(self, interface: t.Type[T], value: T) -> None:

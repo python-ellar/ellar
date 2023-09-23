@@ -3,6 +3,7 @@ import typing as t
 from ellar.common.constants import SERIALIZER_FILTER_KEY
 from ellar.common.helper.modelfield import create_model_field
 from ellar.common.interfaces import IExecutionContext
+from ellar.common.logger import request_logger
 from ellar.common.serializer import SerializerFilter, serialize_object
 from ellar.reflect import reflect
 
@@ -25,6 +26,9 @@ class JSONResponseModel(ResponseModel):
     def create_response(
         self, context: IExecutionContext, response_obj: t.Any, status_code: int
     ) -> Response:
+        request_logger.debug(
+            f"Creating Response from returned Handler value - '{self.__class__.__name__}'"
+        )
         json_response_class = t.cast(
             t.Type[JSONResponse],
             context.get_app().config.DEFAULT_JSON_CLASS or self._response_type,

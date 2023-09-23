@@ -16,7 +16,7 @@ from .factory import get_parameter_field
 
 class BulkArgsResolverGenerator:
     """
-    This class splits Schema into different ModelFields to he resolved independently and computed back later.
+    This class splits Schema into different ModelFields to be resolved independently and computed back later.
     class ASchema(BaseModel):
         A: int
         B: int

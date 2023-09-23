@@ -3,6 +3,7 @@ import typing as t
 
 from ellar.common.constants import SCOPE_RESPONSE_STARTED
 from ellar.common.interfaces import IExecutionContext, IResponseModel
+from ellar.common.logger import request_logger
 from pydantic import BaseModel
 
 from ..response_types import Response
@@ -62,6 +63,9 @@ class RouteResponseModel:
         ctx: IExecutionContext,
         endpoint_response_content: t.Union[t.Any, t.Tuple[int, t.Any]],
     ) -> ResponseResolver:
+        request_logger.debug(
+            f"Resolving Response Structure - '{self.__class__.__name__}'"
+        )
         status_code: int = 200
         response_obj: t.Any = endpoint_response_content
 
@@ -93,11 +97,17 @@ class RouteResponseModel:
     def process_response(
         self, ctx: IExecutionContext, response_obj: t.Union[t.Any, t.Tuple[int, t.Any]]
     ) -> t.Optional[Response]:
+        request_logger.debug(
+            f"Response Processor Handler - '{self.__class__.__name__}'"
+        )
         if isinstance(response_obj, Response):
             return response_obj
         scope, _, _ = ctx.get_args()
 
         if scope.get(SCOPE_RESPONSE_STARTED) is True:
+            request_logger.debug(
+                f"Stopped Processing Since `response.send` has been called - '{self.__class__.__name__}'"
+            )
             return None
 
         resolver = self.response_resolver(ctx, response_obj)

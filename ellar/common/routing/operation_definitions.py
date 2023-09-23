@@ -56,26 +56,12 @@ def _websocket_connection_attributes(func: t.Callable) -> t.Callable:
 class OperationDefinitions:
     __slots__ = ()
 
-    # def _get_http_operations_class(self, func: t.Callable) -> t.Type[TOperation]:
-    #     if class_base_function_regex.match(repr(func)):
-    #         return ControllerRouteOperation
-    #     return RouteOperation
-    #
-    # def _get_ws_operations_class(self, func: t.Callable) -> t.Type[TWebsocketOperation]:
-    #     if class_base_function_regex.match(repr(func)):
-    #         return ControllerWebsocketRouteOperation
-    #     return WebsocketRouteOperation
-
     def _get_operation(self, route_parameter: RouteParameters) -> t.Callable:
         setattr(route_parameter.endpoint, OPERATION_ENDPOINT_KEY, True)
         setattr(route_parameter.endpoint, ROUTE_OPERATION_PARAMETERS, route_parameter)
         return route_parameter.endpoint
 
     def _get_ws_operation(self, ws_route_parameters: WsRouteParameters) -> t.Callable:
-        # _ws_operation_class = self._get_ws_operations_class(
-        #     ws_route_parameters.endpoint
-        # )
-        # _operation = _ws_operation_class(**ws_route_parameters.dict())
         setattr(ws_route_parameters.endpoint, OPERATION_ENDPOINT_KEY, True)
         setattr(
             ws_route_parameters.endpoint,

@@ -2,6 +2,7 @@ import typing as t
 from enum import Enum
 
 from ellar.common.interfaces import IExecutionContext
+from ellar.common.logger import request_logger
 from ellar.common.serializer import Serializer, SerializerFilter, serialize_object
 
 from ..response_types import FileResponse, Response, StreamingResponse
@@ -40,6 +41,9 @@ class FileResponseModel(ResponseModel):
     def create_response(
         self, context: IExecutionContext, response_obj: t.Any, status_code: int
     ) -> Response:
+        request_logger.debug(
+            f"Creating Response from returned Handler value - '{self.__class__.__name__}'"
+        )
         response_args, headers = self.get_context_response(
             context=context, status_code=status_code
         )
@@ -82,6 +86,10 @@ class StreamingResponseModel(ResponseModel):
     def create_response(
         self, context: IExecutionContext, response_obj: t.Any, status_code: int
     ) -> Response:
+        request_logger.debug(
+            f"Creating Response from returned Handler value - '{self.__class__.__name__}'"
+        )
+
         response_args, headers = self.get_context_response(
             context=context, status_code=status_code
         )
