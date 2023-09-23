@@ -128,7 +128,7 @@ class NOT_SET_TYPE:
 
 NOT_SET: Any = NOT_SET_TYPE()
 
-
+ELLAR_LOG_FMT_STRING = "%(levelname)s: [%(name)s] %(message)s"
 DEFAULT_LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -142,6 +142,10 @@ DEFAULT_LOGGING = {
             "()": "uvicorn.logging.AccessFormatter",
             "fmt": '%(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s',
         },
+        "ellar-formatter": {
+            "()": "logging.Formatter",
+            "fmt": ELLAR_LOG_FMT_STRING,
+        },
     },
     "handlers": {
         "default": {
@@ -154,6 +158,11 @@ DEFAULT_LOGGING = {
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stdout",
         },
+        "ellar-default": {
+            "formatter": "ellar-formatter",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout",
+        },
         "console": {
             "class": "logging.StreamHandler",
         },
@@ -163,14 +172,14 @@ DEFAULT_LOGGING = {
         "uvicorn.error": {"level": "INFO"},
         "uvicorn.access": {"handlers": ["access"], "level": "INFO", "propagate": False},
         "ellar": {
-            "handlers": ["default"],
+            "handlers": ["ellar-default"],
             "level": "INFO",
             "propagate": False,
         },
         "ellar.request": {
-            "handlers": ["default"],
+            "handlers": ["ellar-default"],
             "level": "INFO",
-            "propagate": True,
+            "propagate": False,
         },
     },
 }
