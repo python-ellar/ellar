@@ -8,8 +8,8 @@ another_router = ModuleRouter("/prefix/another", name="arouter")
 
 
 @another_router.get("/sample")
-def some_example(self):
-    pass
+def some_example():
+    return {"message": "okay"}
 
 
 @another_router.get("/sample")

@@ -26,6 +26,17 @@ def serialize_if_pydantic_object(obj: t.Any) -> t.Any:
 
 
 class ResponseModelField(ModelField):
+    """
+    A representation of response schema defined in route function
+
+        @get('/', response={200: ASchema, 404: ErrorSchema})
+        def example():
+            pass
+
+    During module building, `ASchema` and `ErrorSchema` will be converted to ResponseModelField
+    types for the of validation and OPENAPI documentation
+    """
+
     def validate_object(self, obj: t.Any) -> t.Any:
         request_logger.debug(
             f"Validating Response Object - '{self.__class__.__name__}'"
@@ -52,6 +63,21 @@ class ResponseModelField(ModelField):
 
 
 class BaseResponseModel(IResponseModel, ABC):
+    """
+    A base model representation of endpoint response. It provides essential information about a response type, just as
+    it is defined on the endpoint, the status code and schema plus description for OPENAPI documentation.
+
+    For example:
+
+        @get('/', response={200: ASchema, 404: ErrorSchema})
+        def example():
+            pass
+
+    From the Above example, two response models will be generated.
+    - response model for 200 status and ASchema and
+    - response model for 400 status and ErrorSchema
+    """
+
     __slots__ = (
         "_response_type",
         "_media_type",
@@ -126,10 +152,10 @@ class BaseResponseModel(IResponseModel, ABC):
     def create_response(
         self, context: IExecutionContext, response_obj: t.Any, status_code: int
     ) -> Response:
+        """Please override this function to create a custom response"""
         request_logger.debug(
             f"Creating Response from returned Handler value - '{self.__class__.__name__}'"
         )
-        """Cant create custom responses, Please override this function to create a custom response"""
         response_args, headers = self.get_context_response(
             context=context, status_code=status_code
         )
@@ -162,6 +188,16 @@ class BaseResponseModel(IResponseModel, ABC):
 
 
 class ResponseModel(BaseResponseModel):
+    """
+    Handles endpoint models with Response Type as schema
+
+        from starlette.responses import PlainTextResponse
+
+        @get('/', response={200: PlainTextResponse})
+        def example():
+            pass
+    """
+
     def serialize(
         self,
         response_obj: t.Any,

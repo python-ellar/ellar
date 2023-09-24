@@ -1,7 +1,7 @@
 import typing as t
 
 from anyio import create_task_group
-from ellar.common import IApplicationShutdown, IApplicationStartup
+from ellar.common import IApplicationShutdown, IApplicationStartup, logger
 from ellar.reflect import asynccontextmanager
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -51,6 +51,8 @@ class EllarApplicationLifespan:
 
     @asynccontextmanager
     async def lifespan(self, app: "App") -> t.AsyncIterator[t.Any]:
+        logger.logger.debug("Executing Modules Startup Handlers")
+
         async with create_task_group() as tg:
             tg.start_soon(self.run_all_startup_actions, app)
 
@@ -58,5 +60,7 @@ class EllarApplicationLifespan:
             async with self._lifespan_context(app) as ctx:  # type:ignore[attr-defined]
                 yield ctx
         finally:
+
+            logger.logger.debug("Executing Modules Shutdown Handlers")
             async with create_task_group() as tg:
                 tg.start_soon(self.run_all_shutdown_actions, app)

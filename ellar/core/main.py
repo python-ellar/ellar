@@ -5,7 +5,7 @@ import typing as t
 from ellar.auth import IIdentitySchemes
 from ellar.auth.handlers import AuthenticationHandlerType
 from ellar.common.compatible import cached_property
-from ellar.common.constants import LOG_LEVELS
+from ellar.common.constants import ELLAR_LOG_FMT_STRING, LOG_LEVELS
 from ellar.common.datastructures import State, URLPath
 from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
 from ellar.common.logger import logger
@@ -92,7 +92,7 @@ class App(AppTemplating):
         )
         logger_ = logging.getLogger("ellar")
         if not logger_.handlers:
-            formatter = logging.Formatter("%(levelname)s: [%(name)s] %(message)s")
+            formatter = logging.Formatter(ELLAR_LOG_FMT_STRING)
             stream_handler = logging.StreamHandler()
             # file_handler = logging.FileHandler("my_app.log")
             # file_handler.setFormatter(formatter)

@@ -1,9 +1,8 @@
-import logging
 import typing as t
 
 from ellar.common.constants import SCOPE_RESPONSE_STARTED
 from ellar.common.interfaces import IExecutionContext, IResponseModel
-from ellar.common.logger import request_logger
+from ellar.common.logger import logger, request_logger
 from pydantic import BaseModel
 
 from ..response_types import Response
@@ -11,8 +10,6 @@ from .base import ResponseModel, ResponseResolver
 from .exceptions import RouteResponseExecution
 from .helper import create_response_model
 from .json import EmptyAPIResponseModel, JSONResponseModel
-
-logger = logging.getLogger("ellar")
 
 
 class RouteResponseModel:
@@ -104,7 +101,8 @@ class RouteResponseModel:
             return response_obj
         scope, _, _ = ctx.get_args()
 
-        if scope.get(SCOPE_RESPONSE_STARTED) is True:
+        if scope.get(SCOPE_RESPONSE_STARTED) is True:  # pragma: no cover
+            # Similar condition exists in EllarConsumer Manager
             request_logger.debug(
                 f"Stopped Processing Since `response.send` has been called - '{self.__class__.__name__}'"
             )

@@ -41,11 +41,11 @@ class RouteOperationBase:
             t.Union[t.Type, t.Type["ControllerBase"]], _controller_type
         )
 
-    @t.no_type_check
-    def __call__(
-        self, context: IExecutionContext, *args: t.Any, **kwargs: t.Any
-    ) -> t.Any:
-        return self.endpoint(*args, **kwargs)
+    # @t.no_type_check
+    # def __call__(
+    #     self, context: IExecutionContext, *args: t.Any, **kwargs: t.Any
+    # ) -> t.Any:
+    #     return self.endpoint(*args, **kwargs)
 
     @abstractmethod
     def _load_model(self) -> None:

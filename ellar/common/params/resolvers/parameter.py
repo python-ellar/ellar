@@ -155,7 +155,7 @@ class BodyParameterResolver(WsBodyParameterResolver):
         except json.JSONDecodeError as e:
             request_logger.error("JSONDecodeError: ", exc_info=True)
             raise RequestValidationError([ErrorWrapper(e, ("body", e.pos))]) from e
-        except Exception as e:  # pragma: no cover
+        except Exception as e:
             request_logger.error("Unable to parse the body: ", exc_info=e)
             raise HTTPException(
                 status_code=400, detail="There was an error parsing the body"
