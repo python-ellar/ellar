@@ -3,6 +3,7 @@ import typing as t
 
 from ellar.common.exceptions import WebSocketRequestValidationError
 from ellar.common.interfaces import IExecutionContext
+from ellar.common.logger import request_logger
 from ellar.common.params import WebsocketEndpointArgsModel
 from starlette import status
 from starlette.exceptions import WebSocketException
@@ -50,6 +51,9 @@ class WebSocketExtraHandler:
     async def dispatch(
         self, context: "IExecutionContext", **receiver_kwargs: t.Any
     ) -> None:
+        request_logger.debug(
+            f"Running Websocket Dispatch Action from '{self.__class__.__name__}'"
+        )
         websocket = context.switch_to_websocket().get_client()
         await self.execute_on_connect(context=context)
         close_code = status.WS_1000_NORMAL_CLOSURE
@@ -78,6 +82,9 @@ class WebSocketExtraHandler:
     async def _resolve_receiver_dependencies(
         self, context: "IExecutionContext", data: t.Any
     ) -> t.Dict:
+        request_logger.debug(
+            f"Resolving Receiver Dependencies from '{self.__class__.__name__}'"
+        )
         (
             extra_kwargs,
             errors,
@@ -100,10 +107,16 @@ class WebSocketExtraHandler:
         )
 
         receiver_kwargs.update(extra_kwargs)
+        request_logger.debug(
+            f"Executing on_receive handler from '{self.__class__.__name__}'"
+        )
         await self.on_receive(**receiver_kwargs)
 
     async def execute_on_connect(self, *, context: "IExecutionContext") -> None:
         if self.on_connect is not None:
+            request_logger.debug(
+                f"Executing on_connect handler from '{self.__class__.__name__}'"
+            )
             await self.on_connect(context.switch_to_websocket().get_client())
             return
         await context.switch_to_websocket().get_client().accept()
@@ -112,11 +125,17 @@ class WebSocketExtraHandler:
         self, *, context: "IExecutionContext", close_code: int
     ) -> None:
         if self.on_disconnect is not None:
+            request_logger.debug(
+                f"Executing on_disconnect handler from '{self.__class__.__name__}'"
+            )
             await self.on_disconnect(
                 context.switch_to_websocket().get_client(), close_code
             )
 
     async def decode(self, websocket: "WebSocket", message: Message) -> t.Any:
+        request_logger.debug(
+            f"Decoding websocket stream message from '{self.__class__.__name__}'"
+        )
         if self.encoding == "text":
             if "text" not in message:
                 raise WebSocketException(

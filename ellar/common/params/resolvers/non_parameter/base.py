@@ -2,7 +2,7 @@ import typing as t
 from abc import ABC, abstractmethod
 
 from ellar.common.interfaces import IExecutionContext
-from ellar.common.logger import logger
+from ellar.common.logger import request_logger
 from ellar.common.types import T
 from pydantic.error_wrappers import ErrorWrapper
 
@@ -73,7 +73,7 @@ class BaseConnectionParameterResolver(NonParameterResolver):
             value = await self.get_value(ctx)
             return {self.parameter_name: value}, []
         except Exception as ex:
-            logger.error(
+            request_logger.error(
                 f"Unable to resolve `{self.lookup_connection_field}` in connection \nErrorMessage: {ex}"
             )
             return {}, [ErrorWrapper(ex, loc=str(self.parameter_name))]

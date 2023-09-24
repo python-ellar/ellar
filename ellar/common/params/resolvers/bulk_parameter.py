@@ -1,6 +1,7 @@
 import typing as t
 
 from ellar.common.interfaces import IExecutionContext
+from ellar.common.logger import request_logger
 from pydantic.error_wrappers import ErrorWrapper
 from pydantic.fields import ModelField
 
@@ -28,6 +29,9 @@ class BulkParameterResolver(BaseRouteParameterResolver):
     async def resolve_handle(
         self, ctx: IExecutionContext, *args: t.Any, **kwargs: t.Any
     ) -> t.Tuple:
+        request_logger.debug(
+            f"Resolving Bulk Path Parameters - '{self.__class__.__name__}'"
+        )
         values: t.Dict[str, t.Any] = {}
         errors: t.List[ErrorWrapper] = []
 
@@ -67,6 +71,9 @@ class BulkFormParameterResolver(FormParameterResolver, BulkParameterResolver):
     async def resolve_grouped_fields(
         self, ctx: IExecutionContext, body: t.Any
     ) -> t.Tuple:
+        request_logger.debug(
+            f"Resolving Form Grouped Field - '{self.__class__.__name__}'"
+        )
         value, resolver_errors = await self._get_resolver_data(ctx, body)
         if resolver_errors:
             return value, resolver_errors
@@ -100,6 +107,7 @@ class BulkFormParameterResolver(FormParameterResolver, BulkParameterResolver):
     async def resolve_handle(
         self, ctx: IExecutionContext, *args: t.Any, **kwargs: t.Any
     ) -> t.Tuple:
+        request_logger.debug(f"Resolving Form Parameters - '{self.__class__.__name__}'")
         _body = await self.get_request_body(ctx)
         if self._resolvers:
             return await self._use_resolver(ctx, _body)
@@ -112,6 +120,9 @@ class BulkBodyParameterResolver(BodyParameterResolver, BulkParameterResolver):
     async def resolve_handle(
         self, ctx: IExecutionContext, *args: t.Any, **kwargs: t.Any
     ) -> t.Tuple:
+        request_logger.debug(
+            f"Resolving Request Body Parameters - '{self.__class__.__name__}'"
+        )
         _body = await self.get_request_body(ctx)
         values, errors = await super(BulkBodyParameterResolver, self).resolve_handle(
             ctx, *args, body=_body, **kwargs

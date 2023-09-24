@@ -1,10 +1,11 @@
 import logging
+import logging.config
 import typing as t
 
 from ellar.auth import IIdentitySchemes
 from ellar.auth.handlers import AuthenticationHandlerType
 from ellar.common.compatible import cached_property
-from ellar.common.constants import LOG_LEVELS
+from ellar.common.constants import ELLAR_LOG_FMT_STRING, LOG_LEVELS
 from ellar.common.datastructures import State, URLPath
 from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
 from ellar.common.logger import logger
@@ -89,8 +90,23 @@ class App(AppTemplating):
             if self.config.LOG_LEVEL
             else LOG_LEVELS.info.value
         )
-        logging.getLogger("ellar").setLevel(log_level)
+        logger_ = logging.getLogger("ellar")
+        if not logger_.handlers:
+            formatter = logging.Formatter(ELLAR_LOG_FMT_STRING)
+            stream_handler = logging.StreamHandler()
+            # file_handler = logging.FileHandler("my_app.log")
+            # file_handler.setFormatter(formatter)
+            # logger_.addHandler(file_handler)
+            stream_handler.setFormatter(formatter)
+            logger_.addHandler(stream_handler)
+
+            logger_.setLevel(log_level)
+        else:
+            logging.getLogger("ellar").setLevel(log_level)
+            logging.getLogger("ellar.request").setLevel(log_level)
+
         logger.info(f"APP SETTINGS MODULE: {self.config.config_module}")
+        logger.debug("ELLAR LOGGER CONFIGURED")
 
     def _statics_wrapper(self) -> t.Callable:
         async def _statics_func_wrapper(

@@ -3,6 +3,7 @@ import typing as t
 
 from ellar.common import EllarInterceptor, IExecutionContext, IInterceptorsConsumer
 from ellar.common.constants import ROUTE_INTERCEPTORS, SCOPE_RESPONSE_STARTED
+from ellar.common.logger import request_logger
 from ellar.di import injectable
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -51,6 +52,8 @@ class EllarInterceptorConsumer(IInterceptorsConsumer):
             res = await route_operation.handle_request(context=context)
 
         if context.get_args()[0][SCOPE_RESPONSE_STARTED]:
-            print("\nResponse Started")
+            request_logger.debug(
+                f"Stopped Processing Since `response.send` has been called - '{self.__class__.__name__}'"
+            )
             return
         await route_operation.handle_response(context, res)

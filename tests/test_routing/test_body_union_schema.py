@@ -1,7 +1,9 @@
 from typing import Union
+from unittest.mock import patch
 
 from ellar.common import Body, post
 from ellar.common.serializer import serialize_object
+from ellar.core import Request
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
@@ -154,3 +156,18 @@ def test_embed_body():
     response = _client.post("/items/embed", json={"qty": 232})
     assert response.status_code == 200, response.text
     assert response.json() == {"qty": 232}
+
+
+@patch.object(Request, "body")
+def test_body_resolution_fails(mock_form):
+    async def raise_exception():
+        raise Exception()
+
+    mock_form.return_value = raise_exception
+    response = client.post("/items/", json={"item": {"price": 100}})
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "There was an error parsing the body",
+        "status_code": 400,
+    }
