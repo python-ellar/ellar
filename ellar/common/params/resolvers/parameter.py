@@ -1,5 +1,5 @@
 import copy
-import email
+import email.message
 import json
 import typing as t
 
