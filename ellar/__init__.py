@@ -1,3 +1,3 @@
 """Ellar - Python ASGI web framework for building fast, efficient and scalable RESTAPIs and server-side application."""
 
-__version__ = "0.4.8"
+__version__ = "0.4.9"
