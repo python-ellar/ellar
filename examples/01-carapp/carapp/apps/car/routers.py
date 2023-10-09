@@ -14,12 +14,12 @@ from typing import List
 
 from ellar.common import (
     DataclassSerializer,
+    Inject,
     ModuleRouter,
-    Provide,
-    Req,
     render,
     render_template,
 )
+from ellar.core import Request
 from ellar.openapi import ApiTags
 
 from .services import CarRepository
@@ -39,16 +39,18 @@ class CarObject(DataclassSerializer):
 
 
 @router.get(response={200: List[CarObject]})
-async def get_cars(repo: CarRepository = Provide()):
+async def get_cars(repo: Inject[CarRepository]):
     return repo.get_all()
 
 
 @router.http_route("/html", methods=["get", "post"])
 @render("index.html")
-async def get_car_html(repo: CarRepository = Provide()):
+async def get_car_html(repo: Inject[CarRepository]):
     return repo.get_all()
 
 
 @router.get("/html/outside")
-async def get_car_html_with_render(repo: CarRepository = Provide(), request=Req()):
+async def get_car_html_with_render(
+    repo: Inject[CarRepository], request: Inject[Request]
+):
     return render_template("car/list.html", request=request, model=repo.get_all())

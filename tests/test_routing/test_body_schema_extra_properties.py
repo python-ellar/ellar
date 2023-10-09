@@ -33,7 +33,11 @@ item_openapi_schema = {
                 "requestBody": {
                     "content": {
                         "application/json": {
-                            "schema": {"$ref": "#/components/schemas/Items_"}
+                            "schema": {
+                                "title": "Items",
+                                "allOf": [{"$ref": "#/components/schemas/Items_"}],
+                                "include_in_schema": True,
+                            }
                         }
                     },
                     "required": True,

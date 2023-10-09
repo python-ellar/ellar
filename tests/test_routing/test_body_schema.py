@@ -25,7 +25,11 @@ openapi_schema = {
                 "requestBody": {
                     "content": {
                         "application/json": {
-                            "schema": {"$ref": "#/components/schemas/Product"}
+                            "schema": {
+                                "title": "Product",
+                                "allOf": [{"$ref": "#/components/schemas/Product"}],
+                                "include_in_schema": True,
+                            }
                         }
                     },
                     "required": True,

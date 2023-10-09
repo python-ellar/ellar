@@ -55,7 +55,11 @@ def test_schema():
     assert params == {
         "content": {
             "application/x-www-form-urlencoded": {
-                "schema": {"$ref": "#/components/schemas/Filter"}
+                "schema": {
+                    "allOf": [{"$ref": "#/components/schemas/Filter"}],
+                    "include_in_schema": True,
+                    "title": "Will Not Work For Schema With Many Field",
+                }
             }
         },
         "required": True,

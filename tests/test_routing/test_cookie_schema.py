@@ -87,13 +87,23 @@ def test_cookie_schema():
     assert params == [
         {
             "required": False,
-            "schema": {"title": "To", "type": "string", "format": "date-time"},
+            "schema": {
+                "title": "To",
+                "type": "string",
+                "format": "date-time",
+                "include_in_schema": True,
+            },
             "name": "to",
             "in": "cookie",
         },
         {
             "required": False,
-            "schema": {"title": "From", "type": "string", "format": "date-time"},
+            "schema": {
+                "title": "From",
+                "type": "string",
+                "format": "date-time",
+                "include_in_schema": True,
+            },
             "name": "from",
             "in": "cookie",
         },
@@ -102,6 +112,7 @@ def test_cookie_schema():
             "schema": {
                 "allOf": [{"$ref": "#/components/schemas/Range"}],
                 "default": 20,
+                "include_in_schema": True,
             },
             "name": "range",
             "in": "cookie",

@@ -14,7 +14,7 @@ tm = Test.create_test_module()
 
 @post("/items/")
 def save_union_body_and_embedded_body(
-    item: Union[OtherItem, Item], qty: int = Body(12)
+    item: Body[Union[OtherItem, Item]], qty: Body[int, Body.P(default=12)]
 ):
     return {"item": item, "qty": qty}
 
@@ -116,12 +116,18 @@ item_openapi_schema = {
                 "properties": {
                     "item": {
                         "title": "Item",
+                        "include_in_schema": True,
                         "anyOf": [
                             {"$ref": "#/components/schemas/OtherItem"},
                             {"$ref": "#/components/schemas/Item"},
                         ],
                     },
-                    "qty": {"title": "Qty", "type": "integer", "default": 12},
+                    "qty": {
+                        "title": "Qty",
+                        "type": "integer",
+                        "default": 12,
+                        "include_in_schema": True,
+                    },
                 },
             },
         }

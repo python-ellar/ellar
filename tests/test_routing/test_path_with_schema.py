@@ -54,19 +54,32 @@ def test_schema():
     assert params == [
         {
             "required": True,
-            "schema": {"title": "To", "type": "string", "format": "date-time"},
+            "schema": {
+                "title": "To",
+                "type": "string",
+                "format": "date-time",
+                "include_in_schema": True,
+            },
             "name": "to",
             "in": "path",
         },
         {
             "required": True,
-            "schema": {"title": "From", "type": "string", "format": "date-time"},
+            "schema": {
+                "title": "From",
+                "type": "string",
+                "format": "date-time",
+                "include_in_schema": True,
+            },
             "name": "from",
             "in": "path",
         },
         {
             "required": True,
-            "schema": {"$ref": "#/components/schemas/Range"},
+            "schema": {
+                "allOf": [{"$ref": "#/components/schemas/Range"}],
+                "include_in_schema": True,
+            },
             "name": "range",
             "in": "path",
         },

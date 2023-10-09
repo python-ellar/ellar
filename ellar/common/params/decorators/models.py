@@ -24,6 +24,7 @@ def Path(
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
     deprecated: t.Optional[bool] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -44,6 +45,7 @@ def Path(
         example=example,
         examples=examples,
         deprecated=deprecated,
+        include_in_schema=include_in_schema,
         **extra,
     )
 
@@ -64,6 +66,7 @@ def Query(
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
     deprecated: t.Optional[bool] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -84,6 +87,7 @@ def Query(
         example=example,
         examples=examples,
         deprecated=deprecated,
+        include_in_schema=include_in_schema,
         **extra,
     )
 
@@ -105,6 +109,7 @@ def Header(
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
     deprecated: t.Optional[bool] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -126,6 +131,7 @@ def Header(
         example=example,
         examples=examples,
         deprecated=deprecated,
+        include_in_schema=include_in_schema,
         **extra,
     )
 
@@ -146,6 +152,7 @@ def Cookie(
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
     deprecated: t.Optional[bool] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -166,6 +173,7 @@ def Cookie(
         example=example,
         examples=examples,
         deprecated=deprecated,
+        include_in_schema=include_in_schema,
         **extra,
     )
 
@@ -187,6 +195,7 @@ def Body(
     regex: t.Optional[str] = None,
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -208,6 +217,7 @@ def Body(
         regex=regex,
         example=example,
         examples=examples,
+        include_in_schema=include_in_schema,
         **extra,
     )
 
@@ -228,6 +238,7 @@ def Form(
     regex: t.Optional[str] = None,
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -248,6 +259,7 @@ def Form(
         regex=regex,
         example=example,
         examples=examples,
+        include_in_schema=include_in_schema,
         **extra,
     )
 
@@ -268,6 +280,7 @@ def File(
     regex: t.Optional[str] = None,
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -288,6 +301,7 @@ def File(
         regex=regex,
         example=example,
         examples=examples,
+        include_in_schema=include_in_schema,
         **extra,
     )
 
@@ -309,6 +323,7 @@ def WsBody(
     regex: t.Optional[str] = None,
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -330,5 +345,6 @@ def WsBody(
         regex=regex,
         example=example,
         examples=examples,
+        include_in_schema=include_in_schema,
         **extra,
     )
