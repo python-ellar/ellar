@@ -1,5 +1,5 @@
 import pytest
-from ellar.common import Header, ModuleRouter, get, serialize_object
+from ellar.common import Header, Inject, ModuleRouter, get, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
 from ellar.core.routing.helper import build_route_handler
@@ -13,7 +13,7 @@ mr = ModuleRouter("")
 
 @mr.get("/test/header")
 def header_params_schema(
-    request: Request,
+    request: Inject[Request],
     filters: Filter = Header(..., alias="will_not_work_for_schema_with_many_field"),
 ):
     return filters.dict()
@@ -21,9 +21,9 @@ def header_params_schema(
 
 @mr.get("/test-mixed/header")
 def header_params_mixed_schema(
-    request: Request,
-    filters: Filter = Header(...),
-    data: Data = Header(...),
+    request: Inject[Request],
+    filters: Header[Filter],
+    data: Header[Data],
 ):
     return {"filters": filters.dict(), "data": data.dict()}
 

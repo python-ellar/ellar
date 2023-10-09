@@ -8,7 +8,8 @@ from ellar.core.versioning import DefaultAPIVersioning, UrlPathAPIVersioning
 from pydantic.json import ENCODERS_BY_TYPE
 from starlette.responses import JSONResponse
 
-os.environ.pop(ELLAR_CONFIG_MODULE)
+if ELLAR_CONFIG_MODULE in os.environ:
+    os.environ.pop(ELLAR_CONFIG_MODULE)
 
 
 class ConfigTesting(ConfigDefaultTypesMixin):

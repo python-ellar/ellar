@@ -4,6 +4,7 @@ import typing as t
 from ellar.common import (
     IExceptionHandler,
     IExecutionContext,
+    Inject,
     Module,
     get,
     template_filter,
@@ -140,7 +141,7 @@ class TestStarletteCompatibility:
 
     def test_app_debug_return_html(self):
         @get("/")
-        async def homepage(request: Request):
+        async def homepage(request: Inject[Request]):
             raise RuntimeError()
 
         app = AppFactory.create_app()
@@ -156,7 +157,7 @@ class TestStarletteCompatibility:
 
     def test_app_debug_plain_text(self):
         @get("/")
-        async def homepage(request: Request):
+        async def homepage(request: Inject[Request]):
             raise RuntimeError()
 
         app = AppFactory.create_app()
@@ -173,7 +174,7 @@ class TestStarletteCompatibility:
 class TestEllarApp:
     def test_ellar_as_asgi_app(self):
         @get("/")
-        async def homepage(request: Request, ctx: IExecutionContext):
+        async def homepage(request: Inject[Request], ctx: Inject[IExecutionContext]):
             res = PlainTextResponse("Ellar Route Handler as an ASGI app")
             await res(*ctx.get_args())
 
@@ -186,7 +187,7 @@ class TestEllarApp:
 
     def test_ellar_app_url_for(self):
         @get("/homepage-url", name="homepage")
-        async def homepage(request: Request, ctx: IExecutionContext):
+        async def homepage(request: Inject[Request], ctx: Inject[IExecutionContext]):
             res = PlainTextResponse("Ellar Route Handler as an ASGI app")
             return res
 

@@ -2,10 +2,10 @@ import typing as t
 from unittest.mock import patch
 
 import pytest
-from ellar.common import IExceptionHandler, IHostContext, Ws, get, ws_route
+from ellar.common import IExceptionHandler, IHostContext, Inject, get, ws_route
 from ellar.common.exceptions.callable_exceptions import CallableExceptionHandler
 from ellar.common.exceptions.handlers import APIException, APIExceptionHandler
-from ellar.core import Config
+from ellar.core import Config, WebSocket
 from ellar.core.exceptions.service import ExceptionMiddlewareService
 from ellar.core.middleware import ExceptionMiddleware
 from ellar.testing import Test
@@ -342,7 +342,7 @@ def test_ws_exception_handler():
     homepage_3_called = False
 
     @ws_route("/ws")
-    async def homepage_3(session=Ws()):
+    async def homepage_3(session: Inject[WebSocket]):
         nonlocal homepage_3_called
 
         homepage_3_called = True

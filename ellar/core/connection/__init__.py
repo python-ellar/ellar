@@ -1,4 +1,4 @@
-from ellar.common.params.args import add_default_resolver
+from ellar.common.params import add_default_resolver
 from ellar.common.params.resolvers.non_parameter import (
     ConnectionParam,
     RequestParameter,

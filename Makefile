@@ -26,7 +26,7 @@ fmt format:clean ## Run code formatters
 	black ellar tests examples
 	ruff check --fix ellar tests examples
 
-test: ## Run tests
+test:clean ## Run tests
 	pytest
 
 test-cov: ## Run tests with coverage

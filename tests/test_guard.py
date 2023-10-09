@@ -1,6 +1,6 @@
 import pytest
-from ellar.common import APIException, Req, UseGuards, get, serialize_object
-from ellar.core import AppFactory, Reflector
+from ellar.common import APIException, Inject, UseGuards, get, serialize_object
+from ellar.core import AppFactory, Reflector, Request
 from ellar.core.guards import (
     GuardAPIKeyCookie,
     GuardAPIKeyHeader,
@@ -95,7 +95,7 @@ for _path, auth in [
 
     @get(f"/{_path}")
     @UseGuards(auth)
-    def auth_demo_endpoint(request=Req()):
+    def auth_demo_endpoint(request: Inject[Request]):
         return {"authentication": request.user}
 
     app.router.append(auth_demo_endpoint)
@@ -251,7 +251,7 @@ def test_global_guard_works():
     _app = AppFactory.create_app(global_guards=[DigestAuth])
 
     @get("/global")
-    def _auth_demo_endpoint(request=Req()):
+    def _auth_demo_endpoint(request: Inject[Request]):
         return {"authentication": request.user}
 
     _app.router.append(_auth_demo_endpoint)

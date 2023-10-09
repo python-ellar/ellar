@@ -1,5 +1,5 @@
 import pytest
-from ellar.common import Controller, ModuleRouter, WsBody, ws_route
+from ellar.common import Controller, Inject, ModuleRouter, WsBody, ws_route
 from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.common.exceptions import (
     ImproperConfiguration,
@@ -16,7 +16,7 @@ router = ModuleRouter("/router")
 
 @router.ws_route("/ws-with-handler", use_extra_handler=True)
 async def websocket_with_handler(
-    websocket: WebSocket, query: str, data: Item = WsBody()
+    websocket: Inject[WebSocket], query: str, data: Item = WsBody()
 ):
     assert query == "my-query"
     await websocket.send_json(data.dict())
@@ -35,7 +35,7 @@ async def websocket_with_handler_disconnect(websocket: WebSocket, code: int):
 
 
 @router.ws_route("/ws")
-async def websocket_without_handler(websocket: WebSocket, query: str):
+async def websocket_without_handler(websocket: Inject[WebSocket], query: str):
     assert query == "my-query"
     await websocket.accept()
     message = await websocket.receive_text()
@@ -47,7 +47,7 @@ async def websocket_without_handler(websocket: WebSocket, query: str):
 class WebsocketController:
     @ws_route("/ws-with-handler", use_extra_handler=True)
     async def websocket_with_handler_c(
-        self, websocket: WebSocket, query: str, data: Item = WsBody()
+        self, websocket: Inject[WebSocket], query: str, data: Item = WsBody()
     ):
         assert query == "my-query"
         await websocket.send_json(data.dict())
@@ -63,7 +63,9 @@ class WebsocketController:
         assert websocket.client_state == WebSocketState.DISCONNECTED
 
     @ws_route("/ws")
-    async def websocket_without_handler_c(self, websocket: WebSocket, query: str):
+    async def websocket_without_handler_c(
+        self, websocket: Inject[WebSocket], query: str
+    ):
         assert query == "my-query"
         await websocket.accept()
         message = await websocket.receive_text()
@@ -151,7 +153,7 @@ def test_websocket_setup_fails_when_using_body_without_handler():
 
         @router.ws_route("/ws-with-handler", use_extra_handler=False)
         async def websocket_with_handler(
-            websocket: WebSocket, query: str, data: Item = WsBody()
+            websocket: Inject[WebSocket], query: str, data: Item = WsBody()
         ):
             pass
 
@@ -162,7 +164,7 @@ def test_websocket_endpoint_on_connect():
     @Controller("/ws")
     class WebSocketSample:
         @ws_route(use_extra_handler=True)
-        async def ws(self, websocket: WebSocket):
+        async def ws(self, websocket: Inject[WebSocket]):
             pass
 
         @ws_route.connect(ws)
@@ -179,7 +181,7 @@ def test_websocket_endpoint_on_receive_bytes():
     @Controller("/ws")
     class WebSocketSample:
         @ws_route(use_extra_handler=True, encoding="bytes")
-        async def ws(self, websocket: WebSocket, data: bytes = WsBody()):
+        async def ws(self, websocket: Inject[WebSocket], data: bytes = WsBody()):
             await websocket.send_bytes(b"Message bytes was: " + data)
 
     _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
@@ -197,7 +199,7 @@ def test_websocket_endpoint_on_receive_json():
     @Controller("/ws")
     class WebSocketSample:
         @ws_route(use_extra_handler=True, encoding="json")
-        async def ws(self, websocket: WebSocket, data=WsBody()):
+        async def ws(self, websocket: Inject[WebSocket], data=WsBody()):
             await websocket.send_json({"message": data})
 
     _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
@@ -216,7 +218,7 @@ def test_websocket_endpoint_on_receive_json_binary():
     @Controller("/ws")
     class WebSocketSample:
         @ws_route(use_extra_handler=True, encoding="json")
-        async def ws(self, websocket: WebSocket, data=WsBody()):
+        async def ws(self, websocket: Inject[WebSocket], data=WsBody()):
             await websocket.send_json({"message": data}, mode="binary")
 
     _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
@@ -231,7 +233,7 @@ def test_websocket_endpoint_on_receive_text():
     @Controller("/ws")
     class WebSocketSample:
         @ws_route(use_extra_handler=True, encoding="text")
-        async def ws(self, websocket: WebSocket, data: str = WsBody()):
+        async def ws(self, websocket: Inject[WebSocket], data: str = WsBody()):
             await websocket.send_text(f"Message text was: {data}")
 
     _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
@@ -250,7 +252,7 @@ def test_websocket_endpoint_on_default():
     @Controller("/ws")
     class WebSocketSample:
         @ws_route(use_extra_handler=True, encoding=None)
-        async def ws(self, websocket: WebSocket, data: str = WsBody()):
+        async def ws(self, websocket: Inject[WebSocket], data: str = WsBody()):
             await websocket.send_text(f"Message text was: {data}")
 
     _client = Test.create_test_module(controllers=(WebSocketSample,)).get_test_client()
@@ -265,7 +267,7 @@ def test_websocket_endpoint_on_disconnect():
     @Controller("/ws")
     class WebSocketSample:
         @ws_route(use_extra_handler=True, encoding=None)
-        async def ws(self, websocket: WebSocket, data: str = WsBody()):
+        async def ws(self, websocket: Inject[WebSocket], data: str = WsBody()):
             await websocket.send_text(f"Message text was: {data}")
 
         @ws_route.disconnect(ws)

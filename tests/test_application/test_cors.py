@@ -1,11 +1,11 @@
-from ellar.common import http_route
+from ellar.common import Inject, http_route
 from ellar.testing import Test
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 
 
 def test_cors_allow_all():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse("Homepage", status_code=200)
 
     tm = Test.create_test_module(
@@ -61,7 +61,7 @@ def test_cors_allow_all():
 
 
 def test_cors_allow_all_except_credentials():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse("Homepage", status_code=200)
 
     tm = Test.create_test_module(
@@ -108,7 +108,7 @@ def test_cors_allow_all_except_credentials():
 
 
 def test_cors_allow_specific_origin():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse("Homepage", status_code=200)
 
     tm = Test.create_test_module(
@@ -154,7 +154,7 @@ def test_cors_allow_specific_origin():
 
 
 def test_cors_disallowed_preflight():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse("Homepage", status_code=200)
 
     tm = Test.create_test_module(
@@ -191,7 +191,7 @@ def test_cors_disallowed_preflight():
 
 
 def test_preflight_allows_request_origin_if_origins_wildcard_and_credentials_allowed():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse("Homepage", status_code=200)
 
     tm = Test.create_test_module(
@@ -223,7 +223,7 @@ def test_preflight_allows_request_origin_if_origins_wildcard_and_credentials_all
 
 
 def test_cors_preflight_allow_all_methods():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse("Homepage", status_code=200)
 
     tm = Test.create_test_module(
@@ -246,7 +246,7 @@ def test_cors_preflight_allow_all_methods():
 
 
 def test_cors_allow_all_methods():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse("Homepage", status_code=200)
 
     methods = ["delete", "get", "head", "options", "patch", "post", "put"]
@@ -268,7 +268,7 @@ def test_cors_allow_all_methods():
 
 
 def test_cors_allow_origin_regex():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse("Homepage", status_code=200)
 
     tm = Test.create_test_module(
@@ -336,7 +336,7 @@ def test_cors_allow_origin_regex():
 
 
 def test_cors_allow_origin_regex_fullmatch():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse("Homepage", status_code=200)
 
     tm = Test.create_test_module(
@@ -370,7 +370,7 @@ def test_cors_allow_origin_regex_fullmatch():
 
 
 def test_cors_credentialed_requests_return_specific_origin():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse("Homepage", status_code=200)
 
     tm = Test.create_test_module(config_module={"CORS_ALLOW_ORIGINS": ["*"]})
@@ -388,7 +388,7 @@ def test_cors_credentialed_requests_return_specific_origin():
 
 
 def test_cors_vary_header_defaults_to_origin():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse("Homepage", status_code=200)
 
     tm = Test.create_test_module(
@@ -407,7 +407,7 @@ def test_cors_vary_header_defaults_to_origin():
 
 
 def test_cors_vary_header_is_not_set_for_non_credentialed_request():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse(
             "Homepage", status_code=200, headers={"Vary": "Accept-Encoding"}
         )
@@ -424,7 +424,7 @@ def test_cors_vary_header_is_not_set_for_non_credentialed_request():
 
 
 def test_cors_vary_header_is_properly_set_for_credentialed_request():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse(
             "Homepage", status_code=200, headers={"Vary": "Accept-Encoding"}
         )
@@ -442,7 +442,7 @@ def test_cors_vary_header_is_properly_set_for_credentialed_request():
 
 
 def test_cors_vary_header_is_properly_set_when_allow_origins_is_not_wildcard():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse(
             "Homepage", status_code=200, headers={"Vary": "Accept-Encoding"}
         )
@@ -461,7 +461,7 @@ def test_cors_vary_header_is_properly_set_when_allow_origins_is_not_wildcard():
 
 
 def test_cors_allowed_origin_does_not_leak_between_credentialed_requests():
-    def homepage(request: Request):
+    def homepage(request: Inject[Request]):
         return PlainTextResponse("Homepage", status_code=200)
 
     tm = Test.create_test_module(

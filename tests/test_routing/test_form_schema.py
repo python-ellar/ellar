@@ -1,5 +1,5 @@
 import pytest
-from ellar.common import Form, ModuleRouter, post, serialize_object
+from ellar.common import Form, Inject, ModuleRouter, post, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
 from ellar.core.routing.helper import build_route_handler
@@ -13,7 +13,7 @@ mr = ModuleRouter("")
 
 @mr.post("/form-schema")
 def form_params_schema(
-    request: Request,
+    request: Inject[Request],
     filters: Filter = Form(..., alias="will_not_work_for_schema_with_many_field"),
 ):
     return filters.dict()

@@ -1,12 +1,13 @@
 import pytest
 from ellar.auth.session import ISessionStrategy, SessionServiceNullStrategy
 from ellar.auth.session.strategy import SessionClientStrategy
-from ellar.common import Req, get
+from ellar.common import Inject, get
+from ellar.core import Request
 from ellar.testing import Test
 
 
 @get()
-def homepage(req=Req()):
+def homepage(req: Inject[Request]):
     return req.session
 
 

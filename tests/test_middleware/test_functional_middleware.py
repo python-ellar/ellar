@@ -1,4 +1,4 @@
-from ellar.common import IHostContext, Module, ModuleRouter, middleware
+from ellar.common import IHostContext, Inject, Module, ModuleRouter, middleware
 from ellar.core import ModuleBase
 from ellar.core.middleware import FunctionBasedMiddleware
 from ellar.reflect import asynccontextmanager
@@ -10,7 +10,7 @@ mr = ModuleRouter()
 
 
 @mr.get()
-def homepage(request: Request):
+def homepage(request: Inject[Request]):
     if request.headers.get("modified_header"):
         return "homepage modified_header"
 

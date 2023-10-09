@@ -15,16 +15,8 @@ from pydantic.error_wrappers import ErrorWrapper
 from pydantic.fields import FieldInfo, ModelField
 from pydantic.typing import ForwardRef, evaluate_forwardref  # type:ignore
 from pydantic.utils import Representation, lenient_issubclass
-from starlette.background import BackgroundTasks
 from starlette.convertors import Convertor
-from starlette.requests import (
-    HTTPConnection as StarletteHTTPConnection,
-)
-from starlette.requests import (
-    Request as StarletteRequest,
-)
-from starlette.responses import Response
-from starlette.websockets import WebSocket as StarletteWebSocket
+from typing_extensions import Annotated, get_args, get_origin
 
 from .. import params
 from ..helpers import is_scalar_field, is_scalar_sequence_field
@@ -32,14 +24,6 @@ from ..resolvers import (
     BaseRouteParameterResolver,
     IRouteParameterResolver,
     NonParameterResolver,
-)
-from ..resolvers.non_parameter import (
-    BackgroundTasksParameter,
-    ConnectionParam,
-    ExecutionContextParameter,
-    RequestParameter,
-    ResponseRequestParam,
-    WebSocketParameter,
 )
 from .extra_args import ExtraEndpointArg
 from .factory import get_parameter_field
@@ -49,21 +33,6 @@ from .resolver_generators import (
     PathArgsResolverGenerator,
     QueryHeaderResolverGenerator,
 )
-
-DEFAULT_RESOLVERS: t.Dict[t.Type, t.Type[NonParameterResolver]] = {
-    StarletteRequest: RequestParameter,
-    StarletteWebSocket: WebSocketParameter,
-    Response: ResponseRequestParam,
-    StarletteHTTPConnection: ConnectionParam,
-    IExecutionContext: ExecutionContextParameter,
-    BackgroundTasks: BackgroundTasksParameter,
-}
-
-
-def add_default_resolver(
-    type_identifier: t.Type, resolver_type: t.Type[NonParameterResolver]
-) -> None:  # pragma: no cover
-    DEFAULT_RESOLVERS.update({type_identifier: resolver_type})
 
 
 class EndpointArgsModel:
@@ -185,27 +154,30 @@ class EndpointArgsModel:
         self, body_field_class: t.Type[FieldInfo] = params.BodyFieldInfo
     ) -> None:
         for param_name, param in self.endpoint_signature.parameters.items():
+            param_name, param_default, param_annotation, param_kind = (
+                param.name,
+                param.default,
+                param.annotation,
+                param.kind,
+            )
+            param_annotation, param_default = self._get_annotation_type_and_default(
+                param_annotation, param_default
+            )
+
             if (
-                param.kind == param.VAR_KEYWORD
-                or param.kind == param.VAR_POSITIONAL
+                param_kind == param.VAR_KEYWORD
+                or param_kind == param.VAR_POSITIONAL
                 or (
-                    param.name == "self" and param.annotation == inspect.Parameter.empty
+                    param_name == "self" and param_annotation == inspect.Parameter.empty
                 )
             ):
                 # Skipping **kwargs, *args, self
                 continue
 
-            if self._add_non_pydantic_field_to_dependency(
-                param_name=param.name,
-                param_default=param.default,
-                param_annotation=param.annotation,
-            ):
-                continue
-
             if self._add_non_field_param_to_dependency(
-                param_name=param.name,
-                param_default=param.default,
-                param_annotation=param.annotation,
+                param_name=param_name,
+                param_default=param_default,
+                param_annotation=param_annotation,
             ):
                 continue
 
@@ -215,8 +187,8 @@ class EndpointArgsModel:
                 else:
                     ignore_default = True
                 param_field = get_parameter_field(
-                    param_default=param.default,
-                    param_annotation=param.annotation,
+                    param_default=param_default,
+                    param_annotation=param_annotation,
                     param_name=param_name,
                     default_field_info=params.PathFieldInfo,
                     ignore_default=ignore_default,
@@ -233,8 +205,8 @@ class EndpointArgsModel:
                     else params.QueryFieldInfo,
                 )
                 param_field = get_parameter_field(
-                    param_default=param.default,
-                    param_annotation=param.annotation,
+                    param_default=param_default,
+                    param_annotation=param_annotation,
                     default_field_info=default_field_info,
                     param_name=param_name,
                     body_field_class=body_field_class,
@@ -332,14 +304,38 @@ class EndpointArgsModel:
     def compute_extra_route_args(self) -> None:
         self._add_extra_route_args(*self._extra_endpoint_args)
 
+    def _get_annotation_type_and_default(
+        self, param_annotation: t.Any, default_param_default: t.Any
+    ) -> t.Tuple:
+        if get_origin(param_annotation) is Annotated:
+            annotated_args = get_args(param_annotation)
+            if len(annotated_args) == 2:
+                return annotated_args
+            else:
+                raise ImproperConfiguration(
+                    f"Cannot specify multiple `Annotated` Ellar arguments for {annotated_args!r}"
+                )
+
+        return param_annotation, default_param_default
+
     def _add_extra_route_args(
         self, *extra_operation_args: ExtraEndpointArg, key: t.Optional[str] = None
     ) -> None:
         for param in extra_operation_args:
+            param_name, param_default, param_annotation = (
+                param.name,
+                param.default,
+                param.annotation,
+            )
+
+            param_annotation, param_default = self._get_annotation_type_and_default(
+                param_annotation, param_default
+            )
+
             if self._add_non_field_param_to_dependency(
-                param_name=param.name,
-                param_default=param.default,
-                param_annotation=param.annotation,
+                param_name=param_name,
+                param_default=param_default,
+                param_annotation=param_annotation,
                 key=key,
             ):
                 continue
@@ -379,13 +375,3 @@ class EndpointArgsModel:
 
     def build_body_field(self) -> None:  # pragma: no cover
         raise NotImplementedError
-
-    def _add_non_pydantic_field_to_dependency(
-        self, param_name: str, param_default: t.Any, param_annotation: t.Any
-    ) -> bool:
-        resolver_class = DEFAULT_RESOLVERS.get(param_annotation)
-        if resolver_class and param_default == inspect.Parameter.empty:
-            _inject = resolver_class()(param_name, param_annotation)
-            self._computation_models[_inject.in_].append(_inject)
-            return True
-        return False
