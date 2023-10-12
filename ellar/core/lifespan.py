@@ -60,7 +60,6 @@ class EllarApplicationLifespan:
             async with self._lifespan_context(app) as ctx:  # type:ignore[attr-defined]
                 yield ctx
         finally:
-
             logger.logger.debug("Executing Modules Shutdown Handlers")
             async with create_task_group() as tg:
                 tg.start_soon(self.run_all_shutdown_actions, app)

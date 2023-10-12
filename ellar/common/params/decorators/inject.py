@@ -52,12 +52,13 @@ class InjectShortcut:
 
     @classmethod
     def __class_getitem__(cls, args: t.Union[t.Any, t.Tuple[t.Type, str]]) -> t.Any:
-
         if isinstance(args, tuple):
             base_type, _str_default_resolve = args
             default_resolver = _DEFAULT_RESOLVERS.get(_str_default_resolve)
         else:
             if isinstance(args, str):
+                # annotation = t.ForwardRef(args)
+                # annotation = t.evaluate_forwardref(annotation, globals(), globals())
                 args = globals().get(args, args)
             base_type = args
             default_resolver = _DEFAULT_RESOLVERS.get(base_type)

@@ -9,7 +9,9 @@ app = AppFactory.create_app()
 
 
 @post("/product")
-async def create_item(product: Product):
+async def create_item(
+    product: "Product",
+):  # just to test get_typed_annotation in ellar.common.params.args.base
     return product
 
 
