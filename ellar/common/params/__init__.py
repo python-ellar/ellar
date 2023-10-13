@@ -8,7 +8,7 @@ from .decorators import add_default_resolver
 from .resolvers import (
     BaseConnectionParameterResolver,
     IRouteParameterResolver,
-    NonParameterResolver,
+    SystemParameterResolver,
 )
 
 __all__ = [
@@ -17,7 +17,7 @@ __all__ = [
     "RequestEndpointArgsModel",
     "ExtraEndpointArg",
     "EndpointArgsModel",
-    "NonParameterResolver",
+    "SystemParameterResolver",
     "BaseConnectionParameterResolver",
     "IRouteParameterResolver",
 ]

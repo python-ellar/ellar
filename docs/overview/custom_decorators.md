@@ -181,12 +181,12 @@ As shown in the return statements in the example below.
 For example:
 ```python
 import typing as t
-from ellar.common.params import NonParameterResolver
+from ellar.common.params import SystemParameterResolver
 from ellar.common import IExecutionContext
 from pydantic.error_wrappers import ErrorWrapper
 
 
-class UserParam(NonParameterResolver):
+class UserParam(SystemParameterResolver):
     async def resolve(self, ctx: IExecutionContext, **kwargs: t.Any) -> t.Any:
         request = ctx.switch_to_http_connection().get_request()
         user = request.get('user', None)

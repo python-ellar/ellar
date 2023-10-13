@@ -13,9 +13,9 @@ from starlette.websockets import WebSocket as StarletteWebSocket
 from typing_extensions import Annotated
 
 from ..resolvers import (
-    NonParameterResolver,
+    SystemParameterResolver,
 )
-from ..resolvers.non_parameter import (
+from ..resolvers.system_parameters import (
     BackgroundTasksParameter,
     ConnectionParam,
     ExecutionContextParameter,
@@ -27,7 +27,7 @@ from ..resolvers.non_parameter import (
     WebSocketParameter,
 )
 
-_DEFAULT_RESOLVERS: t.Dict[t.Union[t.Type, str], t.Type[NonParameterResolver]] = {
+_DEFAULT_RESOLVERS: t.Dict[t.Union[t.Type, str], t.Type[SystemParameterResolver]] = {
     StarletteRequest: RequestParameter,
     StarletteWebSocket: WebSocketParameter,
     Response: ResponseRequestParam,
@@ -40,14 +40,15 @@ _DEFAULT_RESOLVERS: t.Dict[t.Union[t.Type, str], t.Type[NonParameterResolver]] =
 
 
 def add_default_resolver(
-    type_identifier: t.Union[t.Type, str], resolver_type: t.Type[NonParameterResolver]
+    type_identifier: t.Union[t.Type, str],
+    resolver_type: t.Type[SystemParameterResolver],
 ) -> None:  # pragma: no cover
     _DEFAULT_RESOLVERS.update({type_identifier: resolver_type})
 
 
 def get_default_resolver(
     type_identifier: t.Union[t.Type, str]
-) -> t.Optional[t.Type[NonParameterResolver]]:
+) -> t.Optional[t.Type[SystemParameterResolver]]:
     return _DEFAULT_RESOLVERS.get(type_identifier)
 
 

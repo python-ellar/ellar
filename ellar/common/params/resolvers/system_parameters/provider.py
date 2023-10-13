@@ -4,10 +4,10 @@ import typing as t
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.types import T
 
-from .base import NonParameterResolver
+from .base import SystemParameterResolver
 
 
-class ProviderParameterInjector(NonParameterResolver):
+class ProviderParameterInjector(SystemParameterResolver):
     """
     Defines `Provider` resolver for route parameter based on the provided `service`
     """

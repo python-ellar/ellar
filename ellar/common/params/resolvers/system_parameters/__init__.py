@@ -1,15 +1,15 @@
 from .background import BackgroundTasksParameter
-from .base import BaseConnectionParameterResolver, NonParameterResolver
+from .base import BaseConnectionParameterResolver, SystemParameterResolver
 from .connection import ConnectionParam
 from .context import ExecutionContextParameter
-from .inject import ProviderParameterInjector
+from .provider import ProviderParameterInjector
 from .request import RequestParameter
 from .response import ResponseRequestParam
 from .session import HostRequestParam, SessionRequestParam
 from .websocket import WebSocketParameter
 
 __all__ = [
-    "NonParameterResolver",
+    "SystemParameterResolver",
     "BaseConnectionParameterResolver",
     "ExecutionContextParameter",
     "RequestParameter",

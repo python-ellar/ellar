@@ -24,7 +24,7 @@ from ..helpers import is_scalar_field, is_scalar_sequence_field
 from ..resolvers import (
     BaseRouteParameterResolver,
     IRouteParameterResolver,
-    NonParameterResolver,
+    SystemParameterResolver,
 )
 from .extra_args import ExtraEndpointArg
 from .factory import get_parameter_field
@@ -148,7 +148,7 @@ class EndpointArgsModel:
             + self._computation_models[params.PathFieldInfo.in_.value]
             + self._computation_models[params.QueryFieldInfo.in_.value]
             + self._computation_models[params.CookieFieldInfo.in_.value]
-            + self._computation_models[NonParameterResolver.in_]
+            + self._computation_models[SystemParameterResolver.in_]
         )
 
     def compute_route_parameter_list(
@@ -182,7 +182,7 @@ class EndpointArgsModel:
             ):
                 continue
 
-            if self._add_non_field_param_to_dependency(
+            if self._add_system_parameters_to_dependency(
                 param_name=param_name,
                 param_default=param_default,
                 param_annotation=param_annotation,
@@ -236,7 +236,7 @@ class EndpointArgsModel:
                         )
                 self._add_to_model(field=param_field)
 
-    def _add_non_field_param_to_dependency(
+    def _add_system_parameters_to_dependency(
         self,
         *,
         param_default: t.Any,
@@ -244,7 +244,7 @@ class EndpointArgsModel:
         param_annotation: t.Optional[t.Type],
         key: t.Optional[str] = None,
     ) -> t.Optional[bool]:
-        if isinstance(param_default, NonParameterResolver):
+        if isinstance(param_default, SystemParameterResolver):
             model = param_default(param_name, param_annotation)  # type:ignore
             self._computation_models[key or model.in_].append(model)
             return True
@@ -340,7 +340,7 @@ class EndpointArgsModel:
                 param_annotation, param_default
             )
 
-            if self._add_non_field_param_to_dependency(
+            if self._add_system_parameters_to_dependency(
                 param_name=param_name,
                 param_default=param_default,
                 param_annotation=param_annotation,
