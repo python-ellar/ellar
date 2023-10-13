@@ -15,158 +15,129 @@ They indicate the type of HTTP request that the route function can handle, such 
 These decorators help to specify which type of request a route function can handle.
 
 
-## **Route Function Parameters Decorators**
-These decorators are Pydantic `ModelField` that can be used to define and validate the dependencies of route function parameters. 
+## **Route Function Parameters**
+These are Pydantic Models that defines and validates user input dependencies as a route function parameters. 
 They are used to ensure that the specified parameters are present in the request and are of the correct type. 
+
 If any of the specified parameters are missing or are of an invalid type, the decorators will raise a `422` error code and also provide a clear error message if the input validation fails.
-This helps to ensure that the application is receiving valid input and can process the request correctly. 
+This helps to ensure that your application is receiving valid input and can process the request correctly.
 
-- `Body(..., embed=False)`
-- `Form(..., embed=True)`
-- `Query(...)`
-- `File(...)`
-- `Path(...)`
-- `Header(...)`
-- `Cookie(...)`
+- `Body[T, Body.P(..., embed=False)]`: marks a parameter as a field to be available in a request body of `application/json` content-type.
+- `Form[T, Form.P(..., embed=True)]`: marks a parameter as a field to be available in a request body of `x-www-form-urlencoded or multipart/form-data` content-type.
+- `Query[T, Query.P(...)]`: marks a parameter as a field to be available in request query object
+- `File[T, File.P(...)]`: marks a parameter as a field to be available in a request body of `multipart/form-data` content-type.
+- `Path[T, Path.P(...)]`: marks a parameter as a request path variable.
+- `Header[T, Header.P(...)]`: marks a parameter as a request header variable.
+- `Cookie[T, Cookie.P(...)]`: marks a parameter as a request cookie variable.
+- `WsBody[T, WsBody.P(...)]`: defines the message format that should be transmitted from the client in a `WebSocket` when there is a successful connection. See websocket advance [doc](../websockets/websockets.md#advance-websocket-usage)
 
-Please refer to the "How-to-Guide" on parsing inputs [here](../../techniques/validations){target="_blank"} to see how this input decorators work. 
+Please refer to the "How-to-Guide" on parsing inputs [here](../techniques/validations/index.md){target="_blank"} to see how this input decorators work. 
 
-### **WsBody(..., embed=False)**
-
-`WsBody(...)` is a decorator that defines the message format that should be transmitted from the client in a WebSocket when there is a successful connection. 
-This decorator can be used to specify the structure of the message that is sent over the WebSocket, and to validate the message against a specified schema
-but for only `use_extra_handler=True`.
-
-For example:
-```python
-from ellar.common import WsBody, ws_route
-from ellar.core import WebSocket
-...
-@ws_route('/websocket', use_extra_handler=True)
-def sample_endpoint_ws(self, websocket: WebSocket, data_schema: str = WsBody()):
-    pass
-
-@ws_route.connect(sample_endpoint_ws)
-async def on_connect(self, websocket: WebSocket):
-    # Called when there is a connection to `sample_endpoint_ws`
-    await websocket.accept()
-
-@ws_route.disconnect(sample_endpoint_ws)
-async def on_disconnect(self, websocket: WebSocket, code: int):
-    # Called when there is a disconnect from `sample_endpoint_ws`
-    await websocket.close(code)
-```
-
-## **Non Route Function Parameters Decorators**
+## **Non Route Function Parameters**
 We discussed decorators that are used to define route function parameter dependencies in Ellar. 
 These decorators, such as `Query`, `Form`, and `Body`, etc. are pydantic models used to specify the expected parameters for a route function. 
 
 However, there are also some route parameters that are **system** dependent, such as the `request` or `websocket` object, and the `response` object. 
 These parameters are resolved by the application and supplied to the route function when needed, and are not specified with pydantic models or user input.
 
-### **Provide(Type)**
-The **Provide(Type)** decorator is used to resolve a service provider and inject it into a route function parameter. 
-This can be useful when using the ModuleRouter feature in Ellar. 
-
-It allows for easy injection of services into route functions, making it easier to manage dependencies and improve code organization. 
-This can be useful for resolving database connections, external APIs, or other resources that are used by the route function.
+### **Inject[Type]**
+The **Inject[Type]** annotation is used to inject a service registered in Ellar DI container and also inject system services into a route function parameter.
 
 For example:
 ```python
-from ellar.common import ModuleRouter, Provide
+from ellar.common import ModuleRouter, Inject
 from ellar.core import App, Config
+from sqlalchemy.ext.asyncio import AsyncSession
+
 
 router = ModuleRouter('/test-provide')
 
 @router.get('/app')
-def example_endpoint(app: Provide(App), config: Provide(Config)):
+def example_endpoint(app: Inject[App], config: Inject[Config], async_session: Inject[AsyncSession]):
     assert isinstance(app, App)
     assert app.config == config
     assert isinstance(config, Config)
     return {'message': 'injected App and Configuration object to route function'}
 ```
-In the example above, `example_endpoint` function has two parameters `app` and `config` which are decorated with `Provide(Type)` decorator.
-This decorator tells the application to resolve the `App` and `Config` service providers and inject them as the `app` and `config` parameters when the endpoint is called.
+In the example above, `example_endpoint` function has two parameters `app` and `config` which are annotated with `Inject[Type]`.
+This annotation tells the application to resolve the `App` and `Config` service providers and inject them as the `app` and `config` parameters when the endpoint is called.
 
 This allows for easy access to the objects without having to manually import and instantiate them. 
 It also makes the code more modular and easier to test.
 
 !!! info
     Only types registered in the application can be resolved, but you can set `INJECTOR_AUTO_BIND = True` in configuration for the injector to register automatically that are not found. 
-    please note that this automatic registration will be scoped to singleton by the `EllarInjector`.
+    please note that this automatic registration will be scoped to `singleton` by the `EllarInjector`.
 
-### **Context**
-The **Context()** decorator injects the current `IExecutionContext` to route function parameter. See [ExecutionContext](../../basics/execution-context){target="_blank"}
+### **Injecting ExecutionContext**
+We inject `ExecutionContext` by simply annotating a parameter with Inject and IExecutionContext interface or ExecutionContext class.
+See [ExecutionContext](../basics/execution-context.md){target="_blank"} for more understanding of `ExecutionContext`
 
 For example:
 ```python
-from ellar.common import ModuleRouter, Context
+from ellar.common import ModuleRouter, IExecutionContext, Inject
 
 router = ModuleRouter('/test-context')
 
 @router.get('/')
-def example_endpoint(ctx = Context()):
+def example_endpoint(ctx: Inject[IExecutionContext]):
     http_connection_instance = ctx.switch_to_http_connection().get_client()
     query_params = http_connection_instance.query_params
     return {'message': 'inject execution context', 'query_params': query_params}
 ```
 
-In this example, the example_endpoint function is decorated with the **Context()** decorator, which injects the current `IExecutionContext` object into the `ctx` parameter of the function. 
-The `IExecutionContext` object provides access to various resources and information related to the current execution context, such as the current HTTP connection, query parameters, and more. 
-
-In this example, the `switch_to_http_connection()` method is used to access the current HTTP connection and the `get_client()` method is used to get the client object for the connection. 
-The `query_params` attribute of the client object is then accessed and included in the response returned by the endpoint.
-
-### **Req**
-**Req()** decorator injects current `Request` object to route function parameter.
+### **Injecting Request Object**
+We inject `Request` by simply annotating a parameter with Inject and Request class.
 
 For example:
 ```python
-from ellar.common import ModuleRouter, Req
+from ellar.common import ModuleRouter, Inject
+from ellar.core import Request
 
 router = ModuleRouter('/test-req')
 
 @router.get('/')
-def example_endpoint(req = Req()):
+def example_endpoint(req: Inject[Request]):
     headers = req.headers
     query_params = req.query_params
     return {'message': 'injected request object', 'headers': headers, 'query_params': query_params}
 
 ```
 
-In this example, the `example_endpoint` function has a parameter req decorated with `Req()`, which will be automatically populated with the current `Request` object at runtime. 
+In this example, the `example_endpoint` function has a parameter annotated with `Inject[Request]`, which will be automatically populated with the current `Request` object at runtime. 
 The `headers` and `query_params` attributes of the `req` object can then be accessed and used within the function.
 
-### **Res**
-**Res()** decorator injects current `Response` object to route function parameter.
+### **Injecting Response Object**
+We inject `Response` by simply annotating a parameter with Inject and Response class.
 
 For example:
 ```python
-from ellar.common import ModuleRouter, Res
+from ellar.common import ModuleRouter, Inject, Response
 
 router = ModuleRouter('/test-response')
 
 @router.get('/')
-def example_endpoint(res = Res()):
+def example_endpoint(res: Inject[Response]):
     res.headers['x-custom-header'] = 'hello'
     return {'message': 'inject response object'}
 
 ```
 
-In this example, the `Res()` decorator injects the current `Response` object to the `res` parameter of the `example_endpoint` function. 
+In this example, the `Inject[Response]` annotation injects the current `Response` object to the `res` parameter of the `example_endpoint` function. 
 This will allow you to manipulate the headers of the response before it is sent back to the client.
 
-### **Ws**
-**Ws()** decorator injects current `WebSocket` object to route function parameter.
+### **Injecting Websocket Object**
+We inject `Websocket` by simply annotating a parameter with Inject and Websocket class.
 
 For example:
 ```python
-from ellar.common import ModuleRouter, Ws
+from ellar.common import ModuleRouter, Inject
+from ellar.core import WebSocket
 
 router = ModuleRouter('/test-ws')
 
 @router.ws_route('/')
-async def example_endpoint(ws = Ws()):
+async def example_endpoint(ws: Inject[WebSocket]):
     await ws.accept()
     await ws.send_json({'message': 'injected WebSocket object to route function'})
 ```
@@ -175,17 +146,37 @@ the `example_endpoint` function is executed. The `Ws` decorator injects the curr
 
 The same conditions and examples applies for:
 
-- **Host()** decorator injects current client host address to route function parameter.
-- **Session()** decorator injects current Session object to route function parameter. This requires [SessionMiddleware](https://www.starlette.io/middleware/#sessionmiddleware){target="_blank"} module from Starlette added in application middleware and also `SessionMiddleware` module depends on [itsdangerous](https://pypi.org/project/itsdangerous/){target="_blank"} package.
-- **Http()** decorator injects current HTTP connection object to route function parameter.
+- **Host**  `Inject[str, Inject.Key("Host")]` injects current client host address to route function parameter. see example below
+- **Session** `Inject[dict, Inject.Key("Session")]` injects current Session object to route function parameter. This requires [SessionMiddleware](https://www.starlette.io/middleware/#sessionmiddleware){target="_blank"} module from Starlette added in application middleware and also `SessionMiddleware` module depends on [itsdangerous](https://pypi.org/project/itsdangerous/){target="_blank"} package.
+- **Http** `Inject[dict, Inject.Key("Session")]` injects current HTTP connection object to route function parameter. see example below
 
-## **Creating a Custom Parameter Decorators**
-You can still create your own route parameter decorators that suits your need. You simply need to follow a contract, `NonParameterResolver`, and override the resolve function.
+For example:
+```python
+from ellar.common import Inject, ModuleRouter
+from starlette.requests import HTTPConnection
 
-The `NonParameterResolver` has two attribute, `type_annotation` and `parameter_name`, that are provided automatically when computing route parameter dependencies. 
-They are gotten from the application of the NonParameterResolver, like so - `def s(parameter_name:type_annotation = NonParameterResolver())`.
+router = ModuleRouter()
 
-`NonParameterResolver` receives current `IExecutionContext` must return a tuple of dict object of the resulting resolve data with `parameter_name` and list of errors if any. As shown in the return statements in the example below.
+@router.get("/others")
+def get_requests_case_2(
+    session: Inject[dict, Inject.Key("Session")], # injects requests session
+    host: Inject[str, Inject.Key("Host")], # injects requests host
+    connection: Inject[HTTPConnection], # injects connection
+) -> bool:
+    assert isinstance(connection, HTTPConnection)  # True
+    assert host == "testclient"
+    assert isinstance(session, dict) and len(session) == 0
+    return True
+```
+
+## **Custom Parameter Decorators**
+You can create your own route parameter decorators whenever necessary. You simply need to follow a contract, `NonParameterResolver`, and override the resolve function.
+
+The `NonParameterResolver` has two attribute, `type_annotation` and `parameter_name`, that are provided automatically when computing route function parameter dependencies.
+The `type_annotation` and `parameter_name` are determined from the parameter declaration like so - `def route_function(parameter_name:type_annotation = NonParameterResolver())`.
+
+All `NonParameterResolver` receives current `IExecutionContext` during route function execution, and it must return a tuple of dict object of the resulting resolve data with `parameter_name` and list of errors if any. 
+As shown in the return statements in the example below.
 
 For example:
 ```python
@@ -212,9 +203,13 @@ If no user is found, an empty dict and a list of errors containing an ErrorWrapp
 
 This `UserParam` decorator can then be used to inject the user object to a route function parameter like so:
 ```python
+from typing_extensions import Annotated
+from .custom_decorator import UserParam
+from .schema import UserType
 
 @router.get('/user')
-def example_endpoint(user: UserParam()):
+def example_endpoint(user = UserParam(), user2: Annotated[UserType, UserParam()]):
+    assert user2 == user # True
     return {'message': 'injected user object to route function', 'user': user}
 
 ```
@@ -242,7 +237,7 @@ which will return a 200 status code and HTML content from my_template.
 The return object from the index function will be used as the templating context for `my_template` during the template rendering process. 
 This allows the function to pass data to the template and have it rendered with the provided context, the rendered template will be the response body.
 
-See [HTML Templating](../../templating/templating){target="_blank"} for more information on `render` and HTML templating with Ellar.
+See [HTML Templating](../techniques/templating.md){target="_blank"} for more information on `render` and HTML templating with Ellar.
 
 ### **FILE**
 **@file()** decorator converts a route function response to file or streaming response type. 
@@ -385,7 +380,7 @@ See [Pydantic Model Export](https://docs.pydantic.dev/usage/exporting_models/#mo
 This decorator allows you to specify the version of the endpoint that the function is associated with. 
 
 Based on the versioning scheme configuration in the application, versioned route functions are called. This can be useful for maintaining backward compatibility, or for rolling out new features to different versions of an application. 
-More information on how to use this decorator can be found in the [Versioning documentation](../../techniques/versioning){target="_blank"}
+More information on how to use this decorator can be found in the [Versioning documentation](../techniques/versioning.md){target="_blank"}
 
 A quick example on how to use `version` decorator:
 ```python
@@ -408,7 +403,7 @@ These protection classes have a `can_execute` function that is called to determi
 This decorator allows you to apply certain conditions or checks before a route function is executed, such as `authentication` or `authorization` checks. 
 This can help to ensure that only authorized users can access certain resources. 
 
-More information on how to use this decorator can be found in the [Guard Documentation](../guards){target="_blank"}
+More information on how to use this decorator can be found in the [Guard Documentation](guards.md){target="_blank"}
 
 A quick example on how to use `UseGuards` decorator:
 ```python
@@ -441,7 +436,7 @@ Each guard class has a `can_execute` function that is called in the order specif
 The `command` decorator is used to convert a decorated function into a command that can be executed through the Ellar command-line interface (CLI) actions. 
 This allows you to define custom commands that can be run from the command-line, which can be useful for tasks such as running database migrations, generating code, or other tasks that can be automated.
 
-See [Ellar-CLI Custom Commands](../../cli){target="_blank"}
+See [Ellar-CLI Custom Commands](../cli/introduction.md){target="_blank"}
 
 ## **Module Function Decorators**
 
@@ -454,4 +449,4 @@ See [Ellar-CLI Custom Commands](../../cli){target="_blank"}
 - `@template_global`: This decorator is used to register a function as a global variable available in all Jinja2 templates. The function can be called without any arguments and should return a value.
 
 These decorators can be used to define functions that will be executed at specific points in the application's lifecycle. 
-They provide a way to separate and organize the different parts of an application. See [Module Additional Configuration](../modules/#additional-module-configurations){target="_blank"} for examples on how these decorator functions are used.
+They provide a way to separate and organize the different parts of an application. See [Module Additional Configuration](modules.md#additional-module-configurations){target="_blank"} for examples on how these decorator functions are used.

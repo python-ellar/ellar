@@ -382,12 +382,12 @@ For example, lets make `CacheService` available in our route function.
 
 === "Synchronous Route Function"
     ```python
-    from ellar.common import get, Provide
+    from ellar.common import get, Inject
     from ellar.cache import ICacheService
     
     ...
     @get('/cache-test')
-    def my_route_function(self, cache_service: ICacheService = Provide()):
+    def my_route_function(self, cache_service: Inject[ICacheService]):
         cached_value = cache_service.get("my-key")
         if cached_value:
             return cached_value
@@ -397,12 +397,12 @@ For example, lets make `CacheService` available in our route function.
     ```
 === "Asynchronous Route Function"
     ```python
-    from ellar.common import get, Provide
+    from ellar.common import get, Inject
     from ellar.cache import ICacheService
     
     ...
     @get('/cache-test')
-    async def my_route_function(self, cache_service: ICacheService = Provide()):
+    async def my_route_function(self, cache_service: Inject[ICacheService]):
         cached_value = await cache_service.get_async("my-key")
         if cached_value:
             return cached_value

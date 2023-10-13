@@ -28,7 +28,12 @@ router = ModuleRouter()
 
 
 @router.get("/starlette-request")
-def get_requests_case_1(request: Inject[StarletteRequest], req: Inject[EllarRequest]):
+def get_requests_case_1(
+    request: Inject[StarletteRequest],
+    req: Inject[EllarRequest],
+    request_2: EllarRequest,
+):
+    assert request_2 == request
     assert isinstance(request, EllarRequest)  # True
     assert isinstance(req, EllarRequest)
     return req == request
@@ -48,36 +53,42 @@ def get_requests_case_2(
 
 @router.get("/ellar-context")
 def get_requests(
-    context_1: Inject[ExecutionContext], context_2: Inject[IExecutionContext]
+    context_1: Inject[ExecutionContext],
+    context_2: Inject[IExecutionContext],
+    ctx: IExecutionContext,
 ):
     assert isinstance(context_1, ExecutionContext)
-    return context_1 == context_2
+    return context_1 == context_2 == ctx
 
 
 @router.get("/starlette-connection")
 def get_connections(
     connection: Inject[StarletteHTTPConnection],
     connection_2: Inject[EllarHTTPConnection],
+    connection_3: EllarHTTPConnection,
 ):
     assert isinstance(connection, EllarHTTPConnection)  # True
     assert isinstance(connection_2, EllarHTTPConnection)
-    return connection == connection_2
+    return connection == connection_2 == connection_3
 
 
 @router.get("/starlette-response")
-def get_responses(response: Inject[StarletteResponse]):
+def get_responses(response: Inject[StarletteResponse], res: StarletteResponse):
+    assert res == response
     assert isinstance(response, StarletteResponse)  # True
     return response is not None
 
 
 @router.ws_route("/starlette-websocket")
 async def get_websockets(
-    websocket: Inject[StarletteWebSocket], ws: Inject[EllarWebSocket]
+    websocket: Inject[StarletteWebSocket],
+    ws: Inject[EllarWebSocket],
+    ws_2: EllarWebSocket,
 ):
     assert isinstance(ws, EllarWebSocket)  # True
     assert isinstance(websocket, EllarWebSocket)
     await ws.accept()
-    await ws.send_json(ws == websocket)
+    await ws.send_json(ws == websocket == ws_2)
     await ws.close()
 
 

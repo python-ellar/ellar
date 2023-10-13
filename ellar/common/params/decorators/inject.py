@@ -45,13 +45,17 @@ def add_default_resolver(
     _DEFAULT_RESOLVERS.update({type_identifier: resolver_type})
 
 
+def get_default_resolver(
+    type_identifier: t.Union[t.Type, str]
+) -> t.Optional[t.Type[NonParameterResolver]]:
+    return _DEFAULT_RESOLVERS.get(type_identifier)
+
+
 class InjectShortcut:
-    @classmethod
-    def Key(cls, key: str) -> str:
+    def Key(self, key: str) -> str:
         return key
 
-    @classmethod
-    def __class_getitem__(cls, args: t.Union[t.Any, t.Tuple[t.Type, str]]) -> t.Any:
+    def __getitem__(self, args: t.Union[t.Any, t.Tuple[t.Type, str]]) -> t.Any:
         if isinstance(args, tuple):
             base_type, _str_default_resolve = args
             default_resolver = _DEFAULT_RESOLVERS.get(_str_default_resolve)

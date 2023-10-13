@@ -14,13 +14,13 @@ tm = Test.create_test_module()
 
 @post("/items/")
 def save_union_body_and_embedded_body(
-    item: Body[Union[OtherItem, Item]], qty: Body[int, Body.P(default=12)]
+    item: Union[OtherItem, Item], qty: Body[int, Body.P(default=12)]
 ):
     return {"item": item, "qty": qty}
 
 
 @post("/items/embed")
-def embed_qty(qty: int = Body(12, embed=True)):
+def embed_qty(qty: Body[int, Body.P(12, embed=True)]):
     return {"qty": qty}
 
 

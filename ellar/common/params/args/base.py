@@ -19,6 +19,7 @@ from starlette.convertors import Convertor
 from typing_extensions import Annotated, get_args, get_origin
 
 from .. import params
+from ..decorators import get_default_resolver
 from ..helpers import is_scalar_field, is_scalar_sequence_field
 from ..resolvers import (
     BaseRouteParameterResolver,
@@ -172,6 +173,13 @@ class EndpointArgsModel:
                 )
             ):
                 # Skipping **kwargs, *args, self
+                continue
+
+            if self._add_non_pydantic_field_to_dependency(
+                param_name=param_name,
+                param_default=param_default,
+                param_annotation=param_annotation,
+            ):
                 continue
 
             if self._add_non_field_param_to_dependency(
@@ -375,3 +383,14 @@ class EndpointArgsModel:
 
     def build_body_field(self) -> None:  # pragma: no cover
         raise NotImplementedError
+
+    def _add_non_pydantic_field_to_dependency(
+        self, param_name: str, param_default: t.Any, param_annotation: t.Any
+    ) -> bool:
+        """Checks for parameter annotations that are not pydantic models"""
+        resolver_class = get_default_resolver(param_annotation)
+        if resolver_class and param_default == inspect.Parameter.empty:
+            _inject = resolver_class()(param_name, param_annotation)
+            self._computation_models[_inject.in_].append(_inject)
+            return True
+        return False

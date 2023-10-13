@@ -3,10 +3,11 @@ import typing as t
 from typing_extensions import Annotated
 
 from . import models as param_functions
-from .inject import InjectShortcut, add_default_resolver
+from .inject import InjectShortcut, add_default_resolver, get_default_resolver
 
 __all__ = [
     "add_default_resolver",
+    "get_default_resolver",
     "Body",
     "Cookie",
     "File",
@@ -95,4 +96,4 @@ else:
     Path = _ParamShortcut(param_functions.Path)
     Query = _ParamShortcut(param_functions.Query)
     WsBody = _ParamShortcut(param_functions.WsBody)
-    Inject = InjectShortcut
+    Inject = InjectShortcut()

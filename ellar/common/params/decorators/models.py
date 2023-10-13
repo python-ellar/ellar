@@ -4,9 +4,6 @@ from pydantic.fields import Undefined
 
 from ...params import params
 
-if t.TYPE_CHECKING:  # pragma: no cover
-    pass
-
 
 def Path(
     default: t.Any = ...,

@@ -136,7 +136,7 @@ from ellar.common import post, set_metadata
 ...
 @post()
 @set_metadata('roles', ['admin'])
-async def create(self, payload: CreateCarSerializer = Body()):
+async def create(self, payload:Body[CreateCarSerializer]):
     self.repo.create_car(payload)
     return 'This action adds a new car'
 ...
@@ -160,7 +160,7 @@ Now that we have a custom `@roles()` decorator, we can use it to decorate the `c
 ...
 @post()
 @role('admin', 'staff')
-async def create(self, payload: CreateCarSerializer = Body()):
+async def create(self, payload:Body[CreateCarSerializer]):
     self.repo.create_car(payload)
     return 'This action adds a new car'
 ...

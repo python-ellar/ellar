@@ -48,6 +48,6 @@ class CookieSchema(Serializer):
 @Controller
 class ItemsController(ControllerBase):
     @get('/cookie-as-schema')
-    def cookie_as_schema(self, cookie_values: CookieSchema = Cookie()):
+    def cookie_as_schema(self, cookie_values: Cookie[CookieSchema]):
         return {"cookie_values": cookie_values.dict()}
 ```

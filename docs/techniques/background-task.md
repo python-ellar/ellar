@@ -7,7 +7,7 @@ this kind of task could be email notifications sent after performing an action.
 In Ellar, you can access the **response** object and set a `background` parameter.
 ```python
 from starlette.background import BackgroundTask
-from ellar.common import ModuleRouter, get, Res
+from ellar.common import ModuleRouter, Response
 
 router = ModuleRouter('/background-test')
 
@@ -15,7 +15,7 @@ async def send_welcome_email(email):
     print(f'Send Welcome Email Task Called with {email}')
 
 @router.post('/signup')
-def sign_up(username: str, password: str, email: str, res=Res()):
+def sign_up(username: str, password: str, email: str, res:Response):
     res.background = BackgroundTask(send_welcome_email, email=email)
     return {'status': 'Signup successful'}
 ```

@@ -12,18 +12,13 @@ class ProviderParameterInjector(NonParameterResolver):
     Defines `Provider` resolver for route parameter based on the provided `service`
     """
 
-    def __init__(self, service: t.Optional[t.Type[T]] = None) -> None:
-        if service:
-            assert isinstance(service, type), "Service must be a type"
-        super().__init__(data=service)
-
     def __call__(
         self, parameter_name: str, parameter_annotation: t.Type[T]
     ) -> "ProviderParameterInjector":
         self.parameter_name = parameter_name
         self.type_annotation = parameter_annotation
         if not self.data and isinstance(self.type_annotation, inspect.Parameter.empty):
-            raise Exception("Injectable must have a valid type")
+            raise Exception("Inject Type must have a valid type")
 
         if (
             self.data
