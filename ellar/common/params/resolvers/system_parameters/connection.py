@@ -2,10 +2,10 @@ import typing as t
 
 from ellar.common.interfaces import IExecutionContext
 
-from .base import NonParameterResolver
+from .base import SystemParameterResolver
 
 
-class ConnectionParam(NonParameterResolver):
+class ConnectionParam(SystemParameterResolver):
     async def resolve(
         self, ctx: IExecutionContext, **kwargs: t.Any
     ) -> t.Tuple[t.Dict, t.List]:

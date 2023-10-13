@@ -1,6 +1,6 @@
 from functools import wraps
 
-from ellar.common import Context, IExecutionContext, Query, Res, extra_args, get
+from ellar.common import IExecutionContext, Inject, Query, extra_args, get
 from ellar.common.params import ExtraEndpointArg
 from ellar.common.serializer import serialize_object
 from ellar.core.connection import Request
@@ -41,10 +41,10 @@ def add_additional_signature_to_endpoint(func):
 def add_extra_non_field_extra_args(func):
     # EXTRA ARGS SETUP
     context = ExtraEndpointArg(
-        name="context", annotation=IExecutionContext, default_value=Context()
+        name="context", annotation=Inject[IExecutionContext], default_value=None
     )
     response = ExtraEndpointArg(
-        name="response", annotation=Response, default_value=Res()
+        name="response", annotation=Inject[Response], default_value=None
     )
 
     extra_args(response)(func)
@@ -67,7 +67,7 @@ def add_extra_non_field_extra_args(func):
 @add_extra_non_field_extra_args
 @add_additional_signature_to_endpoint
 def query_params_extra(
-    request: Request,
+    request: Inject[Request],
     filters: Filter = Query(),
 ):
     return filters.dict()
@@ -89,6 +89,7 @@ openapi_schema = {
                             "title": "To",
                             "type": "string",
                             "format": "date-time",
+                            "include_in_schema": True,
                         },
                         "name": "to",
                         "in": "query",
@@ -99,6 +100,7 @@ openapi_schema = {
                             "title": "From",
                             "type": "string",
                             "format": "date-time",
+                            "include_in_schema": True,
                         },
                         "name": "from",
                         "in": "query",
@@ -108,19 +110,28 @@ openapi_schema = {
                         "schema": {
                             "allOf": [{"$ref": "#/components/schemas/Range"}],
                             "default": 20,
+                            "include_in_schema": True,
                         },
                         "name": "range",
                         "in": "query",
                     },
                     {
                         "required": True,
-                        "schema": {"title": "Query1", "type": "string"},
+                        "schema": {
+                            "title": "Query1",
+                            "type": "string",
+                            "include_in_schema": True,
+                        },
                         "name": "query1",
                         "in": "query",
                     },
                     {
                         "required": True,
-                        "schema": {"title": "Query2", "type": "string"},
+                        "schema": {
+                            "title": "Query2",
+                            "type": "string",
+                            "include_in_schema": True,
+                        },
                         "name": "query2",
                         "in": "query",
                     },

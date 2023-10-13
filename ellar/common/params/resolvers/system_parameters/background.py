@@ -3,10 +3,10 @@ import typing as t
 from ellar.common.interfaces import IExecutionContext
 from starlette.background import BackgroundTask, BackgroundTasks
 
-from .base import NonParameterResolver
+from .base import SystemParameterResolver
 
 
-class BackgroundTasksParameter(NonParameterResolver):
+class BackgroundTasksParameter(SystemParameterResolver):
     async def resolve(
         self, ctx: IExecutionContext, **kwargs: t.Any
     ) -> t.Tuple[t.Dict, t.List]:

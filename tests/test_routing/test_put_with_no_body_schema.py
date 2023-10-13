@@ -25,7 +25,11 @@ openapi_schema = {
                 "parameters": [
                     {
                         "required": True,
-                        "schema": {"title": "Item Id", "type": "string"},
+                        "schema": {
+                            "title": "Item Id",
+                            "type": "string",
+                            "include_in_schema": True,
+                        },
                         "name": "item_id",
                         "in": "path",
                     }

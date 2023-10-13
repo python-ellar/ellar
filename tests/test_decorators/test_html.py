@@ -1,5 +1,12 @@
 import pytest
-from ellar.common import Controller, get, render, template_filter, template_global
+from ellar.common import (
+    Controller,
+    Inject,
+    get,
+    render,
+    template_filter,
+    template_global,
+)
 from ellar.common.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,
     RESPONSE_OVERRIDE_KEY,
@@ -16,7 +23,7 @@ from ellar.reflect import reflect
 
 def test_render_decorator_works():
     @render("index")
-    def endpoint_render(request: Request):
+    def endpoint_render(request: Inject[Request]):
         pass  # pragma: no cover
 
     response_override = reflect.get_metadata(RESPONSE_OVERRIDE_KEY, endpoint_render)
@@ -41,7 +48,7 @@ def test_render_decorator_raise_exception_for_invalid_template_name():
     ):
 
         @render
-        def endpoint_render(request: Request):
+        def endpoint_render(request: Inject[Request]):
             pass  # pragma: no cover
 
 
@@ -50,7 +57,7 @@ def test_render_decorator_uses_endpoint_name_as_template_name():
     class AController:
         @get("/endpoint_render")
         @render()
-        def endpoint_render(self, request: Request):
+        def endpoint_render(self, request: Inject[Request]):
             pass  # pragma: no cover
 
     a_controller_operations = reflect.get_metadata(

@@ -1,7 +1,7 @@
 from typing import List, Optional
 
-from ellar.common import Context, ModuleRouter
-from ellar.core import AppFactory
+from ellar.common import Inject, ModuleRouter
+from ellar.core import AppFactory, ExecutionContext
 from pydantic import BaseModel
 from starlette.responses import PlainTextResponse
 
@@ -54,7 +54,7 @@ def get_plain_text_case_2():
 
 
 @mr.get("/items/text-case-3", response={200: PlainTextResponse})
-async def get_plain_text_case_3(ctx=Context()):
+async def get_plain_text_case_3(ctx: Inject[ExecutionContext]):
     res = PlainTextResponse("Sent Response with going through response process")
     await res(*ctx.get_args())
 

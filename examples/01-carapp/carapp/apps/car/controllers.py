@@ -59,7 +59,7 @@ class CarController(ControllerBase):
 
     @post("/", name="v2_create")
     @Version("v2")
-    async def create_v2(self, payload: CreateCarSerializer):
+    async def create_v2(self, payload: Body[CreateCarSerializer]):
         result = self.repo.create_car(payload)
         result.update(message="This action adds a new car - version 2")
         return result

@@ -261,7 +261,7 @@ class CarController(ControllerBase):
 ```
 
 ## **Testing a Websocket Route**
-You can use the same [TestClient](../basics/testing#testclient) to test WebSockets.
+You can use the same [TestClient](../basics/testing.md#testclient) to test WebSockets.
 
 For this, you use the TestClient in a `with` statement, connecting to the WebSocket:
 

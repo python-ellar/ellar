@@ -174,7 +174,7 @@ class Filters(Serializer):
 @Controller
 class ItemsController(ControllerBase):
     @get('/query-as-schema')
-    def query_as_schema(self, filters: Filters = Query()):
+    def query_as_schema(self, filters:Query[Filters]):
         return {"filters": filters.dict()}
 ```
 

@@ -26,7 +26,7 @@ from ellar.common import File, Controller, post, ControllerBase
 @Controller
 class ItemsController(ControllerBase):
     @post("/files/")
-    async def create_file(self, file: bytes = File()):
+    async def create_file(self, file: File[bytes]):
         return {"file_size": len(file)}
 ```
 
@@ -50,12 +50,12 @@ from ellar.common import File, UploadFile, Controller, post, ControllerBase
 @Controller
 class ItemsController(ControllerBase):
     @post("/files/")
-    async def create_file(self, file: bytes = File()):
+    async def create_file(self, file: File[bytes]):
         return {"file_size": len(file)}
     
     
     @post("/uploadfile/")
-    async def create_upload_file(self, file: UploadFile = File()):
+    async def create_upload_file(self, file: File[UploadFile]):
         return {"filename": file.filename}
 ```
 
@@ -120,7 +120,7 @@ from ellar.common import File, UploadFile, Controller, post, ControllerBase
 @Controller
 class ItemsController(ControllerBase):
     @post("/upload-many")
-    def upload_many(self, files: List[UploadFile] = File()):
+    def upload_many(self, files: File[List[UploadFile]]):
         return [f.filename for f in files]
 ```
 

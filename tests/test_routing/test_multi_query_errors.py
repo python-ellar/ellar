@@ -31,6 +31,7 @@ openapi_schema = {
                             "title": "Q",
                             "type": "array",
                             "items": {"type": "integer"},
+                            "include_in_schema": True,
                         },
                         "name": "q",
                         "in": "query",

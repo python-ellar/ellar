@@ -2,7 +2,7 @@ import re
 
 from ellar.auth.session import ISessionStrategy
 from ellar.auth.session.strategy import SessionClientStrategy
-from ellar.common import Controller, delete, get, post
+from ellar.common import Controller, Inject, delete, get, post
 from ellar.core import Request
 from ellar.core.routing import ControllerRouterFactory
 from ellar.testing import Test
@@ -12,17 +12,17 @@ from starlette.routing import Mount
 @Controller("/")
 class SessionSampleController:
     @get()
-    def view_session(self, request: Request):
+    def view_session(self, request: Inject[Request]):
         return {"session": request.session}
 
     @post()
-    async def update_session(self, request: Request):
+    async def update_session(self, request: Inject[Request]):
         data = await request.json()
         request.session.update(data)
         return {"session": request.session}
 
     @delete()
-    async def clear_session(self, request: Request):
+    async def clear_session(self, request: Inject[Request]):
         request.session.clear()
         return {"session": request.session}
 

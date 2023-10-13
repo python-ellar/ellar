@@ -9,12 +9,12 @@ from pydantic.error_wrappers import ErrorWrapper
 from ..base import IRouteParameterResolver
 
 
-class NonParameterResolver(IRouteParameterResolver, ABC):
+class SystemParameterResolver(IRouteParameterResolver, ABC):
     """
     Define extra route function parameter dependencies that does not depend on user inputs
 
     Example:
-    >>> class UserField(NonParameterResolver):
+    >>> class UserField(SystemParameterResolver):
     >>>     async def resolve(self, ctx: IExecutionContext, **kwargs: t.Any) -> t.Any:
     >>>          request = ctx.switch_to_http_connection().get_request()
     >>>          user = request.get('user', None)
@@ -27,7 +27,7 @@ class NonParameterResolver(IRouteParameterResolver, ABC):
     >>>     return user
     """
 
-    in_: str = "non_field_parameter"
+    in_: str = "system_parameter"
 
     def __init__(self, data: t.Optional[t.Any] = None):
         self.data = data
@@ -44,7 +44,7 @@ class NonParameterResolver(IRouteParameterResolver, ABC):
         raise NotImplementedError
 
 
-class BaseConnectionParameterResolver(NonParameterResolver):
+class BaseConnectionParameterResolver(SystemParameterResolver):
     """
     Defines HTTPConnection fields resolver for route parameter based on the provided `lookup_connection_field`
     """
@@ -54,7 +54,7 @@ class BaseConnectionParameterResolver(NonParameterResolver):
 
     def __call__(
         self, parameter_name: str, parameter_annotation: t.Type[T]
-    ) -> "NonParameterResolver":
+    ) -> "SystemParameterResolver":
         result = super().__call__(parameter_name, parameter_annotation)
         if not hasattr(self, "lookup_connection_field"):
             raise Exception(f"{self.__class__.__name__}.request_field is not set")

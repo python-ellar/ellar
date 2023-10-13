@@ -1,24 +1,8 @@
 import typing as t
 
-from ellar.common.interfaces import IExecutionContext
-from ellar.common.params.resolvers.non_parameter import (
-    ConnectionParam,
-    ExecutionContextParameter,
-    HostRequestParam,
-    ProviderParameterInjector,
-    RequestParameter,
-    ResponseRequestParam,
-    SessionRequestParam,
-    WebSocketParameter,
-)
 from pydantic.fields import Undefined
-from starlette.responses import Response
 
-from ..params import params
-from ..types import T
-
-if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core import HTTPConnection, Request, WebSocket
+from ...params import params
 
 
 def Path(
@@ -37,6 +21,7 @@ def Path(
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
     deprecated: t.Optional[bool] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -57,6 +42,7 @@ def Path(
         example=example,
         examples=examples,
         deprecated=deprecated,
+        include_in_schema=include_in_schema,
         **extra,
     )
 
@@ -77,6 +63,7 @@ def Query(
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
     deprecated: t.Optional[bool] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -97,6 +84,7 @@ def Query(
         example=example,
         examples=examples,
         deprecated=deprecated,
+        include_in_schema=include_in_schema,
         **extra,
     )
 
@@ -118,6 +106,7 @@ def Header(
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
     deprecated: t.Optional[bool] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -139,6 +128,7 @@ def Header(
         example=example,
         examples=examples,
         deprecated=deprecated,
+        include_in_schema=include_in_schema,
         **extra,
     )
 
@@ -159,6 +149,7 @@ def Cookie(
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
     deprecated: t.Optional[bool] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -179,6 +170,7 @@ def Cookie(
         example=example,
         examples=examples,
         deprecated=deprecated,
+        include_in_schema=include_in_schema,
         **extra,
     )
 
@@ -200,6 +192,7 @@ def Body(
     regex: t.Optional[str] = None,
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -221,6 +214,7 @@ def Body(
         regex=regex,
         example=example,
         examples=examples,
+        include_in_schema=include_in_schema,
         **extra,
     )
 
@@ -241,6 +235,7 @@ def Form(
     regex: t.Optional[str] = None,
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -261,6 +256,7 @@ def Form(
         regex=regex,
         example=example,
         examples=examples,
+        include_in_schema=include_in_schema,
         **extra,
     )
 
@@ -281,6 +277,7 @@ def File(
     regex: t.Optional[str] = None,
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -301,6 +298,7 @@ def File(
         regex=regex,
         example=example,
         examples=examples,
+        include_in_schema=include_in_schema,
         **extra,
     )
 
@@ -322,6 +320,7 @@ def WsBody(
     regex: t.Optional[str] = None,
     example: t.Any = Undefined,
     examples: t.Optional[t.Dict[str, t.Any]] = None,
+    include_in_schema: bool = True,
     **extra: t.Any,
 ) -> t.Any:
     """
@@ -343,70 +342,6 @@ def WsBody(
         regex=regex,
         example=example,
         examples=examples,
+        include_in_schema=include_in_schema,
         **extra,
     )
-
-
-def Http() -> "HTTPConnection":
-    """
-    Route Function Parameter for retrieving Current Request Instance
-    :return: Request
-    """
-    return ConnectionParam()  # type: ignore[return-value]
-
-
-def Req() -> "Request":
-    """
-    Route Function Parameter for retrieving Current Request Instance
-    :return: Request
-    """
-    return RequestParameter()  # type: ignore[return-value]
-
-
-def Ws() -> "WebSocket":
-    """
-    Route Function Parameter for retrieving Current WebSocket Instance
-    :return: WebSocket
-    """
-    return WebSocketParameter()  # type: ignore[return-value]
-
-
-def Context() -> IExecutionContext:
-    """
-    Route Function Parameter for retrieving Current IExecutionContext Instance
-    :return: IExecutionContext
-    """
-    return t.cast(IExecutionContext, ExecutionContextParameter())
-
-
-def Provide(service: t.Optional[t.Type[T]] = None) -> T:
-    """
-    Route Function Parameter for resolving registered Provider
-    :return: T
-    """
-    return t.cast(T, ProviderParameterInjector(service))
-
-
-def Session() -> t.Dict:
-    """
-    Route Function Parameter for resolving registered `HTTPConnection.sessions`
-    Ensure SessionMiddleware is registered to application middlewares
-    :return: Dict
-    """
-    return t.cast(t.Dict, SessionRequestParam())
-
-
-def Host() -> str:
-    """
-    Route Function Parameter for resolving registered `HTTPConnection.client.host`
-    :return: str
-    """
-    return t.cast(str, HostRequestParam())
-
-
-def Res() -> Response:
-    """
-    Route Function Parameter for resolving registered Response
-    :return: Response
-    """
-    return t.cast(Response, ResponseRequestParam())

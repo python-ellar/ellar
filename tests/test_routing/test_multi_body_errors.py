@@ -38,6 +38,7 @@ openapi_schema = {
                                 "title": "Item",
                                 "type": "array",
                                 "items": {"$ref": "#/components/schemas/Item2"},
+                                "include_in_schema": True,
                             }
                         }
                     },

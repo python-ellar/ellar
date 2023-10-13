@@ -56,7 +56,7 @@ $(venv) pip install ellar
 ## **Try This**
 ```python
 import uvicorn
-from ellar.common import Body, Controller, ControllerBase, delete, get, post, put, Serializer, Provide
+from ellar.common import Body, Controller, ControllerBase, delete, get, post, put, Serializer, Inject
 from ellar.core import AppFactory
 from ellar.di import injectable, request_scope
 from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerDocumentGenerator
@@ -95,7 +95,7 @@ class MotoController(ControllerBase):
         return result
 
     @get('/{car_id:str}')
-    async def get_one(self, car_id: str, service: CarService = Provide()):
+    async def get_one(self, car_id: str, service: Inject[CarService]):
         assert self._service == service
         return f"This action returns a #{car_id} car"
 

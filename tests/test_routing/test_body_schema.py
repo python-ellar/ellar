@@ -9,7 +9,9 @@ app = AppFactory.create_app()
 
 
 @post("/product")
-async def create_item(product: Product):
+async def create_item(
+    product: "Product",
+):  # just to test get_typed_annotation in ellar.common.params.args.base
     return product
 
 
@@ -25,7 +27,11 @@ openapi_schema = {
                 "requestBody": {
                     "content": {
                         "application/json": {
-                            "schema": {"$ref": "#/components/schemas/Product"}
+                            "schema": {
+                                "title": "Product",
+                                "allOf": [{"$ref": "#/components/schemas/Product"}],
+                                "include_in_schema": True,
+                            }
                         }
                     },
                     "required": True,

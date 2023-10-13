@@ -290,7 +290,7 @@ class ItemsController(ControllerBase):
         return {"item_id": item_id, "item": item.dict(), "q": q}
     
     @put("/{item_id}/another")
-    async def update_another(self, item_id: int, item: Item, user: User, importance: int = Body(), q: str = None):
+    async def update_another(self, item_id: int, item: Item, user: User, importance: Body[int], q: str = None):
         results = {"item_id": item_id, "item": item, "user": user, "importance": importance, "q": q}
         return results
 ```

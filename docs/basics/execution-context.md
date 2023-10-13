@@ -164,18 +164,18 @@ class ExecutionContext(HostContext):
 These extra information are necessary for reading `metadata` properties set on controllers or the route handler function.
 
 ### **How to access the current execution context**
-You can access the current execution context using the `Context()` function. 
+You can access the current execution context using the `Inject[ExecutionContext]` annotation. 
 This decorator can be applied to a parameter of a controller or service method, 
 and it will inject the current `ExecutionContext` object into the method.
 
 For example, consider the following controller method:
 ```python
-from ellar.common import Context, get, Controller
+from ellar.common import get, Controller, IExecutionContext, Inject
 
 @Controller('/users')
 class UserController:
     @get('/{user_id}')
-    async def get_user(self, user_id: str, ctx=Context()):
+    async def get_user(self, user_id: str, ctx:Inject[IExecutionContext]):
         # Use the ctx object to access the current execution context
         res = ctx.switch_to_http_connection().get_response()
         res.status_code = 200
@@ -185,7 +185,8 @@ class UserController:
 
 ```
 
-In this example, the `get_user` method is decorated with the `@get` decorator to handle a GET request to the /users/:id route. The `Context()` function is applied to the second parameter of the method, which will inject the current `ExecutionContext` object into the method.
+In this example, the `get_user` method is decorated with the `@get` decorator to handle a GET request to the /users/:id route. 
+The `Inject[ExecutionContext]` annotation is applied to the second parameter of the method, which will inject the current `ExecutionContext` object into the method.
 
 Once you have access to the `ExecutionContext` object, you can use its methods and properties to access information about the current request.
 

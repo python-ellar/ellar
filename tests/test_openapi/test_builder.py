@@ -234,7 +234,11 @@ def test_builder_build_document_has_correct_schema():
                     "parameters": [
                         {
                             "required": True,
-                            "schema_": {"title": "Cat Id", "type": "integer"},
+                            "schema_": {
+                                "title": "Cat Id",
+                                "type": "integer",
+                                "include_in_schema": True,
+                            },
                             "name": "cat_id",
                             "in_": "path",
                         }

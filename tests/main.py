@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import UUID
 
-from ellar.common import ModuleRouter, Path, Query, Serializer
+from ellar.common import Inject, ModuleRouter, Path, Query, Serializer
 from ellar.core.connection import Request
 from ellar.core.factory import AppFactory
 from pydantic import Field
@@ -213,7 +213,7 @@ def get_query_aliased_name(query: AliasedSchema = Query(..., alias="aliased.-_~n
 
 
 @router.get("/query/param")
-def get_query_param(request: Request, query=Query(None)):
+def get_query_param(request: Inject[Request], query=Query(None)):
     if query is None:
         return "foo bar"
     return f"foo bar {query}"

@@ -60,6 +60,7 @@ class ParamFieldInfo(FieldInfo):
         example: t.Any = Undefined,
         examples: t.Optional[t.Dict[str, t.Any]] = None,
         deprecated: t.Optional[bool] = None,
+        include_in_schema: bool = True,
         **extra: t.Any,
     ) -> None:
         self.deprecated = deprecated
@@ -76,6 +77,7 @@ class ParamFieldInfo(FieldInfo):
             le=le,
             min_length=min_length,
             max_length=max_length,
+            include_in_schema=include_in_schema,
             regex=regex,
             **extra,
         )
@@ -114,6 +116,7 @@ class PathFieldInfo(ParamFieldInfo):
         example: t.Any = Undefined,
         examples: t.Optional[t.Dict[str, t.Any]] = None,
         deprecated: t.Optional[bool] = None,
+        include_in_schema: bool = True,
         **extra: t.Any,
     ) -> None:
         super().__init__(
@@ -129,6 +132,7 @@ class PathFieldInfo(ParamFieldInfo):
             max_length=max_length,
             regex=regex,
             deprecated=deprecated,
+            include_in_schema=include_in_schema,
             example=example,
             examples=examples,
             **extra,
@@ -162,6 +166,7 @@ class HeaderFieldInfo(ParamFieldInfo):
         example: t.Any = Undefined,
         examples: t.Optional[t.Dict[str, t.Any]] = None,
         deprecated: t.Optional[bool] = None,
+        include_in_schema: bool = True,
         **extra: t.Any,
     ):
         self.convert_underscores = convert_underscores
@@ -178,6 +183,7 @@ class HeaderFieldInfo(ParamFieldInfo):
             max_length=max_length,
             regex=regex,
             deprecated=deprecated,
+            include_in_schema=include_in_schema,
             example=example,
             examples=examples,
             **extra,
@@ -213,6 +219,7 @@ class BodyFieldInfo(ParamFieldInfo):
         regex: t.Optional[str] = None,
         example: t.Any = Undefined,
         examples: t.Optional[t.Dict[str, t.Any]] = None,
+        include_in_schema: bool = True,
         **extra: t.Any,
     ) -> None:
         self.embed = embed
@@ -231,6 +238,7 @@ class BodyFieldInfo(ParamFieldInfo):
             max_length=max_length,
             regex=regex,
             examples=examples,
+            include_in_schema=include_in_schema,
             example=example,
             **extra,
         )
@@ -266,6 +274,7 @@ class FormFieldInfo(ParamFieldInfo):
         regex: t.Optional[str] = None,
         example: t.Any = Undefined,
         examples: t.Optional[t.Dict[str, t.Any]] = None,
+        include_in_schema: bool = True,
         **extra: t.Any,
     ):
         super().__init__(
@@ -282,6 +291,7 @@ class FormFieldInfo(ParamFieldInfo):
             regex=regex,
             example=example,
             examples=examples,
+            include_in_schema=include_in_schema,
             **extra,
         )
         self.embed = True

@@ -1,5 +1,5 @@
 import pytest
-from ellar.common import ModuleRouter, Path, get, serialize_object
+from ellar.common import Inject, ModuleRouter, Path, get, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
 from ellar.core.routing.helper import build_route_handler
@@ -13,7 +13,7 @@ mr = ModuleRouter("")
 
 @mr.get("/path-with-schema/{from}/{to}/{range}")
 def path_params_schema(
-    request: Request,
+    request: Inject[Request],
     filters: Filter = Path(..., alias="will_not_work_for_schema_with_many_field"),
 ):
     return filters.dict()
@@ -54,19 +54,32 @@ def test_schema():
     assert params == [
         {
             "required": True,
-            "schema": {"title": "To", "type": "string", "format": "date-time"},
+            "schema": {
+                "title": "To",
+                "type": "string",
+                "format": "date-time",
+                "include_in_schema": True,
+            },
             "name": "to",
             "in": "path",
         },
         {
             "required": True,
-            "schema": {"title": "From", "type": "string", "format": "date-time"},
+            "schema": {
+                "title": "From",
+                "type": "string",
+                "format": "date-time",
+                "include_in_schema": True,
+            },
             "name": "from",
             "in": "path",
         },
         {
             "required": True,
-            "schema": {"$ref": "#/components/schemas/Range"},
+            "schema": {
+                "allOf": [{"$ref": "#/components/schemas/Range"}],
+                "include_in_schema": True,
+            },
             "name": "range",
             "in": "path",
         },
