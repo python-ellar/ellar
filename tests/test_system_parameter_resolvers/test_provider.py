@@ -19,7 +19,7 @@ def test_provider_setup_fails_for_no_service_defined():
     provider_resolver = ProviderParameterInjector()
 
     with pytest.raises(ImproperConfiguration):
-        provider_resolver("parameter_name", inspect.Parameter.empty)
+        provider_resolver("parameter_name", inspect.Parameter.empty())
 
 
 def test_provider_setup_fails_for_service_mismatch():
