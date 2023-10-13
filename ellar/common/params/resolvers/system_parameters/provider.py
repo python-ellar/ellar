@@ -1,6 +1,7 @@
 import inspect
 import typing as t
 
+from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.types import T
 
@@ -18,14 +19,14 @@ class ProviderParameterInjector(SystemParameterResolver):
         self.parameter_name = parameter_name
         self.type_annotation = parameter_annotation
         if not self.data and isinstance(self.type_annotation, inspect.Parameter.empty):
-            raise Exception("Inject Type must have a valid type")
+            raise ImproperConfiguration("Inject Type must have a valid type")
 
         if (
             self.data
             and parameter_annotation is not inspect.Parameter.empty
             and parameter_annotation is not self.data
         ):
-            raise Exception(
+            raise ImproperConfiguration(
                 f"Annotation({self.type_annotation}) is not the same as service({self.data})"
             )
 
