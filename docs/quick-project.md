@@ -275,4 +275,4 @@ Please ensure your server is running
 ![Swagger UI](https://python-ellar.github.io/ellar/img/car_api.png)
 
 ## **Source Code**
-You can find this example source code [here](https://github.com/python-ellar/ellar/tree/intro_doc_change/examples/quick-project)
+You can find this example source code [here](https://github.com/python-ellar/ellar/tree/main/examples/quick-project)
