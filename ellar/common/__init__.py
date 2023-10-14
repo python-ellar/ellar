@@ -1,7 +1,5 @@
 import typing as t
 
-from starlette.exceptions import WebSocketException
-
 from .commands import EllarTyper, command
 from .datastructures import UploadFile
 from .decorators import (
@@ -30,6 +28,7 @@ from .exceptions import (
     NotFound,
     PermissionDenied,
     UnsupportedMediaType,
+    WebSocketException,
 )
 from .interfaces import (
     IApplicationShutdown,

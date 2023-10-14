@@ -8,7 +8,7 @@ from ellar.common.constants import (
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
-from ellar.common.exceptions.callable_exceptions import CallableExceptionHandler
+from ellar.common.exceptions import CallableExceptionHandler
 from ellar.core.middleware import FunctionBasedMiddleware, Middleware
 from ellar.reflect import reflect
 

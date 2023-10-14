@@ -47,7 +47,8 @@ dependencies = [
     # cli
     "typer >=0.6.1,<0.10.0",
     # testing
-    "httpx >= 0.22.0"
+    "httpx >= 0.22.0",
+    "passlib >= 1.7.4"
 ]
 
 [project.urls]
