@@ -29,3 +29,8 @@ class Development(BaseConfig):
     ]
 
 ```
+
+## **CORS**
+Cross-origin resource sharing (CORS) is a mechanism that allows resources to be requested from another domain. 
+Under the hood, Ellar registers CORS Middleware and provides CORS options in application for CORS customization.
+See how to configure **CORS** [here](../overview/middleware.md#corsmiddleware)
