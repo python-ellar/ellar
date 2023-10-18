@@ -67,6 +67,14 @@ class TestUtilsHashPass:
         with pytest.raises(TypeError, match=msg):
             make_password(1)
 
+    def test_check_password_invalid_hasher(self):
+        encoded = make_password(
+            "lètmein",
+            "pbkdf2_sha256",
+            "seasalt",
+        )
+        assert check_password("lètmein", f"asas+{encoded}") is False
+
     def test_pbkdf2(self):
         encoded = make_password(
             "lètmein",

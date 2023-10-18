@@ -89,8 +89,13 @@ class BasePasswordHasher(ABC):
             secret, hash_secret
         )
 
+    @abstractmethod
     def must_update(self, encoded: str) -> bool:
-        return self.hasher.needs_update(encoded)  # type: ignore[no-any-return]
+        """Checks if a hash needs to be updated
+
+        if you using passlib hash, simple call hasher.need_update(encoded)
+        """
+        pass
 
     @classmethod
     def identity(cls, encoded: str) -> bool:
