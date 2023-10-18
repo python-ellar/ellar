@@ -1,10 +1,8 @@
 import pytest
 import regex
-from django.contrib.auth.hashers import (
-    UNUSABLE_PASSWORD_PREFIX,
-    UNUSABLE_PASSWORD_SUFFIX_LENGTH,
-)
 from ellar.core.security.hashers import (
+    _UNUSABLE_PASSWORD_PREFIX,
+    _UNUSABLE_PASSWORD_SUFFIX_LENGTH,
     BasePasswordHasher,
     BCryptPasswordHasher,
     BCryptSHA256PasswordHasher,
@@ -18,28 +16,6 @@ from ellar.core.security.hashers import (
     is_password_usable,
     make_password,
 )
-
-try:
-    import bcrypt
-except ImportError:
-    bcrypt = None
-
-try:
-    import argon2
-except ImportError:
-    argon2 = None
-
-# scrypt requires OpenSSL 1.1+
-try:
-    import hashlib
-
-    scrypt = hashlib.scrypt
-except ImportError:
-    scrypt = None
-
-
-class PBKDF2SingleIterationHasher(PBKDF2PasswordHasher):
-    iterations = 1
 
 
 class TestUtilsHashPass:
@@ -186,13 +162,13 @@ class TestUtilsHashPass:
         encoded = make_password(None)
         assert (
             len(encoded)
-            == len(UNUSABLE_PASSWORD_PREFIX) + UNUSABLE_PASSWORD_SUFFIX_LENGTH
+            == len(_UNUSABLE_PASSWORD_PREFIX) + _UNUSABLE_PASSWORD_SUFFIX_LENGTH
         )
 
         assert is_password_usable(encoded) is False
         assert check_password(None, encoded) is False
         assert check_password(encoded, encoded) is False
-        assert check_password(UNUSABLE_PASSWORD_PREFIX, encoded) is False
+        assert check_password(_UNUSABLE_PASSWORD_PREFIX, encoded) is False
         assert check_password("", encoded) is False
         assert check_password("lètmein", encoded) is False
         assert check_password("lètmeinz", encoded) is False
@@ -313,6 +289,9 @@ class TestUtilsHashPass:
 
     def test_load_library_no_algorithm(self):
         class InvalidPasswordHasher(BasePasswordHasher):
+            def must_update(self, encoded: str) -> bool:
+                pass
+
             def decode(self, encoded: str) -> dict:
                 pass
 
