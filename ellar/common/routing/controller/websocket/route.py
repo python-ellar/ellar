@@ -1,6 +1,7 @@
 import typing as t
 
 from ellar.common.interfaces import IExecutionContext
+from ellar.common.logger import request_logger
 
 from ...websocket import WebsocketRouteOperation
 from ..base import ControllerRouteOperationBase
@@ -17,8 +18,14 @@ class ControllerWebsocketRouteOperation(
         return ControllerWebSocketExtraHandler
 
     async def run(self, context: IExecutionContext, kwargs: t.Dict) -> t.Any:
+        request_logger.debug(
+            f"Running Websocket Endpoint handler from '{self.__class__.__name__}'"
+        )
         controller_instance = self._get_controller_instance(ctx=context)
         if self._use_extra_handler:
+            request_logger.debug(
+                f"Switched Websocket Extra Handler from '{self.__class__.__name__}'"
+            )
             ws_extra_handler_type = (
                 self._extra_handler_type or self.get_websocket_handler()
             )

@@ -1,8 +1,7 @@
-from starlette.background import BackgroundTask, BackgroundTasks
-
-from ellar.common import IHostContext, Module, ModuleRouter, middleware
+from ellar.common import IHostContext, Inject, Module, ModuleRouter, middleware
 from ellar.core import ModuleBase
 from ellar.testing import Test
+from starlette.background import BackgroundTask, BackgroundTasks
 
 router = ModuleRouter()
 background_task_results = {}
@@ -30,7 +29,7 @@ class ModuleSample(ModuleBase):
 
 
 @router.get("/background-task")
-def check_background_task_working(tasks: BackgroundTasks):
+def check_background_task_working(tasks: Inject[BackgroundTasks]):
     tasks.add_task(background_task_2)
     tasks.add_task(background_task_1)
 
@@ -38,9 +37,11 @@ def check_background_task_working(tasks: BackgroundTasks):
 
 
 @router.get("/background-task-with-string-annotation")
-def check_background_task_working_with_string_annotation(tasks: "BackgroundTasks"):
-    tasks.add_task(background_task_2)
-    tasks.add_task(background_task_1)
+def check_background_task_working_with_string_annotation(
+    tasks_string_annotation: Inject["BackgroundTasks"],
+):
+    tasks_string_annotation.add_task(background_task_2)
+    tasks_string_annotation.add_task(background_task_1)
 
     return "testing background tasks"
 

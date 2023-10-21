@@ -1,36 +1,35 @@
 import re
 
-from starlette.routing import Mount
-
 from ellar.auth.session import ISessionStrategy
 from ellar.auth.session.strategy import SessionClientStrategy
-from ellar.common import Controller, delete, get, post
+from ellar.common import Controller, Inject, delete, get, post
 from ellar.core import Request
 from ellar.core.routing import ControllerRouterFactory
 from ellar.testing import Test
+from starlette.routing import Mount
 
 
 @Controller("/")
 class SessionSampleController:
     @get()
-    def view_session(self, request: Request):
+    def view_session(self, request: Inject[Request]):
         return {"session": request.session}
 
     @post()
-    async def update_session(self, request: Request):
+    async def update_session(self, request: Inject[Request]):
         data = await request.json()
         request.session.update(data)
         return {"session": request.session}
 
     @delete()
-    async def clear_session(self, request: Request):
+    async def clear_session(self, request: Inject[Request]):
         request.session.clear()
         return {"session": request.session}
 
 
 def test_session():
     test_module = Test.create_test_module(
-        controllers=[SessionSampleController], config_module=dict(SECRET_KEY="secret")
+        controllers=[SessionSampleController], config_module={"SECRET_KEY": "secret"}
     )
     test_module.override_provider(ISessionStrategy, use_class=SessionClientStrategy)
     client = test_module.get_test_client()
@@ -60,7 +59,7 @@ def test_session():
 def test_session_expires():
     test_module = Test.create_test_module(
         controllers=[SessionSampleController],
-        config_module=dict(SECRET_KEY="secret", SESSION_COOKIE_MAX_AGE=-1),
+        config_module={"SECRET_KEY": "secret", "SESSION_COOKIE_MAX_AGE": -1},
     )
     test_module.override_provider(ISessionStrategy, use_class=SessionClientStrategy)
     client = test_module.get_test_client()
@@ -82,7 +81,7 @@ def test_session_expires():
 def test_secure_session():
     test_module = Test.create_test_module(
         controllers=[SessionSampleController],
-        config_module=dict(SECRET_KEY="secret", SESSION_COOKIE_SECURE=True),
+        config_module={"SECRET_KEY": "secret", "SESSION_COOKIE_SECURE": True},
     )
     test_module.override_provider(ISessionStrategy, use_class=SessionClientStrategy)
     secure_client = test_module.get_test_client(base_url="https://testserver")
@@ -122,7 +121,7 @@ def test_session_cookie_sub_path():
                 app=ControllerRouterFactory.build(SessionSampleController),
             )
         ],
-        config_module=dict(SECRET_KEY="secret", SESSION_COOKIE_PATH="/second_app"),
+        config_module={"SECRET_KEY": "secret", "SESSION_COOKIE_PATH": "/second_app"},
     )
     test_module.override_provider(ISessionStrategy, use_class=SessionClientStrategy)
 
@@ -154,7 +153,7 @@ def test_session_cookie_sub_path():
 
 def test_invalid_session_cookie():
     test_module = Test.create_test_module(
-        controllers=[SessionSampleController], config_module=dict(SECRET_KEY="secret")
+        controllers=[SessionSampleController], config_module={"SECRET_KEY": "secret"}
     )
     test_module.override_provider(ISessionStrategy, use_class=SessionClientStrategy)
     client = test_module.get_test_client()
@@ -171,7 +170,7 @@ def test_invalid_session_cookie():
 def test_session_cookie():
     test_module = Test.create_test_module(
         controllers=[SessionSampleController],
-        config_module=dict(SECRET_KEY="secret", SESSION_COOKIE_MAX_AGE=None),
+        config_module={"SECRET_KEY": "secret", "SESSION_COOKIE_MAX_AGE": None},
     )
     test_module.override_provider(ISessionStrategy, use_class=SessionClientStrategy)
     client = test_module.get_test_client()

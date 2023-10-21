@@ -1,6 +1,5 @@
 import pytest
-
-from ellar.common import Controller, file, get
+from ellar.common import Controller, Inject, file, get
 from ellar.common.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,
     RESPONSE_OVERRIDE_KEY,
@@ -16,7 +15,7 @@ from ellar.reflect import reflect
 
 def test_file_decorator_works():
     @file(media_type="text/javascript")
-    def endpoint_file(request: Request):
+    def endpoint_file(request: Inject[Request]):
         """ignore"""
 
     response_override = reflect.get_metadata(RESPONSE_OVERRIDE_KEY, endpoint_file)
@@ -29,7 +28,7 @@ def test_file_decorator_works():
 
 def test_file_streaming_decorator_works():
     @file(media_type="text/javascript", streaming=True)
-    def endpoint_file(request: Request):
+    def endpoint_file(request: Inject[Request]):
         """ignore"""
 
     response_override = reflect.get_metadata(RESPONSE_OVERRIDE_KEY, endpoint_file)
@@ -43,7 +42,7 @@ def test_render_decorator_raise_exception_for_invalid_template_name():
     with pytest.raises(AssertionError, match="File decorator must invoked eg. @file()"):
 
         @file
-        def endpoint_file(request: Request):
+        def endpoint_file(request: Inject[Request]):
             """ignore"""
 
 
@@ -61,7 +60,7 @@ def test_file_decorator_uses_endpoint_name_as_template_name():
     class AFileController:
         @get("/endpoint_file")
         @file(media_type="text/javascript")
-        def endpoint_file(self, request: Request):
+        def endpoint_file(self, request: Inject[Request]):
             """ignore"""
 
     a_controller_operations = reflect.get_metadata(
@@ -84,7 +83,7 @@ def test_file_stream_decorator_uses_endpoint_name_as_template_name():
     class AStreamFileController:
         @get("/endpoint_file")
         @file(media_type="text/javascript", streaming=True)
-        def endpoint_file(self, request: Request):
+        def endpoint_file(self, request: Inject[Request]):
             """ignore"""
 
     a_controller_operations = reflect.get_metadata(

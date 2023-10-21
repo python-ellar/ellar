@@ -25,4 +25,4 @@ class WebSocketHostContext(IWebSocketHostContext):
         return WebSocket(scope=self.scope, receive=self.receive, send=self.send)
 
     def get_client(self) -> WebSocket:
-        return self._websocket_connection  # type: ignore
+        return self._websocket_connection

@@ -1,12 +1,12 @@
 import pytest
-from pydantic.error_wrappers import ErrorWrapper
-
-from ellar.common import Ws, WsBody, get, ws_route
+from ellar.common import Inject, WsBody, get, ws_route
 from ellar.common.exceptions.validation import (
     RequestValidationError,
     WebSocketRequestValidationError,
 )
+from ellar.core import WebSocket
 from ellar.testing import Test
+from pydantic.error_wrappers import ErrorWrapper
 
 from .exception_runner import ExceptionRunner
 
@@ -21,12 +21,12 @@ def exception_http():
 
 
 @ws_route("/exception-Ws", use_extra_handler=False)
-async def exception_ws(websocket=Ws()):
+async def exception_ws(websocket: Inject[WebSocket]):
     _exception_runner.run()
 
 
 @ws_route("/exception-Ws-2", use_extra_handler=True)
-async def exception_ws_2(*, websocket=Ws(), data: dict = WsBody()):
+async def exception_ws_2(websocket: Inject[WebSocket], data: WsBody[dict]):
     assert data == {"hello": "world"}
     _exception_runner.run()
 

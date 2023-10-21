@@ -1,10 +1,9 @@
-import logging
 import typing as t
 from collections import OrderedDict, defaultdict
 
-from injector import Injector
-
+from ellar.di.logger import log
 from ellar.reflect import asynccontextmanager
+from injector import Injector
 
 from ..asgi_args import RequestScopeContext
 from ..constants import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR
@@ -21,8 +20,6 @@ if t.TYPE_CHECKING:  # pragma: no cover
         ModuleTemplateRef,
     )
 
-log = logging.getLogger("ellar.di")
-
 
 class EllarInjector(Injector):
     __slots__ = (
@@ -35,7 +32,7 @@ class EllarInjector(Injector):
     def __init__(
         self,
         auto_bind: bool = True,
-        parent: "Injector" = None,
+        parent: t.Optional["Injector"] = None,
     ) -> None:
         self._stack = ()
         self.parent = parent
@@ -56,7 +53,7 @@ class EllarInjector(Injector):
         self._modules[MODULE_REF_TYPES.APP_DEPENDENT] = OrderedDict()
 
     @property  # type: ignore
-    def binder(self) -> Container:  # type: ignore
+    def binder(self) -> Container:
         return self.container
 
     @binder.setter
@@ -130,17 +127,13 @@ class EllarInjector(Injector):
         scope_instance = t.cast(DIScope, scope_binding.provider.get(self))
 
         log.debug(
-            "%EllarInjector.get(%r, scope=%r) using %r",
-            self._log_prefix,
-            interface,
-            scope,
-            binding.provider,
+            f"{self._log_prefix}EllarInjector.get({interface}, scope={scope}) using {binding.provider}"
         )
 
         result = scope_instance.get(interface, binding.provider, context=context).get(
             self.container.injector
         )
-        log.debug("%s -> %r", self._log_prefix, result)
+        log.debug(f"{self._log_prefix} -> {result}")
         return t.cast(T, result)
 
     def update_scoped_context(self, interface: t.Type[T], value: T) -> None:

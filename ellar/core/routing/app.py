@@ -1,11 +1,11 @@
 import typing as t
 from functools import wraps
 
-from starlette.routing import BaseRoute, Router as StarletteRouter
-
 from ellar.common.constants import SCOPE_API_VERSIONING_RESOLVER
 from ellar.common.routing import RouteCollection
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
+from starlette.routing import BaseRoute
+from starlette.routing import Router as StarletteRouter
 
 from .helper import build_route_handler
 
@@ -36,10 +36,10 @@ class ApplicationRouter(StarletteRouter):
         self,
         routes: t.Sequence[BaseRoute],
         redirect_slashes: bool = True,
-        default: ASGIApp = None,
-        on_startup: t.Sequence[t.Callable] = None,
-        on_shutdown: t.Sequence[t.Callable] = None,
-        lifespan: t.Callable[[t.Any], t.AsyncContextManager] = None,
+        default: t.Optional[ASGIApp] = None,
+        on_startup: t.Optional[t.Sequence[t.Callable]] = None,
+        on_shutdown: t.Optional[t.Sequence[t.Callable]] = None,
+        lifespan: t.Optional[t.Callable[[t.Any], t.AsyncContextManager]] = None,
     ):
         super().__init__(
             routes=None,
@@ -64,22 +64,22 @@ class ApplicationRouter(StarletteRouter):
         self,
         path: str,
         endpoint: t.Callable,
-        methods: t.List[str] = None,
-        name: str = None,
+        methods: t.Optional[t.List[str]] = None,
+        name: t.Optional[str] = None,
         include_in_schema: bool = True,
     ) -> None:  # pragma: no cover
         """Not supported"""
 
     def add_websocket_route(
-        self, path: str, endpoint: t.Callable, name: str = None
+        self, path: str, endpoint: t.Callable, name: t.Optional[str] = None
     ) -> None:  # pragma: no cover
         """Not supported"""
 
     def route(
         self,
         path: str,
-        methods: t.List[str] = None,
-        name: str = None,
+        methods: t.Optional[t.List[str]] = None,
+        name: t.Optional[str] = None,
         include_in_schema: bool = True,
     ) -> t.Callable:  # pragma: no cover
         def decorator(func: t.Callable) -> t.Callable:
@@ -89,7 +89,7 @@ class ApplicationRouter(StarletteRouter):
         return decorator
 
     def websocket_route(
-        self, path: str, name: str = None
+        self, path: str, name: t.Optional[str] = None
     ) -> t.Callable:  # pragma: no cover
         def decorator(func: t.Callable) -> t.Callable:
             """Not supported"""
@@ -110,11 +110,11 @@ class ApplicationRouter(StarletteRouter):
         return decorator
 
     def mount(
-        self, path: str, app: ASGIApp, name: str = None
+        self, path: str, app: ASGIApp, name: t.Optional[str] = None
     ) -> None:  # pragma: nocover
         """Not supported"""
 
     def host(
-        self, host: str, app: ASGIApp, name: str = None
+        self, host: str, app: ASGIApp, name: t.Optional[str] = None
     ) -> None:  # pragma: no cover
         """Not supported"""

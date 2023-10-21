@@ -7,7 +7,7 @@ from weakref import WeakKeyDictionary
 from .constants import REFLECT_TYPE
 from .contextmanager_fix import asynccontextmanager
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("ellar")
 
 
 def _get_actual_target(
@@ -115,7 +115,7 @@ class _Reflect:
             return self._meta_data[_target]
 
         if create:
-            self._meta_data[_target] = dict()
+            self._meta_data[_target] = {}
             return self._meta_data[_target]
         return None
 

@@ -3,12 +3,11 @@ A quick example of how to use ellar Websocket Gateway with python-socketio libra
 
 ## Requirements
 Python >= 3.7
-Starlette
-Injector
+Poetry
 
 ## Project setup
 ```
-pip install -r requirements.txt
+poetry install
 ```
 
 ### Development Server

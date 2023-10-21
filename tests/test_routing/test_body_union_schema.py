@@ -1,7 +1,9 @@
 from typing import Union
+from unittest.mock import patch
 
-from ellar.common import post
+from ellar.common import Body, post
 from ellar.common.serializer import serialize_object
+from ellar.core import Request
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
@@ -11,12 +13,19 @@ tm = Test.create_test_module()
 
 
 @post("/items/")
-def save_union_body(item: Union[OtherItem, Item]):
-    return {"item": item}
+def save_union_body_and_embedded_body(
+    item: Union[OtherItem, Item], qty: Body[int, Body.P(default=12)]
+):
+    return {"item": item, "qty": qty}
+
+
+@post("/items/embed")
+def embed_qty(qty: Body[int, Body.P(12, embed=True)]):
+    return {"qty": qty}
 
 
 app = tm.create_application()
-app.router.append(save_union_body)
+app.router.append(save_union_body_and_embedded_body)
 
 client = tm.get_test_client()
 
@@ -27,16 +36,12 @@ item_openapi_schema = {
     "paths": {
         "/items/": {
             "post": {
-                "operationId": "save_union_body_items__post",
+                "operationId": "save_union_body_and_embedded_body_items__post",
                 "requestBody": {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "title": "Item",
-                                "anyOf": [
-                                    {"$ref": "#/components/schemas/OtherItem"},
-                                    {"$ref": "#/components/schemas/Item"},
-                                ],
+                                "$ref": "#/components/schemas/body_save_union_body_and_embedded_body_items__post"
                             }
                         }
                     },
@@ -104,6 +109,27 @@ item_openapi_schema = {
                     "type": {"title": "Error Type", "type": "string"},
                 },
             },
+            "body_save_union_body_and_embedded_body_items__post": {
+                "title": "body_save_union_body_and_embedded_body_items__post",
+                "required": ["item"],
+                "type": "object",
+                "properties": {
+                    "item": {
+                        "title": "Item",
+                        "include_in_schema": True,
+                        "anyOf": [
+                            {"$ref": "#/components/schemas/OtherItem"},
+                            {"$ref": "#/components/schemas/Item"},
+                        ],
+                    },
+                    "qty": {
+                        "title": "Qty",
+                        "type": "integer",
+                        "default": 12,
+                        "include_in_schema": True,
+                    },
+                },
+            },
         }
     },
     "tags": [],
@@ -116,12 +142,38 @@ def test_item_openapi_schema():
 
 
 def test_post_other_item():
-    response = client.post("/items/", json={"price": 100})
+    response = client.post("/items/", json={"item": {"price": 100}})
     assert response.status_code == 200, response.text
-    assert response.json() == {"item": {"price": 100}}
+    assert response.json() == {"item": {"price": 100}, "qty": 12}
 
 
 def test_post_item():
-    response = client.post("/items/", json={"name": "Foo"})
+    response = client.post("/items/", json={"item": {"name": "Foo"}})
     assert response.status_code == 200, response.text
-    assert response.json() == {"item": {"name": "Foo"}}
+    assert response.json() == {"item": {"name": "Foo"}, "qty": 12}
+
+
+def test_embed_body():
+    _tm = Test.create_test_module()
+    _app = _tm.create_application()
+    _app.router.append(embed_qty)
+
+    _client = _tm.get_test_client()
+    response = _client.post("/items/embed", json={"qty": 232})
+    assert response.status_code == 200, response.text
+    assert response.json() == {"qty": 232}
+
+
+@patch.object(Request, "body")
+def test_body_resolution_fails(mock_form):
+    async def raise_exception():
+        raise Exception()
+
+    mock_form.return_value = raise_exception
+    response = client.post("/items/", json={"item": {"price": 100}})
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "There was an error parsing the body",
+        "status_code": 400,
+    }

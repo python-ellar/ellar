@@ -9,4 +9,3 @@ class AProvider
 class BProvider
     pass
 """
-from ellar.di import injectable

@@ -1,6 +1,4 @@
-from starlette.middleware.errors import ServerErrorMiddleware
-from starlette.requests import Request as StarletteRequest
-from starlette.responses import JSONResponse
+import typing as t
 
 from ellar.common.constants import SCOPE_RESPONSE_STARTED, SCOPE_SERVICE_PROVIDER
 from ellar.common.interfaces import IExceptionHandler, IHostContextFactory
@@ -8,6 +6,9 @@ from ellar.common.responses import Response
 from ellar.common.types import ASGIApp, TMessage, TReceive, TScope, TSend
 from ellar.core.connection.http import Request
 from ellar.di import EllarInjector
+from starlette.middleware.errors import ServerErrorMiddleware
+from starlette.requests import Request as StarletteRequest
+from starlette.responses import JSONResponse
 
 
 class RequestServiceProviderMiddleware(ServerErrorMiddleware):
@@ -17,7 +18,7 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
         *,
         debug: bool,
         injector: "EllarInjector",
-        handler: "IExceptionHandler" = None
+        handler: t.Optional["IExceptionHandler"] = None,
     ) -> None:
         _handler = None
         if handler:
@@ -25,7 +26,9 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
             _handler = self.error_handler
 
         super(RequestServiceProviderMiddleware, self).__init__(
-            debug=debug, handler=_handler, app=app
+            debug=debug,
+            handler=_handler,  # type:ignore[arg-type]
+            app=app,
         )
 
         self.injector = injector
@@ -66,5 +69,5 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
 
     def error_response(self, request: StarletteRequest, exc: Exception) -> Response:
         return JSONResponse(
-            dict(detail="Internal server error", status_code=500), status_code=500
+            {"detail": "Internal server error", "status_code": 500}, status_code=500
         )

@@ -1,5 +1,7 @@
 # **Exceptions & Exception Handling**
-The `ExceptionMiddleware` and `ExceptionMiddlewareService` handle all unhandled exceptions throughout an application and provide user-friendly responses.
+Ellar comes with a built-in exceptions middleware, `ExceptionMiddleware`, which is responsible for processing all exceptions across 
+an application. When an exception is not handled by your application code, it is caught by this middleware, which 
+then automatically sends an appropriate user-friendly response .
 
 ```json
 {
@@ -7,46 +9,48 @@ The `ExceptionMiddleware` and `ExceptionMiddlewareService` handle all unhandled 
   "detail": "Forbidden"
 }
 ```
-
-Types of exceptions managed by default:
-
-- **`HTTPException`**: Provided by `Starlette` to handle HTTP errors
-- **`WebSocketException`**: Provided by `Starlette` to manage websocket errors
-- **`RequestValidationException`**: Provided by `Pydantic` for validation of request data
-- **`APIException`**: Handles HTTP errors and provides more context about the error.
-
-## **HTTPException**
-
-The `HTTPException` class provides a base class that you can use for any
-handled exceptions.
-
-* `HTTPException(status_code, detail=None, headers=None)`
-
-## **WebSocketException**
-
-You can use the `WebSocketException` class to raise errors inside WebSocket endpoints.
-
-* `WebSocketException(code=1008, reason=None)`
-
-You can set any code valid as defined [in the specification](https://tools.ietf.org/html/rfc6455#section-7.4.1){target="_blank"}.
-
-## **APIException**
-It is a type of exception for REST API based applications. It gives more concept to error and provides a simple interface for creating other custom exception needs in your application without having to create an extra exception handler.
-
-For example,
-
-```python
-from ellar.common.exceptions import APIException
-from starlette import status
-
-class ServiceUnavailableException(APIException):
-    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-    code = 'service_unavailable'
-
+And based on application config `DEBUG` value, the exception is raised during is `config.DEBUG`
+is True but when `config.DEBUG` a 500 error is returned as shown below:
+```json
+{
+  "statusCode": 500,
+  "message": "Internal server error"
+}
 ```
-!!!hint
-    You should only raise `HTTPException` and `APIException` inside routing or endpoints. Middleware classes should instead just return appropriate responses directly.
 
+Types of exceptions types managed by default:
+
+- **`HTTPException`**: Provided by `Starlette` to handle HTTP errors.eg. `HTTPException(status_code, detail=None, headers=None)`
+- **`WebSocketException`**: Provided by `Starlette` to manage websocket errors. eg `WebSocketException(code=1008, reason=None)`
+- **`RequestValidationException`**: Provided by `Pydantic` for validation of request data
+- **`APIException`**: It is a type of exception for REST API based applications. It gives more concept to error and provides a simple interface for creating other custom exception needs in your application without having to create an extra exception handler.
+
+    For example,
+
+    ```python
+    from ellar.common import APIException
+    from starlette import status
+    
+    class ServiceUnavailableException(APIException):
+        status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        code = 'service_unavailable'
+    
+    ```
+
+### **Built-in APIExceptions**
+Ellar provides a set of standard exceptions that inherit from the base `APIException`. 
+These are exposed from the `ellar.common` package, and represent many of the most common HTTP exceptions:
+
+- `AuthenticationFailed`
+- `ImproperConfiguration`
+- `MethodNotAllowed`
+- `NotAcceptable`
+- `NotAuthenticated`
+- `NotFound`
+- `PermissionDenied`
+- `UnsupportedMediaType`
+
+## **Throwing standard exceptions**
 Let's use this `ServiceUnavailableException` in our previous project.
 
 For example, in the `CarController`, we have a `get_all()` method (a `GET` route handler). 
@@ -80,6 +84,51 @@ Service Unavailable
 >>> print(exc.get_full_details())
 {'detail':'Service Unavailable','code':'service_unavailable', 'description': 'The server cannot process the request due to a high load'}
 ```
+
+!!!hint
+    You should only raise `HTTPException` and `APIException` during route function handling. Since exception manager is a 
+    middleware and `HTTPException` raised before the `ExceptionMiddleware` will not be managed. Its advice exceptions happening
+    inside middleware classes should return appropriate responses directly.
+
+
+## **Exception Handlers**
+Exception Handlers are classes or functions that handles specific exception type response generation.
+
+Below is an example of ExceptionHandler that handles `HTTPException` in the application:
+```python
+import typing as t
+
+from ellar.common.interfaces import IExceptionHandler, IHostContext
+from starlette.exceptions import (
+    HTTPException as StarletteHTTPException,
+)
+from starlette.responses import Response
+
+
+class HTTPExceptionHandler(IExceptionHandler):
+    exception_type_or_code = StarletteHTTPException
+
+    async def catch(
+        self, ctx: IHostContext, exc: StarletteHTTPException
+    ) -> t.Union[Response, t.Any]:
+        assert isinstance(exc, StarletteHTTPException)
+        config = ctx.get_app().config
+
+        if exc.status_code in {204, 304}:
+            return Response(status_code=exc.status_code, headers=exc.headers)
+
+        if isinstance(exc.detail, (list, dict)):
+            data = exc.detail
+        else:
+            data = {"detail": exc.detail, "status_code": exc.status_code}  # type: ignore[assignment]
+
+        return config.DEFAULT_JSON_CLASS(
+            data, status_code=exc.status_code, headers=exc.headers
+        )
+```
+In the example above, `HTTPExceptionHandler.catch` method will be called when `ExeceptionMiddleware` detect exception of type `HTTPException`.
+And its return response to the client.
+
 
 ## **Creating Custom Exception Handler**
 
@@ -227,3 +276,67 @@ class OverrideAPIExceptionHandler(IExceptionHandler):
 ```
 
 Once we register the `OverrideAPIExceptionHandler` exception handler, it will become the default handler for the `APIException` exception type.
+
+## **Declaring Exception Handler as a function**
+In the previous section, we have seen how to create a custom ExceptionHandler from `IExceptionHandler`. In this section we will do the same using a plane function. 
+
+For example, lets say we have a function `exception_handler_fun` as shown below
+
+```python
+from starlette.responses import PlainTextResponse
+from ellar.common import IExecutionContext
+
+
+def exception_handler_fun(ctx: IExecutionContext, exc: Exception):
+    return PlainTextResponse('Bad Request', status_code=400)
+```
+
+To get the `exception_handler_fun` to work as an ExceptionHandler, you will need `CallableExceptionHandler` from `ellar.common.exceptions` package.
+
+```python
+from starlette.responses import PlainTextResponse
+from ellar.common import IExecutionContext
+from ellar.common.exceptions import CallableExceptionHandler
+
+
+def exception_handler_fun(ctx: IExecutionContext, exc: Exception):
+    return PlainTextResponse('Bad Request', status_code=400)
+
+
+exception_400_handler = CallableExceptionHandler(
+    exc_class_or_status_code=400, callable_exception_handler=exception_handler_fun
+)
+```
+In the above example, you have created `exception_400_handler` Exception Handler to handler http exceptions with status code 400.
+And then it can be registed as an exception handler as we did in previous section
+
+```python
+from .custom_exception_handlers import exception_400_handler
+
+
+class BaseConfig(ConfigDefaultTypesMixin):
+    EXCEPTION_HANDLERS: List[IExceptionHandler] = [
+        exception_400_handler
+    ]
+```
+
+Also, `exception_handler_fun` can be made to handle an custom exception type as shown below.
+```python
+from starlette.responses import PlainTextResponse
+from ellar.common import IExecutionContext
+from ellar.common.exceptions import CallableExceptionHandler
+
+
+class CustomException(Exception):
+    pass
+
+
+def exception_handler_fun(ctx: IExecutionContext, exc: Exception):
+    return PlainTextResponse('Bad Request', status_code=400)
+
+
+exception_custom_handler = CallableExceptionHandler(
+    exc_class_or_status_code=CustomException, callable_exception_handler=exception_handler_fun
+)
+```
+In the above example, `exception_custom_handler` 

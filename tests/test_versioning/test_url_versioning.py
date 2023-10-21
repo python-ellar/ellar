@@ -1,7 +1,7 @@
 import pytest
-
 from ellar.common.constants import NOT_SET
-from ellar.core.versioning import UrlPathAPIVersioning, VersioningSchemes as VERSIONING
+from ellar.core.versioning import UrlPathAPIVersioning
+from ellar.core.versioning import VersioningSchemes as VERSIONING
 from ellar.testing import Test
 
 from .operations import mr
@@ -14,13 +14,13 @@ app.enable_versioning(VERSIONING.URL, version_parameter="v")
 @pytest.mark.parametrize(
     "path, expected_result",
     [
-        ("/version", dict(version="default")),
-        ("/v1/version", dict(version="v1")),
-        ("/v2/version", dict(version="v2")),
-        ("/v3/version", dict(version="v3")),
-        ("/1/version", dict(version="v1")),
-        ("/2/version", dict(version="v2")),
-        ("/3/version", dict(version="v3")),
+        ("/version", {"version": "default"}),
+        ("/v1/version", {"version": "v1"}),
+        ("/v2/version", {"version": "v2"}),
+        ("/v3/version", {"version": "v3"}),
+        ("/1/version", {"version": "v1"}),
+        ("/2/version", {"version": "v2"}),
+        ("/3/version", {"version": "v3"}),
     ],
 )
 def test_url_route_versioning(path, expected_result):
@@ -35,25 +35,25 @@ def test_url_route_versioning(path, expected_result):
     "path, default, expected_result",
     [
         # default is 1
-        ("/version", "1", dict(version="default")),
-        ("/v1/version", "1", dict(version="default")),
-        ("/v2/version", "1", dict(version="v2")),
-        ("/v3/version", "1", dict(version="v3")),
+        ("/version", "1", {"version": "default"}),
+        ("/v1/version", "1", {"version": "default"}),
+        ("/v2/version", "1", {"version": "v2"}),
+        ("/v3/version", "1", {"version": "v3"}),
         # default is 2
-        ("/version", "2", dict(version="default")),
-        ("/v1/version", "2", dict(version="v1")),
-        ("/v2/version", "2", dict(version="default")),
-        ("/v3/version", "2", dict(version="v3")),
+        ("/version", "2", {"version": "default"}),
+        ("/v1/version", "2", {"version": "v1"}),
+        ("/v2/version", "2", {"version": "default"}),
+        ("/v3/version", "2", {"version": "v3"}),
         # default is 3
-        ("/version", "3", dict(version="default")),
-        ("/v1/version", "3", dict(version="v1")),
-        ("/v2/version", "3", dict(version="v2")),
-        ("/v3/version", "3", dict(version="default")),
+        ("/version", "3", {"version": "default"}),
+        ("/v1/version", "3", {"version": "v1"}),
+        ("/v2/version", "3", {"version": "v2"}),
+        ("/v3/version", "3", {"version": "default"}),
         # default is None or NOT_SET
-        ("/version", NOT_SET, dict(version="default")),
-        ("/v1/version", NOT_SET, dict(version="v1")),
-        ("/v2/version", NOT_SET, dict(version="v2")),
-        ("/v3/version", NOT_SET, dict(version="v3")),
+        ("/version", NOT_SET, {"version": "default"}),
+        ("/v1/version", NOT_SET, {"version": "v1"}),
+        ("/v2/version", NOT_SET, {"version": "v2"}),
+        ("/v3/version", NOT_SET, {"version": "v3"}),
     ],
 )
 def test_url_route_versioning_with_default_version(path, default, expected_result):

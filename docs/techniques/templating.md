@@ -176,7 +176,7 @@ if __name__ == "__main__":
 
 
 ## **Jinja2 Configurations**
-If there are specific configurations you want to apply to your Jinja2 Environment, you can look at [JINJA_TEMPLATE_OPTIONS](../../techniques/configurations/#jinja_templates_options){target="_blank"} configuration.
+If there are specific configurations you want to apply to your Jinja2 Environment, you can look at [JINJA_TEMPLATE_OPTIONS](configurations.md#jinja_templates_options){target="_blank"} configuration.
 
 ## **Default Jinja Template Context**
 
@@ -219,8 +219,8 @@ For example:
 ```python
 # main.py
 import uvicorn
-from ellar.common import render, Controller, get, Req
-from ellar.core import AppFactory
+from ellar.common import render, Controller, get
+from ellar.core import AppFactory, Request
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
@@ -230,7 +230,7 @@ BASE_DIR = Path(__file__).parent
 class TemplateExampleController:
     @get('/')
     @render()
-    async def index(self, request=Req()):
+    async def index(self, request:Request):
         assert request.url_for('templateexample:index') == 'http://127.0.0.1:5000/templateexample/'
         return {'name': 'Ellar Template'}
 
@@ -273,7 +273,7 @@ For instance:
 ```python
 @get('/{parameter_a}/{parameter_b}')
 @render()
-async def index(self, parameter_a:str, request=Req()):
+async def index(self, parameter_a:str, request:Request):
     assert request.url_for('templateexample:index', parameter_a='ellar') == 'http://127.0.0.1:5000/templateexample/ellar'
     return {'name': 'Ellar Template'}
 ```
@@ -292,8 +292,8 @@ Just like in controller, we can also reverse URLs that belongs to `ModuleRouter`
 ```python
 # main.py
 import uvicorn
-from ellar.common import ModuleRouter, Req
-from ellar.core import AppFactory
+from ellar.common import ModuleRouter
+from ellar.core import AppFactory, Request
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
@@ -301,7 +301,7 @@ BASE_DIR = Path(__file__).parent
 router = ModuleRouter('/template-reversing', name='users')
 
 @router.get('/{user_id}')
-def profile(user_id: str, request=Req()):
+def profile(user_id: str, request:Request):
     profile_url = request.url_for('users:profile', user_id=user_id)
     return profile_url
 
@@ -330,7 +330,7 @@ For example:
 router = ModuleRouter('/template-reversing')
 
 @router.get('/{user_id}')
-def profile(user_id: str, request=Req()):
+def profile(user_id: str, request:Request):
     profile_url = request.url_for('profile', user_id=user_id)
     return profile_url
 ```
@@ -347,7 +347,7 @@ For example, you could have the following code:
 router = ModuleRouter('/template-reversing', name='users')
 
 @router.get("/profile/{user_id}", name="user_profile")
-async def profile(user_id: str, request=Req()):
+async def profile(user_id: str, request:Request):
     profile_url = request.url_for('users:user_profile', user_id=user_id)
     return profile_url
 ```
@@ -359,4 +359,4 @@ This allows for greater control and readability when reversing URLs, and makes i
 
 
 ### **Adding template filters and template globals.**
-Jinja template filter and global functions can be defined at module level as shown here: [Module Templating Filters](../../overview/modules/#module-templating-filters){target="_blank"}
+Jinja template filter and global functions can be defined at module level as shown here: [Module Templating Filters](../overview/modules.md#module-templating-filters){target="_blank"}

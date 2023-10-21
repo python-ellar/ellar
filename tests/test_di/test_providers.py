@@ -1,6 +1,4 @@
 import pytest
-from injector import CircularDependency, is_decorated_with_inject
-
 from ellar.di import (
     EllarInjector,
     ProviderConfig,
@@ -10,6 +8,7 @@ from ellar.di import (
 )
 from ellar.di.providers import ClassProvider, ModuleProvider
 from ellar.di.scopes import SingletonScope, TransientScope
+from injector import CircularDependency, is_decorated_with_inject
 
 from .examples import (
     AnyDBContext,

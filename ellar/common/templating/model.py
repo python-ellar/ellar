@@ -3,11 +3,10 @@ import typing as t
 from abc import ABC, ABCMeta
 from pathlib import Path
 
-from jinja2 import Environment as BaseEnvironment
-
 from ellar.common.compatible import cached_property
 from ellar.common.interfaces import IModuleTemplateLoader
 from ellar.common.types import TemplateFilterCallable, TemplateGlobalCallable
+from jinja2 import Environment as BaseEnvironment
 
 
 class JinjaTemplating(ABC, metaclass=ABCMeta):

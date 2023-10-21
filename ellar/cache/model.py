@@ -15,9 +15,9 @@ class BaseCacheBackend(IBaseCacheBackendSync, IBaseCacheBackendAsync, ABC):
 
     def __init__(
         self,
-        key_prefix: str = None,
-        version: int = None,
-        ttl: int = None,
+        key_prefix: t.Optional[str] = None,
+        version: t.Optional[int] = None,
+        ttl: t.Optional[int] = None,
     ) -> None:
         self._key_prefix = key_prefix or ""
         self._version = version or 1
@@ -27,13 +27,13 @@ class BaseCacheBackend(IBaseCacheBackendSync, IBaseCacheBackendAsync, ABC):
     def key_prefix(self) -> str:
         return self._key_prefix
 
-    async def has_key_async(self, key: str, version: str = None) -> bool:
+    async def has_key_async(self, key: str, version: t.Optional[str] = None) -> bool:
         """
         Return True if the key is in the cache and has not expired.
         """
         return await self.get_async(key, version=version) is not None
 
-    def has_key(self, key: str, version: str = None) -> bool:
+    def has_key(self, key: str, version: t.Optional[str] = None) -> bool:
         """
         Return True if the key is in the cache and has not expired.
         """
@@ -45,6 +45,7 @@ class BaseCacheBackend(IBaseCacheBackendSync, IBaseCacheBackendAsync, ABC):
                 "Cache key will cause errors if used with memcached: %r "
                 "(longer than %s)" % (key, self.MEMCACHE_MAX_KEY_LENGTH),
                 CacheKeyWarning,
+                stacklevel=3,
             )
 
     def _memcache_key_warnings(self, key: str) -> None:
@@ -54,10 +55,11 @@ class BaseCacheBackend(IBaseCacheBackendSync, IBaseCacheBackendAsync, ABC):
                     "Cache key contains characters that will cause errors if "
                     "used with memcached: %r" % key,
                     CacheKeyWarning,
+                    stacklevel=3,
                 )
                 break
 
-    def make_key(self, key: str, version: str = None) -> str:
+    def make_key(self, key: str, version: t.Optional[str] = None) -> str:
         """
         Default function to generate keys.
         Construct the key used by all other methods. By default, prepend
@@ -65,7 +67,9 @@ class BaseCacheBackend(IBaseCacheBackendSync, IBaseCacheBackendAsync, ABC):
         """
         return "%s:%s:%s" % (self._key_prefix, version or self._version, key)
 
-    def get_backend_ttl(self, ttl: t.Union[float, int] = None) -> t.Union[float, int]:
+    def get_backend_ttl(
+        self, ttl: t.Union[float, int, None] = None
+    ) -> t.Union[float, int]:
         """
         Return the timeout value usable by this backend based upon the provided
         timeout.

@@ -1,15 +1,9 @@
 import copy
-import email
+import email.message
 import json
 import typing as t
 
 import anyio
-from pydantic.error_wrappers import ErrorWrapper
-from pydantic.fields import Undefined
-from pydantic.utils import lenient_issubclass
-from starlette.datastructures import FormData, Headers, QueryParams
-from starlette.exceptions import HTTPException
-
 from ellar.common.constants import (
     sequence_shape_to_type,
     sequence_shapes,
@@ -18,6 +12,12 @@ from ellar.common.constants import (
 from ellar.common.datastructures import UploadFile
 from ellar.common.exceptions import RequestValidationError
 from ellar.common.interfaces import IExecutionContext
+from ellar.common.logger import request_logger
+from pydantic.error_wrappers import ErrorWrapper
+from pydantic.fields import Undefined
+from pydantic.utils import lenient_issubclass
+from starlette.datastructures import FormData, Headers, QueryParams
+from starlette.exceptions import HTTPException
 
 from .base import BaseRouteParameterResolver
 
@@ -33,6 +33,9 @@ class HeaderParameterResolver(BaseRouteParameterResolver):
     async def resolve_handle(
         self, ctx: IExecutionContext, *args: t.Any, **kwargs: t.Any
     ) -> t.Tuple:
+        request_logger.debug(
+            f"Resolving Header Parameters - '{self.__class__.__name__}'"
+        )
         received_params = self.get_received_parameter(ctx=ctx)
         if (
             self.model_field.shape in sequence_shapes
@@ -81,6 +84,7 @@ class PathParameterResolver(BaseRouteParameterResolver):
         return connection.path_params
 
     async def resolve_handle(self, ctx: IExecutionContext, **kwargs: t.Any) -> t.Tuple:
+        request_logger.debug(f"Resolving Path Parameters - '{self.__class__.__name__}'")
         received_params = self.get_received_parameter(ctx=ctx)
         value = received_params.get(str(self.model_field.alias))
         self.assert_field_info()
@@ -104,6 +108,9 @@ class WsBodyParameterResolver(BaseRouteParameterResolver):
     async def resolve_handle(
         self, ctx: IExecutionContext, *args: t.Any, body: t.Any, **kwargs: t.Any
     ) -> t.Tuple:
+        request_logger.debug(
+            f"Resolving Websocket Body Parameters - '{self.__class__.__name__}'"
+        )
         embed = getattr(self.model_field.field_info, "embed", False)
         received_body = {self.model_field.alias: body}
         loc = ("body",)
@@ -124,6 +131,9 @@ class BodyParameterResolver(WsBodyParameterResolver):
         super().__init__(*args, **kwargs)
 
     async def get_request_body(self, ctx: IExecutionContext) -> t.Any:
+        request_logger.debug(
+            f"Resolving Request Body Parameters - '{self.__class__.__name__}'"
+        )
         try:
             request = ctx.switch_to_http_connection().get_request()
             body_bytes = await request.body()
@@ -143,8 +153,10 @@ class BodyParameterResolver(WsBodyParameterResolver):
                     body_bytes = json_body
             return body_bytes
         except json.JSONDecodeError as e:
-            raise RequestValidationError([ErrorWrapper(e, ("body", e.pos))])
+            request_logger.error("JSONDecodeError: ", exc_info=True)
+            raise RequestValidationError([ErrorWrapper(e, ("body", e.pos))]) from e
         except Exception as e:
+            request_logger.error("Unable to parse the body: ", exc_info=e)
             raise HTTPException(
                 status_code=400, detail="There was an error parsing the body"
             ) from e
@@ -171,11 +183,15 @@ class FormParameterResolver(BodyParameterResolver):
         return values, errors_
 
     async def get_request_body(self, ctx: IExecutionContext) -> t.Any:
+        request_logger.debug(
+            f"Resolving Request Form Parameters - '{self.__class__.__name__}'"
+        )
         try:
             request = ctx.switch_to_http_connection().get_request()
             body_bytes = await request.form()
             return body_bytes
         except Exception as e:
+            request_logger.error("Unable to parse the body: ", exc_info=True)
             raise HTTPException(
                 status_code=400, detail="There was an error parsing the body"
             ) from e

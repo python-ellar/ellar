@@ -24,8 +24,6 @@ Also, some boilerplate files are populated and installed in a new `project_name`
 ```shell
 project-name/
 ├─ project_name/
-│  ├─ apps/
-│  │  ├─ __init__.py
 │  ├─ core/
 │  ├─ domain/
 │  ├─ config.py
@@ -44,7 +42,6 @@ A brief overview of generated core files:
 |----------------------------|----------------------------------------------------------------------------------------------------------------|
 | `pyproject.toml`           | Python project metadata store.                                                                                 |
 | `README.md`                | Project Description and documentation.                                                                         |
-| `project_name.apps`        | Root path to all project modules.                                                                              |
 | `project_name.core`        | Core/business logic folder.                                                                                    |
 | `project_name.domain`      | Domain logic folder.                                                                                           |
 | `project_name.config`      | Application configuration file                                                                                 |
@@ -124,7 +121,7 @@ One last thing, before we move to the next page, we need to create an app `modul
 
 Lets add a `car` module/app to our project:
 ```shell
-$(venv) ellar create-module car
+$(venv) ellar create-module car apps/
 ```
 The result of this CLI command is stored in `project-name/project_name/apps`
 ```

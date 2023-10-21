@@ -1,7 +1,7 @@
 try:
     import socketio  # noqa
-except Exception:  # pragma: no cover
-    raise Exception("socketio package is required. Use `pip install socketio`.")
+except Exception as e:  # pragma: no cover
+    raise Exception("socketio package is required. Use `pip install socketio`.") from e
 
 from .decorators import (
     WebSocketGateway,

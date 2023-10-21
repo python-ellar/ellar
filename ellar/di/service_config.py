@@ -3,6 +3,8 @@ import typing as t
 from injector import (
     ConstructorOrClassT,
     inject,
+)
+from injector import (
     is_decorated_with_inject as injector_is_decorated_with_inject,
 )
 
@@ -25,15 +27,17 @@ __all__ = (
 
 
 class ProviderConfig(t.Generic[T]):
-    __slots__ = ("base_type", "use_value", "use_class")
+    __slots__ = ("base_type", "use_value", "use_class", "scope")
 
     def __init__(
         self,
         base_type: t.Union[t.Type[T], t.Type],
         *,
-        use_value: T = None,
+        use_value: t.Optional[T] = None,
         use_class: t.Union[t.Type[T], t.Any] = None,
+        scope: t.Optional[t.Union[t.Type[DIScope], t.Any]] = None,
     ):
+        self.scope = scope or SingletonScope
         if use_value and use_class:
             raise DIImproperConfiguration(
                 "`use_class` and `use_value` can not be used at the same time."
@@ -44,15 +48,15 @@ class ProviderConfig(t.Generic[T]):
         self.use_class = use_class
 
     def register(self, container: "Container") -> None:
-        scope = get_scope(self.base_type) or SingletonScope
+        scope = get_scope(self.base_type) or self.scope
         if self.use_class:
-            scope = get_scope(self.use_class) or SingletonScope
+            scope = get_scope(self.use_class) or scope
             container.register(
                 base_type=self.base_type, concrete_type=self.use_class, scope=scope
             )
         elif self.use_value:
-            container.register_singleton(
-                base_type=self.base_type, concrete_type=self.use_value
+            container.register(
+                base_type=self.base_type, concrete_type=self.use_value, scope=scope
             )
         elif not isinstance(self.base_type, type):
             raise DIImproperConfiguration(
@@ -128,7 +132,7 @@ def is_decorated_with_injectable(func_or_class: ConstructorOrClassT) -> bool:
 def has_binding(func_or_class: ConstructorOrClassT) -> bool:
     """See if given a Type __init__ or callable has __binding__."""
     if isinstance(func_or_class, type) and hasattr(func_or_class, "__init__"):
-        return injector_is_decorated_with_inject(getattr(func_or_class, "__init__"))
+        return injector_is_decorated_with_inject(func_or_class.__init__)  # type: ignore[misc]
     return injector_is_decorated_with_inject(func_or_class)
 
 

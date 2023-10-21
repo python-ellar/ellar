@@ -1,12 +1,11 @@
 import pytest
-from starlette.routing import Host, Mount
-
 from ellar.common import Module
 from ellar.common.constants import MODULE_WATERMARK
 from ellar.core import AppFactory, Config, ModuleBase, ModuleSetup
 from ellar.di import EllarInjector
 from ellar.reflect import reflect
 from ellar.testing import TestClient
+from starlette.routing import Host, Mount
 
 from .sample import (
     AppAPIKey,
@@ -54,7 +53,7 @@ def test_factory__build_modules():
     assert len(module_refs) == 3
 
     modules = [AModule, ApplicationModule, BModule]
-    for k, v in module_refs.items():
+    for k, _v in module_refs.items():
         assert k in modules
 
 

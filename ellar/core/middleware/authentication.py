@@ -1,11 +1,10 @@
-from starlette.routing import compile_path
-from starlette.types import ASGIApp
-
 from ellar.auth.services import IdentityAuthenticationService
 from ellar.common import AnonymousIdentity, IHostContextFactory
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.core.conf import Config
 from ellar.di import EllarInjector
+from starlette.routing import compile_path
+from starlette.types import ASGIApp
 
 
 class IdentityMiddleware:
@@ -15,7 +14,7 @@ class IdentityMiddleware:
         *,
         injector: EllarInjector,
         config: Config,
-        identity_auth_service: IdentityAuthenticationService
+        identity_auth_service: IdentityAuthenticationService,
     ) -> None:
         self.app = app
         self.identity_auth_service = identity_auth_service

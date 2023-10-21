@@ -1,6 +1,6 @@
 from typing import Optional
 
-from ellar.common import Body, Controller, Module, ModuleRouter, Ws, put, ws_route
+from ellar.common import Body, Controller, Inject, Module, ModuleRouter, put, ws_route
 from ellar.core.connection import WebSocket
 from ellar.core.modules import ModuleBase
 from ellar.di import ProviderConfig
@@ -31,8 +31,8 @@ class SampleController:
         item_id: int,
         item: Item,
         user: User,
-        importance: int = Body(gt=0),
-        q: Optional[str] = None
+        importance: Body[int, Body.P(gt=0)],
+        q: Optional[str] = None,
     ):
         results = {
             "item_id": item_id,
@@ -46,7 +46,7 @@ class SampleController:
         return results
 
     @ws_route("/websocket")
-    async def websocket_test(self, *, web_socket: WebSocket = Ws()):
+    async def websocket_test(self, *, web_socket: Inject[WebSocket]):
         await web_socket.accept()
         await web_socket.send_json({"message": "Websocket okay"})
         await web_socket.close()

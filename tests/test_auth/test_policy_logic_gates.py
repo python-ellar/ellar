@@ -1,7 +1,6 @@
 from unittest.mock import Mock
 
 import pytest
-
 from ellar.auth import BasePolicyHandler, BasePolicyHandlerWithRequirement
 from ellar.common import IExecutionContext
 from ellar.di import EllarInjector

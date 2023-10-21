@@ -32,11 +32,11 @@ def import_from_string(import_str: t.Any) -> t.Any:  # pragma: no cover
     try:
         for attr_str in attrs_str.split("."):
             instance = getattr(instance, attr_str)
-    except AttributeError:
+    except AttributeError as attr_ex:
         message = 'Attribute "{attrs_str}" not found in module "{module_str}".'
         raise ImportFromStringError(
             message.format(attrs_str=attrs_str, module_str=module_str)
-        )
+        ) from attr_ex
 
     return instance
 
@@ -51,7 +51,7 @@ def module_import(module_str: str) -> t.Any:  # pragma: no cover
         if exc.name != module_str:
             raise exc from None
         message = 'Could not import module "{module_str}".'
-        raise ImportFromStringError(message.format(module_str=module_str))
+        raise ImportFromStringError(message.format(module_str=module_str)) from exc
 
 
 @t.no_type_check

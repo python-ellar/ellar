@@ -20,10 +20,10 @@ class AppIdentitySchemes(IIdentitySchemes):
     def find_authentication_scheme(self, scheme: str) -> AuthenticationHandlerType:
         try:
             return self._authentication_schemes[scheme]
-        except KeyError:
+        except KeyError as ex:
             raise RuntimeError(
                 f'No Authentication Scheme found with the name:"{scheme}"'
-            )
+            ) from ex
 
     def get_authentication_schemes(
         self,

@@ -1,9 +1,5 @@
 import typing as t
 
-from starlette.routing import WebSocketRoute as StarletteWebSocketRoute, compile_path
-from starlette.status import WS_1008_POLICY_VIOLATION
-from starlette.websockets import WebSocketState
-
 from ellar.common.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,
     EXTRA_ROUTE_ARGS_KEY,
@@ -15,8 +11,13 @@ from ellar.common.exceptions import (
 )
 from ellar.common.helper import get_name
 from ellar.common.interfaces import IExecutionContext
+from ellar.common.logger import request_logger
 from ellar.common.params import ExtraEndpointArg, WebsocketEndpointArgsModel
 from ellar.reflect import reflect
+from starlette.routing import WebSocketRoute as StarletteWebSocketRoute
+from starlette.routing import compile_path
+from starlette.status import WS_1008_POLICY_VIOLATION
+from starlette.websockets import WebSocketState
 
 from ..base import WebsocketRouteOperationBase
 from .handler import WebSocketExtraHandler
@@ -47,12 +48,12 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
     ) -> None:
         super().__init__(endpoint=endpoint)
         assert path.startswith("/"), "Routed paths must start with '/'"
-        self._handlers_kwargs: t.Dict[str, t.Any] = dict(
-            encoding=encoding,
-            on_receive=None,
-            on_connect=None,
-            on_disconnect=None,
-        )
+        self._handlers_kwargs: t.Dict[str, t.Any] = {
+            "encoding": encoding,
+            "on_receive": None,
+            "on_connect": None,
+            "on_disconnect": None,
+        }
         self._handlers_kwargs.update(handlers_kwargs)
         self._use_extra_handler = use_extra_handler
         self._extra_handler_type: t.Optional[
@@ -85,7 +86,13 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
         self._handlers_kwargs.update({handler_name: handler})
 
     async def run(self, context: IExecutionContext, kwargs: t.Dict) -> t.Any:
+        request_logger.debug(
+            f"Running Websocket Endpoint handler from '{self.__class__.__name__}'"
+        )
         if self._use_extra_handler:
+            request_logger.debug(
+                f"Switched Websocket Extra Handler from '{self.__class__.__name__}'"
+            )
             ws_extra_handler_type = (
                 self._extra_handler_type or self.get_websocket_handler()
             )
@@ -98,6 +105,9 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
             return await self.endpoint(**kwargs)
 
     async def handle_request(self, context: IExecutionContext) -> t.Any:
+        request_logger.debug(
+            f"Resolving request handler dependencies '{self.__class__.__name__}'"
+        )
         func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
             ctx=context
         )
@@ -107,7 +117,7 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
             if websocket.client_state == WebSocketState.CONNECTING:
                 await websocket.accept()
             await websocket.send_json(
-                dict(code=WS_1008_POLICY_VIOLATION, errors=exc.errors())
+                {"code": WS_1008_POLICY_VIOLATION, "errors": exc.errors()}
             )
             await websocket.close(code=WS_1008_POLICY_VIOLATION)
             raise exc

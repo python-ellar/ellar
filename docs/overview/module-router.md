@@ -97,13 +97,13 @@ You can also achieve the same result by using custom decorator.
 
 ```python
 from ellar.core import Request
-from ellar.common import ModuleRouter, Req, Res, Response
+from ellar.common import ModuleRouter,Response, Inject
 
 
 math_router = ModuleRouter('/math', tag='Math')
 
 @math_router.get('/add')
-def addition(*, request=Req(), res=Res(), a:int, b:int):
+def addition(request:Inject[Request], res:Inject[Response], a:int, b:int):
     res.headers['x-operation'] = 'Addition'
     return dict(is_request_object=isinstance(request, Request), is_response_object=isinstance(res, Response), operation_result=a + b)
 
@@ -116,13 +116,13 @@ We can also inject service providers just like controller routes using the `Prov
 
 ```python
 from ellar.core import Config
-from ellar.common import ModuleRouter, Provide, Response
+from ellar.common import ModuleRouter, Response, Inject
 
 
 math_router = ModuleRouter('/math', tag='Math')
 
 @math_router.get('/subtract')
-def subtraction(a:int, b:int, res:Response, config=Provide(Config)):
+def subtraction(a:int, b:int, res:Response, config:Inject[Config]):
     res.headers['x-operation'] = 'Subtraction'
     return dict(
         is_config=isinstance(config, Config),

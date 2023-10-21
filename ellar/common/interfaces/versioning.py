@@ -14,3 +14,16 @@ class IAPIVersioning(ABC):
     @abstractmethod
     def get_version_resolver(self, scope: TScope) -> IAPIVersioningResolver:
         """Retrieve Version Resolver"""
+
+    @classmethod
+    def __get_validators__(
+        cls: t.Type["IAPIVersioning"],
+    ) -> t.Iterable[t.Callable[..., t.Any]]:
+        # for Pydantic Model Validation
+        yield cls.__validate
+
+    @classmethod
+    def __validate(cls, v: t.Any) -> t.Any:
+        if not isinstance(v, cls):
+            raise ValueError(f"Expected BaseAPIVersioning, received: {type(v)}")
+        return v

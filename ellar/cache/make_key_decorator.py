@@ -26,8 +26,8 @@ class MakeKeyDecorator:
             instance: "BaseCacheBackend",
             key: str,
             *args: t.Any,
-            version: str = None,
-            **kwargs: t.Any
+            version: t.Optional[str] = None,
+            **kwargs: t.Any,
         ) -> t.Any:
             if self._validate:
                 instance.validate_key(key)
@@ -42,8 +42,8 @@ class MakeKeyDecorator:
             instance: "BaseCacheBackend",
             key: str,
             *args: t.Any,
-            version: str = None,
-            **kwargs: t.Any
+            version: t.Optional[str] = None,
+            **kwargs: t.Any,
         ) -> t.Any:
             if self._validate:
                 instance.validate_key(key)

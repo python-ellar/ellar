@@ -8,7 +8,7 @@ from ellar.common.constants import (
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
-from ellar.common.exceptions.callable_exceptions import CallableExceptionHandler
+from ellar.common.exceptions import CallableExceptionHandler
 from ellar.core.middleware import FunctionBasedMiddleware, Middleware
 from ellar.reflect import reflect
 
@@ -25,9 +25,9 @@ class ModuleBaseBuilder:
     def __init__(self, cls: t.Union[t.Type["ModuleBase"], "ModuleBaseMeta"]) -> None:
         self._cls = cls
         self._cls.__MODULE_FIELDS__ = t.cast(
-            t.Dict, getattr(self._cls, MODULE_FIELDS, None) or dict()
+            t.Dict, getattr(self._cls, MODULE_FIELDS, None) or {}
         )
-        self._actions: t.Dict[str, t.Callable[[t.Any], None]] = dict()
+        self._actions: t.Dict[str, t.Callable[[t.Any], None]] = {}
         self._actions.update(
             {
                 EXCEPTION_HANDLERS_KEY: self.exception_config,

@@ -1,21 +1,23 @@
 import sys
 import typing as t
 
-from pydantic import Field, validator
-from pydantic.json import ENCODERS_BY_TYPE as encoders_by_type
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.websockets import WebSocketClose
-
 from ellar.common.constants import (
     DEFAULT_LOGGING as default_logging,
+)
+from ellar.common.constants import (
     LOG_LEVELS as log_levels,
 )
+from ellar.common.interfaces import IAPIVersioning, IEllarMiddleware, IExceptionHandler
 from ellar.common.responses import JSONResponse, PlainTextResponse
 from ellar.common.serializer import Serializer, SerializerFilter
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
 from ellar.core.versioning import DefaultAPIVersioning
+from pydantic import validator
+from pydantic.json import ENCODERS_BY_TYPE as encoders_by_type
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.websockets import WebSocketClose
 
-from .mixins import ConfigDefaultTypesMixin, TExceptionHandler, TMiddleware, TVersioning
+from .mixins import ConfigDefaultTypesMixin
 
 if sys.version_info >= (3, 8):  # pragma: no cover
     from typing import Literal
@@ -63,7 +65,6 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
 
     SECRET_KEY: str = "your-secret-key"
 
-    VERSIONING_SCHEME: TVersioning = Field(DefaultAPIVersioning())
     # injector auto_bind = True allows you to resolve types that are not registered on the container
     # For more info, read: https://injector.readthedocs.io/en/latest/index.html
     INJECTOR_AUTO_BIND = False
@@ -73,7 +74,7 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any] = {}
 
     # Application route versioning scheme
-    VERSIONING_SCHEME: TVersioning = DefaultAPIVersioning()  # type: ignore
+    VERSIONING_SCHEME: IAPIVersioning = DefaultAPIVersioning()
 
     REDIRECT_SLASHES: bool = False
 
@@ -95,9 +96,9 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     ALLOWED_HOSTS: t.List[str] = ["*"]
     REDIRECT_HOST: bool = True
 
-    MIDDLEWARE: t.List[TMiddleware] = []
+    MIDDLEWARE: t.List[IEllarMiddleware] = []
 
-    EXCEPTION_HANDLERS: t.List[TExceptionHandler] = []  # type:ignore
+    EXCEPTION_HANDLERS: t.List[IExceptionHandler] = []
 
     # Default not found handler
     DEFAULT_NOT_FOUND_HANDLER: ASGIApp = _not_found

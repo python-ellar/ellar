@@ -1,15 +1,14 @@
 import typing as t
 from abc import ABC, abstractmethod
 
-from starlette.exceptions import HTTPException
-from starlette.status import HTTP_401_UNAUTHORIZED
-
 from ellar.common.exceptions import APIException
 from ellar.common.interfaces import IHostContext
 from ellar.common.serializer.guard import (
     HTTPAuthorizationCredentials,
     HTTPBasicCredentials,
 )
+from starlette.exceptions import HTTPException
+from starlette.status import HTTP_401_UNAUTHORIZED
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.connection import HTTPConnection
@@ -110,7 +109,7 @@ class BaseHttpAuth(BaseAuth, ABC):
     async def authentication_handler(
         self,
         connection: "HTTPConnection",
-        credentials: t.Union[HTTPBasicCredentials, HTTPAuthorizationCredentials],
+        credentials: t.Any,
     ) -> t.Optional[t.Any]:
         pass  # pragma: no cover
 

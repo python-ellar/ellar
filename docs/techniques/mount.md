@@ -6,12 +6,12 @@ Let's see how to mount sub-routes in ellar
 
 from starlette.routing import Mount
 from ellar.common.routing import RouteOperation
-from ellar.common import Req
+from ellar.core import Request
 
-def users(request=Req()):
+def users(request:Request):
     return "List of users"
 
-def user(username: str, request=Req()):
+def user(username: str, request:Request):
     return f"Users Profile of {username}"
 
 

@@ -70,9 +70,9 @@ def Cache(
     ttl: t.Union[float, int],
     *,
     key_prefix: str = "",
-    version: str = None,
+    version: t.Optional[str] = None,
     backend: str = "default",
-    make_key_callback: t.Callable[[IExecutionContext, str], str] = None,
+    make_key_callback: t.Optional[t.Callable[[IExecutionContext, str], str]] = None,
 ) -> t.Callable:
     """
     =========CONTROLLER AND ROUTE FUNCTION DECORATOR ==============

@@ -39,27 +39,7 @@ Actions that can be performed by middleware functions:
 - End the request-response cycle if need be
 - Each middleware class or function must call `app` or `call_next` respectively else the request will be left without response
 
-## **Dependency Injection**
-This is still feature is still in progress
 
-```python
-import typing as t
-from starlette.types import ASGIApp
-from ellar.di import injectable
-
-
-@injectable
-class MyCustomService:
-    pass
-
-
-class EllarASGIMiddlewareStructure:
-    def __init__(self, app: ASGIApp, service: MyCustomService, **other_options: t.Any):
-        self.app = app
-        self.options = other_options
-        self.custom_service = service
-
-```
 ## **Application Middleware**
 Ellar applies some ASGI middleware necessary for resource protection, error handling, and context management.
 They include:
@@ -69,9 +49,11 @@ They include:
 - **`RequestServiceProviderMiddleware`**: - This inherits from `ServerErrorMiddleware`. It provides DI context during request and 
 also ensures that application exceptions may return a custom 500 page, or display an application traceback in DEBUG mode.
 - **`RequestVersioningMiddleware`**: This computes resource versioning info from request object based on configured resource versioning scheme at the application level.
-- **`ExceptionMiddleware`**: - Adds exception handlers, so that particular types of expected exception cases can be associated with handler functions. For example raising `HTTPException(status_code=404)` within an endpoint will end up rendering a custom 404 page.
+- **`ExceptionMiddleware`**: - Adds exception handlers, so that some common exception raised with the application can be associated with handler functions. For example raising `HTTPException(status_code=404)` within an endpoint will end up rendering a custom 404 page.
+- **`SessionMiddleware`**: controls session state using the session strategy configured in the application.   
+- **`IdentityMiddleware`**: controls all registered authentication schemes and provides user identity to all request
 
-## Applying Middleware
+## **Applying Middleware**
 Middleware can be applied through the application `config` - `MIDDLEWARES` variable. 
 
 Let's apply some middleware in our previous project. At the project root level, open `config.py`.
@@ -94,6 +76,67 @@ class DevelopmentConfig(BaseConfig):
 ```
 !!! Hint
     This is how to apply any `ASGI` middlewares such as `GZipMiddleware`, `EllarASGIMiddlewareStructure`, and others available in the `Starlette` library.
+
+## **Dependency Injection**
+In section above, we saw how middleware are registered to the application. But what if the middleware class depends on other services, how then should we configure it? 
+The `Middleware` does all the work.
+
+For example, lets modify the `GZipMiddleware` class and make it depend on `Config` service.
+```python
+from ellar.core import Config
+from ellar.core.middleware import GZipMiddleware, Middleware
+from ellar.common.types import ASGIApp
+
+
+class CustomGZipMiddleware(GZipMiddleware):
+    def __init__(self, app: ASGIApp, config: Config, minimum_size: int = 500, compresslevel: int = 9):
+        super().__init__(app, minimum_size, compresslevel)
+        self._config = config
+
+## And in Config.py
+...
+
+class DevelopmentConfig(BaseConfig):
+    DEBUG: bool = True
+    # Application middlewares
+    MIDDLEWARE: list[Middleware] = [
+        Middleware(CustomGZipMiddleware, minimum_size=1000)
+    ]
+```
+
+In the example above, `Middleware` that wraps `CustomGZipMiddleware` with ensure dependent classes in `CustomGZipMiddleware` are resolved when
+instantiating `CustomGZipMiddleware` object. As you see, the `config` value was not provided but will be injected during runtime.
+
+## **Function as Middleware**
+In Modules middleware sections, we saw how you can define middlewares in module. 
+In similar fashion, we can define a function a register them as middleware.
+
+For example:
+```python
+# project_name/middleware_function.py
+from ellar.common import IHostContext
+from ellar.core.middleware import Middleware, FunctionBasedMiddleware
+
+
+async def my_middleware_function(context: IHostContext, call_next):
+    request = context.switch_to_http_connection().get_request() # for http response only
+    request.state.my_middleware_function_1 = True
+    await call_next()
+
+## And in Config.py
+...
+
+class DevelopmentConfig(BaseConfig):
+    DEBUG: bool = True
+    # Application middlewares
+    MIDDLEWARE: list[Middleware] = [
+        Middleware(FunctionBasedMiddleware, dispatch=my_middleware_function),
+    ]
+```
+
+In above, we created `my_middleware_function` function then registered as `FunctionBasedMiddleware` as a dispatch action to be called during request handling lifecycle.
+It is important to note that `dispatch` function must take `context` and `call_next` as function parameters.
+
 
 ## **Starlette Middlewares**
 Let's explore other Starlette middlewares and other third party `ASGI` Middlewares

@@ -4,18 +4,20 @@ from .args import (
     RequestEndpointArgsModel,
     WebsocketEndpointArgsModel,
 )
+from .decorators import add_default_resolver
 from .resolvers import (
     BaseConnectionParameterResolver,
     IRouteParameterResolver,
-    NonParameterResolver,
+    SystemParameterResolver,
 )
 
 __all__ = [
+    "add_default_resolver",
     "WebsocketEndpointArgsModel",
     "RequestEndpointArgsModel",
     "ExtraEndpointArg",
     "EndpointArgsModel",
-    "NonParameterResolver",
+    "SystemParameterResolver",
     "BaseConnectionParameterResolver",
     "IRouteParameterResolver",
 ]

@@ -1,12 +1,18 @@
 import os
 
+from ellar.common import (
+    Controller,
+    Inject,
+    Module,
+    ModuleRouter,
+    exception_handler,
+    get,
+)
+from ellar.core import ModuleBase, Request, WebSocket
+from ellar.core.guards import GuardAPIKeyQuery
 from starlette.exceptions import HTTPException
 from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Host, Mount, Route, Router
-
-from ellar.common import Controller, Module, ModuleRouter, exception_handler, get
-from ellar.core import ModuleBase, Request, WebSocket
-from ellar.core.guards import GuardAPIKeyQuery
 
 
 def create_tmp_template_and_static_dir(tmpdir):
@@ -61,17 +67,17 @@ router = ModuleRouter()
 
 @router.get("/func")
 @router.head("/func")
-def func_homepage(request: Request):
+def func_homepage(request: Inject[Request]):
     return PlainTextResponse("Hello, world!")
 
 
 @router.get("/async")
-async def async_homepage(request: Request):
+async def async_homepage(request: Inject[Request]):
     return PlainTextResponse("Hello, world!")
 
 
 @router.ws_route("/ws")
-async def websocket_endpoint(session: WebSocket):
+async def websocket_endpoint(session: Inject[WebSocket]):
     await session.accept()
     await session.send_text("Hello, world!")
     await session.close()
@@ -84,7 +90,7 @@ class ClassBaseController:
         return PlainTextResponse("Hello, world!")
 
     @get("/500")
-    def runtime_error(self, request: Request):
+    def runtime_error(self, request: Inject[Request]):
         raise RuntimeError()
 
 

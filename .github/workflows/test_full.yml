@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -23,12 +23,12 @@ jobs:
       - name: Install Dependencies
         run: flit install --symlink
       - name: Test
-        run: pytest tests
+        run: pytest
 
   codestyle:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -38,10 +38,8 @@ jobs:
       - name: Install Dependencies
         run: flit install --symlink
       - name: Black
-        run: black --check ellar tests
-      - name: isort
-        run: isort --check ellar tests
-      - name: Flake8
-        run: flake8 ellar tests
+        run: black --check ellar tests examples
+      - name: Ruff Linting Check
+        run: ruff check ellar tests examples
       - name: mypy
         run: mypy ellar

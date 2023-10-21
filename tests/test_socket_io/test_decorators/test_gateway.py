@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.common import UseGuards
 from ellar.common.constants import CONTROLLER_CLASS_KEY, GUARDS_KEY
 from ellar.common.helper import get_name
@@ -61,7 +60,6 @@ class SampleMarkAsGateway:
     ],
 )
 def test_websocket_gateway_works_without_gateway(gateway, watermark, options):
-
     assert isinstance(gateway, GatewayType)
     assert hasattr(gateway, "__GATEWAY_WATERMARK__") is watermark
 

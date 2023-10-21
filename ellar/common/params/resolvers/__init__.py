@@ -8,7 +8,6 @@ from .bulk_parameter import (
     BulkFormParameterResolver,
     BulkParameterResolver,
 )
-from .non_parameter.base import BaseConnectionParameterResolver, NonParameterResolver
 from .parameter import (
     BodyParameterResolver,
     CookieParameterResolver,
@@ -18,6 +17,10 @@ from .parameter import (
     PathParameterResolver,
     QueryParameterResolver,
     WsBodyParameterResolver,
+)
+from .system_parameters.base import (
+    BaseConnectionParameterResolver,
+    SystemParameterResolver,
 )
 
 __all__ = [
@@ -35,6 +38,6 @@ __all__ = [
     "BulkFormParameterResolver",
     "QueryParameterResolver",
     "FileParameterResolver",
-    "NonParameterResolver",
+    "SystemParameterResolver",
     "BaseConnectionParameterResolver",
 ]

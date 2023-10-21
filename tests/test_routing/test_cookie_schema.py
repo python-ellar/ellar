@@ -1,6 +1,5 @@
 import pytest
-
-from ellar.common import Cookie, ModuleRouter, get, serialize_object
+from ellar.common import Cookie, Inject, ModuleRouter, get, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
 from ellar.core.routing.helper import build_route_handler
@@ -14,7 +13,7 @@ router = ModuleRouter("")
 
 @router.get("/test/cookie")
 def cookie_params_schema(
-    request: Request,
+    request: Inject[Request],
     filters: Filter = Cookie(..., alias="will_not_work_for_schema_with_many_field"),
 ):
     return filters.dict()
@@ -22,11 +21,11 @@ def cookie_params_schema(
 
 @router.get("/test-mixed/cookie")
 def cookie_params_mixed_schema(
-    request: Request,
-    filters: Filter = Cookie(...),
-    data: Data = Cookie(...),
+    request: Inject[Request],
+    filters: Cookie[Filter],
+    data: Cookie[Data],
 ):
-    return dict(filters=filters.dict(), data=data.dict())
+    return {"filters": filters.dict(), "data": data.dict()}
 
 
 tm = Test.create_test_module(routers=(router,))
@@ -88,13 +87,23 @@ def test_cookie_schema():
     assert params == [
         {
             "required": False,
-            "schema": {"title": "To", "type": "string", "format": "date-time"},
+            "schema": {
+                "title": "To",
+                "type": "string",
+                "format": "date-time",
+                "include_in_schema": True,
+            },
             "name": "to",
             "in": "cookie",
         },
         {
             "required": False,
-            "schema": {"title": "From", "type": "string", "format": "date-time"},
+            "schema": {
+                "title": "From",
+                "type": "string",
+                "format": "date-time",
+                "include_in_schema": True,
+            },
             "name": "from",
             "in": "cookie",
         },
@@ -103,6 +112,7 @@ def test_cookie_schema():
             "schema": {
                 "allOf": [{"$ref": "#/components/schemas/Range"}],
                 "default": 20,
+                "include_in_schema": True,
             },
             "name": "range",
             "in": "cookie",

@@ -1,9 +1,8 @@
+from ellar.auth.session import ISessionStrategy, SessionServiceNullStrategy
+from ellar.core.conf import Config
 from starlette.datastructures import MutableHeaders
 from starlette.requests import HTTPConnection
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
-
-from ellar.auth.session import ISessionStrategy, SessionServiceNullStrategy
-from ellar.core.conf import Config
 
 
 class SessionMiddleware:

@@ -1,8 +1,10 @@
 import logging
 import typing as t
 from enum import Enum
-from typing import Any, Dict
+from typing import Any
 
+from ellar.common.types import TMessage
+from ellar.di import AnnotationToValue
 from pydantic.fields import (
     SHAPE_LIST,
     SHAPE_SEQUENCE,
@@ -10,9 +12,6 @@ from pydantic.fields import (
     SHAPE_TUPLE,
     SHAPE_TUPLE_ELLIPSIS,
 )
-
-from ellar.common.types import TMessage
-from ellar.di import AnnotationToValue
 
 POST = "POST"
 PUT = "PUT"
@@ -119,13 +118,17 @@ class NOT_SET_TYPE:
     def __copy__(self) -> Any:  # pragma: no cover
         return NOT_SET
 
-    def __deepcopy__(self, memodict: Dict = {}) -> Any:  # pragma: no cover
+    def __deepcopy__(
+        self, memodict: t.Optional[t.Any] = None
+    ) -> Any:  # pragma: no cover
+        if memodict is None:
+            memodict = {}
         return NOT_SET
 
 
 NOT_SET: Any = NOT_SET_TYPE()
 
-
+ELLAR_LOG_FMT_STRING = "%(levelname)s: [%(name)s] %(message)s"
 DEFAULT_LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -139,6 +142,10 @@ DEFAULT_LOGGING = {
             "()": "uvicorn.logging.AccessFormatter",
             "fmt": '%(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s',
         },
+        "ellar-formatter": {
+            "()": "logging.Formatter",
+            "fmt": ELLAR_LOG_FMT_STRING,
+        },
     },
     "handlers": {
         "default": {
@@ -151,6 +158,11 @@ DEFAULT_LOGGING = {
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stdout",
         },
+        "ellar-default": {
+            "formatter": "ellar-formatter",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stdout",
+        },
         "console": {
             "class": "logging.StreamHandler",
         },
@@ -160,7 +172,12 @@ DEFAULT_LOGGING = {
         "uvicorn.error": {"level": "INFO"},
         "uvicorn.access": {"handlers": ["access"], "level": "INFO", "propagate": False},
         "ellar": {
-            "handlers": ["default"],
+            "handlers": ["ellar-default"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "ellar.request": {
+            "handlers": ["ellar-default"],
             "level": "INFO",
             "propagate": False,
         },

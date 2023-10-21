@@ -16,6 +16,7 @@ from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.logger import logger
 from ellar.common.models import ControllerBase, ControllerType
 from ellar.di import RequestScope, injectable
+from ellar.di.scopes import DIScope
 from ellar.reflect import REFLECT_TYPE, reflect
 
 from ..routing.controller import (
@@ -70,20 +71,14 @@ def reflect_all_controller_type_routes(cls: t.Type[ControllerBase]) -> None:
                 )
 
 
-@t.overload
-def Controller(
-    prefix: t.Optional[str] = None,
-) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:  # pragma: no cover
-    ...
-
-
-@t.overload
+@t.no_type_check
 def Controller(
     prefix: t.Optional[str] = None,
     *,
-    name: str = None,
+    name: t.Optional[str] = None,
     include_in_schema: bool = True,
-) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:  # pragma: no cover
+    scope: t.Optional[t.Union[t.Type[DIScope], DIScope]] = RequestScope,
+) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:
     """
     ========= CLASS DECORATOR ==============
 
@@ -91,22 +86,7 @@ def Controller(
     :param prefix: Route Prefix default=[ControllerName]
     :param name: route name prefix for url reversing, eg name:route_name default=''
     :param include_in_schema: include controller in OPENAPI schema
-    :return: t.Type[ControllerBase]
-    """
-    ...
-
-
-def Controller(
-    prefix: t.Optional[str] = None,
-    *,
-    name: str = None,
-    include_in_schema: bool = True,
-) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:
-    """
-    Controller Class Decorator
-    :param prefix: Route Prefix default=[ControllerName]
-    :param name: route name prefix for url reversing, eg name:route_name default=controller_name
-    :param include_in_schema: include controller in OPENAPI schema
+    :param scope: Controller Instance Lifetime scope
     :return: t.Type[ControllerBase]
     """
     _prefix: t.Optional[t.Any] = prefix if prefix is not None else NOT_SET
@@ -157,14 +137,15 @@ def Controller(
         ) and not hasattr(cls, "__CONTROLLER_WATERMARK__"):
             reflect.define_metadata(CONTROLLER_WATERMARK, True, _controller_type)
             reflect_all_controller_type_routes(_controller_type)
-            injectable(RequestScope)(cls)
+
+            injectable(scope or RequestScope)(cls)
 
             for key in CONTROLLER_METADATA.keys:
                 reflect.define_metadata(key, kwargs[key], _controller_type)
 
         if new_cls:
             # if we forced cls to inherit from ControllerBase, we need to block it from been processed
-            setattr(cls, "__CONTROLLER_WATERMARK__", True)
+            cls.__CONTROLLER_WATERMARK__ = True
 
         return _controller_type
 

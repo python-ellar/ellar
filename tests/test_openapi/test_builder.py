@@ -8,15 +8,15 @@ from ellar.openapi.openapi_v3 import APIKeyIn
 class CatController:
     @get("/create")
     async def create_cat(self):
-        return dict(message="created")
+        return {"message": "created"}
 
     @put("/{cat_id:int}")
     async def update_cat(self, cat_id: int):
-        return dict(message="created", cat_id=cat_id)
+        return {"message": "created", "cat_id": cat_id}
 
 
 def convert_server(url, description=None, **variables):
-    return dict(url=url, description=description, variables=variables)
+    return {"url": url, "description": description, "variables": variables}
 
 
 def test_builder_defaults():
@@ -59,24 +59,26 @@ def test_builder_set_term_of_service_works():
 
 
 def test_builder_set_contact_works():
-    details = dict(
-        name="Eadwin", url="https://github.com/eadwinCode", email="eadwin@gmail.com"
-    )
+    details = {
+        "name": "Eadwin",
+        "url": "https://github.com/eadwinCode",
+        "email": "eadwin@gmail.com",
+    }
     builder = OpenAPIDocumentBuilder().set_contact(**details)
     assert builder._build["info"]["contact"] == details
 
 
 def test_builder_set_license_works():
-    details = dict(name="Yahoo", url="https://yahoo.com")
+    details = {"name": "Yahoo", "url": "https://yahoo.com"}
     builder = OpenAPIDocumentBuilder().set_license(**details)
     assert builder._build["info"]["license"] == details
 
 
 def test_builder_set_external_doc_works():
-    details = dict(
-        description="More detailed documentation can be foound here",
-        url="https://external-doc.com",
-    )
+    details = {
+        "description": "More detailed documentation can be foound here",
+        "url": "https://external-doc.com",
+    }
     builder = OpenAPIDocumentBuilder().set_external_doc(**details)
     assert builder._build["externalDocs"] == details
 
@@ -142,15 +144,15 @@ def test_add_bearer_auth():
 
 
 def test_builder_add_server_works():
-    server1 = dict(
-        url="{server}/v1",
-        description="Servers",
-        server=dict(default="https://staging.server.com"),
-    )
-    server2 = dict(
-        url="https://{environment}.example.com/v2",
-        environment=dict(default="api", enum=["api", "api.dev", "api.staging"]),
-    )
+    server1 = {
+        "url": "{server}/v1",
+        "description": "Servers",
+        "server": {"default": "https://staging.server.com"},
+    }
+    server2 = {
+        "url": "https://{environment}.example.com/v2",
+        "environment": {"default": "api", "enum": ["api", "api.dev", "api.staging"]},
+    }
     builder = OpenAPIDocumentBuilder().add_server(**server1).add_server(**server2)
     servers = builder._build["servers"]
     assert len(servers) == 2
@@ -159,23 +161,24 @@ def test_builder_add_server_works():
 
 
 def test_builder_add_tags_works():
-    tag1 = dict(name="tag1", description="some tag1 description")
-    tag2 = dict(
-        name="tag2",
-        description="some tag2 description",
-        external_doc_url="https://tag2.com",
-        external_doc_description="some tag2 link description",
-    )
+    tag1 = {"name": "tag1", "description": "some tag1 description"}
+    tag2 = {
+        "name": "tag2",
+        "description": "some tag2 description",
+        "external_doc_url": "https://tag2.com",
+        "external_doc_description": "some tag2 link description",
+    }
     builder = OpenAPIDocumentBuilder().add_tags(**tag1).add_tags(**tag2)
 
     tags = builder._build["tags"]
-    tag2_result = dict(
-        name="tag2",
-        description="some tag2 description",
-        externalDocs=dict(
-            url="https://tag2.com", description="some tag2 link description"
-        ),
-    )
+    tag2_result = {
+        "name": "tag2",
+        "description": "some tag2 description",
+        "externalDocs": {
+            "url": "https://tag2.com",
+            "description": "some tag2 link description",
+        },
+    }
 
     assert len(tags) == 2
     assert tags[0] == tag1
@@ -231,7 +234,11 @@ def test_builder_build_document_has_correct_schema():
                     "parameters": [
                         {
                             "required": True,
-                            "schema_": {"title": "Cat Id", "type": "integer"},
+                            "schema_": {
+                                "title": "Cat Id",
+                                "type": "integer",
+                                "include_in_schema": True,
+                            },
                             "name": "cat_id",
                             "in_": "path",
                         }

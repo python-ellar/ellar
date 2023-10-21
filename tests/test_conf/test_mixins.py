@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.cache.backends.local_cache import LocalMemCacheBackend
 from ellar.core import Config
 
@@ -13,10 +12,14 @@ def test_cache_backend_without_default_raise_exception():
 
 def test_invalid_exception_handler_config():
     invalid_type = type("whatever", (), {})
-    with pytest.raises(ValueError, match="Expected 'ExceptionHandler', received:"):
+    with pytest.raises(
+        ValueError, match="Expected IExceptionHandler object, received:"
+    ):
         Config(EXCEPTION_HANDLERS=[invalid_type])
 
-    with pytest.raises(ValueError, match="Expected 'ExceptionHandler', received:"):
+    with pytest.raises(
+        ValueError, match="Expected IExceptionHandler object, received:"
+    ):
         Config(EXCEPTION_HANDLERS=[invalid_type()])
 
 
@@ -29,6 +32,6 @@ def test_invalid_versioning_config():
 def test_invalid_middleware_config():
     invalid_type = type("whatever", (), {})
     with pytest.raises(
-        ValueError, match=r"Expected Type/instance of Middleware, received: "
+        ValueError, match=r"Expected EllarMiddleware object, received: "
     ):
         Config(MIDDLEWARE=[invalid_type()])

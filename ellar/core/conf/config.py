@@ -1,11 +1,10 @@
 import typing as t
 
-from starlette.config import environ
-
 from ellar.common.compatible.dict import AttributeDictAccessMixin
 from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.common.helper.importer import import_from_string
 from ellar.common.types import VT
+from starlette.config import environ
 
 from .app_settings_models import ConfigValidationSchema
 from .mixins import ConfigDefaultTypesMixin
@@ -20,8 +19,8 @@ class Config(AttributeDictAccessMixin, dict, ConfigDefaultTypesMixin):
 
     def __init__(
         self,
-        config_module: str = None,
-        config_prefix: str = None,
+        config_module: t.Optional[str] = None,
+        config_prefix: t.Optional[str] = None,
         **mapping: t.Any,
     ):
         """
@@ -48,7 +47,7 @@ class Config(AttributeDictAccessMixin, dict, ConfigDefaultTypesMixin):
                     if setting.isupper() and setting.startswith(_prefix):
                         self[setting.replace(_prefix, "")] = getattr(mod, setting)
             except Exception as ex:
-                raise ConfigRuntimeError(str(ex))
+                raise ConfigRuntimeError(str(ex)) from ex
 
     def set_defaults(self, **kwargs: t.Any) -> "Config":
         for k, v in kwargs.items():

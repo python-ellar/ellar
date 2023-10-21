@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.common import Controller, ControllerBase, UseGuards, Version, set_metadata
 from ellar.common.constants import CONTROLLER_METADATA, GUARDS_KEY, VERSIONING_KEY
 from ellar.common.exceptions import ImproperConfiguration

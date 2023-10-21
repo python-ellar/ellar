@@ -1,7 +1,6 @@
 import json
 
 import pytest
-
 from ellar.common.constants import SCOPE_API_VERSIONING_RESOLVER
 from ellar.core import Config
 from ellar.core.middleware import RequestVersioningMiddleware
@@ -38,10 +37,10 @@ async def assert_version_middleware_app(scope, receive, send):
         }
     )
     await send(
-        dict(
-            type="http.response.body",
-            body=json.dumps({"message": "versioning scheme work"}).encode(),
-        )
+        {
+            "type": "http.response.body",
+            "body": json.dumps({"message": "versioning scheme work"}).encode(),
+        }
     )
 
 

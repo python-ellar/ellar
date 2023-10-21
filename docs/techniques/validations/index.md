@@ -47,10 +47,10 @@ Please keep it open.
 ## **Tutorial**
 You are going to learn how to use the following route handler parameter:
 
-- [Path](./path-params)
-- [Query](./query-params/)
-- [Header](./header-params/)
-- [Cookie](./cookie-params/)
-- [Body](./body/)
-- [Form](./form-params/)
-- [File](./file-params/)
+- [Path](path-params.md)
+- [Query](query-params.md)
+- [Header](header-params.md)
+- [Cookie](cookie-params.md)
+- [Body](body.md)
+- [Form](form-params.md)
+- [File](file-params.md)

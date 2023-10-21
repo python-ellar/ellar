@@ -9,9 +9,9 @@ class Identity(AttributeDict):
     auth_type: t.Optional[str]
     issuer: t.Optional[str]
 
-    def __init__(self, auth_type: str = None, **kwargs: t.Any) -> None:
+    def __init__(self, auth_type: t.Optional[str] = None, **kwargs: t.Any) -> None:
         kwargs.setdefault("id", kwargs.get("id", kwargs.get("sub")))
-        kwargs.update(dict(auth_type=auth_type))
+        kwargs.update({"auth_type": auth_type})
         super().__init__(**kwargs)
 
     @property

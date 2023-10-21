@@ -1,19 +1,18 @@
 import dataclasses
 import typing as t
 
-from starlette.routing import BaseRoute
-
 import ellar.core.main as main
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.models import ControllerBase
 from ellar.core.conf import Config
 from ellar.di import MODULE_REF_TYPES, Container, EllarInjector
 from ellar.reflect import reflect
+from starlette.routing import BaseRoute
 
 from .ref import ModuleRefBase, create_module_ref_factor
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common import EllarTyper, IModuleSetup
+    from ellar.common import IModuleSetup
 
     from .base import ModuleBase
 
@@ -29,14 +28,10 @@ class DynamicModule:
 
     controllers: t.Sequence[
         t.Union[t.Type["ControllerBase"], t.Type]
-    ] = dataclasses.field(default_factory=lambda: tuple())
+    ] = dataclasses.field(default_factory=lambda: ())
 
     routers: t.Sequence[t.Union[BaseRoute]] = dataclasses.field(
-        default_factory=lambda: tuple()
-    )
-
-    commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = dataclasses.field(
-        default_factory=lambda: tuple()
+        default_factory=lambda: ()
     )
     _is_configured: bool = False
 
@@ -48,17 +43,15 @@ class DynamicModule:
         if self._is_configured:
             return
 
-        kwargs = dict(
-            controllers=list(self.controllers),
-            routers=list(self.routers),
-            providers=list(self.providers),
-            commands=list(self.commands),
-        )
+        kwargs = {
+            "controllers": list(self.controllers),
+            "routers": list(self.routers),
+            "providers": list(self.providers),
+        }
         for key in [
             MODULE_METADATA.CONTROLLERS,
             MODULE_METADATA.ROUTERS,
             MODULE_METADATA.PROVIDERS,
-            MODULE_METADATA.COMMANDS,
         ]:
             value = kwargs[key]
             if value:
@@ -115,7 +108,7 @@ class ModuleSetup:
 
     @property
     def has_factory_function(self) -> bool:
-        if self.factory:
+        if self.factory is not None:
             # if we have a factory function, we need to check if the services to inject is just config
             # if so, then we can go ahead and have the configuration executed since at this level,
             # the config service is available to be injected.
@@ -133,7 +126,7 @@ class ModuleSetup:
         if self.has_factory_function or self.ref_type == MODULE_REF_TYPES.APP_DEPENDENT:
             return self
 
-        if self.factory:
+        if self.factory is not None:
             return self.configure_with_factory(config, container)
 
         return create_module_ref_factor(

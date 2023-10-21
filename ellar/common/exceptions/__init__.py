@@ -11,6 +11,7 @@ from .api import (
     PermissionDenied,
     UnsupportedMediaType,
 )
+from .callable_exceptions import CallableExceptionHandler
 from .context import ExecutionContextException, HostContextException
 from .validation import RequestValidationError, WebSocketRequestValidationError
 
@@ -30,4 +31,5 @@ __all__ = [
     "MethodNotAllowed",
     "NotAcceptable",
     "UnsupportedMediaType",
+    "CallableExceptionHandler",
 ]

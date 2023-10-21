@@ -36,7 +36,7 @@ def create_model_field(
 
     try:
         return response_field(field_info=field_info)
-    except RuntimeError:
+    except RuntimeError as e:
         raise Exception(
             f"Invalid args for response field! Hint: check that {type_} is a valid pydantic field type"
-        )
+        ) from e

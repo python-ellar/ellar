@@ -43,11 +43,9 @@ class ExceptionMiddlewareService(IExceptionMiddlewareService):
         handler: IExceptionHandler,
     ) -> None:
         if isinstance(exc_class_or_status_code, int):
-            assert isinstance(handler, IExceptionHandler)
             self._status_handlers[exc_class_or_status_code] = handler
         else:
             assert issubclass(exc_class_or_status_code, Exception)
-            assert isinstance(handler, IExceptionHandler)
             self._exception_handlers[exc_class_or_status_code] = handler
 
     def lookup_exception_handler(self, exc: Exception) -> t.Optional[IExceptionHandler]:

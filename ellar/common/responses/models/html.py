@@ -1,6 +1,7 @@
 import typing as t
 
 from ellar.common.interfaces import IExecutionContext
+from ellar.common.logger import request_logger
 from ellar.common.templating import (
     Environment,
     TemplateResponse,
@@ -31,12 +32,14 @@ class HTMLResponseModel(ResponseModel):
     def create_response(
         self, context: IExecutionContext, response_obj: t.Any, status_code: int
     ) -> Response:
-
+        request_logger.debug(
+            f"Creating Response from returned Handler value - '{self.__class__.__name__}'"
+        )
         jinja_environment = context.get_service_provider().get(Environment)
         template_name = self._get_template_name(ctx=context)
-        template_context = dict(
-            request=context.switch_to_http_connection().get_request()
-        )
+        template_context = {
+            "request": context.switch_to_http_connection().get_request()
+        }
         template_context.update(**process_view_model(response_obj))
         template = jinja_environment.get_template(template_name)
 

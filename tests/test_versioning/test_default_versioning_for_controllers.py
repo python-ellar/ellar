@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.core.versioning import VersioningSchemes as VERSIONING
 from ellar.testing import Test
 
@@ -23,17 +22,17 @@ app.enable_versioning(VERSIONING.NONE)
 @pytest.mark.parametrize(
     "path, expected_result",
     [
-        ("/individual/version", dict(version="default")),
-        ("/individual/version?v=1", dict(version="default")),
-        ("/individual/version?v=2", dict(version="default")),
-        ("/individual/version?v=3", dict(version="default")),
-        ("/controller-versioning/version", dict(version="default")),
-        ("/controller-versioning/version?v=1", dict(version="default")),
-        ("/controller-versioning/version?v=2", dict(version="default")),
-        ("/controller-versioning/version?v=3", dict(version="default")),
-        ("/controller-versioning-list/version?v=1", dict(version="default")),
-        ("/controller-versioning-list/version?v=2", dict(version="default")),
-        ("/controller-versioning-list/version?v=3", dict(version="default")),
+        ("/individual/version", {"version": "default"}),
+        ("/individual/version?v=1", {"version": "default"}),
+        ("/individual/version?v=2", {"version": "default"}),
+        ("/individual/version?v=3", {"version": "default"}),
+        ("/controller-versioning/version", {"version": "default"}),
+        ("/controller-versioning/version?v=1", {"version": "default"}),
+        ("/controller-versioning/version?v=2", {"version": "default"}),
+        ("/controller-versioning/version?v=3", {"version": "default"}),
+        ("/controller-versioning-list/version?v=1", {"version": "default"}),
+        ("/controller-versioning-list/version?v=2", {"version": "default"}),
+        ("/controller-versioning-list/version?v=3", {"version": "default"}),
     ],
 )
 def test_default_route_versioning_query(path, expected_result):
@@ -46,18 +45,18 @@ def test_default_route_versioning_query(path, expected_result):
 @pytest.mark.parametrize(
     "path, header, expected_result",
     [
-        ("/individual/version", "", dict(version="default")),
-        ("/individual/version", "v=1", dict(version="default")),
-        ("/individual/version", "v=2", dict(version="default")),
-        ("/individual/version", "v=3", dict(version="default")),
-        ("/controller-versioning/version", "", dict(version="default")),
-        ("/controller-versioning/version", "v=1", dict(version="default")),
-        ("/controller-versioning/version", "v=2", dict(version="default")),
-        ("/controller-versioning/version", "v=3", dict(version="default")),
-        ("/controller-versioning-list/version", "", dict(version="default")),
-        ("/controller-versioning-list/version", "v=1", dict(version="default")),
-        ("/controller-versioning-list/version", "v=2", dict(version="default")),
-        ("/controller-versioning-list/version", "v=3", dict(version="default")),
+        ("/individual/version", "", {"version": "default"}),
+        ("/individual/version", "v=1", {"version": "default"}),
+        ("/individual/version", "v=2", {"version": "default"}),
+        ("/individual/version", "v=3", {"version": "default"}),
+        ("/controller-versioning/version", "", {"version": "default"}),
+        ("/controller-versioning/version", "v=1", {"version": "default"}),
+        ("/controller-versioning/version", "v=2", {"version": "default"}),
+        ("/controller-versioning/version", "v=3", {"version": "default"}),
+        ("/controller-versioning-list/version", "", {"version": "default"}),
+        ("/controller-versioning-list/version", "v=1", {"version": "default"}),
+        ("/controller-versioning-list/version", "v=2", {"version": "default"}),
+        ("/controller-versioning-list/version", "v=3", {"version": "default"}),
     ],
 )
 def test_default_route_versioning_header(path, header, expected_result):
@@ -70,45 +69,45 @@ def test_default_route_versioning_header(path, header, expected_result):
 @pytest.mark.parametrize(
     "path, host, expected_result",
     [
-        ("/individual/version", "testserver.org", dict(version="default")),
-        ("/individual/version", "v1.testserver.org", dict(version="default")),
-        ("/individual/version", "v2.testserver.org", dict(version="default")),
-        ("/individual/version", "v3.testserver.org", dict(version="default")),
-        ("/controller-versioning/version", "testserver.org", dict(version="default")),
+        ("/individual/version", "testserver.org", {"version": "default"}),
+        ("/individual/version", "v1.testserver.org", {"version": "default"}),
+        ("/individual/version", "v2.testserver.org", {"version": "default"}),
+        ("/individual/version", "v3.testserver.org", {"version": "default"}),
+        ("/controller-versioning/version", "testserver.org", {"version": "default"}),
         (
             "/controller-versioning/version",
             "v1.testserver.org",
-            dict(version="default"),
+            {"version": "default"},
         ),
         (
             "/controller-versioning/version",
             "v2.testserver.org",
-            dict(version="default"),
+            {"version": "default"},
         ),
         (
             "/controller-versioning/version",
             "v3.testserver.org",
-            dict(version="default"),
+            {"version": "default"},
         ),
         (
             "/controller-versioning-list/version",
             "testserver.org",
-            dict(version="default"),
+            {"version": "default"},
         ),
         (
             "/controller-versioning-list/version",
             "v1.testserver.org",
-            dict(version="default"),
+            {"version": "default"},
         ),
         (
             "/controller-versioning-list/version",
             "v2.testserver.org",
-            dict(version="default"),
+            {"version": "default"},
         ),
         (
             "/controller-versioning-list/version",
             "v3.testserver.org",
-            dict(version="default"),
+            {"version": "default"},
         ),
     ],
 )

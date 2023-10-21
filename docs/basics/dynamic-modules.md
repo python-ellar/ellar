@@ -33,7 +33,7 @@ The `DynamicModule` instance is used when the module requires some configuration
 while the `ModuleSetup` instance is used when the module does not require any additional configuration outside the ones provided in the application config.
 
 ## **DynamicModule**
-`DynamicModule` is a dataclass type that is used **override** `Module` decorated attributes at easy without having to modify the module code directly. 
+`DynamicModule` is a dataclass type that is used to **override** `Module` decorated attributes without having to modify the module code directly.
 In other words, it gives you the flexibility to reconfigure module.
 
 For example: Lets look at the code below:
@@ -141,4 +141,4 @@ When `AppFactory` starts module bootstrapping, `my_module_configuration_factory`
 all the required **parameters** and returned a `DynamicModule` of `MyModule`.
 
 For more example, checkout [Ellar Throttle Module](https://github.com/eadwinCode/ellar-throttler/blob/master/ellar_throttler/module.py){target="_blank"}
-or [Ellar Cache Module](../../techniques/caching){target="_blank"}
+or [Ellar Cache Module](../techniques/caching.md){target="_blank"}

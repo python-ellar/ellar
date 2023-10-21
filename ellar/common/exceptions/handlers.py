@@ -1,14 +1,15 @@
 import typing as t
 
+from ellar.common.interfaces import IExceptionHandler, IHostContext
+from ellar.common.serializer import serialize_object
 from starlette import status
 from starlette.exceptions import (
     HTTPException as StarletteHTTPException,
+)
+from starlette.exceptions import (
     WebSocketException as StarletteWebSocketException,
 )
 from starlette.responses import Response
-
-from ellar.common.interfaces import IExceptionHandler, IHostContext
-from ellar.common.serializer import serialize_object
 
 from .api import APIException
 from .validation import RequestValidationError
@@ -29,7 +30,7 @@ class HTTPExceptionHandler(IExceptionHandler):
         if isinstance(exc.detail, (list, dict)):
             data = exc.detail
         else:
-            data = dict(detail=exc.detail, status_code=exc.status_code)
+            data = {"detail": exc.detail, "status_code": exc.status_code}  # type: ignore[assignment]
 
         return config.DEFAULT_JSON_CLASS(
             data, status_code=exc.status_code, headers=exc.headers

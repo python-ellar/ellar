@@ -1,10 +1,9 @@
 import inspect
 import typing as t
 
+from ellar.common.helper.modelfield import create_model_field
 from pydantic.fields import FieldInfo, ModelField, Required
 from pydantic.schema import get_annotation_from_field_info
-
-from ellar.common.helper.modelfield import create_model_field
 
 from .. import params
 from ..helpers import is_scalar_field
@@ -19,7 +18,6 @@ def get_parameter_field(
     ignore_default: bool = False,
     body_field_class: t.Type[FieldInfo] = params.BodyFieldInfo,
 ) -> ModelField:
-
     default_value = Required
     had_schema = False
     if param_default is not inspect.Parameter.empty and ignore_default is False:

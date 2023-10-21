@@ -2,16 +2,15 @@ import sys
 
 import anyio
 import pytest
+from ellar.common import Header, Inject, ws_route
+from ellar.core import AppFactory
 from starlette import status
 from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
-
-from ellar.common import Header, ws_route
-from ellar.core import AppFactory
 
 
 def test_websocket_url(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         await websocket.send_json({"url": str(websocket.url)})
         await websocket.close()
@@ -27,7 +26,7 @@ def test_websocket_url(test_client_factory):
 
 def test_websocket_binary_json(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         message = await websocket.receive_json(mode="binary")
         await websocket.send_json(message, mode="binary")
@@ -45,7 +44,7 @@ def test_websocket_binary_json(test_client_factory):
 
 def test_websocket_query_params(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket, a: str, b: str) -> None:
+    async def ws_function(websocket: Inject[WebSocket], a: str, b: str) -> None:
         await websocket.accept()
         await websocket.send_json({"params": {"a": a, "b": b}})
         await websocket.close()
@@ -65,7 +64,9 @@ def test_websocket_query_params(test_client_factory):
 )
 def test_websocket_headers(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket, user_agent: str = Header()) -> None:
+    async def ws_function(
+        websocket: Inject[WebSocket], user_agent: str = Header()
+    ) -> None:
         headers = dict(websocket.headers)
         assert user_agent == headers["user-agent"]
         await websocket.accept()
@@ -92,7 +93,7 @@ def test_websocket_headers(test_client_factory):
 
 def test_websocket_port(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         await websocket.send_json({"port": websocket.url.port})
         await websocket.close()
@@ -108,7 +109,7 @@ def test_websocket_port(test_client_factory):
 
 def test_websocket_send_and_receive_text(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         data = await websocket.receive_text()
         await websocket.send_text("Message was: " + data)
@@ -126,7 +127,7 @@ def test_websocket_send_and_receive_text(test_client_factory):
 
 def test_websocket_send_and_receive_bytes(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         data = await websocket.receive_bytes()
         await websocket.send_bytes(b"Message was: " + data)
@@ -144,7 +145,7 @@ def test_websocket_send_and_receive_bytes(test_client_factory):
 
 def test_websocket_send_and_receive_json(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         _data = await websocket.receive_json()
         await websocket.send_json({"message": _data})
@@ -162,7 +163,7 @@ def test_websocket_send_and_receive_json(test_client_factory):
 
 def test_websocket_iter_text(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         async for _data in websocket.iter_text():
             await websocket.send_text("Message was: " + _data)
@@ -179,7 +180,7 @@ def test_websocket_iter_text(test_client_factory):
 
 def test_websocket_iter_bytes(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         async for data_ in websocket.iter_bytes():
             await websocket.send_bytes(b"Message was: " + data_)
@@ -196,7 +197,7 @@ def test_websocket_iter_bytes(test_client_factory):
 
 def test_websocket_iter_json(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         async for data_ in websocket.iter_json():
             await websocket.send_json({"message": data_})
@@ -225,7 +226,7 @@ def test_websocket_concurrency_pattern(test_client_factory):
                 await websocket.send_json(message)
 
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         async with anyio.create_task_group() as task_group:
             task_group.start_soon(reader, websocket)
@@ -246,7 +247,7 @@ def test_client_close(test_client_factory):
     close_code = None
 
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         nonlocal close_code
         await websocket.accept()
         try:
@@ -265,7 +266,7 @@ def test_client_close(test_client_factory):
 
 def test_application_close(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         await websocket.close(status.WS_1001_GOING_AWAY)
 
@@ -281,7 +282,7 @@ def test_application_close(test_client_factory):
 
 def test_rejected_connection(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.close(status.WS_1001_GOING_AWAY)
 
     app = AppFactory.create_app()
@@ -296,7 +297,7 @@ def test_rejected_connection(test_client_factory):
 
 def test_subprotocol(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         assert websocket["subprotocols"] == ["soap", "wamp"]
         await websocket.accept(subprotocol="wamp")
         await websocket.close()
@@ -311,7 +312,7 @@ def test_subprotocol(test_client_factory):
 
 def test_additional_headers(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept(headers=[(b"additional", b"header")])
         await websocket.close()
 
@@ -325,7 +326,7 @@ def test_additional_headers(test_client_factory):
 
 def test_no_additional_headers(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         await websocket.close()
 
@@ -339,8 +340,8 @@ def test_no_additional_headers(test_client_factory):
 
 def test_websocket_exception(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
-        assert False
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
+        raise AssertionError()
 
     app = AppFactory.create_app()
     app.router.append(ws_function)
@@ -353,7 +354,7 @@ def test_websocket_exception(test_client_factory):
 
 def test_duplicate_close(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         await websocket.close()
         await websocket.close()
@@ -369,7 +370,7 @@ def test_duplicate_close(test_client_factory):
 
 def test_duplicate_disconnect(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         message = await websocket.receive()
         assert message["type"] == "websocket.disconnect"
@@ -386,7 +387,7 @@ def test_duplicate_disconnect(test_client_factory):
 
 def test_websocket_close_reason(test_client_factory) -> None:
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         await websocket.close(code=status.WS_1001_GOING_AWAY, reason="Going Away")
 
@@ -403,7 +404,7 @@ def test_websocket_close_reason(test_client_factory) -> None:
 
 def test_send_json_invalid_mode(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         await websocket.send_json({}, mode="invalid")
 
@@ -418,7 +419,7 @@ def test_send_json_invalid_mode(test_client_factory):
 
 def test_receive_json_invalid_mode(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         await websocket.receive_json(mode="invalid")
 
@@ -433,7 +434,7 @@ def test_receive_json_invalid_mode(test_client_factory):
 
 def test_receive_text_before_accept(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.receive_text()
 
     app = AppFactory.create_app()
@@ -447,7 +448,7 @@ def test_receive_text_before_accept(test_client_factory):
 
 def test_receive_bytes_before_accept(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.receive_bytes()
 
     app = AppFactory.create_app()
@@ -461,7 +462,7 @@ def test_receive_bytes_before_accept(test_client_factory):
 
 def test_receive_json_before_accept(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.receive_json()
 
     app = AppFactory.create_app()
@@ -475,7 +476,7 @@ def test_receive_json_before_accept(test_client_factory):
 
 def test_send_before_accept(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.send({"type": "websocket.send"})
 
     app = AppFactory.create_app()
@@ -489,7 +490,7 @@ def test_send_before_accept(test_client_factory):
 
 def test_send_wrong_message_type(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.send({"type": "websocket.accept"})
         await websocket.send({"type": "websocket.accept"})
 
@@ -504,7 +505,7 @@ def test_send_wrong_message_type(test_client_factory):
 
 def test_receive_before_accept(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         websocket.client_state = WebSocketState.CONNECTING
         await websocket.receive()
@@ -520,7 +521,7 @@ def test_receive_before_accept(test_client_factory):
 
 def test_receive_wrong_message_type(test_client_factory):
     @ws_route("/{path:path}")
-    async def ws_function(websocket: WebSocket) -> None:
+    async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         await websocket.receive()
 

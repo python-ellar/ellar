@@ -30,10 +30,10 @@ class CacheModule(ModuleBase, IModuleSetup):
     def setup(
         cls, default: BaseCacheBackend, **kwargs: BaseCacheBackend
     ) -> DynamicModule:
-        args = dict(default=default)
+        args = {"default": default}
         args.update(kwargs)
 
-        schema = CacheModuleSchemaSetup(**dict(CACHES=args))
+        schema = CacheModuleSchemaSetup(**{"CACHES": args})  # type: ignore[arg-type]
         return cls._create_dynamic_module(schema)
 
     @classmethod
@@ -45,7 +45,7 @@ class CacheModule(ModuleBase, IModuleSetup):
         module: t.Type["CacheModule"], config: Config
     ) -> DynamicModule:
         if config.CACHES:
-            schema = CacheModuleSchemaSetup(**dict(CACHES=config.CACHES))
+            schema = CacheModuleSchemaSetup(**{"CACHES": config.CACHES})
             return module._create_dynamic_module(schema)
 
         cache_service = CacheService()

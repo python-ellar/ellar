@@ -1,14 +1,13 @@
 import typing as t
 
-from pydantic import BaseModel
-from pydantic.fields import FieldInfo, ModelField
-
 from ellar.common.constants import (
     MULTI_RESOLVER_FORM_GROUPED_KEY,
     MULTI_RESOLVER_KEY,
     sequence_types,
 )
 from ellar.common.exceptions import ImproperConfiguration
+from pydantic import BaseModel
+from pydantic.fields import FieldInfo, ModelField
 
 from .. import params
 from ..helpers import is_scalar_field, is_scalar_sequence_field
@@ -17,7 +16,7 @@ from .factory import get_parameter_field
 
 class BulkArgsResolverGenerator:
     """
-    This class splits Schema into different ModelFields to he resolved independently and computed back later.
+    This class splits Schema into different ModelFields to be resolved independently and computed back later.
     class ASchema(BaseModel):
         A: int
         B: int
@@ -99,7 +98,7 @@ class BulkArgsResolverGenerator:
                 **field.field_info.__class__.__field_constraints__,
                 **{"convert_underscores": convert_underscores}
                 if convert_underscores
-                else dict(),
+                else {},
             )
 
             attrs = {k: getattr(field.field_info, k, v) for k, v in keys.items()}

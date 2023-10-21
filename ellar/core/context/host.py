@@ -36,11 +36,11 @@ class HostContext(IHostContext):
         self.send = send
 
     def get_service_provider(self) -> "EllarInjector":
-        return self._service_provider  # type:ignore
+        return self._service_provider
 
     @cached_property
     def _service_provider(self) -> "EllarInjector":
-        return self.scope[SCOPE_SERVICE_PROVIDER]  # type:ignore
+        return self.scope[SCOPE_SERVICE_PROVIDER]  # type:ignore[no-any-return]
 
     @cached_property
     def _get_websocket_context(self) -> IWebSocketHostContext:
@@ -57,10 +57,10 @@ class HostContext(IHostContext):
         return http_context_factory(self)
 
     def switch_to_http_connection(self) -> IHTTPHostContext:
-        return self._get_http_context  # type: ignore
+        return self._get_http_context
 
     def switch_to_websocket(self) -> IWebSocketHostContext:
-        return self._get_websocket_context  # type: ignore
+        return self._get_websocket_context
 
     def get_type(self) -> str:
         return str(self.scope["type"])

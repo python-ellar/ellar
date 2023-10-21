@@ -1,7 +1,5 @@
 import typing as t
 
-from pydantic.schema import get_flat_models_from_fields, get_model_name_map
-
 from ellar.common import Body, ModuleRouter, Query
 from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.common.responses.models import ResponseModel, ResponseModelField
@@ -11,6 +9,7 @@ from ellar.core.routing import ModuleRouterFactory
 from ellar.openapi import OpenAPIRouteDocumentation, openapi_info
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 from ellar.reflect import reflect
+from pydantic.schema import get_flat_models_from_fields, get_model_name_map
 
 from ..schema import BlogObjectDTO, CreateCarSchema, Filter, NoteSchemaDC
 
@@ -90,7 +89,7 @@ def test_open_api_route_model_get_openapi_operation_metadata():
     route_operation = reflect.get_metadata(
         CONTROLLER_OPERATION_HANDLER_KEY, get_car_by_id
     )
-    openapi = reflect.get_metadata(OPENAPI_OPERATION_KEY, get_car_by_id) or dict()
+    openapi = reflect.get_metadata(OPENAPI_OPERATION_KEY, get_car_by_id) or {}
     openapi_route_doc = OpenAPIRouteDocumentation(route=route_operation, **openapi)
     result = openapi_route_doc.get_openapi_operation_metadata("post")
     assert result == {
@@ -113,27 +112,37 @@ def test_open_api_route_get_openapi_operation_parameters_works_for_empty_model_n
     route_operation = reflect.get_metadata(
         CONTROLLER_OPERATION_HANDLER_KEY, get_car_by_id
     )
-    openapi = reflect.get_metadata(OPENAPI_OPERATION_KEY, get_car_by_id) or dict()
+    openapi = reflect.get_metadata(OPENAPI_OPERATION_KEY, get_car_by_id) or {}
     openapi_route_doc = OpenAPIRouteDocumentation(route=route_operation, **openapi)
-    result = openapi_route_doc.get_openapi_operation_parameters(model_name_map=dict())
+    result = openapi_route_doc.get_openapi_operation_parameters(model_name_map={})
     assert result == [
         {
             "name": "car_id",
             "in": "path",
             "required": True,
-            "schema": {"title": "Car Id", "type": "integer"},
+            "schema": {"title": "Car Id", "include_in_schema": True, "type": "integer"},
         },
         {
             "name": "to",
             "in": "query",
             "required": False,
-            "schema": {"title": "To", "type": "string", "format": "date-time"},
+            "schema": {
+                "title": "To",
+                "include_in_schema": True,
+                "type": "string",
+                "format": "date-time",
+            },
         },
         {
             "name": "from",
             "in": "query",
             "required": False,
-            "schema": {"title": "From", "type": "string", "format": "date-time"},
+            "schema": {
+                "title": "From",
+                "include_in_schema": True,
+                "type": "string",
+                "format": "date-time",
+            },
         },
     ]
 
@@ -162,12 +171,16 @@ def test_open_api_route_get_openapi_operation_request_body():
         model_name_map=model_name_map
     )
     assert result == {
-        "required": True,
         "content": {
             "application/json": {
-                "schema": {"$ref": "#/components/schemas/CreateCarSchema"}
+                "schema": {
+                    "allOf": [{"$ref": "#/components/schemas/CreateCarSchema"}],
+                    "include_in_schema": True,
+                    "title": "Car",
+                }
             }
         },
+        "required": True,
     }
 
 
@@ -191,7 +204,11 @@ def test_open_api_route_get_child_openapi_path():
                 "required": True,
                 "content": {
                     "application/json": {
-                        "schema": {"$ref": "#/components/schemas/CreateCarSchema"}
+                        "schema": {
+                            "title": "Car",
+                            "include_in_schema": True,
+                            "allOf": [{"$ref": "#/components/schemas/CreateCarSchema"}],
+                        }
                     }
                 },
             },
@@ -227,8 +244,8 @@ def test_open_api_route_get_openapi_path():
         openapi_route_doc.get_route_models(), known_models=set()
     )
     model_name_map = get_model_name_map(models)
-    paths = dict()
-    security_schemes = dict()
+    paths = {}
+    security_schemes = {}
 
     openapi_route_doc.get_openapi_path(
         model_name_map=model_name_map,
@@ -246,7 +263,13 @@ def test_open_api_route_get_openapi_path():
                     "required": True,
                     "content": {
                         "application/json": {
-                            "schema": {"$ref": "#/components/schemas/CreateCarSchema"}
+                            "schema": {
+                                "title": "Car",
+                                "include_in_schema": True,
+                                "allOf": [
+                                    {"$ref": "#/components/schemas/CreateCarSchema"}
+                                ],
+                            }
                         }
                     },
                 },
@@ -277,8 +300,8 @@ def test_open_api_route_get_openapi_path():
     }
     assert len(security_schemes) == 0
 
-    paths = dict()
-    security_schemes = dict()
+    paths = {}
+    security_schemes = {}
 
     openapi_route_doc.get_openapi_path(
         model_name_map=model_name_map,
@@ -296,7 +319,13 @@ def test_open_api_route_get_openapi_path():
                     "required": True,
                     "content": {
                         "application/json": {
-                            "schema": {"$ref": "#/components/schemas/CreateCarSchema"}
+                            "schema": {
+                                "title": "Car",
+                                "include_in_schema": True,
+                                "allOf": [
+                                    {"$ref": "#/components/schemas/CreateCarSchema"}
+                                ],
+                            }
                         }
                     },
                 },
@@ -337,8 +366,8 @@ def test_open_api_route_get_openapi_path_with_security():
         openapi_route_doc.get_route_models(), known_models=set()
     )
     model_name_map = get_model_name_map(models)
-    paths = dict()
-    security_schemes = dict()
+    paths = {}
+    security_schemes = {}
 
     openapi_route_doc.get_openapi_path(
         model_name_map=model_name_map,
@@ -366,7 +395,13 @@ def test_open_api_route_get_openapi_path_with_security():
                     "required": True,
                     "content": {
                         "application/json": {
-                            "schema": {"$ref": "#/components/schemas/CreateCarSchema"}
+                            "schema": {
+                                "title": "Car",
+                                "include_in_schema": True,
+                                "allOf": [
+                                    {"$ref": "#/components/schemas/CreateCarSchema"}
+                                ],
+                            }
                         }
                     },
                 },
@@ -413,13 +448,17 @@ def test_open_api_route__get_openapi_path_object_works_for_routes_with_multiple_
     result = openapi_route_doc._get_openapi_path_object(model_name_map=model_name_map)
     assert isinstance(result, tuple)
     assert result[0] == {
-        "post": {
+        "get": {
             "summary": None,
-            "operationId": "list_and_create_car_list_post",
+            "operationId": "list_and_create_car_list_get",
             "requestBody": {
                 "content": {
                     "application/json": {
-                        "schema": {"$ref": "#/components/schemas/CreateCarSchema"}
+                        "schema": {
+                            "title": "Car",
+                            "include_in_schema": True,
+                            "allOf": [{"$ref": "#/components/schemas/CreateCarSchema"}],
+                        }
                     }
                 }
             },
@@ -445,13 +484,17 @@ def test_open_api_route__get_openapi_path_object_works_for_routes_with_multiple_
                 },
             },
         },
-        "get": {
+        "post": {
             "summary": None,
-            "operationId": "list_and_create_car_list_get",
+            "operationId": "list_and_create_car_list_post",
             "requestBody": {
                 "content": {
                     "application/json": {
-                        "schema": {"$ref": "#/components/schemas/CreateCarSchema"}
+                        "schema": {
+                            "title": "Car",
+                            "include_in_schema": True,
+                            "allOf": [{"$ref": "#/components/schemas/CreateCarSchema"}],
+                        }
                     }
                 }
             },

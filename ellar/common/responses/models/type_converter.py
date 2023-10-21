@@ -1,8 +1,6 @@
 import typing as t
 from dataclasses import is_dataclass
 
-from pydantic import BaseModel
-
 from ellar.common.constants import primitive_types
 from ellar.common.converters import TypeDefinitionConverter
 from ellar.common.serializer import (
@@ -12,6 +10,7 @@ from ellar.common.serializer import (
     SerializerBase,
     convert_dataclass_to_pydantic_model,
 )
+from pydantic import BaseModel
 
 
 class ResponseTypeDefinitionConverter(TypeDefinitionConverter):
@@ -32,7 +31,7 @@ class ResponseTypeDefinitionConverter(TypeDefinitionConverter):
             return outer_type_
 
         if issubclass(outer_type_, BaseModel):
-            cls = type(outer_type_.__name__, (outer_type_, Serializer), dict())
+            cls = type(outer_type_.__name__, (outer_type_, Serializer), {})
             return t.cast(t.Type[BaseSerializer], cls)
 
         if is_dataclass(outer_type_):

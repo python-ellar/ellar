@@ -1,8 +1,7 @@
 import typing as t
 
-from socketio import AsyncServer
-
 from ellar.common.types import TReceive, TScope, TSend
+from socketio import AsyncServer
 
 
 class SocketIOASGIApp:

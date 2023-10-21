@@ -9,7 +9,9 @@ app = AppFactory.create_app()
 
 
 @post("/product")
-async def create_item(product: Product):
+async def create_item(
+    product: "Product",
+):  # just to test get_typed_annotation in ellar.common.params.args.base
     return product
 
 
@@ -25,7 +27,11 @@ openapi_schema = {
                 "requestBody": {
                     "content": {
                         "application/json": {
-                            "schema": {"$ref": "#/components/schemas/Product"}
+                            "schema": {
+                                "title": "Product",
+                                "allOf": [{"$ref": "#/components/schemas/Product"}],
+                                "include_in_schema": True,
+                            }
                         }
                     },
                     "required": True,
@@ -107,3 +113,38 @@ def test_get_with_body(test_client_factory):
     body = {"name": "Foo", "description": "Some description", "price": 5.5}
     response = client.post("/product", json=body)
     assert response.json() == body
+
+
+def test_body_fails_for_invalid_json_data(test_client_factory):
+    client = test_client_factory(app)
+    body = """
+{
+    "name": "John",
+    "age": 30,
+    "is_student": True,
+    "favorite_colors": ["red", "blue", "green"],
+    "address": {
+        "street": "123 Main St",
+        "city": "Some City",
+        "zip": "12345"
+    },
+    "unterminated_quote": "This string is not properly terminated,
+}
+"""
+    response = client.post("/product", data=body)
+    assert response.json() == {
+        "detail": [
+            {
+                "loc": ["body", 56],
+                "msg": "Expecting value: line 5 column 19 (char 56)",
+                "type": "value_error.jsondecode",
+                "ctx": {
+                    "msg": "Expecting value",
+                    "doc": '\n{\n    "name": "John",\n    "age": 30,\n    "is_student": True,\n    "favorite_colors": ["red", "blue", "green"],\n    "address": {\n        "street": "123 Main St",\n        "city": "Some City",\n        "zip": "12345"\n    },\n    "unterminated_quote": "This string is not properly terminated,\n}\n',
+                    "pos": 56,
+                    "lineno": 5,
+                    "colno": 19,
+                },
+            }
+        ]
+    }

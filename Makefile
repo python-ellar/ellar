@@ -17,25 +17,22 @@ install-full: ## Install dependencies
 	make install
 	pre-commit install -f
 
-lint: ## Run code linters
-	black --check ellar tests
-	isort --check ellar tests
-	autoflake --remove-unused-variables --remove-unused-variables -r ellar tests
-	flake8 ellar tests
+lint:fmt ## Run code linters
+	black --check ellar tests examples
+	ruff check ellar tests examples
 	mypy ellar
 
-fmt format: ## Run code formatters
-	black ellar tests
-	isort ellar tests
+fmt format:clean ## Run code formatters
+	black ellar tests examples
+	ruff check --fix ellar tests examples
 
-test: ## Run tests
-	pytest tests
+test:clean ## Run tests
+	pytest
 
 test-cov: ## Run tests with coverage
-	pytest --cov=ellar --cov-report term-missing tests
+	pytest --cov=ellar --cov-report term-missing
 
-doc-deploy: ## Run Deploy Documentation
-	make clean
+doc-deploy:clean ## Run Deploy Documentation
 	mkdocs gh-deploy --force --ignore-version
 
 doc-serve: ## Launch doc local server

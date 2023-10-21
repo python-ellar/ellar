@@ -1,8 +1,6 @@
 import pytest
-from starlette.status import HTTP_401_UNAUTHORIZED
-
-from ellar.common import APIException, Req, UseGuards, get, serialize_object
-from ellar.core import AppFactory, Reflector
+from ellar.common import APIException, Inject, UseGuards, get, serialize_object
+from ellar.core import AppFactory, Reflector, Request
 from ellar.core.guards import (
     GuardAPIKeyCookie,
     GuardAPIKeyHeader,
@@ -14,6 +12,7 @@ from ellar.core.guards import (
 from ellar.di import injectable
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import TestClient
+from starlette.status import HTTP_401_UNAUTHORIZED
 
 
 class CustomException(APIException):
@@ -96,7 +95,7 @@ for _path, auth in [
 
     @get(f"/{_path}")
     @UseGuards(auth)
-    def auth_demo_endpoint(request=Req()):
+    def auth_demo_endpoint(request: Inject[Request]):
         return {"authentication": request.user}
 
     app.router.append(auth_demo_endpoint)
@@ -114,7 +113,7 @@ BODY_UNAUTHORIZED_DEFAULT = {"detail": "Forbidden"}
             "/apikeyquery?key=querysecretkey",
             {},
             200,
-            dict(authentication="querysecretkey"),
+            {"authentication": "querysecretkey"},
         ),
         (
             "/apikeyquery-injectable",
@@ -126,85 +125,85 @@ BODY_UNAUTHORIZED_DEFAULT = {"detail": "Forbidden"}
             "/apikeyquery-injectable?key=querysecretkey",
             {},
             200,
-            dict(authentication="querysecretkey"),
+            {"authentication": "querysecretkey"},
         ),
         ("/apikeyheader", {}, HTTP_401_UNAUTHORIZED, BODY_UNAUTHORIZED_DEFAULT),
         (
             "/apikeyheader",
-            dict(headers={"key": "headersecretkey"}),
+            {"headers": {"key": "headersecretkey"}},
             200,
-            dict(authentication="headersecretkey"),
+            {"authentication": "headersecretkey"},
         ),
         ("/apikeycookie", {}, HTTP_401_UNAUTHORIZED, BODY_UNAUTHORIZED_DEFAULT),
         (
             "/apikeycookie",
-            dict(cookies={"key": "cookiesecretkey"}),
+            {"cookies": {"key": "cookiesecretkey"}},
             200,
-            dict(authentication="cookiesecretkey"),
+            {"authentication": "cookiesecretkey"},
         ),
         ("/basic", {}, HTTP_401_UNAUTHORIZED, BODY_UNAUTHORIZED_DEFAULT),
         (
             "/basic",
-            dict(headers={"Authorization": "Basic YWRtaW46c2VjcmV0"}),
+            {"headers": {"Authorization": "Basic YWRtaW46c2VjcmV0"}},
             200,
-            dict(authentication="admin"),
+            {"authentication": "admin"},
         ),
         (
             "/basic",
-            dict(headers={"Authorization": "Basic d2hhdGV2ZXI="}),
+            {"headers": {"Authorization": "Basic d2hhdGV2ZXI="}},
             HTTP_401_UNAUTHORIZED,
             {"detail": "Invalid authentication credentials"},
         ),
         (
             "/basic",
-            dict(headers={"Authorization": "YWRtaW46c2VjcmV0"}),
+            {"headers": {"Authorization": "YWRtaW46c2VjcmV0"}},
             200,
-            dict(authentication="admin"),
+            {"authentication": "admin"},
         ),
         (
             "/basic",
-            dict(headers={"Authorization": "Basic invalid"}),
+            {"headers": {"Authorization": "Basic invalid"}},
             HTTP_401_UNAUTHORIZED,
             {"detail": "Invalid authentication credentials"},
         ),
         (
             "/basic",
-            dict(headers={"Authorization": "some invalid value"}),
+            {"headers": {"Authorization": "some invalid value"}},
             HTTP_401_UNAUTHORIZED,
             BODY_UNAUTHORIZED_DEFAULT,
         ),
         ("/bearer", {}, 401, BODY_UNAUTHORIZED_DEFAULT),
         (
             "/bearer",
-            dict(headers={"Authorization": "Bearer bearertoken"}),
+            {"headers": {"Authorization": "Bearer bearertoken"}},
             200,
-            dict(authentication="bearertoken"),
+            {"authentication": "bearertoken"},
         ),
         (
             "/bearer",
-            dict(headers={"Authorization": "Invalid bearertoken"}),
+            {"headers": {"Authorization": "Invalid bearertoken"}},
             HTTP_401_UNAUTHORIZED,
             {"detail": "Invalid authentication credentials"},
         ),
         ("/digest", {}, 401, BODY_UNAUTHORIZED_DEFAULT),
         (
             "/digest",
-            dict(headers={"Authorization": "Digest digesttoken"}),
+            {"headers": {"Authorization": "Digest digesttoken"}},
             200,
-            dict(authentication="digesttoken"),
+            {"authentication": "digesttoken"},
         ),
         (
             "/digest",
-            dict(headers={"Authorization": "Invalid digesttoken"}),
+            {"headers": {"Authorization": "Invalid digesttoken"}},
             HTTP_401_UNAUTHORIZED,
             {"detail": "Invalid authentication credentials"},
         ),
         ("/customexception", {}, HTTP_401_UNAUTHORIZED, BODY_UNAUTHORIZED_DEFAULT),
         (
             "/customexception",
-            dict(headers={"key": "headersecretkey"}),
+            {"headers": {"key": "headersecretkey"}},
             200,
-            dict(authentication="headersecretkey"),
+            {"authentication": "headersecretkey"},
         ),
     ],
 )
@@ -252,7 +251,7 @@ def test_global_guard_works():
     _app = AppFactory.create_app(global_guards=[DigestAuth])
 
     @get("/global")
-    def _auth_demo_endpoint(request=Req()):
+    def _auth_demo_endpoint(request: Inject[Request]):
         return {"authentication": request.user}
 
     _app.router.append(_auth_demo_endpoint)

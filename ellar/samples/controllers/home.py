@@ -10,8 +10,8 @@ class HomeController(ControllerBase):
     @get("/")
     @render()
     def index(self):
-        github_url = "https://github.com/eadwincode/ellar"
-        doc_url = "https://eadwincode.github.io/ellar/"
+        github_url = "https://github.com/python-ellar/ellar"
+        doc_url = "https://python-ellar.github.io/ellar/"
         return {
             "message": "",
             "docs_url": doc_url,

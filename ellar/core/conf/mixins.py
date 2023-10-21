@@ -1,71 +1,16 @@
-import inspect
 import typing as t
 
+from ellar.common.constants import LOG_LEVELS as log_levels
+from ellar.common.interfaces import IAPIVersioning, IEllarMiddleware, IExceptionHandler
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp
-
-from ellar.common.constants import LOG_LEVELS as log_levels
-from ellar.common.interfaces import IAPIVersioning, IExceptionHandler
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core import App
 
 __all__ = [
     "ConfigDefaultTypesMixin",
-    "TVersioning",
-    "TMiddleware",
-    "TExceptionHandler",
 ]
-
-
-class TExceptionHandler:
-    @classmethod
-    def __get_validators__(
-        cls: t.Type["TExceptionHandler"],
-    ) -> t.Iterable[t.Callable[..., t.Any]]:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls: t.Type["TExceptionHandler"], v: t.Any) -> t.Any:
-        if isinstance(v, IExceptionHandler):
-            return v
-
-        if inspect.isclass(v):
-            raise ValueError(f"Expected 'ExceptionHandler', received: {v}")
-
-        raise ValueError(f"Expected 'ExceptionHandler', received: {type(v)}")
-
-
-class TVersioning:
-    @classmethod
-    def __get_validators__(
-        cls: t.Type["TVersioning"],
-    ) -> t.Iterable[t.Callable[..., t.Any]]:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v: t.Any) -> t.Any:
-        if not isinstance(v, IAPIVersioning):
-            raise ValueError(f"Expected BaseAPIVersioning, received: {type(v)}")
-        return v
-
-
-class TMiddleware:
-    @classmethod
-    def __get_validators__(
-        cls,
-    ) -> t.Iterable[t.Callable[..., t.Any]]:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v: t.Any) -> t.Any:
-        from ellar.core.middleware import Middleware
-
-        if not isinstance(v, Middleware):
-            raise ValueError(
-                f"Expected Type/instance of Middleware, received: {type(v)}"
-            )
-        return v  # pragma: no cover
 
 
 class ConfigDefaultTypesMixin:
@@ -83,7 +28,7 @@ class ConfigDefaultTypesMixin:
     JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any]
 
     # Application route versioning scheme
-    VERSIONING_SCHEME: TVersioning
+    VERSIONING_SCHEME: IAPIVersioning
 
     # Enable or Disable Application Router route searching by appending backslash
     REDIRECT_SLASHES: bool
@@ -96,7 +41,7 @@ class ConfigDefaultTypesMixin:
     STATIC_DIRECTORIES: t.Optional[t.List[t.Union[str, t.Any]]]
 
     # Application user defined middlewares
-    MIDDLEWARE: t.List[TMiddleware]
+    MIDDLEWARE: t.List[IEllarMiddleware]
 
     # A dictionary mapping either integer status codes,
     # or exception class types onto callables which handle the exceptions.

@@ -24,7 +24,7 @@ class EllarUvicornServer(uvicorn.Server):
         self._serve_task: t.Optional[t.Awaitable[t.Any]] = None
         super().__init__(config=uvicorn.Config(app, host=host, port=port))
 
-    async def startup(self, sockets: list = None) -> None:
+    async def startup(self, sockets: t.Optional[t.List[t.Any]] = None) -> None:
         """Override uvicorn startup"""
         await super().startup(sockets)
         self.config.setup_event_loop()

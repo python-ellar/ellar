@@ -2,17 +2,16 @@ import typing as t
 from unittest.mock import patch
 
 import pytest
-from pydantic.error_wrappers import ValidationError
-from starlette.exceptions import HTTPException, WebSocketException
-from starlette.responses import JSONResponse, Response
-
-from ellar.common import IExceptionHandler, IHostContext, Ws, get, ws_route
+from ellar.common import IExceptionHandler, IHostContext, Inject, get, ws_route
 from ellar.common.exceptions.callable_exceptions import CallableExceptionHandler
 from ellar.common.exceptions.handlers import APIException, APIExceptionHandler
-from ellar.core import Config
+from ellar.core import Config, WebSocket
 from ellar.core.exceptions.service import ExceptionMiddlewareService
 from ellar.core.middleware import ExceptionMiddleware
 from ellar.testing import Test
+from pydantic.error_wrappers import ValidationError
+from starlette.exceptions import HTTPException, WebSocketException
+from starlette.responses import JSONResponse, Response
 
 
 class InvalidExceptionHandler:
@@ -91,7 +90,7 @@ def test_invalid_handler_raise_exception():
     assert ex.value.errors() == [
         {
             "loc": ("EXCEPTION_HANDLERS", 0),
-            "msg": "Expected 'ExceptionHandler', received: <class 'tests.test_exceptions.test_custom_exceptions.InvalidExceptionHandler'>",
+            "msg": "Expected IExceptionHandler object, received: <class 'type'>",
             "type": "value_error",
         }
     ]
@@ -102,8 +101,7 @@ def test_invalid_handler_raise_exception():
     assert ex.value.errors() == [
         {
             "loc": ("EXCEPTION_HANDLERS", 0),
-            "msg": "Expected 'ExceptionHandler', received: "
-            "<class 'tests.test_exceptions.test_custom_exceptions.InvalidExceptionHandler'>",
+            "msg": "Expected IExceptionHandler object, received: <class 'tests.test_exceptions.test_custom_exceptions.InvalidExceptionHandler'>",
             "type": "value_error",
         }
     ]
@@ -344,7 +342,7 @@ def test_ws_exception_handler():
     homepage_3_called = False
 
     @ws_route("/ws")
-    async def homepage_3(session=Ws()):
+    async def homepage_3(session: Inject[WebSocket]):
         nonlocal homepage_3_called
 
         homepage_3_called = True

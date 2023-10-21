@@ -1,11 +1,10 @@
 import typing as t
 
-from pydantic import BaseModel, create_model
-from starlette.convertors import Convertor
-
 from ellar.common.constants import MULTI_RESOLVER_KEY
 from ellar.common.helper.modelfield import create_model_field
 from ellar.common.interfaces import IExecutionContext
+from pydantic import BaseModel, create_model
+from starlette.convertors import Convertor
 
 from .. import params
 from ..resolvers import BaseRouteParameterResolver
@@ -33,7 +32,7 @@ class RequestEndpointArgsModel(EndpointArgsModel):
         endpoint: t.Callable,
         operation_unique_id: str,
         param_converters: t.Dict[str, Convertor],
-        extra_endpoint_args: t.Sequence[ExtraEndpointArg] = None,
+        extra_endpoint_args: t.Optional[t.Sequence[ExtraEndpointArg]] = None,
     ) -> None:
         super().__init__(
             path=path,
@@ -51,7 +50,16 @@ class RequestEndpointArgsModel(EndpointArgsModel):
         self.body_resolver = None
 
         body_resolvers = self._computation_models[params.BodyFieldInfo.in_.value]
-        if body_resolvers and len(body_resolvers) == 1:
+        if (
+            body_resolvers
+            and len(body_resolvers) == 1
+            and not (
+                body_resolvers[0].model_field.field_info.embed  # type: ignore[attr-defined]
+                and isinstance(
+                    body_resolvers[0].model_field.field_info, params.BodyFieldInfo  # type: ignore[attr-defined]
+                )
+            )
+        ):
             self.body_resolver = body_resolvers[0]
         elif body_resolvers:
             # if body_resolvers is more than one, we create a bulk_body_resolver instead
@@ -61,9 +69,9 @@ class RequestEndpointArgsModel(EndpointArgsModel):
             )
             model_name = "body_" + self.operation_unique_id
             body_model_field: t.Type[BaseModel] = create_model(model_name)
-            _fields_required, _body_param_class = [], dict()
+            _fields_required, _body_param_class = [], {}
             for f in _body_resolvers_model_fields:
-                setattr(f.field_info, "embed", True)
+                f.field_info.embed = True  # type:ignore[attr-defined]
                 body_model_field.__fields__[f.alias or f.name] = f
                 _fields_required.append(f.required)
                 _body_param_class[
@@ -80,7 +88,7 @@ class RequestEndpointArgsModel(EndpointArgsModel):
                 body_field_info = klass
                 media_type = getattr(field_info, "media_type", media_type)
             elif len(_body_param_class) > 1:
-                key = list(reversed(sorted(_body_param_class.keys())))[0]
+                key = sorted(_body_param_class.keys(), reverse=True)[0]
                 klass, field_info = _body_param_class[key]
                 body_field_info = klass
                 media_type = getattr(field_info, "media_type", media_type)

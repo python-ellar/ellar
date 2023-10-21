@@ -1,8 +1,6 @@
 import typing as t
 
 import socketio
-from starlette.routing import Mount
-
 from ellar.core.routing import RouterBuilder
 from ellar.reflect import reflect
 from ellar.socket_io.adapter import SocketIOASGIApp
@@ -17,6 +15,7 @@ from ellar.socket_io.constants import (
 )
 from ellar.socket_io.gateway import SocketMessageOperation, SocketOperationConnection
 from ellar.socket_io.model import GatewayBase, GatewayType
+from starlette.routing import Mount
 
 _socket_servers: t.Dict[str, socketio.AsyncServer] = {}
 

@@ -1,13 +1,15 @@
 import os
 
 import pytest
-from pydantic.json import ENCODERS_BY_TYPE
-from starlette.responses import JSONResponse
-
 from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.conf import Config, ConfigDefaultTypesMixin
 from ellar.core.conf.config import ConfigRuntimeError
 from ellar.core.versioning import DefaultAPIVersioning, UrlPathAPIVersioning
+from pydantic.json import ENCODERS_BY_TYPE
+from starlette.responses import JSONResponse
+
+if ELLAR_CONFIG_MODULE in os.environ:
+    os.environ.pop(ELLAR_CONFIG_MODULE)
 
 
 class ConfigTesting(ConfigDefaultTypesMixin):
@@ -76,10 +78,10 @@ def test_configuration_raise_runtime_error_for_invalid_settings_module_path():
     with pytest.raises(ConfigRuntimeError):
         Config(config_module="tests.somewrongpath.settings")
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         Config(STATIC_FOLDER_PACKAGES=[("package",)])
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         Config(STATIC_FOLDER_PACKAGES=[("package", "static", "some_whatever")])
 
 
@@ -121,8 +123,9 @@ def test_configuration_can_be_changed_during_instantiation():
 
 def test_can_set_defaults_a_configuration_instance_once():
     config = Config(config_module=overriding_settings_path)
-    with pytest.raises(Exception):
-        config.SOME_NEW_CONFIGS
+    with pytest.raises(AttributeError):
+        d = config.SOME_NEW_CONFIGS
+        assert d
     config.setdefault("SOME_NEW_CONFIGS", "some new configuration values")
     assert config.SOME_NEW_CONFIGS == "some new configuration values"
 

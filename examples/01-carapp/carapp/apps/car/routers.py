@@ -12,11 +12,24 @@ def index(request: Request):
 from dataclasses import dataclass
 from typing import List
 
-from ellar.common import Provide, render, Req, ModuleRouter, render_template, DataclassSerializer
+from ellar.common import (
+    DataclassSerializer,
+    Inject,
+    ModuleRouter,
+    render,
+    render_template,
+)
+from ellar.core import Request
+from ellar.openapi import ApiTags
 
 from .services import CarRepository
 
-router = ModuleRouter("/car-as-router", tag='Router', description='Example of car Resource from a <strong>ModuleRouter</strong>')
+router = ModuleRouter("/car-as-router")
+tag = ApiTags(
+    name="Router",
+    description="Example of car Resource from a <strong>ModuleRouter</strong>",
+)
+tag(router.get_control_type())
 
 
 @dataclass
@@ -26,16 +39,18 @@ class CarObject(DataclassSerializer):
 
 
 @router.get(response={200: List[CarObject]})
-async def get_cars(repo: CarRepository = Provide()):
+async def get_cars(repo: Inject[CarRepository]):
     return repo.get_all()
 
 
-@router.http_route('/html', methods=['get', 'post'])
+@router.http_route("/html", methods=["get", "post"])
 @render("index.html")
-async def get_car_html(repo: CarRepository = Provide()):
+async def get_car_html(repo: Inject[CarRepository]):
     return repo.get_all()
 
 
-@router.get('/html/outside')
-async def get_car_html_with_render(repo: CarRepository = Provide(), request=Req()):
+@router.get("/html/outside")
+async def get_car_html_with_render(
+    repo: Inject[CarRepository], request: Inject[Request]
+):
     return render_template("car/list.html", request=request, model=repo.get_all())

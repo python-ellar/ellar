@@ -1,6 +1,6 @@
 import binascii
 import typing as t
-from abc import ABC
+from abc import ABC, abstractmethod
 from base64 import b64decode
 
 from ellar.common.exceptions import APIException, AuthenticationFailed
@@ -20,6 +20,14 @@ class HttpBearerAuth(BaseHttpAuth, ABC):
     openapi_scheme: str = "bearer"
     openapi_bearer_format: t.Optional[str] = None
     header: str = "Authorization"
+
+    @abstractmethod
+    async def authentication_handler(
+        self,
+        connection: "HTTPConnection",
+        credentials: HTTPAuthorizationCredentials,
+    ) -> t.Optional[t.Any]:
+        pass  # pragma: no cover
 
     @classmethod
     def openapi_security_scheme(cls) -> t.Dict:
@@ -49,6 +57,14 @@ class HttpBasicAuth(BaseHttpAuth, ABC):
     openapi_scheme: str = "basic"
     realm: t.Optional[str] = None
     header = "Authorization"
+
+    @abstractmethod
+    async def authentication_handler(
+        self,
+        connection: "HTTPConnection",
+        credentials: HTTPBasicCredentials,
+    ) -> t.Optional[t.Any]:
+        pass  # pragma: no cover
 
     def _not_unauthorized_exception(self, message: str) -> None:
         if self.realm:  # pragma: no cover
@@ -91,7 +107,7 @@ class HttpBasicAuth(BaseHttpAuth, ABC):
 
         if not separator:
             self._not_unauthorized_exception("Invalid authentication credentials")
-        return HTTPBasicCredentials(username=username, password=password)
+        return HTTPBasicCredentials(username=username, password=password)  # type: ignore[arg-type]
 
 
 class HttpDigestAuth(HttpBearerAuth, ABC):

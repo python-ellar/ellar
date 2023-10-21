@@ -91,19 +91,19 @@ class CarController(ControllerBase):
     ...
 ```
 
-### **injection (`parameter_name=Req()`)**
+### **injection (`parameter_name=Inject[Request]`)**
 
-We can also inject request object to any handler by using `@Req` decorator in handler signature.
+We can also inject request object to any handler by using `Inject[Request]` decorator in handler signature.
 ```python
 # project_name/apps/car/controllers.py
 
-from ellar.common import Controller, ControllerBase, get, Req
+from ellar.common import Controller, ControllerBase, get, Inject
 from ellar.core import Request
 
 @Controller('/car')
 class CarController(ControllerBase):
     @get()
-    def get_all(self, req_data: Request, req_data_2=Req()):
+    def get_all(self, req_data: Request, req_data_2: Inject[Request]):
         assert isinstance(req_data, Request) # True
         assert isinstance(req_data_2, Request)
         assert req_data == req_data_2
@@ -131,21 +131,21 @@ class CarController(ControllerBase):
 
 Other request `handler` signature injectors
 
-|             |                                                                                                        |
-|-------------|--------------------------------------------------------------------------------------------------------|
-| `Req()`     | for `Request` object                                                                                   |
-| `Res()`     | for `Response` object                                                                                  |
-| `Path()`    | pydantic field - resolves path parameters                                                              |
-| `Body()`    | pydantic field - resolves required Request `body` parameters                                           |
-| `Form()`    | pydantic field - resolves required Request `body` parameters with content-type=`x-www-form-urlencoded` |
-| `Header()`  | pydantic field - resolves required Request `header` parameters                                         |
-| `Query()`   | pydantic field - resolves required Request `query` parameters                                          |
-| `File()`    | pydantic field - resolves required Request `body` parameters with content-type=`x-www-form-urlencoded` |
-| `Ctx()`     | Injects `ExecutionContext`.                                                                            |
-| `Cookie()`  | pydantic field - resolves required Request `cookie` parameters                                         |
-| `Session()` | injects Request session data                                                                           |
-| `Host()`    | injects Request clients host                                                                           |
-| `Provide()` | injects services                                                                                       |
+|                                       |                                                                                                        |
+|---------------------------------------|--------------------------------------------------------------------------------------------------------|
+| `Inject[Request]`                     | for `Request` object                                                                                   |
+| `Inject[Response]`                    | for `Response` object                                                                                  |
+| `Path()`                              | pydantic field - resolves path parameters                                                              |
+| `Body()`                              | pydantic field - resolves required Request `body` parameters                                           |
+| `Form()`                              | pydantic field - resolves required Request `body` parameters with content-type=`x-www-form-urlencoded` |
+| `Header()`                            | pydantic field - resolves required Request `header` parameters                                         |
+| `Query()`                             | pydantic field - resolves required Request `query` parameters                                          |
+| `File()`                              | pydantic field - resolves required Request `body` parameters with content-type=`x-www-form-urlencoded` |
+| `Inject[ExecutionContext]`            | Injects `ExecutionContext`.                                                                            |
+| `Cookie()`                            | pydantic field - resolves required Request `cookie` parameters                                         |
+| `Inject[dict, Inject.Key('Session')]` | injects Request session data                                                                           |
+| `Inject[str, Inject.Key('Host')]`     | injects Request clients host                                                                           |
+| `Inject[Type]`                        | injects services                                                                                       |
 
 ## **Resource**
 
@@ -244,7 +244,7 @@ from .schemas import CreateCarSerializer
 
 
 @post()
-async def create(self, payload: CreateCarSerializer = Body()):
+async def create(self, payload: Body[CreateCarSerializer]):
     return 'This action adds a new car'
 ```
 
@@ -271,13 +271,13 @@ from .schemas import CreateCarSerializer, CarListFilter
 @Controller('/car')
 class CarController(ControllerBase):
     @post()
-    async def create(self, payload: CreateCarSerializer = Body()):
+    async def create(self, payload:Body[CreateCarSerializer]):
         result = payload.dict()
         result.update(message='This action adds a new car')
         return result
 
     @put('/{car_id:str}')
-    async def update(self, car_id: str, payload: CreateCarSerializer = Body()):
+    async def update(self, car_id: str, payload:Body[CreateCarSerializer]):
         result = payload.dict()
         result.update(message=f'This action updated #{car_id} car resource')
         return result
@@ -291,7 +291,7 @@ class CarController(ControllerBase):
         return f"This action removes a #{car_id} car"
 
     @get()
-    async def get_all(self, query: CarListFilter = Query()):
+    async def get_all(self, query:Query[CarListFilter]):
         assert isinstance(self.context.switch_to_http_connection().get_request(), Request)  # True
         return f'This action returns all cars at limit={query.limit}, offset={query.offset}'
 

@@ -13,7 +13,7 @@ class_base_function_regex: t.Pattern[t.Any] = re.compile(
 def generate_operation_unique_id(
     *, name: str, path: str, methods: t.Sequence[str]
 ) -> str:
-    _methods = "_".join(sorted(list(methods)))
+    _methods = "_".join(sorted(methods))
     operation_id = name + path
     operation_id = re.sub("[^0-9a-zA-Z_]", "_", operation_id)
     operation_id = operation_id + "_" + _methods.lower()
@@ -27,8 +27,8 @@ def generate_controller_operation_unique_id(
     versioning: t.Sequence[str],
     extra_string: str = "",
 ) -> int:
-    _methods = "_".join(sorted(list(methods))).lower()
-    _versioning = "_".join(sorted(list(versioning))).lower()
+    _methods = "_".join(sorted(methods)).lower()
+    _versioning = "_".join(sorted(versioning)).lower()
     return hash(path + _methods + _versioning + extra_string)
 
 
@@ -52,7 +52,7 @@ def is_async_callable(obj: t.Any) -> bool:
 
 
 def build_init_kwargs(obj: t.Type, init_kwargs: t.Dict) -> t.Dict:
-    _result = dict()
+    _result = {}
     if hasattr(obj, "__init__"):
         signature = inspect.signature(obj.__init__)
         for k, v in signature.parameters.items():

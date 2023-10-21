@@ -20,7 +20,7 @@ class BaseAPIVersioning(IAPIVersioning):
         self,
         version_parameter: str = "version",
         default_version: t.Optional[str] = None,
-        **kwargs: t.Any
+        **kwargs: t.Any,
     ):
         self.version_parameter = version_parameter
         self.default_version = default_version

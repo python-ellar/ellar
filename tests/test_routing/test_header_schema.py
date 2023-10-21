@@ -1,6 +1,5 @@
 import pytest
-
-from ellar.common import Header, ModuleRouter, get, serialize_object
+from ellar.common import Header, Inject, ModuleRouter, get, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
 from ellar.core.routing.helper import build_route_handler
@@ -14,7 +13,7 @@ mr = ModuleRouter("")
 
 @mr.get("/test/header")
 def header_params_schema(
-    request: Request,
+    request: Inject[Request],
     filters: Filter = Header(..., alias="will_not_work_for_schema_with_many_field"),
 ):
     return filters.dict()
@@ -22,11 +21,11 @@ def header_params_schema(
 
 @mr.get("/test-mixed/header")
 def header_params_mixed_schema(
-    request: Request,
-    filters: Filter = Header(...),
-    data: Data = Header(...),
+    request: Inject[Request],
+    filters: Header[Filter],
+    data: Header[Data],
 ):
-    return dict(filters=filters.dict(), data=data.dict())
+    return {"filters": filters.dict(), "data": data.dict()}
 
 
 tm = Test.create_test_module(routers=(mr,))
@@ -88,13 +87,23 @@ def test_header_schema():
     assert params == [
         {
             "required": False,
-            "schema": {"title": "To", "type": "string", "format": "date-time"},
+            "schema": {
+                "title": "To",
+                "type": "string",
+                "format": "date-time",
+                "include_in_schema": True,
+            },
             "name": "to",
             "in": "header",
         },
         {
             "required": False,
-            "schema": {"title": "From", "type": "string", "format": "date-time"},
+            "schema": {
+                "title": "From",
+                "type": "string",
+                "format": "date-time",
+                "include_in_schema": True,
+            },
             "name": "from",
             "in": "header",
         },
@@ -103,6 +112,7 @@ def test_header_schema():
             "schema": {
                 "allOf": [{"$ref": "#/components/schemas/Range"}],
                 "default": 20,
+                "include_in_schema": True,
             },
             "name": "range",
             "in": "header",

@@ -1,10 +1,9 @@
 import typing as t
 
+from ellar.common.interfaces import IExecutionContext
 from pydantic.error_wrappers import ErrorWrapper
 from pydantic.fields import FieldInfo
 from starlette.convertors import Convertor
-
-from ellar.common.interfaces import IExecutionContext
 
 from .. import params
 from ..resolvers import BaseRouteParameterResolver, WsBodyParameterResolver
@@ -21,7 +20,7 @@ class WebsocketEndpointArgsModel(EndpointArgsModel):
         path: str,
         endpoint: t.Callable,
         param_converters: t.Dict[str, Convertor],
-        extra_endpoint_args: t.Sequence[ExtraEndpointArg] = None,
+        extra_endpoint_args: t.Optional[t.Sequence[ExtraEndpointArg]] = None,
     ) -> None:
         super().__init__(
             path=path,
@@ -41,7 +40,9 @@ class WebsocketEndpointArgsModel(EndpointArgsModel):
 
         if self.body_resolver and len(self.body_resolver) > 1:
             for resolver in self.body_resolver:
-                setattr(resolver.model_field.field_info, "embed", True)
+                resolver.model_field.field_info.embed = (  # type:ignore[attr-defined]
+                    True
+                )
 
     def compute_route_parameter_list(
         self, body_field_class: t.Type[FieldInfo] = params.BodyFieldInfo

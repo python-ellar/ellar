@@ -1,16 +1,16 @@
 import typing as t
 from abc import ABC, abstractmethod
 
-from pydantic import BaseModel
-from pydantic.fields import ModelField
-from starlette.responses import Response
-
 from ellar.common.constants import SERIALIZER_FILTER_KEY
 from ellar.common.exceptions import RequestValidationError
 from ellar.common.helper.modelfield import create_model_field
 from ellar.common.interfaces import IExecutionContext, IResponseModel
+from ellar.common.logger import request_logger
 from ellar.common.serializer import SerializerFilter, serialize_object
 from ellar.reflect import reflect
+from pydantic import BaseModel
+from pydantic.fields import ModelField
+from starlette.responses import Response
 
 from .type_converter import ResponseTypeDefinitionConverter
 
@@ -26,7 +26,21 @@ def serialize_if_pydantic_object(obj: t.Any) -> t.Any:
 
 
 class ResponseModelField(ModelField):
+    """
+    A representation of response schema defined in route function
+
+        @get('/', response={200: ASchema, 404: ErrorSchema})
+        def example():
+            pass
+
+    During module building, `ASchema` and `ErrorSchema` will be converted to ResponseModelField
+    types for the of validation and OPENAPI documentation
+    """
+
     def validate_object(self, obj: t.Any) -> t.Any:
+        request_logger.debug(
+            f"Validating Response Object - '{self.__class__.__name__}'"
+        )
         values, error = self.validate(obj, {}, loc=(self.alias,))
         if error:
             _errors = list(error) if isinstance(error, list) else [error]
@@ -36,6 +50,7 @@ class ResponseModelField(ModelField):
     def serialize(
         self, obj: t.Any, serializer_filter: t.Optional[SerializerFilter] = None
     ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
+        request_logger.debug(f"Serializing Response Data - '{self.__class__.__name__}'")
         try:
             values = self.validate_object(obj=obj)
         except RequestValidationError:
@@ -48,6 +63,21 @@ class ResponseModelField(ModelField):
 
 
 class BaseResponseModel(IResponseModel, ABC):
+    """
+    A base model representation of endpoint response. It provides essential information about a response type, just as
+    it is defined on the endpoint, the status code and schema plus description for OPENAPI documentation.
+
+    For example:
+
+        @get('/', response={200: ASchema, 404: ErrorSchema})
+        def example():
+            pass
+
+    From the Above example, two response models will be generated.
+    - response model for 200 status and ASchema and
+    - response model for 400 status and ErrorSchema
+    """
+
     __slots__ = (
         "_response_type",
         "_media_type",
@@ -61,7 +91,7 @@ class BaseResponseModel(IResponseModel, ABC):
 
     def __init__(
         self,
-        description: str = None,
+        description: t.Optional[str] = None,
         model_field_or_schema: t.Union[ResponseModelField, t.Any] = None,
         **kwargs: t.Any,
     ) -> None:
@@ -122,7 +152,10 @@ class BaseResponseModel(IResponseModel, ABC):
     def create_response(
         self, context: IExecutionContext, response_obj: t.Any, status_code: int
     ) -> Response:
-        """Cant create custom responses, Please override this function to create a custom response"""
+        """Please override this function to create a custom response"""
+        request_logger.debug(
+            f"Creating Response from returned Handler value - '{self.__class__.__name__}'"
+        )
         response_args, headers = self.get_context_response(
             context=context, status_code=status_code
         )
@@ -147,7 +180,7 @@ class BaseResponseModel(IResponseModel, ABC):
         http_connection = context.switch_to_http_connection()
         if http_connection.has_response:
             endpoint_response = http_connection.get_response()
-            response_args = dict(background=endpoint_response.background)
+            response_args = {"background": endpoint_response.background}
             if endpoint_response.status_code > 0:
                 response_args["status_code"] = endpoint_response.status_code
             return response_args, dict(endpoint_response.headers)
@@ -155,6 +188,16 @@ class BaseResponseModel(IResponseModel, ABC):
 
 
 class ResponseModel(BaseResponseModel):
+    """
+    Handles endpoint models with Response Type as schema
+
+        from starlette.responses import PlainTextResponse
+
+        @get('/', response={200: PlainTextResponse})
+        def example():
+            pass
+    """
+
     def serialize(
         self,
         response_obj: t.Any,

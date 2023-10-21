@@ -1,6 +1,5 @@
 import pytest
-
-from ellar.common import ModuleRouter, Query, get, serialize_object
+from ellar.common import Inject, ModuleRouter, Query, get, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
 from ellar.core.routing.helper import build_route_handler
@@ -14,7 +13,7 @@ mr = ModuleRouter("")
 
 @mr.get("/test")
 def query_params_schema(
-    request: Request,
+    request: Inject[Request],
     filters: Filter = Query(..., alias="will_not_work_for_schema_with_many_field"),
 ):
     return filters.dict()
@@ -22,13 +21,18 @@ def query_params_schema(
 
 @mr.get("/test-mixed")
 def query_params_mixed_schema(
-    request: Request,
+    request: Inject[Request],
+    filters: Query[Filter],
+    data: Query[Data],
     query1: int,
     query2: int = 5,
-    filters: Filter = Query(...),
-    data: Data = Query(...),
 ):
-    return dict(query1=query1, query2=query2, filters=filters.dict(), data=data.dict())
+    return {
+        "query1": query1,
+        "query2": query2,
+        "filters": filters.dict(),
+        "data": data.dict(),
+    }
 
 
 tm = Test.create_test_module(routers=(mr,))
@@ -88,13 +92,23 @@ def test_schema():
     assert params == [
         {
             "required": False,
-            "schema": {"title": "To", "type": "string", "format": "date-time"},
+            "schema": {
+                "title": "To",
+                "type": "string",
+                "format": "date-time",
+                "include_in_schema": True,
+            },
             "name": "to",
             "in": "query",
         },
         {
             "required": False,
-            "schema": {"title": "From", "type": "string", "format": "date-time"},
+            "schema": {
+                "title": "From",
+                "type": "string",
+                "format": "date-time",
+                "include_in_schema": True,
+            },
             "name": "from",
             "in": "query",
         },
@@ -103,6 +117,7 @@ def test_schema():
             "schema": {
                 "allOf": [{"$ref": "#/components/schemas/Range"}],
                 "default": 20,
+                "include_in_schema": True,
             },
             "name": "range",
             "in": "query",

@@ -24,7 +24,7 @@ from typing import Optional
 @Controller
 class ItemsController(ControllerBase):
     @get("/")
-    async def read_items(self, user_agent: Optional[str] = Header(default=None)):
+    async def read_items(self, user_agent: Header[Optional[str], Header.P(default=None)]):
         return {"User-Agent": user_agent}
 ```
 
@@ -58,7 +58,7 @@ from typing import Optional
 class ItemsController(ControllerBase):
     @get("/")
     async def read_items(
-        self, strange_header: Optional[str] = Header(default=None, convert_underscores=False)
+        self, strange_header:Header[Optional[str], Header.P(default=None, convert_underscores=False)]
     ):
         return {"strange_header": strange_header}
 ```

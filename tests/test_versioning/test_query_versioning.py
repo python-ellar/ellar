@@ -1,5 +1,4 @@
 import pytest
-
 from ellar.common.constants import NOT_SET
 from ellar.core.versioning import VersioningSchemes as VERSIONING
 from ellar.testing import Test
@@ -14,10 +13,10 @@ app.enable_versioning(VERSIONING.QUERY, version_parameter="v")
 @pytest.mark.parametrize(
     "path, expected_result",
     [
-        ("/version", dict(version="default")),
-        ("/version?v=1", dict(version="v1")),
-        ("/version?v=2", dict(version="v2")),
-        ("/version?v=3", dict(version="v3")),
+        ("/version", {"version": "default"}),
+        ("/version?v=1", {"version": "v1"}),
+        ("/version?v=2", {"version": "v2"}),
+        ("/version?v=3", {"version": "v3"}),
     ],
 )
 def test_query_route_versioning(path, expected_result):
@@ -31,25 +30,25 @@ def test_query_route_versioning(path, expected_result):
     "path, default, expected_result",
     [
         # default is 1
-        ("/version", "1", dict(version="default")),
-        ("/version?v=1", "1", dict(version="default")),
-        ("/version?v=2", "1", dict(version="v2")),
-        ("/version?v=3", "1", dict(version="v3")),
+        ("/version", "1", {"version": "default"}),
+        ("/version?v=1", "1", {"version": "default"}),
+        ("/version?v=2", "1", {"version": "v2"}),
+        ("/version?v=3", "1", {"version": "v3"}),
         # default is 2
-        ("/version", "2", dict(version="default")),
-        ("/version?v=1", "2", dict(version="v1")),
-        ("/version?v=2", "2", dict(version="default")),
-        ("/version?v=3", "2", dict(version="v3")),
+        ("/version", "2", {"version": "default"}),
+        ("/version?v=1", "2", {"version": "v1"}),
+        ("/version?v=2", "2", {"version": "default"}),
+        ("/version?v=3", "2", {"version": "v3"}),
         # default is 3
-        ("/version", "3", dict(version="default")),
-        ("/version?v=1", "3", dict(version="v1")),
-        ("/version?v=2", "3", dict(version="v2")),
-        ("/version?v=3", "3", dict(version="default")),
+        ("/version", "3", {"version": "default"}),
+        ("/version?v=1", "3", {"version": "v1"}),
+        ("/version?v=2", "3", {"version": "v2"}),
+        ("/version?v=3", "3", {"version": "default"}),
         # default is None or NOT_SET
-        ("/version", NOT_SET, dict(version="default")),
-        ("/version?v=1", NOT_SET, dict(version="v1")),
-        ("/version?v=2", NOT_SET, dict(version="v2")),
-        ("/version?v=3", NOT_SET, dict(version="v3")),
+        ("/version", NOT_SET, {"version": "default"}),
+        ("/version?v=1", NOT_SET, {"version": "v1"}),
+        ("/version?v=2", NOT_SET, {"version": "v2"}),
+        ("/version?v=3", NOT_SET, {"version": "v3"}),
     ],
 )
 def test_query_route_versioning_with_default_version(path, default, expected_result):
@@ -70,15 +69,15 @@ def test_query_versioning_version_parameter():
         "/version?v=4"
     )  # version_parameter for query lookup is 'version'
     assert response.status_code == 200
-    assert response.json() == dict(version="default")
+    assert response.json() == {"version": "default"}
 
     response = client.get("/version?version=2")
     assert response.status_code == 200
-    assert response.json() == dict(version="v2")
+    assert response.json() == {"version": "v2"}
 
     response = client.get("/version?version=1")
     assert response.status_code == 200
-    assert response.json() == dict(version="v1")
+    assert response.json() == {"version": "v1"}
 
 
 @pytest.mark.parametrize(
