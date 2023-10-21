@@ -17,4 +17,9 @@ class WsResponse:
         self._room = room
 
     def dict(self) -> t.Dict:
-        return dict(event=self._event, data=self._data, to=self._to, room=self._room)
+        return {
+            "event": self._event,
+            "data": self._data,
+            "to": self._to,
+            "room": self._room,
+        }

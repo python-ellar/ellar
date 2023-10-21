@@ -19,7 +19,7 @@ class CallableExceptionHandler(IExceptionHandler):
 
 
     def exception_handler_fun(ctx: IExecutionContext, exc: Exception):
-        return PlainResponse('Bad Request', status_code=400)
+        return PlainTextResponse('Bad Request', status_code=400)
 
     exception_400_handler = CallableExceptionHandler(
         exc_class_or_status_code=400, callable_exception_handler= exception_handler_fun
@@ -41,9 +41,12 @@ class CallableExceptionHandler(IExceptionHandler):
         self,
         *func_args: t.Any,
         exc_class_or_status_code: t.Union[t.Type[Exception], int],
-        callable_exception_handler: t.Callable[
-            [IHostContext, Exception],
-            t.Union[t.Awaitable[Response], Response, t.Any],
+        callable_exception_handler: t.Union[
+            t.Callable[
+                [IHostContext, Exception],
+                t.Union[t.Awaitable[Response], Response, t.Any],
+            ],
+            t.Any,
         ],
     ) -> None:
         self.callable_exception_handler = callable_exception_handler

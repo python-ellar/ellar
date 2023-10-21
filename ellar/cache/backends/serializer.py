@@ -28,7 +28,7 @@ class RedisSerializer(ICacheSerializer):
     def dumps(self, data: t.Any) -> t.Any:
         # Only skip pickling for integers, an int subclasses as bool should be
         # pickled.
-        if type(data) is int:
+        if isinstance(data, int):
             return data
         return pickle.dumps(data, self._protocol)
 
