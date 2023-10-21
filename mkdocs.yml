@@ -110,6 +110,7 @@ nav:
   - Security:
       - Authentication: security/authentication.md
       - Authorization: security/authorization.md
+      - Encryption and Hashing: security/encryption_and_hashing.md
       - CSRF and CORS: security/csrf.md
       - Sessions: security/sessions.md
       - Rate Limiting: security/throttling.md

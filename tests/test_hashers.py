@@ -3,13 +3,13 @@ import regex
 from ellar.core.security.hashers import (
     _UNUSABLE_PASSWORD_PREFIX,
     _UNUSABLE_PASSWORD_SUFFIX_LENGTH,
-    BasePasswordHasher,
-    BCryptPasswordHasher,
-    BCryptSHA256PasswordHasher,
-    MD5PasswordHasher,
-    PBKDF2PasswordHasher,
-    PBKDF2SHA1PasswordHasher,
-    ScryptPasswordHasher,
+    BaseHasher,
+    BCryptHasher,
+    BCryptSHA256Hasher,
+    MD5Hasher,
+    PBKDF2Hasher,
+    PBKDF2SHA1Hasher,
+    ScryptHasher,
     check_password,
     get_hasher,
     identify_hasher,
@@ -201,7 +201,7 @@ class TestUtilsHashPass:
         assert is_password_usable(password) is True
 
     def test_low_level_pbkdf2(self):
-        hasher = PBKDF2PasswordHasher()
+        hasher = PBKDF2Hasher()
         encoded = hasher.encode("lètmein", "seasalt2")
         assert (
             encoded
@@ -210,18 +210,18 @@ class TestUtilsHashPass:
         assert hasher.verify("lètmein", encoded) is True
 
     def test_low_level_pbkdf2_sha1(self):
-        hasher = PBKDF2SHA1PasswordHasher()
+        hasher = PBKDF2SHA1Hasher()
         encoded = hasher.encode("lètmein", "seasalt2")
         assert encoded == "pbkdf2_sha1$870000$seasalt2$iFPKnrkYfxxyxaeIqxq+c3nJ/j4="
         assert hasher.verify("lètmein", encoded) is True
 
     def test_bcrypt_salt_check(self):
-        hasher = BCryptPasswordHasher()
+        hasher = BCryptHasher()
         encoded = hasher.encode("lètmein")
         assert hasher.must_update(encoded) is False
 
     def test_bcryptsha256_salt_check(self):
-        hasher = BCryptSHA256PasswordHasher()
+        hasher = BCryptSHA256Hasher()
         encoded = hasher.encode("lètmein")
         assert hasher.must_update(encoded) is False
 
@@ -258,10 +258,10 @@ class TestUtilsHashPass:
     @pytest.mark.parametrize(
         "hasher_class",
         [
-            MD5PasswordHasher,
-            PBKDF2PasswordHasher,
-            PBKDF2SHA1PasswordHasher,
-            ScryptPasswordHasher,
+            MD5Hasher,
+            PBKDF2Hasher,
+            PBKDF2SHA1Hasher,
+            ScryptHasher,
         ],
     )
     def test_encode_invalid_salt(self, hasher_class):
@@ -273,10 +273,10 @@ class TestUtilsHashPass:
     @pytest.mark.parametrize(
         "hasher_class",
         [
-            MD5PasswordHasher,
-            PBKDF2PasswordHasher,
-            PBKDF2SHA1PasswordHasher,
-            ScryptPasswordHasher,
+            MD5Hasher,
+            PBKDF2Hasher,
+            PBKDF2SHA1Hasher,
+            ScryptHasher,
         ],
     )
     def test_encode_password_required(self, hasher_class):
@@ -288,7 +288,7 @@ class TestUtilsHashPass:
             )
 
     def test_load_library_no_algorithm(self):
-        class InvalidPasswordHasher(BasePasswordHasher):
+        class InvalidPasswordHasher(BaseHasher):
             def must_update(self, encoded: str) -> bool:
                 pass
 
@@ -403,10 +403,10 @@ class TestUtilsHashPassScrypt:
     @pytest.mark.parametrize(
         "key, value",
         [
-            ("block_size", ScryptPasswordHasher.block_size),
-            ("parallelism", ScryptPasswordHasher.parallelism),
+            ("block_size", ScryptHasher.block_size),
+            ("parallelism", ScryptHasher.parallelism),
             ("salt", "seasalt"),
-            ("work_factor", ScryptPasswordHasher.work_factor),
+            ("work_factor", ScryptHasher.work_factor),
         ],
     )
     def test_scrypt_decode(self, key, value):

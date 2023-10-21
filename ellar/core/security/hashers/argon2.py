@@ -2,10 +2,10 @@ import typing as t
 
 from passlib.hash import argon2
 
-from .base import BasePasswordHasher, EncodingSalt, EncodingType, must_update_salt
+from .base import BaseHasher, EncodingSalt, EncodingType, must_update_salt
 
 
-class Argon2PasswordHasher(BasePasswordHasher):
+class Argon2Hasher(BaseHasher):
     """
     Secure password hashing using the argon2 algorithm.
 

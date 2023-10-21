@@ -1,26 +1,26 @@
 import typing as t
 
-from .argon2 import Argon2PasswordHasher
-from .base import BasePasswordHasher, EncodingType, get_random_string, must_update_salt
-from .bcrypt import BCryptPasswordHasher, BCryptSHA256PasswordHasher
-from .md5 import MD5PasswordHasher
-from .pbkdf import PBKDF2PasswordHasher, PBKDF2SHA1PasswordHasher
-from .scrypt import ScryptPasswordHasher
+from .argon2 import Argon2Hasher
+from .base import BaseHasher, EncodingType, get_random_string, must_update_salt
+from .bcrypt import BCryptHasher, BCryptSHA256Hasher
+from .md5 import MD5Hasher
+from .pbkdf import PBKDF2Hasher, PBKDF2SHA1Hasher
+from .scrypt import ScryptHasher
 
 # This will never be a valid encoded hash
 _UNUSABLE_PASSWORD_PREFIX = "!"
 _UNUSABLE_PASSWORD_SUFFIX_LENGTH = (
     40  # number of random chars to add after UNUSABLE_PASSWORD_PREFIX
 )
-__HASHERS_DICT: t.Dict[str, t.Type["BasePasswordHasher"]] = {}
+__HASHERS_DICT: t.Dict[str, t.Type["BaseHasher"]] = {}
 
 
-def add_hasher(*hashers: t.Type["BasePasswordHasher"]) -> None:
+def add_hasher(*hashers: t.Type["BaseHasher"]) -> None:
     for hasher in hashers:
         __HASHERS_DICT.update({hasher.algorithm: hasher})
 
 
-def get_hasher(algorithm: str = "pbkdf2_sha256") -> "BasePasswordHasher":
+def get_hasher(algorithm: str = "pbkdf2_sha256") -> "BaseHasher":
     try:
         hasher_type = __HASHERS_DICT[algorithm]
         return hasher_type()
@@ -31,7 +31,7 @@ def get_hasher(algorithm: str = "pbkdf2_sha256") -> "BasePasswordHasher":
         ) from kex
 
 
-def identify_hasher(encoded: str) -> "BasePasswordHasher":
+def identify_hasher(encoded: str) -> "BaseHasher":
     possible_hashers = [v for k, v in __HASHERS_DICT.items() if v.identity(encoded)]
     if possible_hashers:
         return possible_hashers[0]()
@@ -83,8 +83,8 @@ def check_password(
     Return a boolean of whether the raw password matches the three
     part encoded digest.
 
-    If setter is specified, it'll be called when you need to
-    regenerate the password.
+    If setter is specified, it'll be called if a password hash needs to be updated
+     or regenerated based on the `preferred_algorithm`
     """
 
     if password is None or not is_password_usable(encoded):
@@ -107,23 +107,24 @@ def check_password(
 
 
 add_hasher(
-    PBKDF2PasswordHasher,
-    PBKDF2SHA1PasswordHasher,
-    Argon2PasswordHasher,
-    BCryptSHA256PasswordHasher,
-    BCryptPasswordHasher,
-    ScryptPasswordHasher,
-    MD5PasswordHasher,
+    PBKDF2Hasher,
+    PBKDF2SHA1Hasher,
+    Argon2Hasher,
+    BCryptSHA256Hasher,
+    BCryptHasher,
+    ScryptHasher,
+    MD5Hasher,
 )
 
 __all__ = [
-    "PBKDF2PasswordHasher",
-    "PBKDF2SHA1PasswordHasher",
-    "Argon2PasswordHasher",
-    "BCryptSHA256PasswordHasher",
-    "BCryptPasswordHasher",
-    "ScryptPasswordHasher",
-    "MD5PasswordHasher",
+    "BaseHasher",
+    "PBKDF2Hasher",
+    "PBKDF2SHA1Hasher",
+    "Argon2Hasher",
+    "BCryptSHA256Hasher",
+    "BCryptHasher",
+    "ScryptHasher",
+    "MD5Hasher",
     "must_update_salt",
     "make_password",
     "check_password",

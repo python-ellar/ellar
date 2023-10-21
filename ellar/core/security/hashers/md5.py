@@ -2,10 +2,10 @@ import typing as t
 
 from passlib.hash import md5_crypt
 
-from .base import BasePasswordHasher, EncodingSalt, EncodingType, must_update_salt
+from .base import BaseHasher, EncodingSalt, EncodingType, must_update_salt
 
 
-class MD5PasswordHasher(BasePasswordHasher):
+class MD5Hasher(BaseHasher):
     """
     The Salted MD5 password hashing algorithm (not recommended)
     """

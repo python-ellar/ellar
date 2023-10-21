@@ -1,9 +1,9 @@
 from passlib.hash import django_pbkdf2_sha1, django_pbkdf2_sha256
 
-from .base import BasePasswordHasher, must_update_salt
+from .base import BaseHasher, must_update_salt
 
 
-class PBKDF2PasswordHasher(BasePasswordHasher):
+class PBKDF2Hasher(BaseHasher):
     """
     Handles PBKDF2 passwords
     """
@@ -31,7 +31,7 @@ class PBKDF2PasswordHasher(BasePasswordHasher):
         return (decoded["iterations"] != self.iterations) or update_salt
 
 
-class PBKDF2SHA1PasswordHasher(PBKDF2PasswordHasher):
+class PBKDF2SHA1Hasher(PBKDF2Hasher):
     """
     Alternate PBKDF2 hasher which uses SHA1, the default PRF
     recommended by PKCS #5. This is compatible with other

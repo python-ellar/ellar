@@ -1,9 +1,9 @@
 from passlib.hash import django_bcrypt, django_bcrypt_sha256
 
-from .base import BasePasswordHasher
+from .base import BaseHasher
 
 
-class BCryptSHA256PasswordHasher(BasePasswordHasher):
+class BCryptSHA256Hasher(BaseHasher):
     """
     Secure password hashing using the bcrypt algorithm (recommended)
 
@@ -38,7 +38,7 @@ class BCryptSHA256PasswordHasher(BasePasswordHasher):
         return decoded["work_factor"] != self.rounds  # type:ignore[no-any-return]
 
 
-class BCryptPasswordHasher(BCryptSHA256PasswordHasher):
+class BCryptHasher(BCryptSHA256Hasher):
     """
     Secure password hashing using the bcrypt algorithm
 

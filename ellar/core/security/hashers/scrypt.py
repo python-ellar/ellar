@@ -3,10 +3,10 @@ import hashlib
 import secrets
 import typing as t
 
-from .base import BasePasswordHasher, EncodingSalt, EncodingType
+from .base import BaseHasher, EncodingSalt, EncodingType
 
 
-class ScryptPasswordHasher(BasePasswordHasher):
+class ScryptHasher(BaseHasher):
     """
     Secure password hashing using the Scrypt algorithm.
     """

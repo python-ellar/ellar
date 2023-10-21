@@ -13,7 +13,7 @@ UNUSABLE_PASSWORD_SUFFIX_LENGTH = (
 
 RANDOM_STRING_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-__HASHERS_DICT: t.Dict[str, t.Type["BasePasswordHasher"]] = {}
+__HASHERS_DICT: t.Dict[str, t.Type["BaseHasher"]] = {}
 EncodingType = t.Union[str, bytes]
 EncodingSalt = t.Optional[t.Union[str, bytes]]
 
@@ -39,7 +39,7 @@ def get_random_string(length: int, allowed_chars: str = RANDOM_STRING_CHARS) -> 
     )  # pragma no cover
 
 
-class BasePasswordHasher(ABC):
+class BaseHasher(ABC):
     hasher: t.Union[t.Type[uh.GenericHandler], t.Any]
     algorithm: str
     salt_entropy: int = 128
