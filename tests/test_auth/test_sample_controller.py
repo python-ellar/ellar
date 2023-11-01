@@ -2,6 +2,8 @@ import base64
 import pickle
 
 import pytest
+from ellar.common import serialize_object
+from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
 from .app import AppModule, SimpleHeaderAuthHandler
@@ -64,23 +66,25 @@ class TestArticleController:
             assert res.text == '"fast and furious 10 Article"'
 
     @pytest.mark.parametrize(
-        "age, route, status",
+        "age, route, status, requirements",
         [
             # 'at-least-21'
-            (19, "at-least-21", 403),
-            (20, "at-least-21", 403),
-            (21, "at-least-21", 200),
-            (22, "at-least-21", 200),
+            (19, "at-least-21", 403, ["Tochi", "Udoh"]),
+            (20, "at-least-21", 403, ["Tochi", "Udoh"]),
+            (21, "at-least-21", 200, ["Tochi", "Udoh"]),
+            (22, "at-least-21", 200, ["Tochi", "Udoh"]),
             # 'at-least-21-case-2'
-            (19, "at-least-21-case-2", 403),
-            (20, "at-least-21-case-2", 403),
-            (21, "at-least-21-case-2", 200),
-            (22, "at-least-21-case-2", 200),
+            (19, "at-least-21-case-2", 403, ["chinelo", "udoh", "clara", "udoh"]),
+            (20, "at-least-21-case-2", 403, ["chinelo", "udoh", "clara", "udoh"]),
+            (21, "at-least-21-case-2", 200, ["chinelo", "udoh", "clara", "udoh"]),
+            (22, "at-least-21-case-2", 200, ["chinelo", "udoh", "clara", "udoh"]),
         ],
     )
-    def test_at_least_21_works(self, age, route, status):
+    def test_at_least_21_works(self, age, route, status, requirements):
         with self.client as client:
-            auth = base64.b64encode(pickle.dumps({"age": age, "id": 23}))
+            auth = base64.b64encode(
+                pickle.dumps({"age": age, "id": 23, "requirements": requirements})
+            )
             res = client.get(f"/article/{route}", headers={"key": auth})
 
             assert res.status_code == status
@@ -96,6 +100,15 @@ class TestArticleController:
         res = self.client.get("/article/list", headers={"key": auth})
         assert res.status_code == 200
         assert res.text == '"List of articles"'
+
+    @pytest.mark.parametrize(
+        "route",
+        ["create", "admin-only", "staff-only", "at-least-21", "at-least-21-case-2"],
+    )
+    def test_article_controller_routes_requires_user_authentication(self, route):
+        res = self.client.get(f"/article/{route}")
+        assert res.status_code == 401
+        assert res.json() == {"detail": "Forbidden", "status_code": 401}
 
 
 class TestMovieController:
@@ -124,3 +137,35 @@ class TestMovieController:
             auth = base64.b64encode(pickle.dumps({"age": age, "id": 23}))
             res = client.get("/movies/", headers={"key": auth})
             assert res.status_code == status
+
+    def test_get_fast_fails_for_anonymous(
+        self,
+    ):
+        with self.client as client:
+            res = client.get("/movies/")
+            assert res.status_code == 401
+            assert res.json() == {"detail": "Forbidden", "status_code": 401}
+
+    def test_open_api_document_for_get_fast_endpoint(self):
+        document = serialize_object(
+            OpenAPIDocumentBuilder().build_document(
+                self.test_module.create_application()
+            )
+        )
+        assert document["paths"]["/movies/"] == {
+            "get": {
+                "operationId": "fast_x__get",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {"title": "Response Model", "type": "object"}
+                            }
+                        },
+                        "description": "Successful Response",
+                    }
+                },
+                "security": [{"SimpleHeaderAuthHandler": []}],
+                "tags": ["moviess"],
+            }
+        }

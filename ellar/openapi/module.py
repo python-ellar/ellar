@@ -1,10 +1,18 @@
 import typing as t
 
-from ellar.common import IExecutionContext, IModuleSetup, Module, ModuleRouter, render
-from ellar.common.models import GuardCanActivate
+from ellar.common import (
+    GuardCanActivate,
+    IExecutionContext,
+    IModuleSetup,
+    Module,
+    ModuleRouter,
+    render,
+    set_metadata,
+)
 from ellar.core import DynamicModule, ModuleBase
 from ellar.di import injectable
 from ellar.openapi.docs_ui import IDocumentationUIContext
+from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 from ellar.openapi.openapi_v3 import OpenAPI
 
 __all__ = ["OpenAPIDocumentModule"]
@@ -30,6 +38,17 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
             t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]
         ] = None,
     ) -> DynamicModule:
+        """
+        Sets up OpenAPIDocumentModule
+
+        @param docs_ui: Type of DocumentationRenderer
+        @param document: Document Pydantic Model
+        @param router_prefix: OPENAPI route prefix
+        @param openapi_url: OPENAPI route url
+        @param allow_any: Allow AllowAnyGuard on openapi routes
+        @param guards: Guards that should be applied to openapi routes
+        @return:
+        """
         _guards = list(guards) if guards else []
         if allow_any:
             _guards = [AllowAnyGuard] + _guards
@@ -50,6 +69,7 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
             openapi_url = "/openapi.json"
 
             @router.get(openapi_url, include_in_schema=False)
+            @set_metadata(OPENAPI_OPERATION_KEY, True)
             def openapi_schema() -> t.Any:
                 assert document and isinstance(document, OpenAPI), "Invalid Document"
                 return document
@@ -92,5 +112,6 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
             name=template_name.replace(".html", ""),
         )
         @render(template_name)
+        @set_metadata(OPENAPI_OPERATION_KEY, True)
         def _doc() -> t.Any:
             return template_context

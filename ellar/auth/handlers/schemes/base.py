@@ -1,6 +1,7 @@
 import typing as t
 from abc import ABC, abstractmethod
 
+from ellar.common import Identity
 from ellar.common.exceptions import APIException
 from ellar.common.interfaces import IHostContext
 from ellar.common.serializer.guard import (
@@ -48,7 +49,10 @@ class BaseAuth(ABC):
     ) -> t.Any:
         if result:
             # auth parameter on request
-            connection.scope["user"] = result
+            if isinstance(result, dict):
+                connection.scope["user"] = Identity(**result)
+            else:
+                connection.scope["user"] = result
             return True
         return False
 

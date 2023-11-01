@@ -1,5 +1,5 @@
 from .controller import ControllerBase, ControllerType
-from .guard import GuardCanActivate
+from .guard import GlobalGuard, GuardCanActivate
 from .identity import AnonymousIdentity, Identity
 from .interceptor import EllarInterceptor
 
@@ -10,4 +10,5 @@ __all__ = [
     "EllarInterceptor",
     "Identity",
     "GuardCanActivate",
+    "GlobalGuard",
 ]

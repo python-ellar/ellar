@@ -54,6 +54,7 @@ from .models import (
     ControllerBase,
     ControllerType,
     EllarInterceptor,
+    GlobalGuard,
     GuardCanActivate,
     Identity,
 )
@@ -104,6 +105,7 @@ __all__ = [
     "ControllerType",
     "GuardCanActivate",
     "EllarTyper",
+    "GlobalGuard",
     "Serializer",
     "DataclassSerializer",
     "WebSocketException",

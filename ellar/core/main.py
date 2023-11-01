@@ -4,6 +4,7 @@ import typing as t
 
 from ellar.auth import IIdentitySchemes
 from ellar.auth.handlers import AuthenticationHandlerType
+from ellar.common import GlobalGuard
 from ellar.common.compatible import cached_property
 from ellar.common.constants import ELLAR_LOG_FMT_STRING, LOG_LEVELS
 from ellar.common.datastructures import State, URLPath
@@ -166,7 +167,7 @@ class App(AppTemplating):
         return t.cast(T, module_ref.get_module_instance())
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
-        return self._global_guards
+        return [self.__global_guard] + self._global_guards
 
     def get_interceptors(
         self,
@@ -310,6 +311,10 @@ class App(AppTemplating):
     @cached_property
     def __identity_scheme(self) -> IIdentitySchemes:
         return self.injector.get(IIdentitySchemes)  # type: ignore[no-any-return]
+
+    @cached_property
+    def __global_guard(self) -> GlobalGuard:
+        return self.injector.get(GlobalGuard)  # type: ignore[no-any-return]
 
     def add_authentication_schemes(
         self, *authentication: AuthenticationHandlerType

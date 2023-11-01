@@ -3,6 +3,7 @@ from abc import ABC, ABCMeta, abstractmethod
 
 from ellar.common.exceptions import APIException
 from ellar.common.interfaces import IExecutionContext
+from ellar.di import injectable
 from starlette.exceptions import HTTPException
 from starlette.status import HTTP_403_FORBIDDEN
 
@@ -20,3 +21,9 @@ class GuardCanActivate(ABC, metaclass=ABCMeta):
 
     def raise_exception(self) -> None:
         raise self.exception_class(status_code=self.status_code, detail=self.detail)
+
+
+@injectable
+class GlobalGuard(GuardCanActivate):
+    async def can_activate(self, context: IExecutionContext) -> bool:
+        return True
