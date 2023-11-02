@@ -190,7 +190,7 @@ class EndpointArgsModel:
                 continue
 
             if param_name in self.path_param_names:
-                if isinstance(param.default, params.PathFieldInfo):
+                if isinstance(param_default, params.PathFieldInfo):
                     ignore_default = False
                 else:
                     ignore_default = True
@@ -208,8 +208,8 @@ class EndpointArgsModel:
             else:
                 default_field_info = t.cast(
                     t.Type[params.ParamFieldInfo],
-                    param.default
-                    if isinstance(param.default, FieldInfo)
+                    param_default
+                    if isinstance(param_default, FieldInfo)
                     else params.QueryFieldInfo,
                 )
                 param_field = get_parameter_field(
@@ -229,7 +229,7 @@ class EndpointArgsModel:
                             )
 
                         bulk_resolver_generator_class = self.get_resolver_generator(
-                            param.default
+                            param_default
                         )
                         bulk_resolver_generator_class(param_field).generate_resolvers(
                             body_field_class=body_field_class
@@ -350,12 +350,12 @@ class EndpointArgsModel:
 
             default_field_info = t.cast(
                 t.Type[params.ParamFieldInfo],
-                param.default
-                if isinstance(param.default, FieldInfo)
+                param_default
+                if isinstance(param_default, FieldInfo)
                 else params.QueryFieldInfo,
             )
             param_field = get_parameter_field(
-                param_default=param.default,
+                param_default=param_default,
                 param_annotation=param.annotation,
                 default_field_info=default_field_info,
                 param_name=param.name,

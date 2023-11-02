@@ -167,7 +167,7 @@ class App(AppTemplating):
         return t.cast(T, module_ref.get_module_instance())
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
-        return [self.__global_guard] + self._global_guards
+        return self.__global_guard + self._global_guards
 
     def get_interceptors(
         self,
@@ -313,8 +313,14 @@ class App(AppTemplating):
         return self.injector.get(IIdentitySchemes)  # type: ignore[no-any-return]
 
     @cached_property
-    def __global_guard(self) -> GlobalGuard:
-        return self.injector.get(GlobalGuard)  # type: ignore[no-any-return]
+    def __global_guard(
+        self,
+    ) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
+        try:
+            guard = self.injector.get(GlobalGuard)
+            return [guard]
+        except Exception:
+            return []
 
     def add_authentication_schemes(
         self, *authentication: AuthenticationHandlerType
