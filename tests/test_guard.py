@@ -25,19 +25,19 @@ class QuerySecretKeyInjectable(GuardAPIKeyQuery):
         super().__init__()
         self.reflector = reflector
 
-    async def authentication_handler(self, connection, key):
+    async def authentication_handler(self, context, key):
         if key == "querysecretkey":
             return key
 
 
 class QuerySecretKey(GuardAPIKeyQuery):
-    async def authentication_handler(self, connection, key):
+    async def authentication_handler(self, context, key):
         if key == "querysecretkey":
             return key
 
 
 class HeaderSecretKey(GuardAPIKeyHeader):
-    async def authentication_handler(self, connection, key):
+    async def authentication_handler(self, context, key):
         if key == "headersecretkey":
             return key
 
@@ -50,7 +50,7 @@ class HeaderSecretKeyCustomException(HeaderSecretKey):
 class CookieSecretKey(GuardAPIKeyCookie):
     openapi_name = "API Key Auth"
 
-    async def authentication_handler(self, connection, key):
+    async def authentication_handler(self, context, key):
         if key == "cookiesecretkey":
             return key
 
@@ -58,7 +58,7 @@ class CookieSecretKey(GuardAPIKeyCookie):
 class BasicAuth(GuardHttpBasicAuth):
     openapi_name = "API Authentication"
 
-    async def authentication_handler(self, connection, credentials):
+    async def authentication_handler(self, context, credentials):
         if credentials.username == "admin" and credentials.password == "secret":
             return credentials.username
 
@@ -67,14 +67,14 @@ class BasicAuth(GuardHttpBasicAuth):
 class BearerAuth(GuardHttpBearerAuth):
     openapi_name = "JWT Authentication"
 
-    async def authentication_handler(self, connection, credentials):
+    async def authentication_handler(self, context, credentials):
         if credentials.credentials == "bearertoken":
             return credentials.credentials
 
 
 @injectable()
 class DigestAuth(GuardHttpDigestAuth):
-    async def authentication_handler(self, connection, credentials):
+    async def authentication_handler(self, context, credentials):
         if credentials.credentials == "digesttoken":
             return credentials.credentials
 

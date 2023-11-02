@@ -278,8 +278,7 @@ from ellar.common.serializer.guard import (
 from ellar.core.guards import GuardHttpBearerAuth
 from ellar.di import injectable
 from ellar_jwt import JWTService
-from ellar.common.logger import logger
-from ellar.core import HTTPConnection
+from ellar.common import logger, IExecutionContext
 
 
 @injectable
@@ -289,14 +288,14 @@ class AuthGuard(GuardHttpBearerAuth):
 
     async def authentication_handler(
         self,
-        connection: HTTPConnection,
+        context: IExecutionContext,
         credentials: HTTPAuthorizationCredentials,
     ) -> t.Optional[t.Any]:
         try:
             data = await self.jwt_service.decode_async(credentials.credentials)
             return UserIdentity(auth_type="bearer", **data)
         except Exception as ex:
-            logger.error(f"[AuthGuard] Exception: {ex}")
+            logger.logger.error(f"[AuthGuard] Exception: {ex}")
             self.raise_exception()
 ```
 
@@ -506,16 +505,15 @@ Let us define a mechanism for declaring routes as anonymous or public.
     from ellar.core import Reflector
     from ellar.di import injectable
     from ellar_jwt import JWTService
-    from ellar.common.logger import logger
-    from ellar.core import HTTPConnection
+    from ellar.common import logger, IExecutionContext
     
     IS_ANONYMOUS = 'is_anonymous'
     
     
     def allow_any() -> t.Callable:
         return set_metadata(IS_ANONYMOUS, True)    
-    
-    
+
+
     @injectable
     class AuthGuard(GuardHttpBearerAuth):
         def __init__(self, jwt_service: JWTService, reflector: Reflector) -> None:
@@ -524,10 +522,9 @@ Let us define a mechanism for declaring routes as anonymous or public.
     
         async def authentication_handler(
             self,
-            connection: HTTPConnection,
+            context: IExecutionContext,
             credentials: HTTPAuthorizationCredentials,
         ) -> t.Optional[t.Any]:
-            context = connection.service_provider.get(IExecutionContext)
             is_anonymous = self.reflector.get_all_and_override(IS_ANONYMOUS, context.get_handler(), context.get_class())
             
             if is_anonymous:
@@ -559,7 +556,7 @@ Let us define a mechanism for declaring routes as anonymous or public.
     from ellar.di import injectable
     from ellar_jwt import JWTService
     from ellar.common.logger import logger
-    from ellar.core import HTTPConnection
+    from ellar.common import logger, IExecutionContext
     
     
     def allow_any() -> t.Callable:
@@ -577,15 +574,15 @@ Let us define a mechanism for declaring routes as anonymous or public.
             self.jwt_service = jwt_service
     
         async def authentication_handler(
-                self,
-                connection: HTTPConnection,
-                credentials: HTTPAuthorizationCredentials,
+            self,
+            context: IExecutionContext,
+            credentials: HTTPAuthorizationCredentials,
         ) -> t.Optional[t.Any]:
             try:
                 data = await self.jwt_service.decode_async(credentials.credentials)
                 return UserIdentity(auth_type="bearer", **data)
             except Exception as ex:
-                logger.error(f"[AuthGuard] Exception: {ex}")
+                logger.logger.error(f"[AuthGuard] Exception: {ex}")
                 self.raise_exception()
     ```
 
