@@ -112,7 +112,8 @@ async def test_request_service_context():
         with pytest.raises(UnsatisfiedRequirement):
             injector.get(Foo)
 
-    assert injector.get(Foo1) != foo1
+    with pytest.raises(UnsatisfiedRequirement):
+        injector.get(Foo1)
 
 
 @pytest.mark.asyncio

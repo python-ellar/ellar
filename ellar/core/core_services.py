@@ -43,16 +43,16 @@ class EllarCoreService:
         )
         self.injector.container.register(IHostContextFactory, HostContextFactory)
 
-        self.injector.container.register_scoped(
+        self.injector.container.register(
             IHTTPConnectionContextFactory, HTTPConnectionContextFactory
         )
 
-        self.injector.container.register_scoped(
+        self.injector.container.register(
             IWebSocketContextFactory, WebSocketContextFactory
         )
 
         self.injector.container.register(Reflector)
-        self.injector.container.register_singleton(
+        self.injector.container.register(
             IInterceptorsConsumer, EllarInterceptorConsumer
         )
         self.injector.container.register_singleton(IGuardsConsumer, GuardConsumer)

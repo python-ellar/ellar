@@ -27,7 +27,7 @@ theme:
     - navigation.indexes
     - navigation.instant
     - navigation.prune
-    - navigation.tabs
+#    - navigation.tabs
     - navigation.left
     - navigation.tracking
   palette:

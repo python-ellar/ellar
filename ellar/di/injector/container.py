@@ -4,6 +4,7 @@ from inspect import isabstract
 from injector import (
     AssistedBuilder,
     Binding,
+    SingletonScope,
     UnsatisfiedRequirement,
     _is_specialization,
 )
@@ -13,17 +14,13 @@ from injector import (
 from injector import (
     Module as InjectorModule,
 )
-from injector import (
-    Scope as InjectorScope,
-)
+from injector import NoScope as TransientScope
+from injector import Scope as InjectorScope
 
 from ..providers import Provider
 from ..scopes import (
-    DIScope,
     RequestScope,
     ScopeDecorator,
-    SingletonScope,
-    TransientScope,
 )
 from ..service_config import get_scope, is_decorated_with_injectable
 
@@ -52,7 +49,7 @@ class Container(InjectorBinder):
         self,
         interface: t.Type,
         to: t.Any = None,
-        scope: t.Union[ScopeDecorator, t.Type[DIScope]] = None,
+        scope: t.Union[ScopeDecorator, t.Type[InjectorScope]] = None,
     ) -> Binding:
         provider = self.provider_for(interface, to)
         scope = scope or get_scope(to or interface) or TransientScope
@@ -93,7 +90,7 @@ class Container(InjectorBinder):
         self,
         base_type: t.Type,
         concrete_type: t.Union[t.Type, t.Any] = None,
-        scope: t.Union[t.Type[DIScope], ScopeDecorator] = None,
+        scope: t.Union[t.Type[InjectorScope], ScopeDecorator] = None,
     ) -> None:
         try:
             if concrete_type and isinstance(concrete_type, type):

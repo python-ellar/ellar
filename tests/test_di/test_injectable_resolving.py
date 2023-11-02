@@ -2,7 +2,7 @@ import pytest
 from ellar.di import (
     EllarInjector,
     injectable,
-    request_scope,
+    request_or_transient_scope,
     singleton_scope,
     transient_scope,
 )
@@ -14,7 +14,7 @@ class SampleInjectableA:
     pass
 
 
-@injectable(scope=request_scope)
+@injectable(scope=request_or_transient_scope)
 class SampleInjectableB:
     pass
 
@@ -40,7 +40,7 @@ def test_injectable_class_can_be_resolved_at_runtime_without_if_they_are_not_reg
     with pytest.raises(UnsatisfiedRequirement):
         injector.get(MustBeRegisteredToResolve)
 
-    injector.container.register_scoped(MustBeRegisteredToResolve)
+    injector.container.register_exact_transient(MustBeRegisteredToResolve)
     assert isinstance(
         injector.get(MustBeRegisteredToResolve), MustBeRegisteredToResolve
     )

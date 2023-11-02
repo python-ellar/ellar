@@ -77,10 +77,4 @@ def test_openapi_auth_schema():
         },
     }
 
-    assert document["security"] == [
-        {"JWT Authentication": []},
-        {"HeaderAuth": []},
-        {"QueryAuth": []},
-        {"API Key Auth": []},
-        {"API Authentication": []},
-    ]
+    assert document.get("security", []) == []

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from ellar.di import injectable
-from ellar.di.scopes import RequestScope, TransientScope
+from ellar.di.scopes import RequestORTransientScope, RequestScope, TransientScope
 
 
 class Foo:
@@ -79,6 +79,20 @@ class IContext(ABC):
 
 @injectable(RequestScope)
 class AnyContext(IContext):
+    def __init__(self):
+        pass
+
+    @property
+    def id(self):
+        return "Example"
+
+    @property
+    def user(self):
+        return "Example"
+
+
+@injectable(RequestORTransientScope)
+class TransientRequestContext(IContext):
     def __init__(self):
         pass
 

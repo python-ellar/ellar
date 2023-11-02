@@ -15,9 +15,9 @@ from ellar.common.constants import (
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.logger import logger
 from ellar.common.models import ControllerBase, ControllerType
-from ellar.di import RequestScope, injectable
-from ellar.di.scopes import DIScope
+from ellar.di import RequestORTransientScope, injectable
 from ellar.reflect import REFLECT_TYPE, reflect
+from injector import Scope
 
 from ..routing.controller import (
     ControllerRouteOperation,
@@ -77,7 +77,7 @@ def Controller(
     *,
     name: t.Optional[str] = None,
     include_in_schema: bool = True,
-    scope: t.Optional[t.Union[t.Type[DIScope], DIScope]] = RequestScope,
+    scope: t.Optional[t.Union[t.Type[Scope], Scope]] = RequestORTransientScope,
 ) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:
     """
     ========= CLASS DECORATOR ==============
@@ -138,7 +138,7 @@ def Controller(
             reflect.define_metadata(CONTROLLER_WATERMARK, True, _controller_type)
             reflect_all_controller_type_routes(_controller_type)
 
-            injectable(scope or RequestScope)(cls)
+            injectable(scope or RequestORTransientScope)(cls)
 
             for key in CONTROLLER_METADATA.keys:
                 reflect.define_metadata(key, kwargs[key], _controller_type)

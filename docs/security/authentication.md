@@ -4,10 +4,10 @@ In this section, we shall go through different approaches to authentication in E
 
 There are two ways in which user authentication and identification are processed in Ellar:
 
-- Using Guards
-- Using Authentication Schemes
+- [Using Guards](#1-guard-authentication)
+- [Using Authentication Schemes](#2-authentication-schemes)
 
-## **Guard Authentication**
+## **1. Guard Authentication**
 We have discussed in detail how Guards are used to protect a route and check for user authorizations, but we never really addressed how they can be used for authentication purposes. For this, we are going to illustrate JWT authentication using Guard
 
 !!!note 
@@ -443,3 +443,182 @@ With the above illustration refresh token mechanism is complete.
 
 You can also vist [http://localhost:8000/docs](http://localhost:8000/docs)
 ![Swagger UI](../img/auth_image.png)
+
+## Apply AuthGuard Globally
+
+In situations when you need to protect all your endpoints, you can register `AuthGuard` as a global guard instead of 
+using the `@UseGuards` decorator in all your controllers or route functions. 
+However, you also need to implement a mechanism to skip the auth guard for certain route functions 
+that don't require it, such as the `sign_in` route function.
+
+First, let us register `AuthGuard` a global guard in `AuthModule`.
+
+```python title="auth.module.py" linenums="1"
+from datetime import timedelta
+
+from ellar.common import GlobalGuard, Module
+from ellar.core import ModuleBase
+from ellar.di import ProviderConfig
+from ellar_jwt import JWTModule
+
+from .controllers import AuthController
+from ..user.module import UserModule
+from .services import AuthService
+from .guards import AuthGuard
+
+@Module(
+    modules=[
+        UserModule,
+        JWTModule.setup(
+            signing_secret_key="my_poor_secret_key_lol", lifetime=timedelta(minutes=5)
+        ),
+    ],
+    controllers=[AuthController],
+    providers=[AuthService, ProviderConfig(GlobalGuard, use_class=AuthGuard)],
+)
+class AuthModule(ModuleBase):
+    """
+    Auth Module
+    """
+
+    pass
+```
+
+With this, `AuthGuard` will be available to all endpoints.
+
+### **Anonymous Route Function Mechanism**
+Let us define a mechanism for declaring routes as anonymous or public. 
+
+=== "Using Route Function MetaData"
+    One way to achieve this, is by using the `set_metadata` decorator.
+    We can set some metadata on those functions, and it can be read in AuthGuard. 
+    If the metadata is present, we exit the authentication verification and allow the execution to continue.
+    
+    ```python title='auth.guards.py' linenums='1'
+    import typing as t
+    
+    from ellar.auth import UserIdentity
+    from ellar.common.serializer.guard import (
+        HTTPAuthorizationCredentials,
+    )
+    from ellar.common import IExecutionContext, set_metadata
+    from ellar.core.guards import GuardHttpBearerAuth
+    from ellar.core import Reflector
+    from ellar.di import injectable
+    from ellar_jwt import JWTService
+    from ellar.common.logger import logger
+    from ellar.core import HTTPConnection
+    
+    IS_ANONYMOUS = 'is_anonymous'
+    
+    
+    def allow_any() -> t.Callable:
+        return set_metadata(IS_ANONYMOUS, True)    
+    
+    
+    @injectable
+    class AuthGuard(GuardHttpBearerAuth):
+        def __init__(self, jwt_service: JWTService, reflector: Reflector) -> None:
+            self.jwt_service = jwt_service
+            self.reflector = reflector
+    
+        async def authentication_handler(
+            self,
+            connection: HTTPConnection,
+            credentials: HTTPAuthorizationCredentials,
+        ) -> t.Optional[t.Any]:
+            context = connection.service_provider.get(IExecutionContext)
+            is_anonymous = self.reflector.get_all_and_override(IS_ANONYMOUS, context.get_handler(), context.get_class())
+            
+            if is_anonymous:
+                return True
+            
+            try:
+                data = await self.jwt_service.decode_async(credentials.credentials)
+                return UserIdentity(auth_type="bearer", **data)
+            except Exception as ex:
+                logger.error(f"[AuthGuard] Exception: {ex}")
+                self.raise_exception()
+    ```
+    
+    We have defined the `allow_any` metadata decorator in the above illustration and have used Ellar's built-in class `Reflector` to read the metadata defined at the controller or route function.
+
+=== "Using GuardCanActivate"
+    We can create an `allow_any` decorator function that defines a guard metadata on the decorated function to override the global guard
+    
+    ```python title='auth.guards.py' linenums='1'
+    import typing as t
+    
+    from ellar.auth import UserIdentity
+    from ellar.common.serializer.guard import (
+        HTTPAuthorizationCredentials,
+    )
+    from ellar.common import IExecutionContext, set_metadata, constants, GuardCanActivate
+    from ellar.core.guards import GuardHttpBearerAuth
+    from ellar.core import Reflector
+    from ellar.di import injectable
+    from ellar_jwt import JWTService
+    from ellar.common.logger import logger
+    from ellar.core import HTTPConnection
+    
+    
+    def allow_any() -> t.Callable:
+        return set_metadata(constants.GUARDS_KEY, [AllowAny])
+    
+    
+    class AllowAny(GuardCanActivate):
+        async def can_activate(self, context: IExecutionContext) -> bool:
+            return True
+    
+    
+    @injectable
+    class AuthGuard(GuardHttpBearerAuth):
+        def __init__(self, jwt_service: JWTService) -> None:
+            self.jwt_service = jwt_service
+    
+        async def authentication_handler(
+                self,
+                connection: HTTPConnection,
+                credentials: HTTPAuthorizationCredentials,
+        ) -> t.Optional[t.Any]:
+            try:
+                data = await self.jwt_service.decode_async(credentials.credentials)
+                return UserIdentity(auth_type="bearer", **data)
+            except Exception as ex:
+                logger.error(f"[AuthGuard] Exception: {ex}")
+                self.raise_exception()
+    ```
+
+#### Using allow_any decorator function
+We have seen from above how to get `allow_any` decorator function.
+Now we use it on the `refresh` and `sign in` endpoints as shown below:
+
+```python title='auth.controllers.py' linenums='1'
+from ellar.common import Controller, ControllerBase, post, Body, get
+from ellar.openapi import ApiTags
+from .services import AuthService
+from .guards import AuthGuard, allow_any
+
+
+@Controller
+@ApiTags(name='Authentication', description='User Authentication Endpoints')
+class AuthController(ControllerBase):
+    def __init__(self, auth_service: AuthService) -> None:
+        self.auth_service = auth_service
+
+    @post("/login")
+    @allow_any()
+    async def sign_in(self, username: Body[str], password: Body[str]):
+        return await self.auth_service.sign_in(username=username, password=password)
+
+    @get("/profile")
+    async def get_profile(self):
+        return self.context.user
+    
+    @allow_any()
+    @post("/refresh")
+    async def refresh_token(self, payload: str = Body(embed=True)):
+        return await self.auth_service.refresh_token(payload)
+```
+
+## **2. Authentication Schemes**
