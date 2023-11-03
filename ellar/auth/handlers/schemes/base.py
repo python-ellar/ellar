@@ -30,7 +30,7 @@ class BaseAuth(ABC):
         self,
         *,
         connection: "HTTPConnection",
-        context: t.Union[IHostContext, IExecutionContext]
+        context: t.Union[IHostContext, IExecutionContext],
     ) -> t.Optional[t.Any]:
         """Override and Provide Authentication actions"""
 
