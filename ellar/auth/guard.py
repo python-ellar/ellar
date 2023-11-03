@@ -21,6 +21,4 @@ class AuthenticatedRequiredGuard(GuardCanActivate):
         return {}
 
     async def can_activate(self, context: IExecutionContext) -> bool:
-        return (  # type:ignore[no-any-return]
-            context.switch_to_http_connection().get_request().user.is_authenticated
-        )
+        return context.user.is_authenticated

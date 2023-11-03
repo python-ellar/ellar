@@ -19,7 +19,7 @@ class MoviesControllers:
 @Authorize()
 class ArticleController:
     @get("/create")
-    @AuthenticationRequired("SimpleHeaderAuthHandler")
+    @AuthenticationRequired
     @CheckPolicies(RequiredClaimsPolicy("article", "create", "publish"))
     async def create_and_publish(self):
         return "fast and furious 10 Article"
