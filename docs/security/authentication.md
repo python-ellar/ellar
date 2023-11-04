@@ -663,7 +663,7 @@ class JWTAuthentication(HttpBearerAuthenticationHandler):
 
 Let us make `JWTAuthentication` Handler available for ellar to use as shown below
 
-```python title='server.py' linenums='1'
+```python title='project_name.server.py' linenums='1'
 import os
 from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
@@ -693,7 +693,7 @@ Also, we need to remove `GlobalGuard` registration we did in `AuthModule`, so th
 Next, we register a simple guard `AuthenticationRequiredGuard` globally to the application. `AuthenticationRequiredGuard` is a simply guard
 that checks if a request has a valid user identity.
 
-```python title='server.py' linenums='1'
+```python title='project_name.server.py' linenums='1'
 import os
 from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
@@ -707,12 +707,13 @@ application = AppFactory.create_from_app_module(
     config_module=os.environ.get(
         ELLAR_CONFIG_MODULE, "project_name.config:DevelopmentConfig"
     ),
-    global_guards=[AuthenticatedRequiredGuard]
+    global_guards=[AuthenticatedRequiredGuard('JWTAuthentication')]
 )
 application.add_authentication_schemes(JWTAuthentication)
 ```
 We need to refactor auth controller and mark refresh and sign_in function as public routes
-```python
+
+```python title='auth.controller.py' linenums='1'
 from ellar.common import Controller, ControllerBase, post, Body, get
 from ellar.auth import SkipAuth
 from ellar.openapi import ApiTags

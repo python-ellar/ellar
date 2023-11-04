@@ -2,7 +2,6 @@ import typing as t
 
 import starlette.status
 from ellar.common import GuardCanActivate, IExecutionContext, constants
-from ellar.core import Reflector
 
 
 class AuthenticatedRequiredGuard(GuardCanActivate):
@@ -11,6 +10,8 @@ class AuthenticatedRequiredGuard(GuardCanActivate):
     def __init__(
         self, authentication_scheme: t.Optional[str], openapi_scope: t.List
     ) -> None:
+        from ellar.core import Reflector
+
         self.authentication_scheme = authentication_scheme
         self.openapi_scope = openapi_scope or []
         self.reflector = Reflector()
