@@ -4,7 +4,7 @@ from ellar.common import IExecutionContext, IModuleSetup, Module, ModuleRouter, 
 from ellar.common.models import GuardCanActivate
 from ellar.core import DynamicModule, ModuleBase
 from ellar.di import injectable
-from ellar.openapi.docs_generators import IDocumentationGenerator
+from ellar.openapi.docs_ui import IDocumentationUIContext
 from ellar.openapi.openapi_v3 import OpenAPI
 
 __all__ = ["OpenAPIDocumentModule"]
@@ -21,9 +21,7 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
     @classmethod
     def setup(
         cls,
-        document_generator: t.Union[
-            t.Sequence[IDocumentationGenerator], IDocumentationGenerator
-        ],
+        docs_ui: t.Union[t.Sequence[IDocumentationUIContext], IDocumentationUIContext],
         document: t.Optional[OpenAPI] = None,
         router_prefix: str = "",
         openapi_url: t.Optional[str] = None,
@@ -35,7 +33,7 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
         _guards = list(guards) if guards else []
         if allow_any:
             _guards = [AllowAnyGuard] + _guards
-        _document_generator: t.List[IDocumentationGenerator] = []
+        _document_renderer: t.List[IDocumentationUIContext] = []
         router = ModuleRouter(
             router_prefix,
             guards=_guards,
@@ -43,10 +41,10 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
             include_in_schema=False,
         )
 
-        if isinstance(document_generator, (list, tuple, set)):
-            _document_generator = list(document_generator)
+        if isinstance(docs_ui, (list, tuple, set)):
+            _document_renderer = list(docs_ui)
         else:
-            _document_generator = [document_generator]  # type: ignore[list-item]
+            _document_renderer = [docs_ui]  # type: ignore[list-item]
 
         if not openapi_url and document:
             openapi_url = "/openapi.json"
@@ -56,11 +54,11 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
                 assert document and isinstance(document, OpenAPI), "Invalid Document"
                 return document
 
-        for doc_gen in _document_generator:
-            if not isinstance(doc_gen, IDocumentationGenerator):
+        for doc_gen in _document_renderer:
+            if not isinstance(doc_gen, IDocumentationUIContext):
                 raise Exception(
                     f"{doc_gen.__class__.__name__ if not isinstance(doc_gen, type) else doc_gen.__name__} "
-                    f"must be of type `IDocumentationGenerator`"
+                    f"must be of type `IDocumentationUIContext`"
                 )
 
             template_context = dict(doc_gen.template_context)

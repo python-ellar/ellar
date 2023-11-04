@@ -50,10 +50,10 @@ $(venv) pip install ellar
 ## **Try This**
 ```python
 import uvicorn
-from ellar.common import Body, Controller, ControllerBase, delete, get, post, put, Serializer, Provide
+from ellar.common import Body, Controller, ControllerBase, delete, get, post, put, Serializer, Inject
 from ellar.core import AppFactory
 from ellar.di import injectable, request_scope
-from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerDocumentGenerator
+from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerUI
 from pydantic import Field
 from pathlib import Path
 
@@ -76,20 +76,20 @@ class MotoController(ControllerBase):
         self._service = service
     
     @post()
-    async def create(self, payload: CreateCarSerializer = Body()):
+    async def create(self, payload:  Body[CreateCarSerializer]):
         assert self._service.detail == 'a service'
         result = payload.dict()
         result.update(message='This action adds a new car')
         return result
 
     @put('/{car_id:str}')
-    async def update(self, car_id: str, payload: CreateCarSerializer = Body()):
+    async def update(self, car_id: str, payload: Body[CreateCarSerializer]):
         result = payload.dict()
         result.update(message=f'This action updated #{car_id} car resource')
         return result
 
     @get('/{car_id:str}')
-    async def get_one(self, car_id: str, service: CarService = Provide()):
+    async def get_one(self, car_id: str, service: Inject[CarService]):
         assert self._service == service
         return f"This action returns a #{car_id} car"
 
@@ -113,7 +113,7 @@ document_builder.set_title('Ellar API') \
 
 document = document_builder.build_document(app)
 module = OpenAPIDocumentModule.setup(
-    document_generator=SwaggerDocumentGenerator(),
+    docs_ui=SwaggerUI(),
     document=document,
     guards=[]
 )

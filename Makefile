@@ -9,6 +9,7 @@ clean: ## Removing cached python compiled files
 	find . -name \*pyo | xargs  rm -fv
 	find . -name \*~  | xargs  rm -fv
 	find . -name __pycache__  | xargs  rm -rfv
+	find . -name .ruff_cache  | xargs  rm -rfv
 
 install: ## Install dependencies
 	flit install --deps develop --symlink

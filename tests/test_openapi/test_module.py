@@ -9,8 +9,8 @@ from ellar.di import EllarInjector, injectable
 from ellar.openapi import (
     OpenAPIDocumentBuilder,
     OpenAPIDocumentModule,
-    ReDocDocumentGenerator,
-    SwaggerDocumentGenerator,
+    ReDocsUI,
+    SwaggerUI,
 )
 from ellar.openapi.module import AllowAnyGuard
 from ellar.reflect import reflect
@@ -51,7 +51,7 @@ def test_openapi_module_with_openapi_url_doesnot_create_new_openapi_url():
     module_config = OpenAPIDocumentModule.setup(
         openapi_url="/openapi_url.json",
         document=document,
-        document_generator=SwaggerDocumentGenerator(),
+        docs_ui=SwaggerUI(),
     )
     app.install_module(module_config)
     res = client.get("/docs")
@@ -64,9 +64,7 @@ def test_openapi_module_creates_openapi_url():
     document = OpenAPIDocumentBuilder().build_document(app)
     client = TestClient(app)
 
-    module_config = OpenAPIDocumentModule.setup(
-        document=document, document_generator=SwaggerDocumentGenerator()
-    )
+    module_config = OpenAPIDocumentModule.setup(document=document, docs_ui=SwaggerUI())
     app.install_module(module_config)
     res = client.get("/docs")
 
@@ -121,9 +119,7 @@ def test_openapi_module_creates_swagger_endpoint():
     module_config = OpenAPIDocumentModule.setup(
         openapi_url="/openapi_url.json",
         document=document,
-        document_generator=SwaggerDocumentGenerator(
-            title="Swagger Doc Test", path="docs-swagger-test"
-        ),
+        docs_ui=SwaggerUI(title="Swagger Doc Test", path="docs-swagger-test"),
     )
     app.install_module(module_config)
     client = TestClient(app)
@@ -141,9 +137,7 @@ def test_openapi_module_creates_redocs_endpoint():
     module_config = OpenAPIDocumentModule.setup(
         openapi_url="/openapi_url.json",
         document=document,
-        document_generator=ReDocDocumentGenerator(
-            title="Redocs Doc Test", path="docs-redocs-test"
-        ),
+        docs_ui=ReDocsUI(title="Redocs Doc Test", path="docs-redocs-test"),
     )
     app.install_module(module_config)
     client = TestClient(app)
@@ -163,7 +157,7 @@ def test_openapi_module_with_route_guards():
     module_config = OpenAPIDocumentModule.setup(
         document=document,
         guards=[CustomDocsGuard],
-        document_generator=(SwaggerDocumentGenerator(), ReDocDocumentGenerator()),
+        docs_ui=(SwaggerUI(), ReDocsUI()),
     )
     app.install_module(module_config)
     client = TestClient(app)
@@ -194,17 +188,17 @@ def test_invalid_open_api_doc_setup():
         OpenAPIDocumentModule.setup(
             document=document,
             guards=[CustomDocsGuard],
-            document_generator=(CustomDocsGuard(),),
+            docs_ui=(CustomDocsGuard(),),
         )
-    assert str(ex.value) == "CustomDocsGuard must be of type `IDocumentationGenerator`"
+    assert str(ex.value) == "CustomDocsGuard must be of type `IDocumentationUIContext`"
 
     with pytest.raises(Exception) as ex:
         OpenAPIDocumentModule.setup(
             document=document,
             guards=[CustomDocsGuard],
-            document_generator=(CustomDocsGuard,),
+            docs_ui=(CustomDocsGuard,),
         )
-    assert str(ex.value) == "CustomDocsGuard must be of type `IDocumentationGenerator`"
+    assert str(ex.value) == "CustomDocsGuard must be of type `IDocumentationUIContext`"
 
 
 def test_app_global_guard_blocks_openapi_doc_page():
@@ -214,7 +208,7 @@ def test_app_global_guard_blocks_openapi_doc_page():
 
     module_config = OpenAPIDocumentModule.setup(
         document=document,
-        document_generator=SwaggerDocumentGenerator(),
+        docs_ui=SwaggerUI(),
         allow_any=False,
     )
     app.install_module(module_config)
@@ -222,3 +216,17 @@ def test_app_global_guard_blocks_openapi_doc_page():
 
     assert response.status_code == 403
     assert response.json() == {"detail": "Not Allowed", "status_code": 403}
+
+    module_config = OpenAPIDocumentModule.setup(
+        document=document,
+        docs_ui=SwaggerUI(),
+        allow_any=False,
+        guards=[CustomDocsGuard],
+    )
+    app.install_module(module_config)
+
+    guards = reflect.get_metadata(
+        GUARDS_KEY, module_config.routers[0].get_control_type()
+    )
+    assert len(guards) == 1
+    assert AllowAnyGuard not in guards

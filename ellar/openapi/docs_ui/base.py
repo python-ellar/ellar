@@ -1,7 +1,11 @@
 from abc import ABC, abstractmethod
 
 
-class IDocumentationGenerator(ABC):
+class IDocumentationUIContext(ABC):
+    """
+    Provides Context that for rendering OPENAPI Docs
+    """
+
     @property
     @abstractmethod
     def title(self) -> str:

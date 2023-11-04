@@ -1,9 +1,9 @@
 from .builder import OpenAPIDocumentBuilder
 from .decorators import ApiTags, openapi_info
-from .docs_generators import (
-    IDocumentationGenerator,
-    ReDocDocumentGenerator,
-    SwaggerDocumentGenerator,
+from .docs_ui import (
+    IDocumentationUIContext,
+    ReDocsUI,
+    SwaggerUI,
 )
 from .module import OpenAPIDocumentModule
 from .route_doc_models import (
@@ -13,14 +13,14 @@ from .route_doc_models import (
 )
 
 __all__ = [
-    "IDocumentationGenerator",
+    "IDocumentationUIContext",
     "OpenAPIDocumentBuilder",
     "OpenAPIRoute",
     "OpenAPIMountDocumentation",
     "OpenAPIRouteDocumentation",
     "OpenAPIDocumentModule",
-    "ReDocDocumentGenerator",
-    "SwaggerDocumentGenerator",
+    "ReDocsUI",
+    "SwaggerUI",
     "openapi_info",
     "ApiTags",
 ]

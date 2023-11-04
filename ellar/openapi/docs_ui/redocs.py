@@ -1,10 +1,10 @@
-from .base import IDocumentationGenerator
+from .base import IDocumentationUIContext
 
 
-class SwaggerDocumentGenerator(IDocumentationGenerator):
+class ReDocsUI(IDocumentationUIContext):
     @property
     def template_name(self) -> str:
-        return "swagger.html"
+        return "redocs.html"
 
     @property
     def title(self) -> str:
@@ -20,16 +20,16 @@ class SwaggerDocumentGenerator(IDocumentationGenerator):
 
     def __init__(
         self,
-        path: str = "docs",
-        title: str = "Ellar Swagger Doc",
-        swagger_js_url: str = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-bundle.js",
-        swagger_css_url: str = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui.css",
+        path: str = "redoc",
+        title: str = "Ellar Redoc",
+        redoc_js_url: str = "https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js",
         favicon_url: str = "https://eadwincode.github.io/ellar/img/Icon.svg",
+        with_google_fonts: bool = True,
     ):
         self._path = path
         self._title = title
         self._template_context = {
-            "swagger_js_url": swagger_js_url,
-            "swagger_css_url": swagger_css_url,
+            "redoc_js_url": redoc_js_url,
             "favicon_url": favicon_url,
+            "with_google_fonts": with_google_fonts,
         }

@@ -53,7 +53,7 @@ In `project_name.server`, we create the `application` instance using the `AppFac
 # project_name/server.py
 import os
 
-from ellar.constants import ELLAR_CONFIG_MODULE
+from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
 from .root_module import ApplicationModule
 
@@ -178,9 +178,9 @@ then add the below.
 # project_name/server.py
 
 import os
-from ellar.constants import ELLAR_CONFIG_MODULE
+from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
-from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerDocumentGenerator
+from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerUI
 from .root_module import ApplicationModule
 
 application = AppFactory.create_from_app_module(
@@ -198,7 +198,7 @@ document_builder.set_title('Project Name API') \
 
 document = document_builder.build_document(application)
 module_config = OpenAPIDocumentModule.setup(
-    document_generator=SwaggerDocumentGenerator(),
+    docs_ui=SwaggerUI(),
     document=document,
     guards=[]
 )
