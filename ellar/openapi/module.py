@@ -11,8 +11,8 @@ from ellar.common import (
 )
 from ellar.core import DynamicModule, ModuleBase
 from ellar.di import injectable
-from ellar.openapi.docs_ui import IDocumentationUIContext
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
+from ellar.openapi.docs_ui import IDocumentationUIContext
 from ellar.openapi.openapi_v3 import OpenAPI
 
 __all__ = ["OpenAPIDocumentModule"]

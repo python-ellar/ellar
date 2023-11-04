@@ -1,4 +1,4 @@
-from .decorators import AuthenticationRequired, Authorize, CheckPolicies
+from .decorators import AuthenticationRequired, Authorize, CheckPolicies, SkipAuth
 from .handlers import BaseAuthenticationHandler
 from .identity import UserIdentity
 from .interceptor import AuthorizationInterceptor
@@ -26,4 +26,5 @@ __all__ = [
     "AppIdentitySchemes",
     "IdentityAuthenticationService",
     "AuthenticationRequired",
+    "SkipAuth",
 ]

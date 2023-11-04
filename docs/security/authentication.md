@@ -293,7 +293,7 @@ class AuthGuard(GuardHttpBearerAuth):
     ) -> t.Optional[t.Any]:
         try:
             data = await self.jwt_service.decode_async(credentials.credentials)
-            return UserIdentity(auth_type="bearer", **data)
+            return UserIdentity(auth_type=self.scheme, **data)
         except Exception as ex:
             logger.logger.error(f"[AuthGuard] Exception: {ex}")
             self.raise_exception()
@@ -500,12 +500,11 @@ Let us define a mechanism for declaring routes as anonymous or public.
     from ellar.common.serializer.guard import (
         HTTPAuthorizationCredentials,
     )
-    from ellar.common import IExecutionContext, set_metadata
+    from ellar.common import IExecutionContext, set_metadata, logger
     from ellar.core.guards import GuardHttpBearerAuth
     from ellar.core import Reflector
     from ellar.di import injectable
     from ellar_jwt import JWTService
-    from ellar.common import logger, IExecutionContext
     
     IS_ANONYMOUS = 'is_anonymous'
     
@@ -532,7 +531,7 @@ Let us define a mechanism for declaring routes as anonymous or public.
             
             try:
                 data = await self.jwt_service.decode_async(credentials.credentials)
-                return UserIdentity(auth_type="bearer", **data)
+                return UserIdentity(auth_type=self.scheme, **data)
             except Exception as ex:
                 logger.error(f"[AuthGuard] Exception: {ex}")
                 self.raise_exception()
@@ -550,13 +549,10 @@ Let us define a mechanism for declaring routes as anonymous or public.
     from ellar.common.serializer.guard import (
         HTTPAuthorizationCredentials,
     )
-    from ellar.common import IExecutionContext, set_metadata, constants, GuardCanActivate
+    from ellar.common import IExecutionContext, set_metadata, constants, GuardCanActivate, logger
     from ellar.core.guards import GuardHttpBearerAuth
-    from ellar.core import Reflector
     from ellar.di import injectable
     from ellar_jwt import JWTService
-    from ellar.common.logger import logger
-    from ellar.common import logger, IExecutionContext
     
     
     def allow_any() -> t.Callable:
@@ -619,3 +615,145 @@ class AuthController(ControllerBase):
 ```
 
 ## **2. Authentication Schemes**
+
+Authentication scheme is another strategy for identifying the user who is using the application. The difference between it and
+and Guard strategy is your identification executed at middleware layer when processing incoming request while guard execution
+happens just before route function is executed.
+
+Ellar provides `BaseAuthenticationHandler` contract which defines what is required to set up any authentication strategy. 
+We are going to make some modifications on the existing project to see how we can achieve the same result and to show how authentication handlers in ellar.
+
+### Creating a JWT Authentication Handler
+Just like AuthGuard, we need to create its equivalent. But first we need to create a `auth_scheme.py` at the root level 
+of your application for us to define a `JWTAuthentication` handler. 
+
+
+```python title='prject_name.auth_scheme.py' linenums='1'
+import typing as t
+from ellar.common.serializer.guard import (
+    HTTPAuthorizationCredentials,
+)
+from ellar.auth import UserIdentity
+from ellar.auth.handlers import HttpBearerAuthenticationHandler
+from ellar.common import IHostContext
+from ellar.di import injectable
+from ellar_jwt import JWTService
+
+from starlette.exceptions import HTTPException
+
+
+@injectable
+class JWTAuthentication(HttpBearerAuthenticationHandler):
+    def __init__(self, jwt_service: JWTService) -> None:
+        self.jwt_service = jwt_service
+
+    async def authentication_handler(
+        self,
+        context: IHostContext,
+        credentials: HTTPAuthorizationCredentials,
+    ) -> t.Optional[t.Any]:
+        # this function will be called by Identity Middleware but only when a `Bearer token` is found on the header request
+        try:
+            data = await self.jwt_service.decode_async(credentials.credentials)
+            return UserIdentity(auth_type=self.scheme, **data)
+        except Exception as ex:
+            # if we cant identity the user or token has expired we raise 401 error.
+            raise HTTPException(status_code=401) from ex
+```
+
+Let us make `JWTAuthentication` Handler available for ellar to use as shown below
+
+```python title='server.py' linenums='1'
+import os
+from ellar.common.constants import ELLAR_CONFIG_MODULE
+from ellar.core.factory import AppFactory
+from .root_module import ApplicationModule
+from .auth_scheme import JWTAuthentication
+
+application = AppFactory.create_from_app_module(
+    ApplicationModule,
+    config_module=os.environ.get(
+        ELLAR_CONFIG_MODULE, "project_name.config:DevelopmentConfig"
+    ),
+)
+application.add_authentication_schemes(JWTAuthentication)
+
+```
+Unlike guards, Authentication handlers are registered global by default as shown in the above illustration. 
+Also, we need to remove `GlobalGuard` registration we did in `AuthModule`, so that we dont have too user identification checks.
+
+!!!note
+    In the above illustration, we added JWTAuthentication as a type. This means JWTAuthentication instance will be created by DI. We can using this method because we want to inject `JWTService`. 
+    But if you don't have any need for DI injection, you can use the below.
+    ```python
+    ...
+    application.add_authentication_schemes(JWTAuthentication())
+    ```
+
+Next, we register a simple guard `AuthenticationRequiredGuard` globally to the application. `AuthenticationRequiredGuard` is a simply guard
+that checks if a request has a valid user identity.
+
+```python title='server.py' linenums='1'
+import os
+from ellar.common.constants import ELLAR_CONFIG_MODULE
+from ellar.core.factory import AppFactory
+from ellar.auth.guard import AuthenticatedRequiredGuard
+from .root_module import ApplicationModule
+from .auth_scheme import JWTAuthentication
+
+
+application = AppFactory.create_from_app_module(
+    ApplicationModule,
+    config_module=os.environ.get(
+        ELLAR_CONFIG_MODULE, "project_name.config:DevelopmentConfig"
+    ),
+    global_guards=[AuthenticatedRequiredGuard]
+)
+application.add_authentication_schemes(JWTAuthentication)
+```
+We need to refactor auth controller and mark refresh and sign_in function as public routes
+```python
+from ellar.common import Controller, ControllerBase, post, Body, get
+from ellar.auth import SkipAuth
+from ellar.openapi import ApiTags
+from .services import AuthService
+
+
+@Controller
+@ApiTags(name='Authentication', description='User Authentication Endpoints')
+class AuthController(ControllerBase):
+    def __init__(self, auth_service: AuthService) -> None:
+        self.auth_service = auth_service
+
+    @post("/login")
+    @SkipAuth()
+    async def sign_in(self, username: Body[str], password: Body[str]):
+        return await self.auth_service.sign_in(username=username, password=password)
+
+    @get("/profile")
+    async def get_profile(self):
+        return self.context.user
+    
+    @SkipAuth()
+    @post("/refresh")
+    async def refresh_token(self, payload: str = Body(embed=True)):
+        return await self.auth_service.refresh_token(payload)
+
+
+```
+Still having the server running, we can test as before
+
+```shell
+$ # GET /auth/profile
+$ curl http://localhost:8000/auth/profile
+{"detail":"Forbidden"} # status_code=403
+
+$ # POST /auth/login
+$ curl -X POST http://localhost:8000/auth/login -d '{"username": "john", "password": "password"}' -H "Content-Type: application/json"
+{"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2OTg3OTE0OTE..."}
+
+$ # GET /profile using access_token returned from previous step as bearer code
+$ curl http://localhost:8000/auth/profile -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2Vybm..."
+{"exp":1698793558,"iat":1698793258,"jti":"e96e94c5c3ef4fbbbd7c2468eb64534b","sub":1,"user_id":1,"username":"john", "id":null,"auth_type":"bearer"}
+
+```

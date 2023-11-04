@@ -109,7 +109,7 @@ class BaseAPIKey(BaseAuth, ABC):
 
 
 class BaseHttpAuth(BaseAuth, ABC):
-    openapi_scheme: t.Optional[str] = None
+    scheme: t.Optional[str] = None
     realm: t.Optional[str] = None
 
     @classmethod
@@ -144,13 +144,13 @@ class BaseHttpAuth(BaseAuth, ABC):
 
     @classmethod
     def openapi_security_scheme(cls) -> t.Dict:
-        assert cls.openapi_scheme, "openapi_scheme is required"
+        assert cls.scheme, "openapi_scheme is required"
         return {
             cls.openapi_name
             or cls.__name__: {
                 "type": "http",
                 "description": cls.openapi_description,
-                "scheme": cls.openapi_scheme,
+                "scheme": cls.scheme,
                 "name": cls.openapi_name or cls.__name__,
             }
         }

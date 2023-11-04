@@ -1,7 +1,7 @@
 import typing as t
 
+from ellar.common import constants
 from ellar.common import set_metadata as set_meta
-from ellar.common.constants import GUARDS_KEY, ROUTE_INTERCEPTORS
 
 from .constants import POLICY_KEYS
 from .guard import AuthenticatedRequiredGuard
@@ -31,7 +31,7 @@ def Authorize() -> t.Callable:
     :return:
     """
 
-    return set_meta(ROUTE_INTERCEPTORS, [AuthorizationInterceptor])
+    return set_meta(constants.ROUTE_INTERCEPTORS, [AuthorizationInterceptor])
 
 
 def AuthenticationRequired(
@@ -48,11 +48,24 @@ def AuthenticationRequired(
     @return: Callable
     """
     if callable(authentication_scheme):
-        return set_meta(GUARDS_KEY, [AuthenticatedRequiredGuard(None, [])])(
+        return set_meta(constants.GUARDS_KEY, [AuthenticatedRequiredGuard(None, [])])(
             authentication_scheme
         )
 
     return set_meta(
-        GUARDS_KEY,
+        constants.GUARDS_KEY,
         [AuthenticatedRequiredGuard(authentication_scheme, openapi_scope or [])],
+    )
+
+
+def SkipAuth() -> t.Callable:
+    """
+    ========= CONTROLLER AND ROUTE FUNCTION DECORATOR ==============
+    Decorates a Class or Route Function with SKIP_AUTH attribute that is checked by `AuthenticationRequiredGuard`
+    @return: Callable
+    """
+
+    return set_meta(
+        constants.SKIP_AUTH,
+        True,
     )

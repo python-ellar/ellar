@@ -17,7 +17,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 class HttpBearerAuth(BaseHttpAuth, ABC):
     exception_class = APIException
-    openapi_scheme: str = "bearer"
+    scheme: str = "bearer"
     openapi_bearer_format: t.Optional[str] = None
     header: str = "Authorization"
 
@@ -36,7 +36,7 @@ class HttpBearerAuth(BaseHttpAuth, ABC):
         scheme, _, credentials = self._authorization_partitioning(authorization)
         if not (authorization and scheme and credentials):
             return self.handle_invalid_request()  # type: ignore[no-any-return]
-        if scheme and str(scheme).lower() != self.openapi_scheme:
+        if scheme and str(scheme).lower() != self.scheme:
             raise self.exception_class(
                 status_code=self.status_code,
                 detail="Invalid authentication credentials",
@@ -46,7 +46,7 @@ class HttpBearerAuth(BaseHttpAuth, ABC):
 
 class HttpBasicAuth(BaseHttpAuth, ABC):
     exception_class = APIException
-    openapi_scheme: str = "basic"
+    scheme: str = "basic"
     realm: t.Optional[str] = None
     header = "Authorization"
 
@@ -75,7 +75,7 @@ class HttpBasicAuth(BaseHttpAuth, ABC):
 
         if (
             not (authorization and scheme and credentials)
-            or scheme.lower() != self.openapi_scheme
+            or scheme.lower() != self.scheme
         ):
             return self.handle_invalid_request()  # type: ignore[no-any-return]
 
@@ -95,5 +95,5 @@ class HttpBasicAuth(BaseHttpAuth, ABC):
 
 
 class HttpDigestAuth(HttpBearerAuth, ABC):
-    openapi_scheme = "digest"
+    scheme = "digest"
     header = "Authorization"
