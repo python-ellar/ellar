@@ -30,7 +30,7 @@ class HTTPExceptionHandler(IExceptionHandler):
         if isinstance(exc.detail, (list, dict)):
             data = exc.detail
         else:
-            data = {"detail": exc.detail, "status_code": exc.status_code}  # type: ignore[assignment]
+            data = {"detail": exc.detail, "status_code": exc.status_code}
 
         return config.DEFAULT_JSON_CLASS(
             data, status_code=exc.status_code, headers=exc.headers

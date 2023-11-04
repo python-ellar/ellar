@@ -101,7 +101,9 @@ class EllarInjector(Injector):
     def get_templating_modules(
         self,
     ) -> t.Dict[t.Type["ModuleBase"], "ModuleTemplateRef"]:
-        return self._modules.get(MODULE_REF_TYPES.TEMPLATE, {})
+        return self._modules.get(  # type:ignore[no-any-return]
+            MODULE_REF_TYPES.TEMPLATE, {}
+        )
 
     def add_module(self, module_ref: t.Union["ModuleRefBase", "ModuleSetup"]) -> None:
         self._modules[module_ref.ref_type].update({module_ref.module: module_ref})

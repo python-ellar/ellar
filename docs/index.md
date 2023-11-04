@@ -59,7 +59,7 @@ import uvicorn
 from ellar.common import Body, Controller, ControllerBase, delete, get, post, put, Serializer, Inject
 from ellar.core import AppFactory
 from ellar.di import injectable, request_scope
-from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerDocumentGenerator
+from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerUI
 from pydantic import Field
 from pathlib import Path
 
@@ -119,7 +119,7 @@ document_builder.set_title('Ellar API') \
 
 document = document_builder.build_document(app)
 module = OpenAPIDocumentModule.setup(
-    document_generator=SwaggerDocumentGenerator(),
+    docs_ui=SwaggerUI(),
     document=document,
     guards=[]
 )
