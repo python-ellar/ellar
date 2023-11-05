@@ -12,7 +12,7 @@ from ellar.common.interfaces import (
 )
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.core.services import Reflector
-from ellar.di import injectable, request_scope
+from ellar.di import injectable
 
 from .execution import ExecutionContext
 from .host import HostContext
@@ -23,6 +23,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common.routing import RouteOperationBase
 
 
+@injectable()
 class HTTPConnectionContextFactory(IHTTPConnectionContextFactory):
     context_type = HTTPHostContext
 
@@ -35,6 +36,7 @@ class HTTPConnectionContextFactory(IHTTPConnectionContextFactory):
         pass
 
 
+@injectable()
 class WebSocketContextFactory(IWebSocketContextFactory):
     context_type = WebSocketHostContext
 
@@ -45,7 +47,7 @@ class WebSocketContextFactory(IWebSocketContextFactory):
             )
 
 
-@injectable(scope=request_scope)
+@injectable()
 class HostContextFactory(IHostContextFactory):
     __slots__ = ()
 
@@ -56,7 +58,7 @@ class HostContextFactory(IHostContextFactory):
         return host_context
 
 
-@injectable(scope=request_scope)
+@injectable()
 class ExecutionContextFactory(IExecutionContextFactory):
     __slots__ = ("reflector",)
 

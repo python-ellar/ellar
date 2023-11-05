@@ -2,6 +2,9 @@ import typing as t
 
 from injector import (
     ConstructorOrClassT,
+    Scope,
+    ScopeDecorator,
+    SingletonScope,
     inject,
 )
 from injector import (
@@ -10,7 +13,6 @@ from injector import (
 
 from .constants import INJECTABLE_ATTRIBUTE
 from .exceptions import DIImproperConfiguration
-from .scopes import DIScope, ScopeDecorator, SingletonScope
 from .types import T
 from .utils import fail_silently
 
@@ -35,7 +37,7 @@ class ProviderConfig(t.Generic[T]):
         *,
         use_value: t.Optional[T] = None,
         use_class: t.Union[t.Type[T], t.Any] = None,
-        scope: t.Optional[t.Union[t.Type[DIScope], t.Any]] = None,
+        scope: t.Optional[t.Union[t.Type[Scope], t.Any]] = None,
     ):
         self.scope = scope or SingletonScope
         if use_value and use_class:
@@ -70,7 +72,7 @@ class ProviderConfig(t.Generic[T]):
 
 class _Injectable:
     def __init__(
-        self, scope: t.Optional[t.Union[t.Type[DIScope], ScopeDecorator]] = None
+        self, scope: t.Optional[t.Union[t.Type[Scope], ScopeDecorator]] = None
     ) -> None:
         self.scope = scope or SingletonScope
 
@@ -81,7 +83,7 @@ class _Injectable:
 
 
 def injectable(
-    scope: t.Optional[t.Union[t.Type[DIScope], ScopeDecorator, t.Type]] = SingletonScope
+    scope: t.Optional[t.Union[t.Type[Scope], ScopeDecorator, t.Type]] = SingletonScope
 ) -> t.Union[ConstructorOrClassT, t.Callable]:
     """Decorates a callable or Type with inject and Defines Type or callable scope injection scope
 
@@ -100,7 +102,7 @@ def injectable(
     if (
         isinstance(scope, ScopeDecorator)
         or isinstance(scope, type)
-        and issubclass(scope, DIScope)
+        and issubclass(scope, Scope)
     ):
         return _Injectable(scope)
     return _Injectable()(t.cast(ConstructorOrClassT, scope))
@@ -138,10 +140,10 @@ def has_binding(func_or_class: ConstructorOrClassT) -> bool:
 
 def get_scope(
     func_or_class: ConstructorOrClassT,
-) -> t.Optional[t.Union[t.Type[DIScope], ScopeDecorator]]:
+) -> t.Optional[t.Union[t.Type[Scope], ScopeDecorator]]:
     """Get scope declared scope if available in a type or callable"""
     return t.cast(
-        t.Optional[t.Union[t.Type[DIScope], ScopeDecorator]],
+        t.Optional[t.Union[t.Type[Scope], ScopeDecorator]],
         getattr(
             func_or_class,
             INJECTABLE_ATTRIBUTE,

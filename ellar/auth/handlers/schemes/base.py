@@ -1,6 +1,7 @@
 import typing as t
 from abc import ABC, abstractmethod
 
+from ellar.common import Identity, IExecutionContext
 from ellar.common.exceptions import APIException
 from ellar.common.interfaces import IHostContext
 from ellar.common.serializer.guard import (
@@ -11,6 +12,7 @@ from starlette.exceptions import HTTPException
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.common.routing import RouteOperation
     from ellar.core.connection import HTTPConnection
 
 
@@ -26,18 +28,25 @@ class BaseAuth(ABC):
 
     @abstractmethod
     async def _authentication_check(
-        self, *, connection: "HTTPConnection"
+        self,
+        *,
+        connection: "HTTPConnection",
+        context: t.Union[IHostContext, IExecutionContext],
     ) -> t.Optional[t.Any]:
         """Override and Provide Authentication actions"""
 
     @classmethod
     @abstractmethod
-    def openapi_security_scheme(cls) -> t.Dict:
+    def openapi_security_scheme(
+        cls, route: t.Optional["RouteOperation"] = None
+    ) -> t.Dict:
         """Override and provide OPENAPI Security Scheme"""
 
     async def run_authentication_check(self, context: IHostContext) -> t.Any:
         connection = context.switch_to_http_connection().get_client()
-        result = await self._authentication_check(connection=connection)
+        result = await self._authentication_check(
+            connection=connection, context=context
+        )
         return self.handle_authentication_result(connection, result)
 
     def handle_invalid_request(self) -> t.Any:
@@ -48,7 +57,12 @@ class BaseAuth(ABC):
     ) -> t.Any:
         if result:
             # auth parameter on request
-            connection.scope["user"] = result
+            if isinstance(result, dict):
+                connection.scope["user"] = Identity(**result)
+            else:
+                if isinstance(result, bool):
+                    return result
+                connection.scope["user"] = result
             return True
         return False
 
@@ -62,12 +76,14 @@ class BaseAPIKey(BaseAuth, ABC):
         super().__init__()
 
     async def _authentication_check(
-        self, connection: "HTTPConnection"
+        self,
+        connection: "HTTPConnection",
+        context: t.Union[IHostContext, IExecutionContext],
     ) -> t.Optional[t.Any]:
         key = self._get_key(connection)
         if not key:
             return self.handle_invalid_request()
-        return await self.authentication_handler(connection, key)
+        return await self.authentication_handler(context, key)
 
     @abstractmethod
     def _get_key(self, connection: "HTTPConnection") -> t.Optional[t.Any]:
@@ -75,12 +91,16 @@ class BaseAPIKey(BaseAuth, ABC):
 
     @abstractmethod
     async def authentication_handler(
-        self, connection: "HTTPConnection", key: t.Optional[t.Any]
+        self,
+        context: t.Union[IHostContext, IExecutionContext],
+        key: t.Optional[t.Any],
     ) -> t.Optional[t.Any]:
         pass  # pragma: no cover
 
     @classmethod
-    def openapi_security_scheme(cls) -> t.Dict:
+    def openapi_security_scheme(
+        cls, route: t.Optional["RouteOperation"] = None
+    ) -> t.Dict:
         assert cls.openapi_in, "openapi_in is required"
         return {
             cls.openapi_name
@@ -94,7 +114,7 @@ class BaseAPIKey(BaseAuth, ABC):
 
 
 class BaseHttpAuth(BaseAuth, ABC):
-    openapi_scheme: t.Optional[str] = None
+    scheme: t.Optional[str] = None
     realm: t.Optional[str] = None
 
     @classmethod
@@ -108,16 +128,18 @@ class BaseHttpAuth(BaseAuth, ABC):
     @abstractmethod
     async def authentication_handler(
         self,
-        connection: "HTTPConnection",
+        context: t.Union[IHostContext, IExecutionContext],
         credentials: t.Any,
     ) -> t.Optional[t.Any]:
         pass  # pragma: no cover
 
     async def _authentication_check(
-        self, connection: "HTTPConnection"
+        self,
+        connection: "HTTPConnection",
+        context: t.Union[IHostContext, IExecutionContext],
     ) -> t.Optional[t.Any]:
         credentials = self._get_credentials(connection)
-        return await self.authentication_handler(connection, credentials)
+        return await self.authentication_handler(context, credentials)
 
     @abstractmethod
     def _get_credentials(
@@ -126,14 +148,16 @@ class BaseHttpAuth(BaseAuth, ABC):
         pass  # pragma: no cover
 
     @classmethod
-    def openapi_security_scheme(cls) -> t.Dict:
-        assert cls.openapi_scheme, "openapi_scheme is required"
+    def openapi_security_scheme(
+        cls, route: t.Optional["RouteOperation"] = None
+    ) -> t.Dict:
+        assert cls.scheme, "openapi_scheme is required"
         return {
             cls.openapi_name
             or cls.__name__: {
                 "type": "http",
                 "description": cls.openapi_description,
-                "scheme": cls.openapi_scheme,
+                "scheme": cls.scheme,
                 "name": cls.openapi_name or cls.__name__,
             }
         }

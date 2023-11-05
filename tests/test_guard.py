@@ -1,5 +1,12 @@
 import pytest
-from ellar.common import APIException, Inject, UseGuards, get, serialize_object
+from ellar.common import (
+    APIException,
+    GlobalGuard,
+    Inject,
+    UseGuards,
+    get,
+    serialize_object,
+)
 from ellar.core import AppFactory, Reflector, Request
 from ellar.core.guards import (
     GuardAPIKeyCookie,
@@ -9,7 +16,7 @@ from ellar.core.guards import (
     GuardHttpBearerAuth,
     GuardHttpDigestAuth,
 )
-from ellar.di import injectable
+from ellar.di import ProviderConfig, injectable
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import TestClient
 from starlette.status import HTTP_401_UNAUTHORIZED
@@ -25,19 +32,19 @@ class QuerySecretKeyInjectable(GuardAPIKeyQuery):
         super().__init__()
         self.reflector = reflector
 
-    async def authentication_handler(self, connection, key):
+    async def authentication_handler(self, context, key):
         if key == "querysecretkey":
             return key
 
 
 class QuerySecretKey(GuardAPIKeyQuery):
-    async def authentication_handler(self, connection, key):
+    async def authentication_handler(self, context, key):
         if key == "querysecretkey":
             return key
 
 
 class HeaderSecretKey(GuardAPIKeyHeader):
-    async def authentication_handler(self, connection, key):
+    async def authentication_handler(self, context, key):
         if key == "headersecretkey":
             return key
 
@@ -50,7 +57,7 @@ class HeaderSecretKeyCustomException(HeaderSecretKey):
 class CookieSecretKey(GuardAPIKeyCookie):
     openapi_name = "API Key Auth"
 
-    async def authentication_handler(self, connection, key):
+    async def authentication_handler(self, context, key):
         if key == "cookiesecretkey":
             return key
 
@@ -58,7 +65,7 @@ class CookieSecretKey(GuardAPIKeyCookie):
 class BasicAuth(GuardHttpBasicAuth):
     openapi_name = "API Authentication"
 
-    async def authentication_handler(self, connection, credentials):
+    async def authentication_handler(self, context, credentials):
         if credentials.username == "admin" and credentials.password == "secret":
             return credentials.username
 
@@ -67,16 +74,27 @@ class BasicAuth(GuardHttpBasicAuth):
 class BearerAuth(GuardHttpBearerAuth):
     openapi_name = "JWT Authentication"
 
-    async def authentication_handler(self, connection, credentials):
+    async def authentication_handler(self, context, credentials):
         if credentials.credentials == "bearertoken":
             return credentials.credentials
 
 
 @injectable()
 class DigestAuth(GuardHttpDigestAuth):
-    async def authentication_handler(self, connection, credentials):
+    async def authentication_handler(self, context, credentials):
         if credentials.credentials == "digesttoken":
             return credentials.credentials
+
+        if credentials.credentials == "dict":
+            return {
+                "username": "ellar",
+                "message": "converted to Identity Object",
+                "auth_type": "digest",
+                "id": "12",
+            }
+
+        if credentials.credentials == "boolean":
+            return True
 
 
 app = AppFactory.create_app()
@@ -247,7 +265,7 @@ def test_auth_schema():
     }
 
 
-def test_global_guard_works():
+def test_global_guard_case_1_works():
     _app = AppFactory.create_app(global_guards=[DigestAuth])
 
     @get("/global")
@@ -262,3 +280,65 @@ def test_global_guard_works():
     data = res.json()
 
     assert data == {"detail": "Forbidden"}
+
+
+def test_global_guard_case_2_works():
+    _app = AppFactory.create_app(
+        providers=[ProviderConfig(GlobalGuard, use_class=DigestAuth)]
+    )
+
+    @get("/global")
+    def _auth_demo_endpoint(request: Request):
+        return {"authentication": request.user}
+
+    _app.router.append(_auth_demo_endpoint)
+    _client = TestClient(_app)
+    res = _client.get("/global")
+
+    assert res.status_code == 401
+    data = res.json()
+
+    assert data == {"detail": "Forbidden"}
+
+
+@pytest.mark.parametrize(
+    "input_type, is_authenticated, expect_result",
+    [
+        (
+            "dict",
+            True,
+            {
+                "authentication": {
+                    "username": "ellar",
+                    "message": "converted to Identity Object",
+                    "id": "12",
+                    "auth_type": "digest",
+                }
+            },
+        ),
+        ("boolean", False, {"authentication": {"id": None, "auth_type": None}}),
+    ],
+)
+def test_if_an_auth_guard_return_converts_to_identity(
+    input_type, is_authenticated, expect_result
+):
+    _app = AppFactory.create_app(
+        providers=[ProviderConfig(GlobalGuard, use_class=DigestAuth)]
+    )
+
+    @get("/global")
+    def _auth_demo_endpoint(request: Request):
+        assert request.user.is_authenticated == is_authenticated
+        return {"authentication": request.user}
+
+    _app.router.append(_auth_demo_endpoint)
+    _client = TestClient(_app)
+    res = _client.get(
+        "/global",
+        **{"headers": {"Authorization": f"Digest {input_type}"}},
+    )
+
+    assert res.status_code == 200
+    data = res.json()
+
+    assert data == expect_result

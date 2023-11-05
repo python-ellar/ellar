@@ -106,9 +106,10 @@ When request execution for `/guarded-route`, `guarded_route` guard definition wi
 ### **Global-scope**
 Global guards are used across the whole application, for every controller and every route function but individual controller or route function `@UseGuards` definition can override `global` scoped guards.
 
-Global guards are applied at the `global_guards` parameter of the `AppFactory` creation level as shown below:
-```python
-# project_name/server.py
+Global guards can be applied at application level using `use_global_guards` as shown below:
+
+```python title='project_name/server.py' linenums='1'
+
 import os
 
 from ellar.common.constants import ELLAR_CONFIG_MODULE
@@ -120,9 +121,32 @@ application = AppFactory.create_from_app_module(
     ApplicationModule,
     config_module=os.environ.get(
         ELLAR_CONFIG_MODULE, "dialerai.config:DevelopmentConfig"
-    ),
-    global_guards=[RoleGuard]
+    )
 )
+application.use_global_guards(RoleGuard, MoreGuards, ...)
+```
+Global Guards can also be applied through Dependency Injection. For instance, in `project_name/car/module.py`, we can
+register `RoleGuard` in the module `providers` parameter as a Global guards. See illustration below:
+
+```python title='project_name/car/module.py' linenums='1'
+from ellar.common import Module, GlobalGuard
+from ellar.core import ModuleBase
+from ellar.di import Container, ProviderConfig
+
+from .services import CarRepository
+from .controllers import CarController
+from .guards import RoleGuard
+
+@Module(
+    controllers=[CarController],
+    providers=[CarRepository, ProviderConfig(GlobalGuard, use_class=RoleGuard)]
+)
+class CarModule(ModuleBase):
+    def register_providers(self, container: Container) -> None:
+        # for more complicated provider registrations
+        # container.register_instance(...)
+        pass
+
 ```
 
 ## **Rounding up RoleGuard**

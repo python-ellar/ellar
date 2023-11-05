@@ -20,3 +20,6 @@ class GuardCanActivate(ABC, metaclass=ABCMeta):
 
     def raise_exception(self) -> None:
         raise self.exception_class(status_code=self.status_code, detail=self.detail)
+
+
+GlobalGuard = t.NewType("GlobalGuard", GuardCanActivate)

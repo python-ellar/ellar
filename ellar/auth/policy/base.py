@@ -91,6 +91,7 @@ class _OperandResolversMixin:
         self, context: IExecutionContext, policy: PolicyType
     ) -> t.Union[BasePolicyHandler, BasePolicyHandlerWithRequirement]:
         if isinstance(policy, type):
+            # resolve instance from EllarInjector, we assume the policy hand been decorated with @injector decorator.
             return context.get_service_provider().get(policy)  # type: ignore[no-any-return]
         return policy
 

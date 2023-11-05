@@ -140,11 +140,11 @@ class OpenAPIDocumentBuilderAction:
         for auth in identity_schemes.get_authentication_schemes():
             security_scheme = auth.openapi_security_scheme()
             if security_scheme:
-                scheme_name = list(security_scheme.keys())[0]
                 components.setdefault("securitySchemes", {}).update(security_scheme)
-                self._build.setdefault("security", []).append(
-                    {scheme_name: getattr(auth, "openapi_scope", [])}
-                )
+                # scheme_name = list(security_scheme.keys())[0]
+                # self._build.setdefault("security", []).append(
+                #     {scheme_name: getattr(auth, "openapi_scope", [])}
+                # )
 
         if definitions:
             components["schemas"] = {k: definitions[k] for k in sorted(definitions)}

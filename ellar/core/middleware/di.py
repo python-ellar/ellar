@@ -1,7 +1,7 @@
 import typing as t
 
 from ellar.common.constants import SCOPE_RESPONSE_STARTED, SCOPE_SERVICE_PROVIDER
-from ellar.common.interfaces import IExceptionHandler, IHostContextFactory
+from ellar.common.interfaces import IExceptionHandler, IHostContext, IHostContextFactory
 from ellar.common.responses import Response
 from ellar.common.types import ASGIApp, TMessage, TReceive, TScope, TSend
 from ellar.core.connection.http import Request
@@ -51,6 +51,11 @@ class RequestServiceProviderMiddleware(ServerErrorMiddleware):
 
         async with self.injector.create_asgi_args() as service_provider:
             scope[SCOPE_SERVICE_PROVIDER] = service_provider
+
+            context_factory = service_provider.get(IHostContextFactory)
+            service_provider.update_scoped_context(
+                IHostContext, context_factory.create_context(scope)
+            )
 
             if scope["type"] == "http":
                 await super().__call__(scope, receive, sender)

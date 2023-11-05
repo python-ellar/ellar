@@ -3,7 +3,7 @@ import os
 from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.factory import AppFactory
 
-# from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerDocumentGenerator
+# from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerUI
 from .root_module import ApplicationModule
 
 application = AppFactory.create_from_app_module(
@@ -25,7 +25,7 @@ application = AppFactory.create_from_app_module(
 # document = document_builder.build_document(application)
 # module = OpenAPIDocumentModule.setup(
 #    document=document,
-#    document_generator=SwaggerDocumentGenerator(),
+#    docs_ui=SwaggerUI(),
 #    guards=[]
 # )
 # application.install_module(module)

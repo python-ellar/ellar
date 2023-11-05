@@ -3,6 +3,7 @@ from abc import ABC, ABCMeta, abstractmethod, abstractproperty
 
 from ellar.common.constants import empty_receive
 from ellar.common.types import T, TReceive, TScope, TSend
+from ellar.di import injectable, request_scope
 from starlette.requests import empty_send
 from starlette.responses import Response
 
@@ -38,6 +39,7 @@ class IWebSocketHostContext(ABC):
         """Returns WebSocket instance"""
 
 
+@injectable(scope=request_scope)
 class IHostContext(ABC, metaclass=ABCMeta):
     @abstractmethod
     def get_service_provider(self) -> "EllarInjector":
@@ -72,6 +74,7 @@ class IHostContext(ABC, metaclass=ABCMeta):
         """Sets user identity"""
 
 
+@injectable(scope=request_scope)
 class IExecutionContext(IHostContext, ABC):
     @abstractmethod
     def get_handler(self) -> t.Callable:

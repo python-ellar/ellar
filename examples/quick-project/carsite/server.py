@@ -5,7 +5,7 @@ from ellar.core import AppFactory
 from ellar.openapi import (
     OpenAPIDocumentBuilder,
     OpenAPIDocumentModule,
-    SwaggerDocumentGenerator,
+    SwaggerUI,
 )
 
 from .root_module import ApplicationModule
@@ -23,7 +23,5 @@ document_builder.set_title("CarSite API").set_version("1.0.0").set_contact(
 ).set_license("MIT Licence", url="https://www.google.com")
 
 document = document_builder.build_document(application)
-module = OpenAPIDocumentModule.setup(
-    document=document, document_generator=SwaggerDocumentGenerator(), guards=[]
-)
+module = OpenAPIDocumentModule.setup(document=document, docs_ui=SwaggerUI(), guards=[])
 application.install_module(module)

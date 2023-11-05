@@ -61,6 +61,7 @@ class RouteOperationBase:
         context = execution_context_factory.create_context(
             operation=self, scope=scope, receive=receive, send=send
         )
+        service_provider.update_scoped_context(IExecutionContext, context)
 
         interceptor_consumer = service_provider.get(IInterceptorsConsumer)
         guard_consumer = service_provider.get(IGuardsConsumer)

@@ -3,12 +3,11 @@ from collections import OrderedDict, defaultdict
 
 from ellar.di.logger import log
 from ellar.reflect import asynccontextmanager
-from injector import Injector
+from injector import Injector, Scope, ScopeDecorator
 
 from ..asgi_args import RequestScopeContext
 from ..constants import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR
 from ..providers import InstanceProvider, Provider
-from ..scopes import DIScope, ScopeDecorator
 from ..types import T
 from .container import Container
 
@@ -112,13 +111,8 @@ class EllarInjector(Injector):
     def get(
         self,
         interface: t.Type[T],
-        scope: t.Union[ScopeDecorator, t.Type[DIScope]] = None,
+        scope: t.Union[ScopeDecorator, t.Type[Scope]] = None,
     ) -> T:
-        scoped_context = SCOPED_CONTEXT_VAR.get()
-        context = None
-        if scoped_context:
-            context = scoped_context.context
-
         binding, binder = self.container.get_binding(interface)
         scope = binding.scope
 
@@ -126,13 +120,13 @@ class EllarInjector(Injector):
             scope = scope.scope
         # Fetch the corresponding Scope instance from the Binder.
         scope_binding, _ = binder.get_binding(scope)
-        scope_instance = t.cast(DIScope, scope_binding.provider.get(self))
+        scope_instance = t.cast(Scope, scope_binding.provider.get(self))
 
         log.debug(
             f"{self._log_prefix}EllarInjector.get({interface}, scope={scope}) using {binding.provider}"
         )
 
-        result = scope_instance.get(interface, binding.provider, context=context).get(
+        result = scope_instance.get(interface, binding.provider).get(
             self.container.injector
         )
         log.debug(f"{self._log_prefix} -> {result}")

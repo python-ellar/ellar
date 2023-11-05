@@ -1,17 +1,28 @@
 import typing as t
 
 from ellar.auth import UserIdentity
-from ellar.common import GuardCanActivate, IExecutionContext
+from ellar.common import (
+    GuardCanActivate,
+    IExecutionContext,
+    constants,
+    logger,
+    set_metadata,
+)
 from ellar.common.serializer.guard import (
     HTTPAuthorizationCredentials,
-    HTTPBasicCredentials,
 )
 from ellar.core.guards import GuardHttpBearerAuth
 from ellar.di import injectable
 from ellar_jwt import JWTService
 
-if t.TYPE_CHECKING:
-    from ellar.core import HTTPConnection
+
+def allow_any() -> t.Callable:
+    return set_metadata(constants.GUARDS_KEY, [AllowAny()])
+
+
+class AllowAny(GuardCanActivate):
+    async def can_activate(self, context: IExecutionContext) -> bool:
+        return True
 
 
 @injectable
@@ -21,17 +32,12 @@ class AuthGuard(GuardHttpBearerAuth):
 
     async def authentication_handler(
         self,
-        connection: "HTTPConnection",
-        credentials: t.Union[HTTPBasicCredentials, HTTPAuthorizationCredentials],
+        context: IExecutionContext,
+        credentials: HTTPAuthorizationCredentials,
     ) -> t.Optional[t.Any]:
         try:
             data = await self.jwt_service.decode_async(credentials.credentials)
-            return UserIdentity(auth_type="bearer", **dict(data))
-        except Exception:
+            return UserIdentity(auth_type="bearer", **data)
+        except Exception as ex:
+            logger.logger.error(f"[AuthGuard] Exception: {ex}")
             self.raise_exception()
-
-
-@injectable
-class AllowAnyGuard(GuardCanActivate):
-    async def can_activate(self, context: IExecutionContext) -> bool:
-        return True

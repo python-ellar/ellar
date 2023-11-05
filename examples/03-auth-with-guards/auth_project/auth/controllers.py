@@ -8,23 +8,29 @@ class MyController(ControllerBase):
     def index(self):
         return {'detail': "Welcome Dog's Resources"}
 """
-from ellar.common import Body, Controller, ControllerBase, UseGuards, get, post
+from ellar.common import Body, Controller, ControllerBase, get, post
+from ellar.openapi import ApiTags
 
-from .guards import AllowAnyGuard
-from .schemas import UserCredentials
+from .guards import allow_any
 from .services import AuthService
 
 
-@Controller("/auth")
+@Controller
+@ApiTags(name="Authentication", description="User Authentication Endpoints")
 class AuthController(ControllerBase):
     def __init__(self, auth_service: AuthService) -> None:
         self.auth_service = auth_service
 
-    @post("/sign-in")
-    @UseGuards(AllowAnyGuard)
-    async def sign_in(self, payload: UserCredentials = Body()):
-        return await self.auth_service.sign_in(payload)
+    @post("/login")
+    @allow_any()
+    async def sign_in(self, username: Body[str], password: Body[str]):
+        return await self.auth_service.sign_in(username=username, password=password)
 
     @get("/profile")
-    def get_profile(self):
+    async def get_profile(self):
         return self.context.user
+
+    @allow_any()
+    @post("/refresh")
+    async def refresh_token(self, payload: str = Body(embed=True)):
+        return await self.auth_service.refresh_token(payload)

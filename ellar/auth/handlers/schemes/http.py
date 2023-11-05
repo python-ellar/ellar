@@ -1,6 +1,6 @@
 import binascii
 import typing as t
-from abc import ABC, abstractmethod
+from abc import ABC
 from base64 import b64decode
 
 from ellar.common.exceptions import APIException, AuthenticationFailed
@@ -12,26 +12,21 @@ from ellar.common.serializer.guard import (
 from .base import BaseHttpAuth
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.common.routing import RouteOperation
     from ellar.core.connection import HTTPConnection
 
 
 class HttpBearerAuth(BaseHttpAuth, ABC):
     exception_class = APIException
-    openapi_scheme: str = "bearer"
+    scheme: str = "bearer"
     openapi_bearer_format: t.Optional[str] = None
     header: str = "Authorization"
 
-    @abstractmethod
-    async def authentication_handler(
-        self,
-        connection: "HTTPConnection",
-        credentials: HTTPAuthorizationCredentials,
-    ) -> t.Optional[t.Any]:
-        pass  # pragma: no cover
-
     @classmethod
-    def openapi_security_scheme(cls) -> t.Dict:
-        scheme = super().openapi_security_scheme()
+    def openapi_security_scheme(
+        cls, route: t.Optional["RouteOperation"] = None
+    ) -> t.Dict:
+        scheme = super().openapi_security_scheme(route)
         scheme[cls.openapi_name or cls.__name__].update(
             bearerFormat=cls.openapi_bearer_format
         )
@@ -44,7 +39,7 @@ class HttpBearerAuth(BaseHttpAuth, ABC):
         scheme, _, credentials = self._authorization_partitioning(authorization)
         if not (authorization and scheme and credentials):
             return self.handle_invalid_request()  # type: ignore[no-any-return]
-        if scheme and str(scheme).lower() != self.openapi_scheme:
+        if scheme and str(scheme).lower() != self.scheme:
             raise self.exception_class(
                 status_code=self.status_code,
                 detail="Invalid authentication credentials",
@@ -54,17 +49,9 @@ class HttpBearerAuth(BaseHttpAuth, ABC):
 
 class HttpBasicAuth(BaseHttpAuth, ABC):
     exception_class = APIException
-    openapi_scheme: str = "basic"
+    scheme: str = "basic"
     realm: t.Optional[str] = None
     header = "Authorization"
-
-    @abstractmethod
-    async def authentication_handler(
-        self,
-        connection: "HTTPConnection",
-        credentials: HTTPBasicCredentials,
-    ) -> t.Optional[t.Any]:
-        pass  # pragma: no cover
 
     def _not_unauthorized_exception(self, message: str) -> None:
         if self.realm:  # pragma: no cover
@@ -91,7 +78,7 @@ class HttpBasicAuth(BaseHttpAuth, ABC):
 
         if (
             not (authorization and scheme and credentials)
-            or scheme.lower() != self.openapi_scheme
+            or scheme.lower() != self.scheme
         ):
             return self.handle_invalid_request()  # type: ignore[no-any-return]
 
@@ -111,5 +98,5 @@ class HttpBasicAuth(BaseHttpAuth, ABC):
 
 
 class HttpDigestAuth(HttpBearerAuth, ABC):
-    openapi_scheme = "digest"
+    scheme = "digest"
     header = "Authorization"

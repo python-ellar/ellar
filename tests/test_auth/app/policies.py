@@ -8,6 +8,8 @@ from ellar.di import injectable
 @injectable
 class AtLeast21(BasePolicyHandlerWithRequirement):
     async def handle(self, context: IExecutionContext, requirement: t.Any) -> bool:
+        for _k, v in requirement.items():
+            assert v in context.user.requirements
         return int(context.user.get("age")) >= 21
 
 

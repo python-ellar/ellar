@@ -200,10 +200,16 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         for item in self.guards:
             if not hasattr(item, "openapi_security_scheme"):
                 continue
-            security_scheme = item.openapi_security_scheme()
-            scheme_name = list(security_scheme.keys())[0]
-            operation_security.append({scheme_name: item.openapi_scope})  # type: ignore
+            security_scheme = item.openapi_security_scheme(self.route)
             security_definitions.update(security_scheme)
+
+            keys = list(security_scheme.keys())
+            if keys:
+                scheme_name = keys[0]
+                operation_security.append(
+                    {scheme_name: item.openapi_scope}  # type:ignore[union-attr]
+                )
+
         return security_definitions, operation_security
 
     def get_openapi_operation_metadata(self, method: str) -> t.Dict[str, t.Any]:

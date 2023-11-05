@@ -18,13 +18,13 @@ class QueryAuth(QueryAPIKeyAuthenticationHandler):
         super().__init__()
         self.reflector = reflector
 
-    async def authentication_handler(self, connection, key):
+    async def authentication_handler(self, context, key):
         if key == "querysecretkey":
             return key
 
 
 class HeaderAuth(HeaderAPIKeyAuthenticationHandler):
-    async def authentication_handler(self, connection, key):
+    async def authentication_handler(self, context, key):
         if key == "headersecretkey":
             return key
 
@@ -32,7 +32,7 @@ class HeaderAuth(HeaderAPIKeyAuthenticationHandler):
 class CookieAuth(CookieAPIKeyAuthenticationHandler):
     openapi_name = "API Key Auth"
 
-    async def authentication_handler(self, connection, key):
+    async def authentication_handler(self, context, key):
         if key == "cookiesecretkey":
             return key
 
@@ -40,7 +40,7 @@ class CookieAuth(CookieAPIKeyAuthenticationHandler):
 class BasicAuth(HttpBasicAuthenticationHandler):
     openapi_name = "API Authentication"
 
-    async def authentication_handler(self, connection, credentials):
+    async def authentication_handler(self, context, credentials):
         if credentials.username == "admin" and credentials.password == "secret":
             return credentials.username
 
@@ -49,7 +49,7 @@ class BasicAuth(HttpBasicAuthenticationHandler):
 class BearerAuth(HttpBearerAuthenticationHandler):
     openapi_name = "JWT Authentication"
 
-    async def authentication_handler(self, connection, credentials):
+    async def authentication_handler(self, context, credentials):
         if credentials.credentials == "bearertoken":
             return credentials.credentials
 
@@ -77,10 +77,4 @@ def test_openapi_auth_schema():
         },
     }
 
-    assert document["security"] == [
-        {"JWT Authentication": []},
-        {"HeaderAuth": []},
-        {"QueryAuth": []},
-        {"API Key Auth": []},
-        {"API Authentication": []},
-    ]
+    assert document.get("security", []) == []

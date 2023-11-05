@@ -1,3 +1,8 @@
+import typing as t
+
+from injector import NoScope as TransientScope
+from injector import SingletonScope
+
 from .asgi_args import RequestScopeContext
 from .constants import (
     INJECTABLE_ATTRIBUTE,
@@ -7,9 +12,9 @@ from .constants import (
 )
 from .injector import Container, EllarInjector
 from .scopes import (
+    RequestORTransientScope,
     RequestScope,
-    SingletonScope,
-    TransientScope,
+    request_or_transient_scope,
     request_scope,
     singleton_scope,
     transient_scope,
@@ -26,6 +31,8 @@ __all__ = [
     "Container",
     "EllarInjector",
     "RequestScope",
+    "RequestORTransientScope",
+    "request_or_transient_scope",
     "SingletonScope",
     "TransientScope",
     "request_scope",
@@ -42,3 +49,7 @@ __all__ = [
     "AnnotationToValue",
     "MODULE_REF_TYPES",
 ]
+
+
+def __dir__() -> t.List[str]:
+    return sorted(__all__)  # pragma: no cover

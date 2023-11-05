@@ -5,8 +5,8 @@ from ellar.core.factory import AppFactory
 from ellar.openapi import (
     OpenAPIDocumentBuilder,
     OpenAPIDocumentModule,
-    ReDocDocumentGenerator,
-    SwaggerDocumentGenerator,
+    ReDocsUI,
+    SwaggerUI,
 )
 
 from .root_module import ApplicationModule
@@ -25,7 +25,7 @@ document_builder.set_title("Ellar API").set_version("1.0.2").set_contact(
 
 document = document_builder.build_document(application)
 module = OpenAPIDocumentModule.setup(
-    document_generator=[SwaggerDocumentGenerator(), ReDocDocumentGenerator()],
+    docs_ui=[ReDocsUI(), SwaggerUI()],
     document=document,
     guards=[],
 )
