@@ -606,7 +606,7 @@ class AuthController(ControllerBase):
     async def refresh_token(self, payload: str = Body(embed=True)):
         return await self.auth_service.refresh_token(payload)
 ```
-Source Code to this example is [here]()
+Source Code to this example is [here](https://github.com/python-ellar/ellar/tree/main/examples/03-auth-with-guards)
 
 ## **2. Authentication Schemes**
 
@@ -779,4 +779,4 @@ $ curl http://localhost:8000/auth/profile -H "Authorization: Bearer eyJhbGciOiJI
 {"exp":1698793558,"iat":1698793258,"jti":"e96e94c5c3ef4fbbbd7c2468eb64534b","sub":1,"user_id":1,"username":"john", "id":null,"auth_type":"bearer"}
 
 ```
-Source Code to this example is [here]()
+Source Code to this example is [here](https://github.com/python-ellar/ellar/tree/main/examples/04-auth-with-handlers)
