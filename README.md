@@ -13,8 +13,8 @@
 
 ## Project Status
 Beta version
-- Documentation - 95% complete
-- Authentication and Authorization - (in progress)
+- Documentation - 97% complete
+- Authorization Documentation - (in progress)
 
 
 ## **Introduction**
