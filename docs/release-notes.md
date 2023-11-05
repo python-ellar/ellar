@@ -1,3 +1,17 @@
+# 0.5.2
+## What's Changed
+* Bump ruff from 0.0.275 to 0.1.3 by @dependabot in https://github.com/python-ellar/ellar/pull/135
+* Bump black from 23.9.1 to 23.10.1 by @dependabot in https://github.com/python-ellar/ellar/pull/136
+* Bump types-redis from 4.6.0.5 to 4.6.0.8 by @dependabot in https://github.com/python-ellar/ellar/pull/133
+* Bump mypy from 1.5.1 to 1.6.1 by @dependabot in https://github.com/python-ellar/ellar/pull/134
+* Authentication Docs by @eadwinCode in https://github.com/python-ellar/ellar/pull/137
+
+## Breaking Changes
+* OpenAPI module Refactor by @eadwinCode in https://github.com/python-ellar/ellar/pull/138
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.5.1...0.5.2
+
 # 0.5.1
 ## What's Changed
 * Fix grammar error in dynamic-modules.md by @artemyfmv in https://github.com/python-ellar/ellar/pull/132
