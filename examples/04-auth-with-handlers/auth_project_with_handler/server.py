@@ -5,28 +5,28 @@ from ellar.core.factory import AppFactory
 from ellar.openapi import (
     OpenAPIDocumentBuilder,
     OpenAPIDocumentModule,
-    ReDocsUI,
     SwaggerUI,
 )
 
+from .auth.auth_scheme import JWTAuthentication
 from .root_module import ApplicationModule
 
 application = AppFactory.create_from_app_module(
     ApplicationModule,
     config_module=os.environ.get(
-        ELLAR_CONFIG_MODULE, "carapp.config:DevelopmentConfig"
+        ELLAR_CONFIG_MODULE, "auth_project_with_handler.config:DevelopmentConfig"
     ),
 )
+# Register JWTAuthentication as an authentication scheme
+application.add_authentication_schemes(JWTAuthentication)
+
+# uncomment this section if you want API documentation
 
 document_builder = OpenAPIDocumentBuilder()
-document_builder.set_title("Ellar API").set_version("1.0.2").set_contact(
-    name="John Doe", url="https://www.yahoo.com", email="johnDoe@gmail.com"
+document_builder.set_title("Auth With Auth Handler").set_version("1.0.2").set_contact(
+    name="Author Name", url="https://www.author-name.com", email="authorname@gmail.com"
 ).set_license("MIT Licence", url="https://www.google.com")
 
 document = document_builder.build_document(application)
-module = OpenAPIDocumentModule.setup(
-    docs_ui=[ReDocsUI(), SwaggerUI()],
-    document=document,
-    guards=[],
-)
+module = OpenAPIDocumentModule.setup(document=document, docs_ui=SwaggerUI(), guards=[])
 application.install_module(module)

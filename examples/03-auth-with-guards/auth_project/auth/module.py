@@ -17,23 +17,30 @@ class MyModule(ModuleBase):
         pass
 
 """
-from ellar.common import Module
-from ellar.core import ModuleBase
-from ellar.di import Container
+from datetime import timedelta
 
+from ellar.common import GlobalGuard, Module
+from ellar.core import ModuleBase
+from ellar.di import ProviderConfig
+from ellar_jwt import JWTModule
+
+from ..users.module import UsersModule
 from .controllers import AuthController
+from .guards import AuthGuard
 from .services import AuthService
 
 
 @Module(
+    modules=[
+        UsersModule,
+        JWTModule.setup(
+            signing_secret_key="my_poor_secret_key_lol", lifetime=timedelta(minutes=5)
+        ),
+    ],
     controllers=[AuthController],
-    providers=[AuthService],
-    routers=[],
+    providers=[AuthService, ProviderConfig(GlobalGuard, use_class=AuthGuard)],
 )
 class AuthModule(ModuleBase):
     """
     Auth Module
     """
-
-    def register_providers(self, container: Container) -> None:
-        """for more complicated provider registrations, use container.register_instance(...)"""

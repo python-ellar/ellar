@@ -8,13 +8,14 @@ class MyController(ControllerBase):
     def index(self):
         return {'detail': "Welcome Dog's Resources"}
 """
+from ellar.auth import AuthenticationRequired, SkipAuth
 from ellar.common import Body, Controller, ControllerBase, get, post
 from ellar.openapi import ApiTags
 
-from .guards import allow_any
 from .services import AuthService
 
 
+@AuthenticationRequired("JWTAuthentication")
 @Controller
 @ApiTags(name="Authentication", description="User Authentication Endpoints")
 class AuthController(ControllerBase):
@@ -22,7 +23,7 @@ class AuthController(ControllerBase):
         self.auth_service = auth_service
 
     @post("/login")
-    @allow_any()
+    @SkipAuth()
     async def sign_in(self, username: Body[str], password: Body[str]):
         return await self.auth_service.sign_in(username=username, password=password)
 
@@ -30,7 +31,7 @@ class AuthController(ControllerBase):
     async def get_profile(self):
         return self.context.user
 
-    @allow_any()
+    @SkipAuth()
     @post("/refresh")
     async def refresh_token(self, payload: str = Body(embed=True)):
         return await self.auth_service.refresh_token(payload)

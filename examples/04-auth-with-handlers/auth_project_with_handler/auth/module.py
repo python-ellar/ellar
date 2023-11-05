@@ -9,7 +9,7 @@
     routers=(routerA, routerB)
     statics='statics',
     template='template_folder',
-    # base_directory -> default is the `users` folder
+    # base_directory -> default is the `auth` folder
 )
 class MyModule(ModuleBase):
     def register_providers(self, container: Container) -> None:
@@ -17,16 +17,28 @@ class MyModule(ModuleBase):
         pass
 
 """
+from datetime import timedelta
+
 from ellar.common import Module
 from ellar.core import ModuleBase
+from ellar_jwt import JWTModule
 
-from .services import UsersService
+from ..users.module import UsersModule
+from .controllers import AuthController
+from .services import AuthService
 
 
 @Module(
-    providers=[UsersService],
+    modules=[
+        UsersModule,
+        JWTModule.setup(
+            signing_secret_key="my_poor_secret_key_lol", lifetime=timedelta(minutes=5)
+        ),
+    ],
+    controllers=[AuthController],
+    providers=[AuthService],
 )
-class UsersModule(ModuleBase):
+class AuthModule(ModuleBase):
     """
-    Users Module
+    Auth Module
     """

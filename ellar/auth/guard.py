@@ -3,6 +3,9 @@ import typing as t
 import starlette.status
 from ellar.common import GuardCanActivate, IExecutionContext, constants
 
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.common.routing import RouteOperation
+
 
 class AuthenticatedRequiredGuard(GuardCanActivate):
     status_code = starlette.status.HTTP_401_UNAUTHORIZED
@@ -16,9 +19,16 @@ class AuthenticatedRequiredGuard(GuardCanActivate):
         self.openapi_scope = openapi_scope or []
         self.reflector = Reflector()
 
-    def openapi_security_scheme(self) -> t.Dict:
+    def openapi_security_scheme(
+        self, route: t.Optional["RouteOperation"] = None
+    ) -> t.Dict:
         # this will only add security scope to the applied controller or route function
-        if self.authentication_scheme:
+        skip_auth: t.Any = False
+        if route:
+            skip_auth = self.reflector.get_all_and_override(
+                constants.SKIP_AUTH, route.endpoint, route.get_controller_type()
+            )
+        if not skip_auth and self.authentication_scheme:
             return {self.authentication_scheme: {}}
 
         return {}

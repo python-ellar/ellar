@@ -12,6 +12,7 @@ from starlette.exceptions import HTTPException
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.common.routing import RouteOperation
     from ellar.core.connection import HTTPConnection
 
 
@@ -36,7 +37,9 @@ class BaseAuth(ABC):
 
     @classmethod
     @abstractmethod
-    def openapi_security_scheme(cls) -> t.Dict:
+    def openapi_security_scheme(
+        cls, route: t.Optional["RouteOperation"] = None
+    ) -> t.Dict:
         """Override and provide OPENAPI Security Scheme"""
 
     async def run_authentication_check(self, context: IHostContext) -> t.Any:
@@ -95,7 +98,9 @@ class BaseAPIKey(BaseAuth, ABC):
         pass  # pragma: no cover
 
     @classmethod
-    def openapi_security_scheme(cls) -> t.Dict:
+    def openapi_security_scheme(
+        cls, route: t.Optional["RouteOperation"] = None
+    ) -> t.Dict:
         assert cls.openapi_in, "openapi_in is required"
         return {
             cls.openapi_name
@@ -143,7 +148,9 @@ class BaseHttpAuth(BaseAuth, ABC):
         pass  # pragma: no cover
 
     @classmethod
-    def openapi_security_scheme(cls) -> t.Dict:
+    def openapi_security_scheme(
+        cls, route: t.Optional["RouteOperation"] = None
+    ) -> t.Dict:
         assert cls.scheme, "openapi_scheme is required"
         return {
             cls.openapi_name

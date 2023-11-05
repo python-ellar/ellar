@@ -12,6 +12,7 @@ from ellar.common.serializer.guard import (
 from .base import BaseHttpAuth
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.common.routing import RouteOperation
     from ellar.core.connection import HTTPConnection
 
 
@@ -22,8 +23,10 @@ class HttpBearerAuth(BaseHttpAuth, ABC):
     header: str = "Authorization"
 
     @classmethod
-    def openapi_security_scheme(cls) -> t.Dict:
-        scheme = super().openapi_security_scheme()
+    def openapi_security_scheme(
+        cls, route: t.Optional["RouteOperation"] = None
+    ) -> t.Dict:
+        scheme = super().openapi_security_scheme(route)
         scheme[cls.openapi_name or cls.__name__].update(
             bearerFormat=cls.openapi_bearer_format
         )
