@@ -73,7 +73,6 @@ class UsersService:
         found_user = next(filtered_list)
         if found_user:
             return UserModel(**found_user)
-        return found_user
 
 ```
 
@@ -94,8 +93,6 @@ class UserModule(ModuleBase):
     """
     User Module
     """
-
-    pass
 
 ```
 
@@ -191,8 +188,6 @@ class AuthModule(ModuleBase):
     """
     Auth Module
     """
-
-    pass
 ```
 
 In the above example, we configured `JWTModule` with very minimal configurations and registered it as a module dependency
@@ -443,7 +438,7 @@ With the above illustration refresh token mechanism is complete.
 You can also vist [http://localhost:8000/docs](http://localhost:8000/docs)
 ![Swagger UI](../img/auth_image.png)
 
-## Apply AuthGuard Globally
+## **Apply AuthGuard Globally**
 
 In situations when you need to protect all your endpoints, you can register `AuthGuard` as a global guard instead of 
 using the `@UseGuards` decorator in all your controllers or route functions. 
@@ -479,8 +474,6 @@ class AuthModule(ModuleBase):
     """
     Auth Module
     """
-
-    pass
 ```
 
 With this, `AuthGuard` will be available to all endpoints.
@@ -613,6 +606,7 @@ class AuthController(ControllerBase):
     async def refresh_token(self, payload: str = Body(embed=True)):
         return await self.auth_service.refresh_token(payload)
 ```
+Source Code to this example is [here]()
 
 ## **2. Authentication Schemes**
 
@@ -639,8 +633,6 @@ from ellar.common import IHostContext
 from ellar.di import injectable
 from ellar_jwt import JWTService
 
-from starlette.exceptions import HTTPException
-
 
 @injectable
 class JWTAuthentication(HttpBearerAuthenticationHandler):
@@ -657,8 +649,8 @@ class JWTAuthentication(HttpBearerAuthenticationHandler):
             data = await self.jwt_service.decode_async(credentials.credentials)
             return UserIdentity(auth_type=self.scheme, **data)
         except Exception as ex:
-            # if we cant identity the user or token has expired we raise 401 error.
-            raise HTTPException(status_code=401) from ex
+            # if we cant identity the user or token has expired, we return None.
+            return None
 ```
 
 Let us make `JWTAuthentication` Handler available for ellar to use as shown below
@@ -680,46 +672,31 @@ application.add_authentication_schemes(JWTAuthentication)
 
 ```
 Unlike guards, Authentication handlers are registered global by default as shown in the above illustration. 
-Also, we need to remove `GlobalGuard` registration we did in `AuthModule`, so that we dont have too user identification checks.
+Also, we need to remove `GlobalGuard` registration we did in `AuthModule`, 
+so that we don't have too user identification checks.
 
 !!!note
-    In the above illustration, we added JWTAuthentication as a type. This means JWTAuthentication instance will be created by DI. We can using this method because we want to inject `JWTService`. 
+    In the above illustration, we added JWTAuthentication as a type.
+    This means DI will create JWTAuthentication instance.
+    We can use this method because we want `JWTService` to be injected when instantiating `JWTAuthentication`. 
     But if you don't have any need for DI injection, you can use the below.
     ```python
     ...
     application.add_authentication_schemes(JWTAuthentication())
     ```
 
-Next, we register a simple guard `AuthenticationRequiredGuard` globally to the application. `AuthenticationRequiredGuard` is a simply guard
-that checks if a request has a valid user identity.
-
-```python title='project_name.server.py' linenums='1'
-import os
-from ellar.common.constants import ELLAR_CONFIG_MODULE
-from ellar.core.factory import AppFactory
-from ellar.auth.guard import AuthenticatedRequiredGuard
-from .root_module import ApplicationModule
-from .auth_scheme import JWTAuthentication
-
-
-application = AppFactory.create_from_app_module(
-    ApplicationModule,
-    config_module=os.environ.get(
-        ELLAR_CONFIG_MODULE, "project_name.config:DevelopmentConfig"
-    ),
-    global_guards=[AuthenticatedRequiredGuard('JWTAuthentication')]
-)
-application.add_authentication_schemes(JWTAuthentication)
-```
-We need to refactor auth controller and mark refresh and sign_in function as public routes
+We need
+to refactor auth controller and mark `refresh_token` and `sign_in` function as public routes
+by using `SkipAuth` decorator from `ellar.auth` package.
 
 ```python title='auth.controller.py' linenums='1'
 from ellar.common import Controller, ControllerBase, post, Body, get
-from ellar.auth import SkipAuth
+from ellar.auth import SkipAuth, AuthenticationRequired
 from ellar.openapi import ApiTags
 from .services import AuthService
 
 
+@AuthenticationRequired('JWTAuthentication')
 @Controller
 @ApiTags(name='Authentication', description='User Authentication Endpoints')
 class AuthController(ControllerBase):
@@ -742,6 +719,50 @@ class AuthController(ControllerBase):
 
 
 ```
+In the above illustration,
+we decorated AuthController with `@AuthenticationRequired('JWTAuthentication')`
+to ensure we have authenticated user before executing any route function and, 
+we passed in `JWTAuthentication` as a parameter,
+which will be used in openapi doc to define the controller routes security scheme.
+
+It is importance to note that when using `AuthenticationHandler` approach,
+that you have
+to always use `AuthenticationRequired` decorator on route functions or controller
+that needs protected from anonymous users.
+
+But if you have a single form of authentication,
+you can register `AuthenticatedRequiredGuard` from `eellar.auth.guard` module globally
+just like we did in [applying guard globally](#apply-authguard-globally)
+
+```python title='auth.module.py' linenums='1'
+from datetime import timedelta
+from ellar.auth.guard import AuthenticatedRequiredGuard
+from ellar.common import GlobalGuard, Module
+from ellar.core import ModuleBase
+from ellar.di import ProviderConfig
+from ellar_jwt import JWTModule
+
+from ..users.module import UsersModule
+from .controllers import AuthController
+from .services import AuthService
+
+
+@Module(
+    modules=[
+        UsersModule,
+        JWTModule.setup(
+            signing_secret_key="my_poor_secret_key_lol", lifetime=timedelta(minutes=5)
+        ),
+    ],
+    controllers=[AuthController],
+    providers=[AuthService, ProviderConfig(GlobalGuard, use_value=AuthenticatedRequiredGuard('JWTAuthentication', []))],
+)
+class AuthModule(ModuleBase):
+    """
+    Auth Module
+    """
+```
+
 Still having the server running, we can test as before
 
 ```shell
@@ -758,3 +779,4 @@ $ curl http://localhost:8000/auth/profile -H "Authorization: Bearer eyJhbGciOiJI
 {"exp":1698793558,"iat":1698793258,"jti":"e96e94c5c3ef4fbbbd7c2468eb64534b","sub":1,"user_id":1,"username":"john", "id":null,"auth_type":"bearer"}
 
 ```
+Source Code to this example is [here]()
