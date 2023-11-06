@@ -1,7 +1,8 @@
 import typing as t
 
+from ellar.common import IIdentitySchemes
+
 from ..handlers import AuthenticationHandlerType
-from ..interfaces import IIdentitySchemes
 
 
 class AppIdentitySchemes(IIdentitySchemes):

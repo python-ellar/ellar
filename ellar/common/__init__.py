@@ -42,6 +42,7 @@ from .interfaces import (
     IHostContextFactory,
     IHTTPConnectionContextFactory,
     IHTTPHostContext,
+    IIdentitySchemes,
     IInterceptorsConsumer,
     IModuleSetup,
     IModuleTemplateLoader,
@@ -187,6 +188,7 @@ __all__ = [
     "UseInterceptors",
     "IApplicationStartup",
     "IApplicationShutdown",
+    "IIdentitySchemes",
 ]
 
 

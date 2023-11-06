@@ -6,7 +6,7 @@ The lifespan manager must be run before ellar starts serving incoming request.
 ```python
 import uvicorn
 import contextlib
-from ellar.core import App, AppFactory
+from ellar.app import App, AppFactory
 
 @contextlib.asynccontextmanager
 async def some_async_resource():

@@ -1,13 +1,12 @@
 import typing as t
 from enum import Enum
 
-from ellar.auth import IIdentitySchemes
+from ellar.common import IIdentitySchemes
 from ellar.common.compatible import AttributeDict, cached_property
 from ellar.common.constants import GUARDS_KEY, REF_PREFIX
 from ellar.common.helper.modelfield import create_model_field
 from ellar.common.routing import ModuleMount, RouteOperation
 from ellar.common.routing.controller import ControllerRouteOperation
-from ellar.core.main import App
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY, OPENAPI_TAG
 from pydantic import AnyUrl, BaseModel, EmailStr
 from pydantic.fields import ModelField
@@ -27,6 +26,10 @@ from .route_doc_models import (
 )
 from .schemas import HTTPValidationError, ValidationError
 
+if t.TYPE_CHECKING:
+    from ellar.app import App
+
+
 default_openapi_version = "3.0.2"
 
 
@@ -34,7 +37,7 @@ class OpenAPIDocumentBuilderAction:
     def __init__(self, document_dict: t.Dict) -> None:
         self._build = document_dict
 
-    def _get_openapi_route_document_models(self, app: App) -> t.List[OpenAPIRoute]:
+    def _get_openapi_route_document_models(self, app: "App") -> t.List[OpenAPIRoute]:
         openapi_route_models: t.List = []
         reflector = app.reflector
         app_guards = list(app.get_guards())
@@ -108,7 +111,7 @@ class OpenAPIDocumentBuilderAction:
             _model_fields.append(model_field)
         return _model_fields
 
-    def build(self, app: App) -> OpenAPI:
+    def build(self, app: "App") -> OpenAPI:
         openapi_route_models = self._get_openapi_route_document_models(app=app)
         components: t.Dict[str, t.Dict[str, t.Any]] = {}
 
@@ -318,6 +321,6 @@ class OpenAPIDocumentBuilder:
             },
         )
 
-    def build_document(self, app: App) -> OpenAPI:
+    def build_document(self, app: "App") -> OpenAPI:
         build_action = self._build_action_class(document_dict=self._build)
         return build_action.build(app)

@@ -6,14 +6,14 @@ from uuid import uuid4
 from ellar.common import EllarTyper
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.models import GuardCanActivate
-from ellar.core.main import App
+from ellar.core.conf import Config
 from ellar.core.modules import DynamicModule, ModuleBase, ModuleSetup
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
 from starlette.routing import Host, Mount
 
-from .conf import Config
-from .core_services import EllarCoreService
+from .main import App
+from .services import EllarAppService
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common.routing import ModuleMount, ModuleRouter
@@ -132,8 +132,8 @@ class AppFactory:
         config = Config(app_configured=True, **_get_config_kwargs())
         injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND)
         injector.container.register_instance(config, concrete_type=Config)
-        core_service = EllarCoreService(injector, config)
-        core_service.register_core_services()
+        service = EllarAppService(injector, config)
+        service.register_core_services()
 
         cls._build_modules(app_module=module, injector=injector, config=config)
 

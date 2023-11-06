@@ -1,8 +1,8 @@
 from abc import ABC
 
-from ellar.auth.handlers.schemes import HttpBasicAuth, HttpBearerAuth, HttpDigestAuth
 from ellar.common import APIException
 
+from ..handlers.schemes import HttpBasicAuth, HttpBearerAuth, HttpDigestAuth
 from .mixin import GuardAuthMixin
 
 

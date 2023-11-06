@@ -2,7 +2,7 @@ import typing as t
 from abc import abstractmethod
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core import App
+    from ellar.app import App
 
 
 class IApplicationStartup:

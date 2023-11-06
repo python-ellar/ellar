@@ -1,10 +1,9 @@
 from functools import partial
 
-from ellar.common import AnonymousIdentity, Identity, IHostContext
+from ellar.common import AnonymousIdentity, Identity, IHostContext, IIdentitySchemes
 from ellar.di import injectable
 
 from ..handlers import AuthenticationHandlerType, BaseAuthenticationHandler
-from ..interfaces import IIdentitySchemes
 
 
 @injectable

@@ -2,8 +2,8 @@ import sys
 
 import anyio
 import pytest
+from ellar.app import AppFactory
 from ellar.common import Header, Inject, ws_route
-from ellar.core import AppFactory
 from starlette import status
 from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 

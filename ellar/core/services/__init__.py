@@ -1,3 +1,3 @@
-from .reflector import Reflector
+from .reflector import Reflector, reflector
 
-__all__ = ["Reflector"]
+__all__ = ["Reflector", "reflector"]

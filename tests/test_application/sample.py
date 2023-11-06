@@ -1,5 +1,6 @@
 import os
 
+from ellar.auth.guards import GuardAPIKeyQuery
 from ellar.common import (
     Controller,
     Inject,
@@ -9,7 +10,6 @@ from ellar.common import (
     get,
 )
 from ellar.core import ModuleBase, Request, WebSocket
-from ellar.core.guards import GuardAPIKeyQuery
 from starlette.exceptions import HTTPException
 from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Host, Mount, Route, Router

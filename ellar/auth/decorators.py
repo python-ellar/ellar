@@ -4,7 +4,7 @@ from ellar.common import constants
 from ellar.common import set_metadata as set_meta
 
 from .constants import POLICY_KEYS
-from .guard import AuthenticatedRequiredGuard
+from .guards import AuthenticatedRequiredGuard
 from .interceptor import AuthorizationInterceptor
 from .policy import PolicyType
 

@@ -1,5 +1,5 @@
+from ellar.app import AppFactory
 from ellar.common import Controller, get, put, serialize_object
-from ellar.core import AppFactory
 from ellar.openapi.builder import OpenAPIDocumentBuilder
 from ellar.openapi.openapi_v3 import APIKeyIn
 

@@ -1,10 +1,10 @@
 import typing as t
 
+from ellar.auth.guards import GuardAPIKeyCookie
 from ellar.common import Body, ModuleRouter, Query
 from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.common.responses.models import ResponseModel, ResponseModelField
 from ellar.core.connection import HTTPConnection
-from ellar.core.guards import GuardAPIKeyCookie
 from ellar.core.routing import ModuleRouterFactory
 from ellar.openapi import OpenAPIRouteDocumentation, openapi_info
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
