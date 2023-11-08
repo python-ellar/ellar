@@ -1,3 +1,10 @@
+# 0.5.3
+## What's Changed
+* Fixed Auth And Core pkg Dependency by @eadwinCode in https://github.com/python-ellar/ellar/pull/139
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.5.2...0.5.3
+
 # 0.5.2
 ## What's Changed
 * Bump ruff from 0.0.275 to 0.1.3 by @dependabot in https://github.com/python-ellar/ellar/pull/135
