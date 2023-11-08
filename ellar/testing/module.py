@@ -2,12 +2,11 @@ import typing as t
 from pathlib import Path
 from uuid import uuid4
 
+from ellar.app import App, AppFactory
 from ellar.common import ControllerBase, Module
 from ellar.common.routing import ModuleMount, ModuleRouter
 from ellar.common.types import T
 from ellar.core import ModuleBase
-from ellar.core.factory import AppFactory
-from ellar.core.main import App
 from ellar.di import ProviderConfig
 from starlette.routing import Host, Mount
 from starlette.testclient import TestClient as TestClient

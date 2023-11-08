@@ -1,7 +1,6 @@
 import dataclasses
 import typing as t
 
-import ellar.core.main as main
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.models import ControllerBase
 from ellar.core.conf import Config
@@ -103,7 +102,8 @@ class ModuleSetup:
         if not reflect.get_metadata(MODULE_WATERMARK, self.module):
             raise Exception(f"{self.module.__name__} is not a valid Module")
 
-        if main.App in self.inject:
+        class_names = {cls.__name__ for cls in self.inject}
+        if "App" in class_names:
             self.ref_type = MODULE_REF_TYPES.APP_DEPENDENT
 
     @property

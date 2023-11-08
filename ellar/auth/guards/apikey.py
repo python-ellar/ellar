@@ -1,8 +1,8 @@
 from abc import ABC
 
-from ellar.auth.handlers.schemes import APIKeyCookie, APIKeyHeader, APIKeyQuery
 from ellar.common import APIException
 
+from ..handlers.schemes import APIKeyCookie, APIKeyHeader, APIKeyQuery
 from .mixin import GuardAuthMixin
 
 

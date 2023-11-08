@@ -2,6 +2,7 @@ from abc import ABC
 from unittest.mock import patch
 
 import pytest
+from ellar.app import App
 from ellar.common import (
     Controller,
     ControllerBase,
@@ -11,7 +12,7 @@ from ellar.common import (
     get,
 )
 from ellar.common.constants import MODULE_METADATA
-from ellar.core import App, Config, DynamicModule, ModuleBase, ModuleSetup
+from ellar.core import Config, DynamicModule, ModuleBase, ModuleSetup
 from ellar.core.services import Reflector
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect

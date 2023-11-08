@@ -2,7 +2,6 @@ from .decorators import AuthenticationRequired, Authorize, CheckPolicies, SkipAu
 from .handlers import BaseAuthenticationHandler
 from .identity import UserIdentity
 from .interceptor import AuthorizationInterceptor
-from .interfaces import IIdentitySchemes
 from .policy import (
     BasePolicyHandler,
     BasePolicyHandlerWithRequirement,
@@ -19,7 +18,6 @@ __all__ = [
     "CheckPolicies",
     "BasePolicyHandler",
     "BasePolicyHandlerWithRequirement",
-    "IIdentitySchemes",
     "UserIdentity",
     "RequiredClaimsPolicy",
     "RequiredRolePolicy",

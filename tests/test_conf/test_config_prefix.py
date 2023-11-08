@@ -1,4 +1,5 @@
-from ellar.core import AppFactory, Config
+from ellar.app import AppFactory
+from ellar.core import Config
 
 ELLAR_DEBUG = True
 ELLAR_SECRET_KEY = "your-secret-key-changed"

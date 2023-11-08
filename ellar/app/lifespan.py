@@ -5,7 +5,7 @@ from ellar.common import IApplicationShutdown, IApplicationStartup, logger
 from ellar.reflect import asynccontextmanager
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core import App
+    from ellar.app import App
 
 _T = t.TypeVar("_T")
 

@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.auth import AppIdentitySchemes, IIdentitySchemes
+from ellar.auth import AppIdentitySchemes
 from ellar.auth.session import ISessionStrategy, SessionServiceNullStrategy
 from ellar.common import (
     IExceptionMiddlewareService,
@@ -8,23 +8,26 @@ from ellar.common import (
     IGuardsConsumer,
     IHostContextFactory,
     IHTTPConnectionContextFactory,
+    IIdentitySchemes,
     IInterceptorsConsumer,
     IWebSocketContextFactory,
 )
-from ellar.core.services import Reflector
+from ellar.core.context import ExecutionContextFactory, HostContextFactory
+from ellar.core.context.factory import (
+    HTTPConnectionContextFactory,
+    WebSocketContextFactory,
+)
+from ellar.core.exceptions.service import ExceptionMiddlewareService
+from ellar.core.guards import GuardConsumer
+from ellar.core.interceptors import EllarInterceptorConsumer
+from ellar.core.services import Reflector, reflector
 from ellar.di import EllarInjector
-
-from .context import ExecutionContextFactory, HostContextFactory
-from .context.factory import HTTPConnectionContextFactory, WebSocketContextFactory
-from .exceptions.service import ExceptionMiddlewareService
-from .guards import GuardConsumer
-from .interceptors import EllarInterceptorConsumer
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.conf import Config
 
 
-class EllarCoreService:
+class EllarAppService:
     """Create Binding for all application service"""
 
     __slots__ = ("injector", "config")
@@ -51,7 +54,7 @@ class EllarCoreService:
             IWebSocketContextFactory, WebSocketContextFactory
         )
 
-        self.injector.container.register(Reflector)
+        self.injector.container.register_instance(reflector, Reflector)
         self.injector.container.register(
             IInterceptorsConsumer, EllarInterceptorConsumer
         )

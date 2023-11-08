@@ -42,7 +42,7 @@ class MathAPI:
 Create another file `server.py`:
 
 ```Python
-from ellar.core import AppFactory
+from ellar.app import AppFactory
 from ellar.openapi import OpenAPIDocumentBuilder, OpenAPIDocumentModule
 from .controller import router, MathAPI
 

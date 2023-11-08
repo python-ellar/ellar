@@ -11,6 +11,7 @@ from .context import (
 )
 from .exceptions import IExceptionHandler, IExceptionMiddlewareService
 from .guard_consumer import IGuardsConsumer
+from .identity_schemes import IIdentitySchemes
 from .interceptor_consumer import IInterceptorsConsumer
 from .middleware import IEllarMiddleware
 from .module import IModuleSetup
@@ -39,4 +40,5 @@ __all__ = [
     "IAPIVersioning",
     "IAPIVersioningResolver",
     "IEllarMiddleware",
+    "IIdentitySchemes",
 ]

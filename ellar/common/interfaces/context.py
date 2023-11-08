@@ -8,9 +8,10 @@ from starlette.requests import empty_send
 from starlette.responses import Response
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.app import App
     from ellar.common.models import ControllerBase, Identity
     from ellar.common.routing import RouteOperationBase
-    from ellar.core import App, HTTPConnection, Request, WebSocket
+    from ellar.core import HTTPConnection, Request, WebSocket
     from ellar.di.injector import EllarInjector
 
 

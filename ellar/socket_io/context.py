@@ -7,11 +7,12 @@ from ellar.common import (
     IWebSocketHostContext,
 )
 from ellar.common.types import TReceive, TScope, TSend
-from ellar.core import App
 from ellar.di import EllarInjector
 from socketio import AsyncServer
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.app import App
+
     from .model import GatewayBase
 
 
@@ -45,7 +46,7 @@ class GatewayContext(IExecutionContext):
     def switch_to_websocket(self) -> IWebSocketHostContext:  # pragma: no cover
         return self._context.switch_to_websocket()
 
-    def get_app(self) -> App:  # pragma: no cover
+    def get_app(self) -> "App":  # pragma: no cover
         return self._context.get_app()
 
     def get_type(self) -> str:  # pragma: no cover

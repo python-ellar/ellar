@@ -1,9 +1,9 @@
 from typing import Optional
 from uuid import UUID
 
+from ellar.app import AppFactory
 from ellar.common import Inject, ModuleRouter, Path, Query, Serializer
 from ellar.core.connection import Request
-from ellar.core.factory import AppFactory
 from pydantic import Field
 
 router = ModuleRouter("")

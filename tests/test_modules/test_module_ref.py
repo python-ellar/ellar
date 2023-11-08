@@ -1,6 +1,7 @@
 import logging
 
 import pytest
+from ellar.app import AppFactory
 from ellar.common import (
     Module,
     exception_handler,
@@ -16,7 +17,7 @@ from ellar.common.constants import (
     TEMPLATE_GLOBAL_KEY,
 )
 from ellar.common.helper import get_name
-from ellar.core import AppFactory, Config, ModuleBase
+from ellar.core import Config, ModuleBase
 from ellar.core.modules.ref import (
     InvalidModuleTypeException,
     ModulePlainRef,

@@ -121,7 +121,7 @@ If we want to restrict the interceptor's scope to a single method, we simply app
 In order to set up a global interceptor, we use the use_global_interceptors() method of the Ellar application instance:
 
 ```python
-from ellar.core import AppFactory
+from ellar.app import AppFactory
 
 app = AppFactory.create_from_app_module(ApplicationModule)
 app.use_global_interceptors(LoggingInterceptor())

@@ -1,12 +1,12 @@
 import typing as t
 
 from ellar.auth import UserIdentity
+from ellar.auth.guards import GuardHttpBearerAuth
 from ellar.common import IExecutionContext, logger, set_metadata
 from ellar.common.serializer.guard import (
     HTTPAuthorizationCredentials,
 )
 from ellar.core import Reflector
-from ellar.core.guards import GuardHttpBearerAuth
 from ellar.di import injectable
 from ellar_jwt import JWTService
 

@@ -3,14 +3,11 @@ import typing as t
 from .conf import Config, ConfigDefaultTypesMixin
 from .connection import HTTPConnection, Request, WebSocket
 from .context import ExecutionContext, HostContext
-from .factory import AppFactory
-from .main import App
+from .guards import GuardConsumer
 from .modules import DynamicModule, ModuleBase, ModuleSetup
-from .services import Reflector
+from .services import Reflector, reflector
 
 __all__ = [
-    "App",
-    "AppFactory",
     "HTTPConnection",
     "ExecutionContext",
     "HostContext",
@@ -22,6 +19,8 @@ __all__ = [
     "ModuleSetup",
     "DynamicModule",
     "Reflector",
+    "reflector",
+    "GuardConsumer",
 ]
 
 

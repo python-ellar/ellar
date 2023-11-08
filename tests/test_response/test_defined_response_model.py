@@ -1,7 +1,8 @@
 from typing import List, Optional
 
+from ellar.app import AppFactory
 from ellar.common import Inject, ModuleRouter
-from ellar.core import AppFactory, ExecutionContext
+from ellar.core import ExecutionContext
 from pydantic import BaseModel
 from starlette.responses import PlainTextResponse
 

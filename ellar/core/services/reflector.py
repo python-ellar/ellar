@@ -60,3 +60,6 @@ class Reflector:
             if value is not None:
                 return value
         return None
+
+
+reflector = Reflector()

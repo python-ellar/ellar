@@ -2,9 +2,8 @@ import logging
 import logging.config
 import typing as t
 
-from ellar.auth import IIdentitySchemes
 from ellar.auth.handlers import AuthenticationHandlerType
-from ellar.common import GlobalGuard
+from ellar.common import GlobalGuard, IIdentitySchemes
 from ellar.common.compatible import cached_property
 from ellar.common.constants import ELLAR_LOG_FMT_STRING, LOG_LEVELS
 from ellar.common.datastructures import State, URLPath
@@ -13,7 +12,7 @@ from ellar.common.logger import logger
 from ellar.common.models import EllarInterceptor, GuardCanActivate
 from ellar.common.templating import Environment
 from ellar.common.types import ASGIApp, T, TReceive, TScope, TSend
-from ellar.core.lifespan import EllarApplicationLifespan
+from ellar.core.conf import Config
 from ellar.core.middleware import (
     CORSMiddleware,
     ExceptionMiddleware,
@@ -26,6 +25,7 @@ from ellar.core.middleware import (
 from ellar.core.middleware.authentication import IdentityMiddleware
 from ellar.core.modules import (
     DynamicModule,
+    ModuleBase,
     ModuleRefBase,
     ModuleSetup,
     ModuleTemplateRef,
@@ -37,8 +37,7 @@ from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
 from ellar.di.injector import EllarInjector
 from starlette.routing import BaseRoute, Mount
 
-from .conf import Config
-from .modules import ModuleBase
+from .lifespan import EllarApplicationLifespan
 
 
 class App(AppTemplating):

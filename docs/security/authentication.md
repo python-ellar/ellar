@@ -270,7 +270,7 @@ from ellar.auth import UserIdentity
 from ellar.common.serializer.guard import (
     HTTPAuthorizationCredentials,
 )
-from ellar.core.guards import GuardHttpBearerAuth
+from ellar.auth.guards import GuardHttpBearerAuth
 from ellar.di import injectable
 from ellar_jwt import JWTService
 from ellar.common import logger, IExecutionContext
@@ -494,7 +494,7 @@ Let us define a mechanism for declaring routes as anonymous or public.
         HTTPAuthorizationCredentials,
     )
     from ellar.common import IExecutionContext, set_metadata, logger
-    from ellar.core.guards import GuardHttpBearerAuth
+    from ellar.auth.guards import GuardHttpBearerAuth
     from ellar.core import Reflector
     from ellar.di import injectable
     from ellar_jwt import JWTService
@@ -543,7 +543,7 @@ Let us define a mechanism for declaring routes as anonymous or public.
         HTTPAuthorizationCredentials,
     )
     from ellar.common import IExecutionContext, set_metadata, constants, GuardCanActivate, logger
-    from ellar.core.guards import GuardHttpBearerAuth
+    from ellar.auth.guards import GuardHttpBearerAuth
     from ellar.di import injectable
     from ellar_jwt import JWTService
     

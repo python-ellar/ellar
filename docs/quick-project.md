@@ -244,7 +244,7 @@ then add the following below.
 import os
 
 from ellar.common.constants import ELLAR_CONFIG_MODULE
-from ellar.core import AppFactory
+from ellar.app import AppFactory
 from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerDocumentGenerator
 from .root_module import ApplicationModule
 

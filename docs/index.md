@@ -57,7 +57,7 @@ $(venv) pip install ellar
 ```python
 import uvicorn
 from ellar.common import Body, Controller, ControllerBase, delete, get, post, put, Serializer, Inject
-from ellar.core import AppFactory
+from ellar.app import AppFactory
 from ellar.di import injectable, request_scope
 from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerUI
 from pydantic import Field

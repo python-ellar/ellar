@@ -54,7 +54,7 @@ In `project_name.server`, we create the `application` instance using the `AppFac
 import os
 
 from ellar.common.constants import ELLAR_CONFIG_MODULE
-from ellar.core.factory import AppFactory
+from ellar.app import AppFactory
 from .root_module import ApplicationModule
 
 application = AppFactory.create_from_app_module(

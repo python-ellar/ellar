@@ -2,7 +2,7 @@ import typing as t
 from abc import ABC, abstractmethod
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from .handlers import AuthenticationHandlerType
+    from ellar.auth.handlers import AuthenticationHandlerType
 
 
 class IIdentitySchemes(ABC):
