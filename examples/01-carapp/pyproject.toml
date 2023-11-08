@@ -9,7 +9,7 @@ packages = [{include = "03_socketio_app"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-ellar-cli = "^0.1.8"
+ellar-cli = "^0.2.4"
 
 
 [build-system]

@@ -9,7 +9,7 @@ packages = [{include = "04_auth_with_auth_handler"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-ellar-cli = "^0.1.8"
+ellar-cli = "^0.2.4"
 ellar-jwt = "^0.1.2"
 
 

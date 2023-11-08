@@ -5,11 +5,11 @@ description = "Example of ellar with socket io"
 authors = ["Ezeudoh Tochukwu <tochukwu.ezeudoh@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "03_socketio_app"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-ellar-cli = "^0.1.8"
+ellar-cli = "^0.2.4"
+python-socketio = "^5.10.0"
 
 
 [build-system]

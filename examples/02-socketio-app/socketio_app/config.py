@@ -33,7 +33,7 @@ class BaseConfig(ConfigDefaultTypesMixin):
     VERSIONING_SCHEME: BaseAPIVersioning = DefaultAPIVersioning()
 
     # Enable or Disable Application Router route searching by appending backslash
-    REDIRECT_SLASHES: bool = False
+    REDIRECT_SLASHES: bool = True
 
     # Define references to static folders in python packages.
     # eg STATIC_FOLDER_PACKAGES = [('boostrap4', 'statics')]

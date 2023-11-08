@@ -14,3 +14,6 @@ poetry install
 ```
 ellar runserver --reload
 ```
+
+### Page
+visit [http://127.0.0.1:8000/docs/](http://127.0.0.1:8000/docs/)
