@@ -3,7 +3,7 @@
 </p>
 <p align="end">logo by: <a target="_blank" href="https://www.behance.net/azadvertised">Azad</a></p>
 
-<p align="center"> Ellar - Python ASGI web framework for building fast, efficient and scalable RESTful APIs and server-side application. </p>
+<p align="center"> Ellar - Python ASGI web framework for building fast, efficient, and scalable RESTful APIs and server-side applications. </p>
 
 ![Test](https://github.com/python-ellar/ellar/actions/workflows/test_full.yml/badge.svg)
 ![Coverage](https://img.shields.io/codecov/c/github/python-ellar/ellar)
