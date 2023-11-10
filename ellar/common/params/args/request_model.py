@@ -72,7 +72,7 @@ class RequestEndpointArgsModel(EndpointArgsModel):
             _fields_required, _body_param_class = [], {}
             for f in _body_resolvers_model_fields:
                 f.field_info.embed = True  # type:ignore[attr-defined]
-                body_model_field.__fields__[f.alias or f.name] = f
+                body_model_field.__fields__[f.name] = f
                 _fields_required.append(f.required)
                 _body_param_class[
                     getattr(f.field_info, "media_type", "application/json")

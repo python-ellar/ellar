@@ -7,7 +7,7 @@ from ellar.core import Request
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
-from .sample import Item, OtherItem
+from .sample import Item, OtherItem, Product
 
 tm = Test.create_test_module()
 
@@ -24,8 +24,15 @@ def embed_qty(qty: Body[int, Body.P(12, embed=True)]):
     return {"qty": qty}
 
 
+@post("/items/alias")
+def alias_qty(qty: Body[int, Body.P(12, embed=True, alias="aliasQty")]):
+    return {"qty": qty}
+
+
 app = tm.create_application()
 app.router.append(save_union_body_and_embedded_body)
+app.router.append(embed_qty)
+app.router.append(alias_qty)
 
 client = tm.get_test_client()
 
@@ -68,7 +75,75 @@ item_openapi_schema = {
                     },
                 },
             }
-        }
+        },
+        "/items/alias": {
+            "post": {
+                "operationId": "alias_qty_items_alias_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/body_alias_qty_items_alias_post"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {"title": "Response Model", "type": "object"}
+                            }
+                        },
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        },
+                    },
+                },
+            }
+        },
+        "/items/embed": {
+            "post": {
+                "operationId": "embed_qty_items_embed_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/body_embed_qty_items_embed_post"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {"title": "Response Model", "type": "object"}
+                            }
+                        },
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        },
+                    },
+                },
+            }
+        },
     },
     "components": {
         "schemas": {
@@ -107,6 +182,30 @@ item_openapi_schema = {
                     },
                     "msg": {"title": "Message", "type": "string"},
                     "type": {"title": "Error Type", "type": "string"},
+                },
+            },
+            "body_alias_qty_items_alias_post": {
+                "title": "body_alias_qty_items_alias_post",
+                "type": "object",
+                "properties": {
+                    "aliasQty": {
+                        "title": "Aliasqty",
+                        "type": "integer",
+                        "default": 12,
+                        "include_in_schema": True,
+                    }
+                },
+            },
+            "body_embed_qty_items_embed_post": {
+                "title": "body_embed_qty_items_embed_post",
+                "type": "object",
+                "properties": {
+                    "qty": {
+                        "title": "Qty",
+                        "type": "integer",
+                        "default": 12,
+                        "include_in_schema": True,
+                    }
                 },
             },
             "body_save_union_body_and_embedded_body_items__post": {
@@ -154,14 +253,36 @@ def test_post_item():
 
 
 def test_embed_body():
-    _tm = Test.create_test_module()
-    _app = _tm.create_application()
-    _app.router.append(embed_qty)
-
-    _client = _tm.get_test_client()
-    response = _client.post("/items/embed", json={"qty": 232})
+    response = client.post("/items/embed", json={"qty": 232})
     assert response.status_code == 200, response.text
     assert response.json() == {"qty": 232}
+
+
+def test_embed_and_alias_body():
+    response = client.post("/items/alias", json={"aliasQty": 232})
+    assert response.status_code == 200, response.text
+    assert response.json() == {"qty": 232}
+
+
+def test_alias_with_more_body():
+    @post("/product")
+    async def create_item(
+        product: "Product" = Body(alias="item"), qty: int = Body(alias="aliasQty")
+    ):  # just to test get_typed_annotation in ellar.common.params.args.base
+        return {"item": product, "aliasQty": qty}
+
+    _tm = Test.create_test_module()
+    _app = _tm.create_application()
+    _app.router.append(create_item)
+
+    _client = _tm.get_test_client()
+
+    body = {
+        "item": {"name": "Foo", "description": "Some description", "price": 5.5},
+        "aliasQty": 234,
+    }
+    response = _client.post("/product", json=body)
+    assert response.json() == body
 
 
 @patch.object(Request, "body")
