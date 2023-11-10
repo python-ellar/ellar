@@ -33,7 +33,7 @@ async def form_upload_single_case_1(test: UploadFile = File()):
 
 @router.post("/mixed")
 async def form_upload_single_case_2(
-    test1: UploadFile = File(), test2: UploadFile = File()
+    test1: UploadFile = File(alias="test_alias"), test2: UploadFile = File()
 ):
     content1 = await test1.read()
     content2 = await test2.read()
@@ -143,7 +143,7 @@ def test_multipart_request_multiple_files(tmpdir):
     client = tm.get_test_client()
     with open(path1, "rb") as f1, open(path2, "rb") as f2:
         response = client.post(
-            "/mixed", files={"test1": f1, "test2": ("test2.txt", f2, "text/plain")}
+            "/mixed", files={"test_alias": f1, "test2": ("test2.txt", f2, "text/plain")}
         )
         assert response.json() == {
             "test1": {

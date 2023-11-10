@@ -28,8 +28,49 @@ def cookie_params_mixed_schema(
     return {"filters": filters.dict(), "data": data.dict()}
 
 
+@router.post("/cookie-alias")
+def cookie_with_alias(
+    request: Inject[Request],
+    qty: Cookie[str, Cookie.P(alias="aliasQty")],
+):
+    return {"aliasQty": qty}
+
+
 tm = Test.create_test_module(routers=(router,))
 app = tm.create_application()
+
+
+def test_cookie_with_alias():
+    client = tm.get_test_client()
+    response = client.post(
+        "/cookie-alias",
+        json={},
+        cookies={
+            "aliasQty": "234",
+        },
+    )
+
+    assert response.json() == {
+        "aliasQty": "234",
+    }
+
+    response = client.post(
+        "/cookie-alias",
+        cookies={
+            "qty": "234",
+        },
+    )
+    assert response.status_code == 422
+    json = response.json()
+    assert json == {
+        "detail": [
+            {
+                "loc": ["cookie", "aliasQty"],
+                "msg": "none is not an allowed value",
+                "type": "type_error.none.not_allowed",
+            }
+        ]
+    }
 
 
 def test_cookie_request():

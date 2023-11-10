@@ -35,8 +35,46 @@ def query_params_mixed_schema(
     }
 
 
+@mr.post("/query-alias")
+def query_with_alias(
+    request: Inject[Request],
+    qty: Query[str, Query.P(alias="aliasQty")],
+):
+    return {"aliasQty": qty}
+
+
 tm = Test.create_test_module(routers=(mr,))
 app = tm.create_application()
+
+
+def test_query_with_alias():
+    client = tm.get_test_client()
+    response = client.post(
+        "/query-alias?aliasQty=234",
+        json={},
+    )
+
+    assert response.json() == {
+        "aliasQty": "234",
+    }
+
+    response = client.post(
+        "/query-alias?qty=234",
+        headers={
+            "qty": "234",
+        },
+    )
+    assert response.status_code == 422
+    json = response.json()
+    assert json == {
+        "detail": [
+            {
+                "loc": ["query", "aliasQty"],
+                "msg": "field required",
+                "type": "value_error.missing",
+            }
+        ]
+    }
 
 
 def test_request():

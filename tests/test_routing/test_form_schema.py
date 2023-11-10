@@ -19,6 +19,14 @@ def form_params_schema(
     return filters.dict()
 
 
+@mr.post("/form-alias")
+def form_with_alias(
+    request: Inject[Request],
+    qty: int = Form(..., alias="aliasQty"),
+):
+    return {"aliasQty": qty}
+
+
 test_module = Test.create_test_module(routers=(mr,))
 app = test_module.create_application()
 
@@ -44,6 +52,37 @@ def test_request():
                 "msg": "value is not a valid enumeration member; permitted: 20, 50, 200",
                 "type": "type_error.enum",
                 "ctx": {"enum_values": [20, 50, 200]},
+            }
+        ]
+    }
+
+
+def test_form_with_alias():
+    client = test_module.get_test_client()
+    response = client.post(
+        "/form-alias",
+        data={
+            "aliasQty": 234,
+        },
+    )
+    assert response.json() == {
+        "aliasQty": 234,
+    }
+
+    response = client.post(
+        "/form-alias",
+        data={
+            "qty": 234,
+        },
+    )
+    assert response.status_code == 422
+    json = response.json()
+    assert json == {
+        "detail": [
+            {
+                "loc": ["body", "aliasQty"],
+                "msg": "value is not a valid integer",
+                "type": "type_error.integer",
             }
         ]
     }

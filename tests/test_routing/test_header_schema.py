@@ -28,8 +28,49 @@ def header_params_mixed_schema(
     return {"filters": filters.dict(), "data": data.dict()}
 
 
+@mr.post("/header-alias")
+def header_with_alias(
+    request: Inject[Request],
+    qty: Header[str, Header.P(alias="aliasQty")],
+):
+    return {"aliasQty": qty}
+
+
 tm = Test.create_test_module(routers=(mr,))
 app = tm.create_application()
+
+
+def test_header_with_alias():
+    client = tm.get_test_client()
+    response = client.post(
+        "/header-alias",
+        json={},
+        headers={
+            "aliasQty": "234",
+        },
+    )
+
+    assert response.json() == {
+        "aliasQty": "234",
+    }
+
+    response = client.post(
+        "/header-alias",
+        headers={
+            "qty": "234",
+        },
+    )
+    assert response.status_code == 422
+    json = response.json()
+    assert json == {
+        "detail": [
+            {
+                "loc": ["header", "aliasQty"],
+                "msg": "field required",
+                "type": "value_error.missing",
+            }
+        ]
+    }
 
 
 def test_header_request():
