@@ -1,10 +1,10 @@
 # 0.5.5
 ## What's Changed
-* Route Function Parameter Aliasing Bug Fix by @eadwinCode in https://github.com/python-ellar/ellar/pull/140
-* file upload openapi doc fix by @eadwinCode in https://github.com/python-ellar/ellar/pull/141
+* fix file and form schema route function by @eadwinCode in https://github.com/python-ellar/ellar/pull/142
 
 
-**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.5.3...0.5.4
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.5.4...0.5.5
+
 
 # 0.5.4
 ## What's Changed
