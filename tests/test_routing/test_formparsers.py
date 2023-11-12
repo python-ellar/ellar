@@ -9,6 +9,7 @@ from ellar.testing import Test
 from starlette.formparsers import UploadFile as StarletteUploadFile
 
 from .document_results import FORM_OPENAPI_DOC
+from .sample import Filter
 
 router = ModuleRouter("")
 
@@ -95,6 +96,14 @@ async def form_upload_multiple_case_2(
     }
 
 
+@router.post("/form-with-schema-spreading")
+def form_params_schema_spreading(
+    file: File[UploadFile, File.P(alias="momentOfTruth")],
+    filters: Filter = Form(..., alias="will_not_work_for_schema_with_many_field"),
+):
+    return dict(filters.dict(), file_name=file.filename)
+
+
 tm = Test.create_test_module(routers=(router,))
 
 
@@ -120,6 +129,26 @@ def test_multipart_request_files(tmpdir):
                 "content": "<file content>",
                 "content_type": "text/plain",
             }
+        }
+
+
+def test_file_with_form_schema_combines_all_to_one_schema(tmpdir):
+    path = os.path.join(tmpdir, "test.txt")
+    with open(path, "wb") as file:
+        file.write(b"<file content>")
+
+    client = tm.get_test_client()
+    with open(path, "rb") as f:
+        response = client.post(
+            "/form-with-schema-spreading",
+            data={"from": "1", "to": "2", "range": "50"},
+            files={"momentOfTruth": ("test.txt", f, "text/plain")},
+        )
+        assert response.json() == {
+            "file_name": "test.txt",
+            "from_datetime": "1970-01-01T00:00:01+00:00",
+            "range": 50,
+            "to_datetime": "1970-01-01T00:00:02+00:00",
         }
 
 

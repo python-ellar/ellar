@@ -93,15 +93,44 @@ def test_schema():
     params = document["paths"]["/form-schema"]["post"]["requestBody"]
     assert params == {
         "content": {
-            "application/x-www-form-urlencoded": {
+            "application/form-data": {
                 "schema": {
-                    "allOf": [{"$ref": "#/components/schemas/Filter"}],
+                    "allOf": [
+                        {
+                            "$ref": "#/components/schemas/body_form_params_schema_form_schema_post"
+                        }
+                    ],
                     "include_in_schema": True,
-                    "title": "Will Not Work For Schema With Many Field",
+                    "title": "Body",
                 }
             }
+        }
+    }
+    schema = document["components"]["schemas"][
+        "body_form_params_schema_form_schema_post"
+    ]
+    assert schema == {
+        "title": "body_form_params_schema_form_schema_post",
+        "type": "object",
+        "properties": {
+            "to": {
+                "title": "To",
+                "type": "string",
+                "format": "date-time",
+                "include_in_schema": True,
+            },
+            "from": {
+                "title": "From",
+                "type": "string",
+                "format": "date-time",
+                "include_in_schema": True,
+            },
+            "range": {
+                "allOf": [{"$ref": "#/components/schemas/Range"}],
+                "default": 20,
+                "include_in_schema": True,
+            },
         },
-        "required": True,
     }
 
 

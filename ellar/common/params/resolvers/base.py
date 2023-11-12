@@ -14,6 +14,8 @@ class RouteParameterModelField(ModelField):
 
 
 class IRouteParameterResolver(ABC, metaclass=ABCMeta):
+    model_field: t.Union[RouteParameterModelField, ModelField]
+
     @abstractmethod
     @t.no_type_check
     async def resolve(self, *args: t.Any, **kwargs: t.Any) -> t.Tuple:
