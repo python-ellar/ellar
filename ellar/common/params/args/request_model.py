@@ -3,6 +3,7 @@ import typing as t
 from ellar.common.constants import MULTI_RESOLVER_KEY
 from ellar.common.helper.modelfield import create_model_field
 from ellar.common.interfaces import IExecutionContext
+from ellar.common.logger import logger
 from pydantic import BaseModel, create_model
 from starlette.convertors import Convertor
 
@@ -10,6 +11,41 @@ from .. import params
 from ..resolvers import BaseRouteParameterResolver
 from .base import EndpointArgsModel
 from .extra_args import ExtraEndpointArg
+
+multipart_not_installed_error = (
+    'Form data requires "python-multipart" to be installed. \n'
+    'You can install "python-multipart" with: \n\n'
+    "pip install python-multipart\n"
+)
+multipart_incorrect_install_error = (
+    'Form data requires "python-multipart" to be installed. '
+    'It seems you installed "multipart" instead. \n'
+    'You can remove "multipart" with: \n\n'
+    "pip uninstall multipart\n\n"
+    'And then install "python-multipart" with: \n\n'
+    "pip install python-multipart\n"
+)
+
+
+def check_file_field(field: t.Any) -> None:
+    field_info = field.field_info
+    if isinstance(field_info, params.FormFieldInfo):
+        try:
+            # __version__ is available in both multiparts, and can be mocked
+            from multipart import __version__
+
+            assert __version__
+            try:
+                # parse_options_header is only available in the right multipart
+                from multipart.multipart import parse_options_header
+
+                assert parse_options_header
+            except ImportError:
+                logger.error(multipart_incorrect_install_error)
+                raise RuntimeError(multipart_incorrect_install_error) from None
+        except ImportError:
+            logger.error(multipart_not_installed_error)
+            raise RuntimeError(multipart_not_installed_error) from None
 
 
 class RequestEndpointArgsModel(EndpointArgsModel):
@@ -60,6 +96,7 @@ class RequestEndpointArgsModel(EndpointArgsModel):
                 )
             )
         ):
+            check_file_field(body_resolvers[0].model_field)  # type: ignore[attr-defined]
             self.body_resolver = body_resolvers[0]
         elif body_resolvers:
             # if body_resolvers is more than one, we create a bulk_body_resolver instead
@@ -107,6 +144,7 @@ class RequestEndpointArgsModel(EndpointArgsModel):
             final_field.field_info = t.cast(
                 params.ParamFieldInfo, final_field.field_info
             )
+            check_file_field(final_field)
             self.body_resolver = final_field.field_info.create_resolver(final_field)
 
     async def resolve_body(
