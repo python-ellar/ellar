@@ -3,9 +3,12 @@ import sys
 from typing import List, Union
 
 import pytest
-from ellar.common import File, Form, ModuleRouter, UploadFile
+from ellar.common import File, Form, ModuleRouter, UploadFile, serialize_object
+from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 from starlette.formparsers import UploadFile as StarletteUploadFile
+
+from .document_results import FORM_OPENAPI_DOC
 
 router = ModuleRouter("")
 
@@ -93,6 +96,13 @@ async def form_upload_multiple_case_2(
 
 
 tm = Test.create_test_module(routers=(router,))
+
+
+def test_open_api_schema_generation():
+    document = serialize_object(
+        OpenAPIDocumentBuilder().build_document(tm.create_application())
+    )
+    assert document == FORM_OPENAPI_DOC
 
 
 @pytest.mark.skipif(sys.version_info < (3, 7), reason="requires python >= 3.7")
