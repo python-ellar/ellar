@@ -10,9 +10,12 @@ FORM_OPENAPI_DOC = {
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "title": "Test",
-                                "type": "string",
-                                "format": "binary",
+                                "title": "Body",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/body_form_upload_single_case_1__post"
+                                    }
+                                ],
                                 "include_in_schema": True,
                             }
                         }
@@ -174,14 +177,12 @@ FORM_OPENAPI_DOC = {
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "title": "Test1",
-                                "type": "array",
-                                "items": {
-                                    "anyOf": [
-                                        {"type": "string", "format": "binary"},
-                                        {"type": "string"},
-                                    ]
-                                },
+                                "title": "Body",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/body_form_upload_multiple_case_1_multiple_post"
+                                    }
+                                ],
                                 "include_in_schema": True,
                             }
                         }
@@ -276,6 +277,24 @@ FORM_OPENAPI_DOC = {
                     },
                 },
             },
+            "body_form_upload_multiple_case_1_multiple_post": {
+                "title": "body_form_upload_multiple_case_1_multiple_post",
+                "required": ["test1"],
+                "type": "object",
+                "properties": {
+                    "test1": {
+                        "title": "Test1",
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {"type": "string", "format": "binary"},
+                                {"type": "string"},
+                            ]
+                        },
+                        "include_in_schema": True,
+                    }
+                },
+            },
             "body_form_upload_multiple_case_2_mixed_optional_post": {
                 "title": "body_form_upload_multiple_case_2_mixed_optional_post",
                 "type": "object",
@@ -297,6 +316,19 @@ FORM_OPENAPI_DOC = {
                         "type": "string",
                         "include_in_schema": True,
                     },
+                },
+            },
+            "body_form_upload_single_case_1__post": {
+                "title": "body_form_upload_single_case_1__post",
+                "required": ["test"],
+                "type": "object",
+                "properties": {
+                    "test": {
+                        "title": "Test",
+                        "type": "string",
+                        "format": "binary",
+                        "include_in_schema": True,
+                    }
                 },
             },
             "body_form_upload_single_case_2_mixed_post": {
