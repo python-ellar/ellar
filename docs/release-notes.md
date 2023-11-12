@@ -1,3 +1,12 @@
+# 0.5.4
+## What's Changed
+* Route Function Parameter Aliasing Bug Fix by @eadwinCode in https://github.com/python-ellar/ellar/pull/140
+* file upload openapi doc fix by @eadwinCode in https://github.com/python-ellar/ellar/pull/141
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.5.3...0.5.4
+
+
 # 0.5.3
 ## What's Changed
 * Fixed Auth And Core pkg Dependency by @eadwinCode in https://github.com/python-ellar/ellar/pull/139
