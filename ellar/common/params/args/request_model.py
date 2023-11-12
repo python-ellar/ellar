@@ -5,10 +5,15 @@ from ellar.common.helper.modelfield import create_model_field
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import logger
 from pydantic import BaseModel, create_model
+from pydantic.fields import ModelField
 from starlette.convertors import Convertor
 
 from .. import params
-from ..resolvers import BaseRouteParameterResolver
+from ..resolvers import (
+    BulkFormParameterResolver,
+    IRouteParameterResolver,
+    RouteParameterModelField,
+)
 from .base import EndpointArgsModel
 from .extra_args import ExtraEndpointArg
 
@@ -78,6 +83,16 @@ class RequestEndpointArgsModel(EndpointArgsModel):
         )
         self.operation_unique_id = operation_unique_id
 
+    def _get_body_resolver_model_fields(
+        self, body_resolvers: t.List[IRouteParameterResolver]
+    ) -> t.Generator[t.Union["RouteParameterModelField", ModelField], t.Any, None]:
+        for resolver in body_resolvers:
+            if isinstance(resolver, BulkFormParameterResolver):
+                for form_resolver in resolver.resolvers:
+                    yield form_resolver.model_field
+            else:
+                yield resolver.model_field
+
     def build_body_field(self) -> None:
         """
         Group common body / form fields to one field
@@ -92,22 +107,19 @@ class RequestEndpointArgsModel(EndpointArgsModel):
             and not (
                 body_resolvers[0].model_field.field_info.embed  # type: ignore[attr-defined]
                 and isinstance(
-                    body_resolvers[0].model_field.field_info, params.BodyFieldInfo  # type: ignore[attr-defined]
+                    body_resolvers[0].model_field.field_info, params.BodyFieldInfo
                 )
             )
         ):
-            check_file_field(body_resolvers[0].model_field)  # type: ignore[attr-defined]
+            check_file_field(body_resolvers[0].model_field)
             self.body_resolver = body_resolvers[0]
         elif body_resolvers:
             # if body_resolvers is more than one, we create a bulk_body_resolver instead
-            _body_resolvers_model_fields = (
-                t.cast(BaseRouteParameterResolver, item).model_field
-                for item in body_resolvers
-            )
             model_name = "body_" + self.operation_unique_id
             body_model_field: t.Type[BaseModel] = create_model(model_name)
             _fields_required, _body_param_class = [], {}
-            for f in _body_resolvers_model_fields:
+
+            for f in self._get_body_resolver_model_fields(body_resolvers):
                 f.field_info.embed = True  # type:ignore[attr-defined]
                 body_model_field.__fields__[f.name] = f
                 _fields_required.append(f.required)
@@ -122,12 +134,12 @@ class RequestEndpointArgsModel(EndpointArgsModel):
             media_type = "application/json"
             if len(_body_param_class) == 1:
                 _, (klass, field_info) = _body_param_class.popitem()
-                body_field_info = klass
+                body_field_info = klass  # type:ignore[assignment]
                 media_type = getattr(field_info, "media_type", media_type)
             elif len(_body_param_class) > 1:
                 key = sorted(_body_param_class.keys(), reverse=True)[0]
                 klass, field_info = _body_param_class[key]
-                body_field_info = klass
+                body_field_info = klass  # type:ignore[assignment]
                 media_type = getattr(field_info, "media_type", media_type)
 
             final_field = create_model_field(
