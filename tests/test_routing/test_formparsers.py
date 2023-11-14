@@ -3,7 +3,7 @@ import sys
 from typing import List, Union
 
 import pytest
-from ellar.common import File, Form, ModuleRouter, UploadFile, serialize_object
+from ellar.common import File, Form, ModuleRouter, UploadFile, post, serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 from starlette.formparsers import UploadFile as StarletteUploadFile
@@ -373,3 +373,55 @@ def test_multipart_multi_field_app_reads_body(tmpdir):
         "/multiple", data={"test1": "key pair"}, files=FORCE_MULTIPART
     )
     assert response.json() == {"test1": ["key pair"]}
+
+
+def test_form_file_data_as_bytes(tmpdir):
+    path = os.path.join(tmpdir, "test.txt")
+    with open(path, "wb") as file:
+        file.write(b"<file content>")
+
+    @post("/form-bytes")
+    async def form_file_as_bytes(
+        ex_file: File[bytes],
+    ):
+        return {
+            "file_size": len(ex_file),
+        }
+
+    new_tm = Test.create_test_module()
+    new_tm.create_application().router.append(form_file_as_bytes)
+    client = new_tm.get_test_client()
+
+    with open(path, "rb") as f:
+        response = client.post(
+            "/form-bytes", files={"ex_file": ("test.txt", f, "text/plain")}
+        )
+        assert response.json() == {"file_size": 14}
+
+
+def test_form_file_data_as_list_of_bytes(tmpdir):
+    path = os.path.join(tmpdir, "test.txt")
+    with open(path, "wb") as file:
+        file.write(b"<file content>")
+
+    @post("/form-bytes")
+    async def form_file_as_bytes(
+        ex_files: File[List[bytes]],
+    ):
+        return {
+            "file_size": sum((len(ex_file) for ex_file in ex_files)),
+        }
+
+    new_tm = Test.create_test_module()
+    new_tm.create_application().router.append(form_file_as_bytes)
+    client = new_tm.get_test_client()
+
+    with open(path, "rb") as f:
+        response = client.post(
+            "/form-bytes",
+            files=[
+                ("ex_files", ("test.txt", f, "test/plain")),
+                ("ex_files", ("test2.txt", f, "text/plain")),
+            ],
+        )
+        assert response.json() == {"file_size": 28}
