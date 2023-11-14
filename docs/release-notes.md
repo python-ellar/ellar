@@ -1,3 +1,10 @@
+# 0.5.6
+## What's Changed
+* fixed file data as bytes by @eadwinCode in https://github.com/python-ellar/ellar/pull/143
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.5.5...0.5.6
+
 # 0.5.5
 ## What's Changed
 * fix file and form schema route function by @eadwinCode in https://github.com/python-ellar/ellar/pull/142
