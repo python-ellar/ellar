@@ -9,14 +9,20 @@ from ellar.common.constants import (
     sequence_shapes,
     sequence_types,
 )
-from ellar.common.datastructures import UploadFile
 from ellar.common.exceptions import RequestValidationError
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import request_logger
 from pydantic.error_wrappers import ErrorWrapper
 from pydantic.fields import Undefined
 from pydantic.utils import lenient_issubclass
-from starlette.datastructures import FormData, Headers, QueryParams
+from starlette.datastructures import (
+    FormData,
+    Headers,
+    QueryParams,
+)
+from starlette.datastructures import (
+    UploadFile as StarletteUploadFile,
+)
 from starlette.exceptions import HTTPException
 
 from .base import BaseRouteParameterResolver
@@ -243,7 +249,7 @@ class FileParameterResolver(FormParameterResolver):
         self, *, values: t.Dict, value: t.Any, loc: t.Tuple
     ) -> t.Tuple:
         if lenient_issubclass(self.model_field.type_, bytes) and isinstance(
-            value, UploadFile
+            value, StarletteUploadFile
         ):
             value = await value.read()
         elif (
