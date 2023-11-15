@@ -12,8 +12,8 @@ from ellar.common import (
     template_filter,
     template_global,
 )
-from ellar.common.helper.importer import get_class_import
 from ellar.common.templating import Environment
+from ellar.common.utils.importer import get_class_import
 from ellar.core import Config, ModuleBase
 from ellar.core.connection import Request
 from ellar.core.modules import ModuleTemplateRef

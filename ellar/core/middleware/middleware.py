@@ -1,8 +1,8 @@
 import typing as t
 
-from ellar.common.helper import build_init_kwargs
 from ellar.common.interfaces import IEllarMiddleware
 from ellar.common.types import ASGIApp
+from ellar.common.utils import build_init_kwargs
 from ellar.di import EllarInjector, injectable
 from starlette.middleware import Middleware
 

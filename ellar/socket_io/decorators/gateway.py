@@ -5,7 +5,7 @@ from abc import ABC
 from ellar.common.compatible import AttributeDict
 from ellar.common.constants import CONTROLLER_CLASS_KEY
 from ellar.common.exceptions import ImproperConfiguration
-from ellar.common.helper import get_name
+from ellar.common.utils import get_name
 from ellar.di import RequestScope, injectable
 from ellar.reflect import REFLECT_TYPE, reflect
 from ellar.socket_io.constants import (

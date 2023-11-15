@@ -1,9 +1,9 @@
 import math
-import secrets
 import typing as t
 from abc import ABC, abstractmethod
 
 import passlib.utils.handlers as uh
+from ellar.common.utils.crypto import RANDOM_STRING_CHARS, get_random_string
 
 # This will never be a valid encoded hash
 UNUSABLE_PASSWORD_PREFIX = "!"
@@ -11,32 +11,9 @@ UNUSABLE_PASSWORD_SUFFIX_LENGTH = (
     40  # number of random chars to add after UNUSABLE_PASSWORD_PREFIX
 )
 
-RANDOM_STRING_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
 __HASHERS_DICT: t.Dict[str, t.Type["BaseHasher"]] = {}
 EncodingType = t.Union[str, bytes]
 EncodingSalt = t.Optional[t.Union[str, bytes]]
-
-
-def must_update_salt(salt: str, expected_entropy: int) -> bool:
-    # Each character in the salt provides log_2(len(alphabet)) bits of entropy.
-    return len(salt) * math.log2(len(RANDOM_STRING_CHARS)) < expected_entropy
-
-
-def get_random_string(length: int, allowed_chars: str = RANDOM_STRING_CHARS) -> str:
-    """
-    Return a securely generated random string.
-
-    The bit length of the returned value can be calculated with the formula:
-        log_2(len(allowed_chars)^length)
-
-    For example, with default `allowed_chars` (26+26+10), this gives:
-      * length: 12, bit length =~ 71 bits
-      * length: 22, bit length =~ 131 bits
-    """
-    return "".join(
-        secrets.choice(allowed_chars) for _ in range(length)
-    )  # pragma no cover
 
 
 class BaseHasher(ABC):

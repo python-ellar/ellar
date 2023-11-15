@@ -1,7 +1,9 @@
 import typing as t
 
+from ellar.common.utils.crypto import get_random_string
+
 from .argon2 import Argon2Hasher
-from .base import BaseHasher, EncodingType, get_random_string, must_update_salt
+from .base import BaseHasher, EncodingType
 from .bcrypt import BCryptHasher, BCryptSHA256Hasher
 from .md5 import MD5Hasher
 from .pbkdf import PBKDF2Hasher, PBKDF2SHA1Hasher
@@ -125,7 +127,6 @@ __all__ = [
     "BCryptHasher",
     "ScryptHasher",
     "MD5Hasher",
-    "must_update_salt",
     "make_password",
     "check_password",
     "is_password_usable",

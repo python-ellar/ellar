@@ -2,12 +2,12 @@ from typing import Dict, List, Union, cast
 
 import pytest
 from ellar.common.exceptions import RequestValidationError
-from ellar.common.helper.modelfield import create_model_field
 from ellar.common.responses.models import (
     ResponseModelField,
     ResponseTypeDefinitionConverter,
 )
 from ellar.common.serializer import BaseSerializer
+from ellar.common.utils.modelfield import create_model_field
 from pydantic.typing import get_args
 
 from ..schema import BlogObjectDTO, NoteSchemaDC

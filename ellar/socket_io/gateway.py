@@ -15,8 +15,8 @@ from ellar.common.constants import (
     SCOPE_SERVICE_PROVIDER,
 )
 from ellar.common.exceptions import WebSocketRequestValidationError
-from ellar.common.helper import get_name
 from ellar.common.params import WebsocketEndpointArgsModel
+from ellar.common.utils import get_name
 from ellar.core import Config
 from ellar.di import EllarInjector
 from ellar.reflect import reflect

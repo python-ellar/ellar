@@ -3,10 +3,10 @@ from abc import ABC, abstractmethod
 
 from ellar.common.constants import SERIALIZER_FILTER_KEY
 from ellar.common.exceptions import RequestValidationError
-from ellar.common.helper.modelfield import create_model_field
 from ellar.common.interfaces import IExecutionContext, IResponseModel
 from ellar.common.logger import request_logger
 from ellar.common.serializer import SerializerFilter, serialize_object
+from ellar.common.utils.modelfield import create_model_field
 from ellar.reflect import reflect
 from pydantic import BaseModel
 from pydantic.fields import ModelField
