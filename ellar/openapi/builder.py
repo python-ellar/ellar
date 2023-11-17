@@ -4,9 +4,9 @@ from enum import Enum
 from ellar.common import IIdentitySchemes
 from ellar.common.compatible import AttributeDict, cached_property
 from ellar.common.constants import GUARDS_KEY, REF_PREFIX
-from ellar.common.helper.modelfield import create_model_field
 from ellar.common.routing import ModuleMount, RouteOperation
 from ellar.common.routing.controller import ControllerRouteOperation
+from ellar.common.utils.modelfield import create_model_field
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY, OPENAPI_TAG
 from pydantic import AnyUrl, BaseModel, EmailStr
 from pydantic.fields import ModelField

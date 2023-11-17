@@ -1,8 +1,9 @@
 import typing as t
 
+from ellar.common.utils.crypto import must_update_salt
 from passlib.hash import argon2
 
-from .base import BaseHasher, EncodingSalt, EncodingType, must_update_salt
+from .base import BaseHasher, EncodingSalt, EncodingType
 
 
 class Argon2Hasher(BaseHasher):

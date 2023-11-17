@@ -16,7 +16,7 @@ from ellar.common.constants import (
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
-from ellar.common.helper import get_name
+from ellar.common.utils import get_name
 from ellar.core import Config, ModuleBase
 from ellar.core.modules.ref import (
     InvalidModuleTypeException,

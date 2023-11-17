@@ -1,7 +1,7 @@
 import inspect
 import typing as t
 
-from ellar.common.helper.modelfield import create_model_field
+from ellar.common.utils.modelfield import create_model_field
 from pydantic.fields import FieldInfo, ModelField, Required
 from pydantic.schema import get_annotation_from_field_info
 

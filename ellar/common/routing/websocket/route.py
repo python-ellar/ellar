@@ -9,10 +9,10 @@ from ellar.common.exceptions import (
     ImproperConfiguration,
     WebSocketRequestValidationError,
 )
-from ellar.common.helper import get_name
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import request_logger
 from ellar.common.params import ExtraEndpointArg, WebsocketEndpointArgsModel
+from ellar.common.utils import get_name
 from ellar.reflect import reflect
 from starlette.routing import WebSocketRoute as StarletteWebSocketRoute
 from starlette.routing import compile_path

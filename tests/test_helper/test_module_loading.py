@@ -1,5 +1,5 @@
 import pytest
-from ellar.common.helper.module_loading import module_dir
+from ellar.common.utils.module_loading import module_dir
 from ellar.core import conf
 
 

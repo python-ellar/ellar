@@ -6,7 +6,6 @@ from ellar.common.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,
     ROUTE_OPERATION_PARAMETERS,
 )
-from ellar.common.helper import get_unique_control_type
 from ellar.common.logger import logger
 from ellar.common.routing import (
     RouteOperation,
@@ -14,6 +13,7 @@ from ellar.common.routing import (
     WebsocketRouteOperation,
 )
 from ellar.common.routing.schema import RouteParameters, WsRouteParameters
+from ellar.common.utils import get_unique_control_type
 from ellar.reflect import reflect
 
 

@@ -1,9 +1,9 @@
 import typing as t
 
 from ellar.common.constants import MULTI_RESOLVER_KEY
-from ellar.common.helper.modelfield import create_model_field
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import logger
+from ellar.common.utils.modelfield import create_model_field
 from pydantic import BaseModel, create_model
 from pydantic.fields import ModelField
 from starlette.convertors import Convertor

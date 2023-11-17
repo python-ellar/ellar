@@ -1,6 +1,3 @@
-import copy
-import re
-import sys
 import typing as t
 from enum import Enum
 
@@ -21,13 +18,6 @@ from .resolvers import (
     QueryParameterResolver,
     WsBodyParameterResolver,
 )
-
-if sys.version_info >= (3, 6):
-
-    def copier(x: t.Any, memo: t.Dict) -> t.Any:
-        return x
-
-    copy._deepcopy_dispatch[type(re.compile(""))] = copier  # type: ignore
 
 
 class ParamTypes(Enum):

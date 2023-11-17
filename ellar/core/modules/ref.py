@@ -10,10 +10,10 @@ from ellar.common.constants import (
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
-from ellar.common.helper import build_init_kwargs
 from ellar.common.models import ControllerBase
 from ellar.common.routing import ModuleMount
 from ellar.common.templating import ModuleTemplating
+from ellar.common.utils import build_init_kwargs
 from ellar.di import (
     MODULE_REF_TYPES,
     Container,
