@@ -6,7 +6,7 @@ from jinja2.loaders import BaseLoader
 from .environment import Environment
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.main import App
+    from ellar.app.main import App
 
 
 class JinjaLoader(BaseLoader):

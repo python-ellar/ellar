@@ -2,7 +2,7 @@ import typing as t
 
 from .conf import Config, ConfigDefaultTypesMixin
 from .connection import HTTPConnection, Request, WebSocket
-from .context import ExecutionContext, HostContext
+from .execution_context import ExecutionContext, HostContext
 from .guards import GuardConsumer
 from .modules import DynamicModule, ModuleBase, ModuleSetup
 from .services import Reflector, reflector

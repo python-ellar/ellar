@@ -10,8 +10,8 @@ from ellar.common import (
     get,
 )
 from ellar.core import ModuleBase
-from ellar.core.context import ExecutionContext, HostContext
 from ellar.core.exceptions.service import ExceptionMiddlewareService
+from ellar.core.execution_context import ExecutionContext, HostContext
 from ellar.core.services import Reflector
 from ellar.di import ProviderConfig, injectable
 from ellar.testing import Test

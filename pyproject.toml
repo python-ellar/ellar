@@ -157,3 +157,6 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "ellar.samples.*"
 ignore_errors = true
+[[tool.mypy.overrides]]
+module = "ellar.common.utils.functional"
+ignore_errors = true

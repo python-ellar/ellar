@@ -12,6 +12,7 @@ from ellar.common.logger import logger
 from ellar.common.models import EllarInterceptor, GuardCanActivate
 from ellar.common.templating import Environment
 from ellar.common.types import ASGIApp, T, TReceive, TScope, TSend
+from ellar.core import reflector
 from ellar.core.conf import Config
 from ellar.core.middleware import (
     CORSMiddleware,
@@ -32,15 +33,15 @@ from ellar.core.modules import (
 )
 from ellar.core.routing import ApplicationRouter
 from ellar.core.services import Reflector
-from ellar.core.templating import AppTemplating
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
-from ellar.di.injector import EllarInjector
+from ellar.di import EllarInjector
 from starlette.routing import BaseRoute, Mount
 
 from .lifespan import EllarApplicationLifespan
+from .mixin import AppMixin
 
 
-class App(AppTemplating):
+class App(AppMixin):
     def __init__(
         self,
         config: "Config",
@@ -198,7 +199,7 @@ class App(AppTemplating):
         )
 
     @property
-    def config(self) -> "Config":  # type: ignore
+    def config(self) -> "Config":
         return self._config
 
     def build_middleware_stack(self) -> ASGIApp:
@@ -303,9 +304,9 @@ class App(AppTemplating):
     def rebuild_middleware_stack(self) -> None:
         self.middleware_stack = self.build_middleware_stack()
 
-    @cached_property
+    @property
     def reflector(self) -> Reflector:
-        return self.injector.get(Reflector)  # type: ignore[no-any-return]
+        return reflector
 
     @cached_property
     def __identity_scheme(self) -> IIdentitySchemes:
