@@ -102,7 +102,7 @@ class LazyObject:
             # If initialized, return a copy of the wrapped object.
             return copy.copy(self._wrapped)
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo):  # pragma: no cover
         if self._wrapped is empty:
             # We have to use type(self), not self.__class__, because the
             # latter is proxied.
