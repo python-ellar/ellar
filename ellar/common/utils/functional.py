@@ -93,7 +93,7 @@ class LazyObject:
             self._setup()
         return (unpickle_lazyobject, (self._wrapped,))
 
-    def __copy__(self):
+    def __copy__(self):  # pragma: no cover
         if self._wrapped is empty:
             # If uninitialized, copy the wrapper. Use type(self), not
             # self.__class__, because the latter is proxied.
@@ -176,7 +176,7 @@ class SimpleLazyObject(LazyObject):
             repr_attr = self._wrapped
         return "<%s: %r>" % (type(self).__name__, repr_attr)
 
-    def __copy__(self) -> t.Any:
+    def __copy__(self) -> t.Any:  # pragma: no cover
         if self._wrapped is empty:
             # If uninitialized, copy the wrapper. Use SimpleLazyObject, not
             # self.__class__, because the latter is proxied.
@@ -185,7 +185,7 @@ class SimpleLazyObject(LazyObject):
             # If initialized, return a copy of the wrapped object.
             return copy.copy(self._wrapped)
 
-    def __deepcopy__(self, memo: t.Any) -> t.Any:
+    def __deepcopy__(self, memo: t.Any) -> t.Any:  # pragma: no cover
         if self._wrapped is empty:
             # We have to use SimpleLazyObject, not self.__class__, because the
             # latter is proxied.

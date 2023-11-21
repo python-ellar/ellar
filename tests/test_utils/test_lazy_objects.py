@@ -63,6 +63,11 @@ class TestLazyObject:
         obj = self.lazy_wrap(Foo())
         assert obj.foo == "bar"
 
+    def test_delattr_fails(self):
+        obj = self.lazy_wrap(Foo())
+        with pytest.raises(TypeError):
+            del obj._wrapped
+
     def test_getattr_falsey(self):
         class Thing:
             def __getattr__(self, key):
@@ -87,7 +92,16 @@ class TestLazyObject:
         assert obj.bar == "baz"
 
     def test_delattr(self):
-        obj = self.lazy_wrap(Foo())
+        class A:
+            def __init__(self):
+                self.foo = "bar"
+
+        obj = self.lazy_wrap(A())
+        del obj.foo
+
+        with pytest.raises(AttributeError):
+            assert obj.foo
+
         obj.bar = "baz"
         assert obj.bar == "baz"
         del obj.bar

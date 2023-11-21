@@ -47,7 +47,7 @@ class ApplicationContext:
         if app_context is empty:
             # If app_context exist
             _application_context.set(self)
-            if current_config._wrapped is not empty:
+            if current_config._wrapped is not empty:  # pragma: no cover
                 # ensure current_config is in sync with running application context.
                 current_config._wrapped = self.config
 
