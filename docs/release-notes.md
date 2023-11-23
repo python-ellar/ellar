@@ -1,3 +1,11 @@
+# 0.5.7
+## What's Changed
+* Test coverage fix by @eadwinCode in https://github.com/python-ellar/ellar/pull/144
+* Feat: Lazy Object  by @eadwinCode in https://github.com/python-ellar/ellar/pull/146
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.5.6...0.5.7
+
 # 0.5.6
 ## What's Changed
 * fixed file data as bytes by @eadwinCode in https://github.com/python-ellar/ellar/pull/143
