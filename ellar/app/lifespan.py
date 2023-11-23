@@ -53,7 +53,6 @@ class EllarApplicationLifespan:
     @asynccontextmanager
     async def lifespan(self, app: "App") -> t.AsyncIterator[t.Any]:
         logger.debug("Executing Modules Startup Handlers")
-        logger.debug("ELLAR LOGGER CONFIGURED")
 
         async with create_task_group() as tg:
             tg.start_soon(self.run_all_startup_actions, app)
@@ -66,3 +65,4 @@ class EllarApplicationLifespan:
             logger.debug("Executing Modules Shutdown Handlers")
             async with create_task_group() as tg:
                 tg.start_soon(self.run_all_shutdown_actions, app)
+            logger.info("Application shutdown successfully.")
