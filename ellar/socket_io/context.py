@@ -56,9 +56,9 @@ class GatewayContext(IExecutionContext):
         return self._context.get_args()
 
     @property
-    def user(self) -> Identity:
+    def user(self) -> Identity:  # pragma: no cover
         return self._context.user
 
     @user.setter
-    def user(self, value: Identity) -> None:
+    def user(self, value: Identity) -> None:  # pragma: no cover
         self._context.user = value

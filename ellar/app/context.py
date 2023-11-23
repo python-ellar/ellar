@@ -9,15 +9,19 @@ from ellar.core import Config
 from ellar.di import EllarInjector
 
 if t.TYPE_CHECKING:
-    from .main import App
+    from ellar.app.main import App
 
 _application_context: ContextVar[
     t.Optional[t.Union["ApplicationContext", t.Any]]
 ] = ContextVar("ellar.app.context")
-_application_context.set(empty)
 
 
 class ApplicationContext:
+    """
+    Provides Necessary Application Properties when running Ellar CLI commands and when serving request.
+
+    """
+
     __slots__ = ("_injector", "_config", "_app")
 
     def __init__(self, config: Config, injector: EllarInjector, app: "App") -> None:
@@ -43,14 +47,13 @@ class ApplicationContext:
         return self._config
 
     def __enter__(self) -> "ApplicationContext":
-        app_context = _application_context.get()
+        app_context = _application_context.get(empty)
         if app_context is empty:
             # If app_context exist
             _application_context.set(self)
             if current_config._wrapped is not empty:  # pragma: no cover
                 # ensure current_config is in sync with running application context.
                 current_config._wrapped = self.config
-
             app_context = self
         return app_context  # type:ignore[return-value]
 
@@ -72,23 +75,24 @@ class ApplicationContext:
 
 
 def _get_current_app() -> "App":
-    if _application_context.get() is empty:
-        raise RuntimeError("App is not available at this scope.")
+    app_context = _application_context.get(empty)
+    if app_context is empty:
+        raise RuntimeError("ApplicationContext is not available at this scope.")
 
-    app_context = _application_context.get()
     return app_context.app  # type:ignore[union-attr]
 
 
 def _get_injector() -> EllarInjector:
-    if _application_context.get() is empty:
-        raise RuntimeError("App is not available at this scope.")
+    app_context = _application_context.get(empty)
+    if app_context is empty:
+        raise RuntimeError("ApplicationContext is not available at this scope.")
 
-    app_context = _application_context.get()
     return app_context.injector  # type:ignore[union-attr]
 
 
 def _get_application_config() -> Config:
-    if _application_context.get() is empty:
+    app_context = _application_context.get(empty)
+    if app_context is empty:
         config_module = os.environ.get(ELLAR_CONFIG_MODULE)
         if not config_module:
             raise RuntimeError(
@@ -96,8 +100,8 @@ def _get_application_config() -> Config:
                 "and %s is not specified. This may cause differences in config "
                 "values when the app." % (ELLAR_CONFIG_MODULE,)
             )
+        return Config(config_module=config_module)
 
-    app_context = _application_context.get()
     return app_context.config  # type:ignore[union-attr]
 
 

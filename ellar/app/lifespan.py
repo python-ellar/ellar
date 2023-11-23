@@ -1,12 +1,11 @@
 import typing as t
 
 from anyio import create_task_group
-from ellar.common import IApplicationShutdown, IApplicationStartup, logger
+from ellar.common import IApplicationShutdown, IApplicationStartup
+from ellar.common.logger import logger
 from ellar.reflect import asynccontextmanager
 
-from .context import ApplicationContext
-
-if t.TYPE_CHECKING:  # pragma: no cover
+if t.TYPE_CHECKING:
     from ellar.app import App
 
 _T = t.TypeVar("_T")
@@ -53,18 +52,17 @@ class EllarApplicationLifespan:
 
     @asynccontextmanager
     async def lifespan(self, app: "App") -> t.AsyncIterator[t.Any]:
-        logger.logger.debug("Executing Modules Startup Handlers")
+        logger.debug("Executing Modules Startup Handlers")
+        logger.debug("ELLAR LOGGER CONFIGURED")
 
-        with ApplicationContext.create(app):
+        async with create_task_group() as tg:
+            tg.start_soon(self.run_all_startup_actions, app)
+
+        try:
+            async with self._lifespan_context(app) as ctx:  # type:ignore[attr-defined]
+                logger.info("Application is ready.")
+                yield ctx
+        finally:
+            logger.debug("Executing Modules Shutdown Handlers")
             async with create_task_group() as tg:
-                tg.start_soon(self.run_all_startup_actions, app)
-
-            try:
-                async with self._lifespan_context(
-                    app
-                ) as ctx:  # type:ignore[attr-defined]
-                    yield ctx
-            finally:
-                logger.logger.debug("Executing Modules Shutdown Handlers")
-                async with create_task_group() as tg:
-                    tg.start_soon(self.run_all_shutdown_actions, app)
+                tg.start_soon(self.run_all_shutdown_actions, app)

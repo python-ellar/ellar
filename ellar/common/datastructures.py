@@ -89,4 +89,4 @@ class UploadFile(StarletteUploadFile):
     def validate(cls: t.Type["UploadFile"], v: t.Any) -> t.Any:
         if not isinstance(v, StarletteUploadFile):
             raise ValueError(f"Expected UploadFile, received: {type(v)}")
-        return v
+        return cls(v.file, size=v.size, filename=v.filename, headers=v.headers)

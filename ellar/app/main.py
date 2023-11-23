@@ -2,13 +2,13 @@ import logging
 import logging.config
 import typing as t
 
+from ellar.app.context import ApplicationContext
 from ellar.auth.handlers import AuthenticationHandlerType
 from ellar.common import GlobalGuard, IIdentitySchemes
 from ellar.common.compatible import cached_property
 from ellar.common.constants import ELLAR_LOG_FMT_STRING, LOG_LEVELS
 from ellar.common.datastructures import State, URLPath
 from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
-from ellar.common.logger import logger
 from ellar.common.models import EllarInterceptor, GuardCanActivate
 from ellar.common.templating import Environment
 from ellar.common.types import ASGIApp, T, TReceive, TScope, TSend
@@ -105,9 +105,6 @@ class App(AppMixin):
         else:
             logging.getLogger("ellar").setLevel(log_level)
             logging.getLogger("ellar.request").setLevel(log_level)
-
-        logger.info(f"APP SETTINGS MODULE: {self.config.config_module}")
-        logger.debug("ELLAR LOGGER CONFIGURED")
 
     def _statics_wrapper(self) -> t.Callable:
         async def _statics_func_wrapper(
@@ -259,9 +256,23 @@ class App(AppMixin):
             app = item(app=app, injector=self.injector)
         return app
 
+    def application_context(self) -> ApplicationContext:
+        """
+        Create an ApplicationContext.
+        Use as a contextmanager block to make `current_app`, `current_injector` and `current_config` point at this application.
+
+        It can be used manually outside ellar cli commands or request,
+        e.g.,
+        with app.application_context():
+            assert current_app is app
+            run_some_actions()
+        """
+        return ApplicationContext.create(app=self)
+
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
-        scope["app"] = self
-        await self.middleware_stack(scope, receive, send)
+        with self.application_context() as ctx:
+            scope["app"] = ctx.app
+            await self.middleware_stack(scope, receive, send)
 
     @property
     def routes(self) -> t.List[BaseRoute]:
