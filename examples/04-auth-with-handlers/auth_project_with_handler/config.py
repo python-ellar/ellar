@@ -3,7 +3,7 @@ Application Configurations
 Default Ellar Configurations are exposed here through `ConfigDefaultTypesMixin`
 Make changes and define your own configurations specific to your application
 
-export ELLAR_CONFIG_MODULE=auth_project.config:DevelopmentConfig
+export ELLAR_CONFIG_MODULE=auth_project_with_handler.config:DevelopmentConfig
 """
 
 import typing as t

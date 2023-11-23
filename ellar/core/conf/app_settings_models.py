@@ -24,7 +24,7 @@ if sys.version_info >= (3, 8):  # pragma: no cover
 else:  # pragma: no cover
     from typing_extensions import Literal
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.main import App
+    from ellar.app.main import App
 
 
 async def _not_found(

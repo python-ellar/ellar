@@ -12,21 +12,21 @@ from ellar.common.templating import (
     ModuleTemplating,
 )
 from ellar.common.types import ASGIApp
+from ellar.core.conf import Config
 from ellar.core.connection import Request
 from ellar.core.staticfiles import StaticFiles
+from ellar.di import EllarInjector
 from jinja2 import Environment as BaseEnvironment
 from starlette.templating import pass_context
 
-if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.conf import Config
-    from ellar.core.main import App
-    from ellar.di import EllarInjector
+if t.TYPE_CHECKING:
+    from .main import App
 
 
-class AppTemplating(JinjaTemplating):
-    config: "Config"
+class AppMixin(JinjaTemplating):
     _static_app: t.Optional[ASGIApp]
-    _injector: "EllarInjector"
+    _injector: EllarInjector
+    _config: Config
     has_static_files: bool
 
     @abstractmethod
@@ -43,12 +43,12 @@ class AppTemplating(JinjaTemplating):
 
     @property
     def debug(self) -> bool:
-        return self.config.DEBUG
+        return self._config.DEBUG
 
     @debug.setter
     def debug(self, value: bool) -> None:
         del self.__dict__["jinja_environment"]
-        self.config.DEBUG = value
+        self._config.DEBUG = value
         # TODO: Add warning
         self.rebuild_middleware_stack()
 
@@ -70,7 +70,7 @@ class AppTemplating(JinjaTemplating):
             "autoescape": select_jinja_auto_escape,
         }
         jinja_options: t.Dict = t.cast(
-            t.Dict, self.config.JINJA_TEMPLATES_OPTIONS or {}
+            t.Dict, self._config.JINJA_TEMPLATES_OPTIONS or {}
         )
 
         for k, v in options_defaults.items():
@@ -81,12 +81,12 @@ class AppTemplating(JinjaTemplating):
             request = t.cast(Request, context["request"])
             return request.url_for(name, **path_params)
 
-        app: App = t.cast("App", self)
+        app: "App" = t.cast("App", self)
 
         jinja_env = Environment(app, **jinja_options)
         jinja_env.globals.update(
             url_for=url_for,
-            config=self.config,
+            config=self._config,
         )
         jinja_env.policies["json.dumps_function"] = json.dumps
         return jinja_env
@@ -97,7 +97,7 @@ class AppTemplating(JinjaTemplating):
     def create_static_app(self) -> ASGIApp:
         return StaticFiles(
             directories=self.static_files,  # type: ignore[arg-type]
-            packages=self.config.STATIC_FOLDER_PACKAGES,
+            packages=self._config.STATIC_FOLDER_PACKAGES,
         )
 
     def reload_static_app(self) -> None:
@@ -107,12 +107,12 @@ class AppTemplating(JinjaTemplating):
         self._update_jinja_env_filters(self.jinja_environment)
 
     def _update_jinja_env_filters(self, jinja_environment: BaseEnvironment) -> None:
-        jinja_environment.globals.update(self.config.get(TEMPLATE_GLOBAL_KEY, {}))
-        jinja_environment.filters.update(self.config.get(TEMPLATE_FILTER_KEY, {}))
+        jinja_environment.globals.update(self._config.get(TEMPLATE_GLOBAL_KEY, {}))
+        jinja_environment.filters.update(self._config.get(TEMPLATE_FILTER_KEY, {}))
 
     @cached_property
     def static_files(self) -> t.List[str]:
-        static_directories = t.cast(t.List, self.config.STATIC_DIRECTORIES or [])
+        static_directories = t.cast(t.List, self._config.STATIC_DIRECTORIES or [])
         for module in self.get_module_loaders():
             if module.static_directory:
                 static_directories.append(module.static_directory)

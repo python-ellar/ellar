@@ -5,6 +5,7 @@ from ellar.common.exceptions import (
     ImproperConfiguration,
     WebSocketRequestValidationError,
 )
+from ellar.common.routing.websocket import WebSocketExtraHandler
 from ellar.reflect import reflect
 from ellar.testing import Test
 from starlette.websockets import WebSocket, WebSocketState
@@ -316,3 +317,25 @@ def test_add_websocket_handler_raise_exception_for_wrong_handler_name():
         str(ex.value)
         == "Invalid Handler Name. Handler Name must be in ['encoding', 'on_receive', 'on_connect', 'on_disconnect']"
     )
+    websocket_operation.add_websocket_handler(
+        handler_name="on_receive", handler=websocket_with_handler_connect
+    )
+
+
+def test_websocket_handler_fails_for_invalid_handlers():
+    a_type = type("AType", (), {})
+    with pytest.raises(ValueError):
+
+        @ws_route(extra_handler_type=a_type)
+        def invalid_ws_route():
+            pass
+
+    with pytest.raises(ValueError):
+
+        @ws_route(extra_handler_type=a_type())
+        def invalid_ws_route_case_2():
+            pass
+
+    @ws_route(extra_handler_type=WebSocketExtraHandler)
+    def valid_ws_route():
+        pass

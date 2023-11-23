@@ -130,8 +130,10 @@ class AppFactory:
         assert reflect.get_metadata(MODULE_WATERMARK, module), "Only Module is allowed"
 
         config = Config(app_configured=True, **_get_config_kwargs())
+
         injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND)
         injector.container.register_instance(config, concrete_type=Config)
+
         service = EllarAppService(injector, config)
         service.register_core_services()
 
