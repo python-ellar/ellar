@@ -1,12 +1,17 @@
 import inspect
 import typing as t
 
-from ellar.common.utils.modelfield import create_model_field
-from pydantic.fields import FieldInfo, ModelField, Required
-from pydantic.schema import get_annotation_from_field_info
+from ellar.common.pydantic import (
+    FieldInfo,
+    ModelField,
+    create_model_field,
+    is_scalar_field,
+)
+from ellar.common.pydantic import (
+    types as pydantic_types,
+)
 
 from .. import params
-from ..helpers import is_scalar_field
 
 
 def get_parameter_field(
@@ -18,8 +23,13 @@ def get_parameter_field(
     ignore_default: bool = False,
     body_field_class: t.Type[FieldInfo] = params.BodyFieldInfo,
 ) -> ModelField:
-    default_value = Required
+    default_value = pydantic_types.Required
     had_schema = False
+
+    annotation: t.Any = t.Any
+    if not param_annotation == inspect.Parameter.empty:
+        annotation = param_annotation
+
     if param_default is not inspect.Parameter.empty and ignore_default is False:
         default_value = param_default
 
@@ -27,40 +37,37 @@ def get_parameter_field(
         had_schema = True
         field_info = default_value
         default_value = field_info.default
-        if (
-            isinstance(field_info, params.ParamFieldInfo)
-            and getattr(field_info, "in_", None) is None
-        ):
-            field_info.in_ = default_field_info.in_
+
+        if not field_info.annotation:
+            field_info.annotation = annotation
     else:
-        field_info = default_field_info(default_value)
+        field_info = default_field_info(  # type:ignore[assignment]
+            default_value, annotation=annotation
+        )
 
-    required = default_value == Required
-    annotation: t.Any = t.Any
-
+    required = default_value == pydantic_types.Required
     if not field_info.alias and getattr(
         field_info,
         "convert_underscores",
-        getattr(field_info.extra, "convert_underscores", None),
+        getattr(field_info.json_schema_extra, "convert_underscores", None),
     ):
         alias = param_name.replace("_", "-")
     else:
         alias = field_info.alias or param_name
 
-    if not param_annotation == inspect.Parameter.empty:
-        annotation = param_annotation
-
     field = create_model_field(
         name=param_name,
-        type_=get_annotation_from_field_info(annotation, field_info, param_name),
+        type_=annotation,
         default=None if required else default_value,
         alias=alias,
-        required=required,
+        # required=required,
         field_info=field_info,
     )
-    field.required = required
+    # field.required = required
 
     if not had_schema and not is_scalar_field(field=field):
-        field.field_info = body_field_class(field_info.default)
+        field.field_info = body_field_class(
+            default=field_info.default, annotation=annotation, alias=alias
+        )
 
     return field

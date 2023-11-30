@@ -5,13 +5,6 @@ from typing import Any
 
 from ellar.common.types import TMessage
 from ellar.di import AnnotationToValue
-from pydantic.fields import (
-    SHAPE_LIST,
-    SHAPE_SEQUENCE,
-    SHAPE_SET,
-    SHAPE_TUPLE,
-    SHAPE_TUPLE_ELLIPSIS,
-)
 
 POST = "POST"
 PUT = "PUT"
@@ -81,21 +74,8 @@ class CONTROLLER_METADATA(metaclass=AnnotationToValue):
     INCLUDE_IN_SCHEMA: str
 
 
-sequence_shapes = {
-    SHAPE_LIST,
-    SHAPE_SET,
-    SHAPE_TUPLE,
-    SHAPE_SEQUENCE,
-    SHAPE_TUPLE_ELLIPSIS,
-}
 sequence_types = (list, set, tuple)
-sequence_shape_to_type = {
-    SHAPE_LIST: list,
-    SHAPE_SET: set,
-    SHAPE_TUPLE: tuple,
-    SHAPE_SEQUENCE: list,
-    SHAPE_TUPLE_ELLIPSIS: list,
-}
+
 primitive_types = (int, float, bool, str)
 METHODS_WITH_BODY = {"GET", "HEAD", "POST", "PUT", "DELETE", "PATCH"}
 STATUS_CODES_WITH_NO_BODY = {100, 101, 102, 103, 204, 304}

@@ -5,6 +5,7 @@ from ellar.common.exceptions import WebSocketRequestValidationError
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import request_logger
 from ellar.common.params import WebsocketEndpointArgsModel
+from ellar.common.pydantic import as_pydantic_validator
 from starlette import status
 from starlette.exceptions import WebSocketException
 from starlette.status import WS_1008_POLICY_VIOLATION
@@ -14,6 +15,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.connection import WebSocket
 
 
+@as_pydantic_validator("__validate_input__")
 class WebSocketExtraHandler:
     def __init__(
         self,
@@ -29,24 +31,6 @@ class WebSocketExtraHandler:
         self.on_disconnect = on_disconnect
         self.on_connect = on_connect
         self.route_parameter_model: WebsocketEndpointArgsModel = route_parameter_model
-
-    @classmethod
-    def __get_validators__(
-        cls: t.Type["WebSocketExtraHandler"],
-    ) -> t.Iterable[t.Callable[..., t.Any]]:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls: t.Type["WebSocketExtraHandler"], v: t.Any) -> t.Any:
-        if not isinstance(v, type):
-            raise ValueError(
-                f"Expected Type[WebSocketExtraHandler], received: {type(v)}"
-            )
-        if WebSocketExtraHandler != v or not issubclass(v, WebSocketExtraHandler):
-            raise ValueError(
-                f"Expected Type[WebSocketExtraHandler], received: {type(v)}"
-            )
-        return v
 
     async def dispatch(
         self, context: "IExecutionContext", **receiver_kwargs: t.Any
@@ -170,3 +154,17 @@ class WebSocketExtraHandler:
             self.encoding is None
         ), f"Unsupported 'encoding' attribute {self.encoding}"
         return message["text"] if message.get("text") else message["bytes"]
+
+    @classmethod
+    def __validate_input__(cls, __input_value: t.Any, _: t.Any) -> t.Any:
+        if not isinstance(__input_value, type):
+            raise ValueError(
+                f"Expected Type[WebSocketExtraHandler], received: {type(__input_value)}"
+            )
+        if WebSocketExtraHandler != __input_value or not issubclass(
+            __input_value, WebSocketExtraHandler
+        ):
+            raise ValueError(
+                f"Expected Type[WebSocketExtraHandler], received: {type(__input_value)}"
+            )
+        return __input_value

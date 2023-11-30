@@ -16,7 +16,7 @@ def form_params_schema(
     request: Inject[Request],
     filters: Filter = Form(..., alias="will_not_work_for_schema_with_many_field"),
 ):
-    return filters.dict()
+    return filters.model_dump()
 
 
 @mr.post("/form-alias")
@@ -48,10 +48,11 @@ def test_request():
     assert json == {
         "detail": [
             {
+                "ctx": {"expected": "20, 50 or 200"},
+                "input": 100,
                 "loc": ["body", "range"],
-                "msg": "value is not a valid enumeration member; permitted: 20, 50, 200",
-                "type": "type_error.enum",
-                "ctx": {"enum_values": [20, 50, 200]},
+                "msg": "Input should be 20, 50 or 200",
+                "type": "enum",
             }
         ]
     }
@@ -80,9 +81,11 @@ def test_form_with_alias():
     assert json == {
         "detail": [
             {
+                "input": {"qty": "234"},
                 "loc": ["body", "aliasQty"],
-                "msg": "value is not a valid integer",
-                "type": "type_error.integer",
+                "msg": "Input should be a valid integer",
+                "type": "int_type",
+                "url": "https://errors.pydantic.dev/2.5/v/int_type",
             }
         ]
     }
@@ -91,46 +94,44 @@ def test_form_with_alias():
 def test_schema():
     document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
     params = document["paths"]["/form-schema"]["post"]["requestBody"]
+
     assert params == {
         "content": {
             "application/form-data": {
                 "schema": {
-                    "allOf": [
-                        {
-                            "$ref": "#/components/schemas/body_form_params_schema_form_schema_post"
-                        }
-                    ],
-                    "include_in_schema": True,
-                    "title": "Body",
+                    "$ref": "#/components/schemas/body_form_params_schema_form_schema_post"
                 }
             }
-        }
+        },
+        "required": True,
     }
+
     schema = document["components"]["schemas"][
         "body_form_params_schema_form_schema_post"
     ]
     assert schema == {
-        "title": "body_form_params_schema_form_schema_post",
-        "type": "object",
         "properties": {
             "to": {
-                "title": "To",
                 "type": "string",
                 "format": "date-time",
-                "include_in_schema": True,
+                "title": "To",
+                "allow_mutation": True,
             },
             "from": {
-                "title": "From",
                 "type": "string",
                 "format": "date-time",
-                "include_in_schema": True,
+                "title": "From",
+                "allow_mutation": True,
             },
             "range": {
                 "allOf": [{"$ref": "#/components/schemas/Range"}],
                 "default": 20,
-                "include_in_schema": True,
+                "allow_mutation": True,
             },
         },
+        "type": "object",
+        "required": ["to", "from"],
+        "title": "body_form_params_schema_form_schema_post",
     }
 
 

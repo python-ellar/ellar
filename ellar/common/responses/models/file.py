@@ -3,7 +3,7 @@ from enum import Enum
 
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import request_logger
-from ellar.common.serializer import Serializer, SerializerFilter, serialize_object
+from ellar.common.serializer import Serializer, SerializerFilter
 
 from ..response_types import FileResponse, Response, StreamingResponse
 from .base import ResponseModel, ResponseModelField
@@ -48,8 +48,8 @@ class FileResponseModel(ResponseModel):
             context=context, status_code=status_code
         )
 
-        init_kwargs = serialize_object(self.serialize(response_obj))
-        response_args.update(init_kwargs)
+        init_kwargs = self.serialize(response_obj)
+        response_args.update(init_kwargs)  # type:ignore[arg-type]
 
         response = self._response_type(
             **response_args,
@@ -71,7 +71,8 @@ class FileResponseModel(ResponseModel):
         serializer_filter: t.Optional[SerializerFilter] = None,
     ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
         _response_model_field = self.get_init_kwargs_schema()
-        return _response_model_field.serialize(
+        assert _response_model_field, "ResponseModelField is required"
+        return _response_model_field.prep_and_serialize(
             response_obj, serializer_filter=serializer_filter
         )
 

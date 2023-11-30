@@ -3,14 +3,15 @@ from dataclasses import is_dataclass
 
 from ellar.common.constants import primitive_types
 from ellar.common.converters import TypeDefinitionConverter
-from ellar.common.serializer import (
+from ellar.common.pydantic import BaseModel
+from ellar.common.serializer.base import (
     BaseSerializer,
     DataclassSerializer,
     Serializer,
     SerializerBase,
+    __pydantic_model__,
     convert_dataclass_to_pydantic_model,
 )
-from pydantic import BaseModel
 
 
 class ResponseTypeDefinitionConverter(TypeDefinitionConverter):
@@ -35,9 +36,8 @@ class ResponseTypeDefinitionConverter(TypeDefinitionConverter):
             return t.cast(t.Type[BaseSerializer], cls)
 
         if is_dataclass(outer_type_):
-            if hasattr(outer_type_, "__pydantic_model__"):
-                schema_model = outer_type_.__pydantic_model__
-                return self._get_modified_type(t.cast(type, schema_model))
+            if hasattr(outer_type_, __pydantic_model__):
+                return self._get_modified_type(t.cast(type, outer_type_))
             return self._get_modified_type(
                 t.cast(type, convert_dataclass_to_pydantic_model(outer_type_))
             )

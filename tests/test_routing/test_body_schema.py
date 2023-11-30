@@ -18,7 +18,7 @@ async def create_item(
 app.router.append(create_item)
 
 openapi_schema = {
-    "openapi": "3.0.2",
+    "openapi": "3.1.0",
     "info": {"title": "Ellar API Docs", "version": "1.0.0"},
     "paths": {
         "/product": {
@@ -27,11 +27,7 @@ openapi_schema = {
                 "requestBody": {
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "title": "Product",
-                                "allOf": [{"$ref": "#/components/schemas/Product"}],
-                                "include_in_schema": True,
-                            }
+                            "schema": {"$ref": "#/components/schemas/Product"}
                         }
                     },
                     "required": True,
@@ -41,7 +37,7 @@ openapi_schema = {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {"title": "Response Model", "type": "object"}
+                                "schema": {"type": "object", "title": "Response Model"}
                             }
                         },
                     },
@@ -62,40 +58,40 @@ openapi_schema = {
     "components": {
         "schemas": {
             "HTTPValidationError": {
-                "title": "HTTPValidationError",
-                "required": ["detail"],
-                "type": "object",
                 "properties": {
                     "detail": {
-                        "title": "Details",
-                        "type": "array",
                         "items": {"$ref": "#/components/schemas/ValidationError"},
+                        "type": "array",
+                        "title": "Details",
                     }
                 },
+                "type": "object",
+                "required": ["detail"],
+                "title": "HTTPValidationError",
             },
             "Product": {
-                "title": "Product",
-                "required": ["name", "price"],
-                "type": "object",
                 "properties": {
-                    "name": {"title": "Name", "type": "string"},
-                    "description": {"title": "Description", "type": "string"},
-                    "price": {"title": "Price", "type": "number"},
+                    "name": {"type": "string", "title": "Name"},
+                    "description": {"type": "string", "title": "Description"},
+                    "price": {"type": "number", "title": "Price"},
                 },
+                "type": "object",
+                "required": ["name", "price"],
+                "title": "Product",
             },
             "ValidationError": {
-                "title": "ValidationError",
-                "required": ["loc", "msg", "type"],
-                "type": "object",
                 "properties": {
                     "loc": {
-                        "title": "Location",
-                        "type": "array",
                         "items": {"type": "string"},
+                        "type": "array",
+                        "title": "Location",
                     },
-                    "msg": {"title": "Message", "type": "string"},
-                    "type": {"title": "Error Type", "type": "string"},
+                    "msg": {"type": "string", "title": "Message"},
+                    "type": {"type": "string", "title": "Error Type"},
                 },
+                "type": "object",
+                "required": ["loc", "msg", "type"],
+                "title": "ValidationError",
             },
         }
     },
@@ -131,20 +127,15 @@ def test_body_fails_for_invalid_json_data(test_client_factory):
     "unterminated_quote": "This string is not properly terminated,
 }
 """
-    response = client.post("/product", data=body)
+    response = client.post("/product", json=body)
     assert response.json() == {
         "detail": [
             {
-                "loc": ["body", 56],
-                "msg": "Expecting value: line 5 column 19 (char 56)",
-                "type": "value_error.jsondecode",
-                "ctx": {
-                    "msg": "Expecting value",
-                    "doc": '\n{\n    "name": "John",\n    "age": 30,\n    "is_student": True,\n    "favorite_colors": ["red", "blue", "green"],\n    "address": {\n        "street": "123 Main St",\n        "city": "Some City",\n        "zip": "12345"\n    },\n    "unterminated_quote": "This string is not properly terminated,\n}\n',
-                    "pos": 56,
-                    "lineno": 5,
-                    "colno": 19,
-                },
+                "type": "model_attributes_type",
+                "loc": ["body"],
+                "msg": "Input should be a valid dictionary or object to extract fields from",
+                "input": '\n{\n    "name": "John",\n    "age": 30,\n    "is_student": True,\n    "favorite_colors": ["red", "blue", "green"],\n    "address": {\n        "street": "123 Main St",\n        "city": "Some City",\n        "zip": "12345"\n    },\n    "unterminated_quote": "This string is not properly terminated,\n}\n',
+                "url": "https://errors.pydantic.dev/2.5/v/model_attributes_type",
             }
         ]
     }

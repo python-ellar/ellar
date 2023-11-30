@@ -103,8 +103,7 @@ class BaseAPIKey(BaseAuth, ABC):
     ) -> t.Dict:
         assert cls.openapi_in, "openapi_in is required"
         return {
-            cls.openapi_name
-            or cls.__name__: {
+            cls.openapi_name or cls.__name__: {
                 "type": "apiKey",
                 "description": cls.openapi_description,
                 "in": cls.openapi_in,
@@ -153,8 +152,7 @@ class BaseHttpAuth(BaseAuth, ABC):
     ) -> t.Dict:
         assert cls.scheme, "openapi_scheme is required"
         return {
-            cls.openapi_name
-            or cls.__name__: {
+            cls.openapi_name or cls.__name__: {
                 "type": "http",
                 "description": cls.openapi_description,
                 "scheme": cls.scheme,

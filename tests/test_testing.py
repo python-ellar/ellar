@@ -76,9 +76,7 @@ def test_client_factory_create_test_module_from_module():
     reflect.metadata(
         metadata_key=MODULE_METADATA.PROVIDERS,
         metadata_value=[ProviderConfig(base_type=IFoo, use_class=Foo)],
-    )(
-        ApplicationModule
-    )  # dynamically add IFoo to ApplicationModule Providers
+    )(ApplicationModule)  # dynamically add IFoo to ApplicationModule Providers
 
     tm = Test.create_test_module(
         modules=[ApplicationModule],

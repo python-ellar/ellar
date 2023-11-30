@@ -1,9 +1,13 @@
 import typing as t
 
+from ellar.common.pydantic.types import Undefined
 from typing_extensions import Annotated
 
 from . import models as param_functions
 from .inject import InjectShortcut, add_default_resolver, get_default_resolver
+
+_Unset: t.Any = Undefined
+
 
 __all__ = [
     "add_default_resolver",
@@ -37,7 +41,11 @@ class _ParamShortcut:
         cls,
         default: t.Any = ...,
         *,
+        default_factory: t.Union[t.Callable[[], t.Any], None] = _Unset,
         alias: t.Optional[str] = None,
+        alias_priority: t.Union[int, None] = _Unset,
+        validation_alias: t.Union[str, None] = None,
+        serialization_alias: t.Union[str, None] = None,
         title: t.Optional[str] = None,
         description: t.Optional[str] = None,
         gt: t.Optional[float] = None,
@@ -46,16 +54,23 @@ class _ParamShortcut:
         le: t.Optional[float] = None,
         min_length: t.Optional[int] = None,
         max_length: t.Optional[int] = None,
-        regex: t.Optional[str] = None,
-        example: t.Any = None,
-        examples: t.Optional[t.Dict[str, t.Any]] = None,
+        pattern: t.Optional[str] = None,
+        discriminator: t.Union[str, None] = None,
+        strict: t.Union[bool, None] = _Unset,
+        multiple_of: t.Union[float, None] = _Unset,
+        allow_inf_nan: t.Union[bool, None] = _Unset,
+        max_digits: t.Union[int, None] = _Unset,
+        decimal_places: t.Union[int, None] = _Unset,
+        examples: t.Optional[t.List[t.Any]] = None,
         deprecated: t.Optional[bool] = None,
         include_in_schema: bool = True,
+        json_schema_extra: t.Union[t.Dict[str, t.Any], None] = None,
         **extra: t.Any,
     ) -> t.Dict[str, t.Any]:
         """Arguments for Body, Query, Header, Cookie, etc."""
         return dict(
             default=default,
+            default_factory=default_factory,
             alias=alias,
             title=title,
             description=description,
@@ -65,11 +80,20 @@ class _ParamShortcut:
             le=le,
             min_length=min_length,
             max_length=max_length,
-            regex=regex,
-            example=example,
+            discriminator=discriminator,
+            multiple_of=multiple_of,
+            allow_inf_nan=allow_inf_nan,
+            max_digits=max_digits,
+            decimal_places=decimal_places,
+            pattern=pattern,
+            alias_priority=alias_priority,
+            validation_alias=validation_alias,
+            serialization_alias=serialization_alias,
+            strict=strict,
+            json_schema_extra=json_schema_extra,
             examples=examples,
-            deprecated=deprecated,
             include_in_schema=include_in_schema,
+            deprecated=deprecated,
             **extra,
         )
 

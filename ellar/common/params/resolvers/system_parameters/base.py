@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import request_logger
+from ellar.common.pydantic import get_missing_field_error
 from ellar.common.types import T
-from pydantic.error_wrappers import ErrorWrapper
 
 from ..base import IRouteParameterResolver
 
@@ -76,4 +76,6 @@ class BaseConnectionParameterResolver(SystemParameterResolver):
             request_logger.error(
                 f"Unable to resolve `{self.lookup_connection_field}` in connection \nErrorMessage: {ex}"
             )
-            return {}, [ErrorWrapper(ex, loc=str(self.parameter_name))]
+            return {}, [
+                get_missing_field_error(loc=("connection", str(self.parameter_name)))
+            ]

@@ -1,21 +1,21 @@
 import typing as t
-from enum import Enum
 
 from ellar.common import IIdentitySchemes
 from ellar.common.compatible import AttributeDict, cached_property
-from ellar.common.constants import GUARDS_KEY, REF_PREFIX
+from ellar.common.constants import GUARDS_KEY
+from ellar.common.pydantic import (
+    EmailStr,
+    ModelField,
+    create_model_field,
+    get_definitions,
+)
+from ellar.common.pydantic import (
+    types as pydantic_types,
+)
 from ellar.common.routing import ModuleMount, RouteOperation
 from ellar.common.routing.controller import ControllerRouteOperation
-from ellar.common.utils.modelfield import create_model_field
-from ellar.openapi.constants import OPENAPI_OPERATION_KEY, OPENAPI_TAG
-from pydantic import AnyUrl, BaseModel, EmailStr
-from pydantic.fields import ModelField
-from pydantic.schema import (
-    TypeModelOrEnum,
-    get_flat_models_from_fields,
-    get_model_name_map,
-    model_process_schema,
-)
+from ellar.openapi.constants import OPENAPI_OPERATION_KEY, OPENAPI_TAG, REF_TEMPLATE
+from pydantic.json_schema import GenerateJsonSchema
 from starlette.routing import BaseRoute, Mount
 
 from .openapi_v3 import APIKeyIn, OpenAPI
@@ -30,7 +30,8 @@ if t.TYPE_CHECKING:
     from ellar.app import App
 
 
-default_openapi_version = "3.0.2"
+default_openapi_version = "3.1.0"
+AnyUrl = pydantic_types.AnyUrl
 
 
 class OpenAPIDocumentBuilderAction:
@@ -84,23 +85,6 @@ class OpenAPIDocumentBuilderAction:
             operation_models.extend(route.get_route_models())
         return operation_models
 
-    def _get_model_definitions(
-        self,
-        *,
-        models: t.List[ModelField],
-        model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
-    ) -> t.Dict[str, t.Any]:
-        definitions: t.Dict[str, t.Any] = {}
-        for model in models:
-            _model: TypeModelOrEnum = t.cast(TypeModelOrEnum, model)
-            m_schema, m_definitions, m_nested_models = model_process_schema(
-                _model, model_name_map=model_name_map, ref_prefix=REF_PREFIX
-            )
-            definitions.update(m_definitions)
-            model_name = model_name_map[_model]
-            definitions[model_name] = m_schema
-        return definitions
-
     @cached_property
     def error_model_fields(
         self,
@@ -119,12 +103,13 @@ class OpenAPIDocumentBuilderAction:
         _flat_model = (
             self._get_operations_models(openapi_route_models) + self.error_model_fields
         )
-        models = get_flat_models_from_fields(_flat_model, known_models=set())
-        model_name_map = get_model_name_map(models)
-
-        definitions = self._get_model_definitions(
-            models=models, model_name_map=model_name_map  # type: ignore
+        schema_generator = GenerateJsonSchema(ref_template=REF_TEMPLATE)
+        field_mapping, definitions = get_definitions(
+            fields=_flat_model,
+            schema_generator=schema_generator,
+            separate_input_output_schemas=True,
         )
+
         mounts: t.List[t.Union[BaseRoute, ModuleMount, Mount]] = []
         for _, item in app.injector.get_templating_modules().items():
             mounts.extend(item.routers)
@@ -132,7 +117,7 @@ class OpenAPIDocumentBuilderAction:
         for route in openapi_route_models:
             security_schemes: t.Dict[str, t.Any] = {}
             route.get_openapi_path(
-                model_name_map=model_name_map,
+                field_mapping=field_mapping,
                 paths=paths,
                 security_schemes=security_schemes,
             )
@@ -169,6 +154,7 @@ class OpenAPIDocumentBuilder:
         )
         self._build.setdefault("tags", [])
         self._build.setdefault("openapi", default_openapi_version)
+        # self.add_server("/", description="development server")
 
     def set_openapi_version(self, openapi_version: str) -> "OpenAPIDocumentBuilder":
         """

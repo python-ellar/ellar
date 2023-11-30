@@ -1,0 +1,2 @@
+class ErrorWrapper(Exception):
+    pass

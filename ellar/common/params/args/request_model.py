@@ -3,9 +3,12 @@ import typing as t
 from ellar.common.constants import MULTI_RESOLVER_KEY
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import logger
-from ellar.common.utils.modelfield import create_model_field
-from pydantic import BaseModel, create_model
-from pydantic.fields import ModelField
+from ellar.common.pydantic import (
+    BaseModel,
+    ModelField,
+    create_body_model,
+    create_model_field,
+)
 from starlette.convertors import Convertor
 
 from .. import params
@@ -113,42 +116,54 @@ class RequestEndpointArgsModel(EndpointArgsModel):
         elif body_resolvers:
             # if body_resolvers is more than one, we create a bulk_body_resolver instead
             model_name = "body_" + self.operation_unique_id
-            body_model_field: t.Type[BaseModel] = create_model(model_name)
-            _fields_required, _body_param_class = [], {}
+            _fields_required, _body_param_class, _fields = [], {}, []
 
             for f in self._get_body_resolver_model_fields(body_resolvers):
                 f.field_info.embed = True  # type:ignore[attr-defined]
-                body_model_field.__fields__[f.name] = f
+                _fields.append(f)
                 _fields_required.append(f.required)
                 _body_param_class[
                     getattr(f.field_info, "media_type", "application/json")
                 ] = (f.field_info.__class__, f.field_info)
+
+            pydantic_body_model: t.Type[BaseModel] = create_body_model(
+                fields=_fields, model_name=model_name
+            )
 
             required = any(_fields_required)
             body_field_info: t.Union[
                 t.Type[params.BodyFieldInfo], t.Type[params.ParamFieldInfo]
             ] = params.BodyFieldInfo
             media_type = "application/json"
+
+            field_info_kwargs: t.Dict[str, t.Any] = {
+                "annotation": pydantic_body_model,
+                "alias": "body",
+                "media_type": media_type,
+                MULTI_RESOLVER_KEY: body_resolvers,
+            }
+
+            if not required:
+                field_info_kwargs["default"] = None
+
             if len(_body_param_class) == 1:
                 _, (klass, field_info) = _body_param_class.popitem()
                 body_field_info = klass  # type:ignore[assignment]
-                media_type = getattr(field_info, "media_type", media_type)
+                field_info_kwargs["media_type"] = getattr(
+                    field_info, "media_type", media_type
+                )
             elif len(_body_param_class) > 1:
                 key = sorted(_body_param_class.keys(), reverse=True)[0]
                 klass, field_info = _body_param_class[key]
                 body_field_info = klass  # type:ignore[assignment]
-                media_type = getattr(field_info, "media_type", media_type)
+                field_info_kwargs["media_type"] = getattr(
+                    field_info, "media_type", media_type
+                )
 
             final_field = create_model_field(
                 name="body",
-                type_=body_model_field,
-                required=required,
-                alias="body",
-                field_info=body_field_info(
-                    media_type=media_type,
-                    default=None,
-                    **{MULTI_RESOLVER_KEY: body_resolvers},  # type:ignore
-                ),
+                type_=pydantic_body_model,
+                field_info=body_field_info(**field_info_kwargs),
             )
             final_field.field_info = t.cast(
                 params.ParamFieldInfo, final_field.field_info

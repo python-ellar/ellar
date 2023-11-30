@@ -35,7 +35,9 @@ class Config(AttributeDictAccessMixin, dict, ConfigDefaultTypesMixin):
 
         self.update(**mapping)
 
-        validate_config = ConfigValidationSchema.parse_obj(self)
+        validate_config = ConfigValidationSchema.model_validate(
+            self, from_attributes=True
+        )
         self.update(validate_config.serialize())
 
     def _load_config_module(self, prefix: str) -> None:

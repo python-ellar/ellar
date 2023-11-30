@@ -1,9 +1,10 @@
 import typing as t
 from enum import Enum
 
-from pydantic.fields import FieldInfo, ModelField, Undefined
+from ellar.common.constants import MULTI_RESOLVER_FORM_GROUPED_KEY, MULTI_RESOLVER_KEY
+from ellar.common.pydantic import FieldInfo, ModelField
+from ellar.common.pydantic import types as pydantic_types
 
-from ..constants import MULTI_RESOLVER_FORM_GROUPED_KEY, MULTI_RESOLVER_KEY
 from .resolvers import (
     BaseRouteParameterResolver,
     BodyParameterResolver,
@@ -18,6 +19,8 @@ from .resolvers import (
     QueryParameterResolver,
     WsBodyParameterResolver,
 )
+
+_Unset: t.Any = pydantic_types.Undefined
 
 
 class ParamTypes(Enum):
@@ -35,9 +38,14 @@ class ParamFieldInfo(FieldInfo):
 
     def __init__(
         self,
-        default: t.Any = ...,
+        default: t.Any = pydantic_types.Undefined,
         *,
+        default_factory: t.Union[t.Callable[[], t.Any], None] = _Unset,
+        annotation: t.Optional[t.Any] = None,
         alias: t.Optional[str] = None,
+        alias_priority: t.Union[int, None] = _Unset,
+        validation_alias: t.Union[str, None] = None,
+        serialization_alias: t.Union[str, None] = None,
         title: t.Optional[str] = None,
         description: t.Optional[str] = None,
         gt: t.Optional[float] = None,
@@ -46,18 +54,31 @@ class ParamFieldInfo(FieldInfo):
         le: t.Optional[float] = None,
         min_length: t.Optional[int] = None,
         max_length: t.Optional[int] = None,
-        regex: t.Optional[str] = None,
-        example: t.Any = Undefined,
-        examples: t.Optional[t.Dict[str, t.Any]] = None,
+        pattern: t.Optional[str] = None,
+        discriminator: t.Union[str, None] = None,
+        strict: t.Union[bool, None] = _Unset,
+        multiple_of: t.Union[float, None] = _Unset,
+        allow_inf_nan: t.Union[bool, None] = _Unset,
+        max_digits: t.Union[int, None] = _Unset,
+        decimal_places: t.Union[int, None] = _Unset,
+        examples: t.Optional[t.List[t.Any]] = None,
         deprecated: t.Optional[bool] = None,
         include_in_schema: bool = True,
+        json_schema_extra: t.Union[t.Dict[str, t.Any], None] = None,
         **extra: t.Any,
-    ) -> None:
+    ):
         self.deprecated = deprecated
-        self.example = example
-        self.examples = examples
-        super().__init__(
-            default,
+        self.include_in_schema = include_in_schema
+
+        if serialization_alias in (_Unset, None) and isinstance(alias, str):
+            serialization_alias = alias
+
+        if validation_alias in (_Unset, None):
+            validation_alias = alias
+
+        kwargs = dict(
+            default=default,
+            default_factory=default_factory,
             alias=alias,
             title=title,
             description=description,
@@ -67,17 +88,34 @@ class ParamFieldInfo(FieldInfo):
             le=le,
             min_length=min_length,
             max_length=max_length,
-            include_in_schema=include_in_schema,
-            regex=regex,
+            discriminator=discriminator,
+            multiple_of=multiple_of,
+            allow_nan=allow_inf_nan,
+            max_digits=max_digits,
+            decimal_places=decimal_places,
+            pattern=pattern,
+            annotation=annotation,
+            alias_priority=alias_priority,
+            validation_alias=validation_alias,
+            serialization_alias=serialization_alias,
+            strict=strict,
+            json_schema_extra=json_schema_extra or extra,
             **extra,
         )
+        if examples is not None:
+            kwargs["examples"] = examples
+        init_kwargs = {k: v for k, v in kwargs.items() if v is not _Unset}
+
+        super().__init__(**init_kwargs)
 
     def create_resolver(self, model_field: ModelField) -> BaseRouteParameterResolver:
-        multiple_resolvers = model_field.field_info.extra.get(MULTI_RESOLVER_KEY)
+        multiple_resolvers = model_field.field_info.json_schema_extra.pop(  # type:ignore[union-attr]
+            MULTI_RESOLVER_KEY, None
+        )
         if multiple_resolvers:
-            model_field.field_info.extra.clear()
             return self.bulk_resolver(
-                model_field=model_field, resolvers=multiple_resolvers
+                model_field=model_field,
+                resolvers=multiple_resolvers,  # type:ignore[arg-type]
             )
         return self.resolver(model_field)
 
@@ -93,7 +131,12 @@ class PathFieldInfo(ParamFieldInfo):
         self,
         default: t.Any = ...,
         *,
+        default_factory: t.Union[t.Callable[[], t.Any], None] = _Unset,
+        annotation: t.Optional[t.Any] = None,
         alias: t.Optional[str] = None,
+        alias_priority: t.Union[int, None] = _Unset,
+        validation_alias: t.Union[str, None] = None,
+        serialization_alias: t.Union[str, None] = None,
         title: t.Optional[str] = None,
         description: t.Optional[str] = None,
         gt: t.Optional[float] = None,
@@ -102,16 +145,30 @@ class PathFieldInfo(ParamFieldInfo):
         le: t.Optional[float] = None,
         min_length: t.Optional[int] = None,
         max_length: t.Optional[int] = None,
-        regex: t.Optional[str] = None,
-        example: t.Any = Undefined,
-        examples: t.Optional[t.Dict[str, t.Any]] = None,
+        pattern: t.Optional[str] = None,
+        discriminator: t.Union[str, None] = None,
+        strict: t.Union[bool, None] = _Unset,
+        multiple_of: t.Union[float, None] = _Unset,
+        allow_inf_nan: t.Union[bool, None] = _Unset,
+        max_digits: t.Union[int, None] = _Unset,
+        decimal_places: t.Union[int, None] = _Unset,
+        examples: t.Optional[t.List[t.Any]] = None,
         deprecated: t.Optional[bool] = None,
         include_in_schema: bool = True,
+        json_schema_extra: t.Union[t.Dict[str, t.Any], None] = None,
         **extra: t.Any,
-    ) -> None:
+    ):
+        assert (
+            default is ... or default is pydantic_types.Undefined
+        ), "Path parameters cannot have a default value"
         super().__init__(
-            ...,
+            default=default,
+            default_factory=default_factory,
+            annotation=annotation,
             alias=alias,
+            alias_priority=alias_priority,
+            validation_alias=validation_alias,
+            serialization_alias=serialization_alias,
             title=title,
             description=description,
             gt=gt,
@@ -120,11 +177,17 @@ class PathFieldInfo(ParamFieldInfo):
             le=le,
             min_length=min_length,
             max_length=max_length,
-            regex=regex,
+            pattern=pattern,
+            discriminator=discriminator,
+            strict=strict,
+            multiple_of=multiple_of,
+            allow_inf_nan=allow_inf_nan,
+            max_digits=max_digits,
+            decimal_places=decimal_places,
             deprecated=deprecated,
-            include_in_schema=include_in_schema,
-            example=example,
             examples=examples,
+            include_in_schema=include_in_schema,
+            json_schema_extra=json_schema_extra,
             **extra,
         )
 
@@ -140,10 +203,15 @@ class HeaderFieldInfo(ParamFieldInfo):
 
     def __init__(
         self,
-        default: t.Any,
+        default: t.Any = ...,
         *,
-        alias: t.Optional[str] = None,
         convert_underscores: bool = True,
+        default_factory: t.Union[t.Callable[[], t.Any], None] = _Unset,
+        annotation: t.Optional[t.Any] = None,
+        alias: t.Optional[str] = None,
+        alias_priority: t.Union[int, None] = _Unset,
+        validation_alias: t.Union[str, None] = None,
+        serialization_alias: t.Union[str, None] = None,
         title: t.Optional[str] = None,
         description: t.Optional[str] = None,
         gt: t.Optional[float] = None,
@@ -152,17 +220,28 @@ class HeaderFieldInfo(ParamFieldInfo):
         le: t.Optional[float] = None,
         min_length: t.Optional[int] = None,
         max_length: t.Optional[int] = None,
-        regex: t.Optional[str] = None,
-        example: t.Any = Undefined,
-        examples: t.Optional[t.Dict[str, t.Any]] = None,
+        pattern: t.Optional[str] = None,
+        discriminator: t.Union[str, None] = None,
+        strict: t.Union[bool, None] = _Unset,
+        multiple_of: t.Union[float, None] = _Unset,
+        allow_inf_nan: t.Union[bool, None] = _Unset,
+        max_digits: t.Union[int, None] = _Unset,
+        decimal_places: t.Union[int, None] = _Unset,
+        examples: t.Optional[t.List[t.Any]] = None,
         deprecated: t.Optional[bool] = None,
         include_in_schema: bool = True,
+        json_schema_extra: t.Union[t.Dict[str, t.Any], None] = None,
         **extra: t.Any,
     ):
         self.convert_underscores = convert_underscores
         super().__init__(
-            default,
+            default=default,
+            default_factory=default_factory,
+            annotation=annotation,
             alias=alias,
+            alias_priority=alias_priority,
+            validation_alias=validation_alias,
+            serialization_alias=serialization_alias,
             title=title,
             description=description,
             gt=gt,
@@ -171,11 +250,17 @@ class HeaderFieldInfo(ParamFieldInfo):
             le=le,
             min_length=min_length,
             max_length=max_length,
-            regex=regex,
+            pattern=pattern,
+            discriminator=discriminator,
+            strict=strict,
+            multiple_of=multiple_of,
+            allow_inf_nan=allow_inf_nan,
+            max_digits=max_digits,
+            decimal_places=decimal_places,
             deprecated=deprecated,
-            include_in_schema=include_in_schema,
-            example=example,
             examples=examples,
+            include_in_schema=include_in_schema,
+            json_schema_extra=json_schema_extra,
             **extra,
         )
 
@@ -197,7 +282,12 @@ class BodyFieldInfo(ParamFieldInfo):
         *,
         embed: bool = False,
         media_type: t.Optional[str] = None,
+        default_factory: t.Union[t.Callable[[], t.Any], None] = _Unset,
+        annotation: t.Optional[t.Any] = None,
         alias: t.Optional[str] = None,
+        alias_priority: t.Union[int, None] = _Unset,
+        validation_alias: t.Union[str, None] = None,
+        serialization_alias: t.Union[str, None] = None,
         title: t.Optional[str] = None,
         description: t.Optional[str] = None,
         gt: t.Optional[float] = None,
@@ -206,18 +296,30 @@ class BodyFieldInfo(ParamFieldInfo):
         le: t.Optional[float] = None,
         min_length: t.Optional[int] = None,
         max_length: t.Optional[int] = None,
-        regex: t.Optional[str] = None,
-        example: t.Any = Undefined,
-        examples: t.Optional[t.Dict[str, t.Any]] = None,
+        pattern: t.Optional[str] = None,
+        discriminator: t.Union[str, None] = None,
+        strict: t.Union[bool, None] = _Unset,
+        multiple_of: t.Union[float, None] = _Unset,
+        allow_inf_nan: t.Union[bool, None] = _Unset,
+        max_digits: t.Union[int, None] = _Unset,
+        decimal_places: t.Union[int, None] = _Unset,
+        examples: t.Optional[t.List[t.Any]] = None,
+        deprecated: t.Optional[bool] = None,
         include_in_schema: bool = True,
+        json_schema_extra: t.Union[t.Dict[str, t.Any], None] = None,
         **extra: t.Any,
     ) -> None:
         self.embed = embed
         self.media_type = media_type or self.MEDIA_TYPE
 
         super().__init__(
-            default,
+            default=default,
+            default_factory=default_factory,
+            annotation=annotation,
             alias=alias,
+            alias_priority=alias_priority,
+            validation_alias=validation_alias,
+            serialization_alias=serialization_alias,
             title=title,
             description=description,
             gt=gt,
@@ -226,10 +328,17 @@ class BodyFieldInfo(ParamFieldInfo):
             le=le,
             min_length=min_length,
             max_length=max_length,
-            regex=regex,
+            pattern=pattern,
+            discriminator=discriminator,
+            strict=strict,
+            multiple_of=multiple_of,
+            allow_inf_nan=allow_inf_nan,
+            max_digits=max_digits,
+            decimal_places=decimal_places,
+            deprecated=deprecated,
             examples=examples,
             include_in_schema=include_in_schema,
-            example=example,
+            json_schema_extra=json_schema_extra,
             **extra,
         )
 
@@ -249,10 +358,15 @@ class FormFieldInfo(ParamFieldInfo):
 
     def __init__(
         self,
-        default: t.Any,
+        default: t.Any = ...,
         *,
         media_type: t.Optional[str] = None,
+        default_factory: t.Union[t.Callable[[], t.Any], None] = _Unset,
+        annotation: t.Optional[t.Any] = None,
         alias: t.Optional[str] = None,
+        alias_priority: t.Union[int, None] = _Unset,
+        validation_alias: t.Union[str, None] = None,
+        serialization_alias: t.Union[str, None] = None,
         title: t.Optional[str] = None,
         description: t.Optional[str] = None,
         gt: t.Optional[float] = None,
@@ -261,15 +375,27 @@ class FormFieldInfo(ParamFieldInfo):
         le: t.Optional[float] = None,
         min_length: t.Optional[int] = None,
         max_length: t.Optional[int] = None,
-        regex: t.Optional[str] = None,
-        example: t.Any = Undefined,
-        examples: t.Optional[t.Dict[str, t.Any]] = None,
+        pattern: t.Optional[str] = None,
+        discriminator: t.Union[str, None] = None,
+        strict: t.Union[bool, None] = _Unset,
+        multiple_of: t.Union[float, None] = _Unset,
+        allow_inf_nan: t.Union[bool, None] = _Unset,
+        max_digits: t.Union[int, None] = _Unset,
+        decimal_places: t.Union[int, None] = _Unset,
+        examples: t.Optional[t.List[t.Any]] = None,
+        deprecated: t.Optional[bool] = None,
         include_in_schema: bool = True,
+        json_schema_extra: t.Union[t.Dict[str, t.Any], None] = None,
         **extra: t.Any,
     ):
         super().__init__(
-            default,
+            default=default,
+            default_factory=default_factory,
+            annotation=annotation,
             alias=alias,
+            alias_priority=alias_priority,
+            validation_alias=validation_alias,
+            serialization_alias=serialization_alias,
             title=title,
             description=description,
             gt=gt,
@@ -278,26 +404,34 @@ class FormFieldInfo(ParamFieldInfo):
             le=le,
             min_length=min_length,
             max_length=max_length,
-            regex=regex,
-            example=example,
+            pattern=pattern,
+            discriminator=discriminator,
+            strict=strict,
+            multiple_of=multiple_of,
+            allow_inf_nan=allow_inf_nan,
+            max_digits=max_digits,
+            decimal_places=decimal_places,
+            deprecated=deprecated,
             examples=examples,
             include_in_schema=include_in_schema,
+            json_schema_extra=json_schema_extra,
             **extra,
         )
         self.embed = True
         self.media_type = media_type or self.MEDIA_TYPE
 
     def create_resolver(self, model_field: ModelField) -> BaseRouteParameterResolver:
-        model_field.field_info.extra.setdefault(MULTI_RESOLVER_KEY, [])
-        model_field.field_info.extra.setdefault(MULTI_RESOLVER_FORM_GROUPED_KEY, False)
-
-        multiple_resolvers = model_field.field_info.extra.pop(MULTI_RESOLVER_KEY)
-        is_grouped = model_field.field_info.extra.pop(MULTI_RESOLVER_FORM_GROUPED_KEY)
+        multiple_resolvers = model_field.field_info.json_schema_extra.pop(  # type:ignore[union-attr]
+            MULTI_RESOLVER_KEY, []
+        )
+        is_grouped = model_field.field_info.json_schema_extra.pop(  # type:ignore[union-attr]
+            MULTI_RESOLVER_FORM_GROUPED_KEY, False
+        )
 
         if multiple_resolvers:
             return self.bulk_resolver(
                 model_field=model_field,
-                resolvers=multiple_resolvers,
+                resolvers=multiple_resolvers,  # type:ignore[arg-type]
                 is_grouped=is_grouped,
             )
         return self.resolver(model_field)

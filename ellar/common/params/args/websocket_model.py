@@ -1,8 +1,7 @@
 import typing as t
 
 from ellar.common.interfaces import IExecutionContext
-from pydantic.error_wrappers import ErrorWrapper
-from pydantic.fields import FieldInfo
+from ellar.common.pydantic import ErrorWrapper, FieldInfo
 from starlette.convertors import Convertor
 
 from .. import params

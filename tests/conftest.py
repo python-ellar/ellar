@@ -26,7 +26,9 @@ def fixture_model_with_path(request):
         arbitrary_types_allowed = True
 
     model_with_path = create_model(
-        "ModelWithPath", path=(request.param, ...), __config__=Config  # type: ignore
+        "ModelWithPath",
+        path=(request.param, ...),
+        __config__=Config,  # type: ignore
     )
     return model_with_path(path=request.param("/foo", "bar"))
 

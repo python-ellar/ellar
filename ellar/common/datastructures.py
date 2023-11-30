@@ -26,6 +26,8 @@ from starlette.datastructures import (
 )
 from typing_extensions import Annotated, Doc  # type: ignore[attr-defined]
 
+from .pydantic import as_pydantic_validator
+
 __all__ = [
     "URL",
     "Address",
@@ -38,6 +40,9 @@ __all__ = [
 ]
 
 
+@as_pydantic_validator(
+    "__validate_input", schema={"type": "string", "format": "binary"}
+)
 class UploadFile(StarletteUploadFile):
     """
     A file uploaded in a request.
@@ -76,17 +81,12 @@ class UploadFile(StarletteUploadFile):
     ]
 
     @classmethod
-    def __modify_schema__(cls, field_schema: t.Dict[str, t.Any]) -> None:
-        field_schema.update({"type": "string", "format": "binary"})
-
-    @classmethod
-    def __get_validators__(
-        cls: t.Type["UploadFile"],
-    ) -> t.Iterable[t.Callable[..., t.Any]]:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls: t.Type["UploadFile"], v: t.Any) -> t.Any:
-        if not isinstance(v, StarletteUploadFile):
-            raise ValueError(f"Expected UploadFile, received: {type(v)}")
-        return cls(v.file, size=v.size, filename=v.filename, headers=v.headers)
+    def __validate_input(cls, __input_value: t.Any, _: t.Any) -> "UploadFile":
+        if not isinstance(__input_value, StarletteUploadFile):
+            raise ValueError(f"Expected UploadFile, received: {type(__input_value)}")
+        return cls(
+            __input_value.file,
+            size=__input_value.size,
+            filename=__input_value.filename,
+            headers=__input_value.headers,
+        )

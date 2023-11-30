@@ -5,16 +5,22 @@ import typing as t
 
 import anyio
 from ellar.common.constants import (
-    sequence_shape_to_type,
-    sequence_shapes,
+    # sequence_shape_to_type,
+    # sequence_shapes,
     sequence_types,
 )
 from ellar.common.exceptions import RequestValidationError
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import request_logger
-from pydantic.error_wrappers import ErrorWrapper
-from pydantic.fields import Undefined
-from pydantic.utils import lenient_issubclass
+from ellar.common.pydantic import (
+    ErrorWrapper,
+    is_sequence_field,
+    lenient_issubclass,
+    sequence_annotation_to_type,
+)
+from ellar.common.pydantic import (
+    types as pydantic_types,
+)
 from starlette.datastructures import (
     FormData,
     Headers,
@@ -43,10 +49,7 @@ class HeaderParameterResolver(BaseRouteParameterResolver):
             f"Resolving Header Parameters - '{self.__class__.__name__}'"
         )
         received_params = self.get_received_parameter(ctx=ctx)
-        if (
-            self.model_field.shape in sequence_shapes
-            or self.model_field.type_ in sequence_types
-        ):
+        if is_sequence_field(self.model_field):
             value = (
                 received_params.getlist(self.model_field.alias)
                 or self.model_field.default
@@ -144,7 +147,7 @@ class BodyParameterResolver(WsBodyParameterResolver):
             request = ctx.switch_to_http_connection().get_request()
             body_bytes = await request.body()
             if body_bytes:
-                json_body: t.Any = Undefined
+                json_body: t.Any = pydantic_types.Undefined
                 content_type_value = request.headers.get("content-type")
                 if not content_type_value:
                     json_body = await request.json()
@@ -155,7 +158,7 @@ class BodyParameterResolver(WsBodyParameterResolver):
                         subtype = message.get_content_subtype()
                         if subtype == "json" or subtype.endswith("+json"):
                             json_body = await request.json()
-                if json_body != Undefined:
+                if json_body != pydantic_types.Undefined:
                     body_bytes = json_body
             return body_bytes
         except json.JSONDecodeError as e:
@@ -219,10 +222,7 @@ class FormParameterResolver(BodyParameterResolver):
             received_body = _body
             loc = ("body", self.model_field.alias)  # type:ignore
 
-        if (
-            self.model_field.shape in sequence_shapes
-            or self.model_field.type_ in sequence_types
-        ) and isinstance(_body, FormData):
+        if is_sequence_field(self.model_field) and isinstance(_body, FormData):
             loc = ("body", self.model_field.alias)  # type: ignore
             value = _body.getlist(self.model_field.alias)
         else:
@@ -232,7 +232,7 @@ class FormParameterResolver(BodyParameterResolver):
                 errors = [self.create_error(loc=loc)]
                 return values, errors
 
-        if not value or self.model_field.shape in sequence_shapes and len(value) == 0:
+        if not value or is_sequence_field(self.model_field) and len(value) == 0:
             if self.model_field.required:
                 return await self.process_and_validate(
                     values=values, value=_body, loc=loc
@@ -253,7 +253,7 @@ class FileParameterResolver(FormParameterResolver):
         ):
             value = await value.read()
         elif (
-            self.model_field.shape in sequence_shapes
+            is_sequence_field(self.model_field)
             and lenient_issubclass(self.model_field.type_, bytes)
             and isinstance(value, sequence_types)
         ):
@@ -268,7 +268,7 @@ class FileParameterResolver(FormParameterResolver):
             async with anyio.create_task_group() as tg:
                 for sub_value in value:
                     tg.start_soon(process_fn, sub_value.read)
-            value = sequence_shape_to_type[self.model_field.shape](results)
+            value = sequence_annotation_to_type[self.model_field.type_](results)
 
         v_, errors_ = self.model_field.validate(value, values, loc=loc)
         values[self.model_field.name] = v_

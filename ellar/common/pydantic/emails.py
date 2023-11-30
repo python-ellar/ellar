@@ -1,6 +1,7 @@
 import typing as t
 
 from ..logger import logger
+from .decorator import as_pydantic_validator
 
 try:
     import email_validator
@@ -9,15 +10,14 @@ try:
     from pydantic import EmailStr
 except ImportError:  # pragma: no cover
 
+    @as_pydantic_validator(
+        "__validate_input", schema={"type": "string", "format": "email"}
+    )
     class EmailStr(str):  # type: ignore
         @classmethod
-        def __get_validators__(cls) -> t.Iterable[t.Callable[..., t.Any]]:
-            yield cls.validate
-
-        @classmethod
-        def validate(cls, v: t.Any) -> str:
+        def __validate_input(cls, __input_value: t.Any, _: t.Any) -> str:
             logger.warning(
                 "email-validator not installed, email fields will be treated as str.\n"
                 "To install, run: pip install email-validator"
             )
-            return str(v)
+            return str(__input_value)

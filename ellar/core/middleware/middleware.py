@@ -15,8 +15,6 @@ class EllarMiddleware(Middleware, IEllarMiddleware):
         injectable()(self.cls)
         self.options = build_init_kwargs(self.cls, self.options)
 
-    def __call__(
-        self, app: ASGIApp, injector: EllarInjector
-    ) -> T:  # type:ignore[type-var]
+    def __call__(self, app: ASGIApp, injector: EllarInjector) -> T:  # type:ignore[type-var]
         self.options.update(app=app)
         return injector.create_object(self.cls, additional_kwargs=self.options)

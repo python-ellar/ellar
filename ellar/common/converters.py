@@ -1,7 +1,7 @@
 import typing as t
 from abc import ABC, abstractmethod
 
-from pydantic.typing import get_args, get_origin
+from typing_extensions import get_args, get_origin
 
 _origin_maps = {
     list: t.List,

@@ -2,31 +2,29 @@ import typing as t
 
 from ellar.common.constants import ROUTE_METHODS
 from ellar.common.interfaces import IResponseModel
+from ellar.common.pydantic import (
+    BaseModel,
+    Field,
+    PrivateAttr,
+    as_pydantic_validator,
+    field_validator,
+    model_validator,
+)
 from ellar.common.responses.models import EmptyAPIResponseModel, create_response_model
 from ellar.common.routing.websocket import WebSocketExtraHandler
-from ellar.common.serializer import BaseSerializer
-from pydantic import BaseModel, Field, PrivateAttr, root_validator, validator
+from ellar.common.serializer import BaseSerializer, Serializer
 
 
+@as_pydantic_validator("__validate_input__")
 class TResponseModel:
     @classmethod
-    def __get_validators__(
-        cls: t.Type["TResponseModel"],
-    ) -> t.Any:
-        yield cls.validate  # type:ignore[misc]
-
-    @classmethod
-    def validate(cls: t.Type["IResponseModel"], v: t.Any) -> t.Any:  # type:ignore[misc]
-        if not isinstance(v, IResponseModel):
-            raise ValueError(f"Expected ResponseModel, received: {type(v)}")
-        return v
+    def __validate_input__(cls, __input_value: t.Any, _: t.Any) -> t.Any:
+        if not isinstance(__input_value, IResponseModel):
+            raise ValueError(f"Expected ResponseModel, received: {type(__input_value)}")
+        return __input_value
 
 
-class RouteParameters(BaseModel):
-    class Config:
-        pass
-        # arbitrary_types_allowed = True
-
+class RouteParameters(Serializer):
     path: str
     methods: t.List[str]
     endpoint: t.Callable
@@ -42,7 +40,7 @@ class RouteParameters(BaseModel):
         ]
     ]
 
-    @validator("methods")
+    @field_validator("methods")
     def validate_methods(cls, value: t.Any) -> t.List[str]:
         methods = [m.upper() for m in value]
         not_valid_methods = list(set(methods) - set(ROUTE_METHODS))
@@ -51,13 +49,13 @@ class RouteParameters(BaseModel):
             raise ValueError(f"Method {','.join(not_valid_methods)} not allowed")
         return methods
 
-    @validator("endpoint")
+    @field_validator("endpoint")
     def validate_endpoint(cls, value: t.Any) -> t.Any:
         if not callable(value):  # pragma: no cover
             raise ValueError("An endpoint must be a callable")
         return value
 
-    @root_validator
+    @model_validator(mode="before")
     def validate_root(cls, values: t.Any) -> t.Any:
         if "response" not in values:  # pragma: no cover
             raise ValueError(
@@ -74,7 +72,7 @@ class RouteParameters(BaseModel):
         return values
 
 
-class WsRouteParameters(BaseModel):
+class WsRouteParameters(Serializer):
     path: str
     name: t.Optional[str] = None
     endpoint: t.Callable
@@ -87,11 +85,11 @@ class WsRouteParameters(BaseModel):
         super().__init__(**data)
         self._kwargs = {}
 
-    @validator("endpoint")
+    @field_validator("endpoint")
     def validate_endpoint(cls, value: t.Any) -> t.Any:
         return value
 
-    @validator("encoding")
+    @field_validator("encoding")
     def validate_encoding(cls, value: t.Any) -> t.Any:
         if value not in ["json", "text", "bytes", None]:
             raise ValueError(
