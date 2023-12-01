@@ -83,7 +83,7 @@ test = [
     "types-dataclasses ==0.6.6",
     "python-socketio",
     "uvicorn[standard] == 0.23.2",
-    "aiohttp == 3.8.5",
+    "aiohttp == 3.9.1",
     "argon2-cffi == 23.1.0"
 ]
 dev = [
