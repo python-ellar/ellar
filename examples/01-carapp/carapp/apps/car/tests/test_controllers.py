@@ -22,7 +22,7 @@ class TestCarController:
         )
 
         assert result == {
-            "id": "1",
+            "id": 1,
             "message": "This action adds a new car",
             "model": "CLS",
             "name": "Mercedes",
@@ -60,7 +60,7 @@ class TestCarControllerE2E:
         )
         assert res.status_code == 200
         assert res.json() == {
-            "id": "1",
+            "id": 1,
             "message": "This action adds a new car",
             "model": "CLS",
             "name": "Mercedes",

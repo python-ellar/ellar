@@ -29,7 +29,7 @@ class CarListFilter(Serializer):
 
 
 class CarSerializer(Serializer):
-    id: str
+    id: int
     name: str
     year: int
     model: str

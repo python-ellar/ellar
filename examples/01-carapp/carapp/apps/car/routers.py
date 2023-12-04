@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from typing import List
 
 from ellar.common import (
-    DataclassSerializer,
     Inject,
     ModuleRouter,
     render,
@@ -33,7 +32,7 @@ tag(router.get_control_type())
 
 
 @dataclass
-class CarObject(DataclassSerializer):
+class CarObject:
     name: str
     model: str
 
