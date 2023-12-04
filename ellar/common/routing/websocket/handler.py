@@ -77,8 +77,10 @@ class WebSocketExtraHandler:
         )
         if errors:
             exc = WebSocketRequestValidationError(errors)
-            await context.switch_to_websocket().get_client().send_json(
-                {"code": WS_1008_POLICY_VIOLATION, "errors": exc.errors()}
+            await (
+                context.switch_to_websocket()
+                .get_client()
+                .send_json({"code": WS_1008_POLICY_VIOLATION, "errors": exc.errors()})
             )
             raise exc
         return extra_kwargs

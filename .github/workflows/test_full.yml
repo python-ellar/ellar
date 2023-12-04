@@ -37,8 +37,6 @@ jobs:
         run: pip install flit
       - name: Install Dependencies
         run: flit install --symlink
-      - name: Black
-        run: black --check ellar tests examples
       - name: Ruff Linting Check
         run: ruff check ellar tests examples
       - name: mypy
