@@ -61,7 +61,7 @@ test = [
     "pytest >= 6.2.4,<8.0.0",
     "pytest-cov >= 2.12.0,<5.0.0",
     "mypy == 1.6.1",
-    "ruff ==0.1.4",
+    "ruff ==0.1.6",
     "pytest-asyncio",
     "databases[sqlite] >= 0.3.2",
     "orjson >= 3.2.1",
@@ -78,11 +78,11 @@ test = [
     # types
     "types-ujson ==5.8.0.1",
     "types-orjson ==3.6.2",
-    "types-redis ==4.6.0.8",
+    "types-redis ==4.6.0.11",
     "types-dataclasses ==0.6.6",
     "python-socketio",
     "uvicorn[standard] == 0.23.2",
-    "aiohttp == 3.8.5",
+    "aiohttp == 3.9.1",
     "argon2-cffi == 23.1.0"
 ]
 dev = [
