@@ -90,13 +90,15 @@ class RouteOperationBase:
         return self._controller_type
 
     @abstractmethod
-    async def handle_request(self, *, context: IExecutionContext) -> t.Any:
+    async def handle_request(
+        self, *, context: IExecutionContext
+    ) -> t.Any:  # pragma: no cover
         """return a context"""
 
     @abstractmethod
     async def handle_response(
         self, context: IExecutionContext, response_obj: t.Any
-    ) -> None:
+    ) -> None:  # pragma: no cover
         """returns a any"""
 
     def get_allowed_version(self) -> t.Set[t.Union[int, float, str]]:
@@ -113,8 +115,7 @@ class RouteOperationBase:
 
     @classmethod
     def get_methods(cls, methods: t.Optional[t.List[str]] = None) -> t.Set[str]:
-        if methods is None:
-            methods = ["GET"]
+        methods = ["GET"] if not methods else methods
 
         _methods = {method.upper() for method in methods}
         # if "GET" in _methods:

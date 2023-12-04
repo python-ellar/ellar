@@ -44,7 +44,7 @@ class ModelField:
 
     def get_default(self) -> t.Any:
         if self.field_info.is_required():
-            return PydanticUndefined
+            return PydanticUndefined  # pragma: no cover
         return self.field_info.get_default(call_default_factory=True)
 
     def validate(

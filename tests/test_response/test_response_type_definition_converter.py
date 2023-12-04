@@ -8,13 +8,20 @@ from ellar.common.responses.models import (
     ResponseTypeDefinitionConverter,
 )
 from ellar.common.serializer import BaseSerializer
+from pydantic.dataclasses import dataclass as pydantic_dataclass
 from typing_extensions import get_args
 
 from ..schema import BlogObjectDTO, NoteSchemaDC
 
 
+@pydantic_dataclass
+class PydanticDataClass:
+    name: str
+    scope: str
+
+
 def test_response_type_definition_converter():
-    defined_type = List[Union[NoteSchemaDC, BlogObjectDTO]]
+    defined_type = List[Union[NoteSchemaDC, BlogObjectDTO, PydanticDataClass]]
     converter = ResponseTypeDefinitionConverter(defined_type)
     converted_type = converter.re_group_outer_type()
     _union = get_args(converted_type)

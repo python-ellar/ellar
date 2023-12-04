@@ -59,8 +59,6 @@ class WebsocketEndpointArgsModel(EndpointArgsModel):
             if value_:
                 values.update(value_)
             if errors_:
-                if isinstance(errors_, list):
-                    errors += errors_
-                else:
-                    errors.append(errors_)
+                assert isinstance(errors_, list)
+                errors.extend(errors_)
         return values, errors

@@ -1,9 +1,8 @@
 import typing as t
 from abc import ABC, abstractmethod
 
+from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.interfaces import IExecutionContext
-from ellar.common.logger import request_logger
-from ellar.common.pydantic import get_missing_field_error
 from ellar.common.types import T
 
 from ..base import IRouteParameterResolver
@@ -20,7 +19,7 @@ class SystemParameterResolver(IRouteParameterResolver, ABC):
     >>>          user = request.get('user', None)
     >>>          if user:
     >>>             return {self.parameter_name: user}, []
-    >>>          return {}, [ErrorWrapper('Authenticated Users Only', loc=self.parameter_name)]
+    >>>          return {}, [ErrorWrapper(exc=Exception('Authenticated Users Only'), loc=self.parameter_name)]
     Usage:
     >>> @get('/abc')
     >>> def abc(user: User = UserField()):
@@ -57,7 +56,9 @@ class BaseConnectionParameterResolver(SystemParameterResolver):
     ) -> "SystemParameterResolver":
         result = super().__call__(parameter_name, parameter_annotation)
         if not hasattr(self, "lookup_connection_field"):
-            raise Exception(f"{self.__class__.__name__}.request_field is not set")
+            raise ImproperConfiguration(
+                f"{self.__class__.__name__}.request_field is not set"
+            )
         return result  # type: ignore
 
     async def get_value(self, ctx: IExecutionContext) -> t.Any:
@@ -69,13 +70,5 @@ class BaseConnectionParameterResolver(SystemParameterResolver):
     async def resolve(
         self, ctx: IExecutionContext, **kwargs: t.Any
     ) -> t.Tuple[t.Dict, t.List]:
-        try:
-            value = await self.get_value(ctx)
-            return {self.parameter_name: value}, []
-        except Exception as ex:
-            request_logger.error(
-                f"Unable to resolve `{self.lookup_connection_field}` in connection \nErrorMessage: {ex}"
-            )
-            return {}, [
-                get_missing_field_error(loc=("connection", str(self.parameter_name)))
-            ]
+        value = await self.get_value(ctx)
+        return {self.parameter_name: value}, []

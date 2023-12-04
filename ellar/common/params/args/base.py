@@ -296,8 +296,7 @@ class EndpointArgsModel:
         values: t.Dict[str, t.Any] = {}
         errors: t.List[ErrorWrapper] = []
 
-        if self.body_resolver:
-            await self.resolve_body(ctx, values, errors)
+        await self.resolve_body(ctx, values, errors)
 
         if not errors:
             for parameter_resolver in self._route_models:

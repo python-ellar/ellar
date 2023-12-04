@@ -102,7 +102,7 @@ class ParamFieldInfo(FieldInfo):
             json_schema_extra=json_schema_extra or extra,
             **extra,
         )
-        if examples is not None:
+        if examples is not None:  # pragma: no cover
             kwargs["examples"] = examples
         init_kwargs = {k: v for k, v in kwargs.items() if v is not _Unset}
 

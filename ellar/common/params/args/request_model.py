@@ -179,6 +179,7 @@ class RequestEndpointArgsModel(EndpointArgsModel):
 
         body, errors_ = await self.body_resolver.resolve(ctx=ctx)
         if errors_:
-            errors += list(errors_ if isinstance(errors_, list) else [errors_])
+            assert isinstance(errors_, list)
+            errors.extend(errors_)
             return
         values.update(body)

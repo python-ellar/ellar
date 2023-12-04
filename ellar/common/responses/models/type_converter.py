@@ -28,10 +28,9 @@ class ResponseTypeDefinitionConverter(TypeDefinitionConverter):
             return outer_type_
 
         if is_dataclass(outer_type_):
-            if hasattr(outer_type_, __pydantic_model__):
-                return self._get_converted_type(t.cast(type, outer_type_))
-
-            pydantic_dataclass = convert_dataclass_to_pydantic_model(outer_type_)
+            pydantic_dataclass = outer_type_
+            if not hasattr(outer_type_, __pydantic_model__):
+                pydantic_dataclass = convert_dataclass_to_pydantic_model(outer_type_)
 
             cls = type(
                 outer_type_.__name__,

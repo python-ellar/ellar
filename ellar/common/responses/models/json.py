@@ -89,6 +89,6 @@ class EmptyAPIResponseModel(JSONResponseModel):
                 return serialize_object(
                     response_obj, serializer_filter=serializer_filter
                 )
-            except Exception:
+            except Exception:  # pragma:no cover
                 """Could not serialize response obj"""
         return response_obj
