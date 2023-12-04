@@ -1,6 +1,6 @@
 import typing as t
 
-from pydantic import GetJsonSchemaHandler, model_serializer
+from pydantic import GetJsonSchemaHandler
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema
 
@@ -38,20 +38,6 @@ def as_pydantic_validator(
             klass.__get_pydantic_json_schema__ = classmethod(
                 __get_pydantic_json_schema__
             )
-        return klass
-
-    return wrap
-
-
-def pydantic_serializable(serializing_action: t.Union[str, t.Callable]) -> t.Callable:
-    def wrap(klass: t.Type) -> t.Type:
-        def _model_serializing_object(self: klass) -> str:
-            if callable(serializing_action):
-                return serializing_action(self)
-
-            return getattr(self, serializing_action)(self)
-
-        klass._model_serializing_object = model_serializer(_model_serializing_object)
         return klass
 
     return wrap
