@@ -24,6 +24,7 @@ lint:fmt ## Run code linters
 
 fmt format:clean ## Run code formatters
 	ruff format ellar tests examples
+	ruff check --fix ellar tests examples
 
 test:clean ## Run tests
 	pytest

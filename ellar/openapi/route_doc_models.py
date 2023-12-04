@@ -12,12 +12,15 @@ from ellar.common.params.resolvers import (
     BulkParameterResolver,
     RouteParameterModelField,
 )
-from ellar.common.pydantic import ModelField, get_schema_from_model_field
+from ellar.common.pydantic import (
+    JsonSchemaValue,
+    ModelField,
+    get_schema_from_model_field,
+)
 from ellar.common.routing import ModuleMount, RouteOperation
 from ellar.common.shortcuts import normalize_path
 from ellar.core.services.reflector import Reflector
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
-from pydantic.json_schema import JsonSchemaValue
 from starlette.routing import Mount, compile_path
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -276,6 +279,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
     ) -> t.Optional[t.Dict[str, t.Any]]:
         if not self.route.endpoint_parameter_model.body_resolver:
             return None
+
         model_field = self.route.endpoint_parameter_model.body_resolver.model_field
         assert isinstance(model_field, ModelField)
 
@@ -287,12 +291,15 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
 
         field_info = t.cast(Body, model_field.field_info)
         request_media_type = field_info.media_type
+
         request_body_oai: t.Dict[str, t.Any] = {}
         if model_field.required:
             request_body_oai["required"] = model_field.required
+
         request_media_content: t.Dict[str, t.Any] = {"schema": body_schema}
         if field_info.examples:
             request_media_content["examples"] = field_info.examples
+
         request_body_oai["content"] = {request_media_type: request_media_content}
         return request_body_oai
 
@@ -313,10 +320,12 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
                 field_mapping=field_mapping,
             )
             parameters.extend(operation_parameters)
+
             if parameters:
                 operation["parameters"] = list(
                     {param["name"]: param for param in parameters}.values()
                 )
+
             if method in METHODS_WITH_BODY:
                 request_body_oai = self.get_openapi_operation_request_body(
                     field_mapping=field_mapping,

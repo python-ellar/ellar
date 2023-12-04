@@ -158,9 +158,6 @@ class PathFieldInfo(ParamFieldInfo):
         json_schema_extra: t.Union[t.Dict[str, t.Any], None] = None,
         **extra: t.Any,
     ):
-        assert (
-            default is ... or default is pydantic_types.Undefined
-        ), "Path parameters cannot have a default value"
         super().__init__(
             default=default,
             default_factory=default_factory,

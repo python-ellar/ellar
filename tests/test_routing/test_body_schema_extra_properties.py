@@ -42,7 +42,9 @@ item_openapi_schema = {
                     "200": {
                         "description": "Successful Response",
                         "content": {
-                            "application/json": {"schema": {"title": "Response Model"}}
+                            "application/json": {
+                                "schema": {"type": "object", "title": "Response Model"}
+                            }
                         },
                     },
                     "422": {

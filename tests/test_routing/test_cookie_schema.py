@@ -65,9 +65,11 @@ def test_cookie_with_alias():
     assert json == {
         "detail": [
             {
+                "input": None,
                 "loc": ["cookie", "aliasQty"],
-                "msg": "none is not an allowed value",
-                "type": "type_error.none.not_allowed",
+                "msg": "Input should be a valid string",
+                "type": "string_type",
+                "url": "https://errors.pydantic.dev/2.5/v/string_type",
             }
         ]
     }
@@ -81,8 +83,8 @@ def test_cookie_request():
     )
     assert response.status_code == 200
     assert response.json() == {
-        "to_datetime": "1970-01-01T00:00:02+00:00",
-        "from_datetime": "1970-01-01T00:00:01+00:00",
+        "to_datetime": "1970-01-01T00:00:02Z",
+        "from_datetime": "1970-01-01T00:00:01Z",
         "range": 20,
     }
 
@@ -109,8 +111,8 @@ def test_cookie_request_mixed():
     assert response.status_code == 200
     assert response.json() == {
         "filters": {
-            "to_datetime": "1970-01-01T00:00:02+00:00",
-            "from_datetime": "1970-01-01T00:00:01+00:00",
+            "to_datetime": "1970-01-01T00:00:02Z",
+            "from_datetime": "1970-01-01T00:00:01Z",
             "range": 20,
         },
         "data": {"an_int": 3, "a_float": 1.6},
@@ -127,23 +129,23 @@ def test_cookie_schema():
     params = document["paths"]["/test/cookie"]["get"]["parameters"]
     assert params == [
         {
-            "required": False,
+            "required": True,
             "schema": {
-                "title": "To",
                 "type": "string",
                 "format": "date-time",
-                "include_in_schema": True,
+                "title": "To",
+                "repr": True,
             },
             "name": "to",
             "in": "cookie",
         },
         {
-            "required": False,
+            "required": True,
             "schema": {
-                "title": "From",
                 "type": "string",
                 "format": "date-time",
-                "include_in_schema": True,
+                "title": "From",
+                "repr": True,
             },
             "name": "from",
             "in": "cookie",
@@ -152,8 +154,9 @@ def test_cookie_schema():
             "required": False,
             "schema": {
                 "allOf": [{"$ref": "#/components/schemas/Range"}],
+                "title": "Range",
                 "default": 20,
-                "include_in_schema": True,
+                "repr": True,
             },
             "name": "range",
             "in": "cookie",

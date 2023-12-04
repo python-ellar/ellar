@@ -18,7 +18,7 @@ client = tm.get_test_client()
 
 
 openapi_schema = {
-    "openapi": "3.0.2",
+    "openapi": "3.1.0",
     "info": {"title": "Ellar API Docs", "version": "1.0.0"},
     "paths": {
         "/items/": {
@@ -28,10 +28,9 @@ openapi_schema = {
                     {
                         "required": False,
                         "schema": {
-                            "title": "Q",
-                            "type": "array",
                             "items": {"type": "integer"},
-                            "include_in_schema": True,
+                            "type": "array",
+                            "title": "Q",
                         },
                         "name": "q",
                         "in": "query",
@@ -42,7 +41,7 @@ openapi_schema = {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {"title": "Response Model", "type": "object"}
+                                "schema": {"type": "object", "title": "Response Model"}
                             }
                         },
                     },
@@ -63,30 +62,30 @@ openapi_schema = {
     "components": {
         "schemas": {
             "HTTPValidationError": {
-                "title": "HTTPValidationError",
-                "required": ["detail"],
-                "type": "object",
                 "properties": {
                     "detail": {
-                        "title": "Details",
-                        "type": "array",
                         "items": {"$ref": "#/components/schemas/ValidationError"},
+                        "type": "array",
+                        "title": "Details",
                     }
                 },
+                "type": "object",
+                "required": ["detail"],
+                "title": "HTTPValidationError",
             },
             "ValidationError": {
-                "title": "ValidationError",
-                "required": ["loc", "msg", "type"],
-                "type": "object",
                 "properties": {
                     "loc": {
-                        "title": "Location",
-                        "type": "array",
                         "items": {"type": "string"},
+                        "type": "array",
+                        "title": "Location",
                     },
-                    "msg": {"title": "Message", "type": "string"},
-                    "type": {"title": "Error Type", "type": "string"},
+                    "msg": {"type": "string", "title": "Message"},
+                    "type": {"type": "string", "title": "Error Type"},
                 },
+                "type": "object",
+                "required": ["loc", "msg", "type"],
+                "title": "ValidationError",
             },
         }
     },
@@ -96,14 +95,18 @@ openapi_schema = {
 multiple_errors = {
     "detail": [
         {
+            "type": "int_parsing",
             "loc": ["query", "q", 0],
-            "msg": "value is not a valid integer",
-            "type": "type_error.integer",
+            "msg": "Input should be a valid integer, unable to parse string as an integer",
+            "input": "five",
+            "url": "https://errors.pydantic.dev/2.5/v/int_parsing",
         },
         {
+            "type": "int_parsing",
             "loc": ["query", "q", 1],
-            "msg": "value is not a valid integer",
-            "type": "type_error.integer",
+            "msg": "Input should be a valid integer, unable to parse string as an integer",
+            "input": "six",
+            "url": "https://errors.pydantic.dev/2.5/v/int_parsing",
         },
     ]
 }
@@ -123,4 +126,5 @@ def test_multi_query():
 def test_multi_query_incorrect():
     response = client.get("/items/?q=five&q=six")
     assert response.status_code == 422, response.text
-    assert response.json() == multiple_errors
+    json_result = response.json()
+    assert json_result == multiple_errors

@@ -1,8 +1,10 @@
 import typing as t
 
 from ellar.common.compatible import AttributeDict
+from ellar.common.pydantic.decorator import pydantic_serializable
 
 
+@pydantic_serializable(lambda self: self.__dict__)
 class Identity(AttributeDict):
     """Represent the user's identity."""
 

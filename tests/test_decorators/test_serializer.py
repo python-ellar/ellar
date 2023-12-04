@@ -9,7 +9,6 @@ from ellar.reflect import reflect
     exclude_none=True,
     by_alias=False,
     exclude={"exclude1", "exclude2"},
-    skip_defaults=None,
     exclude_unset=True,
     exclude_defaults=True,
 )
@@ -32,8 +31,6 @@ def test_serializer_filter_decorator_creates_serializer_filter():
 
     for exclude_item in ["exclude1", "exclude2"]:
         assert exclude_item in serializer_filter_data.exclude
-
-    assert serializer_filter_data.skip_defaults is None
 
     assert serializer_filter_data.exclude_unset is True
     assert serializer_filter_data.exclude_defaults is True

@@ -27,8 +27,8 @@ def test_request():
     client = test_module.get_test_client()
     response = client.get("/path-with-schema/1/2/20")
     assert response.json() == {
-        "to_datetime": "1970-01-01T00:00:02+00:00",
-        "from_datetime": "1970-01-01T00:00:01+00:00",
+        "to_datetime": "1970-01-01T00:00:02Z",
+        "from_datetime": "1970-01-01T00:00:01Z",
         "range": 20,
     }
 
@@ -37,10 +37,11 @@ def test_request():
     assert response.json() == {
         "detail": [
             {
+                "ctx": {"expected": "20, 50 or 200"},
+                "input": 100,
                 "loc": ["path", "range"],
-                "msg": "value is not a valid enumeration member; permitted: 20, 50, 200",
-                "type": "type_error.enum",
-                "ctx": {"enum_values": [20, 50, 200]},
+                "msg": "Input should be 20, 50 or 200",
+                "type": "enum",
             }
         ]
     }
@@ -54,31 +55,23 @@ def test_schema():
     assert params == [
         {
             "required": True,
-            "schema": {
-                "title": "To",
-                "type": "string",
-                "format": "date-time",
-                "include_in_schema": True,
-            },
+            "schema": {"type": "string", "title": "To"},
             "name": "to",
             "in": "path",
         },
         {
             "required": True,
-            "schema": {
-                "title": "From",
-                "type": "string",
-                "format": "date-time",
-                "include_in_schema": True,
-            },
+            "schema": {"type": "string", "title": "From"},
             "name": "from",
             "in": "path",
         },
         {
-            "required": True,
+            "required": False,
             "schema": {
                 "allOf": [{"$ref": "#/components/schemas/Range"}],
-                "include_in_schema": True,
+                "title": "Range",
+                "default": 20,
+                "repr": True,
             },
             "name": "range",
             "in": "path",

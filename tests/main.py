@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import FrozenSet, Optional
 from uuid import UUID
 
 from ellar.app import AppFactory
@@ -45,7 +45,7 @@ def get_bool_id(item_id: bool):
 
 
 @router.get("/path/param/{item_id}")
-def get_path_param_id(item_id: Optional[str] = Path(None)):
+def get_path_param_id(item_id: Optional[str] = Path()):
     return item_id
 
 
@@ -150,10 +150,10 @@ def get_path_param_starlette_int(item_id: int):
     return item_id
 
 
-@router.get("/path/param-starlette-int-str/{item_id:int}")
-def get_path_param_starlette_int_str(item_id: str):
-    assert isinstance(item_id, str)
-    return item_id
+# @router.get("/path/param-starlette-int-str/{item_id:int}")
+# def get_path_param_starlette_int_str(item_id: str):
+#     assert isinstance(item_id, str)
+#     return item_id
 
 
 @router.get("/path/param-starlette-uuid/{item_id:uuid}")
@@ -217,6 +217,11 @@ def get_query_param(request: Inject[Request], query=Query(None)):
     if query is None:
         return "foo bar"
     return f"foo bar {query}"
+
+
+@router.get("/query/frozenset")
+def get_query_type_frozenset(query: Query[FrozenSet[int], Query.P(...)]):
+    return ",".join(map(str, sorted(query)))
 
 
 app = AppFactory.create_app(

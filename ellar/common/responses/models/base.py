@@ -6,33 +6,12 @@ from ellar.common.constants import SERIALIZER_FILTER_KEY
 from ellar.common.exceptions import RequestValidationError
 from ellar.common.interfaces import IExecutionContext, IResponseModel
 from ellar.common.logger import request_logger
-from ellar.common.pydantic import ModelField, create_model_field, model_dump
-from ellar.common.serializer import (
-    BaseSerializer,
-    SerializerFilter,
-    default_serializer_filter,
-)
+from ellar.common.pydantic import ModelField, create_model_field
+from ellar.common.serializer import BaseSerializer, SerializerFilter
 from ellar.reflect import reflect
-from pydantic import BaseModel
 from starlette.responses import Response
 
 from .type_converter import ResponseTypeDefinitionConverter
-
-
-def serialize_if_pydantic_object(
-    obj: t.Any, serialize_filter: SerializerFilter
-) -> t.Any:
-    if isinstance(obj, BaseSerializer):
-        return obj.serialize()
-    elif isinstance(obj, BaseModel):
-        return model_dump(obj, **serialize_filter.dict())
-    elif isinstance(obj, list):
-        return [serialize_if_pydantic_object(item, serialize_filter) for item in obj]
-    elif isinstance(obj, dict):
-        return {
-            k: serialize_if_pydantic_object(v, serialize_filter) for k, v in obj.items()
-        }
-    return obj
 
 
 @dataclasses.dataclass
@@ -57,24 +36,27 @@ class ResponseModelField(ModelField):
             _errors = (
                 list(error) if isinstance(error, list) else [error]  # type:ignore[list-item]
             )
-            raise RequestValidationError(errors=_errors)
-        return values
+            return None, _errors
+        return values, []
 
     def prep_and_serialize(
         self, obj: t.Any, serializer_filter: t.Optional[SerializerFilter] = None
     ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
         request_logger.debug(f"Serializing Response Data - '{self.__class__.__name__}'")
         _serializer_filter = (
-            serializer_filter or obj._filter
+            serializer_filter.dict()
+            if serializer_filter
+            else obj._filter.dict()
             if isinstance(obj, BaseSerializer)
-            else default_serializer_filter
+            else {}
         )
-        try:
-            # new_obj = serialize_if_pydantic_object(obj, _serializer_filter)
-            # values = self.validate_object(obj=new_obj)
-            return self.serialize(obj, **_serializer_filter.dict())
-        except RequestValidationError as req_val_ex2:
-            raise req_val_ex2
+
+        values, errors = self.validate_object(obj)
+
+        if errors:
+            raise RequestValidationError(errors)
+
+        return self.serialize(values, **_serializer_filter)
 
     def __hash__(self) -> int:
         # Each ModelField is unique for our purposes, to allow making a dict from

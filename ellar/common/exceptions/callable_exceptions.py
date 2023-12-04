@@ -66,7 +66,7 @@ class CallableExceptionHandler(IExceptionHandler):
     ) -> t.Union[Response, t.Any]:
         args = tuple(list(self.func_args) + [ctx, exc])
         if self.is_async:
-            return await self.callable_exception_handler(*args)  # type:ignore
+            return await self.callable_exception_handler(*args)  # type:ignore[misc]
         return await run_in_threadpool(self.callable_exception_handler, *args)
 
     def __eq__(self, other: t.Any) -> bool:

@@ -16,10 +16,13 @@ from ellar.common.pydantic import (
     ErrorWrapper,
     is_sequence_field,
     lenient_issubclass,
-    sequence_annotation_to_type,
 )
 from ellar.common.pydantic import (
     types as pydantic_types,
+)
+from ellar.common.pydantic.utils import (
+    is_bytes_sequence_annotation,
+    serialize_sequence_value,
 )
 from starlette.datastructures import (
     FormData,
@@ -163,7 +166,9 @@ class BodyParameterResolver(WsBodyParameterResolver):
             return body_bytes
         except json.JSONDecodeError as e:
             request_logger.error("JSONDecodeError: ", exc_info=True)
-            raise RequestValidationError([ErrorWrapper(e, ("body", e.pos))]) from e
+            raise RequestValidationError(
+                [ErrorWrapper(exc=e, loc=("body", e.pos))]
+            ) from e
         except Exception as e:
             request_logger.error("Unable to parse the body: ", exc_info=e)
             raise HTTPException(
@@ -245,18 +250,18 @@ class FormParameterResolver(BodyParameterResolver):
 
 
 class FileParameterResolver(FormParameterResolver):
+    def __init__(self, *args: t.Any, **kwargs: t.Any):
+        super().__init__(*args, **kwargs)
+        self._is_byte = lenient_issubclass(self.model_field.type_, bytes)
+        self._is_list = is_sequence_field(self.model_field)
+        self._is_byte_list = is_bytes_sequence_annotation(self.model_field.type_)
+
     async def process_and_validate(
         self, *, values: t.Dict, value: t.Any, loc: t.Tuple
     ) -> t.Tuple:
-        if lenient_issubclass(self.model_field.type_, bytes) and isinstance(
-            value, StarletteUploadFile
-        ):
+        if self._is_byte and isinstance(value, StarletteUploadFile):
             value = await value.read()
-        elif (
-            is_sequence_field(self.model_field)
-            and lenient_issubclass(self.model_field.type_, bytes)
-            and isinstance(value, sequence_types)
-        ):
+        elif self._is_list and self._is_byte_list and isinstance(value, sequence_types):
             results: t.List[t.Union[bytes, str]] = []
 
             async def process_fn(
@@ -268,7 +273,7 @@ class FileParameterResolver(FormParameterResolver):
             async with anyio.create_task_group() as tg:
                 for sub_value in value:
                     tg.start_soon(process_fn, sub_value.read)
-            value = sequence_annotation_to_type[self.model_field.type_](results)
+            value = serialize_sequence_value(field=self.model_field, value=results)
 
         v_, errors_ = self.model_field.validate(value, values, loc=loc)
         values[self.model_field.name] = v_

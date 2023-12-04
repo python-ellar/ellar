@@ -87,24 +87,12 @@ def test_invalid_handler_raise_exception():
             EXCEPTION_HANDLERS=[InvalidExceptionHandler, OverrideAPIExceptionHandler()]
         )
 
-    assert ex.value.errors() == [
-        {
-            "loc": ("EXCEPTION_HANDLERS", 0),
-            "msg": "Expected IExceptionHandler object, received: <class 'type'>",
-            "type": "value_error",
-        }
-    ]
+    assert "Expected IExceptionHandler object," in ex.value.errors()[0]["msg"]
 
     with pytest.raises(ValidationError) as ex:
         Config(EXCEPTION_HANDLERS=[InvalidExceptionHandler()])
 
-    assert ex.value.errors() == [
-        {
-            "loc": ("EXCEPTION_HANDLERS", 0),
-            "msg": "Expected IExceptionHandler object, received: <class 'tests.test_exceptions.test_custom_exceptions.InvalidExceptionHandler'>",
-            "type": "value_error",
-        }
-    ]
+    assert "Expected IExceptionHandler object, received:" in ex.value.errors()[0]["msg"]
 
 
 def test_invalid_exception_handler_setup_raise_exception():

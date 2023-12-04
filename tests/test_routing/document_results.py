@@ -1,5 +1,5 @@
 FORM_OPENAPI_DOC = {
-    "openapi": "3.0.2",
+    "openapi": "3.1.0",
     "info": {"title": "Ellar API Docs", "version": "1.0.0"},
     "paths": {
         "/": {
@@ -10,13 +10,7 @@ FORM_OPENAPI_DOC = {
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "title": "Body",
-                                "allOf": [
-                                    {
-                                        "$ref": "#/components/schemas/body_form_upload_single_case_1__post"
-                                    }
-                                ],
-                                "include_in_schema": True,
+                                "$ref": "#/components/schemas/body_form_upload_single_case_1__post"
                             }
                         }
                     },
@@ -27,7 +21,7 @@ FORM_OPENAPI_DOC = {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {"title": "Response Model", "type": "object"}
+                                "schema": {"type": "object", "title": "Response Model"}
                             }
                         },
                     },
@@ -52,13 +46,7 @@ FORM_OPENAPI_DOC = {
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "title": "Body",
-                                "allOf": [
-                                    {
-                                        "$ref": "#/components/schemas/body_form_params_schema_spreading_form_with_schema_spreading_post"
-                                    }
-                                ],
-                                "include_in_schema": True,
+                                "$ref": "#/components/schemas/body_form_params_schema_spreading_form_with_schema_spreading_post"
                             }
                         }
                     },
@@ -69,7 +57,7 @@ FORM_OPENAPI_DOC = {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {"title": "Response Model", "type": "object"}
+                                "schema": {"type": "object", "title": "Response Model"}
                             }
                         },
                     },
@@ -94,13 +82,7 @@ FORM_OPENAPI_DOC = {
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "title": "Body",
-                                "allOf": [
-                                    {
-                                        "$ref": "#/components/schemas/body_form_upload_single_case_2_mixed_post"
-                                    }
-                                ],
-                                "include_in_schema": True,
+                                "$ref": "#/components/schemas/body_form_upload_single_case_2_mixed_post"
                             }
                         }
                     },
@@ -111,7 +93,7 @@ FORM_OPENAPI_DOC = {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {"title": "Response Model", "type": "object"}
+                                "schema": {"type": "object", "title": "Response Model"}
                             }
                         },
                     },
@@ -136,13 +118,12 @@ FORM_OPENAPI_DOC = {
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "title": "Body",
                                 "allOf": [
                                     {
                                         "$ref": "#/components/schemas/body_form_upload_multiple_case_2_mixed_optional_post"
                                     }
                                 ],
-                                "include_in_schema": True,
+                                "title": "Body",
                             }
                         }
                     }
@@ -152,7 +133,7 @@ FORM_OPENAPI_DOC = {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {"title": "Response Model", "type": "object"}
+                                "schema": {"type": "object", "title": "Response Model"}
                             }
                         },
                     },
@@ -177,13 +158,7 @@ FORM_OPENAPI_DOC = {
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "title": "Body",
-                                "allOf": [
-                                    {
-                                        "$ref": "#/components/schemas/body_form_upload_multiple_case_1_multiple_post"
-                                    }
-                                ],
-                                "include_in_schema": True,
+                                "$ref": "#/components/schemas/body_form_upload_multiple_case_1_multiple_post"
                             }
                         }
                     },
@@ -194,7 +169,7 @@ FORM_OPENAPI_DOC = {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {"title": "Response Model", "type": "object"}
+                                "schema": {"type": "object", "title": "Response Model"}
                             }
                         },
                     },
@@ -215,140 +190,107 @@ FORM_OPENAPI_DOC = {
     "components": {
         "schemas": {
             "HTTPValidationError": {
-                "title": "HTTPValidationError",
-                "required": ["detail"],
-                "type": "object",
                 "properties": {
                     "detail": {
-                        "title": "Details",
-                        "type": "array",
                         "items": {"$ref": "#/components/schemas/ValidationError"},
+                        "type": "array",
+                        "title": "Details",
                     }
                 },
-            },
-            "Range": {
-                "title": "Range",
-                "enum": [20, 50, 200],
-                "type": "integer",
-                "description": "An enumeration.",
-            },
-            "ValidationError": {
-                "title": "ValidationError",
-                "required": ["loc", "msg", "type"],
                 "type": "object",
+                "required": ["detail"],
+                "title": "HTTPValidationError",
+            },
+            "Range": {"type": "integer", "enum": [20, 50, 200], "title": "Range"},
+            "ValidationError": {
                 "properties": {
                     "loc": {
-                        "title": "Location",
-                        "type": "array",
                         "items": {"type": "string"},
+                        "type": "array",
+                        "title": "Location",
                     },
-                    "msg": {"title": "Message", "type": "string"},
-                    "type": {"title": "Error Type", "type": "string"},
+                    "msg": {"type": "string", "title": "Message"},
+                    "type": {"type": "string", "title": "Error Type"},
                 },
+                "type": "object",
+                "required": ["loc", "msg", "type"],
+                "title": "ValidationError",
             },
             "body_form_params_schema_spreading_form_with_schema_spreading_post": {
-                # form inputs are combined into one just like json body fields
-                "title": "body_form_params_schema_spreading_form_with_schema_spreading_post",
-                "required": ["momentOfTruth"],
-                "type": "object",
                 "properties": {
                     "momentOfTruth": {
-                        "title": "Momentoftruth",
                         "type": "string",
                         "format": "binary",
-                        "include_in_schema": True,
+                        "title": "Momentoftruth",
                     },
                     "to": {
-                        "title": "To",
                         "type": "string",
                         "format": "date-time",
-                        "include_in_schema": True,
+                        "title": "To",
+                        "repr": True,
                     },
                     "from": {
-                        "title": "From",
                         "type": "string",
                         "format": "date-time",
-                        "include_in_schema": True,
+                        "title": "From",
+                        "repr": True,
                     },
                     "range": {
                         "allOf": [{"$ref": "#/components/schemas/Range"}],
                         "default": 20,
-                        "include_in_schema": True,
+                        "repr": True,
                     },
                 },
+                "type": "object",
+                "required": ["momentOfTruth", "to", "from"],
+                "title": "body_form_params_schema_spreading_form_with_schema_spreading_post",
             },
             "body_form_upload_multiple_case_1_multiple_post": {
-                "title": "body_form_upload_multiple_case_1_multiple_post",
-                "required": ["test1"],
-                "type": "object",
                 "properties": {
                     "test1": {
-                        "title": "Test1",
-                        "type": "array",
                         "items": {
                             "anyOf": [
                                 {"type": "string", "format": "binary"},
                                 {"type": "string"},
                             ]
                         },
-                        "include_in_schema": True,
+                        "type": "array",
+                        "title": "Test1",
                     }
                 },
+                "type": "object",
+                "required": ["test1"],
+                "title": "body_form_upload_multiple_case_1_multiple_post",
             },
             "body_form_upload_multiple_case_2_mixed_optional_post": {
-                "title": "body_form_upload_multiple_case_2_mixed_optional_post",
-                "type": "object",
                 "properties": {
-                    "file": {
-                        "title": "File",
-                        "type": "string",
-                        "format": "binary",
-                        "include_in_schema": True,
-                    },
-                    "field0": {
-                        "title": "Field0",
-                        "type": "string",
-                        "default": "",
-                        "include_in_schema": True,
-                    },
-                    "field1": {
-                        "title": "Field1",
-                        "type": "string",
-                        "include_in_schema": True,
-                    },
+                    "file": {"type": "string", "format": "binary", "title": "File"},
+                    "field0": {"type": "string", "title": "Field0", "default": ""},
+                    "field1": {"type": "string", "title": "Field1"},
                 },
+                "type": "object",
+                "title": "body_form_upload_multiple_case_2_mixed_optional_post",
             },
             "body_form_upload_single_case_1__post": {
-                "title": "body_form_upload_single_case_1__post",
-                "required": ["test"],
-                "type": "object",
                 "properties": {
-                    "test": {
-                        "title": "Test",
-                        "type": "string",
-                        "format": "binary",
-                        "include_in_schema": True,
-                    }
+                    "test": {"type": "string", "format": "binary", "title": "Test"}
                 },
+                "type": "object",
+                "required": ["test"],
+                "title": "body_form_upload_single_case_1__post",
             },
             "body_form_upload_single_case_2_mixed_post": {
-                "title": "body_form_upload_single_case_2_mixed_post",
-                "required": ["test_alias", "test2"],
-                "type": "object",
                 "properties": {
                     "test_alias": {
+                        "type": "string",
+                        "format": "binary",
                         "title": "Test Alias",
-                        "type": "string",
-                        "format": "binary",
-                        "include_in_schema": True,
                     },
-                    "test2": {
-                        "title": "Test2",
-                        "type": "string",
-                        "format": "binary",
-                        "include_in_schema": True,
-                    },
+                    "test2": {"type": "string", "format": "binary", "title": "Test2"},
                 },
+                "type": "object",
+                "required": ["test_alias", "test2"],
+                "title": "body_form_upload_single_case_2_mixed_post",
             },
         }
     },

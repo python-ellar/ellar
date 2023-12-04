@@ -1,7 +1,7 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from ellar.app import AppFactory
-from ellar.common import ModuleRouter, serializer_filter
+from ellar.common import ModuleRouter, Serializer, serializer_filter
 from pydantic import BaseModel, Field
 
 mr = ModuleRouter("")
@@ -13,9 +13,15 @@ class Item(BaseModel):
     owner_ids: Optional[List[int]] = None
 
 
+class ItemSerializer(Serializer):
+    name: str = Field(..., alias="aliased_name")
+    price: Optional[float] = None
+    owner_ids: Optional[List[int]] = None
+
+
 @mr.get("/items/valid")
 def get_valid():
-    return Item(aliased_name="valid", price=1.0)
+    return ItemSerializer(aliased_name="valid", price=1.0)
 
 
 @mr.get("/items/coerce")
@@ -23,21 +29,21 @@ def get_coerce():
     return Item(aliased_name="coerce", price="1.0")
 
 
-@mr.get("/items/validlist")
+@mr.get("/items/validlist", response=List[Union[ItemSerializer, Item]])
 def get_validlist():
     return [
         Item(aliased_name="foo"),
         Item(aliased_name="bar", price=1.0),
-        Item(aliased_name="baz", price=2.0, owner_ids=[1, 2, 3]),
+        ItemSerializer(aliased_name="baz", price=2.0, owner_ids=[1, 2, 3]),
     ]
 
 
-@mr.get("/items/validdict", response=Dict[str, Item])
+@mr.get("/items/validdict", response=Dict[str, Union[ItemSerializer, Item]])
 def get_validdict():
     return {
-        "k1": Item(aliased_name="foo"),
+        "k1": ItemSerializer(aliased_name="foo"),
         "k2": Item(aliased_name="bar", price=1.0),
-        "k3": Item(aliased_name="baz", price=2.0, owner_ids=[1, 2, 3]),
+        "k3": ItemSerializer(aliased_name="baz", price=2.0, owner_ids=[1, 2, 3]),
     }
 
 
@@ -50,7 +56,7 @@ def get_valid_exclude_unset():
 @mr.get("/items/coerce-exclude-unset")
 @serializer_filter(exclude_unset=True)
 def get_coerce_exclude_unset():
-    return Item(aliased_name="coerce", price="1.0")
+    return ItemSerializer(aliased_name="coerce", price="1.0")
 
 
 @mr.get("/items/validlist-exclude-unset")
@@ -59,7 +65,7 @@ def get_validlist_exclude_unset():
     return [
         Item(aliased_name="foo"),
         Item(aliased_name="bar", price=1.0),
-        Item(aliased_name="baz", price=2.0, owner_ids=[1, 2, 3]),
+        ItemSerializer(aliased_name="baz", price=2.0, owner_ids=[1, 2, 3]),
     ]
 
 
@@ -67,9 +73,9 @@ def get_validlist_exclude_unset():
 @serializer_filter(exclude_unset=True)
 def get_validdict_exclude_unset():
     return {
-        "k1": Item(aliased_name="foo"),
+        "k1": ItemSerializer(aliased_name="foo"),
         "k2": Item(aliased_name="bar", price=1.0),
-        "k3": Item(aliased_name="baz", price=2.0, owner_ids=[1, 2, 3]),
+        "k3": ItemSerializer(aliased_name="baz", price=2.0, owner_ids=[1, 2, 3]),
     }
 
 

@@ -38,7 +38,7 @@ class RouteParameters(Serializer):
             t.Type[BaseSerializer],
             t.Any,
         ]
-    ]
+    ] = None
 
     @field_validator("methods")
     def validate_methods(cls, value: t.Any) -> t.List[str]:
@@ -57,14 +57,7 @@ class RouteParameters(Serializer):
 
     @model_validator(mode="before")
     def validate_root(cls, values: t.Any) -> t.Any:
-        if "response" not in values:  # pragma: no cover
-            raise ValueError(
-                "Expected "
-                "IResponseModel | Dict[int, Any | Type[BaseModel] | "
-                "Type[BaseSerializer] | IResponseModel]  | Type[BaseModel] | Type[BaseSerializer]"
-            )
-
-        response = values["response"]
+        response = values.get("response")
         if not response:
             values["response"] = {200: create_response_model(EmptyAPIResponseModel)}
         elif not isinstance(response, dict):

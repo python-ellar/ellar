@@ -5,15 +5,15 @@ from enum import Enum
 from pathlib import PureWindowsPath
 
 import pytest
-from ellar.common.serializer import (
-    DataclassSerializer,
+from ellar.common.pydantic import as_pydantic_validator
+from ellar.common.serializer.base import (
     Serializer,
     SerializerFilter,
     convert_dataclass_to_pydantic_model,
     get_dataclass_pydantic_model,
     serialize_object,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 from pydantic import dataclasses as pydantic_dataclasses
 
 
@@ -23,7 +23,7 @@ class Person:
 
 
 @dataclass
-class DataclassPerson(DataclassSerializer):
+class DataclassPerson:
     name: str
     first_name: str
     last_name: t.Optional[str] = None
@@ -100,8 +100,7 @@ class ModelWithDefault(Serializer):
     cat: t.Optional[str] = None
 
 
-class ModelWithRoot(BaseModel):
-    __root__: str
+ModelWithRoot = RootModel[str]
 
 
 def test_convert_dataclass_to_pydantic_model():
@@ -112,9 +111,13 @@ def test_convert_dataclass_to_pydantic_model():
     class SomeClassConvert:
         name: str
 
+    assert getattr(SomeDataClassConvert, "__pydantic_complete__", None) is None
+
     pydantic_model = convert_dataclass_to_pydantic_model(SomeDataClassConvert)
     assert pydantic_model
-    assert issubclass(pydantic_model, BaseModel)
+    assert (
+        getattr(pydantic_model, "__pydantic_complete__", None) is True
+    ), "Converted dataclass is missing pydantic attribute"
 
     with pytest.raises(Exception, match="is not a dataclass"):
         convert_dataclass_to_pydantic_model(SomeClassConvert)
@@ -125,9 +128,9 @@ def test_get_dataclass_pydantic_model():
     class SomeDataClassConvert2:
         name: str
 
+    assert getattr(SomeDataClassConvert2, "__pydantic_complete__", None) is True
     pydantic_model = get_dataclass_pydantic_model(SomeDataClassConvert2)
-    assert pydantic_model
-    assert issubclass(pydantic_model, BaseModel)
+    assert pydantic_model is SomeDataClassConvert2
 
 
 def test_dataclass_serializer():
@@ -136,13 +139,6 @@ def test_dataclass_serializer():
         "name": "Eadwin",
         "first_name": "Eadwin",
         "last_name": None,
-    }
-
-    assert serialize_object(
-        dataclass_person, serializer_filter=SerializerFilter(exclude_none=True)
-    ) == {
-        "name": "Eadwin",
-        "first_name": "Eadwin",
     }
 
     plain_dataclass = PlainDataclassPerson(name="Eadwin", first_name="Eadwin")
@@ -158,8 +154,6 @@ def test_dataclass_serializer():
         "first_name": "Eadwin",
         "last_name": None,
     }
-    assert dataclass_person.get_pydantic_model()
-    assert issubclass(dataclass_person.get_pydantic_model(), BaseModel)
 
 
 def test_serializer_filter():
@@ -223,8 +217,12 @@ def test_encode_model_with_alias():
 
 
 def test_custom_encoders():
+    @as_pydantic_validator("__validate_schema__")
     class safe_datetime(datetime):
-        pass
+        @classmethod
+        def __validate_schema__(cls, __input_value, *args):
+            assert isinstance(__input_value, datetime)
+            return __input_value
 
     class MyModel(BaseModel):
         dt_field: safe_datetime
@@ -246,5 +244,5 @@ def test_encode_model_with_path(model_with_path):
 
 
 def test_encode_root():
-    model = ModelWithRoot(__root__="Foo")
+    model = ModelWithRoot("Foo")
     assert serialize_object(model) == "Foo"

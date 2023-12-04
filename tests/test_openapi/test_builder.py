@@ -24,7 +24,7 @@ def test_builder_defaults():
     assert builder._build["info"]["title"] == "Ellar API Docs"
     assert builder._build["info"]["version"] == "1.0.0"
     assert builder._build["tags"] == []
-    assert builder._build["openapi"] == "3.0.2"
+    assert builder._build["openapi"] == "3.1.0"
 
 
 def test_set_openapi_version_works():
@@ -205,7 +205,7 @@ def test_builder_build_document_has_correct_schema():
     assert "ValidationError" in scheme_dict["components"]["schemas"]
 
     assert scheme_dict == {
-        "openapi": "3.0.2",
+        "openapi": "3.1.0",
         "info": {"title": "Ellar API Docs", "version": "1.0.0"},
         "paths": {
             "/cat/create": {
@@ -217,9 +217,9 @@ def test_builder_build_document_has_correct_schema():
                             "description": "Successful Response",
                             "content": {
                                 "application/json": {
-                                    "schema_": {
-                                        "title": "Response Model",
+                                    "schema": {
                                         "type": "object",
+                                        "title": "Response Model",
                                     }
                                 }
                             },
@@ -234,13 +234,9 @@ def test_builder_build_document_has_correct_schema():
                     "parameters": [
                         {
                             "required": True,
-                            "schema_": {
-                                "title": "Cat Id",
-                                "type": "integer",
-                                "include_in_schema": True,
-                            },
+                            "schema": {"type": "integer", "title": "Cat Id"},
                             "name": "cat_id",
-                            "in_": "path",
+                            "in": "path",
                         }
                     ],
                     "responses": {
@@ -248,9 +244,9 @@ def test_builder_build_document_has_correct_schema():
                             "description": "Successful Response",
                             "content": {
                                 "application/json": {
-                                    "schema_": {
-                                        "title": "Response Model",
+                                    "schema": {
                                         "type": "object",
+                                        "title": "Response Model",
                                     }
                                 }
                             },
@@ -259,8 +255,8 @@ def test_builder_build_document_has_correct_schema():
                             "description": "Validation Error",
                             "content": {
                                 "application/json": {
-                                    "schema_": {
-                                        "ref": "#/components/schemas/HTTPValidationError"
+                                    "schema": {
+                                        "$ref": "#/components/schemas/HTTPValidationError"
                                     }
                                 }
                             },
@@ -272,30 +268,30 @@ def test_builder_build_document_has_correct_schema():
         "components": {
             "schemas": {
                 "HTTPValidationError": {
-                    "title": "HTTPValidationError",
-                    "required": ["detail"],
-                    "type": "object",
                     "properties": {
                         "detail": {
-                            "title": "Details",
+                            "items": {"$ref": "#/components/schemas/ValidationError"},
                             "type": "array",
-                            "items": {"ref": "#/components/schemas/ValidationError"},
+                            "title": "Details",
                         }
                     },
+                    "type": "object",
+                    "required": ["detail"],
+                    "title": "HTTPValidationError",
                 },
                 "ValidationError": {
-                    "title": "ValidationError",
-                    "required": ["loc", "msg", "type"],
-                    "type": "object",
                     "properties": {
                         "loc": {
-                            "title": "Location",
-                            "type": "array",
                             "items": {"type": "string"},
+                            "type": "array",
+                            "title": "Location",
                         },
-                        "msg": {"title": "Message", "type": "string"},
-                        "type": {"title": "Error Type", "type": "string"},
+                        "msg": {"type": "string", "title": "Message"},
+                        "type": {"type": "string", "title": "Error Type"},
                     },
+                    "type": "object",
+                    "required": ["loc", "msg", "type"],
+                    "title": "ValidationError",
                 },
             }
         },

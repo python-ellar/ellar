@@ -83,15 +83,11 @@ item_openapi_schema = {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "allOf": [
-                                    {
-                                        "$ref": "#/components/schemas/body_alias_qty_items_alias_post"
-                                    }
-                                ],
-                                "title": "Body",
+                                "$ref": "#/components/schemas/body_alias_qty_items_alias_post"
                             }
                         }
-                    }
+                    },
+                    "required": True,
                 },
                 "responses": {
                     "200": {
@@ -200,10 +196,9 @@ item_openapi_schema = {
                 "title": "ValidationError",
             },
             "body_alias_qty_items_alias_post": {
-                "properties": {
-                    "qty": {"type": "integer", "title": "Qty", "default": 12}
-                },
+                "properties": {"aliasQty": {"type": "integer", "title": "Aliasqty"}},
                 "type": "object",
+                "required": ["aliasQty"],
                 "title": "body_alias_qty_items_alias_post",
             },
             "body_embed_qty_items_embed_post": {

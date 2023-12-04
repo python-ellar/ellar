@@ -35,8 +35,8 @@ def test_request():
     client = test_module.get_test_client()
     response = client.post("/form-schema", data={"from": "1", "to": "2", "range": "20"})
     assert response.json() == {
-        "to_datetime": "1970-01-01T00:00:02+00:00",
-        "from_datetime": "1970-01-01T00:00:01+00:00",
+        "to_datetime": "1970-01-01T00:00:02Z",
+        "from_datetime": "1970-01-01T00:00:01Z",
         "range": 20,
     }
 
@@ -115,18 +115,18 @@ def test_schema():
                 "type": "string",
                 "format": "date-time",
                 "title": "To",
-                "allow_mutation": True,
+                "repr": True,
             },
             "from": {
                 "type": "string",
                 "format": "date-time",
                 "title": "From",
-                "allow_mutation": True,
+                "repr": True,
             },
             "range": {
                 "allOf": [{"$ref": "#/components/schemas/Range"}],
                 "default": 20,
-                "allow_mutation": True,
+                "repr": True,
             },
         },
         "type": "object",

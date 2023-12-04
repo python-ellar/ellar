@@ -1,7 +1,6 @@
 from ellar.common import Controller, ModuleRouter, get, serialize_object
 from ellar.openapi import ApiTags, OpenAPIDocumentBuilder
 from ellar.testing import Test
-from pydantic import AnyUrl
 
 another_router = ModuleRouter("/prefix/another", name="arouter")
 
@@ -65,13 +64,7 @@ def test_controller_with_api_tags():
             "description": "Some description",
             "externalDocs": {
                 "description": "external",
-                "url": AnyUrl(
-                    "https://example.com",
-                    scheme="https",
-                    host="example.com",
-                    tld="com",
-                    host_type="domain",
-                ),
+                "url": "https://example.com/",
             },
             "name": "dec",
         }

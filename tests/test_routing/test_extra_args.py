@@ -76,7 +76,7 @@ def query_params_extra(
 app.router.append(query_params_extra)
 
 openapi_schema = {
-    "openapi": "3.0.2",
+    "openapi": "3.1.0",
     "info": {"title": "Ellar API Docs", "version": "1.0.0"},
     "paths": {
         "/test": {
@@ -84,23 +84,23 @@ openapi_schema = {
                 "operationId": "query_params_extra_test_get",
                 "parameters": [
                     {
-                        "required": False,
+                        "required": True,
                         "schema": {
-                            "title": "To",
                             "type": "string",
                             "format": "date-time",
-                            "include_in_schema": True,
+                            "title": "To",
+                            "repr": True,
                         },
                         "name": "to",
                         "in": "query",
                     },
                     {
-                        "required": False,
+                        "required": True,
                         "schema": {
-                            "title": "From",
                             "type": "string",
                             "format": "date-time",
-                            "include_in_schema": True,
+                            "title": "From",
+                            "repr": True,
                         },
                         "name": "from",
                         "in": "query",
@@ -109,29 +109,22 @@ openapi_schema = {
                         "required": False,
                         "schema": {
                             "allOf": [{"$ref": "#/components/schemas/Range"}],
+                            "title": "Range",
                             "default": 20,
-                            "include_in_schema": True,
+                            "repr": True,
                         },
                         "name": "range",
                         "in": "query",
                     },
                     {
                         "required": True,
-                        "schema": {
-                            "title": "Query1",
-                            "type": "string",
-                            "include_in_schema": True,
-                        },
+                        "schema": {"type": "string", "title": "Query1"},
                         "name": "query1",
                         "in": "query",
                     },
                     {
                         "required": True,
-                        "schema": {
-                            "title": "Query2",
-                            "type": "string",
-                            "include_in_schema": True,
-                        },
+                        "schema": {"type": "string", "title": "Query2"},
                         "name": "query2",
                         "in": "query",
                     },
@@ -141,7 +134,7 @@ openapi_schema = {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {"title": "Response Model", "type": "object"}
+                                "schema": {"type": "object", "title": "Response Model"}
                             }
                         },
                     },
@@ -162,36 +155,31 @@ openapi_schema = {
     "components": {
         "schemas": {
             "HTTPValidationError": {
-                "title": "HTTPValidationError",
-                "required": ["detail"],
-                "type": "object",
                 "properties": {
                     "detail": {
-                        "title": "Details",
-                        "type": "array",
                         "items": {"$ref": "#/components/schemas/ValidationError"},
+                        "type": "array",
+                        "title": "Details",
                     }
                 },
-            },
-            "Range": {
-                "title": "Range",
-                "enum": [20, 50, 200],
-                "type": "integer",
-                "description": "An enumeration.",
-            },
-            "ValidationError": {
-                "title": "ValidationError",
-                "required": ["loc", "msg", "type"],
                 "type": "object",
+                "required": ["detail"],
+                "title": "HTTPValidationError",
+            },
+            "Range": {"type": "integer", "enum": [20, 50, 200], "title": "Range"},
+            "ValidationError": {
                 "properties": {
                     "loc": {
-                        "title": "Location",
-                        "type": "array",
                         "items": {"type": "string"},
+                        "type": "array",
+                        "title": "Location",
                     },
-                    "msg": {"title": "Message", "type": "string"},
-                    "type": {"title": "Error Type", "type": "string"},
+                    "msg": {"type": "string", "title": "Message"},
+                    "type": {"type": "string", "title": "Error Type"},
                 },
+                "type": "object",
+                "required": ["loc", "msg", "type"],
+                "title": "ValidationError",
             },
         }
     },
@@ -210,8 +198,8 @@ def test_query_params_extra():
         "/test?from=1&to=2&range=20&foo=1&range2=50&query1=somequery1&query2=somequery2"
     )
     assert response.json() == {
-        "to_datetime": "1970-01-01T00:00:02+00:00",
-        "from_datetime": "1970-01-01T00:00:01+00:00",
+        "to_datetime": "1970-01-01T00:00:02Z",
+        "from_datetime": "1970-01-01T00:00:01Z",
         "range": 20,
         "query1": "somequery1",
         "query2": "somequery2",

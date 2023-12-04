@@ -3,13 +3,13 @@ import typing as t
 from ellar.auth.guards import GuardAPIKeyCookie
 from ellar.common import Body, ModuleRouter, Query
 from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
+from ellar.common.pydantic import GenerateJsonSchema, get_definitions
 from ellar.common.responses.models import ResponseModel, ResponseModelField
 from ellar.core.connection import HTTPConnection
 from ellar.core.routing import ModuleRouterFactory
 from ellar.openapi import OpenAPIRouteDocumentation, openapi_info
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 from ellar.reflect import reflect
-from pydantic.schema import get_flat_models_from_fields, get_model_name_map
 
 from ..schema import BlogObjectDTO, CreateCarSchema, Filter, NoteSchemaDC
 
@@ -114,34 +114,50 @@ def test_open_api_route_get_openapi_operation_parameters_works_for_empty_model_n
     )
     openapi = reflect.get_metadata(OPENAPI_OPERATION_KEY, get_car_by_id) or {}
     openapi_route_doc = OpenAPIRouteDocumentation(route=route_operation, **openapi)
-    result = openapi_route_doc.get_openapi_operation_parameters(model_name_map={})
+    field_mapping, _ = get_definitions(
+        fields=openapi_route_doc.get_route_models(),
+        schema_generator=GenerateJsonSchema(),
+    )
+    result = openapi_route_doc.get_openapi_operation_parameters(
+        field_mapping=field_mapping
+    )
     assert result == [
         {
             "name": "car_id",
             "in": "path",
             "required": True,
-            "schema": {"title": "Car Id", "include_in_schema": True, "type": "integer"},
+            "schema": {"type": "integer", "title": "Car Id"},
         },
         {
             "name": "to",
             "in": "query",
-            "required": False,
+            "required": True,
             "schema": {
-                "title": "To",
-                "include_in_schema": True,
                 "type": "string",
                 "format": "date-time",
+                "exclude": None,
+                "frozen": None,
+                "validate_default": None,
+                "repr": True,
+                "init_var": None,
+                "kw_only": None,
+                "title": "To",
             },
         },
         {
             "name": "from",
             "in": "query",
-            "required": False,
+            "required": True,
             "schema": {
-                "title": "From",
-                "include_in_schema": True,
                 "type": "string",
                 "format": "date-time",
+                "exclude": None,
+                "frozen": None,
+                "validate_default": None,
+                "repr": True,
+                "init_var": None,
+                "kw_only": None,
+                "title": "From",
             },
         },
     ]
@@ -150,12 +166,12 @@ def test_open_api_route_get_openapi_operation_parameters_works_for_empty_model_n
 def test_open_api_route_get_openapi_operation_parameters_works():
     route_operation = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, create_car)
     openapi_route_doc = OpenAPIRouteDocumentation(route=route_operation)
-    models = get_flat_models_from_fields(
-        openapi_route_doc.get_route_models(), known_models=set()
+    field_mapping, _ = get_definitions(
+        fields=openapi_route_doc.get_route_models(),
+        schema_generator=GenerateJsonSchema(),
     )
-    model_name_map = get_model_name_map(models)
     result = openapi_route_doc.get_openapi_operation_parameters(
-        model_name_map=model_name_map
+        field_mapping=field_mapping
     )
     assert result == []
 
@@ -163,22 +179,16 @@ def test_open_api_route_get_openapi_operation_parameters_works():
 def test_open_api_route_get_openapi_operation_request_body():
     route_operation = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, create_car)
     openapi_route_doc = OpenAPIRouteDocumentation(route=route_operation)
-    models = get_flat_models_from_fields(
-        openapi_route_doc.get_route_models(), known_models=set()
+    field_mapping, _ = get_definitions(
+        fields=openapi_route_doc.get_route_models(),
+        schema_generator=GenerateJsonSchema(),
     )
-    model_name_map = get_model_name_map(models)
     result = openapi_route_doc.get_openapi_operation_request_body(
-        model_name_map=model_name_map
+        field_mapping=field_mapping
     )
     assert result == {
         "content": {
-            "application/json": {
-                "schema": {
-                    "allOf": [{"$ref": "#/components/schemas/CreateCarSchema"}],
-                    "include_in_schema": True,
-                    "title": "Car",
-                }
-            }
+            "application/json": {"schema": {"$ref": "#/$defs/CreateCarSchema"}}
         },
         "required": True,
     }
@@ -187,13 +197,12 @@ def test_open_api_route_get_openapi_operation_request_body():
 def test_open_api_route_get_child_openapi_path():
     route_operation = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, create_car)
     openapi_route_doc = OpenAPIRouteDocumentation(route=route_operation)
-
-    models = get_flat_models_from_fields(
-        openapi_route_doc.get_route_models(), known_models=set()
+    field_mapping, _ = get_definitions(
+        fields=openapi_route_doc.get_route_models(),
+        schema_generator=GenerateJsonSchema(),
     )
-    model_name_map = get_model_name_map(models)
     result = openapi_route_doc.get_child_openapi_path(
-        model_name_map=model_name_map,
+        field_mapping=field_mapping,
     )
     assert isinstance(result, tuple)
     assert result[0] == {
@@ -203,21 +212,15 @@ def test_open_api_route_get_child_openapi_path():
             "requestBody": {
                 "required": True,
                 "content": {
-                    "application/json": {
-                        "schema": {
-                            "title": "Car",
-                            "include_in_schema": True,
-                            "allOf": [{"$ref": "#/components/schemas/CreateCarSchema"}],
-                        }
-                    }
+                    "application/json": {"schema": {"$ref": "#/$defs/CreateCarSchema"}}
                 },
             },
             "responses": {
-                201: {
+                "201": {
                     "description": "Successful Response",
                     "content": {
                         "application/json": {
-                            "schema": {"$ref": "#/components/schemas/CreateCarSchema"}
+                            "schema": {"$ref": "#/$defs/CreateCarSchema"}
                         }
                     },
                 },
@@ -239,16 +242,15 @@ def test_open_api_route_get_child_openapi_path():
 def test_open_api_route_get_openapi_path():
     route_operation = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, create_car)
     openapi_route_doc = OpenAPIRouteDocumentation(route=route_operation)
-
-    models = get_flat_models_from_fields(
-        openapi_route_doc.get_route_models(), known_models=set()
+    field_mapping, _ = get_definitions(
+        fields=openapi_route_doc.get_route_models(),
+        schema_generator=GenerateJsonSchema(),
     )
-    model_name_map = get_model_name_map(models)
     paths = {}
     security_schemes = {}
 
     openapi_route_doc.get_openapi_path(
-        model_name_map=model_name_map,
+        field_mapping=field_mapping,
         paths=paths,
         security_schemes=security_schemes,
         path_prefix=None,
@@ -263,24 +265,16 @@ def test_open_api_route_get_openapi_path():
                     "required": True,
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "title": "Car",
-                                "include_in_schema": True,
-                                "allOf": [
-                                    {"$ref": "#/components/schemas/CreateCarSchema"}
-                                ],
-                            }
+                            "schema": {"$ref": "#/$defs/CreateCarSchema"}
                         }
                     },
                 },
                 "responses": {
-                    201: {
+                    "201": {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/CreateCarSchema"
-                                }
+                                "schema": {"$ref": "#/$defs/CreateCarSchema"}
                             }
                         },
                     },
@@ -304,7 +298,7 @@ def test_open_api_route_get_openapi_path():
     security_schemes = {}
 
     openapi_route_doc.get_openapi_path(
-        model_name_map=model_name_map,
+        field_mapping=field_mapping,
         paths=paths,
         security_schemes=security_schemes,
         path_prefix="/some-prefix",
@@ -319,24 +313,16 @@ def test_open_api_route_get_openapi_path():
                     "required": True,
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "title": "Car",
-                                "include_in_schema": True,
-                                "allOf": [
-                                    {"$ref": "#/components/schemas/CreateCarSchema"}
-                                ],
-                            }
+                            "schema": {"$ref": "#/$defs/CreateCarSchema"}
                         }
                     },
                 },
                 "responses": {
-                    201: {
+                    "201": {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/CreateCarSchema"
-                                }
+                                "schema": {"$ref": "#/$defs/CreateCarSchema"}
                             }
                         },
                     },
@@ -361,16 +347,16 @@ def test_open_api_route_get_openapi_path_with_security():
     openapi_route_doc = OpenAPIRouteDocumentation(
         route=route_operation, guards=[CustomCookieAPIKey()]
     )
-
-    models = get_flat_models_from_fields(
-        openapi_route_doc.get_route_models(), known_models=set()
+    field_mapping, _ = get_definitions(
+        fields=openapi_route_doc.get_route_models(),
+        schema_generator=GenerateJsonSchema(),
     )
-    model_name_map = get_model_name_map(models)
+
     paths = {}
     security_schemes = {}
 
     openapi_route_doc.get_openapi_path(
-        model_name_map=model_name_map,
+        field_mapping=field_mapping,
         paths=paths,
         security_schemes=security_schemes,
         path_prefix=None,
@@ -395,25 +381,17 @@ def test_open_api_route_get_openapi_path_with_security():
                     "required": True,
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "title": "Car",
-                                "include_in_schema": True,
-                                "allOf": [
-                                    {"$ref": "#/components/schemas/CreateCarSchema"}
-                                ],
-                            }
+                            "schema": {"$ref": "#/$defs/CreateCarSchema"}
                         }
                     },
                 },
                 "security": [{"CustomCookieAPIKey": []}],
                 "responses": {
-                    201: {
+                    "201": {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/CreateCarSchema"
-                                }
+                                "schema": {"$ref": "#/$defs/CreateCarSchema"}
                             }
                         },
                     },
@@ -440,12 +418,12 @@ def test_open_api_route__get_openapi_path_object_works_for_routes_with_multiple_
     openapi_route_doc = OpenAPIRouteDocumentation(
         route=route_operation, guards=[CustomCookieAPIKey()]
     )
-
-    models = get_flat_models_from_fields(
-        openapi_route_doc.get_route_models(), known_models=set()
+    field_mapping, _ = get_definitions(
+        fields=openapi_route_doc.get_route_models(),
+        schema_generator=GenerateJsonSchema(),
     )
-    model_name_map = get_model_name_map(models)
-    result = openapi_route_doc._get_openapi_path_object(model_name_map=model_name_map)
+
+    result = openapi_route_doc._get_openapi_path_object(field_mapping=field_mapping)
     assert isinstance(result, tuple)
     assert result[0] == {
         "get": {
@@ -455,20 +433,20 @@ def test_open_api_route__get_openapi_path_object_works_for_routes_with_multiple_
                 "content": {
                     "application/json": {
                         "schema": {
+                            "allOf": [{"$ref": "#/$defs/CreateCarSchema"}],
+                            "default": None,
                             "title": "Car",
-                            "include_in_schema": True,
-                            "allOf": [{"$ref": "#/components/schemas/CreateCarSchema"}],
                         }
                     }
                 }
             },
             "security": [{"CustomCookieAPIKey": []}],
             "responses": {
-                200: {
+                "200": {
                     "description": "Successful Response",
                     "content": {
                         "application/json": {
-                            "schema": {"$ref": "#/components/schemas/CreateCarSchema"}
+                            "schema": {"$ref": "#/$defs/CreateCarSchema"}
                         }
                     },
                 },
@@ -491,20 +469,20 @@ def test_open_api_route__get_openapi_path_object_works_for_routes_with_multiple_
                 "content": {
                     "application/json": {
                         "schema": {
+                            "allOf": [{"$ref": "#/$defs/CreateCarSchema"}],
+                            "default": None,
                             "title": "Car",
-                            "include_in_schema": True,
-                            "allOf": [{"$ref": "#/components/schemas/CreateCarSchema"}],
                         }
                     }
                 }
             },
             "security": [{"CustomCookieAPIKey": []}],
             "responses": {
-                200: {
+                "200": {
                     "description": "Successful Response",
                     "content": {
                         "application/json": {
-                            "schema": {"$ref": "#/components/schemas/CreateCarSchema"}
+                            "schema": {"$ref": "#/$defs/CreateCarSchema"}
                         }
                     },
                 },

@@ -4,7 +4,7 @@ from ellar.common.constants import SERIALIZER_FILTER_KEY
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import request_logger
 from ellar.common.pydantic import as_pydantic_validator, create_model_field
-from ellar.common.serializer import SerializerFilter
+from ellar.common.serializer import SerializerFilter, serialize_object
 from ellar.reflect import reflect
 
 from ..response_types import JSONResponse, Response
@@ -13,14 +13,16 @@ from .base import ResponseModel, ResponseModelField
 
 @as_pydantic_validator(
     "__validate_input__",
-    schema={
-        "type": "object",
-    },
+    schema="__type_schema__",
 )
 class _AnySchema:
     @classmethod
     def __validate_input__(cls, __input_value: t.Any, _: t.Any) -> t.Any:
         return __input_value
+
+    @classmethod
+    def __type_schema__(cls, core_schema: t.Any, handler: t.Any) -> t.Any:
+        return {"type": "object"}
 
 
 DictModelField: ResponseModelField = t.cast(
@@ -75,14 +77,18 @@ class JSONResponseModel(ResponseModel):
 class EmptyAPIResponseModel(JSONResponseModel):
     model_field_or_schema = DictModelField
 
-    # def serialize(
-    #     self,
-    #     response_obj: t.Any,
-    #     serializer_filter: t.Optional[SerializerFilter] = None,
-    # ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
-    #     try:
-    #         # try a serialize object
-    #         return serialize_object(response_obj, serializer_filter=serializer_filter)
-    #     except Exception:
-    #         """Failed to auto serialize object"""
-    #     return response_obj
+    def serialize(
+        self,
+        response_obj: t.Any,
+        serializer_filter: t.Optional[SerializerFilter] = None,
+    ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
+        try:
+            return super().serialize(response_obj, serializer_filter)
+        except Exception:
+            try:
+                return serialize_object(
+                    response_obj, serializer_filter=serializer_filter
+                )
+            except Exception:
+                """Could not serialize response obj"""
+        return response_obj

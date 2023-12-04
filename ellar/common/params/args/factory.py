@@ -55,6 +55,7 @@ def get_parameter_field(
     else:
         alias = field_info.alias or param_name
 
+    field_info.alias = alias
     field = create_model_field(
         name=param_name,
         type_=annotation,

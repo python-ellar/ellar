@@ -14,10 +14,7 @@ SampleControllerPathSchema = {
                     "description": "Successful Response",
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "title": "Response Model",
-                                "type": "object",
-                            }
+                            "schema": {"type": "object", "title": "Response Model"}
                         }
                     },
                 }
@@ -31,11 +28,7 @@ SampleControllerPathSchema = {
             "parameters": [
                 {
                     "required": True,
-                    "schema": {
-                        "title": "Sample Id",
-                        "type": "integer",
-                        "include_in_schema": True,
-                    },
+                    "schema": {"type": "integer", "title": "Sample Id"},
                     "name": "sample_id",
                     "in": "path",
                 }
@@ -45,10 +38,7 @@ SampleControllerPathSchema = {
                     "description": "Successful Response",
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "title": "Response Model",
-                                "type": "object",
-                            }
+                            "schema": {"type": "object", "title": "Response Model"}
                         }
                     },
                 },

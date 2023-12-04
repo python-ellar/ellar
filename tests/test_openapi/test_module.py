@@ -74,38 +74,38 @@ def test_openapi_module_creates_openapi_url():
 
     res = client.get("/openapi.json")
     assert res.status_code == 200
-
-    assert res.json() == {
-        "openapi": "3.0.2",
+    document_json = res.json()
+    assert document_json == {
+        "openapi": "3.1.0",
         "info": {"title": "Ellar API Docs", "version": "1.0.0"},
         "paths": {},
         "components": {
             "schemas": {
                 "HTTPValidationError": {
-                    "title": "HTTPValidationError",
-                    "required": ["detail"],
-                    "type": "object",
                     "properties": {
                         "detail": {
-                            "title": "Details",
-                            "type": "array",
                             "items": {"$ref": "#/components/schemas/ValidationError"},
+                            "type": "array",
+                            "title": "Details",
                         }
                     },
+                    "type": "object",
+                    "required": ["detail"],
+                    "title": "HTTPValidationError",
                 },
                 "ValidationError": {
-                    "title": "ValidationError",
-                    "required": ["loc", "msg", "type"],
-                    "type": "object",
                     "properties": {
                         "loc": {
-                            "title": "Location",
-                            "type": "array",
                             "items": {"type": "string"},
+                            "type": "array",
+                            "title": "Location",
                         },
-                        "msg": {"title": "Message", "type": "string"},
-                        "type": {"title": "Error Type", "type": "string"},
+                        "msg": {"type": "string", "title": "Message"},
+                        "type": {"type": "string", "title": "Error Type"},
                     },
+                    "type": "object",
+                    "required": ["loc", "msg", "type"],
+                    "title": "ValidationError",
                 },
             }
         },

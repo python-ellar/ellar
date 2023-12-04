@@ -41,7 +41,7 @@ __all__ = [
 
 
 @as_pydantic_validator(
-    "__validate_input", schema={"type": "string", "format": "binary"}
+    "__validate_input__", schema={"type": "string", "format": "binary"}
 )
 class UploadFile(StarletteUploadFile):
     """
@@ -81,7 +81,7 @@ class UploadFile(StarletteUploadFile):
     ]
 
     @classmethod
-    def __validate_input(cls, __input_value: t.Any, _: t.Any) -> "UploadFile":
+    def __validate_input__(cls, __input_value: t.Any, _: t.Any) -> "UploadFile":
         if not isinstance(__input_value, StarletteUploadFile):
             raise ValueError(f"Expected UploadFile, received: {type(__input_value)}")
         return cls(

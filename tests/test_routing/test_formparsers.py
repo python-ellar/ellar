@@ -146,9 +146,9 @@ def test_file_with_form_schema_combines_all_to_one_schema(tmpdir):
         )
         assert response.json() == {
             "file_name": "test.txt",
-            "from_datetime": "1970-01-01T00:00:01+00:00",
+            "from_datetime": "1970-01-01T00:00:01Z",
             "range": 50,
-            "to_datetime": "1970-01-01T00:00:02+00:00",
+            "to_datetime": "1970-01-01T00:00:02Z",
         }
 
 

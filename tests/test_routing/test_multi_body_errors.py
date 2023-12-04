@@ -25,7 +25,7 @@ client = tm.get_test_client()
 
 
 openapi_schema = {
-    "openapi": "3.0.2",
+    "openapi": "3.1.0",
     "info": {"title": "Ellar API Docs", "version": "1.0.0"},
     "paths": {
         "/items/": {
@@ -35,10 +35,9 @@ openapi_schema = {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "title": "Item",
-                                "type": "array",
                                 "items": {"$ref": "#/components/schemas/Item2"},
-                                "include_in_schema": True,
+                                "type": "array",
+                                "title": "Item",
                             }
                         }
                     },
@@ -49,7 +48,7 @@ openapi_schema = {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {"title": "Response Model", "type": "object"}
+                                "schema": {"type": "object", "title": "Response Model"}
                             }
                         },
                     },
@@ -70,39 +69,45 @@ openapi_schema = {
     "components": {
         "schemas": {
             "HTTPValidationError": {
-                "title": "HTTPValidationError",
-                "required": ["detail"],
-                "type": "object",
                 "properties": {
                     "detail": {
-                        "title": "Details",
-                        "type": "array",
                         "items": {"$ref": "#/components/schemas/ValidationError"},
+                        "type": "array",
+                        "title": "Details",
                     }
                 },
+                "type": "object",
+                "required": ["detail"],
+                "title": "HTTPValidationError",
             },
             "Item2": {
-                "title": "Item2",
-                "required": ["name", "age"],
-                "type": "object",
                 "properties": {
-                    "name": {"title": "Name", "type": "string"},
-                    "age": {"title": "Age", "exclusiveMinimum": 0.0, "type": "number"},
+                    "name": {"type": "string", "title": "Name"},
+                    "age": {
+                        "anyOf": [
+                            {"type": "number", "exclusiveMinimum": 0.0},
+                            {"type": "string"},
+                        ],
+                        "title": "Age",
+                    },
                 },
+                "type": "object",
+                "required": ["name", "age"],
+                "title": "Item2",
             },
             "ValidationError": {
-                "title": "ValidationError",
-                "required": ["loc", "msg", "type"],
-                "type": "object",
                 "properties": {
                     "loc": {
-                        "title": "Location",
-                        "type": "array",
                         "items": {"type": "string"},
+                        "type": "array",
+                        "title": "Location",
                     },
-                    "msg": {"title": "Message", "type": "string"},
-                    "type": {"title": "Error Type", "type": "string"},
+                    "msg": {"type": "string", "title": "Message"},
+                    "type": {"type": "string", "title": "Error Type"},
                 },
+                "type": "object",
+                "required": ["loc", "msg", "type"],
+                "title": "ValidationError",
             },
         }
     },
@@ -112,10 +117,12 @@ openapi_schema = {
 single_error = {
     "detail": [
         {
-            "ctx": {"limit_value": 0.0},
+            "ctx": {"gt": 0},
+            "input": -1.0,
             "loc": ["body", 0, "age"],
-            "msg": "ensure this value is greater than 0",
-            "type": "value_error.number.not_gt",
+            "msg": "Input should be greater than 0",
+            "type": "greater_than",
+            "url": "https://errors.pydantic.dev/2.5/v/greater_than",
         }
     ]
 }
@@ -123,24 +130,32 @@ single_error = {
 multiple_errors = {
     "detail": [
         {
+            "type": "missing",
             "loc": ["body", 0, "name"],
-            "msg": "field required",
-            "type": "value_error.missing",
+            "msg": "Field required",
+            "input": {"age": "five"},
+            "url": "https://errors.pydantic.dev/2.5/v/missing",
         },
         {
+            "type": "decimal_parsing",
             "loc": ["body", 0, "age"],
-            "msg": "value is not a valid decimal",
-            "type": "type_error.decimal",
+            "msg": "Input should be a valid decimal",
+            "input": "five",
+            "url": "https://errors.pydantic.dev/2.5/v/decimal_parsing",
         },
         {
+            "type": "missing",
             "loc": ["body", 1, "name"],
-            "msg": "field required",
-            "type": "value_error.missing",
+            "msg": "Field required",
+            "input": {"age": "six"},
+            "url": "https://errors.pydantic.dev/2.5/v/missing",
         },
         {
+            "type": "decimal_parsing",
             "loc": ["body", 1, "age"],
-            "msg": "value is not a valid decimal",
-            "type": "type_error.decimal",
+            "msg": "Input should be a valid decimal",
+            "input": "six",
+            "url": "https://errors.pydantic.dev/2.5/v/decimal_parsing",
         },
     ]
 }
@@ -154,16 +169,18 @@ def test_openapi_schema():
 def test_put_correct_body():
     response = client.post("/items/", json=[{"name": "Foo", "age": 5}])
     assert response.status_code == 200, response.text
-    assert response.json() == {"item": [{"name": "Foo", "age": 5}]}
+    assert response.json() == {"item": [{"name": "Foo", "age": "5"}]}
 
 
 def test_jsonable_encoder_requiring_error():
     response = client.post("/items/", json=[{"name": "Foo", "age": -1.0}])
     assert response.status_code == 422, response.text
-    assert response.json() == single_error
+    json_result = response.json()
+    assert json_result == single_error
 
 
 def test_put_incorrect_body_multiple():
     response = client.post("/items/", json=[{"age": "five"}, {"age": "six"}])
     assert response.status_code == 422, response.text
-    assert response.json() == multiple_errors
+    json_result = response.json()
+    assert json_result == multiple_errors

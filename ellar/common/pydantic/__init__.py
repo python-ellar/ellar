@@ -1,4 +1,7 @@
+import typing as t
+
 from pydantic import (
+    AnyUrl,
     BaseConfig,
     BaseModel,
     Field,
@@ -10,6 +13,7 @@ from pydantic import (
 )
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 from pydantic.fields import FieldInfo
+from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 
 from .decorator import as_pydantic_validator, with_info_plain_validator_function
 from .emails import EmailStr  # type:ignore[attr-defined]
@@ -37,6 +41,7 @@ from .utils import (
 )
 
 __all__ = [
+    "AnyUrl",
     "with_info_plain_validator_function",
     "BaseModel",
     "BaseConfig",
@@ -71,4 +76,10 @@ __all__ = [
     "PrivateAttr",
     "field_validator",
     "model_validator",
+    "GenerateJsonSchema",
+    "JsonSchemaValue",
 ]
+
+
+def __dir__() -> t.List[str]:
+    return sorted(__all__)  # pragma: no cover

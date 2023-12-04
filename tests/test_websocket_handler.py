@@ -106,14 +106,18 @@ def test_websocket_with_handler_fails_for_invalid_input(prefix):
         "code": 1008,
         "errors": [
             {
+                "type": "missing",
                 "loc": ["body", "name"],
-                "msg": "field required",
-                "type": "value_error.missing",
+                "msg": "Field required",
+                "input": {"framework": "Ellar is awesome"},
+                "url": "https://errors.pydantic.dev/2.5/v/missing",
             },
             {
+                "type": "missing",
                 "loc": ["body", "price"],
-                "msg": "field required",
-                "type": "value_error.missing",
+                "msg": "Field required",
+                "input": {"framework": "Ellar is awesome"},
+                "url": "https://errors.pydantic.dev/2.5/v/missing",
             },
         ],
     }
@@ -123,15 +127,17 @@ def test_websocket_with_handler_fails_for_invalid_input(prefix):
 def test_websocket_with_handler_fails_for_missing_route_parameter(prefix):
     with pytest.raises(WebSocketRequestValidationError):
         with client.websocket_connect(f"{prefix}/ws-with-handler") as session:
-            session.send_json(Item(name="Ellar", price=23.34, tax=1.2).dict())
+            session.send_json(Item(name="Ellar", price=23.34, tax=1.2).model_dump())
             message = session.receive_json()
     assert message == {
         "code": 1008,
         "errors": [
             {
+                "input": None,
                 "loc": ["query", "query"],
-                "msg": "field required",
-                "type": "value_error.missing",
+                "msg": "Field required",
+                "type": "missing",
+                "url": "https://errors.pydantic.dev/2.5/v/missing",
             }
         ],
     }

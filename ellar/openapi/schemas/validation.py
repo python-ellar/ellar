@@ -1,6 +1,6 @@
 import typing as t
 
-from pydantic import BaseModel, Field
+from ellar.common.pydantic import BaseModel, Field
 
 
 class ValidationError(BaseModel):

@@ -60,9 +60,11 @@ client = tm.get_test_client()
             {
                 "detail": [
                     {
+                        "input": None,
                         "loc": ["header", "missing"],
-                        "msg": "field required",
-                        "type": "value_error.missing",
+                        "msg": "Field required",
+                        "type": "missing",
+                        "url": "https://errors.pydantic.dev/2.5/v/missing",
                     }
                 ]
             },

@@ -6,7 +6,6 @@ from ellar.common.converters import TypeDefinitionConverter
 from ellar.common.pydantic import BaseModel
 from ellar.common.serializer.base import (
     BaseSerializer,
-    DataclassSerializer,
     Serializer,
     SerializerBase,
     __pydantic_model__,
@@ -17,30 +16,29 @@ from ellar.common.serializer.base import (
 class ResponseTypeDefinitionConverter(TypeDefinitionConverter):
     _registry: t.Dict[t.Any, t.Type[BaseSerializer]] = {}
 
-    def _get_modified_type(
+    def _get_converted_type(
         self, outer_type_: t.Type
     ) -> t.Union[t.Type[BaseSerializer], t.Any]:
         if not isinstance(outer_type_, type):
             raise Exception(f"{outer_type_} is not a type")
 
-        if issubclass(outer_type_, DataclassSerializer):
-            schema_model = outer_type_.get_pydantic_model()
-            cls = type(outer_type_.__name__, (schema_model, SerializerBase), {})
-            return t.cast(t.Type[BaseSerializer], cls)
-
-        if isinstance(outer_type_, type) and issubclass(outer_type_, (BaseSerializer,)):
+        if isinstance(outer_type_, type) and issubclass(
+            outer_type_, (BaseSerializer, BaseModel)
+        ):
             return outer_type_
-
-        if issubclass(outer_type_, BaseModel):
-            cls = type(outer_type_.__name__, (outer_type_, Serializer), {})
-            return t.cast(t.Type[BaseSerializer], cls)
 
         if is_dataclass(outer_type_):
             if hasattr(outer_type_, __pydantic_model__):
-                return self._get_modified_type(t.cast(type, outer_type_))
-            return self._get_modified_type(
-                t.cast(type, convert_dataclass_to_pydantic_model(outer_type_))
+                return self._get_converted_type(t.cast(type, outer_type_))
+
+            pydantic_dataclass = convert_dataclass_to_pydantic_model(outer_type_)
+
+            cls = type(
+                outer_type_.__name__,
+                (pydantic_dataclass, SerializerBase),
+                {},
             )
+            return t.cast(t.Type[BaseSerializer], cls)
 
         if outer_type_ in primitive_types:
             return outer_type_
@@ -52,5 +50,5 @@ class ResponseTypeDefinitionConverter(TypeDefinitionConverter):
 
     def get_modified_type(self, outer_type_: t.Type) -> t.Type[BaseSerializer]:
         if outer_type_ not in self._registry:
-            self._registry[outer_type_] = self._get_modified_type(outer_type_)
+            self._registry[outer_type_] = self._get_converted_type(outer_type_)
         return self._registry[outer_type_]

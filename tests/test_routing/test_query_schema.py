@@ -83,8 +83,8 @@ def test_request():
     client = tm.get_test_client()
     response = client.get("/test?from=1&to=2&range=20&foo=1&range2=50")
     assert response.json() == {
-        "to_datetime": "1970-01-01T00:00:02+00:00",
-        "from_datetime": "1970-01-01T00:00:01+00:00",
+        "to_datetime": "1970-01-01T00:00:02Z",
+        "from_datetime": "1970-01-01T00:00:01Z",
         "range": 20,
     }
 
@@ -98,14 +98,14 @@ def test_request_mixed():
         "/test-mixed?from=1&to=2&range=20&foo=1&range2=50&query1=2&int=3&float=1.6"
     )
     assert response.json() == {
+        "data": {"a_float": 1.6, "an_int": 3},
+        "filters": {
+            "from_datetime": "1970-01-01T00:00:01Z",
+            "range": 20,
+            "to_datetime": "1970-01-01T00:00:02Z",
+        },
         "query1": 2,
         "query2": 5,
-        "filters": {
-            "to_datetime": "1970-01-01T00:00:02+00:00",
-            "from_datetime": "1970-01-01T00:00:01+00:00",
-            "range": 20,
-        },
-        "data": {"an_int": 3, "a_float": 1.6},
     }
 
     response = client.get(
@@ -115,8 +115,8 @@ def test_request_mixed():
         "query1": 2,
         "query2": 10,
         "filters": {
-            "to_datetime": "1970-01-01T00:00:02+00:00",
-            "from_datetime": "1970-01-01T00:00:01+00:00",
+            "to_datetime": "1970-01-01T00:00:02Z",
+            "from_datetime": "1970-01-01T00:00:01Z",
             "range": 20,
         },
         "data": {"an_int": 0, "a_float": 1.5},
@@ -131,23 +131,23 @@ def test_schema():
     params = document["paths"]["/test"]["get"]["parameters"]
     assert params == [
         {
-            "required": False,
+            "required": True,
             "schema": {
-                "title": "To",
                 "type": "string",
                 "format": "date-time",
-                "include_in_schema": True,
+                "title": "To",
+                "repr": True,
             },
             "name": "to",
             "in": "query",
         },
         {
-            "required": False,
+            "required": True,
             "schema": {
-                "title": "From",
                 "type": "string",
                 "format": "date-time",
-                "include_in_schema": True,
+                "title": "From",
+                "repr": True,
             },
             "name": "from",
             "in": "query",
@@ -156,8 +156,9 @@ def test_schema():
             "required": False,
             "schema": {
                 "allOf": [{"$ref": "#/components/schemas/Range"}],
+                "title": "Range",
                 "default": 20,
-                "include_in_schema": True,
+                "repr": True,
             },
             "name": "range",
             "in": "query",

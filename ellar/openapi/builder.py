@@ -5,6 +5,7 @@ from ellar.common.compatible import AttributeDict, cached_property
 from ellar.common.constants import GUARDS_KEY
 from ellar.common.pydantic import (
     EmailStr,
+    GenerateJsonSchema,
     ModelField,
     create_model_field,
     get_definitions,
@@ -15,7 +16,6 @@ from ellar.common.pydantic import (
 from ellar.common.routing import ModuleMount, RouteOperation
 from ellar.common.routing.controller import ControllerRouteOperation
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY, OPENAPI_TAG, REF_TEMPLATE
-from pydantic.json_schema import GenerateJsonSchema
 from starlette.routing import BaseRoute, Mount
 
 from .openapi_v3 import APIKeyIn, OpenAPI
