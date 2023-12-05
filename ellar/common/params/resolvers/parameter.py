@@ -13,7 +13,6 @@ from ellar.common.exceptions import RequestValidationError
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import request_logger
 from ellar.common.pydantic import (
-    ErrorWrapper,
     is_sequence_field,
     lenient_issubclass,
 )
@@ -167,7 +166,16 @@ class BodyParameterResolver(WsBodyParameterResolver):
         except json.JSONDecodeError as e:
             request_logger.error("JSONDecodeError: ", exc_info=True)
             raise RequestValidationError(
-                [ErrorWrapper(exc=e, loc=("body", e.pos))]
+                [
+                    {
+                        "type": "json_invalid",
+                        "loc": ("body", e.pos),
+                        "msg": "JSON decode error",
+                        "input": {},
+                        "ctx": {"error": e.msg},
+                    }
+                ],
+                body=e.doc,
             ) from e
         except Exception as e:
             request_logger.error("Unable to parse the body: ", exc_info=e)

@@ -96,8 +96,7 @@ class SerializerBase(BaseSerializer, __skip_filter__=True):
         return super().model_dump_json(**_filter.dict())  # type:ignore[no-any-return,misc]
 
     def dict(self, **kwargs: t.Any) -> t.Dict:
-        _filter = self._get_filter(**kwargs)
-        return self.model_dump(**_filter)
+        return self.model_dump(**kwargs)
 
     def model_dump(self, **kwargs: t.Any) -> t.Dict:
         _filter = self._get_filter(**kwargs)
@@ -141,9 +140,6 @@ def serialize_object(
                 mode="json",
                 **(serializer_filter or default_serializer_filter).dict(),
             )
-
-        if __pydantic_root__ in obj_dict:
-            obj_dict = obj_dict[__pydantic_root__]
 
         return serialize_object(obj_dict, encoders)
     if is_dataclass(obj):

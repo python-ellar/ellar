@@ -2,7 +2,7 @@ import typing as t
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-from pathlib import PureWindowsPath
+from pathlib import PurePath, PurePosixPath, PureWindowsPath
 
 import pytest
 from ellar.common.pydantic import as_pydantic_validator
@@ -178,6 +178,14 @@ def test_serializer_filter():
     ) == {"foo": "foo"}
 
 
+def test_serializer_pydantic_similar_functions():
+    model = ModelWithDefault(foo="foo", bar="bar")
+    dump = model.dict(exclude_none=True)
+    assert dump == {"foo": "foo", "bar": "bar", "bla": "bla"}
+    json_string = model.serialize_json(SerializerFilter(exclude_none=True))
+    assert json_string == '{"foo":"foo","bar":"bar","bla":"bla"}'
+
+
 def test_encode_class():
     person = Person(name="Foo")
     pet = Pet(owner=person, name="Firulais")
@@ -233,6 +241,28 @@ def test_custom_encoders():
         instance, {safe_datetime: lambda o: o.isoformat()}
     )
     assert encoded_instance["dt_field"] == instance.dt_field.isoformat()
+
+
+def test_encode_model_with_pure_path():
+    class ModelWithPath(BaseModel):
+        path: PurePath
+
+        model_config = {"arbitrary_types_allowed": True}
+
+    test_path = PurePath("/foo", "bar")
+    obj = ModelWithPath(path=test_path)
+    assert serialize_object(obj) == {"path": str(test_path)}
+    assert serialize_object(test_path) == str(test_path)
+
+
+def test_encode_model_with_pure_posix_path():
+    class ModelWithPath(BaseModel):
+        path: PurePosixPath
+        model_config = {"arbitrary_types_allowed": True}
+
+    obj = ModelWithPath(path=PurePosixPath("/foo", "bar"))
+    assert serialize_object(obj) == {"path": "/foo/bar"}
+    assert serialize_object(PurePosixPath("/foo", "bar")) == "/foo/bar"
 
 
 def test_encode_model_with_path(model_with_path):
