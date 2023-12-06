@@ -1,7 +1,7 @@
 from typing import List, Union
 
 import pytest
-from ellar.common.constants import RESPONSE_OVERRIDE_KEY
+from ellar.common.constants import CONTROLLER_CLASS_KEY, RESPONSE_OVERRIDE_KEY
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.responses.models import (
     EmptyAPIResponseModel,
@@ -111,14 +111,18 @@ def test_route_response_model_exception(inputs):
 
 
 def test_invalid_response_override_definition():
-    reflect.define_metadata(
-        RESPONSE_OVERRIDE_KEY, {EmptyAPIResponseModel()}, endpoint_sample
-    )
-    with pytest.raises(ImproperConfiguration) as ex:
-        RouteOperation(
-            path="/",
-            methods=["get"],
-            endpoint=endpoint_sample,
-            response={200: EmptyAPIResponseModel()},
+    with reflect.context():
+        reflect.define_metadata(
+            RESPONSE_OVERRIDE_KEY, {EmptyAPIResponseModel()}, endpoint_sample
         )
+        reflect.define_metadata(
+            CONTROLLER_CLASS_KEY, type("endpoint_sample_class", (), {}), endpoint_sample
+        )
+        with pytest.raises(ImproperConfiguration) as ex:
+            RouteOperation(
+                path="/",
+                methods=["get"],
+                endpoint=endpoint_sample,
+                response={200: EmptyAPIResponseModel()},
+            )
     assert "`RESPONSE_OVERRIDE` is must be of type `Dict`" in str(ex)

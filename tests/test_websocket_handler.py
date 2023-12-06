@@ -1,3 +1,5 @@
+import typing as t
+
 import pytest
 from ellar.common import Controller, Inject, ModuleRouter, WsBody, ws_route
 from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
@@ -17,10 +19,13 @@ router = ModuleRouter("/router")
 
 @router.ws_route("/ws-with-handler", use_extra_handler=True)
 async def websocket_with_handler(
-    websocket: Inject[WebSocket], query: str, data: Item = WsBody()
+    websocket: Inject[WebSocket],
+    query: str,
+    items: WsBody[t.List[str]],
+    data: Item = WsBody(),
 ):
     assert query == "my-query"
-    await websocket.send_json(data.dict())
+    await websocket.send_json({**data.model_dump(), "others": items})
     await websocket.close()
 
 
@@ -48,10 +53,14 @@ async def websocket_without_handler(websocket: Inject[WebSocket], query: str):
 class WebsocketController:
     @ws_route("/ws-with-handler", use_extra_handler=True)
     async def websocket_with_handler_c(
-        self, websocket: Inject[WebSocket], query: str, data: Item = WsBody()
+        self,
+        websocket: Inject[WebSocket],
+        query: str,
+        items: WsBody[t.List[str]],
+        data: Item = WsBody(),
     ):
         assert query == "my-query"
-        await websocket.send_json(data.dict())
+        await websocket.send_json({**data.model_dump(), "others": items})
         await websocket.close()
 
     @ws_route.connect(websocket_with_handler_c)
@@ -83,11 +92,17 @@ def test_websocket_with_handler_works(prefix):
     with client.websocket_connect(
         f"{prefix}/ws-with-handler?query=my-query"
     ) as session:
-        session.send_json(Item(name="Ellar", price=23.34, tax=1.2).dict())
+        session.send_json(
+            {
+                "data": Item(name="Ellar", price=23.34, tax=1.2).model_dump(),
+                "items": ["Python", "Ellar"],
+            }
+        )
         message = session.receive_json()
         assert message == {
-            "name": "Ellar",
             "description": None,
+            "name": "Ellar",
+            "others": ["Python", "Ellar"],
             "price": 23.34,
             "tax": 1.2,
         }
@@ -106,14 +121,18 @@ def test_websocket_with_handler_fails_for_invalid_input(prefix):
         "code": 1008,
         "errors": [
             {
-                "loc": ["body", "name"],
-                "msg": "field required",
-                "type": "value_error.missing",
+                "type": "list_type",
+                "loc": ["body", "items"],
+                "msg": "Input should be a valid list",
+                "input": None,
+                "url": "https://errors.pydantic.dev/2.5/v/list_type",
             },
             {
-                "loc": ["body", "price"],
-                "msg": "field required",
-                "type": "value_error.missing",
+                "type": "model_attributes_type",
+                "loc": ["body", "data"],
+                "msg": "Input should be a valid dictionary or object to extract fields from",
+                "input": None,
+                "url": "https://errors.pydantic.dev/2.5/v/model_attributes_type",
             },
         ],
     }
@@ -123,15 +142,17 @@ def test_websocket_with_handler_fails_for_invalid_input(prefix):
 def test_websocket_with_handler_fails_for_missing_route_parameter(prefix):
     with pytest.raises(WebSocketRequestValidationError):
         with client.websocket_connect(f"{prefix}/ws-with-handler") as session:
-            session.send_json(Item(name="Ellar", price=23.34, tax=1.2).dict())
+            session.send_json(Item(name="Ellar", price=23.34, tax=1.2).model_dump())
             message = session.receive_json()
     assert message == {
         "code": 1008,
         "errors": [
             {
+                "input": None,
                 "loc": ["query", "query"],
-                "msg": "field required",
-                "type": "value_error.missing",
+                "msg": "Field required",
+                "type": "missing",
+                "url": "https://errors.pydantic.dev/2.5/v/missing",
             }
         ],
     }

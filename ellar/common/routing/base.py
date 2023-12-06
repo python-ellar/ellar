@@ -34,10 +34,11 @@ class RouteOperationBase:
 
     def __init__(self, endpoint: t.Callable) -> None:
         self.endpoint = endpoint
-        _controller_type: t.Type = reflect.get_metadata(  # type: ignore[assignment]
-            CONTROLLER_CLASS_KEY, self.endpoint
-        )
-        self._controller_type: t.Union[t.Type, t.Type["ControllerBase"]] = t.cast(
+
+        self._controller_type = None
+        _controller_type: t.Type = self.get_controller_type()
+
+        self._controller_type: t.Union[t.Type, t.Type["ControllerBase"]] = t.cast(  # type:ignore[no-redef]
             t.Union[t.Type, t.Type["ControllerBase"]], _controller_type
         )
 
@@ -90,13 +91,15 @@ class RouteOperationBase:
         return self._controller_type
 
     @abstractmethod
-    async def handle_request(self, *, context: IExecutionContext) -> t.Any:
+    async def handle_request(
+        self, *, context: IExecutionContext
+    ) -> t.Any:  # pragma: no cover
         """return a context"""
 
     @abstractmethod
     async def handle_response(
         self, context: IExecutionContext, response_obj: t.Any
-    ) -> None:
+    ) -> None:  # pragma: no cover
         """returns a any"""
 
     def get_allowed_version(self) -> t.Set[t.Union[int, float, str]]:
@@ -113,8 +116,7 @@ class RouteOperationBase:
 
     @classmethod
     def get_methods(cls, methods: t.Optional[t.List[str]] = None) -> t.Set[str]:
-        if methods is None:
-            methods = ["GET"]
+        methods = ["GET"] if not methods else methods
 
         _methods = {method.upper() for method in methods}
         # if "GET" in _methods:

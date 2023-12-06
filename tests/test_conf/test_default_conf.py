@@ -5,7 +5,7 @@ from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.conf import Config, ConfigDefaultTypesMixin
 from ellar.core.conf.config import ConfigRuntimeError
 from ellar.core.versioning import DefaultAPIVersioning, UrlPathAPIVersioning
-from pydantic.json import ENCODERS_BY_TYPE
+from ellar.pydantic import ENCODERS_BY_TYPE
 from starlette.responses import JSONResponse
 
 if ELLAR_CONFIG_MODULE in os.environ:

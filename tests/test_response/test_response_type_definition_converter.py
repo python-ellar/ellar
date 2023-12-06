@@ -7,14 +7,21 @@ from ellar.common.responses.models import (
     ResponseTypeDefinitionConverter,
 )
 from ellar.common.serializer import BaseSerializer
-from ellar.common.utils.modelfield import create_model_field
-from pydantic.typing import get_args
+from ellar.pydantic import create_model_field
+from pydantic.dataclasses import dataclass as pydantic_dataclass
+from typing_extensions import get_args
 
 from ..schema import BlogObjectDTO, NoteSchemaDC
 
 
+@pydantic_dataclass
+class PydanticDataClass:
+    name: str
+    scope: str
+
+
 def test_response_type_definition_converter():
-    defined_type = List[Union[NoteSchemaDC, BlogObjectDTO]]
+    defined_type = List[Union[NoteSchemaDC, BlogObjectDTO, PydanticDataClass]]
     converter = ResponseTypeDefinitionConverter(defined_type)
     converted_type = converter.re_group_outer_type()
     _union = get_args(converted_type)
@@ -59,15 +66,20 @@ def test_response_converted_types_with_response_model_field_works():
             name="response_model",
             type_=converted_type,
             model_field_class=ResponseModelField,
+            mode="serialization",
         ),
     )
 
-    values = model_field.serialize([{"id": 1, "text": "some text", "completed": False}])
+    values = model_field.prep_and_serialize(
+        [{"id": 1, "text": "some text", "completed": False}]
+    )
     assert values == [{"id": 1, "text": "some text", "completed": False}]
 
-    with pytest.raises(RequestValidationError, match="value is not a valid list"):
+    with pytest.raises(RequestValidationError):
         # invalid data
-        model_field.serialize({"id": 1, "text": "some text", "completed": False})
+        model_field.prep_and_serialize(
+            {"id": 1, "text": "some text", "completed": False}
+        )
 
     defined_type = NoteSchemaDC
     converted_type = ResponseTypeDefinitionConverter(defined_type).re_group_outer_type()
@@ -78,6 +90,7 @@ def test_response_converted_types_with_response_model_field_works():
             name="response_model",
             type_=converted_type,
             model_field_class=ResponseModelField,
+            mode="serialization",
         ),
     )
 
@@ -86,7 +99,7 @@ def test_response_converted_types_with_response_model_field_works():
 
     with pytest.raises(RequestValidationError, match="text"):
         # invalid data
-        model_field.serialize({"id": 1, "completed": False})
+        model_field.prep_and_serialize({"id": 1, "completed": False})
 
     defined_type = Union[NoteSchemaDC, BlogObjectDTO]
     converted_type = ResponseTypeDefinitionConverter(defined_type).re_group_outer_type()
@@ -97,12 +110,13 @@ def test_response_converted_types_with_response_model_field_works():
             name="response_model",
             type_=converted_type,
             model_field_class=ResponseModelField,
+            mode="serialization",
         ),
     )
 
-    values = model_field.serialize({"title": "some title", "author": "Eadwin"})
+    values = model_field.prep_and_serialize({"title": "some title", "author": "Eadwin"})
     assert values == {"title": "some title", "author": "Eadwin"}
 
     with pytest.raises(RequestValidationError, match="author"):
         # invalid data
-        model_field.serialize({"title": "some title"})
+        model_field.prep_and_serialize({"title": "some title"})

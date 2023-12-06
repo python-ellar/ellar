@@ -1,16 +1,12 @@
 import typing as t
 
+from ellar.pydantic import as_pydantic_validator
 
+
+@as_pydantic_validator("__validate_input__", schema={"type": "object"})
 class IEllarMiddleware:
     @classmethod
-    def __get_validators__(
-        cls: t.Type["IEllarMiddleware"],
-    ) -> t.Iterable[t.Callable[..., t.Any]]:
-        # for Pydantic Model Validation
-        yield cls.__validate
-
-    @classmethod
-    def __validate(cls, v: t.Any) -> t.Any:
+    def __validate_input__(cls, v: t.Any, _: t.Any) -> t.Any:
         if not isinstance(v, cls):
             raise ValueError(f"Expected EllarMiddleware object, received: {type(v)}")
         return v  # pragma: no cover

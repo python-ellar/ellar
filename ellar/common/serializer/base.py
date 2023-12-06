@@ -1,16 +1,23 @@
+import dataclasses
 import typing as t
-from dataclasses import asdict, dataclass, is_dataclass
+from dataclasses import asdict, is_dataclass
 from enum import Enum
 from pathlib import PurePath
 from types import GeneratorType
 
-from pydantic import BaseConfig, BaseModel
-from pydantic import dataclasses as PydanticDataclasses
-from pydantic.json import ENCODERS_BY_TYPE
+from ellar.common.utils.functional import LazyStrImport
+from ellar.pydantic import (
+    BaseConfig,
+    BaseModel,
+    TypeAdapter,
+    model_dump,
+    pydantic_dataclass,
+)
 
-__pydantic_model__ = "__pydantic_model__"
-__pydantic_config__ = "__config__"
+__pydantic_model__ = "__pydantic_core_schema__"
+__pydantic_config__ = "__pydantic_config__"
 __pydantic_root__ = "__root__"
+__skip_filter__ = "__skip_filter__"
 
 
 @t.no_type_check
@@ -18,15 +25,14 @@ def get_dataclass_pydantic_model(
     dataclass_type: t.Type,
 ) -> t.Optional[t.Type[BaseModel]]:
     if hasattr(dataclass_type, __pydantic_model__):
-        return t.cast(t.Type[BaseModel], dataclass_type.__dict__[__pydantic_model__])
+        return t.cast(t.Type[BaseModel], dataclass_type)
 
 
 class SerializerConfig(BaseConfig):
-    orm_mode = True
+    from_attributes = True
 
 
-@PydanticDataclasses.dataclass
-@dataclass
+@dataclasses.dataclass
 class SerializerFilter:
     include: t.Optional[
         t.Union[t.Set[t.Union[int, str]], t.Mapping[t.Union[int, str], t.Any]]
@@ -35,22 +41,37 @@ class SerializerFilter:
         t.Union[t.Set[t.Union[int, str]], t.Mapping[t.Union[int, str], t.Any]]
     ] = None
     by_alias: bool = True
-    skip_defaults: t.Optional[bool] = None
     exclude_unset: bool = False
     exclude_defaults: bool = False
     exclude_none: bool = False
 
+    def __post_init__(self) -> None:
+        self._type_adapter: TypeAdapter[t.Any] = TypeAdapter(self.__class__)
+
     def dict(self) -> t.Dict:
-        return asdict(self)
+        return self._type_adapter.dump_python(  # type:ignore[no-any-return]
+            self,
+            mode="json",
+        )
 
 
-_serializer_filter = get_dataclass_pydantic_model(SerializerFilter)
-if _serializer_filter and hasattr(_serializer_filter, "update_forward_refs"):
-    _serializer_filter.update_forward_refs()
+default_serializer_filter = SerializerFilter()
 
 
 class BaseSerializer:
-    _filter: SerializerFilter = SerializerFilter()
+    _filter: SerializerFilter
+
+    def _get_filter(self, **kwargs: t.Any) -> t.Dict:
+        _filter = self._filter.dict()
+        _filter.update(kwargs)
+        return _filter
+
+    def __init_subclass__(cls, **kwargs: t.Any) -> None:
+        if __skip_filter__ in kwargs:
+            return
+
+        if not hasattr(cls, "_filter"):
+            cls._filter = default_serializer_filter
 
     def serialize(
         self, serializer_filter: t.Optional[SerializerFilter] = None
@@ -58,82 +79,78 @@ class BaseSerializer:
         raise NotImplementedError
 
 
-class SerializerBase(BaseSerializer):
-    dict: t.Callable
-
+class SerializerBase(BaseSerializer, __skip_filter__=True):
     def serialize(
         self, serializer_filter: t.Optional[SerializerFilter] = None
     ) -> t.Dict:
         _filter = serializer_filter or self._filter
-        return t.cast(
-            dict,
-            self.dict(**_filter.dict()),
-        )
+        return self.model_dump(**_filter.dict())
 
-
-class Serializer(SerializerBase, BaseModel):
-    Config = SerializerConfig
-
-
-class DataclassSerializer(BaseSerializer):
-    _pydantic_model: t.Optional[t.Type[BaseModel]] = None
-    __config__: t.Type[BaseConfig] = SerializerConfig
-
-    @classmethod
-    def get_pydantic_model(cls) -> t.Type[BaseModel]:
-        if not cls._pydantic_model:
-            cls._pydantic_model = convert_dataclass_to_pydantic_model(cls)
-        return cls._pydantic_model
-
-    def serialize(
+    def serialize_json(
         self, serializer_filter: t.Optional[SerializerFilter] = None
-    ) -> t.Dict:
+    ) -> str:
         _filter = serializer_filter or self._filter
-        return t.cast(
-            dict,
-            self.get_pydantic_model().from_orm(self).dict(**_filter.dict()),
-        )
+        return self.model_dump_json(**_filter.dict())
+
+    def dict(self, **kwargs: t.Any) -> t.Dict:
+        return self.model_dump(**kwargs)
+
+    def model_dump(self, **kwargs: t.Any) -> t.Dict:
+        _filter = self._get_filter(**kwargs)
+        return super().model_dump(**_filter)  # type:ignore[no-any-return,misc]
+
+    def model_dump_json(self, **kwargs: t.Any) -> str:
+        _filter = self._get_filter(**kwargs)
+        return super().model_dump_json(**_filter)  # type:ignore[no-any-return,misc]
+
+
+class Serializer(SerializerBase, BaseModel, __skip_filter__=True):
+    model_config = {"from_attributes": True}
 
 
 def convert_dataclass_to_pydantic_model(dataclass_type: t.Type) -> t.Type[BaseModel]:
     if is_dataclass(dataclass_type):
+        if get_dataclass_pydantic_model(dataclass_type):
+            return t.cast(t.Type[BaseModel], dataclass_type)
+
         # convert to dataclass
-        pydantic_dataclass = PydanticDataclasses.dataclass(
-            dataclass_type,
+        decorator = pydantic_dataclass(
             config=getattr(dataclass_type, __pydantic_config__, SerializerConfig),
         )
-        return pydantic_dataclass.__pydantic_model__
+        pydantic_dataclass_cls = decorator(t.cast(t.Any, dataclass_type))
+        # sa = {item: getattr(pydantic_dataclass, item) for item in dir(pydantic_dataclass)}
+        return t.cast(t.Type[BaseModel], pydantic_dataclass_cls)
     raise Exception(f"{dataclass_type} is not a dataclass")
+
+
+def _lazy_current_config() -> t.Any:
+    return LazyStrImport("ellar.app:current_config")
 
 
 def serialize_object(
     obj: t.Any,
-    encoders: t.Dict[t.Any, t.Callable[[t.Any], t.Any]] = ENCODERS_BY_TYPE,
+    encoders: t.Optional[t.Dict[t.Any, t.Callable[[t.Any], t.Any]]] = None,
     serializer_filter: t.Optional[SerializerFilter] = None,
 ) -> t.Any:
+    _encoders = (
+        encoders if encoders else _lazy_current_config().SERIALIZER_CUSTOM_ENCODER
+    )
     if isinstance(obj, (BaseModel, BaseSerializer)):
-        __config__ = getattr(obj, __pydantic_config__, {})
-        json_encoders = getattr(__config__, "json_encoders", {})
-
-        _encoders = dict(encoders)
-        if json_encoders:
-            _encoders.update(json_encoders)
-
-        obj_dict = (
-            obj.serialize(serializer_filter)
-            if isinstance(obj, BaseSerializer)
-            else obj.dict(**(serializer_filter or SerializerFilter()).dict())
-        )
-
-        if __pydantic_root__ in obj_dict:
-            obj_dict = obj_dict[__pydantic_root__]
+        if isinstance(obj, BaseSerializer):
+            obj_dict = obj.serialize(serializer_filter)
+        else:
+            obj_dict = model_dump(
+                obj,
+                mode="json",
+                **(serializer_filter or default_serializer_filter).dict(),
+            )
 
         return serialize_object(obj_dict, _encoders)
     if is_dataclass(obj):
-        return serialize_object(asdict(obj), encoders, serializer_filter)
+        return serialize_object(asdict(obj), _encoders, serializer_filter)
     if isinstance(obj, dict):
         return {
-            str(k): serialize_object(v, encoders, serializer_filter)
+            str(k): serialize_object(v, _encoders, serializer_filter)
             for k, v in obj.items()
         }
     if isinstance(obj, Enum):
@@ -143,10 +160,11 @@ def serialize_object(
     if isinstance(obj, (str, int, float, type(None))):
         return obj
     if isinstance(obj, (list, set, frozenset, GeneratorType, tuple)):
-        return [serialize_object(item, encoders, serializer_filter) for item in obj]
+        return [serialize_object(item, _encoders, serializer_filter) for item in obj]
 
-    if type(obj) in encoders:
-        return encoders[type(obj)](obj)
+    encoder = _encoders.get(type(obj))
+    if encoder:
+        return encoder(obj)
 
     errors = []
     try:
@@ -158,4 +176,4 @@ def serialize_object(
         except Exception as e2:
             errors.append(e2)
             raise ValueError(errors) from e2
-    return serialize_object(data, encoders, serializer_filter)
+    return serialize_object(data, _encoders, serializer_filter)

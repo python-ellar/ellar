@@ -1,17 +1,25 @@
 import typing as t
 
-from pydantic import BaseModel, ValidationError, create_model
-from pydantic.error_wrappers import ErrorList
+from ellar.common.serializer import serialize_object
+from ellar.pydantic import BaseModel, create_model
 
 RequestErrorModel: t.Type[BaseModel] = create_model("Request")
 WebSocketErrorModel: t.Type[BaseModel] = create_model("WebSocket")
 
 
-class RequestValidationError(ValidationError):
-    def __init__(self, errors: t.Sequence[ErrorList]) -> None:
-        super().__init__(errors, RequestErrorModel)
+class ValidationException(Exception):
+    def __init__(self, errors: t.Sequence[t.Any]) -> None:
+        self._errors = errors
+
+    def errors(self) -> t.Sequence[t.Any]:
+        return serialize_object(self._errors)  # type:ignore[no-any-return]
 
 
-class WebSocketRequestValidationError(ValidationError):
-    def __init__(self, errors: t.Sequence[ErrorList]) -> None:
-        super().__init__(errors, WebSocketErrorModel)
+class RequestValidationError(ValidationException):
+    def __init__(self, errors: t.Sequence[t.Any], *, body: t.Any = None) -> None:
+        super().__init__(errors)
+        self.body = body
+
+
+class WebSocketRequestValidationError(ValidationException):
+    pass

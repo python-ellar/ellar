@@ -1,6 +1,5 @@
 import typing as t
 from abc import ABC, abstractmethod
-from enum import Enum
 
 from ellar.common.compatible import cached_property
 from ellar.common.constants import GUARDS_KEY, METHODS_WITH_BODY, REF_PREFIX
@@ -17,9 +16,11 @@ from ellar.common.routing import ModuleMount, RouteOperation
 from ellar.common.shortcuts import normalize_path
 from ellar.core.services.reflector import Reflector
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
-from pydantic import BaseModel
-from pydantic.fields import ModelField, Undefined
-from pydantic.schema import field_schema
+from ellar.pydantic import (
+    JsonSchemaValue,
+    ModelField,
+    get_schema_from_model_field,
+)
 from starlette.routing import Mount, compile_path
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -35,9 +36,12 @@ class OpenAPIRoute(ABC):
     @abstractmethod
     def get_openapi_path(
         self,
-        model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
         paths: t.Dict,
         security_schemes: t.Dict[str, t.Any],
+        field_mapping: t.Dict[
+            t.Tuple[ModelField, t.Literal["validation", "serialization"]],
+            JsonSchemaValue,
+        ],
         path_prefix: t.Optional[str] = None,
     ) -> None:
         pass
@@ -98,9 +102,12 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
 
     def get_openapi_path(
         self,
-        model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
         paths: t.Dict,
         security_schemes: t.Dict[str, t.Any],
+        field_mapping: t.Dict[
+            t.Tuple[ModelField, t.Literal["validation", "serialization"]],
+            JsonSchemaValue,
+        ],
         path_prefix: t.Optional[str] = None,
     ) -> None:
         path_prefix = (
@@ -110,9 +117,9 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
         )
         for openapi_route in self._routes:
             openapi_route.get_openapi_path(
-                model_name_map=model_name_map,
                 paths=paths,
                 security_schemes=security_schemes,
+                field_mapping=field_mapping,
                 path_prefix=path_prefix,
             )
 
@@ -222,9 +229,9 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         if self.description:
             operation["description"] = self.description
 
-        operation[
-            "operationId"
-        ] = self.operation_id or self.route.get_operation_unique_id(methods=method)
+        operation["operationId"] = (
+            self.operation_id or self.route.get_operation_unique_id(methods=method)
+        )
         if self.deprecated:
             operation["deprecated"] = self.deprecated
 
@@ -233,26 +240,30 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
     def get_openapi_operation_parameters(
         self,
         *,
-        model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
+        field_mapping: t.Dict[
+            t.Tuple[ModelField, t.Literal["validation", "serialization"]],
+            JsonSchemaValue,
+        ],
     ) -> t.List[t.Dict[str, t.Any]]:
         parameters: t.List[t.Dict[str, t.Any]] = []
         for param in self.input_fields:
             field_info = param.field_info
             field_info = t.cast(Param, field_info)
+            param_schema = get_schema_from_model_field(
+                field=param,
+                field_mapping=field_mapping,
+                separate_input_output_schemas=True,
+            )
             parameter = {
                 "name": param.alias,
                 "in": field_info.in_.value,
                 "required": param.required,
-                "schema": field_schema(
-                    param, model_name_map=model_name_map, ref_prefix=REF_PREFIX
-                )[0],
+                "schema": param_schema,
             }
             if field_info.description:
                 parameter["description"] = field_info.description
-            if field_info.examples:
-                parameter["examples"] = field_info.examples
-            elif field_info.example != Undefined:
-                parameter["example"] = field_info.example
+            if field_info.examples:  # pragma:no cover
+                parameter["examples"] = field_info.examples  # type:ignore[assignment]
             if field_info.deprecated:
                 parameter["deprecated"] = field_info.deprecated
             parameters.append(parameter)
@@ -261,30 +272,43 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
     def get_openapi_operation_request_body(
         self,
         *,
-        model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
+        field_mapping: t.Dict[
+            t.Tuple[ModelField, t.Literal["validation", "serialization"]],
+            JsonSchemaValue,
+        ],
     ) -> t.Optional[t.Dict[str, t.Any]]:
         if not self.route.endpoint_parameter_model.body_resolver:
             return None
+
         model_field = self.route.endpoint_parameter_model.body_resolver.model_field
         assert isinstance(model_field, ModelField)
-        body_schema, _, _ = field_schema(
-            model_field, model_name_map=model_name_map, ref_prefix=REF_PREFIX
+
+        body_schema = get_schema_from_model_field(
+            field=model_field,
+            field_mapping=field_mapping,
+            separate_input_output_schemas=True,
         )
+
         field_info = t.cast(Body, model_field.field_info)
         request_media_type = field_info.media_type
+
         request_body_oai: t.Dict[str, t.Any] = {}
         if model_field.required:
             request_body_oai["required"] = model_field.required
+
         request_media_content: t.Dict[str, t.Any] = {"schema": body_schema}
-        if field_info.examples:
+        if field_info.examples:  # pragma: no cover
             request_media_content["examples"] = field_info.examples
-        elif field_info.example != Undefined:
-            request_media_content["example"] = field_info.example
+
         request_body_oai["content"] = {request_media_type: request_media_content}
         return request_body_oai
 
     def _get_openapi_path_object(
-        self, model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str]
+        self,
+        field_mapping: t.Dict[
+            t.Tuple[ModelField, t.Literal["validation", "serialization"]],
+            JsonSchemaValue,
+        ],
     ) -> t.Tuple:
         path: t.Dict = {}
         security_schemes: t.Dict[str, t.Any] = {}
@@ -293,16 +317,18 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             operation = self.get_openapi_operation_metadata(method=method)
             parameters: t.List[t.Dict[str, t.Any]] = []
             operation_parameters = self.get_openapi_operation_parameters(
-                model_name_map=model_name_map
+                field_mapping=field_mapping,
             )
             parameters.extend(operation_parameters)
+
             if parameters:
                 operation["parameters"] = list(
                     {param["name"]: param for param in parameters}.values()
                 )
+
             if method in METHODS_WITH_BODY:
                 request_body_oai = self.get_openapi_operation_request_body(
-                    model_name_map=model_name_map
+                    field_mapping=field_mapping,
                 )
                 if request_body_oai:
                     operation["requestBody"] = request_body_oai
@@ -318,7 +344,9 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
 
             operation_responses = operation.setdefault("responses", {})
             for status, response_model in self.route.response_model.models.items():
-                operation_responses_status = operation_responses.setdefault(status, {})
+                operation_responses_status = operation_responses.setdefault(
+                    str(status), {}
+                )
                 operation_responses_status["description"] = response_model.description
 
                 content = operation_responses_status.setdefault("content", {})
@@ -327,10 +355,10 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
 
                 model_field = response_model.get_model_field()
                 if model_field:
-                    model_field_schema, _, _ = field_schema(
-                        model_field,
-                        model_name_map=model_name_map,
-                        ref_prefix=REF_PREFIX,
+                    model_field_schema = get_schema_from_model_field(
+                        field=model_field,
+                        field_mapping=field_mapping,
+                        separate_input_output_schemas=True,
                     )
                     media_type["schema"] = model_field_schema
 
@@ -355,22 +383,28 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
 
     def get_child_openapi_path(
         self,
-        model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
+        field_mapping: t.Dict[
+            t.Tuple[ModelField, t.Literal["validation", "serialization"]],
+            JsonSchemaValue,
+        ],
     ) -> t.Tuple:
         _path, _security_schemes = self._get_openapi_path_object(
-            model_name_map=model_name_map
+            field_mapping=field_mapping,
         )
         return _path, _security_schemes
 
     def get_openapi_path(
         self,
-        model_name_map: t.Dict[t.Union[t.Type[BaseModel], t.Type[Enum]], str],
         paths: t.Dict,
         security_schemes: t.Dict[str, t.Any],
+        field_mapping: t.Dict[
+            t.Tuple[ModelField, t.Literal["validation", "serialization"]],
+            JsonSchemaValue,
+        ],
         path_prefix: t.Optional[str] = None,
     ) -> None:
         path, _security_schemes = self.get_child_openapi_path(
-            model_name_map=model_name_map
+            field_mapping=field_mapping,
         )
         if path:
             route_path = (

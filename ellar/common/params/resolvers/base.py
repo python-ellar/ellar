@@ -1,9 +1,11 @@
 import typing as t
 from abc import ABC, ABCMeta, abstractmethod
 
-from pydantic.error_wrappers import ErrorWrapper
-from pydantic.errors import MissingError
-from pydantic.fields import ModelField
+from ellar.pydantic import (
+    ModelField,
+    get_missing_field_error,
+    regenerate_error_with_loc,
+)
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ..params import ParamFieldInfo
@@ -36,14 +38,14 @@ class BaseRouteParameterResolver(IRouteParameterResolver, ABC):
         ), "Params must be subclasses of Param"
 
     @classmethod
-    def create_error(cls, loc: t.Any) -> ErrorWrapper:
-        return ErrorWrapper(MissingError(), loc=loc)
+    def create_error(cls, loc: t.Any) -> t.Any:
+        return get_missing_field_error(loc=loc)
 
     @classmethod
-    def validate_error_sequence(cls, errors: t.Any) -> t.List[ErrorWrapper]:
+    def validate_error_sequence(cls, errors: t.Any) -> t.List[t.Any]:
         if not errors:
             return []
-        return list(errors) if isinstance(errors, list) else [errors]
+        return regenerate_error_with_loc(errors=errors, loc_prefix=())
 
     async def resolve(self, *args: t.Any, **kwargs: t.Any) -> t.Tuple:
         value_ = await self.resolve_handle(*args, **kwargs)

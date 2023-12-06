@@ -2,8 +2,7 @@ import typing as t
 
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import request_logger
-from pydantic.error_wrappers import ErrorWrapper
-from pydantic.fields import ModelField
+from ellar.pydantic import ErrorWrapper, ModelField
 
 from .base import BaseRouteParameterResolver
 from .parameter import BodyParameterResolver, FormParameterResolver
@@ -38,7 +37,13 @@ class BulkParameterResolver(BaseRouteParameterResolver):
         for parameter_resolver in self._resolvers:
             value_, errors_ = await parameter_resolver.resolve(ctx=ctx)
             if value_:
-                values.update(value_)
+                values.update(
+                    {
+                        parameter_resolver.model_field.alias: value_[
+                            parameter_resolver.model_field.name
+                        ]
+                    }
+                )
             if errors_:
                 errors += self.validate_error_sequence(errors_)
         if errors:
@@ -74,7 +79,7 @@ class BulkFormParameterResolver(FormParameterResolver, BulkParameterResolver):
         request_logger.debug(
             f"Resolving Form Grouped Field - '{self.__class__.__name__}'"
         )
-        value, resolver_errors = await self._get_resolver_data(ctx, body)
+        value, resolver_errors = await self._get_resolver_data(ctx, body, by_alias=True)
         if resolver_errors:
             return value, resolver_errors
 
@@ -93,13 +98,24 @@ class BulkFormParameterResolver(FormParameterResolver, BulkParameterResolver):
     ) -> t.Tuple:
         return await self._get_resolver_data(ctx, body)
 
-    async def _get_resolver_data(self, ctx: IExecutionContext, body: t.Any) -> t.Tuple:
+    async def _get_resolver_data(
+        self, ctx: IExecutionContext, body: t.Any, by_alias: bool = False
+    ) -> t.Tuple:
         values: t.Dict[str, t.Any] = {}
         errors: t.List[ErrorWrapper] = []
         for parameter_resolver in self._resolvers:
             value_, errors_ = await parameter_resolver.resolve(ctx=ctx, body=body)
             if value_:
-                values.update(value_)
+                value = (
+                    value_
+                    if not by_alias
+                    else {
+                        parameter_resolver.model_field.alias: value_[
+                            parameter_resolver.model_field.name
+                        ]
+                    }
+                )
+                values.update(value)
             if errors_:
                 errors += self.validate_error_sequence(errors_)
         return values, errors

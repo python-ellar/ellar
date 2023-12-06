@@ -104,14 +104,14 @@ def test_invalid_parameter_returned():
     client = test_module.get_test_client()
     response = client.get("/ellar/index-invalid")
     assert response.status_code == 422
-
     assert response.json() == {
         "detail": [
             {
+                "ctx": {"expected": "'inline' or 'attachment'"},
+                "input": "whatever",
                 "loc": ["response_model", "content_disposition_type"],
-                "msg": "value is not a valid enumeration member; permitted: 'inline', 'attachment'",
-                "type": "type_error.enum",
-                "ctx": {"enum_values": ["inline", "attachment"]},
+                "msg": "Input should be 'inline' or 'attachment'",
+                "type": "enum",
             }
         ]
     }

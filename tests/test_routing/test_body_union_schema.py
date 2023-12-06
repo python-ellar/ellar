@@ -4,7 +4,7 @@ from unittest.mock import patch
 from ellar.common import Body, post
 from ellar.common.serializer import serialize_object
 from ellar.core import Request
-from ellar.openapi import OpenAPIDocumentBuilder
+from ellar.openapi import OpenAPIDocumentBuilder, openapi_info
 from ellar.testing import Test
 
 from .sample import Item, OtherItem, Product
@@ -25,7 +25,15 @@ def embed_qty(qty: Body[int, Body.P(12, embed=True)]):
 
 
 @post("/items/alias")
-def alias_qty(qty: Body[int, Body.P(12, embed=True, alias="aliasQty")]):
+@openapi_info(tags=["Product"], description="Modify Product Qty", deprecated=True)
+def alias_qty(
+    qty: Body[
+        int,
+        Body.P(
+            embed=True, alias="aliasQty", description="Product Qty", deprecated=True
+        ),
+    ],
+):
     return {"qty": qty}
 
 
@@ -38,7 +46,7 @@ client = tm.get_test_client()
 
 
 item_openapi_schema = {
-    "openapi": "3.0.2",
+    "openapi": "3.1.0",
     "info": {"title": "Ellar API Docs", "version": "1.0.0"},
     "paths": {
         "/items/": {
@@ -59,7 +67,7 @@ item_openapi_schema = {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {"title": "Response Model", "type": "object"}
+                                "schema": {"type": "object", "title": "Response Model"}
                             }
                         },
                     },
@@ -78,6 +86,8 @@ item_openapi_schema = {
         },
         "/items/alias": {
             "post": {
+                "tags": ["Product"],
+                "description": "Modify Product Qty",
                 "operationId": "alias_qty_items_alias_post",
                 "requestBody": {
                     "content": {
@@ -86,14 +96,15 @@ item_openapi_schema = {
                                 "$ref": "#/components/schemas/body_alias_qty_items_alias_post"
                             }
                         }
-                    }
+                    },
+                    "required": True,
                 },
                 "responses": {
                     "200": {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {"title": "Response Model", "type": "object"}
+                                "schema": {"type": "object", "title": "Response Model"}
                             }
                         },
                     },
@@ -108,6 +119,7 @@ item_openapi_schema = {
                         },
                     },
                 },
+                "deprecated": True,
             }
         },
         "/items/embed": {
@@ -117,7 +129,12 @@ item_openapi_schema = {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/body_embed_qty_items_embed_post"
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/body_embed_qty_items_embed_post"
+                                    }
+                                ],
+                                "title": "Body",
                             }
                         }
                     }
@@ -127,7 +144,7 @@ item_openapi_schema = {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {"title": "Response Model", "type": "object"}
+                                "schema": {"type": "object", "title": "Response Model"}
                             }
                         },
                     },
@@ -148,86 +165,80 @@ item_openapi_schema = {
     "components": {
         "schemas": {
             "HTTPValidationError": {
-                "title": "HTTPValidationError",
-                "required": ["detail"],
-                "type": "object",
                 "properties": {
                     "detail": {
-                        "title": "Details",
-                        "type": "array",
                         "items": {"$ref": "#/components/schemas/ValidationError"},
+                        "type": "array",
+                        "title": "Details",
                     }
                 },
+                "type": "object",
+                "required": ["detail"],
+                "title": "HTTPValidationError",
             },
             "Item": {
-                "title": "Item",
+                "properties": {
+                    "name": {
+                        "anyOf": [{"type": "string"}, {"type": "null"}],
+                        "title": "Name",
+                    }
+                },
                 "type": "object",
-                "properties": {"name": {"title": "Name", "type": "string"}},
+                "title": "Item",
             },
             "OtherItem": {
-                "title": "OtherItem",
-                "required": ["price"],
+                "properties": {"price": {"type": "integer", "title": "Price"}},
                 "type": "object",
-                "properties": {"price": {"title": "Price", "type": "integer"}},
+                "required": ["price"],
+                "title": "OtherItem",
             },
             "ValidationError": {
-                "title": "ValidationError",
-                "required": ["loc", "msg", "type"],
-                "type": "object",
                 "properties": {
                     "loc": {
-                        "title": "Location",
-                        "type": "array",
                         "items": {"type": "string"},
+                        "type": "array",
+                        "title": "Location",
                     },
-                    "msg": {"title": "Message", "type": "string"},
-                    "type": {"title": "Error Type", "type": "string"},
+                    "msg": {"type": "string", "title": "Message"},
+                    "type": {"type": "string", "title": "Error Type"},
                 },
+                "type": "object",
+                "required": ["loc", "msg", "type"],
+                "title": "ValidationError",
             },
             "body_alias_qty_items_alias_post": {
-                "title": "body_alias_qty_items_alias_post",
-                "type": "object",
                 "properties": {
                     "aliasQty": {
-                        "title": "Aliasqty",
                         "type": "integer",
-                        "default": 12,
-                        "include_in_schema": True,
+                        "title": "Aliasqty",
+                        "description": "Product Qty",
                     }
                 },
+                "type": "object",
+                "required": ["aliasQty"],
+                "title": "body_alias_qty_items_alias_post",
             },
             "body_embed_qty_items_embed_post": {
-                "title": "body_embed_qty_items_embed_post",
-                "type": "object",
                 "properties": {
-                    "qty": {
-                        "title": "Qty",
-                        "type": "integer",
-                        "default": 12,
-                        "include_in_schema": True,
-                    }
+                    "qty": {"type": "integer", "title": "Qty", "default": 12}
                 },
+                "type": "object",
+                "title": "body_embed_qty_items_embed_post",
             },
             "body_save_union_body_and_embedded_body_items__post": {
-                "title": "body_save_union_body_and_embedded_body_items__post",
-                "required": ["item"],
-                "type": "object",
                 "properties": {
                     "item": {
-                        "title": "Item",
-                        "include_in_schema": True,
                         "anyOf": [
                             {"$ref": "#/components/schemas/OtherItem"},
                             {"$ref": "#/components/schemas/Item"},
                         ],
+                        "title": "Item",
                     },
-                    "qty": {
-                        "title": "Qty",
-                        "type": "integer",
-                        "default": 12,
-                        "include_in_schema": True,
-                    },
+                    "qty": {"type": "integer", "title": "Qty", "default": 12},
                 },
+                "type": "object",
+                "required": ["item"],
+                "title": "body_save_union_body_and_embedded_body_items__post",
             },
         }
     },

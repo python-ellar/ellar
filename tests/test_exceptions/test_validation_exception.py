@@ -5,8 +5,8 @@ from ellar.common.exceptions.validation import (
     WebSocketRequestValidationError,
 )
 from ellar.core import WebSocket
+from ellar.pydantic import ErrorWrapper
 from ellar.testing import Test
-from pydantic.error_wrappers import ErrorWrapper
 
 from .exception_runner import ExceptionRunner
 
@@ -42,9 +42,9 @@ def test_request_validation_error():
     _exception_runner = ExceptionRunner(
         RequestValidationError,
         errors=[
-            ErrorWrapper(Exception("Invalid Request"), loc="body"),
-            ErrorWrapper(Exception("Invalid Request"), loc="form"),
-            ErrorWrapper(Exception("Invalid Request"), loc="model"),
+            ErrorWrapper(exc=Exception("Invalid Request"), loc="body"),
+            ErrorWrapper(exc=Exception("Invalid Request"), loc="form"),
+            ErrorWrapper(exc=Exception("Invalid Request"), loc="model"),
         ],
     )
     response = client.get("/exception-validation")
@@ -76,18 +76,37 @@ def test_websocket_validation_error():
     _exception_runner = ExceptionRunner(
         WebSocketRequestValidationError,
         errors=[
-            ErrorWrapper(Exception("Invalid Request"), loc="body"),
-            ErrorWrapper(Exception("Invalid Request"), loc="form"),
-            ErrorWrapper(Exception("Invalid Request"), loc="model"),
+            ErrorWrapper(exc=Exception("Invalid Request"), loc=("body",)),
+            ErrorWrapper(exc=Exception("Invalid Request"), loc=("form",)),
+            ErrorWrapper(exc=Exception("Invalid Request"), loc=("model",)),
         ],
     )
     with pytest.raises(WebSocketRequestValidationError) as wex:
         with client.websocket_connect("/exception-Ws") as websocket:
             websocket.send_json({"hello": "world"})
+
     assert wex.value.errors() == [
-        {"loc": ("body",), "msg": "Invalid Request", "type": "value_error.exception"},
-        {"loc": ("form",), "msg": "Invalid Request", "type": "value_error.exception"},
-        {"loc": ("model",), "msg": "Invalid Request", "type": "value_error.exception"},
+        {
+            "loc": [
+                "body",
+            ],
+            "msg": "Invalid Request",
+            "type": "value_error.exception",
+        },
+        {
+            "loc": [
+                "form",
+            ],
+            "msg": "Invalid Request",
+            "type": "value_error.exception",
+        },
+        {
+            "loc": [
+                "model",
+            ],
+            "msg": "Invalid Request",
+            "type": "value_error.exception",
+        },
     ]
 
 
@@ -96,16 +115,34 @@ def test_websocket_validation_error_2():
     _exception_runner = ExceptionRunner(
         WebSocketRequestValidationError,
         errors=[
-            ErrorWrapper(Exception("Invalid Request"), loc="body"),
-            ErrorWrapper(Exception("Invalid Request"), loc="form"),
-            ErrorWrapper(Exception("Invalid Request"), loc="model"),
+            ErrorWrapper(exc=Exception("Invalid Request"), loc="body"),
+            ErrorWrapper(exc=Exception("Invalid Request"), loc="form"),
+            ErrorWrapper(exc=Exception("Invalid Request"), loc="model"),
         ],
     )
     with pytest.raises(WebSocketRequestValidationError) as wex:
         with client.websocket_connect("/exception-Ws-2") as websocket:
             websocket.send_json({"hello": "world"})
     assert wex.value.errors() == [
-        {"loc": ("body",), "msg": "Invalid Request", "type": "value_error.exception"},
-        {"loc": ("form",), "msg": "Invalid Request", "type": "value_error.exception"},
-        {"loc": ("model",), "msg": "Invalid Request", "type": "value_error.exception"},
+        {
+            "loc": [
+                "body",
+            ],
+            "msg": "Invalid Request",
+            "type": "value_error.exception",
+        },
+        {
+            "loc": [
+                "form",
+            ],
+            "msg": "Invalid Request",
+            "type": "value_error.exception",
+        },
+        {
+            "loc": [
+                "model",
+            ],
+            "msg": "Invalid Request",
+            "type": "value_error.exception",
+        },
     ]

@@ -1,3 +1,4 @@
+import dataclasses
 import typing as t
 from abc import ABC, abstractmethod
 
@@ -5,26 +6,15 @@ from ellar.common.constants import SERIALIZER_FILTER_KEY
 from ellar.common.exceptions import RequestValidationError
 from ellar.common.interfaces import IExecutionContext, IResponseModel
 from ellar.common.logger import request_logger
-from ellar.common.serializer import SerializerFilter, serialize_object
-from ellar.common.utils.modelfield import create_model_field
+from ellar.common.serializer import BaseSerializer, SerializerFilter
+from ellar.pydantic import ModelField, create_model_field
 from ellar.reflect import reflect
-from pydantic import BaseModel
-from pydantic.fields import ModelField
 from starlette.responses import Response
 
 from .type_converter import ResponseTypeDefinitionConverter
 
 
-def serialize_if_pydantic_object(obj: t.Any) -> t.Any:
-    if isinstance(obj, BaseModel):
-        return obj.dict(by_alias=True)
-    elif isinstance(obj, list):
-        return [serialize_if_pydantic_object(item) for item in obj]
-    elif isinstance(obj, dict):
-        return {k: serialize_if_pydantic_object(v) for k, v in obj.items()}
-    return obj
-
-
+@dataclasses.dataclass
 class ResponseModelField(ModelField):
     """
     A representation of response schema defined in route function
@@ -43,23 +33,35 @@ class ResponseModelField(ModelField):
         )
         values, error = self.validate(obj, {}, loc=(self.alias,))
         if error:
-            _errors = list(error) if isinstance(error, list) else [error]
-            raise RequestValidationError(errors=_errors)
-        return values
+            _errors = (
+                list(error) if isinstance(error, list) else [error]  # type:ignore[list-item]
+            )
+            return None, _errors
+        return values, []
 
-    def serialize(
+    def prep_and_serialize(
         self, obj: t.Any, serializer_filter: t.Optional[SerializerFilter] = None
     ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
         request_logger.debug(f"Serializing Response Data - '{self.__class__.__name__}'")
-        try:
-            values = self.validate_object(obj=obj)
-        except RequestValidationError:
-            try:
-                new_obj = serialize_if_pydantic_object(obj)
-                values = self.validate_object(obj=new_obj)
-            except RequestValidationError as req_val_ex2:
-                raise req_val_ex2
-        return serialize_object(values, serializer_filter=serializer_filter)
+        _serializer_filter = (
+            serializer_filter.dict()
+            if serializer_filter
+            else obj._filter.dict()
+            if isinstance(obj, BaseSerializer)
+            else {}
+        )
+
+        values, errors = self.validate_object(obj)
+
+        if errors:
+            raise RequestValidationError(errors)
+
+        return self.serialize(values, **_serializer_filter)
+
+    def __hash__(self) -> int:
+        # Each ModelField is unique for our purposes, to allow making a dict from
+        # ModelField to its JSON Schema.
+        return id(self)
 
 
 class BaseResponseModel(IResponseModel, ABC):
@@ -134,6 +136,7 @@ class BaseResponseModel(IResponseModel, ABC):
                     name="response_model",  # TODO: find a good name for the field
                     type_=new_response_schema,
                     model_field_class=ResponseModelField,
+                    mode="serialization",
                 ),
             )
         return _model_field_or_schema
@@ -165,9 +168,7 @@ class BaseResponseModel(IResponseModel, ABC):
 
         response = self._response_type(
             **response_args,
-            content=self.serialize(
-                response_obj, serializer_filter=serializer_filter or SerializerFilter()
-            ),
+            content=self.serialize(response_obj, serializer_filter=serializer_filter),
             headers=headers,
         )
         return response

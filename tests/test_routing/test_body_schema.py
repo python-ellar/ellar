@@ -1,11 +1,14 @@
-from ellar.app import AppFactory
+from unittest.mock import patch
+
 from ellar.common import post
 from ellar.common.serializer import serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
+from ellar.testing import Test
 
+from ..utils import pydantic_error_url
 from .sample import Product
 
-app = AppFactory.create_app()
+tm = Test.create_test_module()
 
 
 @post("/product")
@@ -15,10 +18,10 @@ async def create_item(
     return product
 
 
-app.router.append(create_item)
+tm.create_application().router.append(create_item)
 
 openapi_schema = {
-    "openapi": "3.0.2",
+    "openapi": "3.1.0",
     "info": {"title": "Ellar API Docs", "version": "1.0.0"},
     "paths": {
         "/product": {
@@ -27,11 +30,7 @@ openapi_schema = {
                 "requestBody": {
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "title": "Product",
-                                "allOf": [{"$ref": "#/components/schemas/Product"}],
-                                "include_in_schema": True,
-                            }
+                            "schema": {"$ref": "#/components/schemas/Product"}
                         }
                     },
                     "required": True,
@@ -41,7 +40,7 @@ openapi_schema = {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {"title": "Response Model", "type": "object"}
+                                "schema": {"type": "object", "title": "Response Model"}
                             }
                         },
                     },
@@ -62,40 +61,40 @@ openapi_schema = {
     "components": {
         "schemas": {
             "HTTPValidationError": {
-                "title": "HTTPValidationError",
-                "required": ["detail"],
-                "type": "object",
                 "properties": {
                     "detail": {
-                        "title": "Details",
-                        "type": "array",
                         "items": {"$ref": "#/components/schemas/ValidationError"},
+                        "type": "array",
+                        "title": "Details",
                     }
                 },
+                "type": "object",
+                "required": ["detail"],
+                "title": "HTTPValidationError",
             },
             "Product": {
-                "title": "Product",
-                "required": ["name", "price"],
-                "type": "object",
                 "properties": {
-                    "name": {"title": "Name", "type": "string"},
-                    "description": {"title": "Description", "type": "string"},
-                    "price": {"title": "Price", "type": "number"},
+                    "name": {"type": "string", "title": "Name"},
+                    "description": {"type": "string", "title": "Description"},
+                    "price": {"type": "number", "title": "Price"},
                 },
+                "type": "object",
+                "required": ["name", "price"],
+                "title": "Product",
             },
             "ValidationError": {
-                "title": "ValidationError",
-                "required": ["loc", "msg", "type"],
-                "type": "object",
                 "properties": {
                     "loc": {
-                        "title": "Location",
-                        "type": "array",
                         "items": {"type": "string"},
+                        "type": "array",
+                        "title": "Location",
                     },
-                    "msg": {"title": "Message", "type": "string"},
-                    "type": {"title": "Error Type", "type": "string"},
+                    "msg": {"type": "string", "title": "Message"},
+                    "type": {"type": "string", "title": "Error Type"},
                 },
+                "type": "object",
+                "required": ["loc", "msg", "type"],
+                "title": "ValidationError",
             },
         }
     },
@@ -104,19 +103,21 @@ openapi_schema = {
 
 
 def test_openapi_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
+    document = serialize_object(
+        OpenAPIDocumentBuilder().build_document(tm.create_application())
+    )
     assert document == openapi_schema
 
 
 def test_get_with_body(test_client_factory):
-    client = test_client_factory(app)
+    client = test_client_factory(tm.create_application())
     body = {"name": "Foo", "description": "Some description", "price": 5.5}
     response = client.post("/product", json=body)
     assert response.json() == body
 
 
 def test_body_fails_for_invalid_json_data(test_client_factory):
-    client = test_client_factory(app)
+    client = test_client_factory(tm.create_application())
     body = """
 {
     "name": "John",
@@ -131,20 +132,164 @@ def test_body_fails_for_invalid_json_data(test_client_factory):
     "unterminated_quote": "This string is not properly terminated,
 }
 """
-    response = client.post("/product", data=body)
+    response = client.post("/product", json=body)
     assert response.json() == {
         "detail": [
             {
-                "loc": ["body", 56],
-                "msg": "Expecting value: line 5 column 19 (char 56)",
-                "type": "value_error.jsondecode",
-                "ctx": {
-                    "msg": "Expecting value",
-                    "doc": '\n{\n    "name": "John",\n    "age": 30,\n    "is_student": True,\n    "favorite_colors": ["red", "blue", "green"],\n    "address": {\n        "street": "123 Main St",\n        "city": "Some City",\n        "zip": "12345"\n    },\n    "unterminated_quote": "This string is not properly terminated,\n}\n',
-                    "pos": 56,
-                    "lineno": 5,
-                    "colno": 19,
-                },
+                "type": "model_attributes_type",
+                "loc": ["body"],
+                "msg": "Input should be a valid dictionary or object to extract fields from",
+                "input": '\n{\n    "name": "John",\n    "age": 30,\n    "is_student": True,\n    "favorite_colors": ["red", "blue", "green"],\n    "address": {\n        "street": "123 Main St",\n        "city": "Some City",\n        "zip": "12345"\n    },\n    "unterminated_quote": "This string is not properly terminated,\n}\n',
+                "url": "https://errors.pydantic.dev/2.5/v/model_attributes_type",
             }
         ]
     }
+
+
+def test_post_broken_body():
+    client = tm.get_test_client()
+    response = client.post(
+        "/product",
+        headers={"content-type": "application/json"},
+        content="{some broken json}",
+    )
+    assert response.status_code == 422, response.text
+    assert response.json() == (
+        {
+            "detail": [
+                {
+                    "type": "json_invalid",
+                    "loc": ["body", 1],
+                    "msg": "JSON decode error",
+                    "input": {},
+                    "ctx": {
+                        "error": "Expecting property name enclosed in double quotes"
+                    },
+                }
+            ]
+        }
+    )
+
+
+def test_post_form_for_json():
+    client = tm.get_test_client()
+    response = client.post(
+        "/product",
+        data={"name": "Foo", "description": "Some description", "price": 5.5},
+    )
+    assert response.status_code == 422, response.text
+    assert response.json() == (
+        {
+            "detail": [
+                {
+                    "type": "model_attributes_type",
+                    "loc": ["body"],
+                    "msg": "Input should be a valid dictionary or object to extract fields from",
+                    "input": "name=Foo&description=Some+description&price=5.5",
+                    "url": pydantic_error_url("model_attributes_type"),
+                }
+            ]
+        }
+    )
+
+
+def test_explicit_content_type():
+    client = tm.get_test_client()
+    response = client.post(
+        "/product",
+        content='{"name": "Foo", "description": "Some description", "price": 5.5}',
+        headers={"Content-Type": "application/json"},
+    )
+    assert response.status_code == 200, response.text
+
+
+def test_geo_json():
+    client = tm.get_test_client()
+    response = client.post(
+        "/product",
+        content='{"name": "Foo", "description": "Some description", "price": 5.5}',
+        headers={"Content-Type": "application/geo+json"},
+    )
+    assert response.status_code == 200, response.text
+
+
+def test_no_content_type_is_json():
+    client = tm.get_test_client()
+    response = client.post(
+        "/product",
+        content='{"name": "Foo", "description": "Some description", "price": 5.5}',
+    )
+    assert response.status_code == 200, response.text
+    assert response.json() == {
+        "description": "Some description",
+        "name": "Foo",
+        "price": 5.5,
+    }
+
+
+def test_wrong_headers():
+    client = tm.get_test_client()
+    data = '{"name": "Foo", "description": "Some description", "price": 5.5}'
+    response = client.post(
+        "/product", content=data, headers={"Content-Type": "text/plain"}
+    )
+    assert response.status_code == 422, response.text
+    assert response.json() == (
+        {
+            "detail": [
+                {
+                    "type": "model_attributes_type",
+                    "loc": ["body"],
+                    "msg": "Input should be a valid dictionary or object to extract fields from",
+                    "input": '{"name": "Foo", "description": "Some description", "price": 5.5}',
+                    "url": pydantic_error_url(
+                        "model_attributes_type"
+                    ),  # "https://errors.pydantic.dev/0.38.0/v/dict_attributes_type",
+                }
+            ]
+        }
+    )
+
+    response = client.post(
+        "/product", content=data, headers={"Content-Type": "application/geo+json-seq"}
+    )
+    assert response.status_code == 422, response.text
+    assert response.json() == (
+        {
+            "detail": [
+                {
+                    "type": "model_attributes_type",
+                    "loc": ["body"],
+                    "msg": "Input should be a valid dictionary or object to extract fields from",
+                    "input": '{"name": "Foo", "description": "Some description", "price": 5.5}',
+                    "url": pydantic_error_url("model_attributes_type"),
+                }
+            ]
+        }
+    )
+    response = client.post(
+        "/product",
+        content=data,
+        headers={"Content-Type": "application/not-really-json"},
+    )
+    assert response.status_code == 422, response.text
+    assert response.json() == (
+        {
+            "detail": [
+                {
+                    "type": "model_attributes_type",
+                    "loc": ["body"],
+                    "msg": "Input should be a valid dictionary or object to extract fields from",
+                    "input": '{"name": "Foo", "description": "Some description", "price": 5.5}',
+                    "url": pydantic_error_url("model_attributes_type"),
+                }
+            ]
+        }
+    )
+
+
+def test_other_exceptions():
+    client = tm.get_test_client()
+    with patch("json.loads", side_effect=Exception):
+        response = client.post("/product", json={"test": "test2"})
+        assert response.status_code == 400, response.text

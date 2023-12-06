@@ -4,6 +4,7 @@ from contextvars import ContextVar
 from types import TracebackType
 
 from ellar.common.constants import ELLAR_CONFIG_MODULE
+from ellar.common.logger import logger
 from ellar.common.utils.functional import SimpleLazyObject, empty
 from ellar.core import Config
 from ellar.di import EllarInjector
@@ -95,10 +96,10 @@ def _get_application_config() -> Config:
     if app_context is empty:
         config_module = os.environ.get(ELLAR_CONFIG_MODULE)
         if not config_module:
-            raise RuntimeError(
+            logger.warning(
                 "You are trying to access app config outside app context "
                 "and %s is not specified. This may cause differences in config "
-                "values when the app." % (ELLAR_CONFIG_MODULE,)
+                "values with the app" % (ELLAR_CONFIG_MODULE,)
             )
         return Config(config_module=config_module)
 

@@ -96,7 +96,7 @@ from .routing import (
     trace,
     ws_route,
 )
-from .serializer import DataclassSerializer, Serializer, serialize_object
+from .serializer import Serializer, serialize_object
 from .templating import TemplateResponse, render_template, render_template_string
 
 __all__ = [
@@ -108,7 +108,6 @@ __all__ = [
     "EllarTyper",
     "GlobalGuard",
     "Serializer",
-    "DataclassSerializer",
     "WebSocketException",
     "APIException",
     "AuthenticationFailed",

@@ -1,7 +1,7 @@
 import typing as t
 
 from ellar.common.constants import EXCEPTION_HANDLERS_KEY
-from pydantic import BaseModel
+from ellar.pydantic import BaseModel
 
 
 class ValidateExceptionHandler(BaseModel):

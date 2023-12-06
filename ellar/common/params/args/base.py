@@ -10,17 +10,21 @@ from ellar.common.constants import (
 )
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.interfaces import IExecutionContext
-from pydantic import BaseModel
-from pydantic.error_wrappers import ErrorWrapper
-from pydantic.fields import FieldInfo, ModelField
-from pydantic.typing import ForwardRef, evaluate_forwardref  # type:ignore
-from pydantic.utils import Representation, lenient_issubclass
+from ellar.pydantic import (
+    BaseModel,
+    ErrorWrapper,
+    FieldInfo,
+    ModelField,
+    evaluate_forwardref,
+    is_scalar_field,
+    is_scalar_sequence_field,
+    lenient_issubclass,
+)
 from starlette.convertors import Convertor
 from typing_extensions import Annotated, get_args, get_origin
 
 from .. import params
 from ..decorators import get_default_resolver
-from ..helpers import is_scalar_field, is_scalar_sequence_field
 from ..resolvers import (
     BaseRouteParameterResolver,
     IRouteParameterResolver,
@@ -44,7 +48,7 @@ class EndpointArgsModel:
         str(params.HeaderFieldInfo): QueryHeaderResolverGenerator,
     }
 
-    _provider_skip = primitive_types + sequence_types + (Representation,)
+    _provider_skip = primitive_types + sequence_types
 
     __slots__ = (
         "path",
@@ -223,9 +227,9 @@ class EndpointArgsModel:
                     param_field.field_info, (params.BodyFieldInfo, params.FileFieldInfo)
                 ) and not is_scalar_field(field=param_field):
                     if not is_scalar_sequence_field(param_field):
-                        if not lenient_issubclass(param_field.outer_type_, BaseModel):
+                        if not lenient_issubclass(param_field.type_, BaseModel):
                             raise ImproperConfiguration(
-                                f"{param_field.outer_type_} type can't be processed as a field"
+                                f"{param_field.type_} type can't be processed as a field"
                             )
 
                         bulk_resolver_generator_class = self.get_resolver_generator(
@@ -276,7 +280,7 @@ class EndpointArgsModel:
     ) -> t.Any:
         annotation = param.annotation
         if isinstance(annotation, str):
-            annotation = ForwardRef(annotation)
+            annotation = t.ForwardRef(annotation)
             annotation = evaluate_forwardref(annotation, globalns, globalns)
         return annotation
 
@@ -292,8 +296,7 @@ class EndpointArgsModel:
         values: t.Dict[str, t.Any] = {}
         errors: t.List[ErrorWrapper] = []
 
-        if self.body_resolver:
-            await self.resolve_body(ctx, values, errors)
+        await self.resolve_body(ctx, values, errors)
 
         if not errors:
             for parameter_resolver in self._route_models:

@@ -1,21 +1,16 @@
 import typing as t
 from abc import ABC, abstractmethod
 
+from ellar.pydantic import as_pydantic_validator
 from starlette.responses import Response
 
 from .context import IHostContext
 
 
+@as_pydantic_validator("__validate_input__", schema={"type": "object"})
 class IExceptionHandler(ABC, t.Iterable):
     @classmethod
-    def __get_validators__(
-        cls: t.Type["IExceptionHandler"],
-    ) -> t.Iterable[t.Callable[..., t.Any]]:
-        # for Pydantic Model Validation
-        yield cls.__validate
-
-    @classmethod
-    def __validate(cls, v: t.Any) -> t.Any:
+    def __validate_input__(cls, v: t.Any, _: t.Any) -> t.Any:
         if not isinstance(v, cls):
             raise ValueError(f"Expected IExceptionHandler object, received: {type(v)}")
         return v

@@ -27,14 +27,14 @@ class Range(IntEnum):
 
 
 class Filter(Serializer):
-    to_datetime: datetime = Field(alias="to")
-    from_datetime: datetime = Field(alias="from")
+    to_datetime: datetime = Field(validation_alias="to")
+    from_datetime: datetime = Field(validation_alias="from")
     range: Range = Range.TWENTY
 
 
 class Data(Serializer):
-    an_int: int = Field(alias="int", default=0)
-    a_float: float = Field(alias="float", default=1.5)
+    an_int: int = Field(validation_alias="int", default=0)
+    a_float: float = Field(validation_alias="float", default=1.5)
 
 
 class NonPrimitiveSchema(Serializer):
@@ -46,5 +46,5 @@ class NonPrimitiveSchema(Serializer):
 class ListOfPrimitiveSchema(Serializer):
     # The schema can only work for Body, Query, Header and Form
     # And will fail for Path, Cookie
-    an_int: List[int] = Field(alias="int")
-    a_float: List[float] = Field(alias="float")
+    an_int: List[int] = Field(validation_alias="int")
+    a_float: List[float] = Field(validation_alias="float")

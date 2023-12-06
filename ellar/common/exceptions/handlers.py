@@ -76,5 +76,5 @@ class RequestValidationErrorHandler(IExceptionHandler):
         config = ctx.get_app().config
         return config.DEFAULT_JSON_CLASS(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            content={"detail": serialize_object(exc.errors())},
+            content={"detail": exc.errors()},
         )

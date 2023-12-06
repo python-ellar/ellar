@@ -191,9 +191,11 @@ class TestGatewayWithGuards:
                 "code": 1007,
                 "reason": [
                     {
+                        "input": None,
                         "loc": ["body", "data"],
-                        "msg": "none is not an allowed value",
-                        "type": "type_error.none.not_allowed",
+                        "msg": "Input should be a valid string",
+                        "type": "string_type",
+                        "url": "https://errors.pydantic.dev/2.5/v/string_type",
                     }
                 ],
             }

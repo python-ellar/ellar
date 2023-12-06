@@ -117,7 +117,7 @@ def test_module_template_ref_template_filters():
         def some_template_filter(cls, n):
             pass
 
-    config = Config(**{TEMPLATE_GLOBAL_KEY: []})
+    config = Config(**{TEMPLATE_GLOBAL_KEY: {}})
     container = EllarInjector(auto_bind=False).container
 
     template_filter_functions = config[TEMPLATE_FILTER_KEY]

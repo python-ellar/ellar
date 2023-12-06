@@ -12,8 +12,8 @@ from ellar.common.responses import JSONResponse, PlainTextResponse
 from ellar.common.serializer import Serializer, SerializerFilter
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
 from ellar.core.versioning import DefaultAPIVersioning
-from pydantic import validator
-from pydantic.json import ENCODERS_BY_TYPE as encoders_by_type
+from ellar.pydantic import ENCODERS_BY_TYPE as encoders_by_type
+from ellar.pydantic import field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.websockets import WebSocketClose
 
@@ -55,9 +55,7 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
         }
     )
 
-    class Config:
-        orm_mode = True
-        validate_assignment = True
+    model_config = {"validate_assignment": True, "from_attributes": True}
 
     DEBUG: bool = False
 
@@ -67,7 +65,7 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
 
     # injector auto_bind = True allows you to resolve types that are not registered on the container
     # For more info, read: https://injector.readthedocs.io/en/latest/index.html
-    INJECTOR_AUTO_BIND = False
+    INJECTOR_AUTO_BIND: bool = False
 
     # jinja Environment options
     # https://jinja.palletsprojects.com/en/3.0.x/api/#high-level-api
@@ -90,7 +88,7 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
 
     CORS_ALLOW_CREDENTIALS: bool = False
     CORS_ALLOW_ORIGIN_REGEX: t.Optional[str] = None
-    CORS_EXPOSE_HEADERS: t.Sequence[str] = ()
+    CORS_EXPOSE_HEADERS: t.List[str] = []
     CORS_MAX_AGE: int = 600
 
     ALLOWED_HOSTS: t.List[str] = ["*"]
@@ -132,24 +130,24 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     SESSION_COOKIE_SAME_SITE: Literal["lax", "strict", "none"] = "lax"
     SESSION_COOKIE_MAX_AGE: t.Optional[int] = 14 * 24 * 60 * 60  # 14 days, in seconds
 
-    @validator("MIDDLEWARE", pre=True)
+    @field_validator("MIDDLEWARE", mode="before")
     def pre_middleware_validate(cls, value: t.Any) -> t.Any:
         if isinstance(value, tuple):
             return list(value)
         return value
 
-    @validator("SERIALIZER_CUSTOM_ENCODER")
+    @field_validator("SERIALIZER_CUSTOM_ENCODER")
     def serializer_custom_encoder(cls, value: t.Any) -> t.Any:
         encoder = dict(encoders_by_type)
         encoder.update(value)
         return encoder
 
-    @validator("STATIC_MOUNT_PATH", pre=True)
+    @field_validator("STATIC_MOUNT_PATH", mode="before")
     def pre_static_mount_path(cls, value: t.Any) -> t.Any:
         assert value.startswith("/"), "Routed paths must start with '/'"
         return value
 
-    @validator("CACHES", pre=True)
+    @field_validator("CACHES", mode="before")
     def pre_cache_validate(cls, value: t.Dict) -> t.Any:
         if value and not value.get("default"):
             raise ValueError("CACHES configuration must have a 'default' key")

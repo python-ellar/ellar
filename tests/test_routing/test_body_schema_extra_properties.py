@@ -24,7 +24,7 @@ client = tm.get_test_client()
 
 
 item_openapi_schema = {
-    "openapi": "3.0.2",
+    "openapi": "3.1.0",
     "info": {"title": "Ellar API Docs", "version": "1.0.0"},
     "paths": {
         "/foo": {
@@ -33,11 +33,7 @@ item_openapi_schema = {
                 "requestBody": {
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "title": "Items",
-                                "allOf": [{"$ref": "#/components/schemas/Items_"}],
-                                "include_in_schema": True,
-                            }
+                            "schema": {"$ref": "#/components/schemas/Items_"}
                         }
                     },
                     "required": True,
@@ -47,7 +43,7 @@ item_openapi_schema = {
                         "description": "Successful Response",
                         "content": {
                             "application/json": {
-                                "schema": {"title": "Response Model", "type": "object"}
+                                "schema": {"type": "object", "title": "Response Model"}
                             }
                         },
                     },
@@ -68,42 +64,42 @@ item_openapi_schema = {
     "components": {
         "schemas": {
             "HTTPValidationError": {
-                "title": "HTTPValidationError",
-                "required": ["detail"],
-                "type": "object",
                 "properties": {
                     "detail": {
-                        "title": "Details",
-                        "type": "array",
                         "items": {"$ref": "#/components/schemas/ValidationError"},
+                        "type": "array",
+                        "title": "Details",
                     }
                 },
+                "type": "object",
+                "required": ["detail"],
+                "title": "HTTPValidationError",
             },
             "Items_": {
-                "title": "Items_",
-                "required": ["items"],
-                "type": "object",
                 "properties": {
                     "items": {
-                        "title": "Items",
-                        "type": "object",
                         "additionalProperties": {"type": "integer"},
+                        "type": "object",
+                        "title": "Items",
                     }
                 },
+                "type": "object",
+                "required": ["items"],
+                "title": "Items_",
             },
             "ValidationError": {
-                "title": "ValidationError",
-                "required": ["loc", "msg", "type"],
-                "type": "object",
                 "properties": {
                     "loc": {
-                        "title": "Location",
-                        "type": "array",
                         "items": {"type": "string"},
+                        "type": "array",
+                        "title": "Location",
                     },
-                    "msg": {"title": "Message", "type": "string"},
-                    "type": {"title": "Error Type", "type": "string"},
+                    "msg": {"type": "string", "title": "Message"},
+                    "type": {"type": "string", "title": "Error Type"},
                 },
+                "type": "object",
+                "required": ["loc", "msg", "type"],
+                "title": "ValidationError",
             },
         }
     },

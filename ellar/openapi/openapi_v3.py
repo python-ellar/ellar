@@ -1,9 +1,8 @@
 import typing as t
 from enum import Enum
 
-from ellar.common.compatible import EmailStr
 from ellar.common.serializer import Serializer, SerializerFilter
-from pydantic import AnyUrl, BaseModel, Field
+from ellar.pydantic import AnyUrl, BaseModel, EmailStr, Field, model_rebuild
 
 
 class Contact(BaseModel):
@@ -11,16 +10,14 @@ class Contact(BaseModel):
     url: t.Optional[AnyUrl] = None
     email: t.Optional[EmailStr] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class License(BaseModel):
     name: str
     url: t.Optional[AnyUrl] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class Info(BaseModel):
@@ -31,8 +28,7 @@ class Info(BaseModel):
     license: t.Optional[License] = None
     version: str
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class ServerVariable(BaseModel):
@@ -40,8 +36,7 @@ class ServerVariable(BaseModel):
     default: str
     description: t.Optional[str] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class Server(BaseModel):
@@ -49,8 +44,7 @@ class Server(BaseModel):
     description: t.Optional[str] = None
     variables: t.Optional[t.Dict[str, ServerVariable]] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class Reference(BaseModel):
@@ -69,58 +63,101 @@ class XML(BaseModel):
     attribute: t.Optional[bool] = None
     wrapped: t.Optional[bool] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class ExternalDocumentation(BaseModel):
     description: t.Optional[str] = None
     url: AnyUrl
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class Schema(BaseModel):
-    ref: t.Optional[str] = Field(None, alias="$ref")
-    title: t.Optional[str] = None
-    multipleOf: t.Optional[float] = None
+    # Ref: JSON Schema 2020-12: https://json-schema.org/draft/2020-12/json-schema-core.html#name-the-json-schema-core-vocabu
+    # Core Vocabulary
+    schema_: t.Optional[str] = Field(default=None, alias="$schema")
+    vocabulary: t.Optional[str] = Field(default=None, alias="$vocabulary")
+    id: t.Optional[str] = Field(default=None, alias="$id")
+    anchor: t.Optional[str] = Field(default=None, alias="$anchor")
+    dynamicAnchor: t.Optional[str] = Field(default=None, alias="$dynamicAnchor")
+    ref: t.Optional[str] = Field(default=None, alias="$ref")
+    dynamicRef: t.Optional[str] = Field(default=None, alias="$dynamicRef")
+    defs: t.Optional[t.Dict[str, "SchemaOrBool"]] = Field(default=None, alias="$defs")
+    comment: t.Optional[str] = Field(default=None, alias="$comment")
+    # Ref: JSON Schema 2020-12: https://json-schema.org/draft/2020-12/json-schema-core.html#name-a-vocabulary-for-applying-s
+    # A Vocabulary for Applying Subschemas
+    allOf: t.Optional[t.List["SchemaOrBool"]] = None
+    anyOf: t.Optional[t.List["SchemaOrBool"]] = None
+    oneOf: t.Optional[t.List["SchemaOrBool"]] = None
+    not_: t.Optional["SchemaOrBool"] = Field(default=None, alias="not")
+    if_: t.Optional["SchemaOrBool"] = Field(default=None, alias="if")
+    then: t.Optional["SchemaOrBool"] = None
+    else_: t.Optional["SchemaOrBool"] = Field(default=None, alias="else")
+    dependentSchemas: t.Optional[t.Dict[str, "SchemaOrBool"]] = None
+    prefixItems: t.Optional[t.List["SchemaOrBool"]] = None
+    # TODO: uncomment and remove below when deprecating Pydantic v1
+    # It generales a list of schemas for tuples, before prefixItems was available
+    # items: Optional["SchemaOrBool"] = None
+    items: t.Optional[t.Union["SchemaOrBool", t.List["SchemaOrBool"]]] = None
+    contains: t.Optional["SchemaOrBool"] = None
+    properties: t.Optional[t.Dict[str, "SchemaOrBool"]] = None
+    patternProperties: t.Optional[t.Dict[str, "SchemaOrBool"]] = None
+    additionalProperties: t.Optional["SchemaOrBool"] = None
+    propertyNames: t.Optional["SchemaOrBool"] = None
+    unevaluatedItems: t.Optional["SchemaOrBool"] = None
+    unevaluatedProperties: t.Optional["SchemaOrBool"] = None
+    # Ref: JSON Schema Validation 2020-12: https://json-schema.org/draft/2020-12/json-schema-validation.html#name-a-vocabulary-for-structural
+    # A Vocabulary for Structural Validation
+    type: t.Optional[str] = None
+    enum: t.Optional[t.List[t.Any]] = None
+    const: t.Optional[t.Any] = None
+    multipleOf: t.Optional[float] = Field(default=None, gt=0)
     maximum: t.Optional[float] = None
     exclusiveMaximum: t.Optional[float] = None
     minimum: t.Optional[float] = None
     exclusiveMinimum: t.Optional[float] = None
-    maxLength: t.Optional[int] = Field(None, gte=0)
-    minLength: t.Optional[int] = Field(None, gte=0)
+    maxLength: t.Optional[int] = Field(default=None, ge=0)
+    minLength: t.Optional[int] = Field(default=None, ge=0)
     pattern: t.Optional[str] = None
-    maxItems: t.Optional[int] = Field(None, gte=0)
-    minItems: t.Optional[int] = Field(None, gte=0)
+    maxItems: t.Optional[int] = Field(default=None, ge=0)
+    minItems: t.Optional[int] = Field(default=None, ge=0)
     uniqueItems: t.Optional[bool] = None
-    maxProperties: t.Optional[int] = Field(None, gte=0)
-    minProperties: t.Optional[int] = Field(None, gte=0)
+    maxContains: t.Optional[int] = Field(default=None, ge=0)
+    minContains: t.Optional[int] = Field(default=None, ge=0)
+    maxProperties: t.Optional[int] = Field(default=None, ge=0)
+    minProperties: t.Optional[int] = Field(default=None, ge=0)
     required: t.Optional[t.List[str]] = None
-    enum: t.Optional[t.List[t.Any]] = None
-    type: t.Optional[str] = None
-    allOf: t.Optional[t.List["Schema"]] = None
-    oneOf: t.Optional[t.List["Schema"]] = None
-    AnyOf: t.Optional[t.List["Schema"]] = None
-    not_: t.Optional["Schema"] = Field(None, alias="not")
-    items: t.Optional["Schema"] = None
-    properties: t.Optional[t.Dict[str, "Schema"]] = None
-    additionalProperties: t.Optional[t.Union["Schema", Reference, bool]] = None
-    description: t.Optional[str] = None
+    dependentRequired: t.Optional[t.Dict[str, t.Set[str]]] = None
+    # Ref: JSON Schema Validation 2020-12: https://json-schema.org/draft/2020-12/json-schema-validation.html#name-vocabularies-for-semantic-c
+    # Vocabularies for Semantic Content With "format"
     format: t.Optional[str] = None
+    # Ref: JSON Schema Validation 2020-12: https://json-schema.org/draft/2020-12/json-schema-validation.html#name-a-vocabulary-for-the-conten
+    # A Vocabulary for the Contents of String-Encoded Data
+    contentEncoding: t.Optional[str] = None
+    contentMediaType: t.Optional[str] = None
+    contentSchema: t.Optional["SchemaOrBool"] = None
+    # Ref: JSON Schema Validation 2020-12: https://json-schema.org/draft/2020-12/json-schema-validation.html#name-a-vocabulary-for-basic-meta
+    # A Vocabulary for Basic Meta-Data Annotations
+    title: t.Optional[str] = None
+    description: t.Optional[str] = None
     default: t.Optional[t.Any] = None
-    nullable: t.Optional[bool] = None
-    discriminator: t.Optional[Discriminator] = None
+    deprecated: t.Optional[bool] = None
     readOnly: t.Optional[bool] = None
     writeOnly: t.Optional[bool] = None
+    examples: t.Optional[t.List[t.Any]] = None
+    # Ref: OpenAPI 3.1.0: https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schema-object
+    # Schema Object
+    discriminator: t.Optional[Discriminator] = None
     xml: t.Optional[XML] = None
     externalDocs: t.Optional[ExternalDocumentation] = None
-    example: t.Optional[t.Any] = None
-    deprecated: t.Optional[bool] = None
 
-    class Config:
-        extra: str = "allow"
+    model_config = {"extra": "allow"}
+
+
+# Ref: https://json-schema.org/draft/2020-12/json-schema-core.html#name-json-schema-documents
+# A JSON Schema MUST be an object or a boolean.
+SchemaOrBool = t.Union[Schema, bool]
 
 
 class Example(BaseModel):
@@ -129,8 +166,7 @@ class Example(BaseModel):
     value: t.Optional[t.Any] = None
     externalValue: t.Optional[AnyUrl] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class ParameterInType(Enum):
@@ -147,8 +183,7 @@ class Encoding(BaseModel):
     explode: t.Optional[bool] = None
     allowReserved: t.Optional[bool] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class MediaType(BaseModel):
@@ -157,8 +192,7 @@ class MediaType(BaseModel):
     examples: t.Optional[t.Dict[str, t.Union[Example, Reference]]] = None
     encoding: t.Optional[t.Dict[str, Encoding]] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class ParameterBase(BaseModel):
@@ -175,8 +209,7 @@ class ParameterBase(BaseModel):
 
     content: t.Optional[t.Dict[str, MediaType]] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class Parameter(ParameterBase):
@@ -193,8 +226,7 @@ class RequestBody(BaseModel):
     content: t.Dict[str, MediaType]
     required: t.Optional[bool] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class Link(BaseModel):
@@ -205,8 +237,7 @@ class Link(BaseModel):
     description: t.Optional[str] = None
     server: t.Optional[Server] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class Response(BaseModel):
@@ -215,8 +246,7 @@ class Response(BaseModel):
     content: t.Optional[t.Dict[str, MediaType]] = None
     links: t.Optional[t.Dict[str, t.Union[Link, Reference]]] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class Operation(BaseModel):
@@ -236,8 +266,7 @@ class Operation(BaseModel):
     security: t.Optional[t.List[t.Dict[str, t.List[str]]]] = None
     servers: t.Optional[t.List[Server]] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class PathItem(BaseModel):
@@ -255,8 +284,7 @@ class PathItem(BaseModel):
     servers: t.Optional[t.List[Server]] = None
     parameters: t.Optional[t.List[t.Union[Parameter, Reference]]] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class SecuritySchemeType(Enum):
@@ -270,8 +298,7 @@ class SecurityBase(BaseModel):
     type_: SecuritySchemeType = Field(..., alias="type")
     description: t.Optional[str] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class APIKeyIn(Enum):
@@ -281,18 +308,18 @@ class APIKeyIn(Enum):
 
 
 class APIKey(SecurityBase):
-    type_ = Field(SecuritySchemeType.apiKey, alias="type")
-    in_: APIKeyIn = Field(..., alias="in")
+    type_: SecuritySchemeType = Field(default=SecuritySchemeType.apiKey, alias="type")
+    in_: APIKeyIn = Field(alias="in")
     name: str
 
 
 class HTTPBase(SecurityBase):
-    type_ = Field(SecuritySchemeType.http, alias="type")
+    type_: SecuritySchemeType = Field(default=SecuritySchemeType.http, alias="type")
     scheme: str
 
 
 class HTTPBearer(HTTPBase):
-    scheme = "bearer"
+    scheme: t.Literal["bearer"] = "bearer"
     bearerFormat: t.Optional[str] = None
 
 
@@ -300,8 +327,7 @@ class OAuthFlow(BaseModel):
     refreshUrl: t.Optional[str] = None
     scopes: t.Dict[str, str] = {}
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class OAuthFlowImplicit(OAuthFlow):
@@ -327,17 +353,18 @@ class OAuthFlows(BaseModel):
     clientCredentials: t.Optional[OAuthFlowClientCredentials] = None
     authorizationCode: t.Optional[OAuthFlowAuthorizationCode] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class OAuth2(SecurityBase):
-    type_ = Field(SecuritySchemeType.oauth2, alias="type")
+    type_: SecuritySchemeType = Field(default=SecuritySchemeType.oauth2, alias="type")
     flows: OAuthFlows
 
 
 class OpenIdConnect(SecurityBase):
-    type_ = Field(SecuritySchemeType.openIdConnect, alias="type")
+    type_: SecuritySchemeType = Field(
+        default=SecuritySchemeType.openIdConnect, alias="type"
+    )
     openIdConnectUrl: str
 
 
@@ -358,8 +385,7 @@ class Components(BaseModel):
         t.Dict[str, t.Union[t.Dict[str, PathItem], Reference, t.Any]]
     ] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class Tag(BaseModel):
@@ -367,8 +393,7 @@ class Tag(BaseModel):
     description: t.Optional[str] = None
     externalDocs: t.Optional[ExternalDocumentation] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
 class OpenAPI(Serializer):
@@ -384,10 +409,9 @@ class OpenAPI(Serializer):
     tags: t.Optional[t.List[Tag]] = None
     externalDocs: t.Optional[ExternalDocumentation] = None
 
-    class Config:
-        extra = "allow"
+    model_config = {"extra": "allow"}
 
 
-Schema.update_forward_refs()
-Operation.update_forward_refs()
-Encoding.update_forward_refs()
+model_rebuild(Schema)
+model_rebuild(Operation)
+model_rebuild(Encoding)
