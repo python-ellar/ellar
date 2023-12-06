@@ -1,7 +1,7 @@
 import typing as t
 from abc import ABC, abstractmethod
 
-from ellar.common.pydantic import ModelField
+from ellar.pydantic import ModelField
 from starlette.responses import Response
 
 from .context import IExecutionContext

@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 from ellar.app import App, current_app, current_config, current_injector
 from ellar.app.context import ApplicationContext
@@ -15,9 +17,24 @@ def test_getting_current_app_outside_running_context_fails():
         assert current_app.config
 
 
-def test_current_config_fails_when_there_is_no_ellar_config_module():
-    with pytest.raises(RuntimeError):
+def test_current_config_fails_when_there_is_no_ellar_config_module(caplog):
+    with caplog.at_level(logging.WARNING):
+        tm = Test.create_test_module()
+
+        with ApplicationContext.create(tm.create_application()):
+            assert current_injector.get(App) is not None
+            assert current_config.DEBUG is False
+
+        assert caplog.text == ""
+
+    with caplog.at_level(logging.WARNING):
         assert current_config.DEBUG is False
+        print(caplog.text)
+        assert caplog.text == (
+            "WARNING  ellar:context.py:98 You are trying to access app config outside app "
+            "context and ELLAR_CONFIG_MODULE is not specified. This may cause differences "
+            "in config values with the app\n"
+        )
 
 
 def test_current_injector_works():

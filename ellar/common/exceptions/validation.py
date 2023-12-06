@@ -1,7 +1,7 @@
 import typing as t
 
-from ellar.common.pydantic import BaseModel, create_model
 from ellar.common.serializer import serialize_object
+from ellar.pydantic import BaseModel, create_model
 
 RequestErrorModel: t.Type[BaseModel] = create_model("Request")
 WebSocketErrorModel: t.Type[BaseModel] = create_model("WebSocket")

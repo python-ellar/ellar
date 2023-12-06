@@ -1,7 +1,7 @@
 import typing as t
 from abc import ABC, ABCMeta, abstractmethod
 
-from ellar.common.pydantic import (
+from ellar.pydantic import (
     ModelField,
     get_missing_field_error,
     regenerate_error_with_loc,

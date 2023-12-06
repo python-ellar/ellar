@@ -5,7 +5,7 @@ from ellar.common.exceptions import WebSocketRequestValidationError
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import request_logger
 from ellar.common.params import WebsocketEndpointArgsModel
-from ellar.common.pydantic import as_pydantic_validator
+from ellar.pydantic import as_pydantic_validator
 from starlette import status
 from starlette.exceptions import WebSocketException
 from starlette.status import WS_1008_POLICY_VIOLATION

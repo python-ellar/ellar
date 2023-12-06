@@ -4,8 +4,8 @@ from ellar.common.exceptions.validation import (
     RequestValidationError,
     WebSocketRequestValidationError,
 )
-from ellar.common.pydantic import ErrorWrapper
 from ellar.core import WebSocket
+from ellar.pydantic import ErrorWrapper
 from ellar.testing import Test
 
 from .exception_runner import ExceptionRunner

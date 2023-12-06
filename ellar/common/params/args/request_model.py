@@ -3,7 +3,7 @@ import typing as t
 from ellar.common.constants import MULTI_RESOLVER_KEY
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import logger
-from ellar.common.pydantic import (
+from ellar.pydantic import (
     BaseModel,
     ModelField,
     create_body_model,

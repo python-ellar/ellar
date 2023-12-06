@@ -3,13 +3,13 @@ from dataclasses import is_dataclass
 
 from ellar.common.constants import primitive_types
 from ellar.common.converters import TypeDefinitionConverter
-from ellar.common.pydantic import BaseModel
 from ellar.common.serializer.base import (
     BaseSerializer,
     Serializer,
     SerializerBase,
     convert_dataclass_to_pydantic_model,
 )
+from ellar.pydantic import BaseModel
 
 
 class ResponseTypeDefinitionConverter(TypeDefinitionConverter):

@@ -1,5 +1,6 @@
 import typing as t
 
+from ellar.pydantic import as_pydantic_validator
 from starlette.datastructures import (
     URL as URL,
 )
@@ -25,8 +26,6 @@ from starlette.datastructures import (
     URLPath,
 )
 from typing_extensions import Annotated, Doc  # type: ignore[attr-defined]
-
-from .pydantic import as_pydantic_validator
 
 __all__ = [
     "URL",

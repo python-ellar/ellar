@@ -1,6 +1,6 @@
 import pytest
-from ellar.common.pydantic import ModelField, create_model_field
 from ellar.common.responses.models import ResponseModelField
+from ellar.pydantic import ModelField, create_model_field
 from pydantic import PydanticUndefinedAnnotation
 
 

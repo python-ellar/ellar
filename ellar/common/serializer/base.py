@@ -5,8 +5,8 @@ from enum import Enum
 from pathlib import PurePath
 from types import GeneratorType
 
-from ellar.common.pydantic import (
-    ENCODERS_BY_TYPE,
+from ellar.common.utils.functional import LazyStrImport
+from ellar.pydantic import (
     BaseConfig,
     BaseModel,
     TypeAdapter,
@@ -126,11 +126,18 @@ def convert_dataclass_to_pydantic_model(dataclass_type: t.Type) -> t.Type[BaseMo
     raise Exception(f"{dataclass_type} is not a dataclass")
 
 
+def _lazy_current_config() -> t.Any:
+    return LazyStrImport("ellar.app:current_config")
+
+
 def serialize_object(
     obj: t.Any,
-    encoders: t.Dict[t.Any, t.Callable[[t.Any], t.Any]] = ENCODERS_BY_TYPE,
+    encoders: t.Optional[t.Dict[t.Any, t.Callable[[t.Any], t.Any]]] = None,
     serializer_filter: t.Optional[SerializerFilter] = None,
 ) -> t.Any:
+    _encoders = (
+        encoders if encoders else _lazy_current_config().SERIALIZER_CUSTOM_ENCODER
+    )
     if isinstance(obj, (BaseModel, BaseSerializer)):
         if isinstance(obj, BaseSerializer):
             obj_dict = obj.serialize(serializer_filter)
@@ -141,12 +148,12 @@ def serialize_object(
                 **(serializer_filter or default_serializer_filter).dict(),
             )
 
-        return serialize_object(obj_dict, encoders)
+        return serialize_object(obj_dict, _encoders)
     if is_dataclass(obj):
-        return serialize_object(asdict(obj), encoders, serializer_filter)
+        return serialize_object(asdict(obj), _encoders, serializer_filter)
     if isinstance(obj, dict):
         return {
-            str(k): serialize_object(v, encoders, serializer_filter)
+            str(k): serialize_object(v, _encoders, serializer_filter)
             for k, v in obj.items()
         }
     if isinstance(obj, Enum):
@@ -156,9 +163,9 @@ def serialize_object(
     if isinstance(obj, (str, int, float, type(None))):
         return obj
     if isinstance(obj, (list, set, frozenset, GeneratorType, tuple)):
-        return [serialize_object(item, encoders, serializer_filter) for item in obj]
+        return [serialize_object(item, _encoders, serializer_filter) for item in obj]
 
-    encoder = encoders.get(type(obj))
+    encoder = _encoders.get(type(obj))
     if encoder:
         return encoder(obj)
 
@@ -172,4 +179,4 @@ def serialize_object(
         except Exception as e2:
             errors.append(e2)
             raise ValueError(errors) from e2
-    return serialize_object(data, encoders, serializer_filter)
+    return serialize_object(data, _encoders, serializer_filter)

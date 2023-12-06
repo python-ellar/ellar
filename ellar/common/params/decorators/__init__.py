@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.common.pydantic.types import Undefined
+from ellar.pydantic.types import Undefined
 from typing_extensions import Annotated
 
 from . import models as param_functions

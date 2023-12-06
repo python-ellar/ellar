@@ -1,8 +1,8 @@
 import typing as t
 from abc import ABC, abstractmethod
 
-from ellar.common.pydantic import as_pydantic_validator
 from ellar.common.types import TScope
+from ellar.pydantic import as_pydantic_validator
 
 
 class IAPIVersioningResolver(ABC):

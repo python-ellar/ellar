@@ -1,13 +1,13 @@
 import inspect
 import typing as t
 
-from ellar.common.pydantic import (
+from ellar.pydantic import (
     FieldInfo,
     ModelField,
     create_model_field,
     is_scalar_field,
 )
-from ellar.common.pydantic import (
+from ellar.pydantic import (
     types as pydantic_types,
 )
 

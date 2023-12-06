@@ -1,8 +1,8 @@
 import typing as t
 from enum import Enum
 
-from ellar.common.pydantic import AnyUrl, BaseModel, EmailStr, Field, model_rebuild
 from ellar.common.serializer import Serializer, SerializerFilter
+from ellar.pydantic import AnyUrl, BaseModel, EmailStr, Field, model_rebuild
 
 
 class Contact(BaseModel):

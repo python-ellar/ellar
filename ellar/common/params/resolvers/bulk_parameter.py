@@ -2,7 +2,7 @@ import typing as t
 
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logger import request_logger
-from ellar.common.pydantic import ErrorWrapper, ModelField
+from ellar.pydantic import ErrorWrapper, ModelField
 
 from .base import BaseRouteParameterResolver
 from .parameter import BodyParameterResolver, FormParameterResolver

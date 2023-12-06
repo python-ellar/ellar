@@ -6,7 +6,7 @@ from ellar.common.constants import (
     sequence_types,
 )
 from ellar.common.exceptions import ImproperConfiguration
-from ellar.common.pydantic import (
+from ellar.pydantic import (
     BaseModel,
     FieldConstraintsDefaultValues,
     FieldInfo,

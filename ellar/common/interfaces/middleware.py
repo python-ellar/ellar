@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.common.pydantic import as_pydantic_validator
+from ellar.pydantic import as_pydantic_validator
 
 
 @as_pydantic_validator("__validate_input__", schema={"type": "object"})

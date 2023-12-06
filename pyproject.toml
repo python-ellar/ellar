@@ -127,7 +127,7 @@ ignore = [
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = ["F401"]
-"ellar/common/pydantic/fields.py" = ["B006"]
+"ellar/pydantic/fields.py" = ["B006"]
 
 [tool.ruff.isort]
 known-third-party = ["ellar", "pydantic", "starlette"]
@@ -163,5 +163,5 @@ ignore_errors = true
 module = "ellar.common.utils.functional"
 ignore_errors = true
 [[tool.mypy.overrides]]
-module = "ellar.common.pydantic.*"
+module = "ellar.pydantic.*"
 ignore_errors = true

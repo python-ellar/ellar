@@ -1,6 +1,5 @@
 import typing as t
 
-from ..logger import logger
 from .decorator import as_pydantic_validator
 
 try:
@@ -9,6 +8,7 @@ try:
     assert email_validator
     from pydantic import EmailStr
 except ImportError:  # pragma: no cover
+    from ellar.common.logger import logger
 
     @as_pydantic_validator(
         "__validate_input", schema={"type": "string", "format": "email"}

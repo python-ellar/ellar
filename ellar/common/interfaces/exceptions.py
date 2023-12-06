@@ -1,7 +1,7 @@
 import typing as t
 from abc import ABC, abstractmethod
 
-from ellar.common.pydantic import as_pydantic_validator
+from ellar.pydantic import as_pydantic_validator
 from starlette.responses import Response
 
 from .context import IHostContext

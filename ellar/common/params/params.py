@@ -2,8 +2,8 @@ import typing as t
 from enum import Enum
 
 from ellar.common.constants import MULTI_RESOLVER_FORM_GROUPED_KEY, MULTI_RESOLVER_KEY
-from ellar.common.pydantic import FieldInfo, ModelField
-from ellar.common.pydantic import types as pydantic_types
+from ellar.pydantic import FieldInfo, ModelField
+from ellar.pydantic import types as pydantic_types
 
 from .resolvers import (
     BaseRouteParameterResolver,

@@ -10,7 +10,7 @@ from ellar.common.constants import (
 )
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.interfaces import IExecutionContext
-from ellar.common.pydantic import (
+from ellar.pydantic import (
     BaseModel,
     ErrorWrapper,
     FieldInfo,

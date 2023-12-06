@@ -5,7 +5,7 @@ from enum import Enum
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
 
 import pytest
-from ellar.common.pydantic import as_pydantic_validator
+from ellar.app.context import ApplicationContext
 from ellar.common.serializer.base import (
     Serializer,
     SerializerFilter,
@@ -13,6 +13,8 @@ from ellar.common.serializer.base import (
     get_dataclass_pydantic_model,
     serialize_object,
 )
+from ellar.pydantic import as_pydantic_validator
+from ellar.testing import Test
 from pydantic import BaseModel, Field, RootModel
 from pydantic import dataclasses as pydantic_dataclasses
 
@@ -276,3 +278,28 @@ def test_encode_model_with_path(model_with_path):
 def test_encode_root():
     model = ModelWithRoot("Foo")
     assert serialize_object(model) == "Foo"
+
+
+def test_serialize_object_under_app_context():
+    decoder_func_called = False
+
+    def decoder_func(o):
+        nonlocal decoder_func_called
+        decoder_func_called = True
+        return o.isoformat()
+
+    class safe_datetime(datetime):
+        @classmethod
+        def __validate_schema__(cls, __input_value, *args):
+            assert isinstance(__input_value, datetime)
+            return __input_value
+
+    tm = Test.create_test_module(
+        config_module={"SERIALIZER_CUSTOM_ENCODER": {safe_datetime: decoder_func}}
+    )
+
+    with ApplicationContext.create(tm.create_application()):
+        result = serialize_object(safe_datetime.fromisocalendar(2023, 45, 5))
+        assert result == "2023-11-10T00:00:00"
+
+    assert decoder_func_called is True

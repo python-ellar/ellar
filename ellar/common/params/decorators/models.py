@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.common.pydantic.types import Undefined
+from ellar.pydantic.types import Undefined
 
 from ...params import params
 

@@ -1,7 +1,7 @@
 import typing as t
 
 from ellar.cache import BaseCacheBackend
-from ellar.common.pydantic import BaseModel, as_pydantic_validator, field_validator
+from ellar.pydantic import BaseModel, as_pydantic_validator, field_validator
 
 
 @as_pydantic_validator("__validate_input__", schema={"type": "object"})
