@@ -2,7 +2,12 @@ import typing as t
 from collections import deque
 from dataclasses import is_dataclass
 
-from pydantic import BaseModel, PydanticSchemaGenerationError, create_model
+from pydantic import (
+    BaseModel,
+    PydanticSchemaGenerationError,
+    PydanticUndefinedAnnotation,
+    create_model,
+)
 from pydantic import ValidationError as ValidationError
 from pydantic._internal._typing_extra import eval_type_lenient
 from pydantic._internal._utils import lenient_issubclass
@@ -11,6 +16,7 @@ from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 from starlette.datastructures import UploadFile
 from typing_extensions import Literal, get_args, get_origin
 
+from .exceptions import InvalidModelFieldSetupException
 from .fields import ModelField
 from .types import Undefined, UnionType
 
@@ -42,10 +48,6 @@ def model_dump(
     model: BaseModel, mode: t.Literal["json", "python"] = "json", **kwargs: t.Any
 ) -> t.Any:
     return model.model_dump(mode=mode, **kwargs)
-
-
-def get_model_config(model: BaseModel) -> t.Any:
-    return model.model_config
 
 
 def get_schema_from_model_field(
@@ -108,10 +110,6 @@ def is_sequence_field(field: ModelField) -> bool:
 
 def is_scalar_sequence_field(field: ModelField) -> bool:
     return field_annotation_is_scalar_sequence(field.field_info.annotation)
-
-
-def copy_field_info(*, field_info: FieldInfo, annotation: t.Any) -> FieldInfo:
-    return type(field_info).from_annotation(annotation)
 
 
 def serialize_sequence_value(*, field: ModelField, value: t.Any) -> t.Sequence[t.Any]:
@@ -250,7 +248,7 @@ def create_model_field(
 
     try:
         return model_field_class(**kwargs)  # type: ignore[arg-type]
-    except (RuntimeError, PydanticSchemaGenerationError) as e:
-        raise Exception(
+    except (PydanticUndefinedAnnotation, PydanticSchemaGenerationError) as e:
+        raise InvalidModelFieldSetupException(
             f"Invalid args for response field! Hint: check that {type_} is a valid pydantic field type"
         ) from e

@@ -51,3 +51,7 @@ class ErrorWrapper(BaseModel):
             d["ctx"] = ctx
 
         return d
+
+
+class InvalidModelFieldSetupException(Exception):
+    pass

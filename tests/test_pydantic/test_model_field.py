@@ -1,7 +1,7 @@
 import pytest
 from ellar.common.responses.models import ResponseModelField
 from ellar.pydantic import ModelField, create_model_field
-from pydantic import PydanticUndefinedAnnotation
+from ellar.pydantic.exceptions import InvalidModelFieldSetupException
 
 
 def test_create_model_field_works():
@@ -17,7 +17,7 @@ def test_create_model_field_works():
 
 def test_create_model_field_fails():
     with pytest.raises(
-        PydanticUndefinedAnnotation,
+        InvalidModelFieldSetupException,
     ):
         create_model_field(
             name="response_model",
