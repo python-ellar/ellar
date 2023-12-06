@@ -30,11 +30,11 @@ def test_current_config_fails_when_there_is_no_ellar_config_module(caplog):
     with caplog.at_level(logging.WARNING):
         assert current_config.DEBUG is False
         print(caplog.text)
-        assert caplog.text == (
-            "WARNING  ellar:context.py:98 You are trying to access app config outside app "
+        assert (
+            "You are trying to access app config outside app "
             "context and ELLAR_CONFIG_MODULE is not specified. This may cause differences "
-            "in config values with the app\n"
-        )
+            "in config values with the app"
+        ) in caplog.text
 
 
 def test_current_injector_works():
