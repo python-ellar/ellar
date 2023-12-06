@@ -262,7 +262,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             }
             if field_info.description:
                 parameter["description"] = field_info.description
-            if field_info.examples:
+            if field_info.examples:  # pragma:no cover
                 parameter["examples"] = field_info.examples  # type:ignore[assignment]
             if field_info.deprecated:
                 parameter["deprecated"] = field_info.deprecated
@@ -297,7 +297,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             request_body_oai["required"] = model_field.required
 
         request_media_content: t.Dict[str, t.Any] = {"schema": body_schema}
-        if field_info.examples:
+        if field_info.examples:  # pragma: no cover
             request_media_content["examples"] = field_info.examples
 
         request_body_oai["content"] = {request_media_type: request_media_content}

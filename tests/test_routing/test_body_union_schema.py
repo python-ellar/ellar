@@ -4,7 +4,7 @@ from unittest.mock import patch
 from ellar.common import Body, post
 from ellar.common.serializer import serialize_object
 from ellar.core import Request
-from ellar.openapi import OpenAPIDocumentBuilder
+from ellar.openapi import OpenAPIDocumentBuilder, openapi_info
 from ellar.testing import Test
 
 from .sample import Item, OtherItem, Product
@@ -25,7 +25,15 @@ def embed_qty(qty: Body[int, Body.P(12, embed=True)]):
 
 
 @post("/items/alias")
-def alias_qty(qty: Body[int, Body.P(embed=True, alias="aliasQty")]):
+@openapi_info(tags=["Product"], description="Modify Product Qty", deprecated=True)
+def alias_qty(
+    qty: Body[
+        int,
+        Body.P(
+            embed=True, alias="aliasQty", description="Product Qty", deprecated=True
+        ),
+    ],
+):
     return {"qty": qty}
 
 
@@ -78,6 +86,8 @@ item_openapi_schema = {
         },
         "/items/alias": {
             "post": {
+                "tags": ["Product"],
+                "description": "Modify Product Qty",
                 "operationId": "alias_qty_items_alias_post",
                 "requestBody": {
                     "content": {
@@ -109,6 +119,7 @@ item_openapi_schema = {
                         },
                     },
                 },
+                "deprecated": True,
             }
         },
         "/items/embed": {
@@ -196,7 +207,13 @@ item_openapi_schema = {
                 "title": "ValidationError",
             },
             "body_alias_qty_items_alias_post": {
-                "properties": {"aliasQty": {"type": "integer", "title": "Aliasqty"}},
+                "properties": {
+                    "aliasQty": {
+                        "type": "integer",
+                        "title": "Aliasqty",
+                        "description": "Product Qty",
+                    }
+                },
                 "type": "object",
                 "required": ["aliasQty"],
                 "title": "body_alias_qty_items_alias_post",
