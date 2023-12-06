@@ -71,7 +71,7 @@ class WsRouteParameters(Serializer):
     endpoint: t.Callable
     encoding: t.Optional[str] = Field("json")
     use_extra_handler: bool = Field(False)
-    extra_handler_type: t.Optional[t.Type["WebSocketExtraHandler"]] = None
+    extra_handler_type: t.Optional[t.Type[WebSocketExtraHandler]] = None
     _kwargs: t.Dict = PrivateAttr()
 
     def __init__(self, **data: t.Any) -> None:

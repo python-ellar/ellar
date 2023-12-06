@@ -91,4 +91,4 @@ class EmptyAPIResponseModel(JSONResponseModel):
                 )
             except Exception:  # pragma:no cover
                 """Could not serialize response obj"""
-        return response_obj
+                return response_obj

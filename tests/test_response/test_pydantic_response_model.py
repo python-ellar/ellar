@@ -1,10 +1,10 @@
 from typing import Dict, List, Optional, Union
 
+import ellar.common as common
 from ellar.app import AppFactory
-from ellar.common import ModuleRouter, Serializer, serializer_filter
 from pydantic import BaseModel, Field
 
-mr = ModuleRouter("")
+mr = common.ModuleRouter("")
 
 
 class Item(BaseModel):
@@ -13,7 +13,7 @@ class Item(BaseModel):
     owner_ids: Optional[List[int]] = None
 
 
-class ItemSerializer(Serializer):
+class ItemSerializer(common.Serializer):
     name: str = Field(..., alias="aliased_name")
     price: Optional[float] = None
     owner_ids: Optional[List[int]] = None
@@ -48,19 +48,19 @@ def get_validdict():
 
 
 @mr.get("/items/valid-exclude-unset")
-@serializer_filter(exclude_unset=True)
+@common.serializer_filter(exclude_unset=True)
 def get_valid_exclude_unset():
     return Item(aliased_name="valid", price=1.0)
 
 
 @mr.get("/items/coerce-exclude-unset")
-@serializer_filter(exclude_unset=True)
+@common.serializer_filter(exclude_unset=True)
 def get_coerce_exclude_unset():
     return ItemSerializer(aliased_name="coerce", price="1.0")
 
 
 @mr.get("/items/validlist-exclude-unset")
-@serializer_filter(exclude_unset=True)
+@common.serializer_filter(exclude_unset=True)
 def get_validlist_exclude_unset():
     return [
         Item(aliased_name="foo"),
@@ -70,11 +70,27 @@ def get_validlist_exclude_unset():
 
 
 @mr.get("/items/validdict-exclude-unset")
-@serializer_filter(exclude_unset=True)
+@common.serializer_filter(exclude_unset=True)
 def get_validdict_exclude_unset():
     return {
         "k1": ItemSerializer(aliased_name="foo"),
         "k2": Item(aliased_name="bar", price=1.0),
+        "k3": ItemSerializer(aliased_name="baz", price=2.0, owner_ids=[1, 2, 3]),
+    }
+
+
+@mr.get(
+    "/items/valid-ellipsis-response-model",
+    response={201: Dict[str, ItemSerializer], ...: List[Item]},
+)
+def get_valid_ellipsis(switch: common.Query[str]):
+    if switch == "ellipsis":
+        return [
+            Item(aliased_name="bar", price=1.0),
+            Item(aliased_name="bar2", price=2.0),
+        ]
+    return 201, {
+        "k1": ItemSerializer(aliased_name="foo"),
         "k3": ItemSerializer(aliased_name="baz", price=2.0, owner_ids=[1, 2, 3]),
     }
 
@@ -155,4 +171,19 @@ def test_validdict_exclude_unset(test_client_factory):
         "k1": {"aliased_name": "foo"},
         "k2": {"aliased_name": "bar", "price": 1.0},
         "k3": {"aliased_name": "baz", "price": 2.0, "owner_ids": [1, 2, 3]},
+    }
+
+
+def test_valid_ellipsis(test_client_factory):
+    client = test_client_factory(app)
+    response = client.get("/items/valid-ellipsis-response-model?switch=ellipsis")
+    response.raise_for_status()
+    assert response.json() == [
+        {"aliased_name": "bar", "owner_ids": None, "price": 1.0},
+        {"aliased_name": "bar2", "owner_ids": None, "price": 2.0},
+    ]
+    response = client.get("/items/valid-ellipsis-response-model?switch=none")
+    assert response.json() == {
+        "k1": {"aliased_name": "foo", "owner_ids": None, "price": None},
+        "k3": {"aliased_name": "baz", "owner_ids": [1, 2, 3], "price": 2.0},
     }

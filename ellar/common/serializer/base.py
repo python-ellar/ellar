@@ -84,16 +84,13 @@ class SerializerBase(BaseSerializer, __skip_filter__=True):
         self, serializer_filter: t.Optional[SerializerFilter] = None
     ) -> t.Dict:
         _filter = serializer_filter or self._filter
-        return t.cast(
-            dict,
-            super().model_dump(**_filter.dict()),  # type:ignore[misc]
-        )
+        return self.model_dump(**_filter.dict())
 
     def serialize_json(
         self, serializer_filter: t.Optional[SerializerFilter] = None
     ) -> str:
         _filter = serializer_filter or self._filter
-        return super().model_dump_json(**_filter.dict())  # type:ignore[no-any-return,misc]
+        return self.model_dump_json(**_filter.dict())
 
     def dict(self, **kwargs: t.Any) -> t.Dict:
         return self.model_dump(**kwargs)
