@@ -12,9 +12,10 @@ from ellar.common import (
     get,
 )
 from ellar.common.constants import MODULE_METADATA
-from ellar.core import Config, DynamicModule, ModuleBase, ModuleSetup
+from ellar.common.exceptions import ImproperConfiguration
+from ellar.core import Config, DynamicModule, LazyModuleImport, ModuleBase, ModuleSetup
 from ellar.core.services import Reflector
-from ellar.di import EllarInjector, ProviderConfig
+from ellar.di import EllarInjector, ProviderConfig, exceptions
 from ellar.reflect import reflect
 from ellar.testing import Test
 
@@ -30,6 +31,13 @@ class SampleController(ControllerBase):
     @get("/sample")
     def sample_example(self):
         return {"message": 'You have reached "sample_example" home route'}
+
+
+@Module(routers=(router,))
+class SimpleModule(ModuleBase):
+    @classmethod
+    def invalid_setup(cls):
+        return IDynamic
 
 
 @Module(routers=(router,))
@@ -74,6 +82,93 @@ class DynamicModuleSetupRegisterModule(ModuleBase, IModuleSetup):
         module: "DynamicModuleSetupRegisterModule", config: Config
     ) -> DynamicModule:
         return module.setup(config.a, config.b)
+
+
+SimpleModuleImportStr = "tests.test_modules.test_module_config:SimpleModule"
+DynamicModuleSetupRegisterModuleImportStr = (
+    "tests.test_modules.test_module_config:DynamicModuleSetupRegisterModule"
+)
+
+
+@Module(modules=[LazyModuleImport(SimpleModuleImportStr)])
+class LazyModuleImportWithoutDynamicSetup(ModuleBase):
+    pass
+
+
+@Module(
+    modules=[
+        LazyModuleImport(
+            DynamicModuleSetupRegisterModuleImportStr, "setup", a=233, b=344
+        )
+    ]
+)
+class LazyModuleImportWithDynamicSetup(ModuleBase):
+    pass
+
+
+@Module(
+    modules=[
+        LazyModuleImport(DynamicModuleSetupRegisterModuleImportStr, "setup_register")
+    ]
+)
+class LazyModuleImportWithSetup(ModuleBase):
+    pass
+
+
+def test_invalid_lazy_module_import():
+    with pytest.raises(ImproperConfiguration) as ex:
+        LazyModuleImport("tests.test_modules.test_module_config:IDynamic").get_module()
+    assert str(ex.value) == "IDynamic is not a valid Module"
+
+
+def test_lazy_module_import_fails_for_invalid_import():
+    with pytest.raises(ImproperConfiguration) as ex:
+        LazyModuleImport("tests.test_modules.test_module_config:IDynamic2").get_module()
+    assert (
+        str(ex.value)
+        == 'Unable to import "tests.test_modules.test_module_config:IDynamic2" registered in Module[ApplicationModule]'
+    )
+
+    with pytest.raises(ImproperConfiguration) as ex:
+        LazyModuleImport("tests.test_modules.test_module_config:IDynamic2").get_module(
+            "xyzModule"
+        )
+    assert (
+        str(ex.value)
+        == 'Unable to import "tests.test_modules.test_module_config:IDynamic2" registered in Module[xyzModule]'
+    )
+
+
+def test_lazy_module_import_fails_for_dynamic_setup():
+    with pytest.raises(ImproperConfiguration) as ex:
+        LazyModuleImport(SimpleModuleImportStr, "invalid_setup").get_module()
+    assert (
+        str(ex.value)
+        == "Lazy Module import with setup attribute must return a DynamicModule/ModuleSetup instance"
+    )
+
+
+def test_lazy_module_import():
+    test_module = Test.create_test_module(
+        modules=(LazyModuleImportWithoutDynamicSetup,)
+    )
+    assert len(test_module.create_application().routes[0].routes) == 39
+    with pytest.raises(exceptions.UnsatisfiedRequirement):
+        test_module.get(IDynamic)
+
+
+def test_lazy_module_import_with_dynamic_module_setup():
+    test_module = Test.create_test_module(modules=(LazyModuleImportWithDynamicSetup,))
+    dynamic_instance = test_module.get(IDynamic)
+    assert dynamic_instance.b == 344 and dynamic_instance.a == 233
+
+
+def test_lazy_module_import_with_dynamic_setup():
+    test_module = Test.create_test_module(
+        modules=(LazyModuleImportWithSetup,), config_module={"a": 233, "b": 445}
+    )
+    dynamic_instance = test_module.get(IDynamic)
+    assert dynamic_instance.b == 445 and dynamic_instance.a == 233
 
 
 def test_dynamic_module_haves_routes():
@@ -169,7 +264,7 @@ def test_invalid_module_setup():
     def dynamic_instantiate_factory(module: DynamicInstantiatedModule, *args):
         return ModuleSetup(DynamicInstantiatedModule)
 
-    with pytest.raises(Exception) as ex:
+    with pytest.raises(ImproperConfiguration) as ex:
         ModuleSetup(module=IDynamic)
     assert str(ex.value) == "IDynamic is not a valid Module"
 
@@ -186,7 +281,7 @@ def test_invalid_module_setup():
 
 
 def test_invalid_dynamic_module_setup():
-    with pytest.raises(Exception) as ex:
+    with pytest.raises(ImproperConfiguration) as ex:
         DynamicModule(module=IDynamic)
     assert str(ex.value) == "IDynamic is not a valid Module"
 

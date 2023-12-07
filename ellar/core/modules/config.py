@@ -2,7 +2,9 @@ import dataclasses
 import typing as t
 
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
+from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.models import ControllerBase
+from ellar.common.utils.importer import import_from_string
 from ellar.core.conf import Config
 from ellar.di import MODULE_REF_TYPES, Container, EllarInjector
 from ellar.reflect import reflect
@@ -36,7 +38,7 @@ class DynamicModule:
 
     def __post_init__(self) -> None:
         if not reflect.get_metadata(MODULE_WATERMARK, self.module):
-            raise Exception(f"{self.module.__name__} is not a valid Module")
+            raise ImproperConfiguration(f"{self.module.__name__} is not a valid Module")
 
     def apply_configuration(self) -> None:
         if self._is_configured:
@@ -100,7 +102,7 @@ class ModuleSetup:
 
     def __post_init__(self) -> None:
         if not reflect.get_metadata(MODULE_WATERMARK, self.module):
-            raise Exception(f"{self.module.__name__} is not a valid Module")
+            raise ImproperConfiguration(f"{self.module.__name__} is not a valid Module")
 
         class_names = {cls.__name__ for cls in self.inject}
         if "App" in class_names:
@@ -140,7 +142,7 @@ class ModuleSetup:
 
         res = self.factory(self.module, *services)
         if not isinstance(res, DynamicModule):
-            raise Exception(
+            raise ImproperConfiguration(
                 f"Factory function for {self.module.__name__} module "
                 f"configuration must return `DynamicModule` instance"
             )
@@ -162,3 +164,47 @@ class ModuleSetup:
 
     def __hash__(self) -> int:  # pragma: no cover
         return hash(self.module)
+
+
+class LazyModuleImport:
+    __slots__ = ("module", "setup_method", "setup_method_options")
+
+    def __init__(
+        self, module: str, setup_method: t.Optional[str] = None, **setup_options: t.Any
+    ) -> None:
+        self.module = module
+        self.setup_method = setup_method
+        self.setup_method_options = dict(setup_options)
+
+    @classmethod
+    def validate_module(cls, module: t.Type["ModuleBase"]) -> None:
+        if not reflect.get_metadata(MODULE_WATERMARK, module):
+            raise ImproperConfiguration(f"{module.__name__} is not a valid Module")
+
+    def get_module(
+        self, root_module_name: t.Optional[str] = None
+    ) -> t.Union[t.Type["ModuleBase"], ModuleSetup, DynamicModule]:
+        try:
+            root_module_name = root_module_name or "ApplicationModule"
+            module_cls: t.Type["ModuleBase"] = t.cast(
+                t.Type["ModuleBase"], import_from_string(self.module)
+            )
+        except Exception:
+            raise ImproperConfiguration(
+                f'Unable to import "{self.module}" registered in Module[{root_module_name}]'
+            ) from None
+        self.validate_module(module_cls)
+        if self.setup_method:
+            setup_method = getattr(module_cls, self.setup_method)
+            module_setup = setup_method(**self.setup_method_options)
+            if not isinstance(module_setup, (DynamicModule, ModuleSetup)):
+                raise ImproperConfiguration(
+                    "Lazy Module import with setup attribute must return a "
+                    "DynamicModule/ModuleSetup instance"
+                )
+            return module_setup
+
+        return module_cls
+
+    def __hash__(self) -> int:  # pragma: no cover
+        return hash((self.module, self.setup_method, self.setup_method_options))

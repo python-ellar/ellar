@@ -6,8 +6,7 @@ from uuid import uuid4
 from ellar.common import EllarTyper
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.models import GuardCanActivate
-from ellar.core.conf import Config
-from ellar.core.modules import DynamicModule, ModuleBase, ModuleSetup
+from ellar.core import Config, DynamicModule, LazyModuleImport, ModuleBase, ModuleSetup
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
 from starlette.routing import Host, Mount
@@ -48,6 +47,9 @@ class AppFactory:
         )
         module_dependency = OrderedDict()
         for module in modules:
+            if isinstance(module, LazyModuleImport):
+                module = module.get_module(module_config.module.__name__)
+
             if isinstance(module, DynamicModule):
                 module.apply_configuration()
                 module_config = ModuleSetup(module.module)

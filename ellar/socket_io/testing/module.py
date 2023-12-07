@@ -1,7 +1,7 @@
 import typing as t
+from contextlib import asynccontextmanager
 
 import socketio
-from ellar.reflect import asynccontextmanager
 from ellar.testing.module import Test, TestingModule
 from ellar.testing.uvicorn_server import EllarUvicornServer
 

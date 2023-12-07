@@ -9,7 +9,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 
 def UseGuards(
-    *_guards: t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]
+    *_guards: t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"],
 ) -> t.Callable:
     """
     =========CONTROLLER AND ROUTE FUNCTION DECORATOR ==============

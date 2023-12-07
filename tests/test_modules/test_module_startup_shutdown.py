@@ -1,5 +1,6 @@
+from contextlib import asynccontextmanager
+
 from ellar.common import IApplicationShutdown, IApplicationStartup, Module, ModuleRouter
-from ellar.reflect import asynccontextmanager
 from ellar.testing import Test
 
 router = ModuleRouter("")
