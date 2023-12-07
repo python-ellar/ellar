@@ -1,3 +1,14 @@
+# 0.5.8
+## What's Changed
+* Bump ruff from 0.1.4 to 0.1.6 by @dependabot in https://github.com/python-ellar/ellar/pull/152
+* Bump types-redis from 4.6.0.8 to 4.6.0.11 by @dependabot in https://github.com/python-ellar/ellar/pull/153
+* Bump black from 23.10.1 to 23.11.0 by @dependabot in https://github.com/python-ellar/ellar/pull/151
+* Bump aiohttp from 3.8.5 to 3.9.1 by @dependabot in https://github.com/python-ellar/ellar/pull/150
+* Pydantic v2 migration by @eadwinCode in https://github.com/python-ellar/ellar/pull/148
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.5.7...0.5.8
+
 # 0.5.7
 ## What's Changed
 * Test coverage fix by @eadwinCode in https://github.com/python-ellar/ellar/pull/144
