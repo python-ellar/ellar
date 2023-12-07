@@ -1,7 +1,8 @@
+from contextlib import asynccontextmanager
+
 from ellar.common import IHostContext, Inject, Module, ModuleRouter, middleware
 from ellar.core import ModuleBase
 from ellar.core.middleware import FunctionBasedMiddleware
-from ellar.reflect import asynccontextmanager
 from ellar.testing import Test
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse

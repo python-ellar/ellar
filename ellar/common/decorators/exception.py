@@ -19,7 +19,7 @@ def _add_exception_handler(
 
 
 def exception_handler(
-    exc_class_or_status_code: t.Union[int, t.Type[Exception]]
+    exc_class_or_status_code: t.Union[int, t.Type[Exception]],
 ) -> t.Callable:
     """
     ========= MODULE DECORATOR ==============

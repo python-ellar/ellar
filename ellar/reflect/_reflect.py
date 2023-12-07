@@ -1,17 +1,16 @@
 import logging
 import typing as t
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
 from inspect import ismethod
 from weakref import WeakKeyDictionary
 
 from .constants import REFLECT_TYPE
-from .contextmanager_fix import asynccontextmanager
 
 logger = logging.getLogger("ellar")
 
 
 def _get_actual_target(
-    target: t.Union[t.Type, t.Callable]
+    target: t.Union[t.Type, t.Callable],
 ) -> t.Union[t.Type, t.Callable]:
     try:
         reflect_type = target.__dict__[REFLECT_TYPE]

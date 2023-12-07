@@ -37,7 +37,7 @@ def build_route_handler(item: t.Callable) -> t.Optional[RouteOperationBase]:
 
 @t.no_type_check
 def build_route_parameters(
-    items: t.List[t.Union[RouteParameters, WsRouteParameters]]
+    items: t.List[t.Union[RouteParameters, WsRouteParameters]],
 ) -> t.List[RouteOperationBase]:
     results = []
     for item in items:

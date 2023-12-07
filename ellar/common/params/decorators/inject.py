@@ -47,7 +47,7 @@ def add_default_resolver(
 
 
 def get_default_resolver(
-    type_identifier: t.Union[t.Type, str]
+    type_identifier: t.Union[t.Type, str],
 ) -> t.Optional[t.Type[SystemParameterResolver]]:
     return _DEFAULT_RESOLVERS.get(type_identifier)
 

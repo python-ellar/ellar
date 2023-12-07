@@ -51,7 +51,7 @@ ENCODERS_BY_TYPE: t.Dict[t.Type[t.Any], t.Callable[[t.Any], t.Any]] = {
 
 
 def generate_encoders_by_class_tuples(
-    type_encoder_map: t.Dict[t.Any, t.Callable[[t.Any], t.Any]]
+    type_encoder_map: t.Dict[t.Any, t.Callable[[t.Any], t.Any]],
 ) -> t.Dict[t.Callable[[t.Any], t.Any], t.Tuple[t.Any, ...]]:
     encoders_by_class_tuples: t.Dict[
         t.Callable[[t.Any], t.Any], t.Tuple[t.Any, ...]

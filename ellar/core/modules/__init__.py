@@ -1,5 +1,5 @@
 from .base import ModuleBase, ModuleBaseMeta
-from .config import DynamicModule, ModuleSetup
+from .config import DynamicModule, LazyModuleImport, ModuleSetup
 from .ref import ModulePlainRef, ModuleRefBase, ModuleTemplateRef
 
 __all__ = [
@@ -10,4 +10,5 @@ __all__ = [
     "ModuleSetup",
     "DynamicModule",
     "ModuleBaseMeta",
+    "LazyModuleImport",
 ]

@@ -40,7 +40,7 @@ class _PolicyOperandMixin:
 
     @t.no_type_check
     def __invert__(
-        cls: t.Union["BasePolicyHandler", t.Type["BasePolicyHandler"]]
+        cls: t.Union["BasePolicyHandler", t.Type["BasePolicyHandler"]],
     ) -> "BasePolicyHandler":
         return _NOTPolicy(cls)
 

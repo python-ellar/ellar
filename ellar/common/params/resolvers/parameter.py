@@ -273,7 +273,7 @@ class FileParameterResolver(FormParameterResolver):
             results: t.List[t.Union[bytes, str]] = []
 
             async def process_fn(
-                fn: t.Callable[[], t.Coroutine[t.Any, t.Any, t.Any]]
+                fn: t.Callable[[], t.Coroutine[t.Any, t.Any, t.Any]],
             ) -> None:
                 result = await fn()
                 results.append(result)

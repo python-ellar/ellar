@@ -83,7 +83,7 @@ class _Injectable:
 
 
 def injectable(
-    scope: t.Optional[t.Union[t.Type[Scope], ScopeDecorator, t.Type]] = SingletonScope
+    scope: t.Optional[t.Union[t.Type[Scope], ScopeDecorator, t.Type]] = SingletonScope,
 ) -> t.Union[ConstructorOrClassT, t.Callable]:
     """Decorates a callable or Type with inject and Defines Type or callable scope injection scope
 

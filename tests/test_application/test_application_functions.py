@@ -1,5 +1,6 @@
 import os
 import typing as t
+from contextlib import asynccontextmanager
 
 from ellar.app import App, AppFactory
 from ellar.app.services import EllarAppService
@@ -28,7 +29,6 @@ from ellar.core.versioning import (
 )
 from ellar.di import EllarInjector
 from ellar.openapi import OpenAPIDocumentModule
-from ellar.reflect import asynccontextmanager
 from ellar.testing import Test, TestClient
 from starlette.responses import JSONResponse, PlainTextResponse, Response
 

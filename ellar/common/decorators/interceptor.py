@@ -9,7 +9,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 
 def UseInterceptors(
-    *args: t.Union[t.Type["EllarInterceptor"], "EllarInterceptor"]
+    *args: t.Union[t.Type["EllarInterceptor"], "EllarInterceptor"],
 ) -> t.Callable:
     """
     =========CONTROLLER AND FUNCTION DECORATOR ==============

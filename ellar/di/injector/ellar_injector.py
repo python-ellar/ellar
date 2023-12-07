@@ -1,8 +1,8 @@
 import typing as t
 from collections import OrderedDict, defaultdict
+from contextlib import asynccontextmanager
 
 from ellar.di.logger import log
-from ellar.reflect import asynccontextmanager
 from injector import Injector, Scope, ScopeDecorator
 
 from ..asgi_args import RequestScopeContext

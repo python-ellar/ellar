@@ -187,7 +187,7 @@ def field_annotation_is_scalar(annotation: t.Any) -> bool:
 
 
 def field_annotation_is_scalar_sequence(
-    annotation: t.Union[t.Type[t.Any], None]
+    annotation: t.Union[t.Type[t.Any], None],
 ) -> bool:
     origin = get_origin(annotation)
     if origin is t.Union or origin is UnionType:

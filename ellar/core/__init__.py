@@ -4,7 +4,7 @@ from .conf import Config, ConfigDefaultTypesMixin
 from .connection import HTTPConnection, Request, WebSocket
 from .execution_context import ExecutionContext, HostContext
 from .guards import GuardConsumer
-from .modules import DynamicModule, ModuleBase, ModuleSetup
+from .modules import DynamicModule, LazyModuleImport, ModuleBase, ModuleSetup
 from .services import Reflector, reflector
 
 __all__ = [
@@ -21,6 +21,7 @@ __all__ = [
     "Reflector",
     "reflector",
     "GuardConsumer",
+    "LazyModuleImport",
 ]
 
 

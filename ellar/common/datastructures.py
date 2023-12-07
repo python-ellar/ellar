@@ -25,7 +25,7 @@ from starlette.datastructures import (
 from starlette.datastructures import (
     URLPath,
 )
-from typing_extensions import Annotated, Doc  # type: ignore[attr-defined]
+from typing_extensions import Annotated, Doc
 
 __all__ = [
     "URL",
