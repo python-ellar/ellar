@@ -16,8 +16,8 @@ Thus, the architecture resulting from most applications will include multiple mo
 Building an application as a group of feature modules bundled together helps to manage complexity, have a maintainable, extendable, and testable code base, and encourage development using SOLID principles.
 
 A typical example of a feature module is the **car** project. The `CarModule` wraps all the services and controller that manages the `car` resource which makes it easy to maintain, extend, and testable.
-```python
-# project_name/apps/car/module.py
+```python title='project_name/apps/car/module.py' linenums="1"
+
 
 from ellar.common import Module
 from ellar.core import ModuleBase
@@ -78,26 +78,24 @@ class BookModule(ModuleBase):
 ### **Module Events**
 Every registered Module receives two event calls during its instantiation and when the application is ready.
 
-```python
+```python linenums="1"
 from ellar.common import Module
-from ellar.core import ModuleBase, Config, App
+from ellar.core import ModuleBase, Config
 
 @Module()
 class ModuleEventSample(ModuleBase):
     @classmethod
     def before_init(cls, config: Config) -> None:
         """Called before creating Module object"""
-    
-    def application_ready(self, app: App) -> None:
-        """Called when application is ready - this is similar to @on_startup event"""
 
 ```
-`before_init` receives current app `Config` as a parameter and `application_ready` function receives `App` instance as parameter.
+`before_init` receives current app `Config` as a parameter for further configurations before `ModuleEventSample` is initiated.
+It's important to note that returned values from `before_init` will be passed to the constructor of `ModuleEventSample` during instantiation.
 
 ### **Module Exceptions**
 Custom exception handlers can be registered through modules.
 
-```python
+```python linenums="1"
 from ellar.common import Module, exception_handler, JSONResponse, Response, IHostContext
 from ellar.core import ModuleBase
 
@@ -114,7 +112,7 @@ We can also define `Jinja2` templating filters in project Modules or any `@Modul
 The defined filters are be passed down to `Jinja2` **environment** instance alongside the `template_folder` 
 value when creating **TemplateLoader**.
 
-```python
+```python linenums="1"
 
 from ellar.common import Module, template_global, template_filter
 from ellar.core import ModuleBase
@@ -137,9 +135,9 @@ class ModuleTemplateFilterSample(ModuleBase):
 ## **Dependency Injection**
 A module class can inject providers as well (e.g., for configuration purposes):
 
-For example, from our sample project, the can inject `Config` to the `CarModule`
+For example, from our sample project, we can inject `Config` to the `CarModule`
 
-```python
+```python linenums="1"
 # project_name/apps/car/module.py
 
 from ellar.common import Module
@@ -169,7 +167,7 @@ Middlewares functions can be defined at Module level with `@middleware()` functi
 
 For example:
 
-```python
+```python linenums="1"
 from ellar.common import Module, middleware, IHostContext, PlainTextResponse
 from ellar.core import ModuleBase
 
@@ -211,7 +209,7 @@ As an added support, you can create or reuse modules from `injector` Modules.
 !!! info
     This type of module is used to configure `injector` **bindings** and **providers** for dependency injection purposes.
 
-```python
+```python linenums="1"
 from ellar.core import ModuleBase
 from ellar.di import Container
 from injector import provider

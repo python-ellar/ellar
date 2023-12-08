@@ -3,6 +3,7 @@ from ellar.app import AppFactory
 from ellar.common import Module
 from ellar.common.constants import MODULE_WATERMARK
 from ellar.core import Config, ModuleBase, ModuleSetup
+from ellar.core import LazyModuleImport as lazyLoad
 from ellar.di import EllarInjector
 from ellar.reflect import reflect
 from ellar.testing import TestClient
@@ -60,7 +61,7 @@ def test_factory__build_modules():
 
 def test_factory_create_from_app_module():
     app = AppFactory.create_from_app_module(
-        module=BModule,
+        module=lazyLoad("tests.test_application.test_application_factory:BModule"),
         global_guards=[AppAPIKey],
         config_module="tests.test_application.config:ConfigTrustHostConfigure",
     )

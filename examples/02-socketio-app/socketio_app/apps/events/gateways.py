@@ -22,7 +22,7 @@ class EventsGateway:
 
     @subscribe_message("join")
     async def join(self, message: MessageRoom = WsBody()):
-        await self.context.server.enter_room(self.context.sid, message.room)
+        self.context.server.enter_room(self.context.sid, message.room)
         await self.context.server.emit(
             "my_response",
             {"data": "Entered room: " + message.room},
@@ -31,7 +31,7 @@ class EventsGateway:
 
     @subscribe_message("leave")
     async def leave(self, message: MessageRoom = WsBody()):
-        await self.context.server.leave_room(self.context.sid, message.room)
+        self.context.server.leave_room(self.context.sid, message.room)
         await self.context.server.emit(
             "my_response", {"data": "Left room: " + message.room}, room=self.context.sid
         )
