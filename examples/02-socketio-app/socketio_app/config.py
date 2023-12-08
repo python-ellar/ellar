@@ -11,7 +11,7 @@ import typing as t
 from ellar.common import IExceptionHandler, JSONResponse
 from ellar.core import ConfigDefaultTypesMixin
 from ellar.core.versioning import BaseAPIVersioning, DefaultAPIVersioning
-from pydantic.json import ENCODERS_BY_TYPE as encoders_by_type
+from ellar.pydantic import ENCODERS_BY_TYPE as encoders_by_type
 from starlette.middleware import Middleware
 
 
