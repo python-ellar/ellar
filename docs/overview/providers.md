@@ -1,7 +1,7 @@
 # **Providers**
 A provider is any class or object that is **injectable** as a dependency to another class when creating an instance of that class.
 
-Providers are like services, repositories services, factories, etc., classes that manage complex tasks. These providers can be made available to a controller, a route handler, or to another provider as a dependency. 
+Providers are like services, repository services, factories, etc., classes that manage complex tasks. These providers can be made available to a controller, a route handler, or to another provider as a dependency. 
 This concept is commonly known as [Dependency Injection](https://en.wikipedia.org/wiki/Dependency_injection){target="_blank"}
 
 In Ellar, you can easily create a `provider/injectable` class by decorating that class with the `@injectable()` mark and stating the scope.

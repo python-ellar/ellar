@@ -2,16 +2,15 @@ import os
 
 from ellar.app import AppFactory
 from ellar.common.constants import ELLAR_CONFIG_MODULE
+from ellar.core import LazyModuleImport as lazyLoad
 from ellar.openapi import (
     OpenAPIDocumentBuilder,
     OpenAPIDocumentModule,
     SwaggerUI,
 )
 
-from .root_module import ApplicationModule
-
 application = AppFactory.create_from_app_module(
-    ApplicationModule,
+    lazyLoad("carsite.root_module:ApplicationModule"),
     config_module=os.environ.get(
         ELLAR_CONFIG_MODULE, "carsite.config:DevelopmentConfig"
     ),

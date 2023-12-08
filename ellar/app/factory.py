@@ -76,6 +76,9 @@ class AppFactory:
         :param injector: App Injector instance
         :return: `None`
         """
+        if isinstance(app_module, LazyModuleImport):
+            app_module = app_module.get_module("AppFactory")
+
         assert reflect.get_metadata(
             MODULE_WATERMARK, app_module
         ), "Only Module is allowed"
@@ -128,8 +131,6 @@ class AppFactory:
             if isinstance(config_module, str):
                 return {"config_module": config_module}
             return dict(config_module)
-
-        assert reflect.get_metadata(MODULE_WATERMARK, module), "Only Module is allowed"
 
         config = Config(app_configured=True, **_get_config_kwargs())
 

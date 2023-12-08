@@ -1,6 +1,6 @@
 # **Dynamic Modules**
-We have seen in many example given on how to statically configure a [module](../overview/modules.md){_target='blank'}. 
-In this section we are going to look at different ways to dynamically set up a module.
+We have seen in many examples given on how to statically configure a [module](../overview/modules.md){_target='blank'}. 
+In this section, we are going to look at different ways to dynamically set up a module.
 
 Why is this important? Consider a scenario where a general-purpose module needs to behave differently in different use cases, 
 it may be useful to use a configuration-based approach to allow customization. This is similar to the concept of a "plugin" in many systems, 
@@ -36,7 +36,7 @@ while the `ModuleSetup` instance is used when the module does not require any ad
 `DynamicModule` is a dataclass type that is used to **override** `Module` decorated attributes without having to modify the module code directly.
 In other words, it gives you the flexibility to reconfigure module.
 
-For example: Lets look at the code below:
+For example, Let's look at the code below:
 ```python
 from ellar.common import Module
 from ellar.core import DynamicModule
@@ -79,11 +79,12 @@ It allows you to define the module **dependencies** and allow a **callback facto
 Let's look this `ModuleSetup` example code below with our focus on how we eventually configured `DynamicService` type, 
 how we used `my_module_configuration_factory` to dynamically build `MyModule` module.
 
-```python
+```python linenums="1"
 import typing as t
 from ellar.common import Module, IModuleSetup
 from ellar.di import ProviderConfig
-from ellar.core import DynamicModule, ModuleBase, Config, ModuleSetup, AppFactory
+from ellar.core import DynamicModule, ModuleBase, Config, ModuleSetup
+from ellar.app import AppFactory
 
 
 class Foo:
@@ -123,6 +124,7 @@ app = AppFactory.create_from_app_module(ApplicationModule, config_module=dict(
 ))
 
 dynamic_service = app.injector.get(DynamicService)
+
 assert dynamic_service.param1 == "param1"
 assert dynamic_service.param2 == "param2"
 assert dynamic_service.foo == "foo"
@@ -142,3 +144,96 @@ all the required **parameters** and returned a `DynamicModule` of `MyModule`.
 
 For more example, checkout [Ellar Throttle Module](https://github.com/eadwinCode/ellar-throttler/blob/master/ellar_throttler/module.py){target="_blank"}
 or [Ellar Cache Module](../techniques/caching.md){target="_blank"}
+
+
+## **Lazy Loading Modules**
+Ellar supports loading module decorated classes through a string reference using `LazyModuleImport`.
+For a better application context availability usage in module like, `current_config`,
+`current_app` and `current_injector`, it's advised to go with lazy module import.
+
+For example,
+we can lazy load `CarModule` from our example [here](../overview/modules.md#feature-modules){target="_blank"} into
+`ApplicationModule`
+
+```python title="project_name/root_module.py" linenums="1"
+
+from ellar.common import IExecutionContext, Module, exception_handler
+from ellar.common.responses import JSONResponse, Response
+from ellar.core import ModuleBase, LazyModuleImport as lazyLoad
+from ellar.samples.modules import HomeModule
+
+
+@Module(modules=[HomeModule, lazyLoad('apps.car.module:CarModule')])
+class ApplicationModule(ModuleBase):
+    @exception_handler(404)
+    def exception_404_handler(cls, ctx: IExecutionContext, exc: Exception) -> Response:
+        return JSONResponse({"detail": "Resource not found."}, status_code=404)
+```
+
+In the above illustration, we provided a string reference to `CarModule` into `LazyModuleImport` instance.
+And during `AppFactory` Module bootstrap, `CarModule` will be resolved, validated and registered into the application
+
+### **Properties**
+`LazyModuleImport` attributes,
+
+- `module`: String reference for Module import
+- `setup`: Module setup function name for modules that requires specific function as in case of `DynamicModule` and `ModuleSetup`.
+- `setup_options`: Module setup function parameters
+
+### **Lazy Loading DynamicModules**
+Having the understanding of `DynamicModule` and its registration pattern,
+to lazy load DynamicModule follows the same pattern.
+
+For example, lets lazy load `MyModule` as a `DynamicModule`.
+For that to happen, we need to call `MyModule.setup` with some parameters and in turn returns a `DynamicModule`
+
+```python title="project_name/root_module.py" linenums="1"
+from ellar.common import Module, exception_handler, JSONResponse, IExecutionContext, Response
+from ellar.core import ModuleBase
+from .custom_module import MyModule, Foo
+
+
+@Module(modules=[MyModule.setup(12, 23, Foo())])
+class ApplicationModule(ModuleBase):
+    @exception_handler(404)
+    def exception_404_handler(cls, ctx: IExecutionContext, exc: Exception) -> Response:
+        return JSONResponse({"detail": "Resource not found."}, status_code=404)
+```
+
+Let's rewrite this using `LazyModuleImport`.
+
+```python title="project_name/root_module.py" linenums="1"
+from ellar.common import Module, exception_handler, JSONResponse, IExecutionContext, Response
+from ellar.core import ModuleBase, LazyModuleImport as lazyLoad
+
+
+@Module(modules=[
+    lazyLoad('project_name.custom_module:MyModule', 'setup', param1=12, param2=23, foo=Foo()), 
+])
+class ApplicationModule(ModuleBase):
+    @exception_handler(404)
+    def exception_404_handler(cls, ctx: IExecutionContext, exc: Exception) -> Response:
+        return JSONResponse({"detail": "Resource not found."}, status_code=404)
+
+```
+
+### **Lazy Loading ModuleSetup**
+Just as in `DynamicModule`, `ModuleSetup` can be lazy loaded the same way. 
+Let's take [CacheModule](https://github.com/python-ellar/ellar/blob/main/ellar/cache/module.py) for example.
+
+```python title="project_name/root_module.py" linenums="1"
+from ellar.common import Module, exception_handler, JSONResponse, IExecutionContext, Response
+from ellar.core import ModuleBase, LazyModuleImport as lazyLoad
+
+
+@Module(modules=[
+    lazyLoad('ellar.cache.module:CacheModule', 'register_setup'), 
+])
+class ApplicationModule(ModuleBase):
+    @exception_handler(404)
+    def exception_404_handler(cls, ctx: IExecutionContext, exc: Exception) -> Response:
+        return JSONResponse({"detail": "Resource not found."}, status_code=404)
+
+```
+In the above illustration, we have registered `CacheModule` through `register_setup` function 
+which returns a `ModuleSetup` that configures the `CacheModule` to read its configurations from application config.

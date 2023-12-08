@@ -166,17 +166,16 @@ Let us configure the JWTModule inside AuthModule. 
 from datetime import timedelta
 
 from ellar.common import Module
-from ellar.core import ModuleBase
+from ellar.core import ModuleBase, LazyModuleImport as lazyLoad
 from ellar_jwt import JWTModule
 
 from .controllers import AuthController
-from ..user.module import UserModule
 from .services import AuthService
 
 
 @Module(
     modules=[
-        UserModule,
+        lazyLoad('project_name.users.module:UserModule'),
         JWTModule.setup(
             signing_secret_key="my_poor_secret_key_lol", lifetime=timedelta(minutes=5)
         ),
@@ -231,14 +230,12 @@ To do that, we need to register `AuthModule` to the `ApplicationModule`.
 ```python title="project_name.root_module.py" linenums="1"
 from ellar.common import Module, exception_handler
 from ellar.common import IExecutionContext, JSONResponse, Response
-from ellar.core import ModuleBase
+from ellar.core import ModuleBase, LazyModuleImport as lazyLoad
 from ellar.samples.modules import HomeModule
-from .apps.car.module import CarModule
-from .apps.auth.module import AuthModule
 
 
 @Module(
-    modules=[HomeModule, CarModule, AuthModule],
+    modules=[HomeModule, lazyLoad('project_name.auth.module:AuthModule'),],
 )
 class ApplicationModule(ModuleBase):
     @exception_handler(404)
@@ -451,18 +448,17 @@ First, let us register `AuthGuard` a global guard in `AuthModule`.
 from datetime import timedelta
 
 from ellar.common import GlobalGuard, Module
-from ellar.core import ModuleBase
+from ellar.core import ModuleBase, LazyModuleImport as lazyLoad
 from ellar.di import ProviderConfig
 from ellar_jwt import JWTModule
 
 from .controllers import AuthController
-from ..user.module import UserModule
 from .services import AuthService
 from .guards import AuthGuard
 
 @Module(
     modules=[
-        UserModule,
+        lazyLoad('project_name.users.module:UserModule'),
         JWTModule.setup(
             signing_secret_key="my_poor_secret_key_lol", lifetime=timedelta(minutes=5)
         ),
@@ -658,12 +654,12 @@ Let us make `JWTAuthentication` Handler available for ellar to use as shown belo
 ```python title='project_name.server.py' linenums='1'
 import os
 from ellar.common.constants import ELLAR_CONFIG_MODULE
-from ellar.core.factory import AppFactory
-from .root_module import ApplicationModule
+from ellar.app import AppFactory
+from ellar.core import LazyModuleImport as lazyLoad
 from .auth_scheme import JWTAuthentication
 
 application = AppFactory.create_from_app_module(
-    ApplicationModule,
+    lazyLoad('project_name.root_module:ApplicationModule'),
     config_module=os.environ.get(
         ELLAR_CONFIG_MODULE, "project_name.config:DevelopmentConfig"
     ),
@@ -738,18 +734,17 @@ just like we did in [applying guard globally](#apply-authguard-globally)
 from datetime import timedelta
 from ellar.auth.guard import AuthenticatedRequiredGuard
 from ellar.common import GlobalGuard, Module
-from ellar.core import ModuleBase
+from ellar.core import ModuleBase, LazyModuleImport as lazyLoad
 from ellar.di import ProviderConfig
 from ellar_jwt import JWTModule
 
-from ..users.module import UsersModule
 from .controllers import AuthController
 from .services import AuthService
 
 
 @Module(
     modules=[
-        UsersModule,
+        lazyLoad('project_name.users.module:UserModule'),
         JWTModule.setup(
             signing_secret_key="my_poor_secret_key_lol", lifetime=timedelta(minutes=5)
         ),
