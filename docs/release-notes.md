@@ -1,3 +1,12 @@
+# 0.6.0
+## What's Changed
+* Feat(LazyModuleImport): New feature by @eadwinCode in https://github.com/python-ellar/ellar/pull/155
+* Feat - Lazy Loading ApplicationModule by @eadwinCode in https://github.com/python-ellar/ellar/pull/156
+* code refactoring by @eadwinCode in https://github.com/python-ellar/ellar/pull/157
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.5.8...0.6.0
+
 # 0.5.8
 ## What's Changed
 * Bump ruff from 0.1.4 to 0.1.6 by @dependabot in https://github.com/python-ellar/ellar/pull/152
