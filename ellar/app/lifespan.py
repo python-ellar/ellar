@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from anyio import create_task_group
 from ellar.common import IApplicationShutdown, IApplicationStartup
-from ellar.common.logger import logger
+from ellar.common.logging import logger
 
 if t.TYPE_CHECKING:
     from ellar.app import App

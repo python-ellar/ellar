@@ -1,7 +1,7 @@
 import typing as t
 from abc import abstractmethod
 
-from ellar.common.logger import logger
+from ellar.common.logging import logger
 from starlette.routing import Host, Mount
 
 if t.TYPE_CHECKING:  # pragma: no cover

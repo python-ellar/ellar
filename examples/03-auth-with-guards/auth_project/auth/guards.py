@@ -6,7 +6,7 @@ from ellar.common import (
     GuardCanActivate,
     IExecutionContext,
     constants,
-    logger,
+    logging,
     set_metadata,
 )
 from ellar.common.serializer.guard import (
@@ -39,5 +39,5 @@ class AuthGuard(GuardHttpBearerAuth):
             data = await self.jwt_service.decode_async(credentials.credentials)
             return UserIdentity(auth_type="bearer", **data)
         except Exception as ex:
-            logger.logger.error(f"[AuthGuard] Exception: {ex}")
+            logging.logger.error(f"[AuthGuard] Exception: {ex}")
             self.raise_exception()

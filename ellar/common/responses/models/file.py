@@ -2,7 +2,7 @@ import typing as t
 from enum import Enum
 
 from ellar.common.interfaces import IExecutionContext
-from ellar.common.logger import request_logger
+from ellar.common.logging import request_logger
 from ellar.common.serializer import Serializer, SerializerFilter
 
 from ..response_types import FileResponse, Response, StreamingResponse

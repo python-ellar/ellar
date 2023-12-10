@@ -2,7 +2,7 @@ import typing as t
 import uuid
 
 from ellar.common.constants import CONTROLLER_CLASS_KEY, GUARDS_KEY, VERSIONING_KEY
-from ellar.common.logger import request_logger
+from ellar.common.logging import request_logger
 from ellar.common.models import GuardCanActivate
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.common.utils import get_unique_control_type

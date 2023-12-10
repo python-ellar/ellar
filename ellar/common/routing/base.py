@@ -13,7 +13,7 @@ from ellar.common.interfaces import (
     IGuardsConsumer,
     IInterceptorsConsumer,
 )
-from ellar.common.logger import request_logger
+from ellar.common.logging import request_logger
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.reflect import reflect
 from starlette.routing import Match

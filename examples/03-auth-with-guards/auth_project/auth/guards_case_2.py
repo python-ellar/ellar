@@ -2,7 +2,7 @@ import typing as t
 
 from ellar.auth import UserIdentity
 from ellar.auth.guards import GuardHttpBearerAuth
-from ellar.common import IExecutionContext, logger, set_metadata
+from ellar.common import IExecutionContext, logging, set_metadata
 from ellar.common.serializer.guard import (
     HTTPAuthorizationCredentials,
 )
@@ -39,5 +39,5 @@ class AuthGuard(GuardHttpBearerAuth):
             data = await self.jwt_service.decode_async(credentials.credentials)
             return UserIdentity(auth_type=self.scheme, **data)
         except Exception as ex:
-            logger.logger.error(f"[AuthGuard] Exception: {ex}")
+            logging.logger.error(f"[AuthGuard] Exception: {ex}")
             self.raise_exception()

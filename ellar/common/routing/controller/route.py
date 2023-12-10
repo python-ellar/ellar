@@ -1,7 +1,7 @@
 import typing as t
 
 from ellar.common.interfaces import IExecutionContext
-from ellar.common.logger import request_logger
+from ellar.common.logging import request_logger
 from ellar.common.routing.route import RouteOperation
 from starlette.concurrency import run_in_threadpool
 

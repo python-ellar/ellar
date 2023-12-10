@@ -3,7 +3,7 @@ import typing as t
 
 from ellar.common.exceptions import WebSocketRequestValidationError
 from ellar.common.interfaces import IExecutionContext
-from ellar.common.logger import request_logger
+from ellar.common.logging import request_logger
 from ellar.common.params import WebsocketEndpointArgsModel
 from starlette import status
 from starlette.exceptions import WebSocketException

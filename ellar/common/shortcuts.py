@@ -1,6 +1,6 @@
 from typing import Any, Callable, Optional, no_type_check
 
-from .logger import logger
+from .logging import logger
 
 
 @no_type_check
