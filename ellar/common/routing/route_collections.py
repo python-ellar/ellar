@@ -2,7 +2,7 @@ import typing as t
 import uuid
 from collections import OrderedDict
 
-from ellar.common.logger import logger
+from ellar.common.logging import logger
 from ellar.common.utils import generate_controller_operation_unique_id
 from starlette.routing import BaseRoute, Host, Mount
 

@@ -2,7 +2,7 @@ import typing as t
 
 from ellar.common.constants import SCOPE_RESPONSE_STARTED
 from ellar.common.interfaces import IExecutionContext, IResponseModel
-from ellar.common.logger import logger, request_logger
+from ellar.common.logging import logger, request_logger
 from ellar.pydantic import BaseModel
 
 from ..response_types import Response

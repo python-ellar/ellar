@@ -10,7 +10,7 @@ from ellar.common.exceptions import (
     WebSocketRequestValidationError,
 )
 from ellar.common.interfaces import IExecutionContext
-from ellar.common.logger import request_logger
+from ellar.common.logging import request_logger
 from ellar.common.params import ExtraEndpointArg, WebsocketEndpointArgsModel
 from ellar.common.utils import get_name
 from ellar.reflect import reflect

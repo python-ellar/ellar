@@ -9,7 +9,7 @@ from ellar.common.constants import (
 )
 from ellar.common.exceptions import ImproperConfiguration, RequestValidationError
 from ellar.common.interfaces import IExecutionContext
-from ellar.common.logger import request_logger
+from ellar.common.logging import request_logger
 from ellar.common.params import ExtraEndpointArg, RequestEndpointArgsModel
 from ellar.common.responses.models import RouteResponseModel
 from ellar.common.utils import generate_operation_unique_id, get_name

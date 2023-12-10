@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from ellar.common.constants import SERIALIZER_FILTER_KEY
 from ellar.common.exceptions import RequestValidationError
 from ellar.common.interfaces import IExecutionContext, IResponseModel
-from ellar.common.logger import request_logger
+from ellar.common.logging import request_logger
 from ellar.common.serializer import BaseSerializer, SerializerFilter
 from ellar.pydantic import ModelField, create_model_field
 from ellar.reflect import reflect

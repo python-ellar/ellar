@@ -22,13 +22,10 @@ def test_client_factory(anyio_backend_name, anyio_backend_options):
     name="model_with_path", params=[PurePath, PurePosixPath, PureWindowsPath]
 )
 def fixture_model_with_path(request):
-    class Config:
-        arbitrary_types_allowed = True
-
     model_with_path = create_model(
         "ModelWithPath",
         path=(request.param, ...),
-        __config__=Config,  # type: ignore
+        __config__={"arbitrary_types_allowed": True},  # type: ignore
     )
     return model_with_path(path=request.param("/foo", "bar"))
 

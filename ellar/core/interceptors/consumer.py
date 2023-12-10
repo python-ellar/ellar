@@ -3,7 +3,7 @@ import typing as t
 
 from ellar.common import EllarInterceptor, IExecutionContext, IInterceptorsConsumer
 from ellar.common.constants import ROUTE_INTERCEPTORS, SCOPE_RESPONSE_STARTED
-from ellar.common.logger import request_logger
+from ellar.common.logging import request_logger
 from ellar.di import injectable
 
 if t.TYPE_CHECKING:  # pragma: no cover

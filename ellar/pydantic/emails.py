@@ -8,7 +8,7 @@ try:
     assert email_validator
     from pydantic import EmailStr
 except ImportError:  # pragma: no cover
-    from ellar.common.logger import logger
+    from ellar.common.logging import logger
 
     @as_pydantic_validator(
         "__validate_input", schema={"type": "string", "format": "email"}

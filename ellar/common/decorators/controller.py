@@ -13,7 +13,7 @@ from ellar.common.constants import (
     ROUTE_OPERATION_PARAMETERS,
 )
 from ellar.common.exceptions import ImproperConfiguration
-from ellar.common.logger import logger
+from ellar.common.logging import logger
 from ellar.common.models import ControllerBase, ControllerType
 from ellar.di import RequestORTransientScope, injectable
 from ellar.reflect import REFLECT_TYPE, reflect

@@ -6,7 +6,7 @@ from ellar.common.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,
     ROUTE_OPERATION_PARAMETERS,
 )
-from ellar.common.logger import logger
+from ellar.common.logging import logger
 from ellar.common.routing import (
     RouteOperation,
     RouteOperationBase,
