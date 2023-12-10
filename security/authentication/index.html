@@ -182,21 +182,19 @@
 <span class=normal>21</span>
 <span class=normal>22</span>
 <span class=normal>23</span>
-<span class=normal>24</span>
-<span class=normal>25</span></pre></div></td><td class=code><div><pre><span></span><code><span class=kn>from</span> <span class=nn>datetime</span> <span class=kn>import</span> <span class=n>timedelta</span>
+<span class=normal>24</span></pre></div></td><td class=code><div><pre><span></span><code><span class=kn>from</span> <span class=nn>datetime</span> <span class=kn>import</span> <span class=n>timedelta</span>
 
 <span class=kn>from</span> <span class=nn>ellar.common</span> <span class=kn>import</span> <span class=n>Module</span>
-<span class=kn>from</span> <span class=nn>ellar.core</span> <span class=kn>import</span> <span class=n>ModuleBase</span>
+<span class=kn>from</span> <span class=nn>ellar.core</span> <span class=kn>import</span> <span class=n>ModuleBase</span><span class=p>,</span> <span class=n>LazyModuleImport</span> <span class=k>as</span> <span class=n>lazyLoad</span>
 <span class=kn>from</span> <span class=nn>ellar_jwt</span> <span class=kn>import</span> <span class=n>JWTModule</span>
 
 <span class=kn>from</span> <span class=nn>.controllers</span> <span class=kn>import</span> <span class=n>AuthController</span>
-<span class=kn>from</span> <span class=nn>..user.module</span> <span class=kn>import</span> <span class=n>UserModule</span>
 <span class=kn>from</span> <span class=nn>.services</span> <span class=kn>import</span> <span class=n>AuthService</span>
 
 
 <span class=nd>@Module</span><span class=p>(</span>
     <span class=n>modules</span><span class=o>=</span><span class=p>[</span>
-        <span class=n>UserModule</span><span class=p>,</span>
+        <span class=n>lazyLoad</span><span class=p>(</span><span class=s1>&#39;project_name.users.module:UserModule&#39;</span><span class=p>),</span>
         <span class=n>JWTModule</span><span class=o>.</span><span class=n>setup</span><span class=p>(</span>
             <span class=n>signing_secret_key</span><span class=o>=</span><span class=s2>&quot;my_poor_secret_key_lol&quot;</span><span class=p>,</span> <span class=n>lifetime</span><span class=o>=</span><span class=n>timedelta</span><span class=p>(</span><span class=n>minutes</span><span class=o>=</span><span class=mi>5</span><span class=p>)</span>
         <span class=p>),</span>
@@ -271,18 +269,14 @@
 <span class=normal>10</span>
 <span class=normal>11</span>
 <span class=normal>12</span>
-<span class=normal>13</span>
-<span class=normal>14</span>
-<span class=normal>15</span></pre></div></td><td class=code><div><pre><span></span><code><span class=kn>from</span> <span class=nn>ellar.common</span> <span class=kn>import</span> <span class=n>Module</span><span class=p>,</span> <span class=n>exception_handler</span>
+<span class=normal>13</span></pre></div></td><td class=code><div><pre><span></span><code><span class=kn>from</span> <span class=nn>ellar.common</span> <span class=kn>import</span> <span class=n>Module</span><span class=p>,</span> <span class=n>exception_handler</span>
 <span class=kn>from</span> <span class=nn>ellar.common</span> <span class=kn>import</span> <span class=n>IExecutionContext</span><span class=p>,</span> <span class=n>JSONResponse</span><span class=p>,</span> <span class=n>Response</span>
-<span class=kn>from</span> <span class=nn>ellar.core</span> <span class=kn>import</span> <span class=n>ModuleBase</span>
+<span class=kn>from</span> <span class=nn>ellar.core</span> <span class=kn>import</span> <span class=n>ModuleBase</span><span class=p>,</span> <span class=n>LazyModuleImport</span> <span class=k>as</span> <span class=n>lazyLoad</span>
 <span class=kn>from</span> <span class=nn>ellar.samples.modules</span> <span class=kn>import</span> <span class=n>HomeModule</span>
-<span class=kn>from</span> <span class=nn>.apps.car.module</span> <span class=kn>import</span> <span class=n>CarModule</span>
-<span class=kn>from</span> <span class=nn>.apps.auth.module</span> <span class=kn>import</span> <span class=n>AuthModule</span>
 
 
 <span class=nd>@Module</span><span class=p>(</span>
-    <span class=n>modules</span><span class=o>=</span><span class=p>[</span><span class=n>HomeModule</span><span class=p>,</span> <span class=n>CarModule</span><span class=p>,</span> <span class=n>AuthModule</span><span class=p>],</span>
+    <span class=n>modules</span><span class=o>=</span><span class=p>[</span><span class=n>HomeModule</span><span class=p>,</span> <span class=n>lazyLoad</span><span class=p>(</span><span class=s1>&#39;project_name.auth.module:AuthModule&#39;</span><span class=p>),],</span>
 <span class=p>)</span>
 <span class=k>class</span> <span class=nc>ApplicationModule</span><span class=p>(</span><span class=n>ModuleBase</span><span class=p>):</span>
     <span class=nd>@exception_handler</span><span class=p>(</span><span class=mi>404</span><span class=p>)</span>
@@ -566,22 +560,20 @@ $<span class=w> </span>curl<span class=w> </span>http://localhost:8000/auth/prof
 <span class=normal>22</span>
 <span class=normal>23</span>
 <span class=normal>24</span>
-<span class=normal>25</span>
-<span class=normal>26</span></pre></div></td><td class=code><div><pre><span></span><code><span class=kn>from</span> <span class=nn>datetime</span> <span class=kn>import</span> <span class=n>timedelta</span>
+<span class=normal>25</span></pre></div></td><td class=code><div><pre><span></span><code><span class=kn>from</span> <span class=nn>datetime</span> <span class=kn>import</span> <span class=n>timedelta</span>
 
 <span class=kn>from</span> <span class=nn>ellar.common</span> <span class=kn>import</span> <span class=n>GlobalGuard</span><span class=p>,</span> <span class=n>Module</span>
-<span class=kn>from</span> <span class=nn>ellar.core</span> <span class=kn>import</span> <span class=n>ModuleBase</span>
+<span class=kn>from</span> <span class=nn>ellar.core</span> <span class=kn>import</span> <span class=n>ModuleBase</span><span class=p>,</span> <span class=n>LazyModuleImport</span> <span class=k>as</span> <span class=n>lazyLoad</span>
 <span class=kn>from</span> <span class=nn>ellar.di</span> <span class=kn>import</span> <span class=n>ProviderConfig</span>
 <span class=kn>from</span> <span class=nn>ellar_jwt</span> <span class=kn>import</span> <span class=n>JWTModule</span>
 
 <span class=kn>from</span> <span class=nn>.controllers</span> <span class=kn>import</span> <span class=n>AuthController</span>
-<span class=kn>from</span> <span class=nn>..user.module</span> <span class=kn>import</span> <span class=n>UserModule</span>
 <span class=kn>from</span> <span class=nn>.services</span> <span class=kn>import</span> <span class=n>AuthService</span>
 <span class=kn>from</span> <span class=nn>.guards</span> <span class=kn>import</span> <span class=n>AuthGuard</span>
 
 <span class=nd>@Module</span><span class=p>(</span>
     <span class=n>modules</span><span class=o>=</span><span class=p>[</span>
-        <span class=n>UserModule</span><span class=p>,</span>
+        <span class=n>lazyLoad</span><span class=p>(</span><span class=s1>&#39;project_name.users.module:UserModule&#39;</span><span class=p>),</span>
         <span class=n>JWTModule</span><span class=o>.</span><span class=n>setup</span><span class=p>(</span>
             <span class=n>signing_secret_key</span><span class=o>=</span><span class=s2>&quot;my_poor_secret_key_lol&quot;</span><span class=p>,</span> <span class=n>lifetime</span><span class=o>=</span><span class=n>timedelta</span><span class=p>(</span><span class=n>minutes</span><span class=o>=</span><span class=mi>5</span><span class=p>)</span>
         <span class=p>),</span>
@@ -865,12 +857,12 @@ $<span class=w> </span>curl<span class=w> </span>http://localhost:8000/auth/prof
 <span class=normal>12</span>
 <span class=normal>13</span></pre></div></td><td class=code><div><pre><span></span><code><span class=kn>import</span> <span class=nn>os</span>
 <span class=kn>from</span> <span class=nn>ellar.common.constants</span> <span class=kn>import</span> <span class=n>ELLAR_CONFIG_MODULE</span>
-<span class=kn>from</span> <span class=nn>ellar.core.factory</span> <span class=kn>import</span> <span class=n>AppFactory</span>
-<span class=kn>from</span> <span class=nn>.root_module</span> <span class=kn>import</span> <span class=n>ApplicationModule</span>
+<span class=kn>from</span> <span class=nn>ellar.app</span> <span class=kn>import</span> <span class=n>AppFactory</span>
+<span class=kn>from</span> <span class=nn>ellar.core</span> <span class=kn>import</span> <span class=n>LazyModuleImport</span> <span class=k>as</span> <span class=n>lazyLoad</span>
 <span class=kn>from</span> <span class=nn>.auth_scheme</span> <span class=kn>import</span> <span class=n>JWTAuthentication</span>
 
 <span class=n>application</span> <span class=o>=</span> <span class=n>AppFactory</span><span class=o>.</span><span class=n>create_from_app_module</span><span class=p>(</span>
-    <span class=n>ApplicationModule</span><span class=p>,</span>
+    <span class=n>lazyLoad</span><span class=p>(</span><span class=s1>&#39;project_name.root_module:ApplicationModule&#39;</span><span class=p>),</span>
     <span class=n>config_module</span><span class=o>=</span><span class=n>os</span><span class=o>.</span><span class=n>environ</span><span class=o>.</span><span class=n>get</span><span class=p>(</span>
         <span class=n>ELLAR_CONFIG_MODULE</span><span class=p>,</span> <span class=s2>&quot;project_name.config:DevelopmentConfig&quot;</span>
     <span class=p>),</span>
@@ -953,22 +945,20 @@ $<span class=w> </span>curl<span class=w> </span>http://localhost:8000/auth/prof
 <span class=normal>22</span>
 <span class=normal>23</span>
 <span class=normal>24</span>
-<span class=normal>25</span>
-<span class=normal>26</span></pre></div></td><td class=code><div><pre><span></span><code><span class=kn>from</span> <span class=nn>datetime</span> <span class=kn>import</span> <span class=n>timedelta</span>
+<span class=normal>25</span></pre></div></td><td class=code><div><pre><span></span><code><span class=kn>from</span> <span class=nn>datetime</span> <span class=kn>import</span> <span class=n>timedelta</span>
 <span class=kn>from</span> <span class=nn>ellar.auth.guard</span> <span class=kn>import</span> <span class=n>AuthenticatedRequiredGuard</span>
 <span class=kn>from</span> <span class=nn>ellar.common</span> <span class=kn>import</span> <span class=n>GlobalGuard</span><span class=p>,</span> <span class=n>Module</span>
-<span class=kn>from</span> <span class=nn>ellar.core</span> <span class=kn>import</span> <span class=n>ModuleBase</span>
+<span class=kn>from</span> <span class=nn>ellar.core</span> <span class=kn>import</span> <span class=n>ModuleBase</span><span class=p>,</span> <span class=n>LazyModuleImport</span> <span class=k>as</span> <span class=n>lazyLoad</span>
 <span class=kn>from</span> <span class=nn>ellar.di</span> <span class=kn>import</span> <span class=n>ProviderConfig</span>
 <span class=kn>from</span> <span class=nn>ellar_jwt</span> <span class=kn>import</span> <span class=n>JWTModule</span>
 
-<span class=kn>from</span> <span class=nn>..users.module</span> <span class=kn>import</span> <span class=n>UsersModule</span>
 <span class=kn>from</span> <span class=nn>.controllers</span> <span class=kn>import</span> <span class=n>AuthController</span>
 <span class=kn>from</span> <span class=nn>.services</span> <span class=kn>import</span> <span class=n>AuthService</span>
 
 
 <span class=nd>@Module</span><span class=p>(</span>
     <span class=n>modules</span><span class=o>=</span><span class=p>[</span>
-        <span class=n>UsersModule</span><span class=p>,</span>
+        <span class=n>lazyLoad</span><span class=p>(</span><span class=s1>&#39;project_name.users.module:UserModule&#39;</span><span class=p>),</span>
         <span class=n>JWTModule</span><span class=o>.</span><span class=n>setup</span><span class=p>(</span>
             <span class=n>signing_secret_key</span><span class=o>=</span><span class=s2>&quot;my_poor_secret_key_lol&quot;</span><span class=p>,</span> <span class=n>lifetime</span><span class=o>=</span><span class=n>timedelta</span><span class=p>(</span><span class=n>minutes</span><span class=o>=</span><span class=mi>5</span><span class=p>)</span>
         <span class=p>),</span>
@@ -991,4 +981,4 @@ $<span class=w> </span>curl<span class=w> </span>-X<span class=w> </span>POST<sp
 $<span class=w> </span><span class=c1># GET /profile using access_token returned from previous step as bearer code</span>
 $<span class=w> </span>curl<span class=w> </span>http://localhost:8000/auth/profile<span class=w> </span>-H<span class=w> </span><span class=s2>&quot;Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2Vybm...&quot;</span>
 <span class=o>{</span><span class=s2>&quot;exp&quot;</span>:1698793558,<span class=s2>&quot;iat&quot;</span>:1698793258,<span class=s2>&quot;jti&quot;</span>:<span class=s2>&quot;e96e94c5c3ef4fbbbd7c2468eb64534b&quot;</span>,<span class=s2>&quot;sub&quot;</span>:1,<span class=s2>&quot;user_id&quot;</span>:1,<span class=s2>&quot;username&quot;</span>:<span class=s2>&quot;john&quot;</span>,<span class=w> </span><span class=s2>&quot;id&quot;</span>:null,<span class=s2>&quot;auth_type&quot;</span>:<span class=s2>&quot;bearer&quot;</span><span class=o>}</span>
-</code></pre></div> Source Code to this example is <a href=https://github.com/python-ellar/ellar/tree/main/examples/04-auth-with-handlers>here</a></p> <hr> <div class=md-source-file> <small> Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 6, 2023</span> </small> </div> </article> </div> </div> </main> <footer class=md-footer> <nav class="md-footer__inner md-grid" aria-label=Footer> <a href=../../techniques/background-task/ class="md-footer__link md-footer__link--prev" aria-label="Previous: Background Tasks" rel=prev> <div class="md-footer__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg> </div> <div class=md-footer__title> <div class=md-ellipsis> <span class=md-footer__direction> Previous </span> Background Tasks </div> </div> </a> <a href=../authorization/ class="md-footer__link md-footer__link--next" aria-label="Next: Authorization" rel=next> <div class=md-footer__title> <div class=md-ellipsis> <span class=md-footer__direction> Next </span> Authorization </div> </div> <div class="md-footer__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg> </div> </a> </nav> <div class="md-footer-meta md-typeset"> <div class="md-footer-meta__inner md-grid"> <div class=md-copyright> <div class=md-copyright__highlight> Copyright &copy; 2021 - 2023 <a href=https://github.com/eadwinCode target=_blank rel=noopener>Eadwin Ezeudoh</a> </div> Made with <a href=https://squidfunk.github.io/mkdocs-material/ target=_blank rel=noopener> Material for MkDocs </a> </div> </div> </div> </footer> </div> <div class=md-dialog data-md-component=dialog> <div class="md-dialog__inner md-typeset"></div> </div> <script id=__config type=application/json>{"base": "../..", "features": ["announce.dismiss", "content.action.edit", "content.action.view", "content.code.annotate", "content.code.copy", "content.tooltips", "search.highlight", "search.share", "search.suggest", "toc.follow", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.prune", "navigation.left", "navigation.tracking"], "search": "../../assets/javascripts/workers/search.16e2a7d4.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script> <script src=../../assets/javascripts/bundle.5a2dcb6a.min.js></script> </body> </html>
+</code></pre></div> Source Code to this example is <a href=https://github.com/python-ellar/ellar/tree/main/examples/04-auth-with-handlers>here</a></p> <hr> <div class=md-source-file> <small> Last update: <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">December 8, 2023</span> </small> </div> </article> </div> </div> </main> <footer class=md-footer> <nav class="md-footer__inner md-grid" aria-label=Footer> <a href=../../techniques/background-task/ class="md-footer__link md-footer__link--prev" aria-label="Previous: Background Tasks" rel=prev> <div class="md-footer__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg> </div> <div class=md-footer__title> <div class=md-ellipsis> <span class=md-footer__direction> Previous </span> Background Tasks </div> </div> </a> <a href=../authorization/ class="md-footer__link md-footer__link--next" aria-label="Next: Authorization" rel=next> <div class=md-footer__title> <div class=md-ellipsis> <span class=md-footer__direction> Next </span> Authorization </div> </div> <div class="md-footer__button md-icon"> <svg xmlns=http://www.w3.org/2000/svg viewbox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg> </div> </a> </nav> <div class="md-footer-meta md-typeset"> <div class="md-footer-meta__inner md-grid"> <div class=md-copyright> <div class=md-copyright__highlight> Copyright &copy; 2021 - 2023 <a href=https://github.com/eadwinCode target=_blank rel=noopener>Eadwin Ezeudoh</a> </div> Made with <a href=https://squidfunk.github.io/mkdocs-material/ target=_blank rel=noopener> Material for MkDocs </a> </div> </div> </div> </footer> </div> <div class=md-dialog data-md-component=dialog> <div class="md-dialog__inner md-typeset"></div> </div> <script id=__config type=application/json>{"base": "../..", "features": ["announce.dismiss", "content.action.edit", "content.action.view", "content.code.annotate", "content.code.copy", "content.tooltips", "search.highlight", "search.share", "search.suggest", "toc.follow", "navigation.footer", "navigation.indexes", "navigation.instant", "navigation.prune", "navigation.left", "navigation.tracking"], "search": "../../assets/javascripts/workers/search.16e2a7d4.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script> <script src=../../assets/javascripts/bundle.5a2dcb6a.min.js></script> </body> </html>
