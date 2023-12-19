@@ -1,6 +1,7 @@
 from typing import List, Union
 
 import pytest
+from ellar.common import UJSONResponse
 from ellar.common.constants import CONTROLLER_CLASS_KEY, RESPONSE_OVERRIDE_KEY
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.responses.models import (
@@ -12,7 +13,6 @@ from ellar.common.responses.models import (
 )
 from ellar.common.routing import RouteOperation
 from ellar.reflect import reflect
-from starlette.responses import JSONResponse
 
 from ..schema import BlogObjectDTO, NoteSchemaDC
 
@@ -21,7 +21,7 @@ def endpoint_sample():
     pass  # pragma: no cover
 
 
-class JsonApiResponse(JSONResponse):
+class JsonApiResponse(UJSONResponse):
     media_type = "application/vnd.api+json"
 
 

@@ -48,27 +48,34 @@ def reflect_all_controller_type_routes(cls: t.Type[ControllerBase]) -> None:
                     )
                 reflect.define_metadata(CONTROLLER_CLASS_KEY, cls, item)
 
-                parameter = item.__dict__[ROUTE_OPERATION_PARAMETERS]
+                parameters = item.__dict__[ROUTE_OPERATION_PARAMETERS]
                 operation: t.Union[
                     ControllerRouteOperation, ControllerWebsocketRouteOperation
                 ]
-                if isinstance(parameter, RouteParameters):
-                    operation = ControllerRouteOperation(**parameter.dict())
-                elif isinstance(parameter, WsRouteParameters):
-                    operation = ControllerWebsocketRouteOperation(**parameter.dict())
-                else:  # pragma: no cover
-                    logger.warning(
-                        f"Parameter type is not recognized. {type(parameter) if not isinstance(parameter, type) else parameter}"
+
+                if not isinstance(parameters, list):
+                    parameters = [parameters]
+
+                for parameter in parameters:
+                    if isinstance(parameter, RouteParameters):
+                        operation = ControllerRouteOperation(**parameter.dict())
+                    elif isinstance(parameter, WsRouteParameters):
+                        operation = ControllerWebsocketRouteOperation(
+                            **parameter.dict()
+                        )
+                    else:  # pragma: no cover
+                        logger.warning(
+                            f"Parameter type is not recognized. {type(parameter) if not isinstance(parameter, type) else parameter}"
+                        )
+                        continue
+
+                    reflect.define_metadata(
+                        CONTROLLER_OPERATION_HANDLER_KEY,
+                        [operation],
+                        cls,
                     )
-                    continue
 
                 del item.__dict__[ROUTE_OPERATION_PARAMETERS]
-
-                reflect.define_metadata(
-                    CONTROLLER_OPERATION_HANDLER_KEY,
-                    [operation],
-                    cls,
-                )
 
 
 @t.no_type_check

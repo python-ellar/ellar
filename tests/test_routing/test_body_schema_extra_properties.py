@@ -1,6 +1,6 @@
 from typing import Dict
 
-from ellar.common import post
+from ellar.common import options, post, trace
 from ellar.common.serializer import serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
@@ -14,6 +14,8 @@ class Items_(BaseModel):
 
 
 @post("/foo")
+@trace("/foo")
+@options(include_in_schema=False)
 def foo(items: Items_):
     return items.items
 
@@ -58,7 +60,30 @@ item_openapi_schema = {
                         },
                     },
                 },
-            }
+            },
+            "trace": {
+                "operationId": "foo_foo_trace",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {"type": "object", "title": "Response Model"}
+                            }
+                        },
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        },
+                    },
+                },
+            },
         }
     },
     "components": {
