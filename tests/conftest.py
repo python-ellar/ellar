@@ -1,3 +1,4 @@
+import asyncio
 import functools
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from uuid import uuid4
@@ -33,3 +34,11 @@ def fixture_model_with_path(request):
 @pytest.fixture
 def random_type():
     return type(f"Random{uuid4().hex[:6]}", (), {})
+
+
+@pytest.fixture(autouse=True, scope="session")
+def event_loop():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    yield loop
+    loop.close()

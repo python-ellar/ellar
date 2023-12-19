@@ -194,7 +194,8 @@ def test_dynamic_module_setup_providers_works():
 
 def test_dynamic_module_setup_router_controllers_works():
     test_module = Test.create_test_module(
-        modules=(DynamicInstantiatedModule.setup(a=233, b=344),)
+        modules=(DynamicInstantiatedModule.setup(a=233, b=344),),
+        config_module={"STATIC_MOUNT_PATH": None},
     )
     assert len(test_module.create_application().routes) == 2
     client = test_module.get_test_client()
@@ -212,7 +213,7 @@ def test_dynamic_module_setup_register_works():
     with reflect.context():
         test_module = Test.create_test_module(
             modules=(DynamicModuleSetupRegisterModule.setup_register(),),
-            config_module={"a": 24555, "b": 8899900},
+            config_module={"a": 24555, "b": 8899900, "STATIC_MOUNT_PATH": None},
         )
         assert len(test_module.create_application().routes) == 0
         dynamic_instance = test_module.get(IDynamic)

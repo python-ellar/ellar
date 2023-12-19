@@ -16,7 +16,9 @@ class FileSystemStorage(BaseStorage):
         self.chunk_size = chunk_size
 
     def _get_physical_path(self, filename: str) -> str:
-        return os.path.join(self.root_path, filename)
+        name = os.path.join(self.root_path, filename)
+        self.validate_file_name(filename)
+        return self.generate_filename(name)
 
     def put(self, filename: str, stream: t.IO) -> int:
         physical_path = self._get_physical_path(filename)

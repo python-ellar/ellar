@@ -12,11 +12,11 @@ class EventHandler:
         self.is_coroutine = asyncio.iscoroutinefunction(func)
         self.handler = func
 
-    async def run(self) -> None:
+    def run(self, *args: t.Any, **kwargs: t.Any) -> None:
         if self.is_coroutine:
-            await self.handler()
+            asyncio.ensure_future(self.handler(*args, **kwargs))
             return
-        self.handler()
+        self.handler(*args, **kwargs)
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, EventHandler):
@@ -57,7 +57,7 @@ class Event(t.Generic[T]):
         return handler
 
 
-class RouterEventManager(Event[EventHandler]):
+class EventManager(Event[EventHandler]):
     def create_handle(self, handler: t.Callable) -> EventHandler:
         return EventHandler(handler)
 
@@ -68,6 +68,6 @@ class RouterEventManager(Event[EventHandler]):
     def reload(self, handlers: t.List[EventHandler]) -> None:
         self._handlers = handlers
 
-    async def async_run(self) -> None:
+    def run(self, *args: t.Any, **kwargs: t.Any) -> None:
         for handler in self:
-            await handler.run()
+            handler.run(*args, **kwargs)

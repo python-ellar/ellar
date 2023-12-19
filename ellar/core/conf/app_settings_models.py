@@ -75,7 +75,7 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
 
     STATIC_DIRECTORIES: t.Optional[t.List[t.Union[str, t.Any]]] = []
 
-    STATIC_MOUNT_PATH: str = "/static"
+    STATIC_MOUNT_PATH: t.Optional[str] = "/static"
 
     CORS_ALLOW_ORIGINS: t.List[str] = []
     CORS_ALLOW_METHODS: t.List[str] = ["GET"]
@@ -139,7 +139,8 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
 
     @field_validator("STATIC_MOUNT_PATH", mode="before")
     def pre_static_mount_path(cls, value: t.Any) -> t.Any:
-        assert value.startswith("/"), "Routed paths must start with '/'"
+        if value:
+            assert value.startswith("/"), "Routed paths must start with '/'"
         return value
 
     @field_validator("CACHES", mode="before")

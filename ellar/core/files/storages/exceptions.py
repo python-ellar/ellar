@@ -1,8 +1,8 @@
-class SuspiciousOperation(Exception):
+class UnsafeOperation(Exception):
     """The user did something suspicious"""
 
 
-class SuspiciousFileOperation(SuspiciousOperation):
+class UnsafeFileOperation(UnsafeOperation):
     """A Suspicious filesystem operation was attempted"""
 
     pass

@@ -3,6 +3,7 @@ import logging
 import pytest
 from ellar.app import App, current_app, current_config, current_injector
 from ellar.app.context import ApplicationContext
+from ellar.common import Body, post
 from ellar.core import Config
 from ellar.testing import Test
 
@@ -60,7 +61,29 @@ def test_current_app_works():
 def test_current_config_works():
     tm = Test.create_test_module(config_module={"FRAMEWORK_NAME": "Ellar"})
 
-    with ApplicationContext.create(tm.create_application()):
+    with tm.create_application().application_context():
+        assert current_app.config.FRAMEWORK_NAME == current_config.FRAMEWORK_NAME
+
+    with pytest.raises(RuntimeError):
+        assert current_app.config.FRAMEWORK_NAME
+
+
+def test_current_config_works_():
+    tm = Test.create_test_module(config_module={"FRAMEWORK_NAME": "Ellar"})
+
+    @post
+    def add(a: Body[int], b: Body[int]):
+        from ellar.app import current_app
+
+        assert current_app.config.FRAMEWORK_NAME == current_config.FRAMEWORK_NAME
+        return a + b
+
+    app = tm.create_application()
+    app.router.append(add)
+
+    with app.application_context():
+        res = tm.get_test_client().post("/", json={"a": 1, "b": 4})
+        assert res.json() == 5
         assert current_app.config.FRAMEWORK_NAME == current_config.FRAMEWORK_NAME
 
     with pytest.raises(RuntimeError):

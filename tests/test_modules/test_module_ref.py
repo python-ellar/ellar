@@ -257,7 +257,9 @@ def test_module_template_ref_routes_returns_valid_routes():
             ModuleBaseExample, config=config, container=container
         )
 
-        app = AppFactory.create_from_app_module(module=ModuleBaseExample)
+        app = AppFactory.create_from_app_module(
+            module=ModuleBaseExample, config_module={"STATIC_MOUNT_PATH": None}
+        )
     assert len(module_ref.routers) == 4
     assert len(module_ref.routes) == 4
     assert len(app.routes) == 3

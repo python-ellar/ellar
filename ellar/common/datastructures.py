@@ -1,4 +1,5 @@
 import typing as t
+from io import BytesIO, StringIO
 
 from ellar.pydantic import as_pydantic_validator
 from starlette.datastructures import (
@@ -36,6 +37,7 @@ __all__ = [
     "UploadFile",
     "URLPath",
     "State",
+    "ContentFile",
 ]
 
 
@@ -88,4 +90,19 @@ class UploadFile(StarletteUploadFile):
             size=__input_value.size,
             filename=__input_value.filename,
             headers=__input_value.headers,
+        )
+
+
+class ContentFile(UploadFile):
+    """
+    A File-like object that takes just raw content, rather than an actual file.
+    """
+
+    def __init__(
+        self, content: t.Union[str, bytes], name: t.Optional[str] = None
+    ) -> None:
+        stream_class = StringIO if isinstance(content, str) else BytesIO
+        headers = Headers({"content-type": "text/plain"})
+        super().__init__(
+            stream_class(content), filename=name, size=len(content), headers=headers
         )

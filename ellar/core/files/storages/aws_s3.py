@@ -1,17 +1,18 @@
+import typing as t
+import urllib.parse
+from io import BytesIO
+
 try:
     import boto3
 except ImportError as im_ex:  # pragma: no cover
     raise RuntimeError(
         "boto3 must be installed to use the 'S3AWSFileStorage' class."
     ) from im_ex
-import typing as t
-import urllib.parse
-from io import BytesIO
 
 from .base import BaseStorage
 
 
-class S3AWSFileStorage(BaseStorage):
+class S3AWSFileStorage(BaseStorage):  # pragma: no cover
     def service_name(self) -> str:
         return "s3_bucket"
 
@@ -66,8 +67,9 @@ class S3AWSFileStorage(BaseStorage):
 
     def get_s3_path(self, filename: str) -> str:
         if self._prefix:
-            return "{0}/{1}".format(self._prefix, filename)
-        return filename
+            filename = "{0}/{1}".format(self._prefix, filename)
+        self.validate_file_name(filename)
+        return self.generate_filename(filename)
 
     def _upload_file(
         self, filename: str, data: str, content_type: t.Optional[str], rrs: bool = False

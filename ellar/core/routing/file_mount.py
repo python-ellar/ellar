@@ -1,0 +1,78 @@
+import inspect
+import os.path
+import typing as t
+from pathlib import Path
+
+from ellar.common.types import ASGIApp
+from ellar.core.staticfiles import StaticFiles
+from starlette.middleware import Middleware
+from starlette.routing import BaseRoute, Mount
+
+if t.TYPE_CHECKING:
+    from ellar.app import App
+
+
+class ASGIFileMount(Mount):
+    def __init__(
+        self,
+        directories: t.Sequence[str],
+        path: str,
+        name: str,
+        packages: t.Optional[t.List[t.Union[str, t.Tuple[str, str]]]] = None,
+        middleware: t.Optional[t.Sequence[Middleware]] = None,
+        base_directory: t.Optional[str] = None,
+    ) -> None:
+        if base_directory == "__parent__":
+            # stacks = inspect.stack()
+            stack = inspect.stack()[1]
+            base_directory = Path(stack.filename).resolve().parent  # type:ignore[assignment]
+
+        if base_directory:
+            directories = [
+                str(os.path.join(base_directory, directory))
+                for directory in directories
+            ]
+
+        self._middleware = middleware
+
+        _files_app = StaticFiles(directories=directories, packages=packages)  # type:ignore[arg-type]
+        super().__init__(
+            path=path, name=name, app=self._combine_app_with_middleware(_files_app)
+        )
+
+    def _combine_app_with_middleware(self, app: ASGIApp) -> ASGIApp:
+        if self._middleware is not None:
+            for cls, options in reversed(self._middleware):
+                app = cls(app=app, **options)
+        return app
+
+    @property
+    def routes(self) -> t.List[BaseRoute]:
+        return []
+
+
+class AppStaticFileMount(ASGIFileMount):
+    def __init__(self, app: "App") -> None:
+        directories, packages = self._get_static_directories(app)
+        assert app.config.STATIC_MOUNT_PATH
+        super().__init__(
+            path=app.config.STATIC_MOUNT_PATH,
+            name="static",
+            directories=directories,
+            packages=packages,
+        )
+        # subscribe to app reload
+        app.reload_event_manager += self._reload_static_files  # type:ignore[misc]
+
+    def _get_static_directories(self, app: "App") -> tuple:
+        static_directories = t.cast(t.List, app.config.STATIC_DIRECTORIES or [])
+        for module in app.get_module_loaders():
+            if module.static_directory:
+                static_directories.append(module.static_directory)
+        return static_directories, app.config.STATIC_FOLDER_PACKAGES
+
+    def _reload_static_files(self, app: "App") -> None:
+        directories, packages = self._get_static_directories(app)
+        self.app = self._combine_app_with_middleware(
+            StaticFiles(directories=directories, packages=packages)
+        )

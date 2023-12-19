@@ -50,7 +50,7 @@ class ConfigDefaultTypesMixin:
     EXCEPTION_HANDLERS: t.List[IExceptionHandler]
 
     # static route
-    STATIC_MOUNT_PATH: str
+    STATIC_MOUNT_PATH: t.Optional[str]
 
     # defines other custom json encoders
     SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]]

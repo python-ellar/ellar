@@ -2,7 +2,7 @@ import os
 import pathlib
 from abc import ABC
 
-from .exceptions import SuspiciousFileOperation
+from .exceptions import UnsafeFileOperation
 from .interface import Storage
 from .utils import get_valid_filename, validate_file_name
 
@@ -26,7 +26,7 @@ class BaseStorage(ABC, Storage):
         # `filename` may include a path as returned by FileField.upload_to.
         dirname, filename = os.path.split(filename)
         if ".." in pathlib.PurePath(dirname).parts:
-            raise SuspiciousFileOperation(
+            raise UnsafeFileOperation(
                 "Detected path traversal attempt in '%s'" % dirname
             )
         return os.path.normpath(os.path.join(dirname, get_valid_filename(filename)))
