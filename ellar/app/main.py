@@ -68,8 +68,6 @@ class App(AppMixin):
 
         self._user_middleware = list(t.cast(list, self.config.MIDDLEWARE))
 
-        self._static_app: t.Optional[ASGIApp] = None
-
         self.state = State()
         self.config.DEFAULT_LIFESPAN_HANDLER = (
             lifespan or self.config.DEFAULT_LIFESPAN_HANDLER
@@ -117,15 +115,6 @@ class App(AppMixin):
         else:
             logging.getLogger("ellar").setLevel(log_level)
             logging.getLogger("ellar.request").setLevel(log_level)
-
-    def _statics_wrapper(self) -> t.Callable:
-        async def _statics_func_wrapper(
-            scope: TScope, receive: TReceive, send: TSend
-        ) -> t.Any:
-            assert self._static_app, 'app static ASGIApp can not be "None"'
-            return await self._static_app(scope, receive, send)
-
-        return _statics_func_wrapper
 
     def _get_module_routes(self) -> t.List[BaseRoute]:
         _routes: t.List[BaseRoute] = []
