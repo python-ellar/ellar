@@ -138,13 +138,17 @@ It defines a list of `IExceptionHandler` objects used in handling custom excepti
 ### **STATIC_MOUNT_PATH**
 Default: `/static`
 
-It configures the root path to get to static files. eg `http://localhost:8000/static/stylesheet.css`.
-And if for instance `STATIC_MOUNT_PATH`=`'/my-static'`, then the route becomes `http://localhost:8000/my-static/stylesheet.css`
+It configures the root path to serve static files.
+For example, if there is a `stylesheet.css` in a **static** folder, and `STATIC_MOUNT_PATH=/static`,
+`stylesheet.css` can be reached through the link
+`http://localhost:8000/static/stylesheet.css` assuming you are on local development server.
+
+Also, if `STATIC_MOUNT_PATH=None`, static route handler would not be registered to application routes.
 
 ### **SERIALIZER_CUSTOM_ENCODER**
-Default: `ENCODERS_BY_TYPE` (`pydantic.json.ENCODERS_BY_TYPE`)
+Default: `ENCODERS_BY_TYPE` (`ellar.pydantic.ENCODERS_BY_TYPE`)
 
-**SERIALIZER_CUSTOM_ENCODER** is a key-value pair of type and function. Default is a pydantic JSON encode type.
+**SERIALIZER_CUSTOM_ENCODER** is a key-value pair of a type and function. Default is a pydantic JSON encode type.
 It is used when serializing objects to JSON format.
 
 ### **DEFAULT_NOT_FOUND_HANDLER**
@@ -183,7 +187,8 @@ together instead of having a separate handler for `startup` and `shutdown` event
 
 ```python
 import contextlib
-from ellar.core import App, ConfigDefaultTypesMixin
+from ellar.core import ConfigDefaultTypesMixin
+from ellar.app import App
 
 
 @contextlib.asynccontextmanager
@@ -271,7 +276,7 @@ To apply these configurations without having to load everything, you have to pro
 belongs to ellar. For example,
 
 ```python
-from ellar.core.factory import AppFactory
+from ellar.app import AppFactory
 from .root_module import ApplicationModule
 
 application = AppFactory.create_from_app_module(ApplicationModule, config_module=dict(
@@ -286,13 +291,16 @@ This will be applied to the configuration instance when the application is ready
 During application bootstrapping with `AppFactory`, you can define app configurations directly under `config_module` as a dict object as some below.
 
 ```python
-from ellar.core.factory import AppFactory
+from ellar.app import AppFactory
 from .root_module import ApplicationModule
 
-application = AppFactory.create_from_app_module(ApplicationModule, config_module=dict(
-    SECRET_KEY = "your-secret-key-changed",
-    INJECTOR_AUTO_BIND = True,
-    MIDDLEWARE=[],
-    EXCEPTION_HANDLERS=[]
-))
+application = AppFactory.create_from_app_module(
+    ApplicationModule, 
+    config_module=dict(
+        SECRET_KEY = "your-secret-key-changed",
+        INJECTOR_AUTO_BIND = True,
+        MIDDLEWARE=[],
+        EXCEPTION_HANDLERS=[]
+    )
+)
 ```
