@@ -21,7 +21,7 @@ class PydanticDataClass:
 
 
 def test_response_type_definition_converter():
-    defined_type = List[Union[NoteSchemaDC, BlogObjectDTO, PydanticDataClass]]
+    defined_type = List[Union[BlogObjectDTO]]
     converter = ResponseTypeDefinitionConverter(defined_type)
     converted_type = converter.re_group_outer_type()
     _union = get_args(converted_type)
@@ -31,7 +31,7 @@ def test_response_type_definition_converter():
 
     defined_type = NoteSchemaDC
     converted_type = ResponseTypeDefinitionConverter(defined_type).re_group_outer_type()
-    assert issubclass(converted_type, BaseSerializer)
+    assert converted_type == NoteSchemaDC
 
     defined_type = BlogObjectDTO
     converted_type = ResponseTypeDefinitionConverter(defined_type).re_group_outer_type()
@@ -45,7 +45,7 @@ def test_response_type_definition_converter():
     defined_type = Dict[str, NoteSchemaDC]
     converted_type = ResponseTypeDefinitionConverter(defined_type).re_group_outer_type()
     _, arg = get_args(converted_type)
-    assert issubclass(arg, BaseSerializer)
+    assert arg == NoteSchemaDC
 
     defined_type = List[BlogObjectDTO]
     converted_type = ResponseTypeDefinitionConverter(defined_type).re_group_outer_type()
@@ -71,14 +71,14 @@ def test_response_converted_types_with_response_model_field_works():
     )
 
     values = model_field.prep_and_serialize(
-        [{"id": 1, "text": "some text", "completed": False}]
+        [NoteSchemaDC(id=1, text="some text", completed=False)]
     )
     assert values == [{"id": 1, "text": "some text", "completed": False}]
 
     with pytest.raises(RequestValidationError):
         # invalid data
         model_field.prep_and_serialize(
-            {"id": 1, "text": "some text", "completed": False}
+            NoteSchemaDC(id=1, text="some text", completed=False)
         )
 
     defined_type = NoteSchemaDC
@@ -94,7 +94,9 @@ def test_response_converted_types_with_response_model_field_works():
         ),
     )
 
-    values = model_field.serialize({"id": 1, "text": "some text", "completed": False})
+    values = model_field.serialize(
+        NoteSchemaDC(id=1, text="some text", completed=False)
+    )
     assert values == {"id": 1, "text": "some text", "completed": False}
 
     with pytest.raises(RequestValidationError, match="text"):

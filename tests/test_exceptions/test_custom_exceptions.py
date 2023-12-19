@@ -270,15 +270,11 @@ def test_application_http_exception_handler_raise_exception_for_returning_none()
 def test_application_adding_same_exception_twice():
     tm = Test.create_test_module()
     app = tm.create_application()
-    with patch.object(
-        app.__class__, "rebuild_middleware_stack"
-    ) as rebuild_middleware_stack_mock:
+    with patch.object(app.__class__, "rebuild_stack") as rebuild_middleware_stack_mock:
         app.add_exception_handler(OverrideHTTPException())
     rebuild_middleware_stack_mock.assert_called()
 
-    with patch.object(
-        app.__class__, "rebuild_middleware_stack"
-    ) as rebuild_middleware_stack_mock:
+    with patch.object(app.__class__, "rebuild_stack") as rebuild_middleware_stack_mock:
         app.add_exception_handler(OverrideHTTPException())
     assert rebuild_middleware_stack_mock.call_count == 0
 

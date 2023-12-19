@@ -24,13 +24,13 @@ from starlette.responses import (  # noqa
 
 try:
     import ujson
-except ImportError:  # pragma: nocover
+except ImportError:  # pragma: no cover
     ujson = None  # type: ignore
 
 
 try:
     import orjson
-except ImportError:  # pragma: nocover
+except ImportError:  # pragma: no cover
     orjson = None  # type: ignore
 
 

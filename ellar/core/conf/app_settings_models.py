@@ -1,4 +1,3 @@
-import sys
 import typing as t
 
 from ellar.common.constants import (
@@ -19,10 +18,6 @@ from starlette.websockets import WebSocketClose
 
 from .mixins import ConfigDefaultTypesMixin
 
-if sys.version_info >= (3, 8):  # pragma: no cover
-    from typing import Literal
-else:  # pragma: no cover
-    from typing_extensions import Literal
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.app.main import App
 
@@ -80,7 +75,7 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
 
     STATIC_DIRECTORIES: t.Optional[t.List[t.Union[str, t.Any]]] = []
 
-    STATIC_MOUNT_PATH: str = "/static"
+    STATIC_MOUNT_PATH: t.Optional[str] = "/static"
 
     CORS_ALLOW_ORIGINS: t.List[str] = []
     CORS_ALLOW_METHODS: t.List[str] = ["GET"]
@@ -127,7 +122,7 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     SESSION_COOKIE_PATH: str = "/"
     SESSION_COOKIE_HTTPONLY: bool = True
     SESSION_COOKIE_SECURE: bool = False
-    SESSION_COOKIE_SAME_SITE: Literal["lax", "strict", "none"] = "lax"
+    SESSION_COOKIE_SAME_SITE: t.Literal["lax", "strict", "none"] = "lax"
     SESSION_COOKIE_MAX_AGE: t.Optional[int] = 14 * 24 * 60 * 60  # 14 days, in seconds
 
     @field_validator("MIDDLEWARE", mode="before")
@@ -144,7 +139,8 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
 
     @field_validator("STATIC_MOUNT_PATH", mode="before")
     def pre_static_mount_path(cls, value: t.Any) -> t.Any:
-        assert value.startswith("/"), "Routed paths must start with '/'"
+        if value:
+            assert value.startswith("/"), "Routed paths must start with '/'"
         return value
 
     @field_validator("CACHES", mode="before")

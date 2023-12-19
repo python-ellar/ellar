@@ -15,6 +15,9 @@ class RouteCollection(t.Sequence[BaseRoute]):
         self._served_routes: t.List[BaseRoute] = []
         self.extend([] if routes is None else list(routes))
 
+    def __contains__(self, item: t.Any) -> bool:
+        return item in self._routes
+
     @t.no_type_check
     def __getitem__(self, i: int) -> BaseRoute:
         return self._served_routes.__getitem__(i)

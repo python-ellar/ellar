@@ -9,14 +9,11 @@ from ellar.app.context import ApplicationContext
 from ellar.common.serializer.base import (
     Serializer,
     SerializerFilter,
-    convert_dataclass_to_pydantic_model,
-    get_dataclass_pydantic_model,
     serialize_object,
 )
 from ellar.pydantic import as_pydantic_validator
 from ellar.testing import Test
 from pydantic import BaseModel, Field, RootModel
-from pydantic import dataclasses as pydantic_dataclasses
 
 
 class Person:
@@ -105,34 +102,34 @@ class ModelWithDefault(Serializer):
 ModelWithRoot = RootModel[str]
 
 
-def test_convert_dataclass_to_pydantic_model():
-    @dataclass
-    class SomeDataClassConvert:
-        name: str
+# def test_convert_dataclass_to_pydantic_model():
+#     @dataclass
+#     class SomeDataClassConvert:
+#         name: str
+#
+#     class SomeClassConvert:
+#         name: str
+#
+#     assert getattr(SomeDataClassConvert, "__pydantic_complete__", None) is None
+#
+#     pydantic_model = convert_dataclass_to_pydantic_model(SomeDataClassConvert)
+#     assert pydantic_model
+#     assert (
+#         getattr(pydantic_model, "__pydantic_complete__", None) is True
+#     ), "Converted dataclass is missing pydantic attribute"
+#
+#     with pytest.raises(Exception, match="is not a dataclass"):
+#         convert_dataclass_to_pydantic_model(SomeClassConvert)
 
-    class SomeClassConvert:
-        name: str
 
-    assert getattr(SomeDataClassConvert, "__pydantic_complete__", None) is None
-
-    pydantic_model = convert_dataclass_to_pydantic_model(SomeDataClassConvert)
-    assert pydantic_model
-    assert (
-        getattr(pydantic_model, "__pydantic_complete__", None) is True
-    ), "Converted dataclass is missing pydantic attribute"
-
-    with pytest.raises(Exception, match="is not a dataclass"):
-        convert_dataclass_to_pydantic_model(SomeClassConvert)
-
-
-def test_get_dataclass_pydantic_model():
-    @pydantic_dataclasses.dataclass
-    class SomeDataClassConvert2:
-        name: str
-
-    assert getattr(SomeDataClassConvert2, "__pydantic_complete__", None) is True
-    pydantic_model = get_dataclass_pydantic_model(SomeDataClassConvert2)
-    assert pydantic_model is SomeDataClassConvert2
+# def test_get_dataclass_pydantic_model():
+#     @pydantic_dataclasses.dataclass
+#     class SomeDataClassConvert2:
+#         name: str
+#
+#     assert getattr(SomeDataClassConvert2, "__pydantic_complete__", None) is True
+#     pydantic_model = get_dataclass_pydantic_model(SomeDataClassConvert2)
+#     assert pydantic_model is SomeDataClassConvert2
 
 
 def test_dataclass_serializer():

@@ -1,4 +1,4 @@
-from ellar.common import put, serialize_object
+from ellar.common import patch, put, serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
@@ -7,6 +7,7 @@ app = tm.create_application()
 
 
 @put("/items/{item_id}")
+@patch("/items/{item_id}")
 def save_item_no_body(item_id: str):
     return {"item_id": item_id}
 
@@ -50,7 +51,38 @@ openapi_schema = {
                         },
                     },
                 },
-            }
+            },
+            "patch": {
+                "operationId": "save_item_no_body_items__item_id__patch",
+                "parameters": [
+                    {
+                        "required": True,
+                        "schema": {"type": "string", "title": "Item Id"},
+                        "name": "item_id",
+                        "in": "path",
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {"type": "object", "title": "Response Model"}
+                            }
+                        },
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        },
+                    },
+                },
+            },
         }
     },
     "components": {
@@ -94,6 +126,12 @@ def test_openapi_schema():
 
 def test_put_no_body():
     response = client.put("/items/foo")
+    assert response.status_code == 200, response.text
+    assert response.json() == {"item_id": "foo"}
+
+
+def test_patch_no_body():
+    response = client.patch("/items/foo")
     assert response.status_code == 200, response.text
     assert response.json() == {"item_id": "foo"}
 

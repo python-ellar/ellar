@@ -42,7 +42,7 @@ def create_route_operation(
         )
         return response
 
-    return build_route_handler(endpoint_sample)
+    return build_route_handler(endpoint_sample)[0]
 
 
 def create_ws_route_operation(
@@ -57,7 +57,7 @@ def create_ws_route_operation(
         response = JSONResponse(content={"path": path, "versioning": versions})
         return response
 
-    return build_route_handler(endpoint_sample)
+    return build_route_handler(endpoint_sample)[0]
 
 
 class MockHostRouteOperation(Host):

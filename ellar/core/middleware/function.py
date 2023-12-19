@@ -14,7 +14,7 @@ T = t.TypeVar("T")
 
 class FunctionBasedMiddleware:
     """
-    Convert ASGI Middleware to a Node-like Middleware.
+    Converts a function to an ASGI Middleware
 
     Usage: Example 1
     @middleware()

@@ -31,11 +31,12 @@ from ellar.core.modules import (
     ModuleSetup,
     ModuleTemplateRef,
 )
-from ellar.core.routing import ApplicationRouter
+from ellar.core.routing import ApplicationRouter, AppStaticFileMount
 from ellar.core.services import Reflector
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
 from ellar.di import EllarInjector
-from starlette.routing import BaseRoute, Mount
+from jinja2 import Environment as JinjaEnvironment
+from starlette.routing import BaseRoute
 
 from .lifespan import EllarApplicationLifespan
 from .mixin import AppMixin
@@ -67,12 +68,11 @@ class App(AppMixin):
 
         self._user_middleware = list(t.cast(list, self.config.MIDDLEWARE))
 
-        self._static_app: t.Optional[ASGIApp] = None
-
         self.state = State()
         self.config.DEFAULT_LIFESPAN_HANDLER = (
             lifespan or self.config.DEFAULT_LIFESPAN_HANDLER
         )
+
         self.router = ApplicationRouter(
             routes=self._get_module_routes(),
             redirect_slashes=self.config.REDIRECT_SLASHES,
@@ -81,9 +81,19 @@ class App(AppMixin):
                 self.config.DEFAULT_LIFESPAN_HANDLER  # type: ignore[arg-type]
             ).lifespan,
         )
+        if (
+            self.config.STATIC_MOUNT_PATH
+            and self.config.STATIC_MOUNT_PATH not in self.router.routes
+        ):
+            self.router.append(AppStaticFileMount(self))
+
         self._finalize_app_initialization()
         self.middleware_stack = self.build_middleware_stack()
         self._config_logging()
+
+        self.reload_event_manager += lambda app: self._update_jinja_env_filters(  # type:ignore[misc]
+            self.jinja_environment
+        )
 
     def _config_logging(self) -> None:
         log_level = (
@@ -106,26 +116,8 @@ class App(AppMixin):
             logging.getLogger("ellar").setLevel(log_level)
             logging.getLogger("ellar.request").setLevel(log_level)
 
-    def _statics_wrapper(self) -> t.Callable:
-        async def _statics_func_wrapper(
-            scope: TScope, receive: TReceive, send: TSend
-        ) -> t.Any:
-            assert self._static_app, 'app static ASGIApp can not be "None"'
-            return await self._static_app(scope, receive, send)
-
-        return _statics_func_wrapper
-
     def _get_module_routes(self) -> t.List[BaseRoute]:
         _routes: t.List[BaseRoute] = []
-        if self.has_static_files:
-            self._static_app = self.create_static_app()
-            _routes.append(
-                Mount(
-                    str(self.config.STATIC_MOUNT_PATH),
-                    app=self._statics_wrapper(),
-                    name="static",
-                )
-            )
 
         for _, module_ref in self._injector.get_modules().items():
             _routes.extend(module_ref.routes)
@@ -157,9 +149,8 @@ class App(AppMixin):
         module_ref.run_module_register_services()
         if isinstance(module_ref, ModuleTemplateRef):
             self.router.extend(module_ref.routes)
-            self.reload_static_app()
 
-        self.rebuild_middleware_stack()
+        self.rebuild_stack()
 
         return t.cast(T, module_ref.get_module_instance())
 
@@ -188,12 +179,6 @@ class App(AppMixin):
     @property
     def versioning_scheme(self) -> BaseAPIVersioning:
         return t.cast(BaseAPIVersioning, self._config.VERSIONING_SCHEME)
-
-    @property
-    def has_static_files(self) -> bool:  # type: ignore
-        return (
-            True if self.static_files or self.config.STATIC_FOLDER_PACKAGES else False
-        )
 
     @property
     def config(self) -> "Config":
@@ -298,7 +283,9 @@ class App(AppMixin):
         self.injector.container.register_instance(self)
         self.injector.container.register_instance(self.config, Config)
         self.injector.container.register_instance(self.jinja_environment, Environment)
-        self.injector.container.register_instance(self.jinja_environment, Environment)
+        self.injector.container.register_instance(
+            self.jinja_environment, JinjaEnvironment
+        )
 
     def add_exception_handler(
         self,
@@ -310,10 +297,11 @@ class App(AppMixin):
                 self._exception_handlers.append(exception_handler)
                 _added_any = True
         if _added_any:
-            self.rebuild_middleware_stack()
+            self.rebuild_stack()
 
-    def rebuild_middleware_stack(self) -> None:
+    def rebuild_stack(self) -> None:
         self.middleware_stack = self.build_middleware_stack()
+        self.reload_event_manager.run(self)
 
     @property
     def reflector(self) -> Reflector:

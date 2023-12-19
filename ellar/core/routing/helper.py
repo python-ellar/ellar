@@ -18,7 +18,7 @@ from ellar.reflect import reflect
 
 
 @t.no_type_check
-def build_route_handler(item: t.Callable) -> t.Optional[RouteOperationBase]:
+def build_route_handler(item: t.Callable) -> t.Optional[t.List[RouteOperationBase]]:
     _item: t.Any = item
 
     if callable(item) and type(item) == FunctionType:
@@ -28,11 +28,19 @@ def build_route_handler(item: t.Callable) -> t.Optional[RouteOperationBase]:
         reflect.define_metadata(CONTROLLER_CLASS_KEY, get_unique_control_type(), item)
 
     if not _item and hasattr(item, ROUTE_OPERATION_PARAMETERS):
-        operations = build_route_parameters([item.__dict__[ROUTE_OPERATION_PARAMETERS]])
-        if not operations:
-            return None  # pragma: no cover
-        return operations[0]
-    return _item
+        parameters = item.__dict__[ROUTE_OPERATION_PARAMETERS]
+
+        if not isinstance(parameters, list):
+            parameters = [parameters]
+
+        operations = build_route_parameters(parameters)
+        if isinstance(operations, list):
+            return operations
+
+    if _item:
+        return [_item]
+
+    return _item  # pragma: no cover
 
 
 @t.no_type_check

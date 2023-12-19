@@ -11,7 +11,7 @@ class StaticFiles(StarletteStaticFiles):
     def __init__(
         self,
         *,
-        directories: t.Optional[t.List[PathLike]] = None,
+        directories: t.Optional[t.List[t.Union[PathLike, str]]] = None,
         packages: t.Optional[t.List[t.Union[str, t.Tuple[str, str]]]] = None,
         html: bool = False,  # TODO: expose to config
         check_dir: bool = True,  # TODO: expose to config

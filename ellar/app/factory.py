@@ -167,8 +167,7 @@ class AppFactory:
 
         if module_changed:
             app.router.extend(routes)
-            app.reload_static_app()
-            app.rebuild_middleware_stack()
+            app.rebuild_stack()
 
         return app
 

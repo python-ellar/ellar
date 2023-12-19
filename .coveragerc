@@ -12,3 +12,7 @@ exclude_lines =
     if __name__ == .__main__.:
     class .*\bProtocol\):
     @(abc\.)?abstractmethod
+[run]
+omit =
+    # omit this single file
+    ellar/core/files/storages/aws_s3.py

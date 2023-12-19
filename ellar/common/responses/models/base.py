@@ -6,7 +6,7 @@ from ellar.common.constants import SERIALIZER_FILTER_KEY
 from ellar.common.exceptions import RequestValidationError
 from ellar.common.interfaces import IExecutionContext, IResponseModel
 from ellar.common.logging import request_logger
-from ellar.common.serializer import BaseSerializer, SerializerFilter
+from ellar.common.serializer import BaseSerializer, SerializerFilter, serialize_object
 from ellar.pydantic import ModelField, create_model_field
 from ellar.reflect import reflect
 from starlette.responses import Response
@@ -204,7 +204,18 @@ class ResponseModel(BaseResponseModel):
         response_obj: t.Any,
         serializer_filter: t.Optional[SerializerFilter] = None,
     ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
-        return response_obj
+        return self._serialize_with_serializer_object(response_obj)
+
+    def _serialize_with_serializer_object(
+        self,
+        response_obj: t.Any,
+        serializer_filter: t.Optional[SerializerFilter] = None,
+    ) -> t.Union[t.List[t.Dict], t.Dict, t.Any]:
+        try:
+            return serialize_object(response_obj, serializer_filter=serializer_filter)
+        except Exception:  # pragma: no cover
+            """Could not serialize response obj"""
+            return response_obj
 
 
 class ResponseResolver(t.NamedTuple):

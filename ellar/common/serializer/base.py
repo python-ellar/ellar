@@ -11,7 +11,6 @@ from ellar.pydantic import (
     BaseModel,
     TypeAdapter,
     model_dump,
-    pydantic_dataclass,
 )
 
 __pydantic_model__ = "__pydantic_core_schema__"
@@ -20,12 +19,26 @@ __pydantic_root__ = "__root__"
 __skip_filter__ = "__skip_filter__"
 
 
-@t.no_type_check
-def get_dataclass_pydantic_model(
-    dataclass_type: t.Type,
-) -> t.Optional[t.Type[BaseModel]]:
-    if hasattr(dataclass_type, __pydantic_model__):
-        return t.cast(t.Type[BaseModel], dataclass_type)
+# @t.no_type_check
+# def get_dataclass_pydantic_model(
+#     dataclass_type: t.Type,
+# ) -> t.Optional[t.Type[BaseModel]]:
+#     if hasattr(dataclass_type, __pydantic_model__):
+#         return t.cast(t.Type[BaseModel], dataclass_type)
+#
+# def convert_dataclass_to_pydantic_model(dataclass_type: t.Type) -> t.Type[BaseModel]:
+#     if is_dataclass(dataclass_type):
+#         if get_dataclass_pydantic_model(dataclass_type):
+#             return t.cast(t.Type[BaseModel], dataclass_type)
+#
+#         # convert to dataclass
+#         decorator = pydantic_dataclass(
+#             config=getattr(dataclass_type, __pydantic_config__, SerializerConfig),
+#         )
+#         pydantic_dataclass_cls = decorator(t.cast(t.Any, dataclass_type))
+#         # sa = {item: getattr(pydantic_dataclass, item) for item in dir(pydantic_dataclass)}
+#         return t.cast(t.Type[BaseModel], pydantic_dataclass_cls)
+#     raise Exception(f"{dataclass_type} is not a dataclass")
 
 
 class SerializerConfig(BaseConfig):
@@ -106,21 +119,6 @@ class SerializerBase(BaseSerializer, __skip_filter__=True):
 
 class Serializer(SerializerBase, BaseModel, __skip_filter__=True):
     model_config = {"from_attributes": True}
-
-
-def convert_dataclass_to_pydantic_model(dataclass_type: t.Type) -> t.Type[BaseModel]:
-    if is_dataclass(dataclass_type):
-        if get_dataclass_pydantic_model(dataclass_type):
-            return t.cast(t.Type[BaseModel], dataclass_type)
-
-        # convert to dataclass
-        decorator = pydantic_dataclass(
-            config=getattr(dataclass_type, __pydantic_config__, SerializerConfig),
-        )
-        pydantic_dataclass_cls = decorator(t.cast(t.Any, dataclass_type))
-        # sa = {item: getattr(pydantic_dataclass, item) for item in dir(pydantic_dataclass)}
-        return t.cast(t.Type[BaseModel], pydantic_dataclass_cls)
-    raise Exception(f"{dataclass_type} is not a dataclass")
 
 
 def _lazy_current_config() -> t.Any:

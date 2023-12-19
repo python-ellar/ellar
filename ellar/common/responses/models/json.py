@@ -3,7 +3,7 @@ import typing as t
 from ellar.common.constants import SERIALIZER_FILTER_KEY
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logging import request_logger
-from ellar.common.serializer import SerializerFilter, serialize_object
+from ellar.common.serializer import SerializerFilter
 from ellar.pydantic import as_pydantic_validator, create_model_field
 from ellar.reflect import reflect
 
@@ -85,10 +85,6 @@ class EmptyAPIResponseModel(JSONResponseModel):
         try:
             return super().serialize(response_obj, serializer_filter)
         except Exception:
-            try:
-                return serialize_object(
-                    response_obj, serializer_filter=serializer_filter
-                )
-            except Exception:  # pragma:no cover
-                """Could not serialize response obj"""
-                return response_obj
+            return self._serialize_with_serializer_object(
+                response_obj, serializer_filter
+            )

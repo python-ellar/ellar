@@ -58,7 +58,11 @@ class OperationDefinitions:
 
     def _get_operation(self, route_parameter: RouteParameters) -> t.Callable:
         setattr(route_parameter.endpoint, OPERATION_ENDPOINT_KEY, True)
-        setattr(route_parameter.endpoint, ROUTE_OPERATION_PARAMETERS, route_parameter)
+        route_parameters = getattr(
+            route_parameter.endpoint, ROUTE_OPERATION_PARAMETERS, []
+        )
+        route_parameters.append(route_parameter)
+        setattr(route_parameter.endpoint, ROUTE_OPERATION_PARAMETERS, route_parameters)
         return route_parameter.endpoint
 
     def _get_ws_operation(self, ws_route_parameters: WsRouteParameters) -> t.Callable:

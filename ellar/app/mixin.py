@@ -1,6 +1,5 @@
 import json
 import typing as t
-from abc import abstractmethod
 
 from ellar.common.compatible import cached_property
 from ellar.common.constants import TEMPLATE_FILTER_KEY, TEMPLATE_GLOBAL_KEY
@@ -14,8 +13,8 @@ from ellar.common.templating import (
 from ellar.common.types import ASGIApp
 from ellar.core.conf import Config
 from ellar.core.connection import Request
-from ellar.core.staticfiles import StaticFiles
 from ellar.di import EllarInjector
+from ellar.events import EventManager
 from jinja2 import Environment as BaseEnvironment
 from starlette.templating import pass_context
 
@@ -27,15 +26,8 @@ class AppMixin(JinjaTemplating):
     _static_app: t.Optional[ASGIApp]
     _injector: EllarInjector
     _config: Config
-    has_static_files: bool
-
-    @abstractmethod
-    def build_middleware_stack(self) -> t.Callable:  # pragma: no cover
-        pass
-
-    @abstractmethod
-    def rebuild_middleware_stack(self) -> None:  # pragma: no cover
-        pass
+    rebuild_stack: t.Callable
+    reload_event_manager = EventManager()
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
         for loader in self._injector.get_templating_modules().values():
@@ -50,7 +42,7 @@ class AppMixin(JinjaTemplating):
         del self.__dict__["jinja_environment"]
         self._config.DEBUG = value
         # TODO: Add warning
-        self.rebuild_middleware_stack()
+        self.rebuild_stack()
 
     @cached_property
     def jinja_environment(self) -> BaseEnvironment:  # type: ignore[override]
@@ -94,26 +86,6 @@ class AppMixin(JinjaTemplating):
     def create_global_jinja_loader(self) -> JinjaLoader:
         return JinjaLoader(t.cast("App", self))
 
-    def create_static_app(self) -> ASGIApp:
-        return StaticFiles(
-            directories=self.static_files,  # type: ignore[arg-type]
-            packages=self._config.STATIC_FOLDER_PACKAGES,
-        )
-
-    def reload_static_app(self) -> None:
-        del self.__dict__["static_files"]
-        if self.has_static_files:
-            self._static_app = self.create_static_app()
-        self._update_jinja_env_filters(self.jinja_environment)
-
     def _update_jinja_env_filters(self, jinja_environment: BaseEnvironment) -> None:
         jinja_environment.globals.update(self._config.get(TEMPLATE_GLOBAL_KEY, {}))
         jinja_environment.filters.update(self._config.get(TEMPLATE_FILTER_KEY, {}))
-
-    @cached_property
-    def static_files(self) -> t.List[str]:
-        static_directories = t.cast(t.List, self._config.STATIC_DIRECTORIES or [])
-        for module in self.get_module_loaders():
-            if module.static_directory:
-                static_directories.append(module.static_directory)
-        return static_directories
