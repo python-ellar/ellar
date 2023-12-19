@@ -2,14 +2,12 @@ import typing as t
 import urllib.parse
 from io import BytesIO
 
+from ellar.core.files.storages.base import BaseStorage
+
 try:
     import boto3
-except ImportError as im_ex:  # pragma: no cover
-    raise RuntimeError(
-        "boto3 must be installed to use the 'S3AWSFileStorage' class."
-    ) from im_ex
-
-from .base import BaseStorage
+except ImportError:
+    boto3 = None
 
 
 class S3AWSFileStorage(BaseStorage):  # pragma: no cover
@@ -29,6 +27,11 @@ class S3AWSFileStorage(BaseStorage):  # pragma: no cover
         enable_cache_control: bool = False,
         public_link_expiration: int = 3600,
     ) -> None:
+        if not boto3:
+            raise RuntimeError(
+                "boto3 must be installed to use the 'S3AWSFileStorage' class. pip install boto3"
+            )
+
         self.bucket = self.get_aws_bucket(
             bucket=bucket,
             secret_key=secret_key,
