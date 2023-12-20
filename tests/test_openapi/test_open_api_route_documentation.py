@@ -1,9 +1,10 @@
 import typing as t
 
 from ellar.auth.guards import GuardAPIKeyCookie
-from ellar.common import Body, ModuleRouter, Query
+from ellar.common import Body, GuardCanActivate, ModuleRouter, Query, UseGuards
 from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.common.responses.models import ResponseModel, ResponseModelField
+from ellar.core import ExecutionContext
 from ellar.core.connection import HTTPConnection
 from ellar.core.routing import ModuleRouterFactory
 from ellar.openapi import OpenAPIRouteDocumentation, openapi_info
@@ -12,6 +13,11 @@ from ellar.pydantic import GenerateJsonSchema, get_definitions
 from ellar.reflect import reflect
 
 from ..schema import BlogObjectDTO, CreateCarSchema, Filter, NoteSchemaDC
+
+
+class JustAGuard(GuardCanActivate):
+    async def can_activate(self, context: ExecutionContext) -> bool:
+        return True
 
 
 class CustomCookieAPIKey(GuardAPIKeyCookie):
@@ -41,16 +47,21 @@ router = ModuleRouter()
 @openapi_info(
     summary="Endpoint Summary",
     description="Endpoint Description",
-    deprecated=False,
+    deprecated=True,
     tags=["endpoint", "endpoint-25"],
 )
-def get_car_by_id(car_id: int, filter: Filter = Query()):
+def get_car_by_id(
+    car_id: int,
+    filter: Filter = Query(),
+    schema: int = Query(description="input field description", deprecated=True),
+):
     res = filter.dict()
-    res.update(car_id=car_id)
+    res.update(car_id=car_id, schema=schema)
     return res
 
 
 @router.get("/create", response={201: CreateCarSchema})
+@UseGuards(JustAGuard)
 def create_car(car: CreateCarSchema):
     return car
 
@@ -68,7 +79,7 @@ def test_open_api_route_model_input_fields():
         CONTROLLER_OPERATION_HANDLER_KEY, get_car_by_id
     )
     openapi_route_doc = OpenAPIRouteDocumentation(route=route_operation)
-    assert len(openapi_route_doc.input_fields) == 3
+    assert len(openapi_route_doc.input_fields) == 4
 
     for field in openapi_route_doc.input_fields:
         assert field.field_info.in_.value in ["query", "path"]
@@ -97,14 +108,16 @@ def test_open_api_route_model_get_openapi_operation_metadata():
         "summary": "Endpoint Summary",
         "description": "Endpoint Description",
         "operationId": "get_car_by_id_cars__car_id__post",
+        "deprecated": True,
     }
 
     result = openapi_route_doc.get_openapi_operation_metadata("some_http_method")
     assert result == {
-        "tags": ["endpoint", "endpoint-25"],
-        "summary": "Endpoint Summary",
+        "deprecated": True,
         "description": "Endpoint Description",
         "operationId": "get_car_by_id_cars__car_id__some_http_method",
+        "summary": "Endpoint Summary",
+        "tags": ["endpoint", "endpoint-25"],
     }
 
 
@@ -159,6 +172,18 @@ def test_open_api_route_get_openapi_operation_parameters_works_for_empty_model_n
                 "kw_only": None,
                 "title": "From",
             },
+        },
+        {
+            "name": "schema",
+            "in": "query",
+            "required": True,
+            "schema": {
+                "type": "integer",
+                "description": "input field description",
+                "title": "Schema",
+            },
+            "description": "input field description",
+            "deprecated": True,
         },
     ]
 
@@ -416,7 +441,7 @@ def test_open_api_route__get_openapi_path_object_works_for_routes_with_multiple_
         CONTROLLER_OPERATION_HANDLER_KEY, list_and_create_car
     )
     openapi_route_doc = OpenAPIRouteDocumentation(
-        route=route_operation, guards=[CustomCookieAPIKey()]
+        route=route_operation, guards=[CustomCookieAPIKey(), JustAGuard()]
     )
     field_mapping, _ = get_definitions(
         fields=openapi_route_doc.get_route_models(),

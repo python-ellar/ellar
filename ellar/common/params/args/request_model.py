@@ -13,6 +13,7 @@ from starlette.convertors import Convertor
 
 from .. import params
 from ..resolvers import (
+    BodyParameterResolver,
     BulkFormParameterResolver,
     IRouteParameterResolver,
     RouteParameterModelField,
@@ -107,8 +108,10 @@ class RequestEndpointArgsModel(EndpointArgsModel):
         if (
             body_resolvers
             and len(body_resolvers) == 1
-            and not (
-                body_resolvers[0].model_field.field_info.embed  # type: ignore[attr-defined]
+            and not isinstance(body_resolvers[0], BulkFormParameterResolver)
+            and (
+                isinstance(body_resolvers[0], BodyParameterResolver)
+                and not body_resolvers[0].model_field.field_info.embed  # type: ignore[attr-defined]
             )
         ):
             check_file_field(body_resolvers[0].model_field)

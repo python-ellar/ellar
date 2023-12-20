@@ -150,9 +150,6 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         )
         self.guards = guards or []
 
-        if self.tags and not isinstance(self.tags, list):
-            self.tags = [self.tags]
-
     @cached_property
     def _openapi_models(self) -> t.List[t.Union[ModelField, RouteParameterModelField]]:
         _models: t.List[ModelField] = self.input_fields + self.output_fields
@@ -169,7 +166,8 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         _models: t.List[ModelField] = self.global_route_parameters
 
         for item in self.route.endpoint_parameter_model.get_all_models():
-            if isinstance(item, BodyParameterResolver):
+            if isinstance(item, BodyParameterResolver):  # pragma: no cover
+                # just incase we have a Body Field
                 continue
 
             if isinstance(item, BulkParameterResolver):
@@ -262,7 +260,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             }
             if field_info.description:
                 parameter["description"] = field_info.description
-            if field_info.examples:  # pragma:no cover
+            if field_info.examples:  # pragma: no cover
                 parameter["examples"] = field_info.examples  # type:ignore[assignment]
             if field_info.deprecated:
                 parameter["deprecated"] = field_info.deprecated

@@ -7,6 +7,7 @@ from ellar.core import Request
 from ellar.openapi import OpenAPIDocumentBuilder, openapi_info
 from ellar.testing import Test
 
+from ..utils import pydantic_error_url
 from .sample import Item, OtherItem, Product
 
 tm = Test.create_test_module()
@@ -294,6 +295,21 @@ def test_alias_with_more_body():
     }
     response = _client.post("/product", json=body)
     assert response.json() == body
+    new_body = {"item": body["item"]}
+
+    response = _client.post("/product", json=new_body)
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "type": "missing",
+                "loc": ["body", "aliasQty"],
+                "msg": "Field required",
+                "input": None,
+                "url": pydantic_error_url("missing"),
+            },
+        ]
+    }
 
 
 @patch.object(Request, "body")
@@ -308,4 +324,43 @@ def test_body_resolution_fails(mock_form):
     assert response.json() == {
         "detail": "There was an error parsing the body",
         "status_code": 400,
+    }
+
+
+def test_post_body_empty_list():
+    response = client.post("/items/", json=[])
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "type": "missing",
+                "loc": ["body", "item"],
+                "msg": "Field required",
+                "input": None,
+                "url": pydantic_error_url("missing"),
+            },
+            {
+                "type": "missing",
+                "loc": ["body", "qty"],
+                "msg": "Field required",
+                "input": None,
+                "url": pydantic_error_url("missing"),
+            },
+        ]
+    }
+
+
+def test_post_body_no_data():
+    response = client.post("/items/embed", json=None)
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": [
+            {
+                "input": None,
+                "loc": ["body", "qty"],
+                "msg": "Field required",
+                "type": "missing",
+                "url": pydantic_error_url("missing"),
+            }
+        ]
     }

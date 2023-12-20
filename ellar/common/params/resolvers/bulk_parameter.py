@@ -35,7 +35,7 @@ class BulkParameterResolver(BaseRouteParameterResolver):
         errors: t.List[ErrorWrapper] = []
 
         for parameter_resolver in self._resolvers:
-            value_, errors_ = await parameter_resolver.resolve(ctx=ctx)
+            value_, errors_ = await parameter_resolver.resolve(*args, ctx=ctx, **kwargs)
             if value_:
                 values.update(
                     {
@@ -46,15 +46,18 @@ class BulkParameterResolver(BaseRouteParameterResolver):
                 )
             if errors_:
                 errors += self.validate_error_sequence(errors_)
+
         if errors:
             return values, errors
 
+        # Combining resolved values into one pydantic model specified by the user in Route function parameter
         v_, errors_ = self.model_field.validate(
             values,
             {},
             loc=(self.model_field.field_info.in_.value, self.model_field.alias),
         )
-        if errors_:
+        if errors_:  # pragma: no cover
+            # Just in case error still happened after combining each field to on class.
             errors += self.validate_error_sequence(errors_)
             return values, errors
         return {self.model_field.name: v_}, []
@@ -82,13 +85,15 @@ class BulkFormParameterResolver(FormParameterResolver, BulkParameterResolver):
         value, resolver_errors = await self._get_resolver_data(ctx, body, by_alias=True)
         if resolver_errors:
             return value, resolver_errors
-
+        # Combining resolved values into one pydantic model specified by the user in Route function parameter
         processed_value, processed_errors = self.model_field.validate(
             value,
             {},
             loc=(self.model_field.field_info.in_.value, self.model_field.alias),
         )
-        if processed_errors:
+
+        if processed_errors:  # pragma: no cover
+            # Just in case error still happened after combining each field to on class.
             processed_errors = self.validate_error_sequence(processed_errors)
             return processed_value, processed_errors
         return {self.model_field.name: processed_value}, []
@@ -125,14 +130,10 @@ class BulkFormParameterResolver(FormParameterResolver, BulkParameterResolver):
     ) -> t.Tuple:
         request_logger.debug(f"Resolving Form Parameters - '{self.__class__.__name__}'")
         _body = await self.get_request_body(ctx)
-        if self._resolvers:
-            return await self._use_resolver(ctx, _body)
-        return await super(BulkFormParameterResolver, self).resolve_handle(
-            ctx, *args, **kwargs
-        )
+        return await self._use_resolver(ctx, _body)
 
 
-class BulkBodyParameterResolver(BodyParameterResolver, BulkParameterResolver):
+class BulkBodyParameterResolver(BulkParameterResolver, BodyParameterResolver):
     async def resolve_handle(
         self, ctx: IExecutionContext, *args: t.Any, **kwargs: t.Any
     ) -> t.Tuple:
@@ -140,10 +141,11 @@ class BulkBodyParameterResolver(BodyParameterResolver, BulkParameterResolver):
             f"Resolving Request Body Parameters - '{self.__class__.__name__}'"
         )
         _body = await self.get_request_body(ctx)
-        values, errors = await super(BulkBodyParameterResolver, self).resolve_handle(
-            ctx, *args, body=_body, **kwargs
-        )
-        if not errors:
-            _, body_value = values.popitem()
-            return body_value.dict(), []
-        return values, self.validate_error_sequence(errors)
+
+        values, errors = await super().resolve_handle(ctx, *args, body=_body, **kwargs)
+
+        if errors:
+            return values, self.validate_error_sequence(errors)
+
+        _, body_value = values.popitem()
+        return body_value.dict(), []
