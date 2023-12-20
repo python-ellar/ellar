@@ -2,6 +2,7 @@ import typing as t
 
 from ellar.common.compatible import AttributeDict
 from ellar.common.decorators import set_metadata as set_meta
+from ellar.common.exceptions import ImproperConfiguration
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 
 
@@ -23,6 +24,9 @@ def openapi_info(
     :param deprecated:
     :return:
     """
+    if tags and not isinstance(tags, list):
+        raise ImproperConfiguration("tags must be a sequence of str eg, [tagA, tagB]")
+
     return set_meta(
         OPENAPI_OPERATION_KEY,
         AttributeDict(

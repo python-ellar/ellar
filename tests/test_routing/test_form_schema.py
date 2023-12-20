@@ -6,6 +6,7 @@ from ellar.core.routing.helper import build_route_handler
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
+from ..utils import pydantic_error_url
 from .sample import Filter, NonPrimitiveSchema
 
 mr = ModuleRouter("")
@@ -58,6 +59,27 @@ def test_request():
     }
 
 
+# def test_missing_form_fields():
+#     client = test_module.get_test_client()
+#     response = client.post(
+#         "/form-schema", data=[]
+#     )
+#     assert response.status_code == 422
+#     json = response.json()
+#
+#     assert json == {
+#         "detail": [
+#             {
+#                 "ctx": {"expected": "20, 50 or 200"},
+#                 "input": 100,
+#                 "loc": ["body", "range"],
+#                 "msg": "Input should be 20, 50 or 200",
+#                 "type": "enum",
+#             }
+#         ]
+#     }
+
+
 def test_form_with_alias():
     client = test_module.get_test_client()
     response = client.post(
@@ -81,11 +103,11 @@ def test_form_with_alias():
     assert json == {
         "detail": [
             {
-                "input": {"qty": "234"},
+                "input": None,
                 "loc": ["body", "aliasQty"],
-                "msg": "Input should be a valid integer",
-                "type": "int_type",
-                "url": "https://errors.pydantic.dev/2.5/v/int_type",
+                "msg": "Field required",
+                "type": "missing",
+                "url": pydantic_error_url("missing"),
             }
         ]
     }

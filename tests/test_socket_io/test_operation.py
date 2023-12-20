@@ -4,6 +4,7 @@ import pytest
 from ellar.socket_io import TestGateway
 from ellar.socket_io.testing.module import RunWithServerContext
 
+from ..utils import pydantic_error_url
 from .sample import EventGateway, GatewayOthers, GatewayWithGuards
 
 # @pytest.fixture()
@@ -193,9 +194,9 @@ class TestGatewayWithGuards:
                     {
                         "input": None,
                         "loc": ["body", "data"],
-                        "msg": "Input should be a valid string",
-                        "type": "string_type",
-                        "url": "https://errors.pydantic.dev/2.5/v/string_type",
+                        "msg": "Field required",
+                        "type": "missing",
+                        "url": pydantic_error_url("missing"),
                     }
                 ],
             }

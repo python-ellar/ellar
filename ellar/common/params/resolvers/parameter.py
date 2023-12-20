@@ -5,8 +5,6 @@ import typing as t
 
 import anyio
 from ellar.common.constants import (
-    # sequence_shape_to_type,
-    # sequence_shapes,
     sequence_types,
 )
 from ellar.common.exceptions import RequestValidationError
@@ -130,6 +128,15 @@ class WsBodyParameterResolver(BaseRouteParameterResolver):
             loc = ("body", self.model_field.alias)  # type:ignore
         try:
             value = received_body.get(self.model_field.alias)
+
+            if value is None:
+                if self.model_field.required:
+                    return None, [self.create_error(loc=loc)]
+                else:
+                    return {
+                        self.model_field.name: copy.deepcopy(self.model_field.default)
+                    }, []
+
             v_, errors_ = self.model_field.validate(value, {}, loc=loc)
             return {self.model_field.name: v_}, self.validate_error_sequence(errors_)
         except AttributeError:
@@ -227,7 +234,6 @@ class FormParameterResolver(BodyParameterResolver):
     ) -> t.Tuple:
         _body = body or await self.get_request_body(ctx)
         embed = getattr(self.model_field.field_info, "embed", False)
-        values = {}  # type: ignore
         received_body = {self.model_field.alias: _body}
         loc = ("body",)
 
@@ -239,22 +245,28 @@ class FormParameterResolver(BodyParameterResolver):
             loc = ("body", self.model_field.alias)  # type: ignore
             value = _body.getlist(self.model_field.alias)
         else:
-            try:
-                value = received_body.get(self.model_field.alias)  # type: ignore
-            except AttributeError:
-                errors = [self.create_error(loc=loc)]
-                return values, errors
+            value = received_body.get(self.model_field.alias)  # type: ignore
 
-        if not value or is_sequence_field(self.model_field) and len(value) == 0:
+        if (
+            value is None
+            or (
+                isinstance(self.model_field.field_info.resolver, FormParameterResolver)
+                and value == ""
+            )
+            or (
+                isinstance(self.model_field.field_info.resolver, FormParameterResolver)
+                and is_sequence_field(self.model_field)
+                and len(value) == 0
+            )
+        ):
             if self.model_field.required:
-                return await self.process_and_validate(
-                    values=values, value=_body, loc=loc
-                )
+                return None, [self.create_error(loc=loc)]
             else:
-                values[self.model_field.name] = copy.deepcopy(self.model_field.default)
-            return values, []
+                return {
+                    self.model_field.name: copy.deepcopy(self.model_field.default)
+                }, []
 
-        return await self.process_and_validate(values=values, value=value, loc=loc)
+        return await self.process_and_validate(values={}, value=value, loc=loc)
 
 
 class FileParameterResolver(FormParameterResolver):

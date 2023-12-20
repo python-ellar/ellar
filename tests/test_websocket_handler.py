@@ -13,6 +13,7 @@ from ellar.testing import Test
 from starlette.websockets import WebSocket, WebSocketState
 
 from .schema import Item
+from .utils import pydantic_error_url
 
 router = ModuleRouter("/router")
 
@@ -121,18 +122,18 @@ def test_websocket_with_handler_fails_for_invalid_input(prefix):
         "code": 1008,
         "errors": [
             {
-                "type": "list_type",
+                "type": "missing",
                 "loc": ["body", "items"],
-                "msg": "Input should be a valid list",
+                "msg": "Field required",
                 "input": None,
-                "url": "https://errors.pydantic.dev/2.5/v/list_type",
+                "url": pydantic_error_url("missing"),
             },
             {
-                "type": "model_attributes_type",
+                "type": "missing",
                 "loc": ["body", "data"],
-                "msg": "Input should be a valid dictionary or object to extract fields from",
+                "msg": "Field required",
                 "input": None,
-                "url": "https://errors.pydantic.dev/2.5/v/model_attributes_type",
+                "url": pydantic_error_url("missing"),
             },
         ],
     }
@@ -152,7 +153,7 @@ def test_websocket_with_handler_fails_for_missing_route_parameter(prefix):
                 "loc": ["query", "query"],
                 "msg": "Field required",
                 "type": "missing",
-                "url": "https://errors.pydantic.dev/2.5/v/missing",
+                "url": pydantic_error_url("missing"),
             }
         ],
     }
