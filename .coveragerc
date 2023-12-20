@@ -16,3 +16,4 @@ exclude_lines =
 omit =
     # omit this single file
     ellar/core/files/storages/aws_s3.py
+    ellar/common/compatible/cache_properties.py
