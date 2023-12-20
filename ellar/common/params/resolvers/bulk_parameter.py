@@ -57,7 +57,7 @@ class BulkParameterResolver(BaseRouteParameterResolver):
             loc=(self.model_field.field_info.in_.value, self.model_field.alias),
         )
         if errors_:  # pragma: no cover
-            # Just in case error still happened after combining each field to on class.
+            # Just in case error still happened after combining each field to one pydantic model.
             errors += self.validate_error_sequence(errors_)
             return values, errors
         return {self.model_field.name: v_}, []
@@ -93,7 +93,7 @@ class BulkFormParameterResolver(FormParameterResolver, BulkParameterResolver):
         )
 
         if processed_errors:  # pragma: no cover
-            # Just in case error still happened after combining each field to on class.
+            # Just in case error still happened after combining each field to one pydantic model.
             processed_errors = self.validate_error_sequence(processed_errors)
             return processed_value, processed_errors
         return {self.model_field.name: processed_value}, []
