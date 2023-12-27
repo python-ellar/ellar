@@ -36,8 +36,13 @@ def test_app_reload_static_app(tmpdir, test_client_factory):
     res = client.get("/static/example.txt")
     assert res.status_code == 404
 
+    app = Test.create_test_module(
+        config_module={"STATIC_DIRECTORIES": [tmpdir]}
+    ).create_application()
+    client = test_client_factory(app)
+
     app.config.STATIC_DIRECTORIES = [tmpdir, tmpdir / "statics"]
-    app.rebuild_stack()
+    # app.rebuild_stack()
 
     res = client.get("/static/example.txt")
     assert res.status_code == 200

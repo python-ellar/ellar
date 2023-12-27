@@ -1,5 +1,4 @@
 import typing as t
-from unittest.mock import patch
 
 import pytest
 from ellar.common import IExceptionHandler, IHostContext, Inject, get, ws_route
@@ -270,13 +269,15 @@ def test_application_http_exception_handler_raise_exception_for_returning_none()
 def test_application_adding_same_exception_twice():
     tm = Test.create_test_module()
     app = tm.create_application()
-    with patch.object(app.__class__, "rebuild_stack") as rebuild_middleware_stack_mock:
-        app.add_exception_handler(OverrideHTTPException())
-    rebuild_middleware_stack_mock.assert_called()
 
-    with patch.object(app.__class__, "rebuild_stack") as rebuild_middleware_stack_mock:
-        app.add_exception_handler(OverrideHTTPException())
-    assert rebuild_middleware_stack_mock.call_count == 0
+    exception = OverrideHTTPException()
+    app.add_exception_handler(exception)
+    assert exception is app._exception_handlers[0]
+
+    exception2 = OverrideHTTPException()
+    app.add_exception_handler(exception2)
+    assert exception2 is not app._exception_handlers[0]
+    assert exception is app._exception_handlers[0]
 
 
 def test_callable_exception_handler_equality():

@@ -14,7 +14,7 @@ authors = [
 dynamic = ["version", "description"]
 requires-python = ">=3.7"
 readme = "README.md"
-home-page = "https://github.com/eadwinCode/ellar"
+home-page = "https://github.com/python-ellar/ellar"
 classifiers = [
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",
@@ -52,9 +52,10 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/eadwinCode/ellar"
-Source = "https://github.com/eadwinCode/ellar"
-Homepage = "https://eadwincode.github.io/ellar/"
+Documentation = "https://python-ellar.github.io/ellar/"
+Source = "https://github.com/python-ellar/ellar"
+Homepage = "https://python-ellar.github.io/ellar/"
+"Bug Tracker" = "https://github.com/python-ellar/ellar/issues"
 
 [project.optional-dependencies]
 test = [
