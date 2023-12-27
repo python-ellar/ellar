@@ -62,7 +62,6 @@ class AppStaticFileMount(ASGIFileMount):
             packages=packages,
         )
         # subscribe to app reload
-        app.reload_event_manager += self._reload_static_files  # type:ignore[misc]
 
     def _get_static_directories(self, app: "App") -> tuple:
         static_directories = t.cast(t.List, app.config.STATIC_DIRECTORIES or [])
@@ -71,8 +70,8 @@ class AppStaticFileMount(ASGIFileMount):
                 static_directories.append(module.static_directory)
         return static_directories, app.config.STATIC_FOLDER_PACKAGES
 
-    def _reload_static_files(self, app: "App") -> None:
-        directories, packages = self._get_static_directories(app)
-        self.app = self._combine_app_with_middleware(
-            StaticFiles(directories=directories, packages=packages)
-        )
+    # def _reload_static_files(self, app: "App") -> None:
+    #     directories, packages = self._get_static_directories(app)
+    #     self.app = self._combine_app_with_middleware(
+    #         StaticFiles(directories=directories, packages=packages)
+    #     )
