@@ -1,5 +1,8 @@
+import inspect
+import os
 import re
 import typing as t
+from pathlib import Path
 
 _module_import_regex = re.compile("(((\\w+)?(\\.<\\w+>)?(\\.\\w+))+)", re.IGNORECASE)
 
@@ -70,3 +73,34 @@ def get_class_import(klass: t.Union[t.Type, t.Any]) -> str:  # pragma: no cover
     if len(split_result) == 2:
         return f"{split_result[0]}:{split_result[1]}"
     return result
+
+
+def get_main_directory_by_stack(path: str, stack_level: int) -> str:
+    """
+    Gets Directory Based on execution stack level.
+
+    __main__/__parent__
+    """
+    forced_path_to_string = str(path)
+    if forced_path_to_string.startswith("__main__") or forced_path_to_string.startswith(
+        "/__main__"
+    ):
+        __main__, others = forced_path_to_string.replace("/", " ").split("__main__")
+        __parent__ = False
+
+        if "__parent__" in others:
+            __parent__ = True
+
+        stack = inspect.stack()[stack_level]
+        __main__parent = Path(stack.filename).resolve().parent
+
+        if __parent__:
+            parent_split = others.split("__parent__")
+            for item in parent_split:
+                if item.strip() == "":
+                    __main__parent = __main__parent.parent
+                else:
+                    return os.path.join(__main__parent, item.strip())
+
+        return os.path.join(str(__main__parent), others.strip())
+    return path

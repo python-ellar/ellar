@@ -72,7 +72,7 @@ def test_can_mount_folders_at_parent_director():
         directories=["private"],
         path="/media",
         name="media",
-        base_directory="__parent__",
+        base_directory="__main__",
     )
     assert file_mount.routes == []
 
@@ -99,7 +99,7 @@ def test_file_mount_with_middleware():
                 directories=["private"],
                 path="/media",
                 name="media",
-                base_directory="__parent__",
+                base_directory="__main__",
                 middleware=[
                     Middleware(FunctionBasedMiddleware, dispatch=asgi_middleware)
                 ],

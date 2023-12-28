@@ -189,10 +189,10 @@ class LazyModuleImport:
             module_cls: t.Type["ModuleBase"] = t.cast(
                 t.Type["ModuleBase"], import_from_string(self.module)
             )
-        except Exception:
+        except Exception as ex:
             raise ImproperConfiguration(
-                f'Unable to import "{self.module}" registered in Module[{root_module_name}]'
-            ) from None
+                f'Unable to import "{self.module}" registered in "{root_module_name}"'
+            ) from ex
         self.validate_module(module_cls)
         if self.setup_method:
             setup_method = getattr(module_cls, self.setup_method)

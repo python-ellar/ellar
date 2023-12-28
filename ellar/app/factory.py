@@ -42,13 +42,14 @@ class AppFactory:
         :param module_config: Module Type
         :return: t.Dict[t.Type, t.Type[ModuleBase]]
         """
+        global_module_config = module_config
         modules = (
             reflect.get_metadata(MODULE_METADATA.MODULES, module_config.module) or []
         )
         module_dependency = OrderedDict()
         for module in modules:
             if isinstance(module, LazyModuleImport):
-                module = module.get_module(module_config.module.__name__)
+                module = module.get_module(global_module_config.module.__name__)
 
             if isinstance(module, DynamicModule):
                 module.apply_configuration()

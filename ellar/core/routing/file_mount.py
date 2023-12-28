@@ -1,9 +1,8 @@
-import inspect
 import os.path
 import typing as t
-from pathlib import Path
 
 from ellar.common.types import ASGIApp
+from ellar.common.utils.importer import get_main_directory_by_stack
 from ellar.core.staticfiles import StaticFiles
 from starlette.middleware import Middleware
 from starlette.routing import BaseRoute, Mount
@@ -22,11 +21,7 @@ class ASGIFileMount(Mount):
         middleware: t.Optional[t.Sequence[Middleware]] = None,
         base_directory: t.Optional[str] = None,
     ) -> None:
-        if base_directory == "__parent__":
-            # stacks = inspect.stack()
-            stack = inspect.stack()[1]
-            base_directory = Path(stack.filename).resolve().parent  # type:ignore[assignment]
-
+        base_directory = get_main_directory_by_stack(base_directory, stack_level=2)  # type: ignore[arg-type]
         if base_directory:
             directories = [
                 str(os.path.join(base_directory, directory))

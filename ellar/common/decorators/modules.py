@@ -8,6 +8,7 @@ from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.models import ControllerBase
 from ellar.common.routing import ModuleMount, ModuleRouter
+from ellar.common.utils.importer import get_main_directory_by_stack
 from ellar.di import ProviderConfig, SingletonScope, injectable
 from ellar.reflect import reflect
 from starlette.routing import Host, Mount
@@ -76,6 +77,7 @@ def Module(
 
     :return: t.TYPE[ModuleBase]
     """
+    base_directory = get_main_directory_by_stack(base_directory, stack_level=2)  # type:ignore[arg-type]
     kwargs = AttributeDict(
         name=name,
         controllers=list(controllers),
