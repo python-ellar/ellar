@@ -1,9 +1,8 @@
-import inspect
 import os.path
 import typing as t
-from pathlib import Path
 
 from ellar.common.types import ASGIApp
+from ellar.common.utils.importer import get_main_directory_by_stack
 from ellar.core.staticfiles import StaticFiles
 from starlette.middleware import Middleware
 from starlette.routing import BaseRoute, Mount
@@ -22,11 +21,7 @@ class ASGIFileMount(Mount):
         middleware: t.Optional[t.Sequence[Middleware]] = None,
         base_directory: t.Optional[str] = None,
     ) -> None:
-        if base_directory == "__parent__":
-            # stacks = inspect.stack()
-            stack = inspect.stack()[1]
-            base_directory = Path(stack.filename).resolve().parent  # type:ignore[assignment]
-
+        base_directory = get_main_directory_by_stack(base_directory, stack_level=2)  # type: ignore[arg-type]
         if base_directory:
             directories = [
                 str(os.path.join(base_directory, directory))
@@ -62,7 +57,6 @@ class AppStaticFileMount(ASGIFileMount):
             packages=packages,
         )
         # subscribe to app reload
-        app.reload_event_manager += self._reload_static_files  # type:ignore[misc]
 
     def _get_static_directories(self, app: "App") -> tuple:
         static_directories = t.cast(t.List, app.config.STATIC_DIRECTORIES or [])
@@ -71,8 +65,8 @@ class AppStaticFileMount(ASGIFileMount):
                 static_directories.append(module.static_directory)
         return static_directories, app.config.STATIC_FOLDER_PACKAGES
 
-    def _reload_static_files(self, app: "App") -> None:
-        directories, packages = self._get_static_directories(app)
-        self.app = self._combine_app_with_middleware(
-            StaticFiles(directories=directories, packages=packages)
-        )
+    # def _reload_static_files(self, app: "App") -> None:
+    #     directories, packages = self._get_static_directories(app)
+    #     self.app = self._combine_app_with_middleware(
+    #         StaticFiles(directories=directories, packages=packages)
+    #     )

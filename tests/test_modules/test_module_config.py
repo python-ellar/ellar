@@ -126,7 +126,7 @@ def test_lazy_module_import_fails_for_invalid_import():
         LazyModuleImport("tests.test_modules.test_module_config:IDynamic2").get_module()
     assert (
         str(ex.value)
-        == 'Unable to import "tests.test_modules.test_module_config:IDynamic2" registered in Module[ApplicationModule]'
+        == 'Unable to import "tests.test_modules.test_module_config:IDynamic2" registered in "ApplicationModule"'
     )
 
     with pytest.raises(ImproperConfiguration) as ex:
@@ -135,7 +135,7 @@ def test_lazy_module_import_fails_for_invalid_import():
         )
     assert (
         str(ex.value)
-        == 'Unable to import "tests.test_modules.test_module_config:IDynamic2" registered in Module[xyzModule]'
+        == 'Unable to import "tests.test_modules.test_module_config:IDynamic2" registered in "xyzModule"'
     )
 
 

@@ -14,7 +14,6 @@ from ellar.common.types import ASGIApp
 from ellar.core.conf import Config
 from ellar.core.connection import Request
 from ellar.di import EllarInjector
-from ellar.events import EventManager
 from jinja2 import Environment as BaseEnvironment
 from starlette.templating import pass_context
 
@@ -26,8 +25,7 @@ class AppMixin(JinjaTemplating):
     _static_app: t.Optional[ASGIApp]
     _injector: EllarInjector
     _config: Config
-    rebuild_stack: t.Callable
-    reload_event_manager = EventManager()
+    # rebuild_stack: t.Callable
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
         for loader in self._injector.get_templating_modules().values():
@@ -42,7 +40,7 @@ class AppMixin(JinjaTemplating):
         del self.__dict__["jinja_environment"]
         self._config.DEBUG = value
         # TODO: Add warning
-        self.rebuild_stack()
+        # self.rebuild_stack()
 
     @cached_property
     def jinja_environment(self) -> BaseEnvironment:  # type: ignore[override]

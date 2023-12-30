@@ -58,14 +58,6 @@ class TestAppTemplating:
         result = template.render()
         assert result == "<html>filter square: 4, filter triple_function: 27</html>"
 
-        app.rebuild_stack()
-
-        template = app.jinja_environment.from_string(
-            """<html>filter square: {{2 | square}}, filter triple_function: {{3 | triple}}</html>"""
-        )
-        result = template.render()
-        assert result == "<html>filter square: 4, filter triple_function: 27</html>"
-
     def test_app_template_global(self):
         app = Test.create_test_module().create_application()
 
@@ -76,14 +68,6 @@ class TestAppTemplating:
         @app.template_global(name="triple")
         def triple_function(value):
             return value * value * value
-
-        template = app.jinja_environment.from_string(
-            """<html>filter square: {{square(2)}}, filter triple_function: {{triple(3)}}</html>"""
-        )
-        result = template.render()
-        assert result == "<html>filter square: 4, filter triple_function: 27</html>"
-
-        app.rebuild_stack()
 
         template = app.jinja_environment.from_string(
             """<html>filter square: {{square(2)}}, filter triple_function: {{triple(3)}}</html>"""

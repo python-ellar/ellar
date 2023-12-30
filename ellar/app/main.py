@@ -81,19 +81,10 @@ class App(AppMixin):
                 self.config.DEFAULT_LIFESPAN_HANDLER  # type: ignore[arg-type]
             ).lifespan,
         )
-        if (
-            self.config.STATIC_MOUNT_PATH
-            and self.config.STATIC_MOUNT_PATH not in self.router.routes
-        ):
-            self.router.append(AppStaticFileMount(self))
 
         self._finalize_app_initialization()
-        self.middleware_stack = self.build_middleware_stack()
+        self.middleware_stack: t.Optional[ASGIApp] = None
         self._config_logging()
-
-        self.reload_event_manager += lambda app: self._update_jinja_env_filters(  # type:ignore[misc]
-            self.jinja_environment
-        )
 
     def _config_logging(self) -> None:
         log_level = (
@@ -150,8 +141,8 @@ class App(AppMixin):
         if isinstance(module_ref, ModuleTemplateRef):
             self.router.extend(module_ref.routes)
 
-        self.rebuild_stack()
-
+        # self.rebuild_stack()
+        self._update_jinja_env_filters(self.jinja_environment)
         return t.cast(T, module_ref.get_module_instance())
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
@@ -257,6 +248,17 @@ class App(AppMixin):
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
         with self.application_context() as ctx:
             scope["app"] = ctx.app
+            if self.middleware_stack is None:
+                self.middleware_stack = self.build_middleware_stack()
+
+                self._update_jinja_env_filters(self.jinja_environment)
+
+                if (
+                    self.config.STATIC_MOUNT_PATH
+                    and self.config.STATIC_MOUNT_PATH not in self.router.routes
+                ):
+                    self.router.append(AppStaticFileMount(self))
+
             await self.middleware_stack(scope, receive, send)
 
     @property
@@ -291,17 +293,17 @@ class App(AppMixin):
         self,
         *exception_handlers: IExceptionHandler,
     ) -> None:
-        _added_any = False
+        # _added_any = False
         for exception_handler in exception_handlers:
             if exception_handler not in self._exception_handlers:
                 self._exception_handlers.append(exception_handler)
-                _added_any = True
-        if _added_any:
-            self.rebuild_stack()
+                # _added_any = True
+        # if _added_any:
+        #     self.rebuild_stack()
 
-    def rebuild_stack(self) -> None:
-        self.middleware_stack = self.build_middleware_stack()
-        self.reload_event_manager.run(self)
+    # def rebuild_stack(self) -> None:
+    #     self.middleware_stack = self.build_middleware_stack()
+    #     self.reload_event_manager.run(self)
 
     @property
     def reflector(self) -> Reflector:

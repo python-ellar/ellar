@@ -25,6 +25,7 @@ class SwaggerUI(IDocumentationUIContext):
         swagger_js_url: str = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js",
         swagger_css_url: str = "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css",
         favicon_url: str = "https://eadwincode.github.io/ellar/img/Icon.svg",
+        dark_theme: bool = False,
     ):
         self._path = path
         self._title = title
@@ -32,4 +33,5 @@ class SwaggerUI(IDocumentationUIContext):
             "swagger_js_url": swagger_js_url,
             "swagger_css_url": swagger_css_url,
             "favicon_url": favicon_url,
+            "dark_theme": dark_theme,
         }
