@@ -1,3 +1,10 @@
+# 0.6.2
+## What's Changed
+* Files System And File Mounting by @eadwinCode in https://github.com/python-ellar/ellar/pull/147
+* 100% test coverage by @eadwinCode in https://github.com/python-ellar/ellar/pull/158
+* App stack build on lifespan by @eadwinCode in https://github.com/python-ellar/ellar/pull/159
+* Added support for Swagger Doc dark theme.
+  
 # 0.6.0
 ## What's Changed
 * Feat(LazyModuleImport): New feature by @eadwinCode in https://github.com/python-ellar/ellar/pull/155
