@@ -8,6 +8,7 @@ from ellar.common.logging import logger
 from ellar.common.utils.functional import SimpleLazyObject, empty
 from ellar.core import Config
 from ellar.di import EllarInjector
+from ellar.events import app_context_started_events, app_context_teardown_events
 
 if t.TYPE_CHECKING:
     from ellar.app.main import App
@@ -56,6 +57,7 @@ class ApplicationContext:
                 # ensure current_config is in sync with running application context.
                 current_config._wrapped = self.config
             app_context = self
+            app_context_started_events.run()
         return app_context  # type:ignore[return-value]
 
     def __exit__(
@@ -64,6 +66,7 @@ class ApplicationContext:
         exc_value: t.Optional[BaseException],
         tb: t.Optional[TracebackType],
     ) -> None:
+        app_context_teardown_events.run()
         app_context_var.set(empty)
 
         current_app._wrapped = empty  # type:ignore[attr-defined]

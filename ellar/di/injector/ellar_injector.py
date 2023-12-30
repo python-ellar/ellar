@@ -3,6 +3,7 @@ from collections import OrderedDict, defaultdict
 from contextlib import asynccontextmanager
 
 from ellar.di.logger import log
+from ellar.events import request_context_started_events, request_context_teardown_events
 from injector import Injector, Scope, ScopeDecorator
 
 from ..asgi_args import RequestScopeContext
@@ -148,6 +149,8 @@ class EllarInjector(Injector):
     async def create_asgi_args(self) -> t.AsyncGenerator["EllarInjector", None]:
         try:
             SCOPED_CONTEXT_VAR.set(RequestScopeContext())
+            request_context_started_events.run()
             yield self
         finally:
+            request_context_teardown_events.run()
             SCOPED_CONTEXT_VAR.set(None)

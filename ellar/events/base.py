@@ -1,8 +1,9 @@
 import asyncio
 import typing as t
 from abc import abstractmethod
+from weakref import WeakKeyDictionary
 
-from ellar.common.types import T
+T = t.TypeVar("T")
 
 
 class EventHandler:
@@ -26,15 +27,15 @@ class EventHandler:
         return super(EventHandler, self).__eq__(other)
 
 
-class Event(t.Generic[T]):
+class EventBase(t.Generic[T]):
     __slots__ = ("_handlers",)
 
     def __init__(self) -> None:
-        self._handlers: t.List[T] = []
+        self._handlers: WeakKeyDictionary[t.Any, T] = WeakKeyDictionary()
 
-    def __iadd__(self, handler: t.Callable) -> "Event[T]":
+    def __iadd__(self, handler: t.Callable) -> "EventBase[T]":
         event_handler = self.create_handle(handler)
-        self._handlers.append(event_handler)
+        self._handlers[handler] = event_handler
         return self
 
     @abstractmethod
@@ -42,31 +43,27 @@ class Event(t.Generic[T]):
         pass
 
     def __iter__(self) -> t.Iterator[T]:
-        return iter(self._handlers)
+        return iter(self._handlers.values())
 
-    def __isub__(self, handler: t.Callable) -> "Event[T]":
-        _handler = self.create_handle(handler)
-        self._handlers.remove(_handler)
+    def __isub__(self, handler: t.Callable) -> "EventBase[T]":
+        self._handlers.pop(handler, None)
         return self
 
     def __len__(self) -> int:
         return len(self._handlers)
 
-    def __call__(self, handler: t.Callable) -> t.Callable:
+    def connect(self, handler: t.Callable) -> t.Callable:
         self.__iadd__(handler)
         return handler
 
+    def disconnect(self, handler: t.Callable) -> t.Callable:
+        self.__isub__(handler)
+        return handler
 
-class EventManager(Event[EventHandler]):
+
+class EventManager(EventBase[EventHandler]):
     def create_handle(self, handler: t.Callable) -> EventHandler:
         return EventHandler(handler)
-
-    def __init__(self, handlers: t.Optional[t.List[EventHandler]] = None) -> None:
-        super().__init__()
-        self._handlers = handlers or []
-
-    def reload(self, handlers: t.List[EventHandler]) -> None:
-        self._handlers = handlers
 
     def run(self, *args: t.Any, **kwargs: t.Any) -> None:
         for handler in self:
