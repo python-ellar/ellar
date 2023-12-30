@@ -3,6 +3,9 @@
 <head>
     <meta charset="utf-8"/>
     <link type="text/css" rel="stylesheet" href="{{swagger_css_url}}">
+    {% if dark_theme %}
+        <link href="{{ url_for('static', path='/swagger/SwaggerDark.css') }}" rel="stylesheet">
+    {% endif %}
     <link rel="shortcut icon" href="{{favicon_url}}">
     <title>{{title}}</title>
 </head>
@@ -22,7 +25,7 @@
         layout: "BaseLayout",
         deepLinking: true,
         showExtensions: true,
-        showCommonExtensions: true
+        showCommonExtensions: true,
     })
 </script>
 </html>
