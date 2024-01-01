@@ -77,7 +77,7 @@ test = [
     "redis",
     "itsdangerous >=1.1.0,<3.0.0",
     # types
-    "types-ujson ==5.8.0.1",
+    "types-ujson ==5.9.0.0",
     "types-orjson ==3.6.2",
     "types-redis ==4.6.0.11",
     "types-dataclasses ==0.6.6",
