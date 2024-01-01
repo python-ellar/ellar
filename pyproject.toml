@@ -64,7 +64,6 @@ test = [
     "mypy == 1.7.1",
     "ruff ==0.1.9",
     "pytest-asyncio",
-    "databases[sqlite] >= 0.3.2",
     "orjson >= 3.2.1",
     "ujson >= 4.0.1",
     "python-multipart >= 0.0.5",
