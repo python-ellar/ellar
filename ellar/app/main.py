@@ -246,7 +246,7 @@ class App(AppMixin):
         return ApplicationContext.create(app=self)
 
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
-        with self.application_context() as ctx:
+        async with self.application_context() as ctx:
             scope["app"] = ctx.app
             if self.middleware_stack is None:
                 self.middleware_stack = self.build_middleware_stack()

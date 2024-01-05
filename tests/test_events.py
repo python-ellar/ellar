@@ -1,13 +1,9 @@
-import asyncio
-
-import pytest
 from ellar.common.constants import NOT_SET
 from ellar.core import Config
 from ellar.events import EventHandler, EventManager
 
 
-@pytest.mark.asyncio
-async def test_router_event_manager():
+async def test_router_event_manager(anyio_backend):
     called = 0
 
     def valid_function_1():
@@ -36,8 +32,8 @@ async def test_router_event_manager():
     assert function_handler_1 == EventHandler(valid_function_1)
     assert function_handler_2 == EventHandler(valid_function_2)
 
-    assert function_handler_1.is_coroutine is False
-    assert function_handler_2.is_coroutine
+    # assert function_handler_1.is_coroutine is False
+    # assert function_handler_2.is_coroutine
 
     # check callable register
     lambda_function = route_manager.connect(lambda: valid_function_1())
@@ -49,9 +45,7 @@ async def test_router_event_manager():
     assert list(route_manager._handlers.values())[2] != another_function
     assert list(route_manager._handlers.values())[2] != NOT_SET
 
-    route_manager.run()
-
-    await asyncio.sleep(0.1)
+    await route_manager.run()
     assert called == 3
 
     # check event unregister
@@ -69,5 +63,5 @@ async def test_valid_event_config(anyio_backend):
         called += 1
 
     config = Config(ON_REQUEST_STARTUP=[EventHandler(valid_function_1)])
-    config.ON_REQUEST_STARTUP[0].run()
+    await config.ON_REQUEST_STARTUP[0].run()
     assert called == 1

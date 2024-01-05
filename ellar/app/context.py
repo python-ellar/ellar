@@ -48,7 +48,7 @@ class ApplicationContext:
     def config(self) -> Config:
         return self._config
 
-    def __enter__(self) -> "ApplicationContext":
+    async def __aenter__(self) -> "ApplicationContext":
         app_context = app_context_var.get(empty)
         if app_context is empty:
             # If app_context exist
@@ -57,16 +57,16 @@ class ApplicationContext:
                 # ensure current_config is in sync with running application context.
                 current_config._wrapped = self.config
             app_context = self
-            app_context_started_events.run()
+            await app_context_started_events.run()
         return app_context  # type:ignore[return-value]
 
-    def __exit__(
+    async def __aexit__(
         self,
         exc_type: t.Optional[t.Any],
         exc_value: t.Optional[BaseException],
         tb: t.Optional[TracebackType],
     ) -> None:
-        app_context_teardown_events.run()
+        await app_context_teardown_events.run()
         app_context_var.set(empty)
 
         current_app._wrapped = empty  # type:ignore[attr-defined]

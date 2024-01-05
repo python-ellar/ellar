@@ -277,7 +277,7 @@ def test_encode_root():
     assert serialize_object(model) == "Foo"
 
 
-def test_serialize_object_under_app_context():
+async def test_serialize_object_under_app_context(anyio_backend):
     decoder_func_called = False
 
     def decoder_func(o):
@@ -295,7 +295,7 @@ def test_serialize_object_under_app_context():
         config_module={"SERIALIZER_CUSTOM_ENCODER": {safe_datetime: decoder_func}}
     )
 
-    with ApplicationContext.create(tm.create_application()):
+    async with ApplicationContext.create(tm.create_application()):
         result = serialize_object(safe_datetime.fromisocalendar(2023, 45, 5))
         assert result == "2023-11-10T00:00:00"
 
