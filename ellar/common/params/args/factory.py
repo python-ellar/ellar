@@ -41,9 +41,7 @@ def get_parameter_field(
         if not field_info.annotation:
             field_info.annotation = annotation
     else:
-        field_info = default_field_info(  # type:ignore[assignment]
-            default_value, annotation=annotation
-        )
+        field_info = default_field_info(default_value, annotation=annotation)
 
     required = default_value == pydantic_types.Required
     if not field_info.alias and getattr(

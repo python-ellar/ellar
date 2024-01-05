@@ -1,4 +1,3 @@
-import asyncio
 import typing as t
 from abc import abstractmethod
 from weakref import WeakKeyDictionary
@@ -10,14 +9,12 @@ class EventHandler:
     __slots__ = ("is_coroutine", "handler")
 
     def __init__(self, func: t.Callable) -> None:
-        self.is_coroutine = asyncio.iscoroutinefunction(func)
         self.handler = func
 
-    def run(self, *args: t.Any, **kwargs: t.Any) -> None:
-        if self.is_coroutine:
-            asyncio.ensure_future(self.handler(*args, **kwargs))
-            return
-        self.handler(*args, **kwargs)
+    async def run(self, *args: t.Any, **kwargs: t.Any) -> None:
+        res = self.handler(*args, **kwargs)
+        if isinstance(res, t.Coroutine):
+            await res
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, EventHandler):
@@ -65,6 +62,6 @@ class EventManager(EventBase[EventHandler]):
     def create_handle(self, handler: t.Callable) -> EventHandler:
         return EventHandler(handler)
 
-    def run(self, *args: t.Any, **kwargs: t.Any) -> None:
+    async def run(self, *args: t.Any, **kwargs: t.Any) -> None:
         for handler in self:
-            handler.run(*args, **kwargs)
+            await handler.run(*args, **kwargs)

@@ -3,6 +3,7 @@ import typing as t
 from functools import partial
 from pathlib import Path
 
+import click
 from ellar.common.compatible import AttributeDict
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
@@ -12,9 +13,6 @@ from ellar.common.utils.importer import get_main_directory_by_stack
 from ellar.di import ProviderConfig, SingletonScope, injectable
 from ellar.reflect import reflect
 from starlette.routing import Host, Mount
-
-if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common.commands import EllarTyper
 
 
 def _wrapper(
@@ -50,7 +48,7 @@ def Module(
     base_directory: t.Optional[t.Union[Path, str]] = None,
     static_folder: str = "static",
     modules: t.Sequence[t.Union[t.Type, t.Any]] = (),
-    commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = (),
+    commands: t.Sequence[t.Union[click.Command, click.Group, t.Any]] = (),
 ) -> t.Callable:
     """
     ========= MODULE DECORATOR ==============

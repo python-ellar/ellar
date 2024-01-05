@@ -3,7 +3,7 @@ from collections import OrderedDict
 from pathlib import Path
 from uuid import uuid4
 
-from ellar.common import EllarTyper
+import click
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.models import GuardCanActivate
 from ellar.core import Config, DynamicModule, LazyModuleImport, ModuleBase, ModuleSetup
@@ -185,7 +185,7 @@ class AppFactory:
         global_guards: t.Optional[
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
-        commands: t.Sequence[t.Union[t.Callable, "EllarTyper"]] = (),
+        commands: t.Sequence[t.Union[click.Command, click.Group, t.Any]] = (),
         config_module: t.Union[str, t.Dict, None] = None,
     ) -> App:
         from ellar.common import Module
