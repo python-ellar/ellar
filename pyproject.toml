@@ -44,6 +44,8 @@ dependencies = [
     "starlette == 0.31.1",
     "pydantic >=2.5.1,<3.0.0",
     "jinja2",
+    # CLI
+    "click >= 8.1.7",
     # testing
     "httpx >= 0.22.0",
     "passlib >= 1.7.4"
