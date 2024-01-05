@@ -1,3 +1,14 @@
+# 0.6.4
+## What's Changed
+* Bump actions/setup-python from 4 to 5 by @dependabot in https://github.com/python-ellar/ellar/pull/165
+* Bump types-ujson from 5.8.0.1 to 5.9.0.0 by @dependabot in https://github.com/python-ellar/ellar/pull/164
+* Bump uvicorn[standard] from 0.23.2 to 0.25.0 by @dependabot in https://github.com/python-ellar/ellar/pull/163
+* Bump ruff from 0.1.7 to 0.1.9 by @dependabot in https://github.com/python-ellar/ellar/pull/162
+* Async application context by @eadwinCode in https://github.com/python-ellar/ellar/pull/167
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.6.2...0.6.4
+
 # 0.6.2
 ## What's Changed
 * Files System And File Mounting by @eadwinCode in https://github.com/python-ellar/ellar/pull/147
