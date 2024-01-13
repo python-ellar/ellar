@@ -16,6 +16,7 @@ if t.TYPE_CHECKING:
 app_context_var: ContextVar[
     t.Optional[t.Union["ApplicationContext", t.Any]]
 ] = ContextVar("ellar.app.context")
+app_context_var.set(empty)
 
 
 class ApplicationContext:

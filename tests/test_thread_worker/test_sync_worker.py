@@ -1,6 +1,9 @@
+import contextlib
+
 import pytest
 from ellar.threading.sync_worker import (
     _SyncWorkerThread,
+    execute_async_context_manager_with_sync_worker,
     execute_async_gen_with_sync_worker,
     execute_coroutine_with_sync_worker,
     sentinel,
@@ -20,6 +23,13 @@ async def async_gen(after=None):
         if after and i > after:
             raise Exception("Exceeded")
         yield i
+
+
+@contextlib.asynccontextmanager
+async def async_context_manager(with_exception=False):
+    if with_exception:
+        raise RuntimeError("Context Manager Raised an Exception")
+    yield 10
 
 
 async def test_run_with_sync_worker_runs_async_function_synchronously(anyio_backend):
@@ -71,3 +81,14 @@ async def test_sync_worker_interrupt_function_works(anyio_backend):
     assert res == [0, 1, 2, 3, 4, 5, 6]
     worker.work_queue.put(sentinel)
     worker.join()
+
+
+async def test_sync_worker_runs_async_context_manager(anyio_backend):
+    with execute_async_context_manager_with_sync_worker(async_context_manager()) as ctx:
+        assert ctx == 10
+
+    with pytest.raises(RuntimeError, match="Context Manager Raised an Exception"):
+        with execute_async_context_manager_with_sync_worker(
+            async_context_manager(with_exception=True)
+        ) as ctx:
+            pass
