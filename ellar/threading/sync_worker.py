@@ -5,6 +5,7 @@ https://github.com/lablup/backend.ai/blob/4a19001f9d1ae12be7244e14b304d783da9ea4
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import enum
 import inspect
 import logging
@@ -36,7 +37,9 @@ sentinel = _Sentinel.TOKEN
 class _SyncWorkerThread(threading.Thread):
     work_queue: queue.Queue[
         t.Union[
-            t.Tuple[t.Union[t.AsyncIterator, t.Coroutine], Context],
+            t.Tuple[
+                t.Union[t.AsyncIterator, t.Coroutine, t.AsyncContextManager], Context
+            ],
             _Sentinel,
         ]
     ]
@@ -72,6 +75,11 @@ class _SyncWorkerThread(threading.Thread):
                 coro, ctx = item
                 if inspect.isasyncgen(coro):
                     ctx.run(loop.run_until_complete, self.agen_wrapper(coro))  # type: ignore[arg-type]
+                elif isinstance(coro, t.AsyncContextManager):
+                    ctx.run(
+                        loop.run_until_complete,
+                        self.async_context_manager_wrapper(coro),
+                    )
                 else:
                     try:
                         # FIXME: Once python/mypy#12756 is resolved, remove the type-ignore tag.
@@ -131,7 +139,6 @@ class _SyncWorkerThread(threading.Thread):
                     if item is sentinel:
                         break
                     if isinstance(item, Exception):
-                        self.work_queue.put(sentinel)  # initial loop closing
                         raise item
                     yield item
                 finally:
@@ -139,6 +146,50 @@ class _SyncWorkerThread(threading.Thread):
                     self.stream_queue.task_done()
         finally:
             del ctx
+            self.work_queue.put(sentinel)  # initial loop closing
+
+    def _update_context(self, context: Context) -> None:
+        for var, value in context.items():
+            var.set(value)
+
+    @contextlib.contextmanager
+    def execute_async_context_generator(
+        self, async_context_manager: t.AsyncContextManager, context_update: bool = True
+    ) -> t.Generator:
+        ctx = copy_context()  # preserve context for the worker thread
+
+        try:
+            self.work_queue.put((async_context_manager, ctx))
+            item, updated_ctx = self.stream_queue.get()  # type:ignore[misc]
+
+            try:
+                if isinstance(item, Exception):
+                    raise item
+
+                if context_update:
+                    self._update_context(updated_ctx)
+
+                yield item
+            finally:
+                if updated_ctx:
+                    del updated_ctx
+                    self._update_context(ctx)
+
+                self.stream_block.set()
+                self.stream_queue.task_done()
+        finally:
+            del ctx
+            self.work_queue.put(sentinel)  # initial loop closing
+
+    async def async_context_manager_wrapper(self, agen: t.AsyncContextManager) -> None:
+        try:
+            async with agen as s:
+                self.stream_block.clear()
+                self.stream_queue.put((s, copy_context()))
+                # flow-control the generator.
+                self.stream_block.wait()
+        except Exception as e:
+            self.stream_queue.put((e, None))
 
     def interrupt_generator(self) -> None:
         self.agen_shutdown = True
@@ -165,6 +216,22 @@ def execute_async_gen_with_sync_worker(
     _worker_thread.start()
 
     for item in _worker_thread.execute_generator(async_gen):
+        yield item
+
+    _worker_thread.work_queue.put(sentinel)
+    _worker_thread.join()
+
+
+@contextlib.contextmanager  # type:ignore[arg-type]
+def execute_async_context_manager_with_sync_worker(  # type:ignore[misc]
+    async_gen: t.AsyncContextManager, context_update: bool = True
+) -> t.ContextManager:
+    _worker_thread = _SyncWorkerThread()
+    _worker_thread.start()
+
+    with _worker_thread.execute_async_context_generator(
+        async_gen, context_update
+    ) as item:
         yield item
 
     _worker_thread.work_queue.put(sentinel)

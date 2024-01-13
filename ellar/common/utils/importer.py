@@ -96,10 +96,10 @@ def get_main_directory_by_stack(
     if forced_path_to_string.startswith("__main__") or forced_path_to_string.startswith(
         "/__main__"
     ):
-        __main__, others = forced_path_to_string.replace("/", " ").split("__main__")
+        __main__, *others = forced_path_to_string.replace("/", " ").split("__main__")
         __parent__ = False
 
-        if "__parent__" in others:
+        if "__parent__" in others[0]:
             __parent__ = True
 
         if not from_dir:
@@ -110,12 +110,13 @@ def get_main_directory_by_stack(
             __main__parent = Path(from_dir).resolve()
 
         if __parent__:
-            parent_split = others.split("__parent__")
-            for item in parent_split:
+            others = others[0].split("__parent__")
+            for item in list(others):
                 if item == " ":
                     __main__parent = __main__parent.parent
-                else:
-                    return os.path.join(__main__parent, item.strip())
+                    others.remove(item)
 
-        return os.path.join(str(__main__parent), others.strip())
+        return os.path.join(
+            str(__main__parent), *[i.strip() for i in others[0].split(" ")]
+        )
     return path

@@ -30,3 +30,13 @@ def test_get_main_directory_by_stack_works_with_a_path_reference():
     result = os.listdir(directory)
 
     assert result == ["test.css"]
+
+
+def test_get_main_directory_by_stack_works_path_chaining():
+    path = "__main__/dumbs/default"
+    directory = get_main_directory_by_stack(path, stack_level=1)
+    assert "/test_utils/dumbs/default" in directory
+
+    path = "__main__/__parent__/dumbs/default"
+    directory = get_main_directory_by_stack(path, stack_level=1)
+    assert "/tests/dumbs/default" in directory
