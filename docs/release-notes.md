@@ -1,3 +1,11 @@
+# 0.6.6
+## What's Changed
+* Update publish.yml by @eadwinCode in https://github.com/python-ellar/ellar/pull/168
+* Feat: Added support for running async context manager with sync_worker by @eadwinCode in https://github.com/python-ellar/ellar/pull/169
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.6.4...0.6.6
+
 # 0.6.4
 ## What's Changed
 * Bump actions/setup-python from 4 to 5 by @dependabot in https://github.com/python-ellar/ellar/pull/165
