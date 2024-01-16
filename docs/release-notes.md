@@ -1,3 +1,10 @@
+# 0.6.7
+## What's Changed
+* Bug Fixes: Extra Route Args multiple field grouping by @eadwinCode in https://github.com/python-ellar/ellar/pull/170
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.6.6...0.6.7
+
 # 0.6.6
 ## What's Changed
 * Update publish.yml by @eadwinCode in https://github.com/python-ellar/ellar/pull/168
