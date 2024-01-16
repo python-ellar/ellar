@@ -367,12 +367,6 @@ class EndpointArgsModel:
             ):
                 continue
 
-            # default_field_info = t.cast(
-            #     t.Type[params.ParamFieldInfo],
-            #     param_default
-            #     if isinstance(param_default, FieldInfo)
-            #     else params.QueryFieldInfo,
-            # )
             param_field = self._process_parameter_file(
                 param_default=param_default,
                 param_annotation=param_annotation,

@@ -63,6 +63,23 @@ def add_extra_non_field_extra_args(func):
     return _wrapper
 
 
+def add_additional_grouped_field(func):
+    # EXTRA ARGS SETUP
+    query1 = ExtraEndpointArg(name="query1", annotation=Query[Filter])
+
+    extra_args(query1)(func)
+
+    @wraps(func)
+    def _wrapper(*args, **kwargs):
+        resolved_query1: Filter = query1.resolve(kwargs)
+
+        response = func(*args, **kwargs)
+        response.update(query1=resolved_query1.dict())
+        return response
+
+    return _wrapper
+
+
 @get("/test")
 @add_extra_non_field_extra_args
 @add_additional_signature_to_endpoint
@@ -206,4 +223,28 @@ def test_query_params_extra():
     }
 
     response = client.get("/test?from=1&to=2&range=20&foo=1&range2=50")
+    assert response.status_code == 422
+
+
+def test_extra_args_as_grouped_fields():
+    @get("/test-grouped")
+    @add_additional_grouped_field
+    def query_params_extra(
+        request: Inject[Request],
+    ):
+        return {}
+
+    tm.create_application().router.append(query_params_extra)
+    client = tm.get_test_client()
+    response = client.get(
+        "/test-grouped?from=1&to=2&range=20&foo=1&range2=50&query1=somequery1&query2=somequery2"
+    )
+    assert response.json() == {
+        "query1": {
+            "from_datetime": "1970-01-01T00:00:01Z",
+            "range": 20,
+            "to_datetime": "1970-01-01T00:00:02Z",
+        }
+    }
+    response = client.get("/test-grouped?query1=somequery1&query2=somequery2")
     assert response.status_code == 422
