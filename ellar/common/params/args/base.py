@@ -210,35 +210,51 @@ class EndpointArgsModel:
                 ), "Path params must be of one of the supported types"
                 self._add_to_model(field=param_field)
             else:
-                default_field_info = t.cast(
-                    t.Type[params.ParamFieldInfo],
-                    param_default
-                    if isinstance(param_default, FieldInfo)
-                    else params.QueryFieldInfo,
-                )
-                param_field = get_parameter_field(
+                param_field = self._process_parameter_file(
                     param_default=param_default,
                     param_annotation=param_annotation,
-                    default_field_info=default_field_info,
                     param_name=param_name,
                     body_field_class=body_field_class,
                 )
-                if not isinstance(
-                    param_field.field_info, (params.BodyFieldInfo, params.FileFieldInfo)
-                ) and not is_scalar_field(field=param_field):
-                    if not is_scalar_sequence_field(param_field):
-                        if not lenient_issubclass(param_field.type_, BaseModel):
-                            raise ImproperConfiguration(
-                                f"{param_field.type_} type can't be processed as a field"
-                            )
-
-                        bulk_resolver_generator_class = self.get_resolver_generator(
-                            param_default
-                        )
-                        bulk_resolver_generator_class(param_field).generate_resolvers(
-                            body_field_class=body_field_class
-                        )
                 self._add_to_model(field=param_field)
+
+    def _process_parameter_file(
+        self,
+        *,
+        param_default: t.Any,
+        param_name: str,
+        param_annotation: t.Type,
+        body_field_class: t.Type[FieldInfo] = params.BodyFieldInfo,
+    ) -> ModelField:
+        default_field_info = t.cast(
+            t.Type[params.ParamFieldInfo],
+            param_default
+            if isinstance(param_default, FieldInfo)
+            else params.QueryFieldInfo,
+        )
+        param_field = get_parameter_field(
+            param_default=param_default,
+            param_annotation=param_annotation,
+            default_field_info=default_field_info,
+            param_name=param_name,
+            body_field_class=body_field_class,
+        )
+        if not isinstance(
+            param_field.field_info, (params.BodyFieldInfo, params.FileFieldInfo)
+        ) and not is_scalar_field(field=param_field):
+            if not is_scalar_sequence_field(param_field):
+                if not lenient_issubclass(param_field.type_, BaseModel):
+                    raise ImproperConfiguration(
+                        f"{param_field.type_} type can't be processed as a field"
+                    )
+
+                bulk_resolver_generator_class = self.get_resolver_generator(
+                    param_default
+                )
+                bulk_resolver_generator_class(param_field).generate_resolvers(
+                    body_field_class=body_field_class
+                )
+        return param_field
 
     def _add_system_parameters_to_dependency(
         self,
@@ -351,17 +367,10 @@ class EndpointArgsModel:
             ):
                 continue
 
-            default_field_info = t.cast(
-                t.Type[params.ParamFieldInfo],
-                param_default
-                if isinstance(param_default, FieldInfo)
-                else params.QueryFieldInfo,
-            )
-            param_field = get_parameter_field(
+            param_field = self._process_parameter_file(
                 param_default=param_default,
-                param_annotation=param.annotation,
-                default_field_info=default_field_info,
-                param_name=param.name,
+                param_annotation=param_annotation,
+                param_name=param_name,
             )
             self._add_to_model(field=param_field, key=key)
 
