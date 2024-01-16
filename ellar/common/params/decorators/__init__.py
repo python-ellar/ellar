@@ -1,5 +1,6 @@
 import typing as t
 
+from ellar.common.utils import get_name
 from ellar.pydantic.types import Undefined
 from typing_extensions import Annotated
 
@@ -27,6 +28,7 @@ __all__ = [
 class _ParamShortcut:
     def __init__(self, base_func: t.Callable) -> None:
         self._base_func = base_func
+        self.name = get_name(base_func)
 
     def __call__(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
         return self._base_func(*args, **kwargs)
@@ -109,7 +111,7 @@ if t.TYPE_CHECKING:  # pragma: nocover
     Path = Annotated[T, param_functions.Path()]
     Query = Annotated[T, param_functions.Query()]
     WsBody = Annotated[T, param_functions.WsBody()]
-    Inject = Annotated[T, t.Any]
+    Inject = InjectShortcut()
 
 else:
     Body = _ParamShortcut(param_functions.Body)
