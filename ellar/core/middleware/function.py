@@ -16,22 +16,29 @@ class FunctionBasedMiddleware:
     """
     Converts a function to an ASGI Middleware
 
-    Usage: Example 1
-    @middleware()
-    def my_middleware(context: IExecution, call_next):
-        print("Called my_middleware")
-        request = context.switch_to_http_connection().get_request()
-        request.state.my_middleware = True
-        await call_next()
+    Usage: Example 1 in @Module()
+        @middleware()
+        def my_middleware(context: IExecution, call_next):
+            print("Called my_middleware")
+            request = context.switch_to_http_connection().get_request()
+            request.state.my_middleware = True
+            await call_next()
 
     Usage: Example 2
-    @middleware()
-    def my_middleware(context: IExecution, call_next):
-        print("Called my_middleware")
-        response = context.switch_to_http_connection().get_response()
-        response.content = "Some Content"
-        response.status_code = 200
-        return response
+        @middleware()
+        def my_middleware(context: IExecution, call_next):
+            print("Called my_middleware")
+            response = context.switch_to_http_connection().get_response()
+            response.content = "Some Content"
+            response.status_code = 200
+            return response
+
+    Usage 3: Plain
+        async def asgi_middleware(execution_context, call_next):
+            #Run some actions
+            await call_next()
+
+        Middleware(FunctionBasedMiddleware, dispatch=asgi_middleware)
     """
 
     def __init__(
