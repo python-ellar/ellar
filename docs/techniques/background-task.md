@@ -1,7 +1,7 @@
 # **Background Tasks**
 
-Background tasks are tasks attached to a response and processed after a response has been sent to the client. An example of 
-this kind of task could be email notifications sent after performing an action.
+Background tasks refer to tasks that are associated with a response and are processed after the response has been sent to the client. 
+An illustrative example of such tasks includes email notifications sent as a follow-up to a performed action.
 
 ## **Adding BackgroundTask**
 In Ellar, you can access the **response** object and set a `background` parameter.

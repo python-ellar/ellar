@@ -103,7 +103,7 @@ All response model follows `IResponseModel` contract.
 ```python
 import typing as t
 
-from pydantic.fields import ModelField
+from ellar.pydantic.fields import ModelField
 from ellar.common import IExecutionContext, Response
 
 
@@ -191,13 +191,11 @@ Lets create a new JSON response model.
 # project_name/apps/items/controllers.py
 
 import typing as t
-from ellar.common import Controller, get, ControllerBase, JSONResponse
+from ellar.common import Controller, get, ControllerBase, JSONResponse, Serializer
 from ellar.common.responses.models import ResponseModel
-from dataclasses import dataclass
 
 
-@dataclass
-class NoteSchema:
+class NoteSchema(Serializer):
     id: t.Union[int, None]
     text: str
     completed: bool

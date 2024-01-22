@@ -71,26 +71,6 @@ that can be easily serialized to JSON.
 The resulting dictionary is then passed to the [`JSONResponseModel`](response-model.md#jsonresponsemodel) for serialization to a 
 JSON string and sending the response to the client.
 
-## **Using Dataclass as Response Schema**
-We can utilize the `dataclasses` feature as a response schema by utilizing the `DataclassSerializer` a base class. 
-
-For instance, we can convert the `UserSchema` to a dataclass by defining `UserDataclass` as follows:
-
-```python
-from dataclasses import dataclass
-from ellar.common import DataclassSerializer
-
-
-@dataclass
-class UserDataclass(DataclassSerializer):
-    username: str
-    email: str = None
-    first_name: str = None
-    last_name: str = None
-
-```
-
-By replacing the `UserSchema` with `UserDataclass`, we can expect the same outcomes in the returned response, response validation, and documentation.
 
 ### **Multiple Response Types**
 

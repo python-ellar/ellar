@@ -1,10 +1,11 @@
 # **Controllers**
-The Controller is responsible for handling incoming requests and returning responses to the client.
-The purpose of a controller is to receive specific requests for an application `ApplicationRouter`. `ApplicationRouter` on the other hand, decides which `controller` should handle an incoming request.
+The Controller plays a crucial role in managing incoming requests and providing responses to clients. 
+Its primary function is to handle specific requests directed to an application's `ApplicationRouter`. 
+In turn, the `ApplicationRouter` determines the appropriate `controller` to manage the incoming request.
 
 ![controller description image](../img/controller_description.png)
 
-Controllers can be said to be a router with many routes registered in them.
+Conceptually, controllers can be likened to routers with multiple registered routes within them.
 
 ### **Creating a Controller**
 To create a controller, we use classes and decorators. The `Controller` decorator associates classes with a required
@@ -19,13 +20,13 @@ class UserController(ControllerBase):
 ```
 
 ## **Routing**
-In this section, we are going to highlight key features of the `@Controller()`, a `class decorator` 
-for defining a controller. By default, `@Controller()` will create a path prefix `/car` gotten from the class name in `Car`Controller. 
-This will be used to group related routes and minimize duplicate route definitions.
+In this section, we will outline the key features of `@Controller()`, a `class decorator` designed for defining a controller. 
+By default, when applied, `@Controller()` generates a path prefix based on the class name, such as `/car` 
+for a controller named `CarController`. This feature aims to organize and group related routes, reducing redundancy in route definitions.
 
-For example, we may choose to group a set of routes that manage interactions with a customer entity under the route `/user`. 
-In that case, we could specify the path prefix `/user` in the `@Controller()` decorator so we don't have to repeat that portion of the path for each route in the controller.
-
+For instance, if we want to group a collection of routes managing interactions with a customer entity under the route `/user`, 
+we can specify the path prefix `/user` in the `@Controller()` decorator. 
+This ensures that we don't need to repeat this portion of the path for each route within the controller.
 ```python
 # project_name/apps/car/controllers.py
 
@@ -43,17 +44,20 @@ class CarController(ControllerBase):
 ```
 
 !!! hint
-    Class Decorators name are capitalized while function/method decorator name are in lower case
+    Class decorators are conventionally named with capital letters, while function/method decorator names typically use lowercase letters.
 
-The `@get()` HTTP method decorator before the `get_all(self)` method marks `get_all(self)` as the HTTP request handler that will handle a specific endpoint matching the route path and HTTP method of `GET`. 
 
-But what then is the route path of `get_all(self)`? The route path is determined by concatenating the controller `path prefix` and the path specified in the HTTP method function decorator `@get()`.
+The `@get()` HTTP method decorator preceding the `get_all(self)` method designates `get_all(self)` as the HTTP request 
+handler responsible for handling a specific endpoint matching the route path and HTTP method of `GET`.
 
-For example, we've declared a prefix for every route `(car)`, and haven't added any path information in the decorator, which means the path will default to `/`. In that case,
-Ellar will map `GET /car/` requests to the `get_all(self)` handler.
+But what exactly is the route path for `get_all(self)`? The route path is determined by combining the controller's 
+`path prefix` and the path specified in the HTTP method function decorator `@get()`.
 
-Another example to help make things clear, a path prefix of `/users` combined with the decorator `@get('/profile')` would produce a route mapping for requests like
-`GET /users/profile`.
+For instance, if we've set a prefix for every route `(car)` and haven't added any path information in the
+decorator, it means the path defaults to `/`. In this case, Ellar will associate `GET /car/` requests with the `get_all(self)` handler.
+
+To illustrate further, if we have a path prefix of `/users` and include the decorator `@get('/profile')`, 
+it would result in a route mapping for requests like `GET /users/profile`.
 
 
 ### **Overview of HTTP function decorator parameters:**
@@ -248,10 +252,11 @@ async def create(self, payload: Body[CreateCarSerializer]):
     return 'This action adds a new car'
 ```
 
-`CreateCarSerializer` is a pydantic type. These means `name`, `year` and `model` fields are type validated out of the box. 
+`CreateCarSerializer` is a Pydantic type, which implies that the `name`, `year`, and `model` fields undergo automatic type validation.
 
-It's important to note the way we used `CreateCarSerializer` as a type annotation of the `payload` parameter in the `create` route handler method. 
-Ellar will compute values for all the route handler parameters and validates them based on the annotated types before executing the handler. 
+It's crucial to observe how we utilized `CreateCarSerializer` as a type annotation for the `payload` parameter in the `create` 
+route handler method. Ellar will calculate values for all route handler parameters and validate them according to 
+the annotated types before executing the handler.
 
 !!! info
     if a parameter is not annotated, it will be assumed as a `string` type
@@ -298,11 +303,11 @@ class CarController(ControllerBase):
 ```
 ## **Linking Controller**
 
-In the previous page, we already wired our `car` module (`CarModule`) to `ApplicationModule` in `project_name/root_module` 
-but this time we shall be adding things to the `CarModule`. To keep things more simple, organized, and modular.
+On the preceding page, we successfully connected our `car` module (`CarModule`) to the `ApplicationModule` in `project_name/root_module`. 
+However, this time, we will be introducing modifications to the `CarModule` to keep things simple, organized and modular.
 
-Let's register `CarController` to `CarModule`.
-`@Module()` takes `controllers` as a parameter which is an array of the `ControllerBase` type.
+To achieve this, let's include the registration of `CarController` within the `CarModule`. 
+The `@Module()` decorator accepts a `controllers` parameter, which is an array of the `ControllerBase` type.
 
 In the `car/module.py`,
 

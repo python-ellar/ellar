@@ -33,7 +33,7 @@ making it more manageable in a large project.
 
 In our previous project, within the `car` module folder, we can create a following directories, `my_static/car`. 
 Inside this folder `my_static/car`, we can create a file named `example.txt`. 
-This allows us to keep all of the static files related to the car module organized in one location `my_static`.
+This allows us to keep all the static files related to the car module organized in one location `my_static`.
 
 Next, we tell `CarModule` about our static folder.
 
@@ -83,4 +83,40 @@ These packages should have a `static` folder and the **package name** should be 
 STATIC_FOLDER_PACKAGES =  [('bootstrap', 'statics'), ('package-name', 'path/to/static/directory')]
 ```
 
-Static files will respond with "404 Not found" or "405 Method not allowed" responses for requests which do not match. In `HTML` mode if `404.html` file exists it will be shown as 404 response.
+Static files will respond with "404 Not found" or "405 Method not allowed" responses for requests which do not match. 
+In `HTML` mode if `404.html` file exists it will be shown as 404 response.
+
+## **Mounting other files**
+Ellar offers `ASGIFileMount` to easily mount files on your application outside of static files.
+
+```python
+import ellar.common as ec
+
+from ellar.core.middleware import FunctionBasedMiddleware
+from ellar.core.routing import ASGIFileMount
+from starlette.middleware import Middleware
+
+
+async def asgi_middleware(execution_context, call_next):
+    """Run some actions"""
+    await call_next()
+
+
+@ec.Module(routers=[
+   ASGIFileMount(
+       directories=["private"],
+       path="/media",
+       name="media",
+       base_directory='base/path/to/locate/directories',
+       middleware=[
+           Middleware(FunctionBasedMiddleware, dispatch=asgi_middleware)
+       ],
+   )
+])
+class ModuleSample:
+    pass
+```
+
+In the provided example, the `private` directory is mounted using `ASGIFileMount` under the `/media` endpoint. Accessing a file,
+e.g., `http://127.0.0.1:8000/media/my-file.txt`, will retrieve and display `my-file.txt` in the browser. 
+Additionally, there is a middleware configuration option in case if your requirement requires it.

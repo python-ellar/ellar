@@ -1,15 +1,14 @@
 # **Module Router**
 
-ModuleRouter allows you to define your route handlers as standalone functions, providing an alternative to using classes. 
-This can be beneficial for python developers who prefer using functions. 
-It is important to note that using ModuleRouter does not limit your access to other features provided by Ellar.
+`ModuleRouter` allows you to define your route handlers as standalone functions, offering an alternative to using classes. 
+This can be advantageous for Python developers who prefer using functions. 
+Importantly, using `ModuleRouter` does not restrict your access to other features provided by Ellar.
 
 ## **Usage**
-The Ellar CLI tool generates a `routers.py` file in every `create-module` scaffold command. 
-This file contains a quick guide on how to use the `ModuleRouter` class.
+The Ellar CLI tool automatically generates a `routers.py` file with every `create-module` scaffold command. 
+This file serves as a concise guide on utilizing the `ModuleRouter` class.
 
-Let's use the **routers.py** created in our previous project. And create **two** route functions, **addition** and **subtraction** 
-
+Now, let's leverage the **routers.py** file generated in our prior project to implement **two** route functions, namely **addition** and **subtraction**.
 ```python
 # project_name/apps/car/routers.py
 """
@@ -23,25 +22,30 @@ def index(request: Request):
     return {'detail': 'Welcome to Cats Resource'}
 """
 from ellar.common import ModuleRouter
+from ellar.openapi import ApiTags
 
-math_router = ModuleRouter('/math', tag='Math')
+math_router = ModuleRouter('/math')
+open_api_tag = ApiTags(name='Math')
+open_api_tag(math_router.get_control_type())
 
 @math_router.get('/add')
-def addition(a:int, b:int):
+def addition(a: int, b: int):
     return a + b
 
 
 @math_router.get('/subtract')
-def subtraction(a:int, b:int):
+def subtraction(a: int, b: int):
     return a - b
-```
-In the example above, we created `math_router` with a prefix `/math` and a OPENAPI tag 'math'. Then we added two routes `addition(a:int, b:int)` and `subtraction(a:int, b:int)`. 
-Each route takes two query parameters, 'a' and 'b' which are declared as int type. These functions handle the query parameters and return the result of the mathematical operation.
 
-Next, we have to make the `math_router` visible to the application
+```
+
+In the provided example, the `math_router` is created with a prefix `/math` and an OPENAPI tag 'Math'. 
+Two routes, `addition(a:int, b:int)` and `subtraction(a:int, b:int)`, are added to the router, each handling two query parameters ('a' and 'b') of integer type. These functions perform the specified mathematical operations and return the results.
+
+To make the `math_router` visible to the application, it is registered with the current injector using `current_injector.register(ModuleRouter, math_router)`. This step ensures that the router is recognized and accessible within the application.
 
 ## **Registering Module Router**
-Like controllers, ModuleRouters also need to be registered to their root module in order to be used in a web application. 
+Like controllers, ModuleRouters also need to be registered to their root module to be used in a web application. 
 In the example provided above, the `math_router` would be registered under the `project_name/apps/car/module.py` file.
 
 This registration process typically involves importing the `math_router` and then adding it to the list of `routers` in the `module.py` file. 

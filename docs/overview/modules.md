@@ -1,24 +1,25 @@
 # **Modules**
 
-A module is a class annotated with a `@Module()` decorator.
-The `@Module()` decorator provides **metadata** that exports a `Module` data and defines the module structure.
+A module is represented by a class with the `@Module()` decorator. 
+This decorator provides essential metadata, offering a `Module` data structure that outlines the module's architecture.
 
 ![middleware description image](../img/ModuleDescription.png)
 
-The best way to organize your components is to build your projects as `Modules`.
+Organizing components within projects as `Modules` is considered a best practice. 
+The `ApplicationModule` serves as the starting point or root module for constructing the application module tree. 
+This internal data structure facilitates the resolution of relationships, dependencies, and interactions between modules and providers.
 
-The `ApplicationModule` is the entry-point/root module to building the application module tree -
-the internal data structure used to resolve `module` and `provider` relationships and dependencies.
-
-Thus, the architecture resulting from most applications will include multiple modules with closely related **functionality**.
+Consequently, the typical architecture of applications involves multiple modules, each encapsulating closely related functionality.
 
 ## **Feature modules**
-Building an application as a group of feature modules bundled together helps to manage complexity, have a maintainable, extendable, and testable code base, and encourage development using SOLID principles.
+Building an application as a group of feature modules bundled together helps manage complexity, 
+maintain a codebase that is both extendable and testable, and encourages development using SOLID principles.
 
-A typical example of a feature module is the **car** project. The `CarModule` wraps all the services and controller that manages the `car` resource which makes it easy to maintain, extend, and testable.
+A typical example of a feature module is the **car** project. 
+The `CarModule` wraps all the services and controllers responsible for managing the `car` resource, 
+making it easy to maintain, extend, and test.
+
 ```python title='project_name/apps/car/module.py' linenums="1"
-
-
 from ellar.common import Module
 from ellar.core import ModuleBase
 from ellar.di import Container
@@ -76,21 +77,66 @@ class BookModule(ModuleBase):
 ## **Additional Module Configurations**
 
 ### **Module Events**
-Every registered Module receives two event calls during its instantiation and when the application is ready.
+Before a Module is instantiated, the `before_init` class method is invoked with an application config object. 
+This allows for the configuration of additional initialization parameters that need to be supplied to the `__init__` 
+function, originating from the application config.
 
 ```python linenums="1"
+import typing
 from ellar.common import Module
 from ellar.core import ModuleBase, Config
+
 
 @Module()
 class ModuleEventSample(ModuleBase):
     @classmethod
-    def before_init(cls, config: Config) -> None:
+    def before_init(cls, config: Config) -> typing.Any:
         """Called before creating Module object"""
 
 ```
 `before_init` receives current app `Config` as a parameter for further configurations before `ModuleEventSample` is initiated.
 It's important to note that returned values from `before_init` will be passed to the constructor of `ModuleEventSample` during instantiation.
+
+### **Module Application Cycle**
+The Ellar application follows a two-phase lifecycle, consisting of `on_startup` and `on_shutdown`, which are managed by `EllarApplicationLifespan`.
+
+- `on_startup`: Triggered when the ASGI server initiates a lifespan request on the application instance.
+- `on_shutdown`: Activated when the ASGI server is in the process of shutting down the application.
+
+Modules can subscribe to these events by inheriting from `IApplicationStartup` for startup actions and `IApplicationShutdown` for shutdown actions.
+
+For instance:
+```python
+from ellar.common import Module, IApplicationShutdown, IApplicationStartup
+from ellar.core import ModuleBase
+
+@Module()
+class AModuleSample(ModuleBase, IApplicationStartup):
+    async def on_startup(self, app: "App") -> None:
+        pass
+
+@Module()
+class BModuleSample(ModuleBase, IApplicationShutdown):
+    async def on_shutdown(self) -> None:
+        pass
+
+@Module()
+class CModuleSample(ModuleBase, IApplicationStartup, IApplicationShutdown):
+    async def on_startup(self, app: "App") -> None:
+        pass
+
+    async def on_shutdown(self) -> None:
+        pass
+```
+
+In the provided example:
+- `AModuleSample` subscribes to `IApplicationStartup` and will be called only during startup.
+- `BModuleSample` subscribes to `IApplicationShutdown` and will be called only during application shutdown.
+- `CModuleSample` subscribes to both `IApplicationStartup` and `IApplicationShutdown`, thus being invoked during both startup and shutdown phases.
+
+This modular approach enables modules to actively engage in the application's life-cycle events, allowing developers 
+to organize and execute code efficiently during specific stages. 
+This not only enhances flexibility but also contributes to the overall maintainability of the application.
 
 ### **Module Exceptions**
 Custom exception handlers can be registered through modules.
@@ -108,12 +154,11 @@ class ModuleExceptionSample(ModuleBase):
 `exception_404_handler` will be register to the application at runtime during `ModuleExceptionSample` computation.
 
 ### **Module Templating Filters**
-We can also define `Jinja2` templating filters in project Modules or any `@Module()` module.
-The defined filters are be passed down to `Jinja2` **environment** instance alongside the `template_folder` 
-value when creating **TemplateLoader**.
+In addition, we can define `Jinja2` templating filters within project Modules or any module annotated with `@Module()`.
+The specified filters are then passed down to the `Jinja2` **environment** instance alongside the `template_folder` 
+value when creating the **TemplateLoader**.
 
-```python linenums="1"
-
+```python
 from ellar.common import Module, template_global, template_filter
 from ellar.core import ModuleBase
 
@@ -131,6 +176,7 @@ class ModuleTemplateFilterSample(ModuleBase):
     def double_filter_dec(cls, n):
         return n * 2
 ```
+
 
 ## **Dependency Injection**
 A module class can inject providers as well (e.g., for configuration purposes):
