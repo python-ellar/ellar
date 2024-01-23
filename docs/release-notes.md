@@ -1,3 +1,11 @@
+# 0.6.8
+## What's Changed
+* Drop file storage  by @eadwinCode in https://github.com/python-ellar/ellar/pull/171
+* Updated Ellar CLI documentation by @eadwinCode in https://github.com/python-ellar/ellar/pull/171
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.6.7...0.6.8
+
 # 0.6.7
 ## What's Changed
 * Bug Fixes: Extra Route Args multiple field grouping by @eadwinCode in https://github.com/python-ellar/ellar/pull/170
