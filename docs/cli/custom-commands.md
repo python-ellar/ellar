@@ -1,111 +1,192 @@
 # **Custom Commands**
-In this section, we are going to go over how to create a custom command and throw more light on how Ella CLI works.
+In this section, we will guide you through the process of creating a command and explain why you 
+should utilize `ellar_cli.click` as your primary Click package when working with Ellar.
 
-## **Create Custom Command**
-Let's create a file called `commands.py` at the root level of the project.
+
+## **Command Options Arguments**
+The `ellar_cli.click` package offers comprehensive help messages and documentation for command options and arguments 
+without compromising the fundamental functionality of the command. 
+For instance:
 
 ```python
-# project_name/commands.py
+import ellar_cli.click as click
 
-from ellar.common import command
-
-@command
-def my_new_command():
-    """my_new_command cli description """
+@click.command()
+@click.argument("arg1", required=True, help="Arg1 description")
+@click.argument("arg2", required=False, help="Arg2 description")
+@click.option("-op1", required=False, help="option1 description")
+@click.option("-op2", required=False, help="option2 description")
+def my_command(arg1, arg2, op1, op2):
+    print(f"ARG1={arg1} ARG2={arg2}; op1={op1} op2={op2}")
 ```
 
-## **Custom Command with Context**
+When you register `my_command` to a `@Module` class, you can then execute it in your terminal with the following command:
+```shell
+ellar my-command --help 
 
-Ellar CLI tools is a wrapper round [typer](https://typer.tiangolo.com/).
-So, therefore, we can easily get the command context by adding a parameter with the annotation of `typer.Context`
+## OUTPUT
 
-Ellar CLI adds some meta-data CLI context that provides an interface for interaction with the Ellar project.
+Usage: ellar my-command <arg1> [<arg2>] [OPTIONS]
 
-For example:
+ARGUMENTS:
+  arg1: <arg1>    Arg1 description  [required]
+  arg2: [<arg2>]  Arg2 description
 
-```python
-import typing as t
-import typer
-from ellar.common import command
-from ellar_cli.service import EllarCLIService
-from ellar_cli.constants import ELLAR_META
-
-@command
-def my_new_command(ctx:typer.Context):
-    """my_new_command CLI Description """
-    ellar_cli_service = t.cast(t.Optional[EllarCLIService], ctx.meta.get(ELLAR_META))
-    app = ellar_cli_service.import_application()
+[OPTIONS]:
+  -op1 TEXT  option1 description
+  -op2 TEXT  option2 description
+  --help     Show this message and exit.
 ```
-`EllarCLIService` is an Ellar CLI meta-data for interacting with Ellar project.
 
-Some important method that may be of interest:
+## **With App Context Decorator**
+The `ellar_cli.click` module includes a command decorator function called `with_app_context`. 
+This decorator ensures that a click command is executed within the application context, 
+allowing `current_app`, `current_injector`, and `current_config` to have values.
 
-- `import_application`: returns application instance.
-- `get_application_config`: gets current application config.
-
-## **Register a Custom Command**
-
-Lets, make the `my_new_command` visible on the CLI.
-In other for Ellar CLI to identify custom command, its has to be registered to a `@Module` class.
-
-For example:
+For instance:
 
 ```python
-# project_name/root_module.py
+import ellar_cli.click as click
+from ellar.core import Config
+from ellar.app import current_injector
+
+@click.command()
+@click.argument("arg1", required=True, help="Arg1 description")
+@click.with_app_context
+def command_context(arg1):
+    config = current_injector.get(Config) 
+    print("ALLOWED_HOSTS:", config.ALLOWED_HOSTS, ";ELLAR_CONFIG_MODULE:", config.config_module)
+
+@click.command()
+@click.argument("arg1", required=True, help="Arg1 description")
+def command_wc(arg1):
+    config = current_injector.get(Config) 
+    print("ALLOWED_HOSTS:", config.ALLOWED_HOSTS, ";ELLAR_CONFIG_MODULE:", config.config_module)
+```
+
+In this example, `command_context` is wrapped with `with_app_context`, while `command_wc` is not. 
+When executing both commands, `command_context` will run successfully, and `command_wc` will raise a RuntimeError 
+because it attempts to access a value outside the context.
+
+## **AppContextGroup**
+`AppContextGroup` extended from `click.Group` to wrap all its commands with `with_app_context` decorator.
+
+
+```python
+import ellar_cli.click as click
+from ellar.core import Config
+from ellar.app import current_injector
+
+cm = click.AppContextGroup(name='cm')
+
+@cm.command()
+@click.argument("arg1", required=True, help="Arg1 description")
+def command_context(arg1):
+    config = current_injector.get(Config) 
+    print("ALLOWED_HOSTS:", config.ALLOWED_HOSTS, ";ELLAR_CONFIG_MODULE:", config.config_module)
+
+
+@cm.command()
+@click.argument("arg1", required=True, help="Arg1 description")
+def command_wc(arg1):
+    config = current_injector.get(Config) 
+    print("ALLOWED_HOSTS:", config.ALLOWED_HOSTS, ";ELLAR_CONFIG_MODULE:", config.config_module)
+```
+All commands registered under `cm` will be executed under within the context of the application. 
+
+### **Disabling `with_app_context` in AppContextGroup**
+There are some cases where you may want to execute a command under `AppContextGroup` outside application context.
+This can be done by setting `with_app_context=False` as command parameter.
+
+```python
+import ellar_cli.click as click
+
+cm = click.AppContextGroup(name='cm')
+
+@cm.command(with_app_context=False)
+@click.argument("arg1", required=True, help="Arg1 description")
+def command_wc(arg1):
+    # config = current_injector.get(Config) 
+    print("ALLOWED_HOSTS:Unavailable;ELLAR_CONFIG_MODULE:Unavailable")
+```
+
+## Async Command
+The `ellar_cli.click` package provides a utility decorator function, `run_as_async`, 
+specifically designed to execute coroutine commands. 
+This is useful when you want to define asynchronous commands using the `click` package. 
+Here's an example:
+
+```python
+import ellar_cli.click as click
+from ellar.core import Config
+from ellar.app import current_injector
+
+@click.command()
+@click.argument("arg1", required=True, help="Arg1 description")
+@click.with_app_context
+@click.run_as_async
+async def command_context(arg1):
+    config = current_injector.get(Config) 
+    print("ALLOWED_HOSTS:", config.ALLOWED_HOSTS, ";ELLAR_CONFIG_MODULE:", config.config_module)
+```
+
+In this example, the `run_as_async` decorator enables the `command_context` coroutine 
+command to be executed appropriately during execution.
+
+## **Custom Command With Ellar**
+Let's create a command group `db` which contains sub-commands such as `makemigrations`, `migrate`, `reset-db`, and so on.
+
+To implement this scenario, let's create a file `commands.py` at the root level of the project and add the code below.
+```python
+from ellar_cli.click import AppContextGroup
+
+db = AppContextGroup(name="db")
+
+
+@db.command(name="make-migrations")
+def makemigrations():
+    """Create DB Migration """
+
+@db.command()
+def migrate():
+    """Applies Migrations"""
+```
+
+### **Registering Command**
+
+To make the `db` command visible on the CLI, it **must** be registered within a `@Module` class. 
+This ensures that the Ellar CLI can recognize and identify custom commands.
+
+```python
 from ellar.common import Module
 from ellar.core import ModuleBase
-from .commands import my_new_command
+from .commands import db
 
-@Module(commands=[my_new_command])
+@Module(commands=[db])
 class ApplicationModule(ModuleBase):
     pass
 ```
-
-open your terminal and navigate to project directory and run the command below
+Open your terminal and navigate to the project directory and run the command below
 ```shell
-ellar --help
+ellar db --help
 ```
 
 command output
 ```shell
-Usage: Ellar, Python Web framework [OPTIONS] COMMAND [ARGS]...
+Usage: Ellar, Python Web framework db [OPTIONS] COMMAND [ARGS]...
 
 Options:
-  -p, --project TEXT              Run Specific Command on a specific project
-  --install-completion [bash|zsh|fish|powershell|pwsh]
-                                  Install completion for the specified shell.
-  --show-completion [bash|zsh|fish|powershell|pwsh]
-                                  Show completion for the specified shell, to
-                                  copy it or customize the installation.
-  --help                          Show this message and exit.
+  --help  Show this message and exit.
 
 Commands:
-  create-module   - Scaffolds Ellar Application Module -
-  create-project  - Scaffolds Ellar Application -
-  my-new-command  - my_new_command cli description
-  new             - Runs a complete Ellar project scaffold and creates...
-  runserver       - Starts Uvicorn Server -
-  say-hi 
+  make-migrations  Create DB Migration
+  migrate          Applies Migrations
+
 ```
 
-## **Using Click Commands**
-If prefer click commands, Ellar-CLI supports that too. Simply create a click command and register it to any module registered in
-the `ApplicationModule`. For example
+Having explored various methods for crafting commands and understanding the roles of `wrap_app_context` and `run_as_async` decorators, 
+you now possess the knowledge to create diverse commands for your Ellar application. 
 
-```python
-import click
-from ellar.common import JSONResponse, Module, Response, exception_handler
-from ellar.core import ModuleBase
-from ellar.core.connection import Request
-
-@click.command()
-def say_hello():
-    click.echo("Hello from ellar.")
-
-
-@Module(commands=[say_hello])
-class ApplicationModule(ModuleBase):
-    @exception_handler(404)
-    def exception_404_handler(cls, request: Request, exc: Exception) -> Response:
-        return JSONResponse({"detail": "Resource not found."})
-```
+It's crucial to keep in mind that any custom command you develop needs to be registered within a `@Module` class, which, 
+in turn, should be registered with the `ApplicationModule`.
+This ensures that your commands are recognized and integrated into the Ellar application's command-line interface. 
