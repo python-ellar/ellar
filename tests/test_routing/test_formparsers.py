@@ -4,6 +4,7 @@ from typing import List, Union
 
 import pytest
 from ellar.common import File, Form, ModuleRouter, UploadFile, post, serialize_object
+from ellar.common.datastructures import ContentFile
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 from starlette.formparsers import UploadFile as StarletteUploadFile
@@ -425,3 +426,26 @@ def test_form_file_data_as_list_of_bytes(tmpdir):
             ],
         )
         assert response.json() == {"file_size": 28}
+
+
+async def test_with_content_file(anyio_backend):
+    res = await form_upload_multiple_case_1(
+        [
+            ContentFile(b"Content One", name="text.txt"),
+            ContentFile(b"Content Two", name="text1.txt"),
+        ]
+    )
+    assert res == {
+        "test1": [
+            {
+                "content": "Content One",
+                "content_type": "text/plain",
+                "filename": "text.txt",
+            },
+            {
+                "content": "Content Two",
+                "content_type": "text/plain",
+                "filename": "text1.txt",
+            },
+        ]
+    }

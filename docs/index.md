@@ -23,7 +23,7 @@ Ellar was deeply influenced by [NestJS](https://docs.nestjs.com/){target="_blank
 Also, Ellar took some concepts from [FastAPI](https://fastapi.tiangolo.com/){target="_blank"} in terms of request parameter handling and data serialization with Pydantic. 
 
 The objective of Ellar is to provide a high level of abstracted interface to your python web app, along with a well-structured project setup, give room for object-oriented approach to web application design, 
-allow you chose your desired application architecture, and ultimately, deliver speedy handling to requests using any ASGI server.
+allow you to choose your desired application architecture, and ultimately, deliver speedy handling to requests using any ASGI server.
 
 ## **Project Status**
 Beta version

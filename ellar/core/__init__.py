@@ -4,14 +4,17 @@ from .conf import Config, ConfigDefaultTypesMixin
 from .connection import HTTPConnection, Request, WebSocket
 from .execution_context import ExecutionContext, HostContext
 from .guards import GuardConsumer
+from .interceptors import EllarInterceptorConsumer
 from .modules import DynamicModule, LazyModuleImport, ModuleBase, ModuleSetup
 from .services import Reflector, reflector
+from .versioning import VersioningSchemes
 
 __all__ = [
     "HTTPConnection",
     "ExecutionContext",
     "HostContext",
     "ConfigDefaultTypesMixin",
+    "EllarInterceptorConsumer",
     "ModuleBase",
     "Config",
     "Request",
@@ -22,6 +25,7 @@ __all__ = [
     "reflector",
     "GuardConsumer",
     "LazyModuleImport",
+    "VersioningSchemes",
 ]
 
 

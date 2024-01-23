@@ -1,15 +1,13 @@
 # **Versioning**
-Versioning allows for the existence of multiple versions of controllers or individual routes within the same application, 
-which can be useful when making changes that may break previous versions. 
-This allows developers to support older versions of the application while still making necessary updates.
+Versioning is a practice in software development that involves managing different versions of endpoints (APIs) within an application. 
+This is crucial when introducing changes to an API that may impact existing clients or when supporting multiple versions concurrently. 
+Different versioning strategies are employed to handle these scenarios:
 
-There are 4 types of versioning that are supported:
-
-- [`URL Versioning`](#url-versioning): The version will be passed within the **URL** of the request 
-- [`Header Versioning`](#header-versioning): A custom request **header** will specify the version
-- [`Query Versioning`](#query-versioning): A custom request **query** will specify the version
-- [`Host Versioning`](#host-versioning): The version will be part of the request **client host**
-
+- [`URL Versioning`](#url-versioning): The version is included in the **URL** of the request.
+- [`Header Versioning`](#header-versioning): The version is specified using a custom request **header**.
+- [`Query Versioning`](#query-versioning): The version is specified in a custom request **query**.
+- [`Host Versioning`](#host-versioning): The version is part of the request **client host**.
+- 
 ## **URL Versioning**
 This scheme requires the client to specify the version as part of the URL path.
 ```

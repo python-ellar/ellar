@@ -24,7 +24,13 @@ For Pip Users
 ```shell
 ellar new carsite
 ```
-This will create the `pyproject.toml` and add all other necessary files for ellar project.
+This will create the `pyproject.toml` and add all other necessary files for your ellar project.
+
+Also, if you want a plain scaffold without `pyproject.toml`
+```shell
+ellar new carsite --plain
+```
+See [this](./cli/new-command.md#new-project-without-pyproject-requirement){target="_blank"} plain projects CLI execution pattern
 
 In the scaffolded project, you will see the following:
 

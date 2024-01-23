@@ -11,7 +11,7 @@ Create a file `controller.py`:
 ```Python
 from ellar.common import ModuleRouter, Controller, get
 
-router = ModuleRouter('', tag='Math')
+router = ModuleRouter('')
 
 
 @router.get("/add")
