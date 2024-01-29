@@ -17,6 +17,16 @@ def middleware() -> t.Callable:
     ========= MODULE DECORATOR ==============
 
     Defines middleware functions at  @Module decorated class level
+
+    Usage:
+
+    @middleware()
+    async def my_middleware(cls, context: IExecutionContext, call_next):
+        print("Called my_middleware")
+        request = context.switch_to_http_connection().get_request()
+        request.state.my_middleware = True
+        await call_next()
+
     :return: Function
     """
 

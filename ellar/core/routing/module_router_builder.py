@@ -7,7 +7,7 @@ from .builder import RouterBuilder
 from .helper import build_route_parameters
 
 
-class ModuleRouterFactory(RouterBuilder, controller_type=ModuleRouter):
+class ModuleRouterBuilder(RouterBuilder, controller_type=ModuleRouter):
     @classmethod
     def build(
         cls, controller_type: t.Union[ModuleRouter, t.Any], **kwargs: t.Any

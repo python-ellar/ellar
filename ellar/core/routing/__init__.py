@@ -1,15 +1,15 @@
 from .app import ApplicationRouter
 from .builder import RouterBuilder, get_controller_builder_factory
-from .factory import ControllerRouterFactory
+from .controller_builder import ControllerRouterBuilder
 from .file_mount import AppStaticFileMount, ASGIFileMount
-from .module_router import ModuleRouterFactory
+from .module_router_builder import ModuleRouterBuilder
 
 __all__ = [
     "ApplicationRouter",
-    "ControllerRouterFactory",
+    "ControllerRouterBuilder",
     "get_controller_builder_factory",
     "RouterBuilder",
-    "ModuleRouterFactory",
+    "ModuleRouterBuilder",
     "AppStaticFileMount",
     "ASGIFileMount",
 ]

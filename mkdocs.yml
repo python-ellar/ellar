@@ -62,6 +62,13 @@ plugins:
         minify_html: true
   - git-revision-date-localized:
       enable_creation_date: false
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          rendering:
+            show_root_heading: true
+            show_source: false
 
 nav:
   - Get Started:
@@ -85,6 +92,7 @@ nav:
       - Dynamic Modules: basics/dynamic-modules.md
       - Injector Scopes: basics/injector-scopes.md
       - Lifespan: basics/lifespan.md
+      - Application Context: basics/application-context.md
       - Testing: basics/testing.md
   - Techniques:
       - Configuration: techniques/configurations.md

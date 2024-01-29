@@ -1,5 +1,6 @@
 import typing as t
 
+from ellar.pydantic import as_pydantic_validator
 from jinja2 import TemplateNotFound
 from jinja2.loaders import BaseLoader
 
@@ -49,3 +50,12 @@ class JinjaLoader(BaseLoader):
                     result.add(template)
 
         return list(result)
+
+
+@as_pydantic_validator("__validate_input__", schema={"type": "object"})
+class JinjaLoaderType(BaseLoader):
+    @classmethod
+    def __validate_input__(cls, v: t.Any, _: t.Any) -> t.Any:
+        if not isinstance(v, BaseLoader):
+            raise ValueError(f"Expected {BaseLoader} object, received: {type(v)}")
+        return v

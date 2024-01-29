@@ -37,7 +37,7 @@ ellar create-module user
 Now, let's add some implementations to the generated files. For this application, the `UserService` will be working with a hard-coded list of users with a retrieve one-by-email method. 
 In a real application, you´d build your user model and persistence layer using a library of your choice like SQLAlchemy, Django ORM, Peewee, PonyORM, etc.
 
-```python title='user.services.py' linenums="1"
+```python title='user/services.py' linenums="1"
 
 from ellar.common import Serializer
 from ellar.common.serializer import SerializerFilter
@@ -79,7 +79,7 @@ class UsersService:
 In the above example, we have used `make_password` to hash the password. It is strictly advised you don't save passwords as plain text.
 In the `UsersModule`, we need to register the `UserService` we just created so that it will be injectable in `AuthService`
 
-```python title='user.module.py' linenums="1"
+```python title='user/module.py' linenums="1"
 from ellar.common import Module
 from ellar.core import ModuleBase
 
@@ -100,7 +100,7 @@ class UserModule(ModuleBase):
 The `AuthService` has the job of retrieving a user and verifying the password. 
 Let's create a `sign_in` function for this purpose.
 
-```python title="auth.services.py" linenums='1'
+```python title="auth/services.py" linenums='1'
 import typing as t
 
 from ellar.core.security.hashers import check_password
@@ -127,7 +127,7 @@ class AuthService:
 
 Next, we create the AuthController and add a sign_in endpoint
 
-```python title="auth.controllers.py" linenums="1"
+```python title="auth/controllers.py" linenums="1"
 from ellar.common import Controller, ControllerBase, post, Body
 from .services import AuthService
 
@@ -162,7 +162,7 @@ Let us configure the JWTModule inside AuthModule. 
 !!!hint
     You can also see docs on how to use the [EllarJWT](https://github.com/python-ellar/ellar-jwt){target=_blank}
 
-```python title="auth.module.py" linenums="1"
+```python title="auth/module.py" linenums="1"
 from datetime import timedelta
 
 from ellar.common import Module
@@ -195,7 +195,7 @@ With that done, we have completed the `AuthModule` setup. 
 
 Now, let us finish the `AuthService` by returning a token using `JWTService`.
 
-```python title="auth.services.py" linenums='1'
+```python title="auth/services.py" linenums='1'
 import typing as t
 
 from ellar.core.security.hashers import check_password
@@ -227,7 +227,7 @@ class AuthService:
 At this point, we can run the application to test what we have done so far. 
 To do that, we need to register `AuthModule` to the `ApplicationModule`.
 
-```python title="project_name.root_module.py" linenums="1"
+```python title="project_name/root_module.py" linenums="1"
 from ellar.common import Module, exception_handler
 from ellar.common import IExecutionContext, JSONResponse, Response
 from ellar.core import ModuleBase, LazyModuleImport as lazyLoad
@@ -260,7 +260,7 @@ $ # Note: above JWT truncated
 At this point, we can now comfortably address our final requirement: protecting endpoints by requiring a valid JWT to be 
 present on the request. We will do this by creating an AuthGuard that will be used to guard our routes. 
 
-```python title='auth.guards.py' linenums='1'
+```python title='auth/guards.py' linenums='1'
 import typing as t
 
 from ellar.auth import UserIdentity
@@ -293,7 +293,7 @@ class AuthGuard(GuardHttpBearerAuth):
 
 We can now implement our protected route and register our AuthGuard to guard it.
 
-```python title='auth.controllers.py' linenums='1'
+```python title='auth/controllers.py' linenums='1'
 from ellar.common import Controller, ControllerBase, post, Body, get, UseGuards
 from .services import AuthService
 from .guards import AuthGuard
@@ -344,7 +344,7 @@ So, let us address token refresh using EllarJWT. Depending your application, thi
 To get this done, we need to edit the `sign_in` in `AuthService` to return `access_token` and `refresh_token`.
 We also need to add a `refresh_token` endpoint to our `AuthController`.
 
-```python title='auth.services.py' linenums='1'
+```python title='auth/services.py' linenums='1'
 import typing as t
 from datetime import timedelta
 
@@ -401,7 +401,7 @@ class AuthService:
 We have modified the sign_in method and added the refresh_token method to handle refresh token actions. 
 The `sign_in` method return `access_token` and `refresh_token` that expires in 30days.
 
-```python title='auth.controllers.py' linenums='1'
+```python title='auth/controllers.py' linenums='1'
 from ellar.common import Controller, ControllerBase, post, Body, get, UseGuards
 from ellar.openapi import ApiTags
 from .services import AuthService
@@ -444,7 +444,7 @@ that don't require it, such as the `sign_in` route function.
 
 First, let us register `AuthGuard` a global guard in `AuthModule`.
 
-```python title="auth.module.py" linenums="1"
+```python title="auth/module.py" linenums="1"
 from datetime import timedelta
 
 from ellar.common import GlobalGuard, Module
@@ -482,7 +482,7 @@ Let us define a mechanism for declaring routes as anonymous or public.
     We can set some metadata on those functions, and it can be read in AuthGuard. 
     If the metadata is present, we exit the authentication verification and allow the execution to continue.
     
-    ```python title='auth.guards.py' linenums='1'
+    ```python title='auth/guards.py' linenums='1'
     import typing as t
     
     from ellar.auth import UserIdentity
@@ -531,7 +531,7 @@ Let us define a mechanism for declaring routes as anonymous or public.
 === "Using GuardCanActivate"
     We can create an `allow_any` decorator function that defines a guard metadata on the decorated function to override the global guard
     
-    ```python title='auth.guards.py' linenums='1'
+    ```python title='auth/guards.py' linenums='1'
     import typing as t
     
     from ellar.auth import UserIdentity
@@ -575,7 +575,7 @@ Let us define a mechanism for declaring routes as anonymous or public.
 We have seen from above how to get `allow_any` decorator function.
 Now we use it on the `refresh` and `sign in` endpoints as shown below:
 
-```python title='auth.controllers.py' linenums='1'
+```python title='auth/controllers.py' linenums='1'
 from ellar.common import Controller, ControllerBase, post, Body, get
 from ellar.openapi import ApiTags
 from .services import AuthService
@@ -618,7 +618,7 @@ Just like AuthGuard, we need to create its equivalent. But first we need to crea
 of your application for us to define a `JWTAuthentication` handler. 
 
 
-```python title='prject_name.auth_scheme.py' linenums='1'
+```python title='prject_name/auth_scheme.py' linenums='1'
 import typing as t
 from ellar.common.serializer.guard import (
     HTTPAuthorizationCredentials,
@@ -685,7 +685,7 @@ We need
 to refactor auth controller and mark `refresh_token` and `sign_in` function as public routes
 by using `SkipAuth` decorator from `ellar.auth` package.
 
-```python title='auth.controller.py' linenums='1'
+```python title='auth/controller.py' linenums='1'
 from ellar.common import Controller, ControllerBase, post, Body, get
 from ellar.auth import SkipAuth, AuthenticationRequired
 from ellar.openapi import ApiTags
@@ -730,7 +730,7 @@ But if you have a single form of authentication,
 you can register `AuthenticatedRequiredGuard` from `eellar.auth.guard` module globally
 just like we did in [applying guard globally](#apply-authguard-globally)
 
-```python title='auth.module.py' linenums='1'
+```python title='auth/module.py' linenums='1'
 from datetime import timedelta
 from ellar.auth.guard import AuthenticatedRequiredGuard
 from ellar.common import GlobalGuard, Module

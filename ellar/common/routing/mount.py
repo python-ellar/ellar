@@ -7,6 +7,7 @@ from ellar.common.models import GuardCanActivate
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.common.utils import get_unique_control_type
 from ellar.reflect import reflect
+from starlette.middleware import Middleware
 from starlette.routing import BaseRoute, Match, Route, Router
 from starlette.routing import Mount as StarletteMount
 from starlette.types import ASGIApp
@@ -28,8 +29,12 @@ class ModuleMount(StarletteMount):
         routes: t.Optional[t.Sequence[BaseRoute]] = None,
         name: t.Optional[str] = None,
         include_in_schema: bool = False,
+        *,
+        middleware: t.Optional[t.Sequence[Middleware]] = None,
     ) -> None:
-        super(ModuleMount, self).__init__(path=path, routes=routes, name=name, app=app)
+        super(ModuleMount, self).__init__(
+            path=path, routes=routes, name=name, app=app, middleware=middleware
+        )
         self.include_in_schema = include_in_schema
         self._current_found_route_key = f"{uuid.uuid4().hex:4}_ModuleMountRoute"
         self._control_type = control_type

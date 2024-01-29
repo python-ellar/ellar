@@ -79,6 +79,7 @@ class AppMixin(JinjaTemplating):
             config=self._config,
         )
         jinja_env.policies["json.dumps_function"] = json.dumps
+        # jinja_env.policies["get_messages"] = get_messages
         return jinja_env
 
     def create_global_jinja_loader(self) -> JinjaLoader:

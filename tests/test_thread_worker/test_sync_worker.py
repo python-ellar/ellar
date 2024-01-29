@@ -3,9 +3,9 @@ import contextlib
 import pytest
 from ellar.threading.sync_worker import (
     _SyncWorkerThread,
-    execute_async_context_manager_with_sync_worker,
-    execute_async_gen_with_sync_worker,
-    execute_coroutine_with_sync_worker,
+    execute_async_context_manager,
+    execute_async_gen,
+    execute_coroutine,
     sentinel,
 )
 
@@ -33,13 +33,13 @@ async def async_context_manager(with_exception=False):
 
 
 async def test_run_with_sync_worker_runs_async_function_synchronously(anyio_backend):
-    res = execute_coroutine_with_sync_worker(coroutine_function())
+    res = execute_coroutine(coroutine_function())
     assert res == "Coroutine Function"
 
 
 async def test_run_with_sync_worker_will_raise_an_exception(anyio_backend):
     with pytest.raises(RuntimeError):
-        execute_coroutine_with_sync_worker(coroutine_function_2())
+        execute_coroutine(coroutine_function_2())
 
 
 async def test_sync_worker_exists_wait_for_work_task(anyio_backend):
@@ -51,7 +51,7 @@ async def test_sync_worker_exists_wait_for_work_task(anyio_backend):
 
 
 async def test_sync_worker_execute_async_generator(anyio_backend):
-    res = list(execute_async_gen_with_sync_worker(async_gen()))
+    res = list(execute_async_gen(async_gen()))
     assert res == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
@@ -84,11 +84,11 @@ async def test_sync_worker_interrupt_function_works(anyio_backend):
 
 
 async def test_sync_worker_runs_async_context_manager(anyio_backend):
-    with execute_async_context_manager_with_sync_worker(async_context_manager()) as ctx:
+    with execute_async_context_manager(async_context_manager()) as ctx:
         assert ctx == 10
 
     with pytest.raises(RuntimeError, match="Context Manager Raised an Exception"):
-        with execute_async_context_manager_with_sync_worker(
+        with execute_async_context_manager(
             async_context_manager(with_exception=True)
         ) as ctx:
             pass

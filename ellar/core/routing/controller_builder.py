@@ -13,7 +13,7 @@ from starlette.routing import Router
 from .builder import RouterBuilder
 
 
-class ControllerRouterFactory(RouterBuilder, controller_type=type(ControllerBase)):
+class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase)):
     @classmethod
     def build(
         cls, controller_type: t.Union[t.Type[ControllerBase], t.Any], **kwargs: t.Any
