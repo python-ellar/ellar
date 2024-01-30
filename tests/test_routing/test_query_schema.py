@@ -1,8 +1,8 @@
 import pytest
 from ellar.common import Inject, ModuleRouter, Query, get, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
+from ellar.common.routing.utils import build_route_handler
 from ellar.core.connection import Request
-from ellar.core.routing.helper import build_route_handler
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 

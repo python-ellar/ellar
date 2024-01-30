@@ -4,7 +4,7 @@ from ellar.auth.session import ISessionStrategy
 from ellar.auth.session.strategy import SessionClientStrategy
 from ellar.common import Controller, Inject, delete, get, post
 from ellar.core import Request
-from ellar.core.routing import ControllerRouterFactory
+from ellar.core.router_builders import ControllerRouterBuilder
 from ellar.testing import Test
 from starlette.routing import Mount
 
@@ -118,7 +118,7 @@ def test_session_cookie_sub_path():
         routers=[
             Mount(
                 "/second_app",
-                app=ControllerRouterFactory.build(SessionSampleController),
+                app=ControllerRouterBuilder.build(SessionSampleController),
             )
         ],
         config_module={"SECRET_KEY": "secret", "SESSION_COOKIE_PATH": "/second_app"},

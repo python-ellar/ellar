@@ -2,9 +2,9 @@ import typing as t
 
 from ellar.common import ModuleRouter
 from ellar.common.routing import ModuleMount
+from ellar.common.routing.utils import build_route_parameters
 
-from .builder import RouterBuilder
-from .helper import build_route_parameters
+from .base import RouterBuilder
 
 
 class ModuleRouterBuilder(RouterBuilder, controller_type=ModuleRouter):

@@ -1,7 +1,7 @@
 import typing as t
 
 import socketio
-from ellar.core.routing import RouterBuilder
+from ellar.core.router_builders import RouterBuilder
 from ellar.reflect import reflect
 from ellar.socket_io.adapter import SocketIOASGIApp
 from ellar.socket_io.constants import (

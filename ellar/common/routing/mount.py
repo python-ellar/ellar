@@ -1,7 +1,13 @@
+import functools
 import typing as t
 import uuid
 
-from ellar.common.constants import CONTROLLER_CLASS_KEY, GUARDS_KEY, VERSIONING_KEY
+from ellar.common.constants import (
+    CONTROLLER_CLASS_KEY,
+    GUARDS_KEY,
+    SCOPE_API_VERSIONING_RESOLVER,
+    VERSIONING_KEY,
+)
 from ellar.common.logging import request_logger
 from ellar.common.models import GuardCanActivate
 from ellar.common.types import TReceive, TScope, TSend
@@ -16,8 +22,10 @@ from .operation_definitions import OperationDefinitions
 from .route import RouteOperation
 from .route_collections import RouteCollection
 from .schema import RouteParameters, WsRouteParameters
+from .utils import build_route_handler
 
-__all__ = ["ModuleMount", "ModuleRouter"]
+if t.TYPE_CHECKING:
+    from ellar.core.versioning.resolver import BaseAPIVersioningResolver
 
 
 class ModuleMount(StarletteMount):
@@ -145,3 +153,109 @@ class ModuleRouter(OperationDefinitions, ModuleMount):
             reflect.define_metadata(
                 CONTROLLER_CLASS_KEY, self.get_control_type(), operation_handler
             )
+
+
+def router_default_decorator(func: ASGIApp) -> ASGIApp:
+    @functools.wraps(func)
+    async def _wrap(scope: TScope, receive: TReceive, send: TSend) -> None:
+        version_scheme_resolver: "BaseAPIVersioningResolver" = t.cast(
+            "BaseAPIVersioningResolver", scope[SCOPE_API_VERSIONING_RESOLVER]
+        )
+        if version_scheme_resolver and version_scheme_resolver.matched_any_route:
+            version_scheme_resolver.raise_exception()
+
+        await func(scope, receive, send)
+
+    return _wrap
+
+
+class ApplicationRouter(Router):
+    routes: RouteCollection  # type: ignore
+
+    def __init__(
+        self,
+        routes: t.Sequence[BaseRoute],
+        redirect_slashes: bool = True,
+        default: t.Optional[ASGIApp] = None,
+        on_startup: t.Optional[t.Sequence[t.Callable]] = None,
+        on_shutdown: t.Optional[t.Sequence[t.Callable]] = None,
+        lifespan: t.Optional[t.Callable[[t.Any], t.AsyncContextManager]] = None,
+    ):
+        super().__init__(
+            routes=None,
+            redirect_slashes=redirect_slashes,
+            default=default,
+            on_startup=on_startup,
+            on_shutdown=on_shutdown,
+            lifespan=lifespan,
+        )
+        self.default = router_default_decorator(self.default)
+        self.routes: RouteCollection = RouteCollection(routes)
+
+    def append(self, item: t.Union[BaseRoute, t.Callable]) -> None:
+        _items: t.Any = build_route_handler(item)
+        if _items:
+            self.routes.extend(_items)
+
+    def extend(self, routes: t.Sequence[t.Union[BaseRoute, t.Callable]]) -> None:
+        for route in routes:
+            self.append(route)
+
+    def add_route(
+        self,
+        path: str,
+        endpoint: t.Callable,
+        methods: t.Optional[t.List[str]] = None,
+        name: t.Optional[str] = None,
+        include_in_schema: bool = True,
+    ) -> None:  # pragma: no cover
+        """Not supported"""
+
+    def add_websocket_route(
+        self, path: str, endpoint: t.Callable, name: t.Optional[str] = None
+    ) -> None:  # pragma: no cover
+        """Not supported"""
+
+    def route(
+        self,
+        path: str,
+        methods: t.Optional[t.List[str]] = None,
+        name: t.Optional[str] = None,
+        include_in_schema: bool = True,
+    ) -> t.Callable:  # pragma: no cover
+        def decorator(func: t.Callable) -> t.Callable:
+            """Not supported"""
+            return func
+
+        return decorator
+
+    def websocket_route(
+        self, path: str, name: t.Optional[str] = None
+    ) -> t.Callable:  # pragma: no cover
+        def decorator(func: t.Callable) -> t.Callable:
+            """Not supported"""
+            return func
+
+        return decorator
+
+    def add_event_handler(
+        self, event_type: str, func: t.Callable
+    ) -> None:  # pragma: no cover
+        """Not supported"""
+
+    def on_event(self, event_type: str) -> t.Callable:  # pragma: no cover
+        def decorator(func: t.Callable) -> t.Callable:
+            """Not supported"""
+            return func
+
+        return decorator
+
+    def mount(
+        self, path: str, app: ASGIApp, name: t.Optional[str] = None
+    ) -> None:  # pragma: nocover
+        """Not supported"""
+
+    def host(
+        self, host: str, app: ASGIApp, name: t.Optional[str] = None
+    ) -> None:  # pragma: no cover
+        """Not supported"""

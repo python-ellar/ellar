@@ -4,7 +4,7 @@ from ellar.common.params.args.request_model import (
     multipart_incorrect_install_error,
     multipart_not_installed_error,
 )
-from ellar.core.routing import get_controller_builder_factory
+from ellar.core.router_builders import get_controller_builder_factory
 
 builder = get_controller_builder_factory(ModuleRouter)
 

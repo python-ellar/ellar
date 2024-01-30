@@ -12,8 +12,8 @@ from ellar.common.routing import (
     RouteOperation,
     WebsocketRouteOperation,
 )
+from ellar.common.routing.utils import build_route_handler
 from ellar.common.utils import generate_controller_operation_unique_id
-from ellar.core.routing.helper import build_route_handler
 from ellar.core.versioning import UrlPathAPIVersioning
 from ellar.reflect import reflect
 from ellar.testing import Test

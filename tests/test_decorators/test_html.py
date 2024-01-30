@@ -18,6 +18,7 @@ from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.responses.models import HTMLResponseModel
 from ellar.common.templating import TemplateFunctionData
 from ellar.core import Request
+from ellar.core.router_builders import ControllerRouterBuilder
 from ellar.reflect import reflect
 
 
@@ -59,6 +60,8 @@ def test_render_decorator_uses_endpoint_name_as_template_name():
         @render()
         def endpoint_render(self, request: Inject[Request]):
             pass  # pragma: no cover
+
+    ControllerRouterBuilder.build(AController)
 
     a_controller_operations = reflect.get_metadata(
         CONTROLLER_OPERATION_HANDLER_KEY, AController

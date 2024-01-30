@@ -14,6 +14,7 @@ from ellar.common.models import ControllerBase
 from ellar.common.routing import ModuleMount
 from ellar.common.templating import ModuleTemplating
 from ellar.common.utils import build_init_kwargs
+from ellar.core.router_builders import get_controller_builder_factory
 from ellar.di import (
     MODULE_REF_TYPES,
     Container,
@@ -25,7 +26,6 @@ from ellar.di.providers import ModuleProvider
 from ellar.reflect import reflect
 from starlette.routing import BaseRoute, Mount
 
-from ..routing import get_controller_builder_factory
 from .base import ModuleBase, ModuleBaseMeta
 
 if t.TYPE_CHECKING:  # pragma: no cover

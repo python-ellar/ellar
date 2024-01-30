@@ -6,7 +6,7 @@ from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.common.responses.models import ResponseModel, ResponseModelField
 from ellar.core import ExecutionContext
 from ellar.core.connection import HTTPConnection
-from ellar.core.routing import ModuleRouterFactory
+from ellar.core.router_builders import ModuleRouterBuilder
 from ellar.openapi import OpenAPIRouteDocumentation, openapi_info
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 from ellar.pydantic import GenerateJsonSchema, get_definitions
@@ -71,7 +71,7 @@ def list_and_create_car(car: CreateCarSchema = Body(default=None)):
     return car
 
 
-ModuleRouterFactory.build(router)
+ModuleRouterBuilder.build(router)
 
 
 def test_open_api_route_model_input_fields():

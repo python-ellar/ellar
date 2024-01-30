@@ -18,7 +18,7 @@ from jinja2 import Environment as BaseEnvironment
 from starlette.templating import pass_context
 
 if t.TYPE_CHECKING:
-    from .main import App
+    from ellar.app.main import App
 
 
 class AppMixin(JinjaTemplating):

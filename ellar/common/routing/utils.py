@@ -7,18 +7,18 @@ from ellar.common.constants import (
     ROUTE_OPERATION_PARAMETERS,
 )
 from ellar.common.logging import logger
-from ellar.common.routing import (
-    RouteOperation,
-    RouteOperationBase,
-    WebsocketRouteOperation,
-)
-from ellar.common.routing.schema import RouteParameters, WsRouteParameters
 from ellar.common.utils import get_unique_control_type
 from ellar.reflect import reflect
 
+from .route import RouteOperation, RouteOperationBase
+from .schema import RouteParameters, WsRouteParameters
+from .websocket import WebsocketRouteOperation
+
 
 @t.no_type_check
-def build_route_handler(item: t.Callable) -> t.Optional[t.List[RouteOperationBase]]:
+def build_route_handler(
+    item: t.Union[t.Callable, t.Any],
+) -> t.Optional[t.List[RouteOperationBase]]:
     _item: t.Any = item
 
     if callable(item) and type(item) == FunctionType:

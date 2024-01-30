@@ -10,6 +10,7 @@ from ellar.common.responses.models import (
     StreamingResponseModel,
 )
 from ellar.core import Request
+from ellar.core.router_builders import ControllerRouterBuilder
 from ellar.reflect import reflect
 
 
@@ -63,6 +64,7 @@ def test_file_decorator_uses_endpoint_name_as_template_name():
         def endpoint_file(self, request: Inject[Request]):
             """ignore"""
 
+    ControllerRouterBuilder.build(AFileController)
     a_controller_operations = reflect.get_metadata(
         CONTROLLER_OPERATION_HANDLER_KEY, AFileController
     )
@@ -86,6 +88,7 @@ def test_file_stream_decorator_uses_endpoint_name_as_template_name():
         def endpoint_file(self, request: Inject[Request]):
             """ignore"""
 
+    ControllerRouterBuilder.build(AStreamFileController)
     a_controller_operations = reflect.get_metadata(
         CONTROLLER_OPERATION_HANDLER_KEY, AStreamFileController
     )

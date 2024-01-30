@@ -5,7 +5,7 @@ from ellar.common.constants import (
     CONTROLLER_CLASS_KEY,
     CONTROLLER_OPERATION_HANDLER_KEY,
 )
-from ellar.core.routing import ControllerRouterFactory
+from ellar.core.router_builders import ControllerRouterBuilder
 from ellar.reflect import reflect
 
 
@@ -28,13 +28,10 @@ def test_inheritance_fails():
     with pytest.raises(Exception) as ex:
 
         @Controller
-        class NewController(ControllerImplementationBase):
+        class NewController(MyController):
             pass
 
-    assert (
-        "NewController Controller route tried to be processed more than once."
-        in str(ex)
-    )
+    assert "`@Controller` decorated classes does not support inheritance. " in str(ex)
 
 
 def test_control_type_with_more_than_one_type_fails():
@@ -43,6 +40,8 @@ def test_control_type_with_more_than_one_type_fails():
         @get()
         def endpoint_once(self):
             pass
+
+    ControllerRouterBuilder.build(AnotherSampleController)
 
     reflect.define_metadata(
         CONTROLLER_CLASS_KEY,
@@ -55,7 +54,7 @@ def test_control_type_with_more_than_one_type_fails():
 
     with pytest.raises(Exception, match=r"Operation must have a single control type."):
         operation._controller_type = None
-        ControllerRouterFactory.build(AnotherSampleController)
+        ControllerRouterBuilder.build(AnotherSampleController)
 
 
 def test_controller_raise_exception_for_controller_operation_without_controller_class(

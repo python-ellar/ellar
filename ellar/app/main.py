@@ -10,6 +10,7 @@ from ellar.common.constants import ELLAR_LOG_FMT_STRING, LOG_LEVELS
 from ellar.common.datastructures import State, URLPath
 from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
 from ellar.common.models import EllarInterceptor, GuardCanActivate
+from ellar.common.routing import ApplicationRouter, AppStaticFileMount
 from ellar.common.templating import Environment
 from ellar.common.types import ASGIApp, T, TReceive, TScope, TSend
 from ellar.core import reflector
@@ -31,7 +32,6 @@ from ellar.core.modules import (
     ModuleSetup,
     ModuleTemplateRef,
 )
-from ellar.core.routing import ApplicationRouter, AppStaticFileMount
 from ellar.core.services import Reflector
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
 from ellar.di import EllarInjector
