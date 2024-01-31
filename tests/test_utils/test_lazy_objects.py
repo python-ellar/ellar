@@ -3,13 +3,13 @@ import pickle
 import sys
 
 import pytest
-from ellar.common.utils.functional import (
+from ellar.utils.functional import (
     LazyObject,
     LazyStrImport,
     SimpleLazyObject,
     empty,
 )
-from ellar.common.utils.importer import ImportFromStringError
+from ellar.utils.importer import ImportFromStringError
 
 
 class Foo:

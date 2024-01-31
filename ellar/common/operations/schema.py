@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import typing as t
 
 from ellar.common.constants import ROUTE_METHODS
 from ellar.common.interfaces import IResponseModel
 from ellar.common.responses.models import EmptyAPIResponseModel, create_response_model
-from ellar.common.routing.websocket import WebSocketExtraHandler
 from ellar.common.serializer import BaseSerializer, Serializer
 from ellar.pydantic import (
     BaseModel,
@@ -71,7 +72,7 @@ class WsRouteParameters(Serializer):
     endpoint: t.Callable
     encoding: t.Optional[str] = Field("json")
     use_extra_handler: bool = Field(False)
-    extra_handler_type: t.Optional[t.Type[WebSocketExtraHandler]] = None
+    extra_handler_type: t.Optional[t.Type[t.Any]] = None
     _kwargs: t.Dict = PrivateAttr()
 
     def __init__(self, **data: t.Any) -> None:
@@ -87,6 +88,16 @@ class WsRouteParameters(Serializer):
         if value not in ["json", "text", "bytes", None]:
             raise ValueError(
                 f"Encoding type not supported. Once [json | text | bytes]. Received: {value}"
+            )
+        return value
+
+    @field_validator("extra_handler_type")
+    def validate_extra_handler_type(cls, value: t.Any) -> t.Any:
+        from ellar.core.routing.websocket import WebSocketExtraHandler
+
+        if value and not issubclass(value, WebSocketExtraHandler):
+            raise ValueError(
+                f"Expected value to be type of {WebSocketExtraHandler}. but got {value}"
             )
         return value
 

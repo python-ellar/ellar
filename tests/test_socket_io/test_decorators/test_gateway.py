@@ -2,9 +2,9 @@ import pytest
 from ellar.auth.guards import GuardHttpBearerAuth
 from ellar.common import UseGuards
 from ellar.common.constants import CONTROLLER_CLASS_KEY, GUARDS_KEY
-from ellar.common.utils import get_name
+from ellar.common.exceptions import ImproperConfiguration
 from ellar.reflect import reflect
-from ellar.socket_io import WebSocketGateway, subscribe_message
+from ellar.socket_io import GatewayRouterFactory, WebSocketGateway, subscribe_message
 from ellar.socket_io.constants import (
     GATEWAY_MESSAGE_HANDLER_KEY,
     GATEWAY_METADATA,
@@ -13,6 +13,7 @@ from ellar.socket_io.constants import (
     MESSAGE_METADATA,
 )
 from ellar.socket_io.model import GatewayBase, GatewayType
+from ellar.utils import get_name
 
 
 @WebSocketGateway(path="/ws", namespace="/some-namespace")
@@ -83,6 +84,8 @@ def test_sub_message_building_works():
         def a_message(self):
             pass
 
+    GatewayRouterFactory.build(SampleAGateway)
+
     message_handlers = reflect.get_metadata_or_raise_exception(
         GATEWAY_MESSAGE_HANDLER_KEY, SampleAGateway
     )
@@ -110,6 +113,8 @@ def test_sub_message_building_fails():
             def b_message(self):
                 pass
 
+        GatewayRouterFactory.build(SampleBGateway)
+
     assert (
         "SampleBGateway Gateway message handler tried to be processed more than once"
         in str(ex.value)
@@ -124,3 +129,15 @@ def test_cant_use_gateway_decorator_on_function():
             pass
 
     assert "WebSocketGateway is a class decorator" in str(ex.value)
+
+
+def test_inheritance_fails():
+    with pytest.raises(ImproperConfiguration) as ex:
+
+        @WebSocketGateway(path="/ws", namespace="/some-namespace")
+        class InheritanceNotSupported(SampleWithoutGateway):
+            pass
+
+    assert "`@WebSocketGateway` decorated classes does not support inheritance." in str(
+        ex.value
+    )

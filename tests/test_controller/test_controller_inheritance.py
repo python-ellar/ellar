@@ -80,21 +80,16 @@ def test_controller_raise_exception_for_controller_operation_without_controller_
         client.get("/abcd/test")
 
 
-# def test_controller_raise_exception_for_controller_operation_for_invalid_type(
-#     test_client_factory,
-# ):
-#     @Controller("/abcd")
-#     class Another3SampleController:
-#         @get("/test")
-#         def endpoint_once(self):
-#             pass
-#
-#     reflect.delete_metadata(
-#         CONTROLLER_CLASS_KEY, Another3SampleController.endpoint_once
-#     )
-#
-#     app = AppFactory.create_app(controllers=(Another3SampleController,))
-#
-#     client = test_client_factory(app)
-#     with pytest.raises(RuntimeError, match=r"Controller Type was not found"):
-#         client.get("/abcd/test")
+def test_cant_build_operation_route_twice():
+    @Controller("/abcd")
+    class Another2SampleController:
+        @get("/test")
+        @reflect.metadata(CONTROLLER_CLASS_KEY, "b_message")
+        def endpoint_once(self):
+            pass
+
+    with pytest.raises(
+        Exception,
+        match=r"Controller route function can not be reused once its under a `@Controller` decorator.",
+    ):
+        ControllerRouterBuilder.build(Another2SampleController)

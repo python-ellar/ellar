@@ -5,10 +5,10 @@ from types import TracebackType
 
 from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.common.logging import logger
-from ellar.common.utils.functional import SimpleLazyObject, empty
 from ellar.core import Config
 from ellar.di import EllarInjector
 from ellar.events import app_context_started_events, app_context_teardown_events
+from ellar.utils.functional import SimpleLazyObject, empty
 
 if t.TYPE_CHECKING:
     from ellar.app.main import App

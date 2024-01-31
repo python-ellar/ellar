@@ -1,4 +1,4 @@
-from ellar.common.utils.enums import create_enums_from_dict, create_enums_from_list
+from ellar.utils.enums import create_enums_from_dict, create_enums_from_list
 
 
 def test_create_enums_from_list():

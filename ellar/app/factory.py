@@ -4,11 +4,13 @@ from pathlib import Path
 from uuid import uuid4
 
 import click
+from ellar.common import Module
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.models import GuardCanActivate
 from ellar.core import Config, DynamicModule, LazyModuleImport, ModuleBase, ModuleSetup
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
+from ellar.threading import run_as_async
 from starlette.routing import Host, Mount
 
 from .main import App
@@ -112,7 +114,8 @@ class AppFactory:
             injector.add_module(module_ref)
 
     @classmethod
-    def _create_app(
+    @run_as_async
+    async def _create_app(
         cls,
         module: t.Type[t.Union[ModuleBase, t.Any]],
         global_guards: t.Optional[
@@ -160,7 +163,6 @@ class AppFactory:
             module_ref = module_config.configure_with_factory(
                 config, injector.container
             )
-            # module_ref.run_module_register_services()
 
             injector.add_module(module_ref)
             routes.extend(module_ref.routes)
@@ -168,7 +170,6 @@ class AppFactory:
 
         if module_changed:
             app.router.extend(routes)
-            # app.rebuild_stack()
 
         return app
 
@@ -188,8 +189,6 @@ class AppFactory:
         commands: t.Sequence[t.Union[click.Command, click.Group, t.Any]] = (),
         config_module: t.Union[str, t.Dict, None] = None,
     ) -> App:
-        from ellar.common import Module
-
         module = Module(
             controllers=controllers,
             routers=routers,
@@ -202,7 +201,7 @@ class AppFactory:
         )
         app_factory_module = type(f"Module{uuid4().hex[:6]}", (), {})
         module(app_factory_module)
-        return cls._create_app(
+        return cls._create_app(  # type:ignore[no-any-return]
             module=app_factory_module,
             config_module=config_module,
             global_guards=global_guards,
@@ -217,6 +216,6 @@ class AppFactory:
         ] = None,
         config_module: t.Union[str, t.Dict, None] = None,
     ) -> App:
-        return cls._create_app(
+        return cls._create_app(  # type:ignore[no-any-return]
             module, config_module=config_module, global_guards=global_guards
         )

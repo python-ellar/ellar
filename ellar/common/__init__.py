@@ -58,6 +58,19 @@ from .models import (
     GuardCanActivate,
     Identity,
 )
+from .operations import (
+    ModuleRouter,
+    delete,
+    get,
+    head,
+    http_route,
+    options,
+    patch,
+    post,
+    put,
+    trace,
+    ws_route,
+)
 from .params.decorators import (
     Body,
     Cookie,
@@ -81,19 +94,6 @@ from .responses import (
     Response,
     StreamingResponse,
     UJSONResponse,
-)
-from .routing import (
-    ModuleRouter,
-    delete,
-    get,
-    head,
-    http_route,
-    options,
-    patch,
-    post,
-    put,
-    trace,
-    ws_route,
 )
 from .serializer import Serializer, serialize_object
 from .templating import TemplateResponse, render_template, render_template_string

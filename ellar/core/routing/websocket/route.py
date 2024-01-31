@@ -12,8 +12,8 @@ from ellar.common.exceptions import (
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logging import request_logger
 from ellar.common.params import ExtraEndpointArg, WebsocketEndpointArgsModel
-from ellar.common.utils import get_name
 from ellar.reflect import reflect
+from ellar.utils import get_name
 from starlette.routing import WebSocketRoute as StarletteWebSocketRoute
 from starlette.routing import compile_path
 from starlette.status import WS_1008_POLICY_VIOLATION

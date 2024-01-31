@@ -12,8 +12,8 @@ from ellar.common.interfaces import IExecutionContext
 from ellar.common.logging import request_logger
 from ellar.common.params import ExtraEndpointArg, RequestEndpointArgsModel
 from ellar.common.responses.models import RouteResponseModel
-from ellar.common.utils import generate_operation_unique_id, get_name
 from ellar.reflect import reflect
+from ellar.utils import generate_operation_unique_id, get_name
 from starlette.concurrency import run_in_threadpool
 from starlette.responses import Response
 from starlette.routing import Route as StarletteRoute

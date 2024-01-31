@@ -1,6 +1,6 @@
 import os
 
-from ellar.common.utils.importer import get_main_directory_by_stack
+from ellar.utils.importer import get_main_directory_by_stack
 
 
 def test_get_main_directory_by_stack_works_for_main_directory():

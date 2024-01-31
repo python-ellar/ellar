@@ -12,8 +12,8 @@ from ellar.common.params.resolvers import (
     BulkParameterResolver,
     RouteParameterModelField,
 )
-from ellar.common.routing import ModuleMount, RouteOperation
 from ellar.common.shortcuts import normalize_path
+from ellar.core.routing import EllarMount, RouteOperation
 from ellar.core.services.reflector import Reflector
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 from ellar.pydantic import (
@@ -50,7 +50,7 @@ class OpenAPIRoute(ABC):
 class OpenAPIMountDocumentation(OpenAPIRoute):
     def __init__(
         self,
-        mount: t.Union[ModuleMount, Mount],
+        mount: t.Union[EllarMount, Mount],
         name: t.Optional[str] = None,
         global_guards: t.Optional[
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]

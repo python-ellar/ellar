@@ -1,6 +1,6 @@
 import pytest
-from ellar.common.utils.module_loading import module_dir
 from ellar.core import conf
+from ellar.utils.module_loading import module_dir
 
 
 def test_module_dir():

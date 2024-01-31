@@ -1,7 +1,7 @@
 import typing as t
 
 from ellar.common.interfaces import IExceptionHandler, IHostContext
-from ellar.common.utils import is_async_callable
+from ellar.utils import is_async_callable
 from starlette.concurrency import run_in_threadpool
 from starlette.responses import Response
 

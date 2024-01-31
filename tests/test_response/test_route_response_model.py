@@ -11,7 +11,7 @@ from ellar.common.responses.models import (
     RouteResponseExecution,
     RouteResponseModel,
 )
-from ellar.common.routing import RouteOperation
+from ellar.core.routing import RouteOperation
 from ellar.reflect import reflect
 
 from ..schema import BlogObjectDTO, NoteSchemaDC

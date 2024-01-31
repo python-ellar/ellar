@@ -7,11 +7,12 @@ from ellar.common.constants import (
     ROUTE_OPERATION_PARAMETERS,
 )
 from ellar.common.logging import logger
-from ellar.common.utils import get_unique_control_type
+from ellar.common.operations import RouteParameters, WsRouteParameters
 from ellar.reflect import reflect
+from ellar.utils import get_unique_control_type
 
-from .route import RouteOperation, RouteOperationBase
-from .schema import RouteParameters, WsRouteParameters
+from .base import RouteOperationBase
+from .route import RouteOperation
 from .websocket import WebsocketRouteOperation
 
 
@@ -33,7 +34,7 @@ def build_route_handler(
         if not isinstance(parameters, list):
             parameters = [parameters]
 
-        operations = build_route_parameters(parameters)
+        operations = build_route_parameters(parameters, get_unique_control_type())
         if isinstance(operations, list):
             return operations
 
@@ -46,6 +47,7 @@ def build_route_handler(
 @t.no_type_check
 def build_route_parameters(
     items: t.List[t.Union[RouteParameters, WsRouteParameters]],
+    control_type: t.Type[t.Any],
 ) -> t.List[RouteOperationBase]:
     results = []
     for item in items:
@@ -62,4 +64,11 @@ def build_route_parameters(
 
         if ROUTE_OPERATION_PARAMETERS in item.endpoint.__dict__:
             del item.endpoint.__dict__[ROUTE_OPERATION_PARAMETERS]
+
+        reflect.define_metadata(
+            CONTROLLER_OPERATION_HANDLER_KEY,
+            [operation],
+            control_type,
+        )
+
     return results

@@ -3,7 +3,7 @@ import typing as t
 from ellar.common.compatible.dict import AttributeDictAccessMixin
 from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.common.types import VT
-from ellar.common.utils.importer import import_from_string
+from ellar.utils.importer import import_from_string
 from starlette.config import environ
 
 from .app_settings_models import ConfigValidationSchema

@@ -1,8 +1,8 @@
 import typing as t
 
-from ellar.common.utils import get_name
 from ellar.reflect import reflect
 from ellar.socket_io.constants import MESSAGE_MAPPING_METADATA, MESSAGE_METADATA
+from ellar.utils import get_name
 
 
 def subscribe_message(message: str) -> t.Callable:

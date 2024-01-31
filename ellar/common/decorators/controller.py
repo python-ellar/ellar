@@ -1,4 +1,3 @@
-import inspect
 import typing as t
 
 from ellar.common.compatible import AttributeDict
@@ -11,13 +10,8 @@ from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.models import ControllerBase, ControllerType
 from ellar.di import RequestORTransientScope, injectable
 from ellar.reflect import REFLECT_TYPE, reflect
+from ellar.utils import get_type_of_base
 from injector import Scope
-
-
-def _get_bases(_controller_type: t.Type[t.Any]) -> t.Iterable[t.Type[t.Any]]:
-    for base in inspect.getmro(_controller_type):
-        if issubclass(base, ControllerBase):
-            yield base
 
 
 @t.no_type_check
@@ -79,7 +73,7 @@ def Controller(
                 .replace("controller", "")
             )
 
-        for base in _get_bases(_controller_type):
+        for base in get_type_of_base(ControllerBase, _controller_type):
             if reflect.has_metadata(CONTROLLER_WATERMARK, base) and hasattr(
                 cls, "__CONTROLLER_WATERMARK__"
             ):

@@ -3,7 +3,7 @@ import typing as t
 from abc import ABC, abstractmethod
 
 import passlib.utils.handlers as uh
-from ellar.common.utils.crypto import RANDOM_STRING_CHARS, get_random_string
+from ellar.utils.crypto import RANDOM_STRING_CHARS, get_random_string
 
 # This will never be a valid encoded hash
 UNUSABLE_PASSWORD_PREFIX = "!"

@@ -10,7 +10,6 @@ from ellar.common.constants import ELLAR_LOG_FMT_STRING, LOG_LEVELS
 from ellar.common.datastructures import State, URLPath
 from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
 from ellar.common.models import EllarInterceptor, GuardCanActivate
-from ellar.common.routing import ApplicationRouter, AppStaticFileMount
 from ellar.common.templating import Environment
 from ellar.common.types import ASGIApp, T, TReceive, TScope, TSend
 from ellar.core import reflector
@@ -32,6 +31,7 @@ from ellar.core.modules import (
     ModuleSetup,
     ModuleTemplateRef,
 )
+from ellar.core.routing import ApplicationRouter, AppStaticFileMount
 from ellar.core.services import Reflector
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
 from ellar.di import EllarInjector
@@ -283,7 +283,6 @@ class App(AppMixin):
 
     def _finalize_app_initialization(self) -> None:
         self.injector.container.register_instance(self)
-        self.injector.container.register_instance(self.config, Config)
         self.injector.container.register_instance(self.jinja_environment, Environment)
         self.injector.container.register_instance(
             self.jinja_environment, JinjaEnvironment
@@ -297,13 +296,6 @@ class App(AppMixin):
         for exception_handler in exception_handlers:
             if exception_handler not in self._exception_handlers:
                 self._exception_handlers.append(exception_handler)
-                # _added_any = True
-        # if _added_any:
-        #     self.rebuild_stack()
-
-    # def rebuild_stack(self) -> None:
-    #     self.middleware_stack = self.build_middleware_stack()
-    #     self.reload_event_manager.run(self)
 
     @property
     def reflector(self) -> Reflector:

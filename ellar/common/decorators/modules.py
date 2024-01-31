@@ -8,10 +8,10 @@ from ellar.common.compatible import AttributeDict
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.models import ControllerBase
-from ellar.common.routing import ModuleMount, ModuleRouter
-from ellar.common.utils.importer import get_main_directory_by_stack
+from ellar.common.operations import ModuleRouter
 from ellar.di import ProviderConfig, SingletonScope, injectable
 from ellar.reflect import reflect
+from ellar.utils.importer import get_main_directory_by_stack
 from starlette.routing import Host, Mount
 
 
@@ -42,7 +42,7 @@ def Module(
     *,
     name: t.Optional[str] = None,
     controllers: t.Sequence[t.Union[t.Type[ControllerBase], t.Type]] = (),
-    routers: t.Sequence[t.Union[ModuleRouter, ModuleMount, Mount, Host]] = (),
+    routers: t.Sequence[t.Union[ModuleRouter, Mount, Host]] = (),
     providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = (),
     template_folder: t.Optional[str] = "templates",
     base_directory: t.Optional[t.Union[Path, str]] = None,

@@ -3,8 +3,7 @@ import typing as t
 from ellar.common import IIdentitySchemes
 from ellar.common.compatible import AttributeDict, cached_property
 from ellar.common.constants import GUARDS_KEY
-from ellar.common.routing import ModuleMount, RouteOperation
-from ellar.common.routing.controller import ControllerRouteOperation
+from ellar.core.routing import ControllerRouteOperation, EllarMount, RouteOperation
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY, OPENAPI_TAG, REF_TEMPLATE
 from ellar.pydantic import (
     EmailStr,
@@ -45,17 +44,21 @@ class OpenAPIDocumentBuilderAction:
 
         for route in app.routes:
             if (
-                isinstance(route, ModuleMount)
+                isinstance(route, EllarMount)
                 and len(route.routes) > 0
                 and route.include_in_schema
+                and route.get_control_type()
             ):
+                control_type = route.get_control_type()
+                assert control_type
+
                 openapi_tags = AttributeDict(
-                    reflector.get(OPENAPI_TAG, route.get_control_type()) or {}
+                    reflector.get(OPENAPI_TAG, control_type) or {}
                 )
                 if route.name:
                     openapi_tags.setdefault("name", route.name)
 
-                guards = reflector.get(GUARDS_KEY, route.get_control_type())
+                guards = reflector.get(GUARDS_KEY, control_type)
 
                 openapi_route_models.append(
                     OpenAPIMountDocumentation(
@@ -110,7 +113,7 @@ class OpenAPIDocumentBuilderAction:
             separate_input_output_schemas=True,
         )
 
-        mounts: t.List[t.Union[BaseRoute, ModuleMount, Mount]] = []
+        mounts: t.List[t.Union[BaseRoute, EllarMount, Mount]] = []
         for _, item in app.injector.get_templating_modules().items():
             mounts.extend(item.routers)
 

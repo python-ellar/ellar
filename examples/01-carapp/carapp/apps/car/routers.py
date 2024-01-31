@@ -24,11 +24,10 @@ from ellar.openapi import ApiTags
 from .services import CarRepository
 
 router = ModuleRouter("/car-as-router")
-tag = ApiTags(
+ApiTags(
     name="Router",
     description="Example of car Resource from a <strong>ModuleRouter</strong>",
-)
-tag(router.get_control_type())
+)(router)
 
 
 @dataclass

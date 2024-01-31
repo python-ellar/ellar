@@ -45,7 +45,7 @@ class EllarApplicationLifespan:
             async with create_task_group() as tg:
                 for module in self._get_startup_modules(app):
                     tg.start_soon(module.on_startup, app)
-        except Exception as ex:
+        except Exception as ex:  # pragma: no cover
             logger.error(ex.exceptions)  # type:ignore[attr-defined]
             raise ex
 
@@ -54,7 +54,7 @@ class EllarApplicationLifespan:
             async with create_task_group() as tg:
                 for module in self._get_shutdown_modules(app):
                     tg.start_soon(module.on_shutdown)
-        except Exception as ex:
+        except Exception as ex:  # pragma: no cover
             logger.error(ex.exceptions)  # type:ignore[attr-defined]
             raise ex
 

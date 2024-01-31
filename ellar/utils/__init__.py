@@ -63,3 +63,11 @@ def build_init_kwargs(obj: t.Type, init_kwargs: t.Dict) -> t.Dict:
                 _result[k] = v.default
     _result.update(init_kwargs)
     return _result
+
+
+def get_type_of_base(
+    base_type: t.Type[t.Any], reference_type: t.Type[t.Any]
+) -> t.Iterable[t.Type[t.Any]]:
+    for base in inspect.getmro(reference_type):
+        if issubclass(base, base_type):
+            yield base

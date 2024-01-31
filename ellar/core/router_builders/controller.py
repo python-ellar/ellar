@@ -12,13 +12,12 @@ from ellar.common.constants import (
 )
 from ellar.common.logging import logger
 from ellar.common.models import ControllerBase, ControllerType
-from ellar.common.routing import (
+from ellar.common.operations import RouteParameters, WsRouteParameters
+from ellar.core.routing import (
     ControllerRouteOperation,
     ControllerWebsocketRouteOperation,
-    ModuleMount,
+    EllarMount,
     RouteCollection,
-    RouteParameters,
-    WsRouteParameters,
 )
 from ellar.reflect import reflect
 from starlette.routing import BaseRoute, Router
@@ -39,7 +38,7 @@ class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase
     @classmethod
     def _process_controller_routes(
         cls, controller: t.Type[ControllerBase]
-    ) -> t.List[BaseRoute]:
+    ) -> t.Sequence[BaseRoute]:
         bases = inspect.getmro(controller)
         res = []
 
@@ -51,6 +50,13 @@ class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase
         for base_cls in reversed(bases):
             if base_cls not in [ABC, ControllerBase, object]:
                 for item in cls._get_route_functions(base_cls):
+                    if reflect.has_metadata(CONTROLLER_CLASS_KEY, item):
+                        raise Exception(
+                            f"{controller.__name__} Controller route tried to be processed more than once."
+                            f"\n-RouteFunction - {item}."
+                            f"\n-Controller route function can not be reused once its under a `@Controller` decorator."
+                        )
+
                     reflect.define_metadata(CONTROLLER_CLASS_KEY, controller, item)
 
                     parameters = item.__dict__[ROUTE_OPERATION_PARAMETERS]
@@ -88,7 +94,7 @@ class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase
     @classmethod
     def build(
         cls, controller_type: t.Union[t.Type[ControllerBase], t.Any], **kwargs: t.Any
-    ) -> ModuleMount:
+    ) -> EllarMount:
         routes = cls._process_controller_routes(controller_type)
 
         app = Router()
@@ -97,7 +103,7 @@ class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase
         include_in_schema = reflect.get_metadata_or_raise_exception(
             CONTROLLER_METADATA.INCLUDE_IN_SCHEMA, controller_type
         )
-        router = ModuleMount(
+        router = EllarMount(
             app=app,
             path=reflect.get_metadata_or_raise_exception(
                 CONTROLLER_METADATA.PATH, controller_type

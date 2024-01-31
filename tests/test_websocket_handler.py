@@ -7,7 +7,7 @@ from ellar.common.exceptions import (
     ImproperConfiguration,
     WebSocketRequestValidationError,
 )
-from ellar.common.routing.websocket import WebSocketExtraHandler
+from ellar.core.routing.websocket import WebSocketExtraHandler
 from ellar.reflect import reflect
 from ellar.testing import Test
 from starlette.websockets import WebSocket, WebSocketState

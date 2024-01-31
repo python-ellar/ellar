@@ -17,3 +17,4 @@ class GATEWAY_METADATA(metaclass=AnnotationToValue):
     PATH: str
     NAME: str
     INCLUDE_IN_SCHEMA: str
+    PROCESSED: str
