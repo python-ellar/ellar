@@ -9,17 +9,14 @@ from starlette.middleware.trustedhost import (
 )
 from starlette.middleware.wsgi import WSGIMiddleware as WSGIMiddleware
 
-from .authentication import IdentityMiddleware
 from .di import RequestServiceProviderMiddleware
 from .exceptions import ExceptionMiddleware
 from .function import FunctionBasedMiddleware
 from .middleware import EllarMiddleware as Middleware
-from .sessions import SessionMiddleware
 from .versioning import RequestVersioningMiddleware
 
 __all__ = [
     "Middleware",
-    "IdentityMiddleware",
     "FunctionBasedMiddleware",
     "CORSMiddleware",
     "ServerErrorMiddleware",
@@ -30,5 +27,4 @@ __all__ = [
     "WSGIMiddleware",
     "RequestVersioningMiddleware",
     "RequestServiceProviderMiddleware",
-    "SessionMiddleware",
 ]

@@ -1,7 +1,5 @@
-from ellar.core.services import Reflector
+from ellar.core.services import reflector
 from ellar.reflect import reflect
-
-reflector = Reflector()
 
 
 class SampleTarget:

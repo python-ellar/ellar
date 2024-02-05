@@ -5,6 +5,7 @@ import typing as t
 
 from ellar.app.context import ApplicationContext
 from ellar.auth.handlers import AuthenticationHandlerType
+from ellar.auth.middleware import IdentityMiddleware, SessionMiddleware
 from ellar.common import GlobalGuard, IIdentitySchemes
 from ellar.common.compatible import cached_property
 from ellar.common.constants import (
@@ -17,25 +18,19 @@ from ellar.common.datastructures import State, URLPath
 from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
 from ellar.common.models import EllarInterceptor, GuardCanActivate
 from ellar.common.templating import Environment, ModuleTemplating
-from ellar.common.types import ASGIApp, T, TReceive, TScope, TSend
-from ellar.core import Request, reflector
+from ellar.common.types import ASGIApp, TReceive, TScope, TSend
 from ellar.core.conf import Config
+from ellar.core.connection import Request
 from ellar.core.middleware import (
     CORSMiddleware,
     ExceptionMiddleware,
     Middleware,
     RequestServiceProviderMiddleware,
     RequestVersioningMiddleware,
-    SessionMiddleware,
     TrustedHostMiddleware,
 )
-from ellar.core.middleware.authentication import IdentityMiddleware
-from ellar.core.modules import (
-    DynamicModule,
-    ModuleBase,
-)
 from ellar.core.routing import ApplicationRouter, AppStaticFileMount
-from ellar.core.services import Reflector
+from ellar.core.services import Reflector, reflector
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
 from ellar.di import EllarInjector
 from jinja2 import Environment as JinjaEnvironment
@@ -120,13 +115,6 @@ class App:
             _routes.extend(module_ref.routes)
 
         return _routes
-
-    def install_module(
-        self,
-        module: t.Union[t.Type[T], t.Type[ModuleBase], DynamicModule],
-        **init_kwargs: t.Any,
-    ) -> None:  # pragma: no cover
-        pass
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         return self.__global_guard + self._global_guards

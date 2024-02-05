@@ -14,7 +14,7 @@ from ellar.common.params.resolvers import (
 )
 from ellar.common.shortcuts import normalize_path
 from ellar.core.routing import EllarMount, RouteOperation
-from ellar.core.services.reflector import Reflector
+from ellar.core.services.reflector import reflector
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 from ellar.pydantic import (
     JsonSchemaValue,
@@ -71,7 +71,6 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
         self._routes: t.List["OpenAPIRouteDocumentation"] = self._build_routes()
 
     def _build_routes(self) -> t.List["OpenAPIRouteDocumentation"]:
-        reflector: Reflector = Reflector()
         _routes: t.List[OpenAPIRouteDocumentation] = []
 
         for route in self.mount.routes:

@@ -194,6 +194,7 @@ class LazyModuleImport:
                 f'Unable to import "{self.module}" registered in "{root_module_name}"'
             ) from ex
         self.validate_module(module_cls)
+
         if self.setup_method:
             setup_method = getattr(module_cls, self.setup_method)
             module_setup = setup_method(**self.setup_method_options)
