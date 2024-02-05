@@ -140,7 +140,7 @@ def test_body_fails_for_invalid_json_data(test_client_factory):
                 "loc": ["body"],
                 "msg": "Input should be a valid dictionary or object to extract fields from",
                 "input": '\n{\n    "name": "John",\n    "age": 30,\n    "is_student": True,\n    "favorite_colors": ["red", "blue", "green"],\n    "address": {\n        "street": "123 Main St",\n        "city": "Some City",\n        "zip": "12345"\n    },\n    "unterminated_quote": "This string is not properly terminated,\n}\n',
-                "url": "https://errors.pydantic.dev/2.5/v/model_attributes_type",
+                "url": pydantic_error_url("model_attributes_type"),
             }
         ]
     }

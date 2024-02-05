@@ -4,6 +4,8 @@ from ellar.common import Query, get, serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
+from ..utils import pydantic_error_url
+
 tm = Test.create_test_module()
 app = tm.create_application()
 
@@ -99,14 +101,14 @@ multiple_errors = {
             "loc": ["query", "q", 0],
             "msg": "Input should be a valid integer, unable to parse string as an integer",
             "input": "five",
-            "url": "https://errors.pydantic.dev/2.5/v/int_parsing",
+            "url": pydantic_error_url("int_parsing"),
         },
         {
             "type": "int_parsing",
             "loc": ["query", "q", 1],
             "msg": "Input should be a valid integer, unable to parse string as an integer",
             "input": "six",
-            "url": "https://errors.pydantic.dev/2.5/v/int_parsing",
+            "url": pydantic_error_url("int_parsing"),
         },
     ]
 }

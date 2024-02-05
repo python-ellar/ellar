@@ -6,6 +6,7 @@ from ellar.core.routing.utils import build_route_handler
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
+from ..utils import pydantic_error_url
 from .sample import Data, Filter, ListOfPrimitiveSchema, NonPrimitiveSchema
 
 router = ModuleRouter("")
@@ -69,7 +70,7 @@ def test_cookie_with_alias():
                 "loc": ["cookie", "aliasQty"],
                 "msg": "Input should be a valid string",
                 "type": "string_type",
-                "url": "https://errors.pydantic.dev/2.5/v/string_type",
+                "url": pydantic_error_url("string_type"),
             }
         ]
     }
