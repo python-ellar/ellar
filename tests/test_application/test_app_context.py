@@ -78,8 +78,8 @@ async def test_current_config_works_(anyio_backend):
     def add(a: Body[int], b: Body[int]):
         from ellar.app import current_injector
 
-        config = current_injector.get(Config)
-        assert config.FRAMEWORK_NAME == config.FRAMEWORK_NAME
+        config_ = current_injector.get(Config)
+        assert config_.FRAMEWORK_NAME == config.FRAMEWORK_NAME
         return a + b
 
     app = tm.create_application()
@@ -88,8 +88,8 @@ async def test_current_config_works_(anyio_backend):
     async with app.application_context():
         res = tm.get_test_client().post("/", json={"a": 1, "b": 4})
         assert res.json() == 5
-        config = current_injector.get(Config)
-        assert config.FRAMEWORK_NAME == config.FRAMEWORK_NAME
+        config_ = current_injector.get(Config)
+        assert config_.FRAMEWORK_NAME == config.FRAMEWORK_NAME
 
     with pytest.raises(RuntimeError):
         current_injector.get(Config)

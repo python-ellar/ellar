@@ -6,6 +6,7 @@ from ellar.core.routing.utils import build_route_handler
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
+from ..utils import pydantic_error_url
 from .sample import Data, Filter, NonPrimitiveSchema
 
 mr = ModuleRouter("")
@@ -69,7 +70,7 @@ def test_header_with_alias():
                 "loc": ["header", "aliasQty"],
                 "msg": "Field required",
                 "type": "missing",
-                "url": "https://errors.pydantic.dev/2.5/v/missing",
+                "url": pydantic_error_url("missing"),
             }
         ]
     }

@@ -61,6 +61,7 @@ class ApplicationContext:
         injector_context_var.reset(self._reset_token)
 
         current_injector._wrapped = injector_context_var.get(empty)  # type:ignore[attr-defined]
+        config._wrapped = injector_context_var.get(empty)
 
     @classmethod
     def create(cls, app: "App") -> "ApplicationContext":
