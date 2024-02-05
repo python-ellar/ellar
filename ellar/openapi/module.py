@@ -1,21 +1,29 @@
 import typing as t
+from functools import lru_cache
+from pathlib import Path
 
+from ellar.app import App
 from ellar.common import (
     GuardCanActivate,
     IExecutionContext,
-    IModuleSetup,
     Module,
     ModuleRouter,
     render,
     set_metadata,
 )
-from ellar.core import DynamicModule, ModuleBase
+from ellar.core import ModuleSetup
 from ellar.di import injectable
+from ellar.openapi.builder import OpenAPIDocumentBuilder
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 from ellar.openapi.docs_ui import IDocumentationUIContext
 from ellar.openapi.openapi_v3 import OpenAPI
+from ellar.utils import get_unique_type
 
 __all__ = ["OpenAPIDocumentModule"]
+
+__BASE_DIR__ = Path(__file__).parent
+
+ICON_SVG_PATH = "https://python-ellar.github.io/ellar/img/Icon.svg"
 
 
 @injectable
@@ -24,23 +32,26 @@ class AllowAnyGuard(GuardCanActivate):
         return True
 
 
-@Module(template_folder="templates")
-class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
+class OpenAPIDocumentModule:
     @classmethod
     def setup(
         cls,
+        app: App,
         docs_ui: t.Union[t.Sequence[IDocumentationUIContext], IDocumentationUIContext],
-        document: t.Optional[OpenAPI] = None,
+        document: t.Optional[
+            t.Union[OpenAPI, t.Callable, OpenAPIDocumentBuilder]
+        ] = None,
         router_prefix: str = "",
         openapi_url: t.Optional[str] = None,
         allow_any: bool = True,
         guards: t.Optional[
             t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]
         ] = None,
-    ) -> DynamicModule:
+    ) -> t.Type[t.Any]:
         """
         Sets up OpenAPIDocumentModule
 
+        @param app: Application instance
         @param docs_ui: Type of DocumentationRenderer
         @param document: Document Pydantic Model
         @param router_prefix: OPENAPI route prefix
@@ -56,7 +67,7 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
         router = ModuleRouter(
             router_prefix,
             guards=_guards,
-            name="ellar-open-api",
+            name="openapi",
             include_in_schema=False,
         )
 
@@ -68,11 +79,23 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
         if not openapi_url and document:
             openapi_url = "/openapi.json"
 
-            @router.get(openapi_url, include_in_schema=False)
+            if isinstance(document, OpenAPIDocumentBuilder):
+                document_build_document = document.build_document
+
+                @lru_cache(1200)
+                def _get_document() -> OpenAPI:
+                    """Build OPENAPI Schema on `openapi.json` request"""
+                    return document_build_document(app)
+
+                document = _get_document
+
+            @router.get(openapi_url, include_in_schema=False, response=OpenAPI)
             @set_metadata(OPENAPI_OPERATION_KEY, True)
             def openapi_schema() -> t.Any:
-                assert document and isinstance(document, OpenAPI), "Invalid Document"
-                return document
+                _docs = document
+                if not isinstance(_docs, OpenAPI):
+                    _docs = document()  # type: ignore[operator]
+                return _docs
 
         for doc_gen in _document_renderer:
             if not isinstance(doc_gen, IDocumentationUIContext):
@@ -82,9 +105,7 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
                 )
 
             template_context = dict(doc_gen.template_context)
-            template_context.setdefault(
-                "favicon_url", "https://eadwincode.github.io/ellar/img/Icon.svg"
-            )
+            template_context.setdefault("favicon_url", ICON_SVG_PATH)
             cls._setup_document_manager(
                 router=router,
                 template_name=doc_gen.template_name,
@@ -93,7 +114,21 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
                 title=doc_gen.title,
                 **template_context,
             )
-        return DynamicModule(module=cls, providers=[], routers=(router,))
+
+        module = Module(
+            template_folder="templates",
+            providers=[],
+            routers=(router,),
+            base_directory=str(__BASE_DIR__),
+        )(get_unique_type())
+
+        module_ref = ModuleSetup(module).get_module_ref(
+            app.config, app.injector.container
+        )
+        app.router.extend(module_ref.routes)  # type: ignore[union-attr]
+        app.injector.add_module(module_ref)
+
+        return module  # type: ignore[no-any-return]
 
     @classmethod
     def _setup_document_manager(
@@ -113,5 +148,5 @@ class OpenAPIDocumentModule(ModuleBase, IModuleSetup):
         )
         @render(template_name)
         @set_metadata(OPENAPI_OPERATION_KEY, True)
-        def _doc() -> t.Any:
+        async def _doc() -> t.Any:
             return template_context

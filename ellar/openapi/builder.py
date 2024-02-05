@@ -33,7 +33,7 @@ default_openapi_version = "3.1.0"
 AnyUrl = pydantic_types.AnyUrl
 
 
-class OpenAPIDocumentBuilderAction:
+class DocumentOpenAPIFactory:
     def __init__(self, document_dict: t.Dict) -> None:
         self._build = document_dict
 
@@ -98,7 +98,7 @@ class OpenAPIDocumentBuilderAction:
             _model_fields.append(model_field)
         return _model_fields
 
-    def build(self, app: "App") -> OpenAPI:
+    def create_document(self, app: "App") -> OpenAPI:
         openapi_route_models = self._get_openapi_route_document_models(app=app)
         components: t.Dict[str, t.Dict[str, t.Any]] = {}
 
@@ -146,10 +146,6 @@ class OpenAPIDocumentBuilderAction:
 
 
 class OpenAPIDocumentBuilder:
-    _build_action_class: t.Type[
-        OpenAPIDocumentBuilderAction
-    ] = OpenAPIDocumentBuilderAction
-
     def __init__(self) -> None:
         self._build: t.Dict = {}
         self._build.setdefault("info", {}).update(
@@ -311,5 +307,5 @@ class OpenAPIDocumentBuilder:
         )
 
     def build_document(self, app: "App") -> OpenAPI:
-        build_action = self._build_action_class(document_dict=self._build)
-        return build_action.build(app)
+        build_action = DocumentOpenAPIFactory(document_dict=self._build)
+        return build_action.create_document(app)

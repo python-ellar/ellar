@@ -41,7 +41,7 @@ ARGUMENTS:
 ## **With App Context Decorator**
 The `ellar_cli.click` module includes a command decorator function called `with_app_context`. 
 This decorator ensures that a click command is executed within the application context, 
-allowing `current_app`, `current_injector`, and `current_config` to have values.
+allowing `current_injector`, and `config` to have values.
 
 For instance:
 

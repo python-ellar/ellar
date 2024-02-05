@@ -6,6 +6,11 @@ from ellar.common.constants import (
     SCOPE_API_VERSIONING_RESOLVER,
 )
 from ellar.common.logging import request_logger
+from ellar.common.operations import (
+    OperationDefinitions,
+    RouteParameters,
+    WsRouteParameters,
+)
 from ellar.common.types import TReceive, TScope, TSend
 from starlette.middleware import Middleware
 from starlette.routing import BaseRoute, Match, Route, Router
@@ -103,7 +108,7 @@ def router_default_decorator(func: ASGIApp) -> ASGIApp:
     return _wrap
 
 
-class ApplicationRouter(Router):
+class ApplicationRouter(Router, OperationDefinitions):
     routes: RouteCollection  # type: ignore
 
     def __init__(
@@ -134,6 +139,16 @@ class ApplicationRouter(Router):
     def extend(self, routes: t.Sequence[t.Union[BaseRoute, t.Callable]]) -> None:
         for route in routes:
             self.append(route)
+
+    def _get_operation(self, route_parameter: RouteParameters) -> t.Callable:
+        endpoint = super()._get_operation(route_parameter)
+        self.append(endpoint)
+        return endpoint
+
+    def _get_ws_operation(self, ws_route_parameters: WsRouteParameters) -> t.Callable:
+        endpoint = super()._get_ws_operation(ws_route_parameters)
+        self.append(endpoint)
+        return endpoint
 
     def add_route(
         self,
@@ -186,7 +201,7 @@ class ApplicationRouter(Router):
 
     def mount(
         self, path: str, app: ASGIApp, name: t.Optional[str] = None
-    ) -> None:  # pragma: nocover
+    ) -> None:  # pragma: no cover
         """Not supported"""
 
     def host(

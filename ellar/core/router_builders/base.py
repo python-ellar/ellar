@@ -5,7 +5,7 @@ from ellar.common.logging import logger
 from starlette.routing import Host, Mount
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common.routing.mount import ModuleMount
+    from ellar.core.routing.mount import EllarMount
 
 _router_builder_factory: t.Dict[t.Type, t.Type["RouterBuilder"]] = {}
 
@@ -30,11 +30,15 @@ def get_controller_builder_factory(
 
 
 class RouterBuilder:
+    """
+    A factory class that validates and converts a Controllers or ModuleRouter to Starlette Mount or EllarMount.
+    """
+
     @classmethod
     @abstractmethod
     def build(
         cls, controller_type: t.Union[t.Type, t.Any], **kwargs: t.Any
-    ) -> t.Union["ModuleMount", Mount]:
+    ) -> t.Union["EllarMount", Mount]:
         """Build controller to Mount"""
 
     @classmethod
@@ -56,7 +60,7 @@ class _DefaultRouterBuilder(RouterBuilder, controller_type=Mount):
     @classmethod
     def build(
         cls, controller_type: t.Union[t.Type, t.Any], **kwargs: t.Any
-    ) -> t.Union["ModuleMount", Mount, t.Any]:
+    ) -> t.Union["EllarMount", Mount, t.Any]:
         """Build controller to Mount"""
         return controller_type
 

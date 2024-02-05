@@ -35,4 +35,5 @@ __all__ = [
     "TResponseModel",
     "WsRouteParameters",
     "ModuleRouter",
+    "OperationDefinitions",
 ]

@@ -1,7 +1,7 @@
 import logging
 
 import pytest
-from ellar.app import App, current_app, current_config, current_injector
+from ellar.app import App, config, current_injector
 from ellar.app.context import ApplicationContext
 from ellar.common import Body, post
 from ellar.core import Config
@@ -15,7 +15,7 @@ def test_getting_injector_outside_running_fails():
 
 def test_getting_current_app_outside_running_context_fails():
     with pytest.raises(RuntimeError):
-        assert current_app.config
+        assert current_injector.get(App)
 
 
 async def test_current_config_fails_when_there_is_no_ellar_config_module(
@@ -26,12 +26,12 @@ async def test_current_config_fails_when_there_is_no_ellar_config_module(
 
         async with ApplicationContext.create(tm.create_application()):
             assert current_injector.get(App) is not None
-            assert current_config.DEBUG is False
+            assert config.DEBUG is False
 
         assert caplog.text == ""
 
     with caplog.at_level(logging.WARNING):
-        assert current_config.DEBUG is False
+        assert config.DEBUG is False
         print(caplog.text)
         assert (
             "You are trying to access app config outside app "
@@ -54,20 +54,21 @@ async def test_current_app_works(anyio_backend):
     tm = Test.create_test_module()
 
     async with ApplicationContext.create(tm.create_application()):
-        assert isinstance(current_app.config, Config)
+        assert isinstance(current_injector.get(Config), Config)
 
     with pytest.raises(RuntimeError):
-        assert current_app.config
+        assert current_injector.get(Config)
 
 
 async def test_current_config_works(anyio_backend):
     tm = Test.create_test_module(config_module={"FRAMEWORK_NAME": "Ellar"})
 
     async with tm.create_application().application_context():
-        assert current_app.config.FRAMEWORK_NAME == current_config.FRAMEWORK_NAME
+        app = current_injector.get(App)
+        assert app.config.FRAMEWORK_NAME == config.FRAMEWORK_NAME
 
     with pytest.raises(RuntimeError):
-        assert current_app.config.FRAMEWORK_NAME
+        current_injector.get(App)
 
 
 async def test_current_config_works_(anyio_backend):
@@ -75,9 +76,10 @@ async def test_current_config_works_(anyio_backend):
 
     @post
     def add(a: Body[int], b: Body[int]):
-        from ellar.app import current_app
+        from ellar.app import current_injector
 
-        assert current_app.config.FRAMEWORK_NAME == current_config.FRAMEWORK_NAME
+        config = current_injector.get(Config)
+        assert config.FRAMEWORK_NAME == config.FRAMEWORK_NAME
         return a + b
 
     app = tm.create_application()
@@ -86,7 +88,8 @@ async def test_current_config_works_(anyio_backend):
     async with app.application_context():
         res = tm.get_test_client().post("/", json={"a": 1, "b": 4})
         assert res.json() == 5
-        assert current_app.config.FRAMEWORK_NAME == current_config.FRAMEWORK_NAME
+        config = current_injector.get(Config)
+        assert config.FRAMEWORK_NAME == config.FRAMEWORK_NAME
 
     with pytest.raises(RuntimeError):
-        assert current_app.config.FRAMEWORK_NAME
+        current_injector.get(Config)

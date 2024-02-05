@@ -2,7 +2,7 @@ from starlette.templating import _TemplateResponse as TemplateResponse
 
 from .environment import Environment
 from .loader import JinjaLoader, JinjaLoaderType
-from .model import JinjaTemplating, ModuleTemplating
+from .model import ModuleTemplating
 from .renderer import (
     get_template_name,
     process_view_model,
@@ -17,7 +17,6 @@ __all__ = [
     "JinjaLoader",
     "JinjaLoaderType",
     "ModuleTemplating",
-    "JinjaTemplating",
     "TemplateResponse",
     "render_template",
     "render_template_string",

@@ -9,7 +9,7 @@ from ellar.common.constants import (
 from ellar.common.logging import logger
 from ellar.common.operations import RouteParameters, WsRouteParameters
 from ellar.reflect import reflect
-from ellar.utils import get_unique_control_type
+from ellar.utils import get_unique_type
 
 from .base import RouteOperationBase
 from .route import RouteOperation
@@ -26,7 +26,7 @@ def build_route_handler(
         _item = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, item)
 
     if not _item and not reflect.has_metadata(CONTROLLER_CLASS_KEY, item):
-        reflect.define_metadata(CONTROLLER_CLASS_KEY, get_unique_control_type(), item)
+        reflect.define_metadata(CONTROLLER_CLASS_KEY, get_unique_type(), item)
 
     if not _item and hasattr(item, ROUTE_OPERATION_PARAMETERS):
         parameters = item.__dict__[ROUTE_OPERATION_PARAMETERS]
@@ -34,7 +34,7 @@ def build_route_handler(
         if not isinstance(parameters, list):
             parameters = [parameters]
 
-        operations = build_route_parameters(parameters, get_unique_control_type())
+        operations = build_route_parameters(parameters, get_unique_type())
         if isinstance(operations, list):
             return operations
 

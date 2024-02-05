@@ -1,3 +1,4 @@
+import json
 import logging
 import logging.config
 import typing as t
@@ -6,13 +7,18 @@ from ellar.app.context import ApplicationContext
 from ellar.auth.handlers import AuthenticationHandlerType
 from ellar.common import GlobalGuard, IIdentitySchemes
 from ellar.common.compatible import cached_property
-from ellar.common.constants import ELLAR_LOG_FMT_STRING, LOG_LEVELS
+from ellar.common.constants import (
+    ELLAR_LOG_FMT_STRING,
+    LOG_LEVELS,
+    TEMPLATE_FILTER_KEY,
+    TEMPLATE_GLOBAL_KEY,
+)
 from ellar.common.datastructures import State, URLPath
 from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
 from ellar.common.models import EllarInterceptor, GuardCanActivate
-from ellar.common.templating import Environment
+from ellar.common.templating import Environment, ModuleTemplating
 from ellar.common.types import ASGIApp, T, TReceive, TScope, TSend
-from ellar.core import reflector
+from ellar.core import Request, reflector
 from ellar.core.conf import Config
 from ellar.core.middleware import (
     CORSMiddleware,
@@ -27,31 +33,31 @@ from ellar.core.middleware.authentication import IdentityMiddleware
 from ellar.core.modules import (
     DynamicModule,
     ModuleBase,
-    ModuleRefBase,
-    ModuleSetup,
-    ModuleTemplateRef,
 )
 from ellar.core.routing import ApplicationRouter, AppStaticFileMount
 from ellar.core.services import Reflector
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
 from ellar.di import EllarInjector
 from jinja2 import Environment as JinjaEnvironment
+from jinja2 import pass_context
+from starlette.datastructures import URL
 from starlette.routing import BaseRoute
 
 from .lifespan import EllarApplicationLifespan
-from .mixin import AppMixin
 
 
-class App(AppMixin):
+class App:
     def __init__(
         self,
         config: "Config",
         injector: EllarInjector,
+        routes: t.Optional[t.List[BaseRoute]] = None,
         lifespan: t.Optional[t.Callable[["App"], t.AsyncContextManager]] = None,
         global_guards: t.Optional[
             t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]
         ] = None,
     ):
+        _routes = routes or []
         assert isinstance(config, Config), "config must instance of Config"
         assert isinstance(
             injector, EllarInjector
@@ -74,7 +80,7 @@ class App(AppMixin):
         )
 
         self.router = ApplicationRouter(
-            routes=self._get_module_routes(),
+            routes=_routes,
             redirect_slashes=self.config.REDIRECT_SLASHES,
             default=self.config.DEFAULT_NOT_FOUND_HANDLER,
             lifespan=EllarApplicationLifespan(
@@ -119,31 +125,8 @@ class App(AppMixin):
         self,
         module: t.Union[t.Type[T], t.Type[ModuleBase], DynamicModule],
         **init_kwargs: t.Any,
-    ) -> t.Union[T, ModuleBase]:
-        if isinstance(module, DynamicModule):
-            module.apply_configuration()
-            module_config = ModuleSetup(module.module, init_kwargs=init_kwargs)
-        else:
-            module_config = ModuleSetup(module, init_kwargs=init_kwargs)
-
-        module_ref = self.injector.get_module(module_config.module)
-        if module_ref:
-            return module_ref.get_module_instance()
-
-        module_ref = module_config.get_module_ref(  # type: ignore[assignment]
-            config=self.config,
-            container=self.injector.container,
-        )
-        assert isinstance(module_ref, ModuleRefBase)
-        self.injector.add_module(module_ref)
-
-        module_ref.run_module_register_services()
-        if isinstance(module_ref, ModuleTemplateRef):
-            self.router.extend(module_ref.routes)
-
-        # self.rebuild_stack()
-        self._update_jinja_env_filters(self.jinja_environment)
-        return t.cast(T, module_ref.get_module_instance())
+    ) -> None:  # pragma: no cover
+        pass
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         return self.__global_guard + self._global_guards
@@ -174,6 +157,16 @@ class App(AppMixin):
     @property
     def config(self) -> "Config":
         return self._config
+
+    @property
+    def debug(self) -> bool:
+        return self._config.DEBUG
+
+    @debug.setter
+    def debug(self, value: bool) -> None:
+        self._config.DEBUG = value
+        # TODO: Add warning
+        # self.rebuild_stack()
 
     def build_middleware_stack(self) -> ASGIApp:
         service_middleware = self.injector.get(IExceptionMiddlewareService)
@@ -246,12 +239,11 @@ class App(AppMixin):
         return ApplicationContext.create(app=self)
 
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
-        async with self.application_context() as ctx:
-            scope["app"] = ctx.app
+        async with self.application_context():
+            scope["app"] = self
+
             if self.middleware_stack is None:
                 self.middleware_stack = self.build_middleware_stack()
-
-                self._update_jinja_env_filters(self.jinja_environment)
 
                 if (
                     self.config.STATIC_MOUNT_PATH
@@ -283,10 +275,6 @@ class App(AppMixin):
 
     def _finalize_app_initialization(self) -> None:
         self.injector.container.register_instance(self)
-        self.injector.container.register_instance(self.jinja_environment, Environment)
-        self.injector.container.register_instance(
-            self.jinja_environment, JinjaEnvironment
-        )
 
     def add_exception_handler(
         self,
@@ -320,3 +308,51 @@ class App(AppMixin):
     ) -> None:
         for auth in authentication:
             self.__identity_scheme.add_authentication(auth)
+
+    def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
+        for loader in self._injector.get_templating_modules().values():
+            yield loader
+
+    def _create_jinja_environment(self) -> Environment:
+        def select_jinja_auto_escape(filename: str) -> bool:
+            if filename is None:  # pragma: no cover
+                return True
+            return filename.endswith((".html", ".htm", ".xml", ".xhtml"))
+
+        options_defaults: t.Dict = {
+            "extensions": [],
+            "auto_reload": self.debug,
+            "autoescape": select_jinja_auto_escape,
+        }
+        jinja_options: t.Dict = t.cast(
+            t.Dict, self._config.JINJA_TEMPLATES_OPTIONS or {}
+        )
+
+        for k, v in options_defaults.items():
+            jinja_options.setdefault(k, v)
+
+        @pass_context
+        def url_for(context: dict, name: str, **path_params: t.Any) -> URL:
+            request = t.cast(Request, context["request"])
+            return request.url_for(name, **path_params)
+
+        jinja_env = Environment(self, **jinja_options)
+        jinja_env.globals.update(
+            url_for=url_for,
+            config=self._config,
+        )
+        jinja_env.policies["json.dumps_function"] = json.dumps
+        # jinja_env.policies["get_messages"] = get_messages
+
+        jinja_env.globals.update(self._config.get(TEMPLATE_GLOBAL_KEY, {}))
+        jinja_env.filters.update(self._config.get(TEMPLATE_FILTER_KEY, {}))
+
+        return jinja_env
+
+    def setup_jinja_environment(self) -> Environment:
+        """Sets up Jinja2 Environment and adds it to DI"""
+        jinja_environment = self._create_jinja_environment()
+
+        self.injector.container.register_instance(jinja_environment, Environment)
+        self.injector.container.register_instance(jinja_environment, JinjaEnvironment)
+        return jinja_environment

@@ -4,6 +4,7 @@ from ellar.common.constants import MODULE_METADATA
 from ellar.di import ProviderConfig
 from ellar.reflect import reflect
 from ellar.testing import Test
+from jinja2 import Environment
 from starlette.routing import Host, Mount
 
 from .test_application.sample import (
@@ -61,7 +62,9 @@ def test_test_client_factory_create_test_module(tmpdir):
     assert res.status_code == 200
     assert res.text == "<file content>"
 
-    template = tm.create_application().jinja_environment.get_template("example.html")
+    template = (
+        tm.create_application().injector.get(Environment).get_template("example.html")
+    )
     result = template.render()
     assert result == "<html>Hello World<html/>"
 

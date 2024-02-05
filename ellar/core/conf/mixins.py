@@ -28,7 +28,7 @@ class ConfigDefaultTypesMixin:
     # https://jinja.palletsprojects.com/en/3.0.x/api/#high-level-api
     JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any]
 
-    JINJA_LOADERS: t.List[JinjaLoaderType]
+    JINJA_LOADERS: t.List[t.Union[JinjaLoaderType, t.Any]]
 
     # Application route versioning scheme
     VERSIONING_SCHEME: IAPIVersioning

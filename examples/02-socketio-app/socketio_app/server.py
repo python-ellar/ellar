@@ -24,9 +24,9 @@ application = AppFactory.create_from_app_module(
 #     .set_license('MIT Licence', url='https://www.google.com')
 #
 # document = document_builder.build_document(application)
-# module = OpenAPIDocumentModule.setup(
+# OpenAPIDocumentModule.setup(
+#     app=application,
 #    document=document,
 #    docs_ui=SwaggerUI(),
 #    guards=[]
 # )
-# application.install_module(module)

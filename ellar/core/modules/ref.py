@@ -282,4 +282,4 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
             factory_builder = get_controller_builder_factory(type(controller))
             factory_builder.check_type(controller)
             result.append(factory_builder.build(controller))
-        return result
+        return result  # type: ignore[return-value]

@@ -23,9 +23,9 @@ document_builder.set_title("Ellar API").set_version("1.0.2").set_contact(
 ).set_license("MIT Licence", url="https://www.google.com")
 
 document = document_builder.build_document(application)
-module = OpenAPIDocumentModule.setup(
+OpenAPIDocumentModule.setup(
+    app=application,
     docs_ui=[ReDocsUI(), SwaggerUI()],
     document=document,
     guards=[],
 )
-application.install_module(module)

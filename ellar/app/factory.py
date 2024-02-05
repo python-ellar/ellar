@@ -1,23 +1,25 @@
 import typing as t
 from collections import OrderedDict
 from pathlib import Path
-from uuid import uuid4
 
 import click
 from ellar.common import Module
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.models import GuardCanActivate
 from ellar.core import Config, DynamicModule, LazyModuleImport, ModuleBase, ModuleSetup
+from ellar.core.modules import ModuleRefBase
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
 from ellar.threading import run_as_async
-from starlette.routing import Host, Mount
+from ellar.utils import get_unique_type
+from starlette.routing import BaseRoute, Host, Mount
 
 from .main import App
 from .services import EllarAppService
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common.routing import ModuleMount, ModuleRouter
+    from ellar.common import ModuleRouter
+    from ellar.core.routing import EllarMount
 
 
 class AppFactory:
@@ -71,7 +73,7 @@ class AppFactory:
         app_module: t.Type[t.Union[ModuleBase, t.Any]],
         config: "Config",
         injector: EllarInjector,
-    ) -> None:
+    ) -> t.List[BaseRoute]:
         """
         builds application module and registers them to EllarInjector
         :param app_module: Root App Module
@@ -88,6 +90,7 @@ class AppFactory:
 
         app_module_config = ModuleSetup(app_module)
         module_dependency = cls.get_all_modules(app_module_config)
+        routes = []
 
         for module_config in reversed(module_dependency):
             if injector.get_module(module_config.module):  # pragma: no cover
@@ -97,8 +100,8 @@ class AppFactory:
                 container=injector.container, config=config
             )
 
-            # if not isinstance(module_ref, ModuleSetup):
-            #     module_ref.run_module_register_services()
+            if isinstance(module_ref, ModuleRefBase):
+                routes.extend(module_ref.routes)
 
             injector.add_module(module_ref)
 
@@ -110,8 +113,10 @@ class AppFactory:
                 config, injector.container
             )
             # module_ref.run_module_register_services()
-
+            routes.extend(module_ref.routes)
             injector.add_module(module_ref)
+
+        return routes
 
     @classmethod
     @run_as_async
@@ -144,17 +149,15 @@ class AppFactory:
         service = EllarAppService(injector, config)
         service.register_core_services()
 
-        cls._build_modules(app_module=module, injector=injector, config=config)
+        routes = cls._build_modules(app_module=module, injector=injector, config=config)
 
         app = App(
+            routes=routes,
             config=config,
             injector=injector,
             lifespan=config.DEFAULT_LIFESPAN_HANDLER,
             global_guards=global_guards,
         )
-
-        routes = []
-        module_changed = False
 
         for module_config in reversed(list(injector.get_app_dependent_modules())):
             if injector.get_module(module_config.module):  # pragma: no cover
@@ -164,20 +167,22 @@ class AppFactory:
                 config, injector.container
             )
 
+            assert isinstance(
+                module_ref, ModuleRefBase
+            ), f"{module_config.module} is not properly configured."
+
             injector.add_module(module_ref)
-            routes.extend(module_ref.routes)
-            module_changed = True
+            app.router.extend(module_ref.routes)
 
-        if module_changed:
-            app.router.extend(routes)
-
+        # app.setup_jinja_environment
+        app.setup_jinja_environment()
         return app
 
     @classmethod
     def create_app(
         cls,
         controllers: t.Sequence[t.Union[t.Type]] = (),
-        routers: t.Sequence[t.Union["ModuleRouter", "ModuleMount", Mount, Host]] = (),
+        routers: t.Sequence[t.Union["ModuleRouter", "EllarMount", Mount, Host]] = (),
         providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = (),
         modules: t.Sequence[t.Type[t.Union[ModuleBase, t.Any]]] = (),
         template_folder: t.Optional[str] = None,
@@ -199,7 +204,7 @@ class AppFactory:
             modules=modules,
             commands=commands,
         )
-        app_factory_module = type(f"Module{uuid4().hex[:6]}", (), {})
+        app_factory_module = get_unique_type()
         module(app_factory_module)
         return cls._create_app(  # type:ignore[no-any-return]
             module=app_factory_module,

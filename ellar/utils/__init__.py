@@ -32,8 +32,8 @@ def generate_controller_operation_unique_id(
     return hash(path + _methods + _versioning + extra_string)
 
 
-def get_unique_control_type() -> t.Type:
-    return type(f"{uuid.uuid4().hex:4}_ModuleRouter", (), {})
+def get_unique_type() -> t.Type:
+    return type(f"DynamicType{uuid.uuid4().hex[:6]}", (), {})
 
 
 def get_name(endpoint: t.Union[t.Callable, t.Type, object]) -> str:

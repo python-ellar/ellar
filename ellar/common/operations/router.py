@@ -3,7 +3,7 @@ import typing as t
 from ellar.common.constants import CONTROLLER_CLASS_KEY, GUARDS_KEY, VERSIONING_KEY
 from ellar.common.models import GuardCanActivate
 from ellar.reflect import reflect
-from ellar.utils import get_unique_control_type
+from ellar.utils import get_unique_type
 
 from .base import OperationDefinitions
 from .schema import RouteParameters, WsRouteParameters
@@ -20,7 +20,7 @@ class ModuleRouter(OperationDefinitions):
         ] = None,
         include_in_schema: bool = True,
     ) -> None:
-        self._control_type = get_unique_control_type()
+        self._control_type = get_unique_type()
         self._kwargs = {
             "path": path,
             "name": name,

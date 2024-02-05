@@ -122,7 +122,7 @@ class Serializer(SerializerBase, BaseModel, __skip_filter__=True):
 
 
 def _lazy_current_config() -> t.Any:
-    return LazyStrImport("ellar.app:current_config")
+    return LazyStrImport("ellar.app:config")
 
 
 def serialize_object(

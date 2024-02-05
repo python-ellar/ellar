@@ -28,5 +28,6 @@ document_builder.set_title("Auth With Auth Handler").set_version("1.0.2").set_co
 ).set_license("MIT Licence", url="https://www.google.com")
 
 document = document_builder.build_document(application)
-module = OpenAPIDocumentModule.setup(document=document, docs_ui=SwaggerUI(), guards=[])
-application.install_module(module)
+OpenAPIDocumentModule.setup(
+    app=application, document=document, docs_ui=SwaggerUI(), guards=[]
+)
