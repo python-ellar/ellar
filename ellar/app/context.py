@@ -7,7 +7,7 @@ from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.common.logging import logger
 from ellar.core import Config
 from ellar.di import EllarInjector
-from ellar.events import app_context_started_events, app_context_teardown_events
+from ellar.events import app_context_started, app_context_teardown
 from ellar.utils.functional import SimpleLazyObject, empty
 
 if t.TYPE_CHECKING:
@@ -48,7 +48,7 @@ class ApplicationContext:
                 # ensure current_config is in sync with running application context.
                 config._wrapped = self.injector.get(Config)
 
-            await app_context_started_events.run()
+            await app_context_started.run()
         return self
 
     async def __aexit__(
@@ -57,11 +57,12 @@ class ApplicationContext:
         exc_value: t.Optional[BaseException],
         tb: t.Optional[TracebackType],
     ) -> None:
-        await app_context_teardown_events.run()
         injector_context_var.reset(self._reset_token)
 
         current_injector._wrapped = injector_context_var.get(empty)  # type:ignore[attr-defined]
         config._wrapped = injector_context_var.get(empty)
+
+        await app_context_teardown.run()
 
     @classmethod
     def create(cls, app: "App") -> "ApplicationContext":
