@@ -81,7 +81,7 @@ test = [
     "types-redis ==4.6.0.20240106",
     "types-dataclasses ==0.6.6",
     "python-socketio",
-    "uvicorn[standard] == 0.25.0",
+    "uvicorn[standard] == 0.27.0.post1",
     "aiohttp == 3.9.3",
     "argon2-cffi == 23.1.0"
 ]
