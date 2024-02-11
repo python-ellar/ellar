@@ -108,14 +108,6 @@ class App:
             logging.getLogger("ellar").setLevel(log_level)
             logging.getLogger("ellar.request").setLevel(log_level)
 
-    def _get_module_routes(self) -> t.List[BaseRoute]:
-        _routes: t.List[BaseRoute] = []
-
-        for _, module_ref in self._injector.get_modules().items():
-            _routes.extend(module_ref.routes)
-
-        return _routes
-
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         return self.__global_guard + self._global_guards
 

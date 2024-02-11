@@ -31,7 +31,7 @@ class IDocumentationUI(ABC):
         Templated HTML string for the OPENAPI document rendering UI
         :return: Templated String or None
         """
-        return None
+        return None  # pragma: no cover
 
     @property
     @abstractmethod
