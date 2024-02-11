@@ -142,7 +142,7 @@ class OpenAPIDocumentModule:
             async def _doc(ctx: IExecutionContext) -> HTMLResponse:
                 request = ctx.switch_to_http_connection().get_request()
                 html_str = render_template_string(
-                    request, docs_ui.template_string, **docs_ui.template_context
+                    docs_ui.template_string, request, **docs_ui.template_context
                 )
                 return HTMLResponse(html_str)
 

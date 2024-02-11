@@ -34,7 +34,7 @@ def _get_jinja_and_template_context(
 
 
 def render_template_string(
-    request: "Request", template_string: str, **template_context: t.Any
+    template_string: str, request: "Request", **template_context: t.Any
 ) -> str:
     """Renders a template to string.
     :param request: Request instance
@@ -51,8 +51,8 @@ def render_template_string(
 
 
 def render_template(
-    request: "Request",
     template_name: str,
+    request: "Request",
     background: t.Optional[BackgroundTask] = None,
     **template_kwargs: t.Any,
 ) -> TemplateResponse:
