@@ -2,7 +2,12 @@ import typing as t
 from abc import ABC, abstractmethod
 
 from ellar.common.compatible import cached_property
-from ellar.common.constants import GUARDS_KEY, METHODS_WITH_BODY, REF_PREFIX
+from ellar.common.constants import (
+    CONTROLLER_CLASS_KEY,
+    GUARDS_KEY,
+    METHODS_WITH_BODY,
+    REF_PREFIX,
+)
 from ellar.common.params.args import EndpointArgsModel
 from ellar.common.params.params import BodyFieldInfo as Body
 from ellar.common.params.params import ParamFieldInfo as Param
@@ -15,7 +20,7 @@ from ellar.common.params.resolvers import (
 from ellar.common.shortcuts import normalize_path
 from ellar.core.routing import EllarMount, RouteOperation
 from ellar.core.services.reflector import reflector
-from ellar.openapi.constants import OPENAPI_OPERATION_KEY
+from ellar.openapi.constants import IGNORE_CONTROLLER_TYPE, OPENAPI_OPERATION_KEY
 from ellar.pydantic import (
     JsonSchemaValue,
     ModelField,
@@ -77,7 +82,10 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             if isinstance(route, RouteOperation) and route.include_in_schema:
                 openapi = reflector.get(OPENAPI_OPERATION_KEY, route.endpoint) or {}
                 guards = reflector.get(GUARDS_KEY, route.endpoint)
-                openapi.setdefault("tags", [self.tag] if self.tag else ["default"])
+
+                if not openapi.get("tags", False):
+                    openapi.update(tags=[self.tag] if self.tag else ["default"])
+
                 _routes.append(
                     OpenAPIRouteDocumentation(
                         route=route,
@@ -137,6 +145,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         guards: t.Optional[
             t.List[t.Union["GuardCanActivate", t.Type["GuardCanActivate"]]]
         ] = None,
+        **operation_extra: t.Any,
     ) -> None:
         self.operation_id = operation_id
         self.summary = summary
@@ -148,6 +157,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             list(global_route_parameters) if global_route_parameters else []
         )
         self.guards = guards or []
+        self._operation_extra = operation_extra
 
     @cached_property
     def _openapi_models(self) -> t.List[t.Union[ModelField, RouteParameterModelField]]:
@@ -226,8 +236,18 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         if self.description:
             operation["description"] = self.description
 
+        ignore_controller = (
+            reflector.get(IGNORE_CONTROLLER_TYPE, self.route.endpoint) or False
+        )
+
         operation["operationId"] = (
-            self.operation_id or self.route.get_operation_unique_id(methods=method)
+            self.operation_id
+            or self.route.get_operation_unique_id(
+                methods=method,
+                controller=None
+                if ignore_controller
+                else reflector.get(CONTROLLER_CLASS_KEY, self.route.endpoint),
+            )
         )
         if self.deprecated:
             operation["deprecated"] = self.deprecated
@@ -374,6 +394,8 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
                         }
                     },
                 }
+            if self._operation_extra:
+                operation.update(self._operation_extra)
             path[method.lower()] = operation
 
         return path, security_schemes

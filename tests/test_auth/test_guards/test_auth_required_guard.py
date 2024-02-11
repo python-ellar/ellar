@@ -8,7 +8,7 @@ SampleControllerPathSchema = {
     "/testing-authentication-required-guard/": {
         "get": {
             "tags": ["sample"],
-            "operationId": "get_samples__get",
+            "operationId": "get_samples__get__sample",
             "responses": {
                 "200": {
                     "description": "Successful Response",
@@ -24,7 +24,7 @@ SampleControllerPathSchema = {
     "/testing-authentication-required-guard/{sample_id}": {
         "get": {
             "tags": ["sample"],
-            "operationId": "get_sample_item_by_id__sample_id__get",
+            "operationId": "get_sample_item_by_id__sample_id__get__sample",
             "parameters": [
                 {
                     "required": True,

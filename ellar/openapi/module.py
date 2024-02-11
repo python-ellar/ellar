@@ -9,19 +9,22 @@ from ellar.common import (
     Module,
     ModuleRouter,
     render,
+    render_template_string,
     set_metadata,
 )
 from ellar.core import ModuleSetup
 from ellar.di import injectable
 from ellar.openapi.builder import OpenAPIDocumentBuilder
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
-from ellar.openapi.docs_ui import IDocumentationUIContext
+from ellar.openapi.docs_ui import IDocumentationUI
 from ellar.openapi.openapi_v3 import OpenAPI
 from ellar.utils import get_unique_type
+from starlette.responses import HTMLResponse
 
 __all__ = ["OpenAPIDocumentModule"]
 
 __BASE_DIR__ = Path(__file__).parent
+
 
 ICON_SVG_PATH = "https://python-ellar.github.io/ellar/img/Icon.svg"
 
@@ -37,7 +40,7 @@ class OpenAPIDocumentModule:
     def setup(
         cls,
         app: App,
-        docs_ui: t.Union[t.Sequence[IDocumentationUIContext], IDocumentationUIContext],
+        docs_ui: t.Union[t.Sequence[IDocumentationUI], IDocumentationUI],
         document: t.Optional[
             t.Union[OpenAPI, t.Callable, OpenAPIDocumentBuilder]
         ] = None,
@@ -63,7 +66,7 @@ class OpenAPIDocumentModule:
         _guards = list(guards) if guards else []
         if allow_any:
             _guards = [AllowAnyGuard] + _guards
-        _document_renderer: t.List[IDocumentationUIContext] = []
+        _document_renderer: t.List[IDocumentationUI] = []
         router = ModuleRouter(
             router_prefix,
             guards=_guards,
@@ -97,23 +100,16 @@ class OpenAPIDocumentModule:
                     _docs = document()  # type: ignore[operator]
                 return _docs
 
-        for doc_gen in _document_renderer:
-            if not isinstance(doc_gen, IDocumentationUIContext):
+        for docs_ui in _document_renderer:
+            if not isinstance(docs_ui, IDocumentationUI):
                 raise Exception(
-                    f"{doc_gen.__class__.__name__ if not isinstance(doc_gen, type) else doc_gen.__name__} "
+                    f"{docs_ui.__class__.__name__ if not isinstance(docs_ui, type) else docs_ui.__name__} "
                     f"must be of type `IDocumentationUIContext`"
                 )
 
-            template_context = dict(doc_gen.template_context)
-            template_context.setdefault("favicon_url", ICON_SVG_PATH)
-            cls._setup_document_manager(
-                router=router,
-                template_name=doc_gen.template_name,
-                path=doc_gen.path,
-                openapi_url=openapi_url,
-                title=doc_gen.title,
-                **template_context,
-            )
+            docs_ui.template_context.setdefault("favicon_url", ICON_SVG_PATH)
+            docs_ui.template_context.setdefault("openapi_url", openapi_url)
+            cls._setup_document_manager(router=router, docs_ui=docs_ui)
 
         module = Module(
             template_folder="templates",
@@ -135,18 +131,32 @@ class OpenAPIDocumentModule:
         cls,
         *,
         router: ModuleRouter,
-        template_name: str,
-        path: str,
-        **template_context: t.Optional[t.Any],
+        docs_ui: IDocumentationUI,
     ) -> None:
-        _path = path.lstrip("/").rstrip("/")
+        _path = docs_ui.path.lstrip("/").rstrip("/")
 
-        @router.get(
+        if not docs_ui.template_name:
+            assert docs_ui.template_string, f"`{docs_ui.__class__.__name__}` class requires the `template_string` attribute to be provided."
+
+            @t.no_type_check
+            async def _doc(ctx: IExecutionContext) -> HTMLResponse:
+                request = ctx.switch_to_http_connection().get_request()
+                html_str = render_template_string(
+                    request, docs_ui.template_string, **docs_ui.template_context
+                )
+                return HTMLResponse(html_str)
+
+        else:
+            assert docs_ui.template_name, f"`{docs_ui.__class__.__name__}` class requires the `template_name` attribute to be provided."
+
+            @render(docs_ui.template_name)
+            async def _doc() -> t.Any:
+                return docs_ui.template_context
+
+        _doc = router.get(
             f"/{_path}",
             include_in_schema=False,
-            name=template_name.replace(".html", ""),
-        )
-        @render(template_name)
-        @set_metadata(OPENAPI_OPERATION_KEY, True)
-        async def _doc() -> t.Any:
-            return template_context
+            name=docs_ui.name,
+        )(_doc)
+
+        set_metadata(OPENAPI_OPERATION_KEY, True)(_doc)

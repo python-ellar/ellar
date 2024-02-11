@@ -315,7 +315,7 @@ def file_stream(self):
 ```
 
 ### **OPENAPI-INFO**
-**@openapi_info()** decorator adds extra route function OPENAPI properties to route function OPENAPI documentation. They include:
+**@api_info()** decorator adds extra route function OPENAPI properties to route function OPENAPI documentation. They include:
 
 Parameters:
 
@@ -327,18 +327,19 @@ Parameters:
 
 For example:
 ```python
-from ellar.common import get, openapi_info
+from ellar.common import get
+from ellar.openapi import api_info
 
 ...
 @get("/open-api-info")
-@openapi_info(
+@api_info(
     tags=['query'], 
     deprecated=False, 
     description='open api info testing', 
     operation_id='some-operation-id', 
     summary='some summary'
 )
-def openapi_info_function(self, query: str):
+def api_info_function(self, query: str):
     return f"foo bar {query}"
 ```
 

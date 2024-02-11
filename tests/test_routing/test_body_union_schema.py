@@ -4,7 +4,9 @@ from unittest.mock import patch
 from ellar.common import Body, post
 from ellar.common.serializer import serialize_object
 from ellar.core import Request
-from ellar.openapi import OpenAPIDocumentBuilder, openapi_info
+from ellar.openapi import OpenAPIDocumentBuilder, api_info
+from ellar.openapi.constants import IGNORE_CONTROLLER_TYPE
+from ellar.reflect import reflect
 from ellar.testing import Test
 
 from ..utils import pydantic_error_url
@@ -14,6 +16,7 @@ tm = Test.create_test_module()
 
 
 @post("/items/")
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 def save_union_body_and_embedded_body(
     item: Union[OtherItem, Item], qty: Body[int, Body.P(default=12)]
 ):
@@ -21,12 +24,14 @@ def save_union_body_and_embedded_body(
 
 
 @post("/items/embed")
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 def embed_qty(qty: Body[int, Body.P(12, embed=True)]):
     return {"qty": qty}
 
 
 @post("/items/alias")
-@openapi_info(tags=["Product"], description="Modify Product Qty", deprecated=True)
+@api_info(tags=["Product"], description="Modify Product Qty", deprecated=True)
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 def alias_qty(
     qty: Body[
         int,

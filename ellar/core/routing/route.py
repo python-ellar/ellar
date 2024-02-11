@@ -98,13 +98,18 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         )
 
     def get_operation_unique_id(
-        self, methods: t.Union[t.Set[str], t.Sequence[str], str]
+        self,
+        methods: t.Union[t.Set[str], t.Sequence[str], str],
+        controller: t.Optional[t.Type] = None,
     ) -> str:
         _methods: t.Sequence[str] = (
             list(methods) if isinstance(methods, set) else [t.cast(str, methods)]
         )
         return generate_operation_unique_id(
-            name=self.name, path=self.path_format, methods=_methods
+            name=self.name,
+            path=self.path_format,
+            methods=_methods,
+            controller=controller,
         )
 
     async def run(self, context: IExecutionContext, kwargs: t.Dict) -> t.Any:

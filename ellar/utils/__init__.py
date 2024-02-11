@@ -11,12 +11,21 @@ class_base_function_regex: t.Pattern[t.Any] = re.compile(
 
 
 def generate_operation_unique_id(
-    *, name: str, path: str, methods: t.Sequence[str]
+    *,
+    name: str,
+    path: str,
+    methods: t.Sequence[str],
+    controller: t.Optional[t.Type] = None,
 ) -> str:
     _methods = "_".join(sorted(methods))
     operation_id = name + path
     operation_id = re.sub("[^0-9a-zA-Z_]", "_", operation_id)
     operation_id = operation_id + "_" + _methods.lower()
+
+    if controller:
+        operation_id += (
+            f'__{str(controller.__name__).lower().replace("controller", "")}'
+        )
     return operation_id
 
 

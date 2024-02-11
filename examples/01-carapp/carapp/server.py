@@ -6,7 +6,7 @@ from ellar.core import LazyModuleImport as lazyLoad
 from ellar.openapi import (
     OpenAPIDocumentBuilder,
     OpenAPIDocumentModule,
-    ReDocsUI,
+    ReDocUI,
     SwaggerUI,
 )
 
@@ -25,7 +25,7 @@ document_builder.set_title("Ellar API").set_version("1.0.2").set_contact(
 document = document_builder.build_document(application)
 OpenAPIDocumentModule.setup(
     app=application,
-    docs_ui=[ReDocsUI(), SwaggerUI()],
+    docs_ui=[ReDocUI(), SwaggerUI()],
     document=document,
     guards=[],
 )

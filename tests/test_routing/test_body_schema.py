@@ -3,6 +3,8 @@ from unittest.mock import patch
 from ellar.common import post
 from ellar.common.serializer import serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
+from ellar.openapi.constants import IGNORE_CONTROLLER_TYPE
+from ellar.reflect import reflect
 from ellar.testing import Test
 
 from ..utils import pydantic_error_url
@@ -12,6 +14,7 @@ tm = Test.create_test_module()
 
 
 @post("/product")
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 async def create_item(
     product: "Product",
 ):  # just to test get_typed_annotation in ellar.common.params.args.base

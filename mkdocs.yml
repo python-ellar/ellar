@@ -132,6 +132,10 @@ nav:
         - runserver: cli/runserver-command.md
     - Custom Commands: cli/custom-commands.md
 
+  - OPENAPI:
+      - index: openapi/index.md
+      - security: openapi/security.md
+      - documentation-ui: openapi/documentation-ui.md
   - WebSockets:
       - websockets: websockets/websockets.md
       - socketio: websockets/socketio.md

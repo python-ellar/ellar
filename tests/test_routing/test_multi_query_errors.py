@@ -2,6 +2,8 @@ from typing import List
 
 from ellar.common import Query, get, serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
+from ellar.openapi.constants import IGNORE_CONTROLLER_TYPE
+from ellar.reflect import reflect
 from ellar.testing import Test
 
 from ..utils import pydantic_error_url
@@ -11,6 +13,7 @@ app = tm.create_application()
 
 
 @get("/items/")
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 def read_items(q: List[int] = Query(None)):
     return {"q": q}
 

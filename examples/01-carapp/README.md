@@ -20,4 +20,4 @@ Start the dev server by running the code below:
 ellar runserver --reload
 ```
 
-Once the server is up, you can visit [SwaggerDoc](http://localhost:8000/docs#) or [ReDocs](http://localhost:8000/redoc#)
+Once the server is up, you can visit [SwaggerDoc](http://localhost:8000/docs#) or [ReDoc](http://localhost:8000/redoc#)

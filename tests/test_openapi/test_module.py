@@ -11,7 +11,8 @@ from ellar.di import injectable
 from ellar.openapi import (
     OpenAPIDocumentBuilder,
     OpenAPIDocumentModule,
-    ReDocsUI,
+    ReDocUI,
+    StopLightUI,
     SwaggerUI,
 )
 from ellar.openapi.module import AllowAnyGuard
@@ -144,7 +145,7 @@ def test_openapi_module_creates_redocs_endpoint():
         app=app,
         openapi_url="/openapi_url.json",
         document=document,
-        docs_ui=ReDocsUI(title="Redocs Doc Test", path="docs-redocs-test"),
+        docs_ui=ReDocUI(title="Redocs Doc Test", path="docs-redocs-test"),
     )
     client = TestClient(app)
 
@@ -156,6 +157,29 @@ def test_openapi_module_creates_redocs_endpoint():
     assert '<redoc spec-url="/openapi_url.json"></redoc>' in response.text
 
 
+def test_openapi_module_creates_stoplight_endpoint():
+    app = AppFactory.create_app()
+    document = OpenAPIDocumentBuilder().build_document(app)
+    OpenAPIDocumentModule.setup(
+        app=app,
+        document=document,
+        docs_ui=StopLightUI(
+            title="StopLight", path="elements-path", config={"layout": "nav"}
+        ),
+    )
+    client = TestClient(app)
+
+    response = client.get("elements-path")
+    assert response.status_code == 200
+
+    assert "StopLight" in response.text
+    assert 'apiDescriptionUrl="/openapi.json"' in response.text
+
+    assert '"layout": "nav"' in response.text
+    assert '"router": "hash"' in response.text
+    assert "StopLight" in response.text
+
+
 def test_openapi_module_with_route_guards():
     app = AppFactory.create_app(providers=[CustomDocsGuard])
     document = OpenAPIDocumentBuilder().build_document(app)
@@ -164,7 +188,7 @@ def test_openapi_module_with_route_guards():
         app=app,
         document=document,
         guards=[CustomDocsGuard],
-        docs_ui=(SwaggerUI(), ReDocsUI()),
+        docs_ui=(SwaggerUI(), ReDocUI(), StopLightUI()),
     )
     client = TestClient(app)
 

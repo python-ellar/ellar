@@ -1,15 +1,16 @@
+import typing as t
 from abc import ABC, abstractmethod
 
 
-class IDocumentationUIContext(ABC):
+class IDocumentationUI(ABC):
     """
-    Provides Context that for rendering OPENAPI Docs
+    Provides Templating Context and information about the OPENAPI Docs renderer.
     """
 
     @property
     @abstractmethod
-    def title(self) -> str:
-        """Page Title"""
+    def name(self) -> str:
+        """Document UI name eg. Swagger, Redoc, Stoplight"""
 
     @property
     @abstractmethod
@@ -18,8 +19,19 @@ class IDocumentationUIContext(ABC):
 
     @property
     @abstractmethod
-    def template_name(self) -> str:
-        """Document Manager Template Name"""
+    def template_name(self) -> t.Optional[str]:
+        """
+        OPENAPI Document UI HTML name. This will be searched for in html folders registered in your Ellar Application.
+        If None is returned, OpenAPIModule will switch to inline template rendering provided in `template_string`
+        """
+
+    @property
+    def template_string(self) -> t.Optional[str]:
+        """
+        Templated HTML string for the OPENAPI document rendering UI
+        :return: Templated String or None
+        """
+        return None
 
     @property
     @abstractmethod

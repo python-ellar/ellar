@@ -6,6 +6,8 @@ import pytest
 from ellar.common import File, Form, ModuleRouter, UploadFile, post, serialize_object
 from ellar.common.datastructures import ContentFile
 from ellar.openapi import OpenAPIDocumentBuilder
+from ellar.openapi.constants import IGNORE_CONTROLLER_TYPE
+from ellar.reflect import reflect
 from ellar.testing import Test
 from starlette.formparsers import UploadFile as StarletteUploadFile
 
@@ -25,6 +27,7 @@ FORCE_MULTIPART = ForceMultipartDict()
 
 
 @router.post
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 async def form_upload_single_case_1(test: UploadFile = File()):
     content = await test.read()
     return {
@@ -37,6 +40,7 @@ async def form_upload_single_case_1(test: UploadFile = File()):
 
 
 @router.post("/mixed")
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 async def form_upload_single_case_2(
     test1: UploadFile = File(alias="test_alias"), test2: UploadFile = File()
 ):
@@ -58,6 +62,7 @@ async def form_upload_single_case_2(
 
 
 @router.post("/multiple")
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 async def form_upload_multiple_case_1(test1: List[Union[UploadFile, str]] = File()):
     results = []
     for item in test1:
@@ -77,6 +82,7 @@ async def form_upload_multiple_case_1(test1: List[Union[UploadFile, str]] = File
 
 
 @router.post("/mixed-optional")
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 async def form_upload_multiple_case_2(
     file: UploadFile = File(None),
     field: str = Form("", alias="field0"),
@@ -98,6 +104,7 @@ async def form_upload_multiple_case_2(
 
 
 @router.post("/form-with-schema-spreading")
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 def form_params_schema_spreading(
     file: File[UploadFile, File.P(alias="momentOfTruth")],
     filters: Filter = Form(..., alias="will_not_work_for_schema_with_many_field"),

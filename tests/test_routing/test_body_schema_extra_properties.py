@@ -3,6 +3,8 @@ from typing import Dict
 from ellar.common import options, post, trace
 from ellar.common.serializer import serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
+from ellar.openapi.constants import IGNORE_CONTROLLER_TYPE
+from ellar.reflect import reflect
 from ellar.testing import Test
 from pydantic import BaseModel
 
@@ -16,6 +18,7 @@ class Items_(BaseModel):
 @post("/foo")
 @trace("/foo")
 @options(include_in_schema=False)
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 def foo(items: Items_):
     return items.items
 

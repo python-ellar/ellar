@@ -2,12 +2,12 @@ import pytest
 from ellar.common.compatible import AttributeDict
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
-from ellar.openapi import openapi_info
+from ellar.openapi import api_info
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 from ellar.reflect import reflect
 
 
-@openapi_info(
+@api_info(
     summary="Endpoint Summary",
     description="Endpoint Description",
     deprecated=False,
@@ -28,10 +28,10 @@ def test_openapi_sets_endpoint_meta():
     assert open_api_data.tags == ["endpoint", "endpoint-25"]
 
 
-def test_invalid_openapi_info_decorator_setup():
+def test_invalid_api_info_decorator_setup():
     with pytest.raises(ImproperConfiguration):
 
-        @openapi_info(
+        @api_info(
             operation_id="4524d-z23zd-453ed-2342e",
             tags="endpoint",
         )

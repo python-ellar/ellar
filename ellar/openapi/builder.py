@@ -206,7 +206,7 @@ class OpenAPIDocumentBuilder:
         self,
         url: t.Union[AnyUrl, str],
         description: t.Optional[str] = None,
-        **variables: t.Dict[str, t.Union[str, t.List[str]]],
+        **variables: t.Union[str, t.List[str]],
     ) -> "OpenAPIDocumentBuilder":
         self._build.setdefault("servers", []).append(
             {"url": url, "description": description, "variables": variables}

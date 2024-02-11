@@ -17,19 +17,25 @@ BASEDIR = Path(__file__).resolve().parent.parent
 
 @Controller
 class EllarController(ControllerBase):
-    @get("/index", response={200: TemplateResponse})
+    @get("/index-2", response={200: TemplateResponse})
     def index_render_template(self):
-        """Looks for ellar/index since use_mvc=True"""
+        """Looks for index.html in all template folder"""
         return render_template(
-            "index", request=self.context.switch_to_http_connection().get_request()
+            self.context.switch_to_http_connection().get_request(), "index"
         )
 
-    @get("/another_index2")
-    def another_index2(self, first_name: str, last_name: str):
+    @get("/index")
+    @render()
+    def index(self):
+        """Looks for `ellar/index.html` in template folder because no template name was provided so use_mvc=True"""
+        return {}
+
+    @get("/another_index")
+    def another_index(self, first_name: str, last_name: str):
         """Since a template name is provided, it will looks for template name"""
         return render_template_string(
-            "render_string",
             request=self.context.switch_to_http_connection().get_request(),
+            template_string="""Hi {{ first_name }} {{ last_name }}!.\nWelcome to Ellar Framework""",
             first_name=first_name,
             last_name=last_name,
         )
@@ -40,7 +46,7 @@ class TemplateWithStaticsController(ControllerBase):
     @get("/index", response={200: TemplateResponse})
     @render("watever.html")
     def index(self):
-        """Looks for ellar/index since use_mvc=True"""
+        """Looks for watever.html in all template folder"""
         return {}
 
 
@@ -51,7 +57,7 @@ tm = Test.create_test_module(
 
 def test_render_template_string():
     client = tm.get_test_client()
-    response = client.get("/ellar/another_index2?first_name=Eadwin&last_name=Eadwin")
+    response = client.get("/ellar/another_index?first_name=Eadwin&last_name=Eadwin")
     assert response.status_code == 200
     content = re.sub("\\s+", " ", response.text).strip()
     assert content == '"Hi Eadwin Eadwin!.\\nWelcome to Ellar Framework"'
@@ -59,12 +65,24 @@ def test_render_template_string():
 
 def test_render_template():
     client = tm.get_test_client()
-    response = client.get("/ellar/index")
+    response = client.get("/ellar/index-2")
     assert response.status_code == 200
     content = re.sub("\\s+", " ", response.text).strip()
     assert (
         content == '<!DOCTYPE html> <html lang="en"> '
         '<head> <meta charset="UTF-8"> <title>Index Page</title> </head> <body> </body> </html>'
+    )
+
+
+def test_ellar_controller_index():
+    client = tm.get_test_client()
+    response = client.get("/ellar/index")
+    assert response.status_code == 200
+    content = re.sub("\\s+", " ", response.text).strip()
+    assert (
+        content
+        == '<html lang="en"> <head> <meta charset="UTF-8"> <title>Ellar Index Page</title> </head> '
+        '<a href="http://testserver/ellar/another_index">world</a> </html>'
     )
 
 

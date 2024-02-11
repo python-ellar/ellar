@@ -3,6 +3,8 @@ from typing import List
 
 from ellar.common import post, serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
+from ellar.openapi.constants import IGNORE_CONTROLLER_TYPE
+from ellar.reflect import reflect
 from ellar.testing import Test
 from pydantic import BaseModel, condecimal
 
@@ -18,6 +20,7 @@ class Item2(BaseModel):
 
 
 @post("/items/")
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 def save_item_no_body(item: List[Item2]):
     return {"item": item}
 

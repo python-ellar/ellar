@@ -26,7 +26,7 @@ from .services import CarRepository
 router = ModuleRouter("/car-as-router")
 ApiTags(
     name="Router",
-    description="Example of car Resource from a <strong>ModuleRouter</strong>",
+    description="Example of Car Resource from a <strong>ModuleRouter</strong>",
 )(router)
 
 

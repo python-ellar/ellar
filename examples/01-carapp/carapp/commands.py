@@ -1,7 +1,6 @@
-from ellar.common import command
-from ellar.common.commands import EllarTyper
+from ellar_cli.click import Group, command
 
-db = EllarTyper(name="db")
+db = Group(name="db")
 
 
 @db.command()
