@@ -1,6 +1,6 @@
 import re
 
-from ellar.auth.session import ISessionStrategy
+from ellar.auth.session import SessionStrategy
 from ellar.auth.session.strategy import SessionClientStrategy
 from ellar.common import Controller, Inject, delete, get, post
 from ellar.core import Request
@@ -31,7 +31,7 @@ def test_session():
     test_module = Test.create_test_module(
         controllers=[SessionSampleController], config_module={"SECRET_KEY": "secret"}
     )
-    test_module.override_provider(ISessionStrategy, use_class=SessionClientStrategy)
+    test_module.override_provider(SessionStrategy, use_class=SessionClientStrategy)
     client = test_module.get_test_client()
 
     response = client.get("/")
@@ -61,7 +61,7 @@ def test_session_expires():
         controllers=[SessionSampleController],
         config_module={"SECRET_KEY": "secret", "SESSION_COOKIE_MAX_AGE": -1},
     )
-    test_module.override_provider(ISessionStrategy, use_class=SessionClientStrategy)
+    test_module.override_provider(SessionStrategy, use_class=SessionClientStrategy)
     client = test_module.get_test_client()
 
     response = client.post("/", json={"some": "data"})
@@ -83,7 +83,7 @@ def test_secure_session():
         controllers=[SessionSampleController],
         config_module={"SECRET_KEY": "secret", "SESSION_COOKIE_SECURE": True},
     )
-    test_module.override_provider(ISessionStrategy, use_class=SessionClientStrategy)
+    test_module.override_provider(SessionStrategy, use_class=SessionClientStrategy)
     secure_client = test_module.get_test_client(base_url="https://testserver")
     unsecure_client = test_module.get_test_client(base_url="http://testserver")
 
@@ -123,7 +123,7 @@ def test_session_cookie_sub_path():
         ],
         config_module={"SECRET_KEY": "secret", "SESSION_COOKIE_PATH": "/second_app"},
     )
-    test_module.override_provider(ISessionStrategy, use_class=SessionClientStrategy)
+    test_module.override_provider(SessionStrategy, use_class=SessionClientStrategy)
 
     client_second_app = test_module.get_test_client(
         base_url="http://testserver/second_app"
@@ -155,7 +155,7 @@ def test_invalid_session_cookie():
     test_module = Test.create_test_module(
         controllers=[SessionSampleController], config_module={"SECRET_KEY": "secret"}
     )
-    test_module.override_provider(ISessionStrategy, use_class=SessionClientStrategy)
+    test_module.override_provider(SessionStrategy, use_class=SessionClientStrategy)
     client = test_module.get_test_client()
 
     response = client.post("/", json={"some": "data"})
@@ -172,7 +172,7 @@ def test_session_cookie():
         controllers=[SessionSampleController],
         config_module={"SECRET_KEY": "secret", "SESSION_COOKIE_MAX_AGE": None},
     )
-    test_module.override_provider(ISessionStrategy, use_class=SessionClientStrategy)
+    test_module.override_provider(SessionStrategy, use_class=SessionClientStrategy)
     client = test_module.get_test_client()
 
     response = client.post("/", json={"some": "data"})

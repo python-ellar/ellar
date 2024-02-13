@@ -3,7 +3,7 @@ import sys
 import anyio
 import pytest
 from ellar.app import AppFactory
-from ellar.common import Header, Inject, ws_route
+from ellar.common import Header, Inject, ModuleRouter, ws_route
 from starlette import status
 from starlette.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 
@@ -504,13 +504,15 @@ def test_send_wrong_message_type(test_client_factory):
 
 
 def test_receive_before_accept(test_client_factory):
-    app = AppFactory.create_app()
+    router = ModuleRouter()
 
-    @app.router.ws_route("/{path:path}")
+    @router.ws_route("/{path:path}")
     async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         websocket.client_state = WebSocketState.CONNECTING
         await websocket.receive()
+
+    app = AppFactory.create_app(routers=[router])
 
     client = test_client_factory(app)
     with pytest.raises(RuntimeError):
@@ -519,12 +521,14 @@ def test_receive_before_accept(test_client_factory):
 
 
 def test_receive_wrong_message_type(test_client_factory):
-    app = AppFactory.create_app()
+    router = ModuleRouter()
 
-    @app.router.ws_route("/{path:path}")
+    @router.ws_route("/{path:path}")
     async def ws_function(websocket: Inject[WebSocket]) -> None:
         await websocket.accept()
         await websocket.receive()
+
+    app = AppFactory.create_app(routers=[router])
 
     client = test_client_factory(app)
     with pytest.raises(RuntimeError):

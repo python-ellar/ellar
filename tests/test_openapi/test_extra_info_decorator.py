@@ -1,6 +1,6 @@
 import pytest
 from ellar.app import AppFactory
-from ellar.common import serialize_object
+from ellar.common import ModuleRouter, serialize_object
 from ellar.common.compatible import AttributeDict
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
@@ -42,13 +42,14 @@ def test_invalid_api_info_decorator_setup():
 
 
 def test_api_info_extra_keys():
-    app = AppFactory.create_app()
+    router = ModuleRouter()
 
-    @app.router.get()
+    @router.get()
     @api_info(operation_id="4524d-z23zd-453ed-2342e", xyz="xyz", abc="abc")
     def endpoint_1(request: Request):
         pass
 
+    app = AppFactory.create_app(routers=[router])
     open_api_data = reflect.get_metadata(OPENAPI_OPERATION_KEY, endpoint_1)
     assert open_api_data == {
         "operation_id": "4524d-z23zd-453ed-2342e",
@@ -80,5 +81,6 @@ def test_api_info_extra_keys():
             },
             "xyz": "xyz",
             "abc": "abc",
+            "tags": ["default"],
         }
     }

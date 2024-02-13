@@ -6,11 +6,6 @@ from ellar.common.constants import (
     SCOPE_API_VERSIONING_RESOLVER,
 )
 from ellar.common.logging import request_logger
-from ellar.common.operations import (
-    OperationDefinitions,
-    RouteParameters,
-    WsRouteParameters,
-)
 from ellar.common.types import TReceive, TScope, TSend
 from starlette.middleware import Middleware
 from starlette.routing import BaseRoute, Match, Route, Router
@@ -31,14 +26,13 @@ class EllarMount(StarletteMount):
         path: str,
         control_type: t.Optional[t.Type] = None,
         app: t.Optional[ASGIApp] = None,
-        routes: t.Optional[t.Sequence[BaseRoute]] = None,
         name: t.Optional[str] = None,
         include_in_schema: bool = False,
         *,
         middleware: t.Optional[t.Sequence[Middleware]] = None,
     ) -> None:
         super(EllarMount, self).__init__(
-            path=path, routes=routes, name=name, app=app, middleware=middleware
+            path=path, name=name, app=app, routes=[], middleware=middleware
         )
         self.include_in_schema = include_in_schema
         self._current_found_route_key = f"{uuid.uuid4().hex:4}_EllarMountRoute"
@@ -108,7 +102,7 @@ def router_default_decorator(func: ASGIApp) -> ASGIApp:
     return _wrap
 
 
-class ApplicationRouter(Router, OperationDefinitions):
+class ApplicationRouter(Router):
     routes: RouteCollection  # type: ignore
 
     def __init__(
@@ -139,16 +133,6 @@ class ApplicationRouter(Router, OperationDefinitions):
     def extend(self, routes: t.Sequence[t.Union[BaseRoute, t.Callable]]) -> None:
         for route in routes:
             self.append(route)
-
-    def _get_operation(self, route_parameter: RouteParameters) -> t.Callable:
-        endpoint = super()._get_operation(route_parameter)
-        self.append(endpoint)
-        return endpoint
-
-    def _get_ws_operation(self, ws_route_parameters: WsRouteParameters) -> t.Callable:
-        endpoint = super()._get_ws_operation(ws_route_parameters)
-        self.append(endpoint)
-        return endpoint
 
     def add_route(
         self,
@@ -202,9 +186,15 @@ class ApplicationRouter(Router, OperationDefinitions):
     def mount(
         self, path: str, app: ASGIApp, name: t.Optional[str] = None
     ) -> None:  # pragma: no cover
-        """Not supported"""
+        raise Exception(
+            "Not supported. Use mount external asgi app in any @Module decorated "
+            "class in `routers` parameter. eg @Module(routers=[ellar.core.mount(my_asgi_app)]"
+        )
 
     def host(
         self, host: str, app: ASGIApp, name: t.Optional[str] = None
     ) -> None:  # pragma: no cover
-        """Not supported"""
+        raise Exception(
+            "Not supported. Use host external asgi app in any @Module decorated "
+            "class in `routers` parameter. eg @Module(routers=[ellar.core.host(my_asgi_app)]"
+        )

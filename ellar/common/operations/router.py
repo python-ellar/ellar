@@ -4,6 +4,7 @@ from ellar.common.constants import CONTROLLER_CLASS_KEY, GUARDS_KEY, VERSIONING_
 from ellar.common.models import GuardCanActivate
 from ellar.reflect import reflect
 from ellar.utils import get_unique_type
+from starlette.middleware import Middleware
 
 from .base import OperationDefinitions
 from .schema import RouteParameters, WsRouteParameters
@@ -19,6 +20,7 @@ class ModuleRouter(OperationDefinitions):
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
         include_in_schema: bool = True,
+        middleware: t.Optional[t.Sequence[Middleware]] = None,
     ) -> None:
         self._control_type = get_unique_type()
         self._kwargs = {
@@ -26,6 +28,7 @@ class ModuleRouter(OperationDefinitions):
             "name": name,
             "include_in_schema": include_in_schema,
             "control_type": self._control_type,
+            "middleware": middleware,
         }
 
         self._pre_build_routes: t.List[t.Union[RouteParameters, WsRouteParameters]] = []
