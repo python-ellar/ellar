@@ -135,7 +135,7 @@ nav:
   - OPENAPI:
       - index: openapi/index.md
       - Security: openapi/security.md
-      - Document UI: openapi/documentation-ui.md
+      - Document UI: openapi/document-ui.md
   - WebSockets:
       - index: websockets/websockets.md
       - Socketio: websockets/socketio.md
