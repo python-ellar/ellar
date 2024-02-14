@@ -16,6 +16,8 @@ Beta version
 - Documentation - 97% complete
 - Authorization Documentation - (in progress)
 
+## Resources
+- [Documentation](python-ellar.github.io/ellar/)
 
 ## **Introduction**
 
