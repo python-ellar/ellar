@@ -43,7 +43,7 @@ document = document_builder.build_document(application)
 
 Once we create a document, we can call the `OpenAPIDocumentModule`**.setup()** method. It accepts:
 
-1. The path to mount the [DocumentationUI](./documentation-ui.md)
+1. The path to mount the [DocumentationUI](./document-ui.md)
 2. An application instance
 3. The document object instantiated above
 4. Optional guards list 
