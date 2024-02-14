@@ -1,3 +1,25 @@
+# 0.7.0
+## What's Changed
+* Bump aiohttp from 3.9.1 to 3.9.3 by @dependabot in https://github.com/python-ellar/ellar/pull/178
+* Bump types-redis from 4.6.0.11 to 4.6.0.20240106 by @dependabot in https://github.com/python-ellar/ellar/pull/175
+* Bump pypa/gh-action-pypi-publish from 1.8.10 to 1.8.11 by @dependabot in https://github.com/python-ellar/ellar/pull/173
+* Bump codecov/codecov-action from 3.1.4 to 4.0.0 by @dependabot in https://github.com/python-ellar/ellar/pull/172
+* Update pytest requirement from <8.0.0,>=6.2.4 to >=6.2.4,<9.0.0 by @dependabot in https://github.com/python-ellar/ellar/pull/174
+* moved `ellar.common.routing` core implementation to `ellar.core.routing` by @eadwinCode in https://github.com/python-ellar/ellar/pull/179
+* dropped `application.install_module()` by @eadwinCode in https://github.com/python-ellar/ellar/pull/179
+* Moved Controllers and Routers computation to happen during `@Module` processing by @eadwinCode in https://github.com/python-ellar/ellar/pull/179
+* Renamed `ellar.openapi.open_info` to `ellar.openapi.api_info` by @eadwinCode in https://github.com/python-ellar/ellar/pull/179
+* Added Session Documentation by @eadwinCode in https://github.com/python-ellar/ellar/pull/179
+* Added OpenAPI Documentation by @eadwinCode in https://github.com/python-ellar/ellar/pull/179
+* Starlette 0.37.1 support by @eadwinCode in https://github.com/python-ellar/ellar/pull/180
+
+## Breaking Changes
+* dropped `application.install_module()` use [ModuleSetup](https://python-ellar.github.io/ellar/basics/dynamic-modules/) for Modules that need application services
+* `OPENAPIModule.setup` requires app as parameter.
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.6.8...0.7.0
+
 # 0.6.8
 ## What's Changed
 * Drop file storage  by @eadwinCode in https://github.com/python-ellar/ellar/pull/171
