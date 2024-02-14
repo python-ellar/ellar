@@ -20,3 +20,8 @@ nav.md-nav--primary ul.md-nav__list li.md-nav__item--active.md-nav__item--nested
     margin-right: auto;
     max-width: 80%;
 }
+
+.md-tabs {
+    background-color: #a50a3e !important;
+    text-transform: uppercase;
+}

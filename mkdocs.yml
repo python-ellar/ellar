@@ -27,7 +27,7 @@ theme:
     - navigation.indexes
     - navigation.instant
     - navigation.prune
-#    - navigation.tabs
+    - navigation.tabs
     - navigation.left
     - navigation.tracking
   palette:
@@ -134,11 +134,11 @@ nav:
 
   - OPENAPI:
       - index: openapi/index.md
-      - security: openapi/security.md
-      - documentation-ui: openapi/documentation-ui.md
+      - Security: openapi/security.md
+      - Document UI: openapi/documentation-ui.md
   - WebSockets:
-      - websockets: websockets/websockets.md
-      - socketio: websockets/socketio.md
+      - index: websockets/websockets.md
+      - Socketio: websockets/socketio.md
 
 markdown_extensions:
   - attr_list

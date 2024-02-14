@@ -160,6 +160,8 @@ class MyDocUI(IDocumentationUI):
 After defining the custom `MyDocUI` class, it can be integrated into 
 Ellar's OpenAPI module setup by specifying it in the `doc_ui` parameter.
 
+It's important to note that `openapi_url` will be passed alongside with `template_context` provided in `MyDocUI`.
+
 ```python
 import os
 
