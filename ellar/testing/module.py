@@ -68,7 +68,7 @@ class TestingModule:
         base_url: str = "http://testserver",
         raise_server_exceptions: bool = True,
         root_path: str = "",
-        backend: str = "asyncio",
+        backend: t.Literal["asyncio", "trio"] = "asyncio",
         backend_options: t.Optional[t.Dict[str, t.Any]] = None,
         **kwargs: t.Any,
     ) -> TestClient:

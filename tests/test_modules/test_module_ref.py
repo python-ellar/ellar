@@ -176,7 +176,7 @@ def test_module_template_ref_scan_middle_ware():
     config_middleware = config[MIDDLEWARE_HANDLERS_KEY]
 
     assert isinstance(config_middleware, list)
-    assert "middleware_func" == get_name(config_middleware[0].options["dispatch"])
+    assert "middleware_func" == get_name(config_middleware[0].kwargs["dispatch"])
 
 
 def test_module_template_ref_get_all_routers():

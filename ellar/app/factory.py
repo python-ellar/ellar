@@ -10,7 +10,6 @@ from ellar.core import Config, DynamicModule, LazyModuleImport, ModuleBase, Modu
 from ellar.core.modules import ModuleRefBase
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
-from ellar.threading import run_as_async
 from ellar.utils import get_unique_type
 from starlette.routing import BaseRoute, Host, Mount
 
@@ -119,8 +118,7 @@ class AppFactory:
         return routes
 
     @classmethod
-    @run_as_async
-    async def _create_app(
+    def _create_app(
         cls,
         module: t.Type[t.Union[ModuleBase, t.Any]],
         global_guards: t.Optional[
@@ -206,7 +204,7 @@ class AppFactory:
         )
         app_factory_module = get_unique_type()
         module(app_factory_module)
-        return cls._create_app(  # type:ignore[no-any-return]
+        return cls._create_app(
             module=app_factory_module,
             config_module=config_module,
             global_guards=global_guards,
@@ -221,6 +219,6 @@ class AppFactory:
         ] = None,
         config_module: t.Union[str, t.Dict, None] = None,
     ) -> App:
-        return cls._create_app(  # type:ignore[no-any-return]
+        return cls._create_app(
             module, config_module=config_module, global_guards=global_guards
         )
