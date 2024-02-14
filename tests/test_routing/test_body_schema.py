@@ -3,6 +3,8 @@ from unittest.mock import patch
 from ellar.common import post
 from ellar.common.serializer import serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
+from ellar.openapi.constants import IGNORE_CONTROLLER_TYPE
+from ellar.reflect import reflect
 from ellar.testing import Test
 
 from ..utils import pydantic_error_url
@@ -12,6 +14,7 @@ tm = Test.create_test_module()
 
 
 @post("/product")
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 async def create_item(
     product: "Product",
 ):  # just to test get_typed_annotation in ellar.common.params.args.base
@@ -140,7 +143,7 @@ def test_body_fails_for_invalid_json_data(test_client_factory):
                 "loc": ["body"],
                 "msg": "Input should be a valid dictionary or object to extract fields from",
                 "input": '\n{\n    "name": "John",\n    "age": 30,\n    "is_student": True,\n    "favorite_colors": ["red", "blue", "green"],\n    "address": {\n        "street": "123 Main St",\n        "city": "Some City",\n        "zip": "12345"\n    },\n    "unterminated_quote": "This string is not properly terminated,\n}\n',
-                "url": "https://errors.pydantic.dev/2.5/v/model_attributes_type",
+                "url": pydantic_error_url("model_attributes_type"),
             }
         ]
     }

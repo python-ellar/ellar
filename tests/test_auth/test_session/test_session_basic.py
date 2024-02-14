@@ -1,5 +1,5 @@
 import pytest
-from ellar.auth.session import ISessionStrategy, SessionServiceNullStrategy
+from ellar.auth.session import SessionServiceNullStrategy, SessionStrategy
 from ellar.auth.session.strategy import SessionClientStrategy
 from ellar.common import Inject, get
 from ellar.core import Request
@@ -16,7 +16,7 @@ tm.create_application().router.append(homepage)
 
 
 def test_session_object_raise_an_exception():
-    session_service = tm.get(ISessionStrategy)
+    session_service = tm.get(SessionStrategy)
     assert isinstance(session_service, SessionServiceNullStrategy)
 
     with pytest.raises(AssertionError):
@@ -26,9 +26,9 @@ def test_session_object_raise_an_exception():
 
 def test_session_object_raise_an_exception_case_2():
     tm_case_2 = Test.create_test_module(config_module={"SESSION_DISABLED": True})
-    tm_case_2.override_provider(ISessionStrategy, use_class=SessionClientStrategy)
+    tm_case_2.override_provider(SessionStrategy, use_class=SessionClientStrategy)
     tm_case_2.create_application().router.append(homepage)
-    session_service = tm_case_2.get(ISessionStrategy)
+    session_service = tm_case_2.get(SessionStrategy)
     assert isinstance(session_service, SessionClientStrategy)
 
     with pytest.raises(AssertionError):

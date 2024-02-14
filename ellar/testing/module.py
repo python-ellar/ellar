@@ -3,10 +3,10 @@ from pathlib import Path
 from uuid import uuid4
 
 from ellar.app import App, AppFactory
-from ellar.common import ControllerBase, Module
-from ellar.common.routing import ModuleMount, ModuleRouter
+from ellar.common import ControllerBase, Module, ModuleRouter
 from ellar.common.types import T
 from ellar.core import ModuleBase
+from ellar.core.routing import EllarMount
 from ellar.di import ProviderConfig
 from starlette.routing import Host, Mount
 from starlette.testclient import TestClient as TestClient
@@ -93,7 +93,7 @@ class Test:
     def create_test_module(
         cls,
         controllers: t.Sequence[t.Union[t.Type[ControllerBase], t.Type]] = (),
-        routers: t.Sequence[t.Union[ModuleRouter, ModuleMount, Mount, Host]] = (),
+        routers: t.Sequence[t.Union[ModuleRouter, EllarMount, Mount, Host]] = (),
         providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = (),
         template_folder: t.Optional[str] = "templates",
         base_directory: t.Optional[t.Union[Path, str]] = None,

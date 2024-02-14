@@ -154,7 +154,7 @@ class TestMovieController:
         )
         assert document["paths"]["/movies/"] == {
             "get": {
-                "operationId": "fast_x__get",
+                "operationId": "fast_x__get__moviess",
                 "responses": {
                     "200": {
                         "content": {

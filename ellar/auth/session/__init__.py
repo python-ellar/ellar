@@ -1,18 +1,18 @@
 import typing as t
 
+from .base import SessionStrategy
 from .cookie_dict import SessionCookieObject
-from .interface import ISessionStrategy
 from .options import SessionCookieOption
 
 __all__ = [
     "SessionCookieObject",
     "SessionCookieOption",
-    "ISessionStrategy",
+    "SessionStrategy",
     "SessionServiceNullStrategy",
 ]
 
 
-class SessionServiceNullStrategy(ISessionStrategy):
+class SessionServiceNullStrategy(SessionStrategy):
     """
     A Null implementation ISessionService. This is used as a placeholder for ISSessionService when there is no
     ISSessionService implementation registered.

@@ -14,6 +14,7 @@ from ellar.common import (
 from ellar.common.constants import MODULE_METADATA
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core import Config, DynamicModule, LazyModuleImport, ModuleBase, ModuleSetup
+from ellar.core.router_builders import ModuleRouterBuilder
 from ellar.core.services import Reflector
 from ellar.di import EllarInjector, ProviderConfig, exceptions
 from ellar.reflect import reflect
@@ -174,14 +175,16 @@ def test_lazy_module_import_with_dynamic_setup():
 def test_dynamic_module_haves_routes():
     routers = reflect.get_metadata(MODULE_METADATA.ROUTERS, DynamicInstantiatedModule)
     assert len(routers) == 1
-    assert len(routers[0].routes) == 39
+    mount0 = ModuleRouterBuilder.build(routers[0])
+    assert len(mount0.routes) == 39
     tm = Test.create_test_module(
         modules=(DynamicInstantiatedModule.setup(a=233, b=344),)
     )
     tm.create_application()
     routers = reflect.get_metadata(MODULE_METADATA.ROUTERS, DynamicInstantiatedModule)
     assert len(routers) == 1
-    assert len(routers[0].routes) == 1
+    mount0 = ModuleRouterBuilder.build(routers[0])
+    assert len(mount0.routes) == 1
 
 
 def test_dynamic_module_setup_providers_works():

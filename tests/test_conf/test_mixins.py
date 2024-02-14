@@ -1,6 +1,7 @@
 import pytest
 from ellar.cache.backends.local_cache import LocalMemCacheBackend
 from ellar.core import Config
+from jinja2 import BaseLoader
 
 
 def test_cache_backend_without_default_raise_exception():
@@ -35,3 +36,9 @@ def test_invalid_middleware_config():
         ValueError, match=r"Expected EllarMiddleware object, received: "
     ):
         Config(MIDDLEWARE=[invalid_type()])
+
+
+def test_invalid_template_loaders():
+    invalid_type = type("whatever", (), {})
+    with pytest.raises(ValueError, match=rf"Expected {BaseLoader} object, received: "):
+        Config(JINJA_LOADERS=[invalid_type()])

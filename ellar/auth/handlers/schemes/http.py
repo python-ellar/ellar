@@ -12,8 +12,8 @@ from ellar.common.serializer.guard import (
 from .base import BaseHttpAuth
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common.routing import RouteOperation
     from ellar.core.connection import HTTPConnection
+    from ellar.core.routing import RouteOperation
 
 
 class HttpBearerAuth(BaseHttpAuth, ABC):

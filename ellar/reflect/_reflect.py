@@ -10,15 +10,16 @@ logger = logging.getLogger("ellar")
 
 
 def _get_actual_target(
-    target: t.Union[t.Type, t.Callable],
+    target: t.Union[t.Type, t.Callable], create: bool = False
 ) -> t.Union[t.Type, t.Callable]:
     try:
         reflect_type = target.__dict__[REFLECT_TYPE]
     except KeyError:
-        try:
-            setattr(target, REFLECT_TYPE, target)
-        except Exception as ex:  # pragma: no cover
-            logger.debug(f"Setting REFLECT_TYPE failed. \nError Message: {ex}")
+        if create:
+            try:
+                setattr(target, REFLECT_TYPE, target)
+            except Exception as ex:  # pragma: no cover
+                logger.debug(f"Setting REFLECT_TYPE failed. \nError Message: {ex}")
         return target
     else:
         return t.cast(t.Union[t.Type, t.Callable], reflect_type)
@@ -109,7 +110,7 @@ class _Reflect:
     def _get_or_create_metadata(
         self, target: t.Union[t.Type, t.Callable], create: bool = False
     ) -> t.Optional[t.Dict]:
-        _target = _get_actual_target(target)
+        _target = _get_actual_target(target, create)
         if _target in self._meta_data:
             return self._meta_data[_target]
 

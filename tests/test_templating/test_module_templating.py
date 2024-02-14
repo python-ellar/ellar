@@ -6,6 +6,7 @@ from ellar.core import Config
 from ellar.core.modules import ModuleBase, ModuleTemplateRef
 from ellar.di import EllarInjector
 from ellar.testing import Test
+from jinja2 import Environment
 
 
 @Module(template_folder="views")
@@ -45,8 +46,9 @@ app = tm.create_application()
 
 
 def test_template_globals_and_template_filters_computation():
-    app.install_module(SomeModule2)
-    environment = app.jinja_environment
+    environment = Test.create_test_module(modules=[SomeModule, SomeModule2]).get(
+        Environment
+    )
 
     for item in ["double_filter", "dec_filter", "double_filter_dec_2"]:
         assert item in environment.filters

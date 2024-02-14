@@ -13,12 +13,10 @@ class ASampleDTO(DataclassSerializer):
     name: str
     age: t.Optional[int] = None
 """
-from dataclasses import dataclass
 
-from ellar.common import DataclassSerializer
+from ellar.common import Serializer
 
 
-@dataclass
-class UserCredentials(DataclassSerializer):
+class UserCredentials(Serializer):
     username: str
     password: str

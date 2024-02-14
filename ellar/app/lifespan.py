@@ -41,23 +41,29 @@ class EllarApplicationLifespan:
                 yield app.injector.get(module)
 
     async def run_all_startup_actions(self, app: "App") -> None:
-        async with create_task_group() as tg:
+        try:
             for module in self._get_startup_modules(app):
-                tg.start_soon(module.on_startup, app)
+                await module.on_startup(app)
+        except Exception as ex:  # pragma: no cover
+            logger.error(ex.exceptions)  # type:ignore[attr-defined]
+            raise ex
 
     async def run_all_shutdown_actions(self, app: "App") -> None:
-        async with create_task_group() as tg:
+        try:
             for module in self._get_shutdown_modules(app):
-                tg.start_soon(module.on_shutdown)
+                await module.on_shutdown()
+        except Exception as ex:  # pragma: no cover
+            logger.error(ex.exceptions)  # type:ignore[attr-defined]
+            raise ex
 
     @asynccontextmanager
     async def lifespan(self, app: "App") -> t.AsyncIterator[t.Any]:
         logger.debug("Executing Modules Startup Handlers")
 
-        async with create_task_group() as tg:
-            tg.start_soon(self.run_all_startup_actions, app)
-
         try:
+            async with create_task_group() as tg:
+                tg.start_soon(self.run_all_startup_actions, app)
+
             async with self._lifespan_context(app) as ctx:  # type:ignore[attr-defined]
                 logger.info("Application is ready.")
                 yield ctx

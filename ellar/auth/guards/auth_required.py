@@ -5,7 +5,7 @@ from ellar.common import GuardCanActivate, IExecutionContext, constants
 from ellar.core.services import reflector
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common.routing import RouteOperation
+    from ellar.core.routing import RouteOperation
 
 
 class AuthenticatedRequiredGuard(GuardCanActivate):

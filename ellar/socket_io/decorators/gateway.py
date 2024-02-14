@@ -1,48 +1,16 @@
-import inspect
 import typing as t
-from abc import ABC
 
 from ellar.common.compatible import AttributeDict
-from ellar.common.constants import CONTROLLER_CLASS_KEY
 from ellar.common.exceptions import ImproperConfiguration
-from ellar.common.utils import get_name
-from ellar.di import RequestScope, injectable
+from ellar.di import RequestORTransientScope, injectable
 from ellar.reflect import REFLECT_TYPE, reflect
 from ellar.socket_io.constants import (
-    GATEWAY_MESSAGE_HANDLER_KEY,
     GATEWAY_METADATA,
     GATEWAY_OPTIONS,
     GATEWAY_WATERMARK,
-    MESSAGE_MAPPING_METADATA,
 )
 from ellar.socket_io.model import GatewayBase, GatewayType
-
-
-def _get_message_handler(
-    cls: t.Type,
-) -> t.Iterable[t.Union[t.Callable]]:
-    for method in cls.__dict__.values():
-        if hasattr(method, MESSAGE_MAPPING_METADATA) and getattr(
-            method, MESSAGE_MAPPING_METADATA
-        ):
-            yield method
-
-
-def _reflect_all_controller_type_routes(cls: t.Type[GatewayBase]) -> None:
-    bases = inspect.getmro(cls)
-
-    for base_cls in reversed(bases):
-        if base_cls not in [ABC, GatewayBase, object]:
-            for method in _get_message_handler(base_cls):
-                if reflect.has_metadata(CONTROLLER_CLASS_KEY, method):
-                    raise Exception(
-                        f"{cls.__name__} Gateway message handler tried to be processed more than once."
-                        f"\n-Message Handler - {method}."
-                        f"\n-Gateway message handler can not be reused once its under a `@Gateway` decorator."
-                    )
-
-                reflect.define_metadata(CONTROLLER_CLASS_KEY, cls, method)
-                reflect.define_metadata(GATEWAY_MESSAGE_HANDLER_KEY, [method], cls)
+from ellar.utils import get_name, get_type_of_base
 
 
 def WebSocketGateway(
@@ -58,6 +26,7 @@ def WebSocketGateway(
             path=path,
             name=name,
             include_in_schema=False,
+            processed=False,
         )
 
         if not isinstance(cls, type):
@@ -82,6 +51,15 @@ def WebSocketGateway(
                 str(get_name(_gateway_type)).lower().replace("gateway", "")
             )
 
+        for base in get_type_of_base(GatewayBase, _gateway_type):
+            if reflect.has_metadata(GATEWAY_WATERMARK, base) and hasattr(
+                _gateway_type, "__GATEWAY_WATERMARK__"
+            ):
+                raise ImproperConfiguration(
+                    f"`@WebSocketGateway` decorated classes does not support inheritance. \n"
+                    f"{_gateway_type}"
+                )
+
         if not reflect.has_metadata(GATEWAY_WATERMARK, _gateway_type) and not hasattr(
             _gateway_type, "__GATEWAY_WATERMARK__"
         ):
@@ -89,8 +67,8 @@ def WebSocketGateway(
             reflect.define_metadata(
                 GATEWAY_OPTIONS, _kwargs["socket_init_kwargs"], _gateway_type
             )
-            _reflect_all_controller_type_routes(_gateway_type)
-            injectable(RequestScope)(_gateway_type)
+
+            injectable(RequestORTransientScope)(_gateway_type)
 
             for key in GATEWAY_METADATA.keys:
                 reflect.define_metadata(key, _kwargs[key], _gateway_type)

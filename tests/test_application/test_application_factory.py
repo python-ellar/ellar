@@ -7,6 +7,7 @@ from ellar.core import LazyModuleImport as lazyLoad
 from ellar.di import EllarInjector
 from ellar.reflect import reflect
 from ellar.testing import TestClient
+from jinja2 import Environment
 from starlette.routing import Host, Mount
 
 from .sample import (
@@ -78,7 +79,7 @@ def test_factory_create_app_dynamically_creates_module():
     module_instance = first_module_ref.get_module_instance()
     assert not isinstance(module_instance, ModuleBase)
     assert reflect.get_metadata(MODULE_WATERMARK, type(module_instance))
-    assert "ellar.app.factory.Module" in str(module_instance.__class__)
+    assert "ellar.utils.DynamicType" in str(module_instance.__class__)
 
 
 def test_factory_create_app_works(tmpdir):
@@ -108,7 +109,7 @@ def test_factory_create_app_works(tmpdir):
     assert res.status_code == 200
     assert res.text == "<file content>"
 
-    template = app.jinja_environment.get_template("example.html")
+    template = app.injector.get(Environment).get_template("example.html")
     result = template.render()
     assert result == "<html>Hello World<html/>"
 

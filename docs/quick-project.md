@@ -251,7 +251,7 @@ import os
 
 from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.app import AppFactory
-from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerDocumentGenerator
+from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerUI
 from .root_module import ApplicationModule
 
 application = AppFactory.create_from_app_module(
@@ -269,11 +269,11 @@ document_builder.set_title('CarSite API') \
 
 document = document_builder.build_document(application)
 module = OpenAPIDocumentModule.setup(
+    app=application,
     document=document,
-    document_generator=SwaggerDocumentGenerator(),
+    docs_ui=SwaggerUI(),
     guards=[]
 )
-application.install_module(module)
 ```
 
 Now we can test our API at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs#/)

@@ -16,13 +16,13 @@ from ellar.common.constants import (
 )
 from ellar.common.exceptions import WebSocketRequestValidationError
 from ellar.common.params import WebsocketEndpointArgsModel
-from ellar.common.utils import get_name
 from ellar.core import Config
 from ellar.di import EllarInjector
 from ellar.reflect import reflect
 from ellar.socket_io.context import GatewayContext
 from ellar.socket_io.model import GatewayBase
 from ellar.socket_io.responses import WsResponse
+from ellar.utils import get_name
 from socketio import AsyncServer
 from starlette import status
 from starlette.concurrency import run_in_threadpool

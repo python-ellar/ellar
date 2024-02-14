@@ -5,13 +5,13 @@ from enum import Enum
 from pathlib import PurePath
 from types import GeneratorType
 
-from ellar.common.utils.functional import LazyStrImport
 from ellar.pydantic import (
     BaseConfig,
     BaseModel,
     TypeAdapter,
     model_dump,
 )
+from ellar.utils.functional import LazyStrImport
 
 __pydantic_model__ = "__pydantic_core_schema__"
 __pydantic_config__ = "__pydantic_config__"
@@ -122,7 +122,7 @@ class Serializer(SerializerBase, BaseModel, __skip_filter__=True):
 
 
 def _lazy_current_config() -> t.Any:
-    return LazyStrImport("ellar.app:current_config")
+    return LazyStrImport("ellar.app:config")
 
 
 def serialize_object(

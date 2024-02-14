@@ -3,8 +3,12 @@ from typing import List
 
 from ellar.common import post, serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
+from ellar.openapi.constants import IGNORE_CONTROLLER_TYPE
+from ellar.reflect import reflect
 from ellar.testing import Test
 from pydantic import BaseModel, condecimal
+
+from ..utils import pydantic_error_url
 
 tm = Test.create_test_module()
 app = tm.create_application()
@@ -16,6 +20,7 @@ class Item2(BaseModel):
 
 
 @post("/items/")
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 def save_item_no_body(item: List[Item2]):
     return {"item": item}
 
@@ -122,7 +127,7 @@ single_error = {
             "loc": ["body", 0, "age"],
             "msg": "Input should be greater than 0",
             "type": "greater_than",
-            "url": "https://errors.pydantic.dev/2.5/v/greater_than",
+            "url": pydantic_error_url("greater_than"),
         }
     ]
 }
@@ -134,28 +139,28 @@ multiple_errors = {
             "loc": ["body", 0, "name"],
             "msg": "Field required",
             "input": {"age": "five"},
-            "url": "https://errors.pydantic.dev/2.5/v/missing",
+            "url": pydantic_error_url("missing"),
         },
         {
             "type": "decimal_parsing",
             "loc": ["body", 0, "age"],
             "msg": "Input should be a valid decimal",
             "input": "five",
-            "url": "https://errors.pydantic.dev/2.5/v/decimal_parsing",
+            "url": pydantic_error_url("decimal_parsing"),
         },
         {
             "type": "missing",
             "loc": ["body", 1, "name"],
             "msg": "Field required",
             "input": {"age": "six"},
-            "url": "https://errors.pydantic.dev/2.5/v/missing",
+            "url": pydantic_error_url("missing"),
         },
         {
             "type": "decimal_parsing",
             "loc": ["body", 1, "age"],
             "msg": "Input should be a valid decimal",
             "input": "six",
-            "url": "https://errors.pydantic.dev/2.5/v/decimal_parsing",
+            "url": pydantic_error_url("decimal_parsing"),
         },
     ]
 }

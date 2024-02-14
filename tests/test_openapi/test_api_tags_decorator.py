@@ -38,7 +38,7 @@ def test_openapi_tag_for_module():
 
 def test_openapi_tag_with_api_tags():
     ApiTags(name="Another Module Router", description="Another router description")(
-        another_router.get_control_type()
+        another_router.control_type
     )
     app = Test.create_test_module(routers=[another_router]).create_application()
 

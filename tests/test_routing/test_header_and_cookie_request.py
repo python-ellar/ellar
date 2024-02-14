@@ -3,6 +3,8 @@ from ellar.common import Cookie, Header, Inject, ModuleRouter
 from ellar.core.connection import Request
 from ellar.testing import Test
 
+from ..utils import pydantic_error_url
+
 mr = ModuleRouter("")
 
 
@@ -64,7 +66,7 @@ client = tm.get_test_client()
                         "loc": ["header", "missing"],
                         "msg": "Field required",
                         "type": "missing",
-                        "url": "https://errors.pydantic.dev/2.5/v/missing",
+                        "url": pydantic_error_url("missing"),
                     }
                 ]
             },

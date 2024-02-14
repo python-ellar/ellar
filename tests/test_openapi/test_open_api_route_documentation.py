@@ -6,9 +6,9 @@ from ellar.common.constants import CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.common.responses.models import ResponseModel, ResponseModelField
 from ellar.core import ExecutionContext
 from ellar.core.connection import HTTPConnection
-from ellar.core.routing import ModuleRouterFactory
-from ellar.openapi import OpenAPIRouteDocumentation, openapi_info
-from ellar.openapi.constants import OPENAPI_OPERATION_KEY
+from ellar.core.router_builders import ModuleRouterBuilder
+from ellar.openapi import OpenAPIRouteDocumentation, api_info
+from ellar.openapi.constants import IGNORE_CONTROLLER_TYPE, OPENAPI_OPERATION_KEY
 from ellar.pydantic import GenerateJsonSchema, get_definitions
 from ellar.reflect import reflect
 
@@ -44,12 +44,13 @@ router = ModuleRouter()
         404: CustomResponseModel(),
     },
 )
-@openapi_info(
+@api_info(
     summary="Endpoint Summary",
     description="Endpoint Description",
     deprecated=True,
     tags=["endpoint", "endpoint-25"],
 )
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 def get_car_by_id(
     car_id: int,
     filter: Filter = Query(),
@@ -62,16 +63,18 @@ def get_car_by_id(
 
 @router.get("/create", response={201: CreateCarSchema})
 @UseGuards(JustAGuard)
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 def create_car(car: CreateCarSchema):
     return car
 
 
 @router.http_route("/list", response={200: CreateCarSchema}, methods=["get", "post"])
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 def list_and_create_car(car: CreateCarSchema = Body(default=None)):
     return car
 
 
-ModuleRouterFactory.build(router)
+ModuleRouterBuilder.build(router)
 
 
 def test_open_api_route_model_input_fields():

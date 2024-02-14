@@ -5,6 +5,8 @@ from ellar.common.params import ExtraEndpointArg
 from ellar.common.serializer import serialize_object
 from ellar.core.connection import Request
 from ellar.openapi import OpenAPIDocumentBuilder
+from ellar.openapi.constants import IGNORE_CONTROLLER_TYPE
+from ellar.reflect import reflect
 from ellar.testing import Test
 from starlette.responses import Response
 
@@ -83,6 +85,7 @@ def add_additional_grouped_field(func):
 @get("/test")
 @add_extra_non_field_extra_args
 @add_additional_signature_to_endpoint
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 def query_params_extra(
     request: Inject[Request],
     filters: Filter = Query(),

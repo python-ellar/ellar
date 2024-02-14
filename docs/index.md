@@ -119,11 +119,11 @@ document_builder.set_title('Ellar API') \
 
 document = document_builder.build_document(app)
 module = OpenAPIDocumentModule.setup(
+    app=app,
     docs_ui=SwaggerUI(),
     document=document,
     guards=[]
 )
-app.install_module(module)
 
 
 if __name__ == "__main__":

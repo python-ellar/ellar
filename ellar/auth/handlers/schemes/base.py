@@ -12,8 +12,8 @@ from starlette.exceptions import HTTPException
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common.routing import RouteOperation
     from ellar.core.connection import HTTPConnection
+    from ellar.core.routing import RouteOperation
 
 
 class BaseAuth(ABC):

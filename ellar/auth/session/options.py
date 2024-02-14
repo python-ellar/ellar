@@ -1,12 +1,7 @@
-import sys
 import typing as t
+from typing import Literal
 
 from ellar.pydantic import BaseModel
-
-if sys.version_info >= (3, 8):  # pragma: no cover
-    from typing import Literal
-else:  # pragma: no cover
-    from typing_extensions import Literal
 
 
 class SessionCookieOption(BaseModel):

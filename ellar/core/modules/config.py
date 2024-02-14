@@ -1,13 +1,13 @@
 import dataclasses
 import typing as t
 
+from ellar.common import ControllerBase, ModuleRouter
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
-from ellar.common.models import ControllerBase
-from ellar.common.utils.importer import import_from_string
 from ellar.core.conf import Config
 from ellar.di import MODULE_REF_TYPES, Container, EllarInjector
 from ellar.reflect import reflect
+from ellar.utils.importer import import_from_string
 from starlette.routing import BaseRoute
 
 from .ref import ModuleRefBase, create_module_ref_factor
@@ -31,7 +31,7 @@ class DynamicModule:
         t.Union[t.Type["ControllerBase"], t.Type]
     ] = dataclasses.field(default_factory=lambda: ())
 
-    routers: t.Sequence[t.Union[BaseRoute]] = dataclasses.field(
+    routers: t.Sequence[t.Union[BaseRoute, ModuleRouter]] = dataclasses.field(
         default_factory=lambda: ()
     )
     _is_configured: bool = False
@@ -194,6 +194,7 @@ class LazyModuleImport:
                 f'Unable to import "{self.module}" registered in "{root_module_name}"'
             ) from ex
         self.validate_module(module_cls)
+
         if self.setup_method:
             setup_method = getattr(module_cls, self.setup_method)
             module_setup = setup_method(**self.setup_method_options)

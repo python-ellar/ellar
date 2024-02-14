@@ -1,9 +1,9 @@
 import os.path
 import typing as t
 
+from ellar.common.staticfiles import StaticFiles
 from ellar.common.types import ASGIApp
-from ellar.common.utils.importer import get_main_directory_by_stack
-from ellar.core.staticfiles import StaticFiles
+from ellar.utils.importer import get_main_directory_by_stack
 from starlette.middleware import Middleware
 from starlette.routing import BaseRoute, Mount
 

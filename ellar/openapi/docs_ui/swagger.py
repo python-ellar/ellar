@@ -1,14 +1,14 @@
-from .base import IDocumentationUIContext
+from .base import IDocumentationUI
 
 
-class SwaggerUI(IDocumentationUIContext):
+class SwaggerUI(IDocumentationUI):
+    @property
+    def name(self) -> str:
+        return "swagger"
+
     @property
     def template_name(self) -> str:
         return "swagger.html"
-
-    @property
-    def title(self) -> str:
-        return self._title
 
     @property
     def path(self) -> str:
@@ -28,8 +28,8 @@ class SwaggerUI(IDocumentationUIContext):
         dark_theme: bool = False,
     ):
         self._path = path
-        self._title = title
         self._template_context = {
+            "title": title,
             "swagger_js_url": swagger_js_url,
             "swagger_css_url": swagger_css_url,
             "favicon_url": favicon_url,

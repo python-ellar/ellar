@@ -3,8 +3,7 @@ import typing as t
 from ellar.common import IIdentitySchemes
 from ellar.common.compatible import AttributeDict, cached_property
 from ellar.common.constants import GUARDS_KEY
-from ellar.common.routing import ModuleMount, RouteOperation
-from ellar.common.routing.controller import ControllerRouteOperation
+from ellar.core.routing import ControllerRouteOperation, EllarMount, RouteOperation
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY, OPENAPI_TAG, REF_TEMPLATE
 from ellar.pydantic import (
     EmailStr,
@@ -34,7 +33,7 @@ default_openapi_version = "3.1.0"
 AnyUrl = pydantic_types.AnyUrl
 
 
-class OpenAPIDocumentBuilderAction:
+class DocumentOpenAPIFactory:
     def __init__(self, document_dict: t.Dict) -> None:
         self._build = document_dict
 
@@ -45,17 +44,21 @@ class OpenAPIDocumentBuilderAction:
 
         for route in app.routes:
             if (
-                isinstance(route, ModuleMount)
+                isinstance(route, EllarMount)
                 and len(route.routes) > 0
                 and route.include_in_schema
+                and route.get_control_type()
             ):
+                control_type = route.get_control_type()
+                assert control_type
+
                 openapi_tags = AttributeDict(
-                    reflector.get(OPENAPI_TAG, route.get_control_type()) or {}
+                    reflector.get(OPENAPI_TAG, control_type) or {}
                 )
                 if route.name:
                     openapi_tags.setdefault("name", route.name)
 
-                guards = reflector.get(GUARDS_KEY, route.get_control_type())
+                guards = reflector.get(GUARDS_KEY, control_type)
 
                 openapi_route_models.append(
                     OpenAPIMountDocumentation(
@@ -95,7 +98,7 @@ class OpenAPIDocumentBuilderAction:
             _model_fields.append(model_field)
         return _model_fields
 
-    def build(self, app: "App") -> OpenAPI:
+    def create_document(self, app: "App") -> OpenAPI:
         openapi_route_models = self._get_openapi_route_document_models(app=app)
         components: t.Dict[str, t.Dict[str, t.Any]] = {}
 
@@ -110,7 +113,7 @@ class OpenAPIDocumentBuilderAction:
             separate_input_output_schemas=True,
         )
 
-        mounts: t.List[t.Union[BaseRoute, ModuleMount, Mount]] = []
+        mounts: t.List[t.Union[BaseRoute, EllarMount, Mount]] = []
         for _, item in app.injector.get_templating_modules().items():
             mounts.extend(item.routers)
 
@@ -143,10 +146,6 @@ class OpenAPIDocumentBuilderAction:
 
 
 class OpenAPIDocumentBuilder:
-    _build_action_class: t.Type[
-        OpenAPIDocumentBuilderAction
-    ] = OpenAPIDocumentBuilderAction
-
     def __init__(self) -> None:
         self._build: t.Dict = {}
         self._build.setdefault("info", {}).update(
@@ -207,7 +206,7 @@ class OpenAPIDocumentBuilder:
         self,
         url: t.Union[AnyUrl, str],
         description: t.Optional[str] = None,
-        **variables: t.Dict[str, t.Union[str, t.List[str]]],
+        **variables: t.Union[str, t.List[str]],
     ) -> "OpenAPIDocumentBuilder":
         self._build.setdefault("servers", []).append(
             {"url": url, "description": description, "variables": variables}
@@ -308,5 +307,5 @@ class OpenAPIDocumentBuilder:
         )
 
     def build_document(self, app: "App") -> OpenAPI:
-        build_action = self._build_action_class(document_dict=self._build)
-        return build_action.build(app)
+        build_action = DocumentOpenAPIFactory(document_dict=self._build)
+        return build_action.create_document(app)

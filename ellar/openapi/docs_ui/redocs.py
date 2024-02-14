@@ -1,14 +1,14 @@
-from .base import IDocumentationUIContext
+from .base import IDocumentationUI
 
 
-class ReDocsUI(IDocumentationUIContext):
+class ReDocUI(IDocumentationUI):
+    @property
+    def name(self) -> str:
+        return "swagger"
+
     @property
     def template_name(self) -> str:
         return "redocs.html"
-
-    @property
-    def title(self) -> str:
-        return self._title
 
     @property
     def path(self) -> str:
@@ -27,8 +27,8 @@ class ReDocsUI(IDocumentationUIContext):
         with_google_fonts: bool = True,
     ):
         self._path = path
-        self._title = title
         self._template_context = {
+            "title": title,
             "redoc_js_url": redoc_js_url,
             "favicon_url": favicon_url,
             "with_google_fonts": with_google_fonts,

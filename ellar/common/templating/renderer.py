@@ -34,18 +34,20 @@ def _get_jinja_and_template_context(
 
 
 def render_template_string(
-    template_name: str, request: "Request", **template_kwargs: t.Any
+    template_string: str, request: "Request", **template_context: t.Any
 ) -> str:
     """Renders a template to string.
     :param request: Request instance
-    :param template_name: the name of the template to be rendered
-    :param template_kwargs: variables that should be available in the context of the template.
+    :param template_string: Template String
+    :param template_context: variables that should be available in the context of the template.
     """
-    jinja_template, template_context = _get_jinja_and_template_context(
-        template_name=template_name, request=request, **template_kwargs
-    )
+    jinja_environment = request.service_provider.get(Environment)
+    jinja_template = jinja_environment.from_string(template_string)
 
-    return jinja_template.render(template_context)
+    _template_context = dict(template_context)
+    _template_context.update(request=request)
+
+    return jinja_template.render(_template_context)  # type:ignore[no-any-return]
 
 
 def render_template(

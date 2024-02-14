@@ -1,13 +1,15 @@
 import pytest
+from ellar.app import AppFactory
+from ellar.common import ModuleRouter, serialize_object
 from ellar.common.compatible import AttributeDict
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
-from ellar.openapi import openapi_info
+from ellar.openapi import OpenAPIDocumentBuilder, api_info
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 from ellar.reflect import reflect
 
 
-@openapi_info(
+@api_info(
     summary="Endpoint Summary",
     description="Endpoint Description",
     deprecated=False,
@@ -28,12 +30,57 @@ def test_openapi_sets_endpoint_meta():
     assert open_api_data.tags == ["endpoint", "endpoint-25"]
 
 
-def test_invalid_openapi_info_decorator_setup():
+def test_invalid_api_info_decorator_setup():
     with pytest.raises(ImproperConfiguration):
 
-        @openapi_info(
+        @api_info(
             operation_id="4524d-z23zd-453ed-2342e",
             tags="endpoint",
         )
         def endpoint(request: Request):
             pass  # pragma: no cover
+
+
+def test_api_info_extra_keys():
+    router = ModuleRouter()
+
+    @router.get()
+    @api_info(operation_id="4524d-z23zd-453ed-2342e", xyz="xyz", abc="abc")
+    def endpoint_1(request: Request):
+        pass
+
+    app = AppFactory.create_app(routers=[router])
+    open_api_data = reflect.get_metadata(OPENAPI_OPERATION_KEY, endpoint_1)
+    assert open_api_data == {
+        "operation_id": "4524d-z23zd-453ed-2342e",
+        "summary": None,
+        "description": None,
+        "deprecated": None,
+        "tags": None,
+        "xyz": "xyz",
+        "abc": "abc",
+    }
+
+    document = OpenAPIDocumentBuilder().build_document(app)
+    data = serialize_object(document)
+    assert data["paths"]["/"] == {
+        "get": {
+            "operationId": "4524d-z23zd-453ed-2342e",
+            "responses": {
+                "200": {
+                    "description": "Successful Response",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "title": "Response Model",
+                            }
+                        }
+                    },
+                }
+            },
+            "xyz": "xyz",
+            "abc": "abc",
+            "tags": ["default"],
+        }
+    }

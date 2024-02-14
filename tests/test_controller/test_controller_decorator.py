@@ -4,7 +4,7 @@ from ellar.common.constants import (
     CONTROLLER_CLASS_KEY,
     CONTROLLER_OPERATION_HANDLER_KEY,
 )
-from ellar.core.routing import ControllerRouterFactory
+from ellar.core.router_builders import ControllerRouterBuilder
 from ellar.di import has_binding, is_decorated_with_injectable
 from ellar.reflect import reflect
 
@@ -47,6 +47,7 @@ class SomeController:
 
 
 def test_controller_routes_has_controller_type():
+    ControllerRouterBuilder.build(SampleController)
     routes = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, SampleController)
     assert routes
 
@@ -59,7 +60,7 @@ def test_controller_computed_properties():
     assert isinstance(SampleController, type) and issubclass(
         SampleController, ControllerBase
     )
-    ControllerRouterFactory.build(SampleController)
+    ControllerRouterBuilder.build(SampleController)
 
     assert is_decorated_with_injectable(SampleController)
     assert not has_binding(SampleController)
@@ -71,7 +72,7 @@ def test_controller_computed_properties():
         def __init__(self, a: str):
             self.a = a
 
-    ControllerRouterFactory.build(SomeControllerB)
+    ControllerRouterBuilder.build(SomeControllerB)
     assert is_decorated_with_injectable(SomeControllerB)
     assert has_binding(SomeControllerB)
 
@@ -88,7 +89,7 @@ def test_controller_computed_properties():
     ],
 )
 def test_controller_url_reverse(controller_type, prefix, name):
-    router = ControllerRouterFactory.build(controller_type)
+    router = ControllerRouterBuilder.build(controller_type)
     for route in router.routes:
         reversed_path = router.url_path_for(f"{name}:{route.name}")
         assert reversed_path == router.path_format.replace("/{path}", route.path)

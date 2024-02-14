@@ -5,7 +5,7 @@ from abc import ABC
 from collections import OrderedDict
 
 from anyio import Lock
-from ellar.common.utils.event_loop import get_or_create_eventloop
+from ellar.utils.event_loop import get_or_create_eventloop
 
 from ..interface import IBaseCacheBackendAsync
 from ..make_key_decorator import make_key_decorator, make_key_decorator_and_validate

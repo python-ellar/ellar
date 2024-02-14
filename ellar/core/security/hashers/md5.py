@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.common.utils.crypto import must_update_salt
+from ellar.utils.crypto import must_update_salt
 from passlib.hash import md5_crypt
 
 from .base import BaseHasher, EncodingSalt, EncodingType

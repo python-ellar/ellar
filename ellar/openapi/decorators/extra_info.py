@@ -6,12 +6,13 @@ from ellar.common.exceptions import ImproperConfiguration
 from ellar.openapi.constants import OPENAPI_OPERATION_KEY
 
 
-def openapi_info(
+def api_info(
     operation_id: t.Optional[str] = None,
     summary: t.Optional[str] = None,
     description: t.Optional[str] = None,
     tags: t.Optional[t.List[str]] = None,
     deprecated: t.Optional[bool] = None,
+    **kwargs: t.Any,
 ) -> t.Callable:
     """
     ========= ROUTE FUNCTION DECORATOR ==============
@@ -35,5 +36,6 @@ def openapi_info(
             description=description,
             deprecated=deprecated,
             tags=tags,
+            **kwargs,
         ),
     )

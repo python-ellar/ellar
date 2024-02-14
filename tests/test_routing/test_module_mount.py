@@ -1,4 +1,4 @@
-from ellar.common.routing import ModuleMount
+from ellar.core.routing import EllarMount
 
 
 class ControlType:
@@ -6,7 +6,7 @@ class ControlType:
 
 
 def test_module_mount_default_handler(test_client_factory):
-    mount = ModuleMount("/", ControlType, routes=[])
+    mount = EllarMount("/", ControlType)
     client = test_client_factory(mount.handle)
     res = client.get("/")
     assert res.status_code == 404

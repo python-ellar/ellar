@@ -9,7 +9,7 @@ import time
 import anyio
 import pytest
 from ellar.app import AppFactory
-from ellar.core.staticfiles import StaticFiles
+from ellar.common.staticfiles import StaticFiles
 from ellar.testing import TestClient
 from starlette.exceptions import HTTPException
 from starlette.routing import Mount

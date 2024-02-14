@@ -9,6 +9,7 @@ from ellar.common.constants import (
 from ellar.common.interfaces import IAPIVersioning, IEllarMiddleware, IExceptionHandler
 from ellar.common.responses import JSONResponse, PlainTextResponse
 from ellar.common.serializer import Serializer, SerializerFilter
+from ellar.common.templating import JinjaLoaderType
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
 from ellar.core.versioning import DefaultAPIVersioning
 from ellar.pydantic import ENCODERS_BY_TYPE as encoders_by_type
@@ -65,6 +66,7 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     # jinja Environment options
     # https://jinja.palletsprojects.com/en/3.0.x/api/#high-level-api
     JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any] = {}
+    JINJA_LOADERS: t.List[JinjaLoaderType] = []
 
     # Application route versioning scheme
     VERSIONING_SCHEME: IAPIVersioning = DefaultAPIVersioning()

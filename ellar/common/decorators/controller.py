@@ -1,81 +1,17 @@
-import inspect
 import typing as t
-from abc import ABC
 
 from ellar.common.compatible import AttributeDict
 from ellar.common.constants import (
-    CONTROLLER_CLASS_KEY,
     CONTROLLER_METADATA,
-    CONTROLLER_OPERATION_HANDLER_KEY,
     CONTROLLER_WATERMARK,
     NOT_SET,
-    OPERATION_ENDPOINT_KEY,
-    ROUTE_OPERATION_PARAMETERS,
 )
 from ellar.common.exceptions import ImproperConfiguration
-from ellar.common.logging import logger
 from ellar.common.models import ControllerBase, ControllerType
 from ellar.di import RequestORTransientScope, injectable
 from ellar.reflect import REFLECT_TYPE, reflect
+from ellar.utils import get_type_of_base
 from injector import Scope
-
-from ..routing.controller import (
-    ControllerRouteOperation,
-    ControllerWebsocketRouteOperation,
-)
-from ..routing.schema import RouteParameters, WsRouteParameters
-
-
-def get_route_functions(
-    cls: t.Type,
-) -> t.Iterable[t.Callable]:
-    for method in cls.__dict__.values():
-        if hasattr(method, OPERATION_ENDPOINT_KEY):
-            yield method
-
-
-def reflect_all_controller_type_routes(cls: t.Type[ControllerBase]) -> None:
-    bases = inspect.getmro(cls)
-
-    for base_cls in reversed(bases):
-        if base_cls not in [ABC, ControllerBase, object]:
-            for item in get_route_functions(base_cls):
-                if reflect.has_metadata(CONTROLLER_CLASS_KEY, item):
-                    raise Exception(
-                        f"{cls.__name__} Controller route tried to be processed more than once."
-                        f"\n-RouteFunction - {item}."
-                        f"\n-Controller route function can not be reused once its under a `@Controller` decorator."
-                    )
-                reflect.define_metadata(CONTROLLER_CLASS_KEY, cls, item)
-
-                parameters = item.__dict__[ROUTE_OPERATION_PARAMETERS]
-                operation: t.Union[
-                    ControllerRouteOperation, ControllerWebsocketRouteOperation
-                ]
-
-                if not isinstance(parameters, list):
-                    parameters = [parameters]
-
-                for parameter in parameters:
-                    if isinstance(parameter, RouteParameters):
-                        operation = ControllerRouteOperation(**parameter.dict())
-                    elif isinstance(parameter, WsRouteParameters):
-                        operation = ControllerWebsocketRouteOperation(
-                            **parameter.dict()
-                        )
-                    else:  # pragma: no cover
-                        logger.warning(
-                            f"Parameter type is not recognized. {type(parameter) if not isinstance(parameter, type) else parameter}"
-                        )
-                        continue
-
-                    reflect.define_metadata(
-                        CONTROLLER_OPERATION_HANDLER_KEY,
-                        [operation],
-                        cls,
-                    )
-
-                del item.__dict__[ROUTE_OPERATION_PARAMETERS]
 
 
 @t.no_type_check
@@ -106,9 +42,7 @@ def Controller(
         ), "Controller Prefix must start with '/'"
     # TODO: replace with a ControllerTypeDict and OpenAPITypeDict
     kwargs = AttributeDict(
-        path=_prefix,
-        name=name,
-        include_in_schema=include_in_schema,
+        path=_prefix, name=name, include_in_schema=include_in_schema, processed=False
     )
 
     def _decorator(cls: t.Type) -> t.Type[ControllerBase]:
@@ -139,11 +73,20 @@ def Controller(
                 .replace("controller", "")
             )
 
+        for base in get_type_of_base(ControllerBase, _controller_type):
+            if reflect.has_metadata(CONTROLLER_WATERMARK, base) and hasattr(
+                cls, "__CONTROLLER_WATERMARK__"
+            ):
+                raise ImproperConfiguration(
+                    f"`@Controller` decorated classes does not support inheritance. \n"
+                    f"{_controller_type}"
+                )
+
         if not reflect.has_metadata(
             CONTROLLER_WATERMARK, _controller_type
         ) and not hasattr(cls, "__CONTROLLER_WATERMARK__"):
             reflect.define_metadata(CONTROLLER_WATERMARK, True, _controller_type)
-            reflect_all_controller_type_routes(_controller_type)
+            # reflect_all_controller_type_routes(_controller_type)
 
             injectable(scope or RequestORTransientScope)(cls)
 

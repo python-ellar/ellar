@@ -6,6 +6,7 @@ from ellar.core.conf import Config, ConfigDefaultTypesMixin
 from ellar.core.conf.config import ConfigRuntimeError
 from ellar.core.versioning import DefaultAPIVersioning, UrlPathAPIVersioning
 from ellar.pydantic import ENCODERS_BY_TYPE
+from jinja2.loaders import FileSystemLoader
 from starlette.responses import JSONResponse
 
 if ELLAR_CONFIG_MODULE in os.environ:
@@ -113,12 +114,14 @@ def test_configuration_can_be_changed_during_instantiation():
         SOME_NEW_CONFIGS="some new configuration values",
         JINJA_TEMPLATES_OPTIONS={"auto_reload": False},
         SERIALIZER_CUSTOM_ENCODER={int: int_encode},
+        JINJA_LOADERS=[FileSystemLoader("templates")],
     )
 
     assert config.DEBUG is False
     assert config.JINJA_TEMPLATES_OPTIONS == {"auto_reload": False}
     assert config.SOME_NEW_CONFIGS == "some new configuration values"
     assert config.SERIALIZER_CUSTOM_ENCODER[int] == int_encode
+    assert len(config.JINJA_LOADERS) == 1
 
 
 def test_can_set_defaults_a_configuration_instance_once():

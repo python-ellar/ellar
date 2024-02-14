@@ -7,6 +7,7 @@ from .guards import GuardConsumer
 from .interceptors import EllarInterceptorConsumer
 from .modules import DynamicModule, LazyModuleImport, ModuleBase, ModuleSetup
 from .services import Reflector, reflector
+from .shortcuts import host, mount
 from .versioning import VersioningSchemes
 
 __all__ = [
@@ -26,6 +27,8 @@ __all__ = [
     "GuardConsumer",
     "LazyModuleImport",
     "VersioningSchemes",
+    "mount",
+    "host",
 ]
 
 

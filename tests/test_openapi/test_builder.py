@@ -211,7 +211,7 @@ def test_builder_build_document_has_correct_schema():
             "/cat/create": {
                 "get": {
                     "tags": ["cat"],
-                    "operationId": "create_cat_create_get",
+                    "operationId": "create_cat_create_get__cat",
                     "responses": {
                         "200": {
                             "description": "Successful Response",
@@ -230,7 +230,7 @@ def test_builder_build_document_has_correct_schema():
             "/cat/{cat_id}": {
                 "put": {
                     "tags": ["cat"],
-                    "operationId": "update_cat__cat_id__put",
+                    "operationId": "update_cat__cat_id__put__cat",
                     "parameters": [
                         {
                             "required": True,

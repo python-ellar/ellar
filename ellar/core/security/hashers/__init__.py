@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.common.utils.crypto import get_random_string
+from ellar.utils.crypto import get_random_string
 
 from .argon2 import Argon2Hasher
 from .base import BaseHasher, EncodingType

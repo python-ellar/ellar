@@ -44,7 +44,7 @@ class ApplicationModule:
 application = AppFactory.create_from_app_module(
     ApplicationModule,
     config_module=os.environ.get(
-        ELLAR_CONFIG_MODULE, "dialerai.config:DevelopmentConfig"
+        ELLAR_CONFIG_MODULE, "project_name.config:DevelopmentConfig"
     ),
     global_guards=[ThrottlerGuard]
 )

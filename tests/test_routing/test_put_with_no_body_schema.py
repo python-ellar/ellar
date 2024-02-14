@@ -1,5 +1,7 @@
 from ellar.common import patch, put, serialize_object
 from ellar.openapi import OpenAPIDocumentBuilder
+from ellar.openapi.constants import IGNORE_CONTROLLER_TYPE
+from ellar.reflect import reflect
 from ellar.testing import Test
 
 tm = Test.create_test_module()
@@ -8,6 +10,7 @@ app = tm.create_application()
 
 @put("/items/{item_id}")
 @patch("/items/{item_id}")
+@reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
 def save_item_no_body(item_id: str):
     return {"item_id": item_id}
 

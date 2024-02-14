@@ -18,7 +18,7 @@ class FunctionBasedMiddleware:
 
     Usage: Example 1 in @Module()
         @middleware()
-        def my_middleware(context: IExecution, call_next):
+        async def my_middleware(cls, context: IExecutionContext, call_next):
             print("Called my_middleware")
             request = context.switch_to_http_connection().get_request()
             request.state.my_middleware = True
@@ -26,7 +26,7 @@ class FunctionBasedMiddleware:
 
     Usage: Example 2
         @middleware()
-        def my_middleware(context: IExecution, call_next):
+        async def my_middleware(context: IExecutionContext, call_next):
             print("Called my_middleware")
             response = context.switch_to_http_connection().get_response()
             response.content = "Some Content"
@@ -34,7 +34,7 @@ class FunctionBasedMiddleware:
             return response
 
     Usage 3: Plain
-        async def asgi_middleware(execution_context, call_next):
+        async def asgi_middleware(execution_context: IExecutionContext, call_next):
             #Run some actions
             await call_next()
 

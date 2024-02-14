@@ -11,9 +11,9 @@ from ellar.common.constants import (
     TEMPLATE_GLOBAL_KEY,
 )
 from ellar.common.models import ControllerBase
-from ellar.common.routing import ModuleMount
 from ellar.common.templating import ModuleTemplating
-from ellar.common.utils import build_init_kwargs
+from ellar.core.router_builders import get_controller_builder_factory
+from ellar.core.routing import EllarMount
 from ellar.di import (
     MODULE_REF_TYPES,
     Container,
@@ -23,9 +23,9 @@ from ellar.di import (
 )
 from ellar.di.providers import ModuleProvider
 from ellar.reflect import reflect
+from ellar.utils import build_init_kwargs
 from starlette.routing import BaseRoute, Mount
 
-from ..routing import get_controller_builder_factory
 from .base import ModuleBase, ModuleBaseMeta
 
 if t.TYPE_CHECKING:  # pragma: no cover
@@ -199,7 +199,7 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         return self._config
 
     @property
-    def routers(self) -> t.Sequence[t.Union[BaseRoute, ModuleMount, Mount]]:
+    def routers(self) -> t.Sequence[t.Union[BaseRoute, EllarMount, Mount]]:
         return self._routers
 
     @property

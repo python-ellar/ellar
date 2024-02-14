@@ -2,10 +2,11 @@ import pytest
 from ellar.common import Inject, ModuleRouter, Query, get, serialize_object
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.connection import Request
-from ellar.core.routing.helper import build_route_handler
+from ellar.core.routing.utils import build_route_handler
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
+from ..utils import pydantic_error_url
 from .sample import Data, Filter, NonPrimitiveSchema
 
 mr = ModuleRouter("")
@@ -73,7 +74,7 @@ def test_query_with_alias():
                 "loc": ["query", "aliasQty"],
                 "msg": "Field required",
                 "type": "missing",
-                "url": "https://errors.pydantic.dev/2.5/v/missing",
+                "url": pydantic_error_url("missing"),
             }
         ]
     }

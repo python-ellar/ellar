@@ -14,7 +14,7 @@ from ellar.common.responses.models import HTMLResponseModel
 from ellar.common.shortcuts import fail_silently
 from ellar.common.templating import TemplateFunctionData
 from ellar.common.types import TemplateFilterCallable, TemplateGlobalCallable
-from ellar.common.utils import class_base_function_regex, get_name
+from ellar.utils import class_base_function_regex, get_name
 
 from .base import set_metadata as set_meta
 

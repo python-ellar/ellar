@@ -1,5 +1,5 @@
 import pytest
-from ellar.auth.session import ISessionStrategy
+from ellar.auth.session import SessionStrategy
 from ellar.auth.session.strategy import SessionClientStrategy
 from ellar.common import Body, IExecutionContext, Inject, ModuleRouter, Query, get
 from ellar.common.exceptions import ImproperConfiguration
@@ -98,7 +98,7 @@ tm = Test.create_test_module(
     config_module={
         "SECRET_KEY": SECRET_KEY,
     },
-).override_provider(ISessionStrategy, use_class=SessionClientStrategy)
+).override_provider(SessionStrategy, use_class=SessionClientStrategy)
 client = tm.get_test_client()
 
 

@@ -5,7 +5,7 @@ repo_name: eadwinCode/ellar
 repo_url: https://github.com/python-ellar/ellar
 edit_uri: blob/master/docs
 copyright: |
-  Copyright &copy; 2021 - 2023 <a href="https://github.com/eadwinCode"  target="_blank" rel="noopener">Eadwin Ezeudoh</a>
+  Copyright &copy; 2024 <a href="https://github.com/eadwinCode"  target="_blank" rel="noopener">Eadwin Ezeudoh</a>
 
 docs_dir: docs
 site_dir: site
@@ -27,7 +27,7 @@ theme:
     - navigation.indexes
     - navigation.instant
     - navigation.prune
-#    - navigation.tabs
+    - navigation.tabs
     - navigation.left
     - navigation.tracking
   palette:
@@ -62,6 +62,13 @@ plugins:
         minify_html: true
   - git-revision-date-localized:
       enable_creation_date: false
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          rendering:
+            show_root_heading: true
+            show_source: false
 
 nav:
   - Get Started:
@@ -85,6 +92,7 @@ nav:
       - Dynamic Modules: basics/dynamic-modules.md
       - Injector Scopes: basics/injector-scopes.md
       - Lifespan: basics/lifespan.md
+      - Application Context: basics/application-context.md
       - Testing: basics/testing.md
   - Techniques:
       - Configuration: techniques/configurations.md
@@ -124,9 +132,13 @@ nav:
         - runserver: cli/runserver-command.md
     - Custom Commands: cli/custom-commands.md
 
+  - OPENAPI:
+      - index: openapi/index.md
+      - Security: openapi/security.md
+      - Document UI: openapi/documentation-ui.md
   - WebSockets:
-      - websockets: websockets/websockets.md
-      - socketio: websockets/socketio.md
+      - index: websockets/websockets.md
+      - Socketio: websockets/socketio.md
 
 markdown_extensions:
   - attr_list

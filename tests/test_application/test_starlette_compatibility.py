@@ -5,9 +5,9 @@ from ellar.common import (
     Inject,
     get,
 )
-from ellar.common.utils.importer import get_class_import
 from ellar.core.connection import Request
 from ellar.testing import Test, TestClient
+from ellar.utils.importer import get_class_import
 
 from .config import ConfigTrustHostConfigure
 from .sample import ApplicationModule

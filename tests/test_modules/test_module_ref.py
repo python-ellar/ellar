@@ -16,7 +16,6 @@ from ellar.common.constants import (
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
-from ellar.common.utils import get_name
 from ellar.core import Config, ModuleBase
 from ellar.core.modules.ref import (
     InvalidModuleTypeException,
@@ -28,6 +27,7 @@ from ellar.core.modules.ref import (
 from ellar.di import EllarInjector, TransientScope, injectable
 from ellar.reflect import reflect
 from ellar.testing import Test
+from ellar.utils import get_name
 from injector import UnsatisfiedRequirement
 from starlette.routing import Route
 

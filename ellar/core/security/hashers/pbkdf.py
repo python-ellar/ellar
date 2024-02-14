@@ -1,4 +1,4 @@
-from ellar.common.utils.crypto import must_update_salt
+from ellar.utils.crypto import must_update_salt
 from passlib.hash import django_pbkdf2_sha1, django_pbkdf2_sha256
 
 from .base import BaseHasher

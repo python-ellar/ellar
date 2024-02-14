@@ -1,12 +1,13 @@
 import typing as t
 
+from ellar.pydantic import as_pydantic_validator
 from jinja2 import TemplateNotFound
 from jinja2.loaders import BaseLoader
 
-from .environment import Environment
-
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.app.main import App
+
+    from .environment import Environment
 
 
 class JinjaLoader(BaseLoader):
@@ -18,12 +19,12 @@ class JinjaLoader(BaseLoader):
         self.app = app
 
     def get_source(  # type: ignore
-        self, environment: Environment, template: str
+        self, environment: "Environment", template: str
     ) -> t.Tuple[str, t.Optional[str], t.Optional[t.Callable]]:
         return self._get_source_fast(environment, template)
 
     def _get_source_fast(
-        self, environment: Environment, template: str
+        self, environment: "Environment", template: str
     ) -> t.Tuple[str, t.Optional[str], t.Optional[t.Callable]]:
         for loader in self._iter_loaders(template):
             try:
@@ -49,3 +50,12 @@ class JinjaLoader(BaseLoader):
                     result.add(template)
 
         return list(result)
+
+
+@as_pydantic_validator("__validate_input__", schema={"type": "object"})
+class JinjaLoaderType(BaseLoader):
+    @classmethod
+    def __validate_input__(cls, v: t.Any, _: t.Any) -> t.Any:
+        if not isinstance(v, BaseLoader):
+            raise ValueError(f"Expected {BaseLoader} object, received: {type(v)}")
+        return v

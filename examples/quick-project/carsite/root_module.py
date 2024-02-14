@@ -9,4 +9,4 @@ from .car.module import CarModule
 class ApplicationModule(ModuleBase):
     @exception_handler(404)
     def exception_404_handler(cls, context: IHostContext, exc: Exception) -> Response:
-        return JSONResponse({"detail": "Resource not found."})
+        return JSONResponse({"detail": "Resource not found."}, status_code=404)

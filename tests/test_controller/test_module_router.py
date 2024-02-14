@@ -1,6 +1,6 @@
 import pytest
-from ellar.common.routing import ModuleRouter
-from ellar.core.routing import ModuleRouterFactory
+from ellar.common import ModuleRouter
+from ellar.core.router_builders import ModuleRouterBuilder
 
 from .sample import router
 
@@ -50,11 +50,10 @@ def some_example_ws_2():
     ],
 )
 def test_build_routes(router_instance, prefix, tag, name):
-    for route in router_instance.routes:
-        reversed_path = router_instance.url_path_for(f"{name}:{route.name}")
-        assert reversed_path == router_instance.path_format.replace(
-            "/{path}", route.path
-        )
+    mount = ModuleRouterBuilder.build(router_instance)
+    for route in mount.routes:
+        reversed_path = mount.url_path_for(f"{name}:{route.name}")
+        assert reversed_path == mount.path_format.replace("/{path}", route.path)
 
 
 def test_module_router_url_reverse():
@@ -64,10 +63,8 @@ def test_module_router_url_reverse():
     def some_route():
         pass
 
-    ModuleRouterFactory.build(new_router)
+    mount = ModuleRouterBuilder.build(new_router)
 
-    reversed_path = new_router.url_path_for(
-        f"{new_router.name}:{new_router.routes[0].name}"
-    )
-    path = new_router.path_format.replace("/{path}", new_router.routes[0].path)
+    reversed_path = mount.url_path_for(f"{mount.name}:{mount.routes[0].name}")
+    path = mount.path_format.replace("/{path}", mount.routes[0].path)
     assert reversed_path == path

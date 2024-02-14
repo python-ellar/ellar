@@ -197,7 +197,20 @@ class _SyncWorkerThread(threading.Thread):
         self.stream_queue.put(sentinel)
 
 
-def execute_coroutine_with_sync_worker(coro: t.Coroutine) -> t.Any:
+def execute_coroutine(coro: t.Coroutine) -> t.Any:
+    """
+    Run a coroutine function as synchronous function with SyncWorker
+
+    example:
+    ```python
+
+        async def coroutine_function():
+            return "Coroutine Function"
+
+        res = execute_coroutine(coroutine_function())
+        assert res == "Coroutine Function"
+    ```
+    """
     _worker_thread = _SyncWorkerThread()
     _worker_thread.start()
 
@@ -209,9 +222,22 @@ def execute_coroutine_with_sync_worker(coro: t.Coroutine) -> t.Any:
     return res
 
 
-def execute_async_gen_with_sync_worker(
+def execute_async_gen(
     async_gen: t.AsyncIterator[_Item],
 ) -> t.Iterator[_Item]:
+    """
+    Runs AsyncGenerator function as a Generator using SyncWorker
+
+    example:
+    ```python
+        async def async_gen():
+            for i in range(0, 10):
+                yield i
+
+        res = list(execute_async_gen(async_gen()))
+        assert res == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    ```
+    """
     _worker_thread = _SyncWorkerThread()
     _worker_thread.start()
 
@@ -223,9 +249,23 @@ def execute_async_gen_with_sync_worker(
 
 
 @contextlib.contextmanager  # type:ignore[arg-type]
-def execute_async_context_manager_with_sync_worker(  # type:ignore[misc]
+def execute_async_context_manager(  # type:ignore[misc]
     async_gen: t.AsyncContextManager, context_update: bool = True
 ) -> t.ContextManager:
+    """
+    Run AsyncContextManager as a ContextManager
+
+    example:
+
+    ```python
+        @contextlib.asynccontextmanager
+        async def async_context_manager():
+            yield 10
+
+        with execute_async_context_manager(async_context_manager()) as ctx:
+            assert ctx == 10
+    ```
+    """
     _worker_thread = _SyncWorkerThread()
     _worker_thread.start()
 
