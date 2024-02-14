@@ -1,8 +1,8 @@
 import os.path
 import typing as t
 
-from ellar.common.staticfiles import StaticFiles
 from ellar.common.types import ASGIApp
+from ellar.core.staticfiles import StaticFiles
 from ellar.utils.importer import get_main_directory_by_stack
 from starlette.middleware import Middleware
 from starlette.routing import BaseRoute, Mount
@@ -37,8 +37,8 @@ class ASGIFileMount(Mount):
 
     def _combine_app_with_middleware(self, app: ASGIApp) -> ASGIApp:
         if self._middleware is not None:
-            for cls, options in reversed(self._middleware):
-                app = cls(app=app, **options)
+            for cls, _, kwargs in reversed(self._middleware):
+                app = cls(app=app, **kwargs)
         return app
 
     @property

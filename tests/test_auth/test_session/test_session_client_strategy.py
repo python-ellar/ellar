@@ -125,9 +125,7 @@ def test_session_cookie_sub_path():
     )
     test_module.override_provider(SessionStrategy, use_class=SessionClientStrategy)
 
-    client_second_app = test_module.get_test_client(
-        base_url="http://testserver/second_app"
-    )
+    client_second_app = test_module.get_test_client(root_path="/second_app")
     client = test_module.get_test_client(base_url="http://testserver/")
 
     response = client_second_app.post("/second_app/", json={"some": "data"})

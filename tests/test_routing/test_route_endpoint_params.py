@@ -41,12 +41,13 @@ def get_requests_case_1(
 
 @router.get("/others")
 def get_requests_case_2(
+    request: StarletteRequest,
     session: Inject[dict, Inject.Key("Session")],
     host: Inject[str, Inject.Key("Host")],
     config: Inject[Config],
 ):
     assert isinstance(config, Config)  # True
-    assert host == "testclient"
+    assert host is None  # Starlette TestClient client info is None
     assert isinstance(session, dict) and len(session) == 0
     return True
 
