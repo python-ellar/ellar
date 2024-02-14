@@ -17,7 +17,7 @@ Beta version
 - Authorization Documentation - (in progress)
 
 ## Resources
-- [Documentation](python-ellar.github.io/ellar/)
+- [Documentation](https://python-ellar.github.io/ellar/)
 
 ## **Introduction**
 
