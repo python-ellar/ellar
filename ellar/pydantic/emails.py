@@ -11,13 +11,15 @@ except ImportError:  # pragma: no cover
     from ellar.common.logging import logger
 
     @as_pydantic_validator(
-        "__validate_input", schema={"type": "string", "format": "email"}
+        "__validate_input__", schema={"type": "string", "format": "email"}
     )
-    class EmailStr(str):  # type: ignore
+    class FallbackEmailStr(str):  # type: ignore
         @classmethod
-        def __validate_input(cls, __input_value: t.Any, _: t.Any) -> str:
+        def __validate_input__(cls, __input_value: t.Any, _: t.Any) -> str:
             logger.warning(
                 "email-validator not installed, email fields will be treated as str.\n"
                 "To install, run: pip install email-validator"
             )
             return str(__input_value)
+
+    EmailStr = FallbackEmailStr
