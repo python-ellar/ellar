@@ -1,3 +1,10 @@
+# 0.7.1
+## What's Changed
+* Fixed EmailStr bug by @eadwinCode in https://github.com/python-ellar/ellar/pull/181
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.7.0...0.7.1
+
 # 0.7.0
 ## What's Changed
 * Bump aiohttp from 3.9.1 to 3.9.3 by @dependabot in https://github.com/python-ellar/ellar/pull/178
