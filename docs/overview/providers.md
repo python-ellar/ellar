@@ -1,48 +1,46 @@
 # **Providers**
-A provider refers to any class or object that can be injected as a dependency when creating an instance of another class. 
+A provider is any class or object that can be injected as a dependency when creating an instance of another class. 
 These can include services, repository services, factories, and other classes responsible for handling complex tasks. 
-Providers are made accessible to controllers, route handlers, or other providers as dependencies, 
-following the principles of [Dependency Injection](https://en.wikipedia.org/wiki/Dependency_injection){target="_blank"}.
+Providers are made accessible to controllers, route handlers, or other providers as dependencies, following the principles of Dependency Injection.
 
-In Ellar, the creation of a `provider/injectable` class is simplified 
-by decorating the class with the `@injectable()` marker and specifying the desired scope.
+In Ellar, creating a provider or injectable class is simplified by decorating the class with the `@injectable()` marker and specifying the desired scope.
 
 ```python
 from ellar.di import injectable, singleton_scope
-
 
 @injectable(scope=singleton_scope)
 class UserRepository:
     pass
 ```
 
-We have created a `UserRepository` provider that will help manage the loading and saving of user data to the database.
+For example, we've created a **UserRepository** provider to manage the loading and saving of user data to the database.
 
-Let's add this service to a controller.
+Now, let's integrate this service into a controller.
 
 ```python
 from ellar.di import injectable, singleton_scope
 from ellar.common import Controller, ControllerBase
 
-
 @injectable(scope=singleton_scope)
 class UserRepository:
     pass
-
 
 @Controller()
 class UserController(ControllerBase):
     def __init__(self, user_repo: UserRepository) -> None:
         self.user_repo = user_repo
 ```
-Let's refactor our `CarController` and move some actions to a service.
+
+We've added the **UserRepository** as a dependency to the **UserController**, 
+ensuring that **Ellar** resolves the **UserRepository** instance when creating the **UserController** instance.
+
+Next, let's refactor our CarController and move some actions to a service.
 
 ```python
 # project_name/apps/car/services.py
 import typing as t
 from ellar.di import injectable, singleton_scope
 from .schemas import CreateCarSerializer, CarSerializer
-
 
 @injectable(scope=singleton_scope)
 class CarRepository:
@@ -54,23 +52,19 @@ class CarRepository:
         self._cars.append(data)
         return data.dict()
 
-
     def get_all(self) -> t.List[CarSerializer]:
         return self._cars
-
 ```
 
-We have successfully created a `CarRepository` with a `singleton` scope.
+We've created a **CarRepository** with a singleton scope to handle car-related operations.
 
-Let's wire it up to `CarController`. And rewrite some route handles.
+Now, let's wire it up to **CarController** and rewrite some route handlers.
 
 ```python
 # project_name/apps/car/controllers.py
-
 from ellar.common import Body, Controller, get, post, Query, ControllerBase
 from .schemas import CreateCarSerializer, CarListFilter
 from .services import CarRepository
-
 
 @Controller('/car')
 class CarController(ControllerBase):
@@ -93,13 +87,14 @@ class CarController(ControllerBase):
     ...
 ```
 
-We have defined `CarRepository` as a dependency to `CarController` and Ellar will resolve the `CarRepository` instance when creating the `CarController` instance.
+By defining CarRepository as a dependency for **CarController**, **Ellar** automatically resolves the CarRepository instance when creating the **CarController** instance.
 
-!!! info
-    Every class dependency should be defined in the class **constructor**  as a type annotation or Ellar won't be aware of the dependencies required for an object instantiation.
+Note that every class dependency should be defined in the class constructor as a type annotation to ensure that **Ellar** is aware of the dependencies required for object instantiation.
 
 ## **Provider Registration**
-To get this working, we need to expose the `CarRepository` to the `CarModule` module just like we did for the `CarController`.
+
+In order to make the `CarRepository` accessible within the `CarModule`, similar to how we exposed the `CarController`, 
+we need to include it in the list of providers within the `CarModule`.
 
 ```python
 # project_name/apps/car/module.py
@@ -110,10 +105,9 @@ from ellar.di import Container
 from .services import CarRepository
 from .controllers import CarController
 
-
 @Module(
     controllers=[CarController],
-    providers=[CarRepository],
+    providers=[CarRepository],  # Include CarRepository in the list of providers
     routers=[],
 )
 class CarModule(ModuleBase):
@@ -123,13 +117,18 @@ class CarModule(ModuleBase):
         pass
 ```
 
+By adding `CarRepository` to the list of providers, Ellar ensures that it is available for dependency injection within the `CarModule`. 
+This allows us to use `CarRepository` within any class or object defined within the `CarModule`, 
+providing a seamless integration of services and controllers within the module.
+
 ## **Other ways of registering a Provider**
-There are two ways we can register/configure providers in EllarInjector IoC.
 
-### **`ProviderConfig`**:
-With `ProviderConfig`, we can register a `base_type` against a `concrete_type` OR register a `base_type` against a value type.
+There are two methods available for registering or configuring providers in EllarInjector IoC.
 
-For example:
+### **1. `ProviderConfig`:**
+With `ProviderConfig`, you can register a `base_type` against a `concrete_type` or a `base_type` against a value type.
+
+For instance:
 ```python
 # main.py
 
@@ -184,11 +183,11 @@ def validate_provider_config():
 if __name__ == "__main__":
     validate_provider_config()
 ```
-In above example, we used `ProviderConfig` as a value type as in the case of `IFooB` type and 
-as a concrete type as in the case of `IFoo` type.
 
-### **`register_providers`**:
-We can also achieve the same by overriding `register_providers` in any Module class.
+In the above example, `ProviderConfig` is used as a value type for `IFooB` and as a concrete type for `IFoo`.
+
+### **2. `register_providers`:**
+Another method is by overriding `register_providers` in any Module class.
 
 For example:
 ```python
@@ -210,7 +209,7 @@ class IFooB:
     pass
 
 
-@injectable  # default scope=singleton_scope
+@injectable
 class AFooClass(IFoo, IFooB):
     pass
 
@@ -242,3 +241,5 @@ if __name__ == "__main__":
     validate_register_services()
 
 ```
+
+In this example, the `register_services` method in `AModule` is used to register `IFoo` and `IFooB` with their respective concrete implementations.

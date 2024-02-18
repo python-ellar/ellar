@@ -1,21 +1,22 @@
 # **Interceptors - [(AOP) technique](https://en.wikipedia.org/wiki/Aspect-oriented_programming){target="_blank"}**
 
-An interceptor is a class annotated with the `@injectable()` decorator and implements the EllarInterceptor interface.
-During request-response cycle, interceptors are called after middleware execution before route handler execution.
+An interceptor is a class marked with the `@injectable()` decorator and adhering to the **`EllarInterceptor`** interface. 
+They execute additional logic before or after method invocation.
 
-Interceptors have a set of useful capabilities which are inspired by the  [Aspect Oriented Programming (AOP) technique](https://en.wikipedia.org/wiki/Aspect-oriented_programming){target="_blank"} technique. 
-They make it possible to:
+Inspired by the principles of [Aspect-Oriented Programming (AOP)](https://en.wikipedia.org/wiki/Aspect-oriented_programming){target="_blank"}, 
+interceptors offer several functionalities:
 
-- bind extra logic before / after method execution
-- transform the result returned from a function
-- transform the exception thrown from a function
-- extend the basic function behavior
-- completely override a function depending on specific conditions (e.g., for caching purposes)
+- Pre- and post-processing of method executions.
+- Transformation of return values.
+- Handling exceptions thrown during execution.
+- Extension of method behavior.
+- Conditional method override, useful for tasks like caching.
 
 ## **Basic**
-Each interceptor implements the `intercept()` method, which takes two arguments. 
-The first one is the `ExecutionContext` instance (exactly the same object as for [guards](guards.md){target="_blank"}) and 
-`next_interceptor` awaitable function that executes the next interceptor in the execution chain.
+Each interceptor class includes an `intercept()` method, accepting two parameters. 
+The first parameter is an instance of the `ExecutionContext` class, which is identical to the object used for [guards](guards.md). 
+The second parameter is a callable asynchronous function called `next_interceptor`, 
+responsible for executing the subsequent interceptor in the execution sequence.
 
 ```python
 import typing as t
@@ -30,38 +31,27 @@ class EllarInterceptor(ABC):
     ) -> t.Any:
         """implementation comes here"""
 ```
+
 !!! note
-    `intercept` function of interceptor class is an asynchronous function.
+    The `intercept()` method within an interceptor class is an asynchronous function.
 
 ## **Execution context**
-The `ExecutionContext` adds several new helper methods that provide additional details about the current execution process. 
-These details can be helpful in building more generic interceptors that can work across a broad set of controllers, methods, and execution contexts. 
-Learn more about `ExecutionContext` [here](../basics/execution-context.md){target="_blank"}.
+The `ExecutionContext` introduces several auxiliary methods that offer further insights into the ongoing execution process. 
+This additional information can be valuable for creating more versatile interceptors capable of functioning across various controllers, methods, and execution contexts. 
+For further details on `ExecutionContext`, refer to the documentation [here](../basics/execution-context.md).
 
 ## **Next Interceptor Handler**
-The second argument, `next_interceptor`,  in `intercept` of EllarInterceptor class is used to invoke the route handler method at some point in your interceptor.
-If you don't call the `next_interceptor` method in your implementation of the `intercept()` method, the route handler method won't be executed at all.
+The `next_interceptor` parameter in the `intercept()` method of the `EllarInterceptor` class serves a crucial role in invoking the route handler method within your interceptor. Omitting the invocation of `next_interceptor` within your implementation of `intercept()` will result in the route handler method not being executed.
 
-This approach means that the `intercept()` method effectively wraps the request/response cycle. 
-As a result, you may implement custom logic **both before and after** the execution of the final route handler. 
-It's clear that you can write code in your `intercept()` method that executes before calling `next_interceptor()`, 
-but how do you affect what happens afterward? depending on the nature of the data returned by `next_interceptor()`, 
-further manipulation can be done before final response to the client.
- 
-Using Aspect Oriented Programming terminology, the invocation of the route handler 
-(i.e., calling `next_interceptor()`) is called a Pointcut, indicating that it's the point at which our 
-additional logic is inserted.
+This mechanism essentially encapsulates the request/response cycle within the `intercept()` method. Consequently, you have the flexibility to incorporate custom logic both before and after the execution of the final route handler. While it's evident how to include code before calling `next_interceptor()`, influencing the behavior afterward depends on the data returned by `next_interceptor()`.
 
-Consider, for example, an incoming `POST /car` request. This request is destined for the `create()` handler 
-defined inside the `CarController`. If an interceptor which does not call the `next_interceptor()`
-method is called anywhere along the way, the `create()` method won't be executed. 
-Once `next_interceptor()` is called, the `create()` handler will be triggered. And once the response is returned, 
-additional operations can be performed on the data returned, and a final result returned to the client.
+From the perspective of Aspect-Oriented Programming, the invocation of the route handler (i.e., calling `next_interceptor()`) represents a Pointcut, denoting the point at which additional logic is injected.
+
+For instance, consider an incoming `POST /car` request targeting the `create()` handler in the `CarController`. If an interceptor fails to call `next_interceptor()` at any point, the `create()` method won't execute. However, once `next_interceptor()` is invoked, the `create()` handler proceeds. Subsequently, upon receiving the response, additional operations can be performed on the returned data before delivering the final result to the client.
 
 
 ## **Aspect interception**
-The first use case we'll look at is to use an interceptor to log user interaction (e.g., storing user calls, asynchronously dispatching events or calculating a timestamp). 
-We show a simple LoggingInterceptor below:
+Here's a simple example demonstrating the use of an interceptor to log user interactions. The **LoggingInterceptor** intercepts requests before and after the route handler execution to log relevant information such as start time, end time, and duration of execution.
 
 ```python
 import typing as t
@@ -70,9 +60,7 @@ import time
 from ellar.common import EllarInterceptor, IExecutionContext
 from ellar.di import injectable
 
-
 logger = logging.getLogger('ellar')
-
 
 @injectable()
 class LoggingInterceptor(EllarInterceptor):
@@ -82,17 +70,21 @@ class LoggingInterceptor(EllarInterceptor):
         logger.info('Before Route Handler Execution...')
         start_time = time.time()
         
+        # Invoke the next interceptor in the chain (or the route handler)
         res = await next_interceptor()
+        
+        # Log after route handler execution
         logger.info(f'After Route Handler Execution.... {time.time() - start_time}s')
+        
         return res
 ```
 
-!!! hint
-    Interceptors, like controllers, providers, guards, and so on, can inject dependencies through their `constructor`.
+This interceptor captures the timing of the request execution by recording the start time before invoking the route handler and calculating the duration after execution. It utilizes the logging module to output the relevant information.
+
+Remember, like other components such as controllers and providers, interceptors can also inject dependencies through their constructor, enabling seamless integration with other parts of the application.
 
 ## **Binding interceptors**
-In order to set up the interceptor, we use the `@UseInterceptors()` decorator imported from the `ellar.common` package. 
-Like **guards**, interceptors can be controller-scoped, method-scoped, or global-scoped.
+To set up an interceptor, we utilize the `@UseInterceptors()` decorator from the `ellar.common` package. Similar to guards, interceptors can be scoped at the controller level, method level, or globally.
 
 ```python
 from ellar.common import UseInterceptors, Controller
@@ -103,8 +95,7 @@ class CarController:
     ...
 ```
 
-Note that we passed the LoggingInterceptor type (instead of an instance), leaving responsibility for instantiation to the framework and enabling dependency injection. 
-As with guards, we can also pass an in-place instance:
+In the above code snippet, we apply the `UseInterceptors()` decorator to the `CarController` class, specifying `LoggingInterceptor` as the interceptor to be used. Note that we pass the type of the interceptor (not an instance), allowing the framework to handle instantiation and enabling dependency injection. Alternatively, we can directly pass an instance:
 
 ```python
 from ellar.common import UseInterceptors, Controller
@@ -115,10 +106,9 @@ class CarController:
     ...
 ```
 
-As mentioned, the construction above attaches the interceptor to every handler declared by this controller. 
-If we want to restrict the interceptor's scope to a single method, we simply apply the decorator at the method level.
+This construction attaches the interceptor to every handler declared within the controller. If we want to limit the scope of the interceptor to a specific method, we apply the decorator at the method level.
 
-In order to set up a global interceptor, we use the use_global_interceptors() method of the Ellar application instance:
+For setting up a global interceptor, we utilize the `use_global_interceptors()` method of the Ellar application instance:
 
 ```python
 from ellar.app import AppFactory
@@ -129,8 +119,10 @@ app.use_global_interceptors(LoggingInterceptor())
 # app.use_global_interceptors(LoggingInterceptor)
 ```
 
+This approach ensures that the interceptor is applied to every request processed by the Ellar application, regardless of the controller or method handling the request.
+
 ## **Exception Handling**
-You can also handle exception through on the process of request/response cycle before it gets handled by system exception handlers.
+You can also manage exceptions during the request/response cycle before they are handled by system exception handlers.
 
 ```python
 class CustomException(Exception):
@@ -145,7 +137,12 @@ class InterceptCustomException(EllarInterceptor):
         try:
             return await next_interceptor()
         except CustomException as cex:
+            # Access the response object from the context
             res = context.switch_to_http_connection().get_response()
+            # Set the status code to 400 for a custom exception
             res.status_code = 400
+            # Return a JSON response with the exception message
             return {"message": str(cex)}
 ```
+
+In the above code, the `InterceptCustomException` interceptor catches any `CustomException` raised during the execution of the request/response cycle. It then modifies the response object to set the status code to 400 and returns a JSON response containing the exception message. This allows for custom handling of exceptions within the interceptor before they are propagated to the system's exception handlers.
