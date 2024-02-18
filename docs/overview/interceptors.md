@@ -6,11 +6,11 @@ They execute additional logic before or after method invocation.
 Inspired by the principles of [Aspect-Oriented Programming (AOP)](https://en.wikipedia.org/wiki/Aspect-oriented_programming){target="_blank"}, 
 interceptors offer several functionalities:
 
-- Pre- and post-processing of method executions.
-- Transformation of return values.
-- Handling exceptions thrown during execution.
-- Extension of method behavior.
-- Conditional method override, useful for tasks like caching.
+- bind extra logic before / after route function execution
+- transform the result returned from a route function
+- transform the exception thrown from a route function
+- extend the basic route function behavior
+- completely override a route function depending on specific conditions (e.g., for caching purposes)
 
 ## **Basic**
 Each interceptor class includes an `intercept()` method, accepting two parameters. 
