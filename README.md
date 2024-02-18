@@ -144,6 +144,3 @@ Ellar has built-in support for Jinja2, which is a popular template engine for HT
   </body>
 </html>
 ```
-
-## Resources
-- [Documentation](https://python-ellar.github.io/ellar/)
