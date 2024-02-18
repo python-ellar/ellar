@@ -11,46 +11,41 @@
 [![PyPI version](https://img.shields.io/pypi/v/ellar.svg)](https://pypi.python.org/pypi/ellar)
 [![PyPI version](https://img.shields.io/pypi/pyversions/ellar.svg)](https://pypi.python.org/pypi/ellar)
 
-## Project Status
-Beta version
-- Documentation - 97% complete
-- Authorization Documentation - (in progress)
-
-## Resources
-- [Documentation](https://python-ellar.github.io/ellar/)
-
 ## **Introduction**
 
-Ellar is a lightweight ASGI framework for building efficient and scalable server-side python applications.
-It supports both OOP (Object-Oriented Programming) and FP (Functional Programming)
+Ellar is a lightweight ASGI framework designed to simplify the development of efficient and scalable server-side Python 
+applications. Whether you're building web services, APIs, or full-fledged web applications, 
+Ellar offers a high level of abstraction and powerful features to streamline your development process.
 
-Ellar is based on [Starlette (ASGI toolkit)](https://www.starlette.io/), a lightweight ASGI framework/toolkit well-suited for developing asynchronous web services with Python. 
+Ellar provides developers with the flexibility to embrace both Object-Oriented Programming (OOP) and Functional Programming (FP) paradigms. 
+It is built on top of Starlette, a renowned ASGI toolkit, ensuring robust asynchronous request handling capabilities.
 
-## **Features Summary**
+## **Key Features**
 
-- **Easy to Use**: Ellar has a simple and intuitive API that makes it easy to get started with building a fast and scalable web applications or web APIs in Python.
-- **Dependency Injection (DI)**: It comes with DI system makes it easy to manage dependencies and reduce coupling between components.
-- **Pydantic Integration**: It is properly integrated with Pydantic, a popular Python library for data validation, to ensure that input data is valid.
-- **Templating with Jinja2**: Ellar provides built-in support for Jinja2 templates, making it easy to create dynamic web pages.
-- **OpenAPI Documentation**: It comes with built-in support for OpenAPI documentation, making it easy to generate `Swagger` or `ReDoc` documentation for your API. And more can be added with ease if necessary.
-- **Controller (MVC) Architecture**: Ellar's controller architecture follows the Model-View-Controller (MVC) pattern, making it easy to organize your code.
-- **Guards for Authentication and Authorization**: It provides built-in support for guards, allowing you to easily implement authentication and authorization in your application.
-- **Modularity**: Ellar follows a modular architecture inspired by NestJS, making it easy to organize your code into reusable modules.
-- **Asynchronous programming**: It allows you to takes advantage of Python's `async/await` feature to write efficient and fast code that can handle large numbers of concurrent requests
-
-## **Dependencies**
-- Python >= 3.7
-- Starlette
-- Injector
-- Pydantic
+- **Easy to Use**: With an intuitive API, Ellar makes it easy for developers to get started with building fast and scalable Python web applications.
+- **Dependency Injection (DI)**: Ellar includes a built-in DI system, enabling easy management of dependencies and reducing coupling between components.
+- **Pydantic Integration**: Integrated with Pydantic for seamless data validation, ensuring that input data is always valid.
+- **Templating with Jinja2**: Built-in support for Jinja2 templates simplifies the creation of dynamic web pages.
+- **OpenAPI Documentation**: Ellar comes with built-in support for generating OpenAPI documentation, facilitating API documentation generation with Swagger or ReDoc.
+- **Controller (MVC) Architecture**: Ellar follows the Model-View-Controller (MVC) pattern, aiding in organizing code and separating concerns.
+- **Guards for Authentication and Authorization**: Offers built-in support for guards, making it easy to implement authentication and authorization in applications.
+- **Modularity**: Inspired by NestJS, Ellar follows a modular architecture, allowing developers to organize code into reusable modules.
+- **Asynchronous Programming**: Leveraging Python's async/await feature, Ellar enables the development of efficient and high-performance applications capable of handling concurrent requests.
 
 ## **Installation**
-```shell
+
+You can install Ellar using pip:
+
+```bash
 $(venv) pip install ellar
 ```
 
-## **Try This**
+## **Getting Started**
+
 ```python
+# Example code showcasing Ellar usage
+# (Please ensure you have properly installed Ellar first)
+
 import uvicorn
 from ellar.common import Body, Controller, ControllerBase, delete, get, post, put, Serializer, Inject
 from ellar.app import AppFactory
@@ -59,33 +54,33 @@ from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, Swagger
 from pydantic import Field
 from pathlib import Path
 
-
+# Define a serializer for creating a car
 class CreateCarSerializer(Serializer):
     name: str
     year: int = Field(..., gt=0)
     model: str
 
-
+# Define a service class for car operations
 @injectable(scope=request_scope)
 class CarService:
     def __init__(self):
         self.detail = 'a service'
 
-
+# Define a controller for car operations
 @Controller
 class MotoController(ControllerBase):
     def __init__(self, service: CarService):
         self._service = service
     
     @post()
-    async def create(self, payload:  Body[CreateCarSerializer]):
+    async def create(self, payload: CreateCarSerializer = Body()):
         assert self._service.detail == 'a service'
         result = payload.dict()
         result.update(message='This action adds a new car')
         return result
 
     @put('/{car_id:str}')
-    async def update(self, car_id: str, payload: Body[CreateCarSerializer]):
+    async def update(self, car_id: str, payload: CreateCarSerializer = Body()):
         result = payload.dict()
         result.update(message=f'This action updated #{car_id} car resource')
         return result
@@ -99,7 +94,7 @@ class MotoController(ControllerBase):
     async def delete(self, car_id: str):
         return f"This action removes a #{car_id} car"
 
-
+# Create the Ellar application
 app = AppFactory.create_app(
     controllers=[MotoController],
     providers=[CarService],
@@ -107,13 +102,16 @@ app = AppFactory.create_app(
     config_module=dict(REDIRECT_SLASHES=True),
     template_folder='templates'
 )
+
+# Build OpenAPI documentation
 document_builder = OpenAPIDocumentBuilder()
 document_builder.set_title('Ellar API') \
     .set_version('1.0.2') \
     .set_contact(name='Author', url='https://www.yahoo.com', email='author@gmail.com') \
     .set_license('MIT Licence', url='https://www.google.com')
-
 document = document_builder.build_document(app)
+
+# Setup OpenAPI documentation module
 module = OpenAPIDocumentModule.setup(
     app=app,
     docs_ui=SwaggerUI(),
@@ -121,26 +119,27 @@ module = OpenAPIDocumentModule.setup(
     guards=[]
 )
 
-
+# Run the application
 if __name__ == "__main__":
     uvicorn.run("main:app", port=5000, reload=True)
 ```
+
 
 Now we can test our API at [http://127.0.0.1:5000/docs](http://127.0.0.1:5000/docs#/)
 
 You can also try the [quick-project](https://python-ellar.github.io/ellar/quick-project/) setup to get a good idea of the library.
 
-## **HTML Templating**
-Ellar has built-in support for Jinja2, which is a popular template engine for HTML. This feature allows for easy and efficient HTML templating similar to that of Flask. Jinja2 can be used to create reusable templates, and to insert dynamic data into HTML pages. It also has support for template inheritance, control structures, and other useful features that can help to simplify and streamline the process of creating HTML templates.
 
-```html
-<html>
-  <body>
-    <ul>
-      {% for item in items %}
-      <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
-  </body>
-</html>
-```
+## **Project Status**
+
+Currently, Ellar is in beta version with the following status:
+- Documentation: 95% complete
+- Authentication and Authorization: In progress
+
+## **Dependency Summary**
+
+Ellar has the following dependencies:
+- Python >= 3.7
+- Starlette
+- Pydantic
+- Injector
