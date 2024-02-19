@@ -129,12 +129,14 @@ if __name__ == "__main__":
 ## **Project Status**
 
 Currently, Ellar is in beta version with the following status:
+
 - Documentation: 95% complete
 - Authentication and Authorization: In progress
 
 ## **Dependency Summary**
 
 Ellar has the following dependencies:
+
 - Python >= 3.7
 - Starlette
 - Pydantic

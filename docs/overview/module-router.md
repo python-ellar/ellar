@@ -26,7 +26,7 @@ from ellar.openapi import ApiTags
 
 math_router = ModuleRouter('/math')
 open_api_tag = ApiTags(name='Math')
-open_api_tag(math_router.get_control_type())
+open_api_tag(math_router)
 
 @math_router.get('/add')
 def addition(a: int, b: int):
@@ -87,7 +87,7 @@ from ellar.core import Request
 from ellar.common import ModuleRouter, Response
 
 
-math_router = ModuleRouter('/math', tag='Math')
+math_router = ModuleRouter('/math', name='Math')
 
 @math_router.get('/add')
 def addition(request: Request, res: Response, a:int, b:int):
@@ -104,7 +104,7 @@ from ellar.core import Request
 from ellar.common import ModuleRouter,Response, Inject
 
 
-math_router = ModuleRouter('/math', tag='Math')
+math_router = ModuleRouter('/math', name='Math')
 
 @math_router.get('/add')
 def addition(request:Inject[Request], res:Inject[Response], a:int, b:int):
@@ -123,7 +123,7 @@ from ellar.core import Config
 from ellar.common import ModuleRouter, Response, Inject
 
 
-math_router = ModuleRouter('/math', tag='Math')
+math_router = ModuleRouter('/math', name='Math')
 
 @math_router.get('/subtract')
 def subtraction(a:int, b:int, res:Response, config:Inject[Config]):
