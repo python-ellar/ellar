@@ -39,16 +39,14 @@ class AuthorizationInterceptor(EllarInterceptor):
 
         policies = self.get_route_handler_policy(context)
 
-        if not policies:
-            return await next_interceptor()
+        if policies:
+            partial_get_policy_instance = partial(self._get_policy_instance, context)
 
-        partial_get_policy_instance = partial(self._get_policy_instance, context)
+            for policy in map(partial_get_policy_instance, policies):
+                result = await policy.handle(context)
 
-        for policy in map(partial_get_policy_instance, policies):
-            result = await policy.handle(context)
-
-            if not result:
-                self.raise_exception()
+                if not result:
+                    self.raise_exception()
 
         return await next_interceptor()
 

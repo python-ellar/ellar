@@ -18,5 +18,5 @@ class HomeController(ControllerBase):
             "git_hub": github_url,
             "version": ellar.__version__,
             "release_url": f"{github_url}/releases/{ellar.__version__}",
-            "example_project_url": f"{github_url}/tree/main/examples",
+            "example_project_url": f"{github_url}/tree/main/samples",
         }

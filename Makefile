@@ -19,12 +19,12 @@ install-full: ## Install dependencies
 	pre-commit install -f
 
 lint:fmt ## Run code linters
-	ruff check ellar tests examples
+	ruff check ellar tests samples
 	mypy ellar
 
 fmt format:clean ## Run code formatters
-	ruff format ellar tests examples
-	ruff check --fix ellar tests examples
+	ruff format ellar tests samples
+	ruff check --fix ellar tests samples
 
 test:clean ## Run tests
 	pytest
