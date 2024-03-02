@@ -8,9 +8,9 @@ from starlette.status import HTTP_403_FORBIDDEN
 
 
 class GuardCanActivate(ABC, metaclass=ABCMeta):
-    exception_class: t.Union[
-        t.Type[HTTPException], t.Type[APIException]
-    ] = HTTPException
+    exception_class: t.Union[t.Type[HTTPException], t.Type[APIException]] = (
+        HTTPException
+    )
     status_code: int = HTTP_403_FORBIDDEN
     detail: str = "Forbidden"
 

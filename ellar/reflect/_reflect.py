@@ -29,9 +29,9 @@ class _Reflect:
     __slots__ = ("_meta_data",)
 
     def __init__(self) -> None:
-        self._meta_data: t.MutableMapping[
-            t.Union[t.Type, t.Callable], t.Dict
-        ] = WeakKeyDictionary()
+        self._meta_data: t.MutableMapping[t.Union[t.Type, t.Callable], t.Dict] = (
+            WeakKeyDictionary()
+        )
 
     def define_metadata(
         self,
@@ -122,9 +122,9 @@ class _Reflect:
     def _clone_meta_data(
         self,
     ) -> t.MutableMapping[t.Union[t.Type, t.Callable], t.Dict]:
-        _meta_data: t.MutableMapping[
-            t.Union[t.Type, t.Callable], t.Dict
-        ] = WeakKeyDictionary()
+        _meta_data: t.MutableMapping[t.Union[t.Type, t.Callable], t.Dict] = (
+            WeakKeyDictionary()
+        )
         for k, v in self._meta_data.items():
             _meta_data[k] = dict(v)
         return _meta_data

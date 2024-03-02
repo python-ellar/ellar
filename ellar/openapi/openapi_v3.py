@@ -259,9 +259,9 @@ class Operation(BaseModel):
     requestBody: t.Optional[t.Union[RequestBody, Reference]] = None
 
     responses: t.Dict[str, t.Union[Response, t.Any]]
-    callbacks: t.Optional[
-        t.Dict[str, t.Union[t.Dict[str, "PathItem"], Reference]]
-    ] = None
+    callbacks: t.Optional[t.Dict[str, t.Union[t.Dict[str, "PathItem"], Reference]]] = (
+        None
+    )
     deprecated: t.Optional[bool] = None
     security: t.Optional[t.List[t.Dict[str, t.List[str]]]] = None
     servers: t.Optional[t.List[Server]] = None

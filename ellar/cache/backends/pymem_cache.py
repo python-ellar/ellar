@@ -1,6 +1,7 @@
 """
 PyMemcacheCacheBackend inspired by Django PyMemcacheCache
 """
+
 import typing as t
 
 try:

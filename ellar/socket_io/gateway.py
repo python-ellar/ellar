@@ -44,9 +44,9 @@ class SocketOperationConnection:
         "_controller_type",
     )
 
-    ws_endpoint_args_model: t.Type[
+    ws_endpoint_args_model: t.Type[WebsocketEndpointArgsModel] = (
         WebsocketEndpointArgsModel
-    ] = WebsocketEndpointArgsModel
+    )
 
     def __init__(
         self, event: str, server: AsyncServer, message_handler: t.Callable

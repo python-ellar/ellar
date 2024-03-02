@@ -76,9 +76,9 @@ class EndpointArgsModel:
         ] = defaultdict(list)
         self.path_param_names = self.get_path_param_names(path)
         self.endpoint_signature = self.get_typed_signature(endpoint)
-        self.body_resolver: t.Optional[
-            t.Union[t.Any, BaseRouteParameterResolver]
-        ] = None
+        self.body_resolver: t.Optional[t.Union[t.Any, BaseRouteParameterResolver]] = (
+            None
+        )
         self._route_models: t.List[IRouteParameterResolver] = []
         self._extra_endpoint_args: t.List[ExtraEndpointArg] = (
             list(extra_endpoint_args) if extra_endpoint_args else []

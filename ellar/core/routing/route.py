@@ -24,9 +24,9 @@ from .base import RouteOperationBase
 
 class RouteOperation(RouteOperationBase, StarletteRoute):
     methods: t.Set[str]
-    request_endpoint_args_model: t.Type[
+    request_endpoint_args_model: t.Type[RequestEndpointArgsModel] = (
         RequestEndpointArgsModel
-    ] = RequestEndpointArgsModel
+    )
 
     __slots__ = (
         "endpoint",

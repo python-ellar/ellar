@@ -13,9 +13,9 @@ from ellar.utils.functional import SimpleLazyObject, empty
 if t.TYPE_CHECKING:
     from ellar.app.main import App
 
-injector_context_var: ContextVar[
-    t.Optional[t.Union["ApplicationContext", t.Any]]
-] = ContextVar("ellar.app.context")
+injector_context_var: ContextVar[t.Optional[t.Union["ApplicationContext", t.Any]]] = (
+    ContextVar("ellar.app.context")
+)
 
 
 class ApplicationContext:

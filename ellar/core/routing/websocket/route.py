@@ -24,9 +24,9 @@ from .handler import WebSocketExtraHandler
 
 
 class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRoute):
-    websocket_endpoint_args_model: t.Type[
+    websocket_endpoint_args_model: t.Type[WebsocketEndpointArgsModel] = (
         WebsocketEndpointArgsModel
-    ] = WebsocketEndpointArgsModel
+    )
 
     __slots__ = (
         "endpoint",
@@ -56,9 +56,9 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
         }
         self._handlers_kwargs.update(handlers_kwargs)
         self._use_extra_handler = use_extra_handler
-        self._extra_handler_type: t.Optional[
-            t.Type[WebSocketExtraHandler]
-        ] = extra_handler_type
+        self._extra_handler_type: t.Optional[t.Type[WebSocketExtraHandler]] = (
+            extra_handler_type
+        )
 
         self.path = path
         self.path_regex, self.path_format, self.param_convertors = compile_path(

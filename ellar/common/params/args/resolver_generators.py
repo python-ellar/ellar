@@ -117,9 +117,9 @@ class BulkArgsResolverGenerator:
             resolvers.append(resolver)
 
         if isinstance(self.param_field.field_info.json_schema_extra, dict):
-            self.param_field.field_info.json_schema_extra[
-                MULTI_RESOLVER_KEY
-            ] = resolvers  # type:ignore[assignment]
+            self.param_field.field_info.json_schema_extra[MULTI_RESOLVER_KEY] = (
+                resolvers  # type:ignore[assignment]
+            )
 
 
 class QueryHeaderResolverGenerator(BulkArgsResolverGenerator):

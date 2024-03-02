@@ -6,9 +6,9 @@ from .asgi_args import RequestScopeContext
 INJECTABLE_ATTRIBUTE = "__DI_SCOPE__"
 
 
-SCOPED_CONTEXT_VAR: contextvars.ContextVar[
-    Optional[RequestScopeContext]
-] = contextvars.ContextVar("SCOPED-CONTEXT-VAR")
+SCOPED_CONTEXT_VAR: contextvars.ContextVar[Optional[RequestScopeContext]] = (
+    contextvars.ContextVar("SCOPED-CONTEXT-VAR")
+)
 SCOPED_CONTEXT_VAR.set(None)
 
 
