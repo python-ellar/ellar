@@ -1,7 +1,7 @@
 -e .[all]
 -r requirements-docs.txt
 -r requirements-tests.txt
-# for cache
+
 aiomcache
 
 pre-commit >=2.17.0,<4.0.0
