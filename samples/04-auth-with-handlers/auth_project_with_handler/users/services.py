@@ -9,6 +9,7 @@ class AProvider
 class BProvider
     pass
 """
+
 import typing as t
 
 from ellar.core.security.hashers import make_password

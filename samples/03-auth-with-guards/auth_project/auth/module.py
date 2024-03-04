@@ -17,6 +17,7 @@ class MyModule(ModuleBase):
         pass
 
 """
+
 from datetime import timedelta
 
 from ellar.common import GlobalGuard, Module

@@ -13,6 +13,7 @@ class ASampleDTO(DataclassSerializer):
     name: str
     age: t.Optional[int] = None
 """
+
 import typing as t
 
 from ellar.common import Serializer

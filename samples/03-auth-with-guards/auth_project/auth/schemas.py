@@ -13,6 +13,7 @@ class ASampleDTO(DataclassSerializer):
     name: str
     age: t.Optional[int] = None
 """
+
 from dataclasses import dataclass
 
 from ellar.common import DataclassSerializer

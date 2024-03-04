@@ -9,6 +9,7 @@ class AProvider
 class BProvider
     pass
 """
+
 import typing as t
 
 from ellar.di import injectable, singleton_scope

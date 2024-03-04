@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<h3>{{ name }}</h3>
+{% macro render_pagination(paginator, endpoint) %}
+  <div>
+    {{ paginator.first }} - {{ paginator.last }} of {{ paginator.total }}
+  </div>
+  <div>
+    {% for page in paginator.iter_pages() %}
+      {% if page %}
+        {% if page != paginator.page %}
+          <a href="{{ url_for(endpoint) }}?page={{page}}">{{ page }}</a>
+        {% else %}
+          <strong>{{ page }}</strong>
+        {% endif %}
+      {% else %}
+        <span class=ellipsis>…</span>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+<ul>
+  {% for user in paginator %}
+    <li>{{ user.id }} - email:{{ user.email }} username: {{ user.username }}
+  {% endfor %}
+</ul>
+{{render_pagination(paginator=paginator, endpoint="list_users_template") }}
+</html>

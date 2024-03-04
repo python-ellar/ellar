@@ -99,14 +99,14 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     DEFAULT_NOT_FOUND_HANDLER: ASGIApp = _not_found
     # The lifespan context function is a newer style that replaces
     # on_startup / on_shutdown handlers. Use one or the other, not both.
-    DEFAULT_LIFESPAN_HANDLER: t.Optional[
-        t.Callable[["App"], t.AsyncContextManager]
-    ] = None
+    DEFAULT_LIFESPAN_HANDLER: t.Optional[t.Callable[["App"], t.AsyncContextManager]] = (
+        None
+    )
 
     # Object Serializer custom encoders
-    SERIALIZER_CUSTOM_ENCODER: t.Dict[
-        t.Any, t.Callable[[t.Any], t.Any]
-    ] = encoders_by_type
+    SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]] = (
+        encoders_by_type
+    )
 
     # logging configuration
     LOGGING_CONFIG: t.Optional[t.Dict[str, t.Any]] = default_logging

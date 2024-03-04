@@ -9,6 +9,7 @@ class AProvider
 class BProvider
     pass
 """
+
 import typing as t
 import uuid
 

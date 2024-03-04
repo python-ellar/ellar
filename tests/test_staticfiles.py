@@ -1,6 +1,7 @@
 """
 Retesting Starlette StaticFile ASGIApp
 """
+
 import os
 import pathlib
 import stat

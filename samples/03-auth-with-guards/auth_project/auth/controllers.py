@@ -8,6 +8,7 @@ class MyController(ControllerBase):
     def index(self):
         return {'detail': "Welcome Dog's Resources"}
 """
+
 from ellar.common import Body, Controller, ControllerBase, get, post
 from ellar.openapi import ApiTags
 

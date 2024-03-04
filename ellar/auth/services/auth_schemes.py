@@ -14,9 +14,9 @@ class AppIdentitySchemes(IIdentitySchemes):
     def add_authentication(
         self, authentication_scheme: AuthenticationHandlerType
     ) -> None:
-        self._authentication_schemes[
-            authentication_scheme.scheme
-        ] = authentication_scheme
+        self._authentication_schemes[authentication_scheme.scheme] = (
+            authentication_scheme
+        )
 
     def find_authentication_scheme(self, scheme: str) -> AuthenticationHandlerType:
         try:

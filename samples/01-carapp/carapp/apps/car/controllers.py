@@ -8,6 +8,7 @@ class MyController(ControllerBase):
     def index(self):
         return {'detail': "Welcome Dog's Resources"}
 """
+
 import typing_extensions as types
 from ellar.common import (
     Body,

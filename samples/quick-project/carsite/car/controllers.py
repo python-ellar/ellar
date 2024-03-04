@@ -8,6 +8,7 @@ class MyController(ControllerBase):
     def index(self):
         return {'detail': "Welcome Dog's Resources"}
 """
+
 import typing as t
 
 from ellar.common import Controller, ControllerBase, delete, get, post, put

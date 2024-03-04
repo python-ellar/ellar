@@ -27,9 +27,9 @@ class DynamicModule:
         default_factory=lambda: []
     )
 
-    controllers: t.Sequence[
-        t.Union[t.Type["ControllerBase"], t.Type]
-    ] = dataclasses.field(default_factory=lambda: ())
+    controllers: t.Sequence[t.Union[t.Type["ControllerBase"], t.Type]] = (
+        dataclasses.field(default_factory=lambda: ())
+    )
 
     routers: t.Sequence[t.Union[BaseRoute, ModuleRouter]] = dataclasses.field(
         default_factory=lambda: ()
