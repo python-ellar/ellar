@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "03-auth-with-guards"
+version = "0.1.0"
+description = "Example of ellar authentication and authorization with guards"
+authors = ["Ezeudoh Tochukwu <tochukwu.ezeudoh@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "03_auth_with_guards"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+ellar-cli = "^0.2.4"
+ellar-jwt = "^0.1.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+[ellar]
+default = "auth_project"
+[ellar.projects.auth_project]
+project-name = "auth_project"
+application = "auth_project.server:application"
+config = "auth_project.config:DevelopmentConfig"
+root-module = "auth_project.root_module:ApplicationModule"

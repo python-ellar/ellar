@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "01-carapp"
+version = "0.1.0"
+description = "A Quick Ellar Project"
+authors = ["Ezeudoh Tochukwu <tochukwu.ezeudoh@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "03_socketio_app"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+ellar-cli = "^0.2.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[ellar]
+default = "carapp"
+[ellar.projects.carapp]
+project-name = "carapp"
+application = "carapp.server:application"
+config = "carapp.config:DevelopmentConfig"
+root-module = "carapp.root_module:ApplicationModule"
+apps-module = "carapp.apps"

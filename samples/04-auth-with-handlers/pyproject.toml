@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "04-auth-with-auth-handlers"
+version = "0.1.0"
+description = "Example of ellar authentication and authorization with auth-handlers and authorization interceptor"
+authors = ["Ezeudoh Tochukwu <tochukwu.ezeudoh@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "04_auth_with_auth_handler"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+ellar-cli = "^0.2.4"
+ellar-jwt = "^0.1.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+[ellar]
+default = "auth_project_with_handler"
+[ellar.projects.auth_project_with_handler]
+project-name = "auth_project_with_handler"
+application = "auth_project_with_handler.server:application"
+config = "auth_project_with_handler.config:DevelopmentConfig"
+root-module = "auth_project_with_handler.root_module:ApplicationModule"
