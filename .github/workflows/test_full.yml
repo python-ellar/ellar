@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Flit
-        run: pip install flit ellar_jwt
+        run: pip install flit ellar_jwt ellar_sql
       - name: Install Dependencies
         run: make install
       - name: Test

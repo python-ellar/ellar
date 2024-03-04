@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: 3.8
       - name: Install Flit
-        run: pip install flit ellar_jwt
+        run: pip install flit ellar_jwt ellar_sql
       - name: Install Dependencies
         run: make install
       - name: Test
