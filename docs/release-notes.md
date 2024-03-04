@@ -1,3 +1,16 @@
+# 0.7.2
+## What's Changed
+* Renamed examples to samples by @eadwinCode in https://github.com/python-ellar/ellar/pull/188
+* Update mkdocstrings[python] requirement from <0.24.0,>=0.19.0 to >=0.19.0,<0.25.0 by @dependabot in https://github.com/python-ellar/ellar/pull/187
+* Bump types-redis from 4.6.0.20240106 to 4.6.0.20240218 by @dependabot in https://github.com/python-ellar/ellar/pull/186
+* Bump ruff from 0.1.9 to 0.3.0 by @dependabot in https://github.com/python-ellar/ellar/pull/185
+* Update python-multipart requirement from <0.0.7,>=0.0.5 to >=0.0.5,<0.0.10 by @dependabot in https://github.com/python-ellar/ellar/pull/184
+* Bump pypa/gh-action-pypi-publish from 1.8.11 to 1.8.12 by @dependabot in https://github.com/python-ellar/ellar/pull/183
+* Lib dependency restructure by @eadwinCode in https://github.com/python-ellar/ellar/pull/189
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.7.1...0.7.2
+
+
 # 0.7.1
 ## What's Changed
 * Fixed EmailStr bug by @eadwinCode in https://github.com/python-ellar/ellar/pull/181
