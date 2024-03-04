@@ -2,11 +2,11 @@ import os
 
 import pytest
 import sqlalchemy as sa
+from db_learning.root_module import ApplicationModule
 from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.testing import Test
 from ellar_sql import EllarSQLService
 
-from ..root_module import ApplicationModule
 from . import common
 
 os.environ.setdefault(ELLAR_CONFIG_MODULE, "db_learning.config:TestConfig")

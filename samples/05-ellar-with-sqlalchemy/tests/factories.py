@@ -1,7 +1,6 @@
 import factory
-from ellar_sql.factory import SESSION_PERSISTENCE_FLUSH, EllarSQLFactory
-
 from db_learning.models import User
+from ellar_sql.factory import SESSION_PERSISTENCE_FLUSH, EllarSQLFactory
 
 from . import common
 
