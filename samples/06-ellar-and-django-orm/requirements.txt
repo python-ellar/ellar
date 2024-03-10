@@ -1,0 +1,3 @@
+Django
+ellar-cli
+ellar-django-module
