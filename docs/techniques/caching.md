@@ -392,7 +392,7 @@ For example, lets make `CacheService` available in our route function.
         if cached_value:
             return cached_value
         processed_value = 'some-value'
-        cache_service.set('my-key', processed_value, timeout=300) # for 5mins
+        cache_service.set('my-key', processed_value, ttl=300) # for 5mins
         return processed_value
     ```
 === "Asynchronous Route Function"
@@ -407,7 +407,7 @@ For example, lets make `CacheService` available in our route function.
         if cached_value:
             return cached_value
         processed_value = 'some-value'
-        await cache_service.set_async('my-key', processed_value, timeout=300) # for 5mins
+        await cache_service.set_async('my-key', processed_value, ttl=300) # for 5mins
         return processed_value
     ```
 
@@ -465,7 +465,7 @@ Here's an example of how to use a custom `make_key_callback` function with the c
     from ellar.common import get
     from ellar.cache import Cache
     from ellar.core import ExecutionContext
-    from ellar.common.helper import get_name
+    from ellar.utils import get_name
     
     def make_key_function(ctx: ExecutionContext, key_prefix: str) -> str:
         function_name = get_name(ctx.get_handler())
@@ -486,15 +486,15 @@ Here's an example of how to use a custom `make_key_callback` function with the c
     from ellar.common import get
     from ellar.cache import Cache
     from ellar.core import ExecutionContext
-    from ellar.common.helper import get_name
+    from ellar.utils import get_name
     
-    def make_key_function(ctx: ExecutionContext, key_prefix: str) -> str:
+    def _make_key_function(ctx: ExecutionContext, key_prefix: str) -> str:
         function_name = get_name(ctx.get_handler())
         return "%s:%s:%s" % (function_name, key_prefix, ctx.switch_to_http_connection().get_client().url)
     
     ...
     @get("/my_endpoint")
-    @Cache(ttl=60, make_key_callback=make_key_function)
+    @Cache(ttl=60, make_key_callback=_make_key_function)
     async def my_endpoint(self):
         # Code to generate response data here
         processed_value = 'some-value'
