@@ -11,6 +11,11 @@ pip install -r requirements.txt
 python manage.py django migrate
 ```
 
+## See Django allowed Commands
+```shell
+python manage.py django --help
+```
+
 ## Development Server
 ```
 python manage.py runserver --reload
