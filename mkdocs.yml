@@ -109,6 +109,7 @@ nav:
       - Response Model: techniques/response-model.md
       - Versioning: techniques/versioning.md
       - Caching: techniques/caching.md
+      - Throttling: techniques/rate-limit.md
       - Templating:
           - Html: techniques/templating.md
           - Static Files: techniques/staticfiles.md

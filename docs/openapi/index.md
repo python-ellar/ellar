@@ -100,7 +100,7 @@ Since we are using `SwaggerUI`, visit [http://localhost:8000/docs](http://localh
 In the context of OpenAPI, operations refer to the HTTP methods used to manipulate endpoints (resources) 
 exposed by your API, such as `GET`, `POST`, or `DELETE`.
 
-We have previously explored in detail how route definitions, input schemas, and response schemas work [here](../techniques/validations).
+We have previously explored in detail how route definitions, input schemas, and response schemas work [here](../techniques/validations/index.md).
 
 In this section, we will delve into adding additional OpenAPI context to `Route Functions`, `Controllers`, and `ModuleRouters`.
 
