@@ -149,18 +149,17 @@ Ellar has the following dependencies:
 ## **Contributing**
 Contributions are Welcome! You can contribute in the following ways.
 
-Create an Issue - Propose a new feature. Report a bug.
-Pull Request - Fix a bug and typo. Refactor the code.
-Create third-party module - Instruct below.
-Share - Share your thoughts on the a Blog, Twitter, and others.
-Make your application - Please try to use Ellar.
-For more details, see [docs/CONTRIBUTING.md](https://github.com/python-ellar/ellar/blob/main/docs/contribution.md).
+- **Create an Issue** - Propose a new feature. Report a bug.
+- **Pull Request** - Fix a bug and typo. Refactor the code.
+- **Create third-party module** - Just like ellar-throttling, ellar-jwt, ellar-sql that can solve common problem in web application development.
+- **Share** - Share your thoughts on the a Blog, Twitter, and others.
+- **Build your application** - Please try to use Ellar. For more details, see [docs/CONTRIBUTING.md](https://github.com/python-ellar/ellar/blob/main/docs/contribution.md).
 
-##**Contributors**
+## **Contributors**
 Thanks to all contributors!
 
 ## **Author**
 Ezeudoh Tochukwu https://github.com/eadwinCode
 
 ##**License**
-Distributed under the MIT License. See LICENSE for more information.
+Ellar is [MIT License](https://github.com/python-ellar/ellar/blob/main/LICENSE).
