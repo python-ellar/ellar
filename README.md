@@ -161,5 +161,5 @@ Thanks to all contributors!
 ## **Author**
 Ezeudoh Tochukwu https://github.com/eadwinCode
 
-##**License**
+## **License**
 Ellar is [MIT License](https://github.com/python-ellar/ellar/blob/main/LICENSE).
