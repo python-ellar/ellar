@@ -9,16 +9,17 @@ packages = [{include = "04_auth_with_auth_handler"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-ellar-cli = "^0.2.4"
+ellar-cli = "^0.4.0"
 ellar-jwt = "^0.1.2"
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-[ellar]
+
+[tool.ellar]
 default = "auth_project_with_handler"
-[ellar.projects.auth_project_with_handler]
+[tool.ellar.projects.auth_project_with_handler]
 project-name = "auth_project_with_handler"
 application = "auth_project_with_handler.server:application"
 config = "auth_project_with_handler.config:DevelopmentConfig"

@@ -9,16 +9,16 @@ packages = [{include = "03_socketio_app"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-ellar-cli = "^0.2.4"
+ellar-cli = "^0.4.0"
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[ellar]
+[tool.ellar]
 default = "carapp"
-[ellar.projects.carapp]
+[tool.ellar.projects.carapp]
 project-name = "carapp"
 application = "carapp.server:application"
 config = "carapp.config:DevelopmentConfig"

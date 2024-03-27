@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-ellar-cli = "^0.2.4"
+ellar-cli = "^0.4.0"
 python-socketio = "^5.10.0"
 
 
@@ -16,9 +16,9 @@ python-socketio = "^5.10.0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[ellar]
+[tool.ellar]
 default = "socketio_app"
-[ellar.projects.socketio_app]
+[tool.ellar.projects.socketio_app]
 project-name = "socketio_app"
 application = "socketio_app.server:application"
 config = "socketio_app.config:DevelopmentConfig"

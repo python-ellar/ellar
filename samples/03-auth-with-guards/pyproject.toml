@@ -9,16 +9,17 @@ packages = [{include = "03_auth_with_guards"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-ellar-cli = "^0.2.4"
+ellar-cli = "^0.4.0"
 ellar-jwt = "^0.1.2"
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-[ellar]
+
+[tool.ellar]
 default = "auth_project"
-[ellar.projects.auth_project]
+[tool.ellar.projects.auth_project]
 project-name = "auth_project"
 application = "auth_project.server:application"
 config = "auth_project.config:DevelopmentConfig"
