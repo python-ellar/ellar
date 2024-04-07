@@ -3,7 +3,6 @@ from .exceptions import RouteResponseExecution
 from .file import (
     FileResponseModel,
     StreamingResponseModel,
-    StreamingResponseModelInvalidContent,
 )
 from .helper import create_response_model
 from .html import HTMLResponseModel, HTMLResponseModelRuntimeError
@@ -23,7 +22,6 @@ __all__ = [
     "HTMLResponseModel",
     "create_response_model",
     "HTMLResponseModelRuntimeError",
-    "StreamingResponseModelInvalidContent",
     "RouteResponseExecution",
     "ResponseTypeDefinitionConverter",
 ]

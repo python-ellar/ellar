@@ -3,10 +3,7 @@ from pathlib import Path
 
 import pytest
 from ellar.common import Controller, ModuleRouter, file, get, serialize_object
-from ellar.common.responses.models import (
-    StreamingResponseModel,
-    StreamingResponseModelInvalidContent,
-)
+from ellar.common.responses.models import StreamingResponseModel
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
@@ -40,7 +37,7 @@ def file_template():
 @streaming_mr.get("/index-decorator")
 @file(media_type="text/html", streaming=True)
 def render_template():
-    return slow_numbers(1, 4)
+    return {"content": slow_numbers(1, 4)}
 
 
 @Controller
@@ -57,16 +54,18 @@ class EllarController:
     @file(media_type="text/html", streaming=True)
     def index(self):
         """detest its mvc and Looks for ellar/index"""
-        return slow_numbers(1, 4)
+        return {"content": slow_numbers(1, 4), "media_type": "text/html"}
 
     @get("/index-invalid")
     @file(media_type="text/html", streaming=True)
     def index3(self):
         """detest its mvc and Looks for ellar/index"""
         return {
-            "path": f"{BASEDIR}/private/test.css",
-            "filename": "file-test-css.css",
-            "content_disposition_type": "whatever",
+            "content": {
+                "path": f"{BASEDIR}/private/test.css",
+                "filename": "file-test-css.css",
+                "content_disposition_type": "whatever",
+            }
         }
 
 
@@ -115,7 +114,7 @@ def test_response_schema(path):
 def test_invalid_parameter_returned():
     client = test_module.get_test_client()
     with pytest.raises(
-        StreamingResponseModelInvalidContent,
+        ValueError,
         match="Content must typing.AsyncIterable OR typing.Iterable",
     ):
         client.get("/ellar/index-invalid")
