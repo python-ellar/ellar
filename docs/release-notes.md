@@ -1,3 +1,15 @@
+# 0.7.3
+## What's Changed
+* Bump codecov/codecov-action from 4.0.0 to 4.1.1 by @dependabot in https://github.com/python-ellar/ellar/pull/198
+* Bump pypa/gh-action-pypi-publish from 1.8.12 to 1.8.14 by @dependabot in https://github.com/python-ellar/ellar/pull/197
+* Bump ruff from 0.3.0 to 0.3.4 by @dependabot in https://github.com/python-ellar/ellar/pull/196
+* Update pytest-cov requirement from <5.0.0,>=2.12.0 to >=2.12.0,<6.0.0 by @dependabot in https://github.com/python-ellar/ellar/pull/193
+* Bump uvicorn[standard] from 0.27.1 to 0.29.0 by @dependabot in https://github.com/python-ellar/ellar/pull/192
+* Minor Fixes by @eadwinCode in https://github.com/python-ellar/ellar/pull/199
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.7.2...0.7.3
+
 # 0.7.2
 ## What's Changed
 * Renamed examples to samples by @eadwinCode in https://github.com/python-ellar/ellar/pull/188
