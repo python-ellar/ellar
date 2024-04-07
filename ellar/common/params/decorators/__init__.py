@@ -111,7 +111,7 @@ if t.TYPE_CHECKING:  # pragma: nocover
     Path = Annotated[T, param_functions.Path()]
     Query = Annotated[T, param_functions.Query()]
     WsBody = Annotated[T, param_functions.WsBody()]
-    Inject = InjectShortcut()
+    Inject = Annotated[T, InjectShortcut()]
 
 else:
     Body = _ParamShortcut(param_functions.Body)
