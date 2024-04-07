@@ -162,7 +162,7 @@ Response model that manages `FILE` response. see [`@file`]() decorator.
 
 - Location: `ellar.common.responses.models.file.FileResponseModel`
 - response_type: `FileResponse`
-- model_field_or_schema: `None`
+- model_field_or_schema: `ellar.common.responses.models.file.FileResponseModelSchema`
 - media_type: `Required`
 
 
@@ -171,7 +171,7 @@ Response model that manages `STREAMING` response. see [`@file`]() decorator.
 
 - Location: `ellar.common.responses.models.file.StreamingResponseModel`
 - response_type: `StreamingResponse`
-- model_field_or_schema: `None`
+- model_field_or_schema: `ellar.common.responses.models.file.StreamResponseModelSchema`
 - media_type: `Required`
 
 

@@ -311,7 +311,9 @@ async def slow_numbers(minimum: int, maximum: int):
 @file(media_type='text/html', streaming=True)
 def file_stream(self):
     # file_stream function must return ContentStream
-    return slow_numbers(1, 4)
+    # return {"content": slow_numbers(1, 4), "media_type": "text/html"} Controls media_type
+    # return {"content": slow_numbers(1, 4)} Controls sets media_type='text/html' set in @file decorator
+    return slow_numbers(1, 4) # This will be converted to {"content": slow_numbers(1, 4), media_type: 'text/html'} media_type set from @file decorator
 ```
 
 ### **OPENAPI-INFO**
