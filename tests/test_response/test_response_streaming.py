@@ -3,9 +3,7 @@ from pathlib import Path
 
 import pytest
 from ellar.common import Controller, ModuleRouter, file, get, serialize_object
-from ellar.common.responses.models import (
-    StreamingResponseModel
-)
+from ellar.common.responses.models import StreamingResponseModel
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
@@ -62,11 +60,13 @@ class EllarController:
     @file(media_type="text/html", streaming=True)
     def index3(self):
         """detest its mvc and Looks for ellar/index"""
-        return {"content": {
-            "path": f"{BASEDIR}/private/test.css",
-            "filename": "file-test-css.css",
-            "content_disposition_type": "whatever",
-        }}
+        return {
+            "content": {
+                "path": f"{BASEDIR}/private/test.css",
+                "filename": "file-test-css.css",
+                "content_disposition_type": "whatever",
+            }
+        }
 
 
 test_module = Test.create_test_module(

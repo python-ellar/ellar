@@ -22,18 +22,16 @@ class FileResponseModelSchema(Serializer):
     method: t.Optional[str] = None
     content_disposition_type: ContentDispositionType = ContentDispositionType.attachment
 
+
 class StreamResponseModelSchema(Serializer):
     media_type: t.Optional[str] = None
     content: t.Any
 
-    @field_validator('content', mode='before')
+    @field_validator("content", mode="before")
     def pre_validate_content(cls, value: t.Dict) -> t.Any:
         if not isinstance(value, (t.AsyncGenerator, t.Generator)):
-            raise ValueError(
-                "Content must typing.AsyncIterable OR typing.Iterable"
-            )
+            raise ValueError("Content must typing.AsyncIterable OR typing.Iterable")
         return value
-
 
 
 class FileResponseModel(ResponseModel):
@@ -116,11 +114,12 @@ class StreamingResponseModel(ResponseModel):
         response_args, headers = self.get_context_response(
             context=context, status_code=status_code
         )
-        data = self.serialize(response_obj)
+        data = t.cast(StreamResponseModelSchema, self.serialize(response_obj))
 
         response = self._response_type(
             **response_args,
-            headers=headers, content=data.content,
-            media_type=data.media_type or self.media_type
+            headers=headers,
+            content=data.content,
+            media_type=data.media_type or self.media_type,
         )
         return response
