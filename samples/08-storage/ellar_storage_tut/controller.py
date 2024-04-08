@@ -11,21 +11,20 @@ from ellar.common import (
     get,
     post,
 )
-
 from ellar_storage import StorageService
 
 
-@Controller('/upload')
+@Controller("/upload")
 class FileManagerController(ControllerBase):
     def __init__(self, storage_service: StorageService):
         self._storage_service = storage_service
 
     @post("/", response=str)
     def upload_file(
-            self,
-            upload: File[UploadFile],
-            storage_service: Inject[StorageService],
-            upload_storage: Form[str]
+        self,
+        upload: File[UploadFile],
+        storage_service: Inject[StorageService],
+        upload_storage: Form[str],
     ):
         assert self._storage_service == storage_service
         res = storage_service.save(file=upload, upload_storage=upload_storage)
@@ -44,7 +43,7 @@ class FileManagerController(ControllerBase):
         return {
             "path": res.get_cdn_url(),  # since we are using a local storage, this will return a path to the file
             "filename": res.filename,
-            'media_type': res.content_type
+            "media_type": res.content_type,
         }
 
     @delete("/", response=dict)

@@ -5,6 +5,7 @@ Make changes and define your own configurations specific to your application
 
 export ELLAR_CONFIG_MODULE=ellar_storage_tut.config:DevelopmentConfig
 """
+
 import os
 import typing as t
 from pathlib import Path
@@ -13,9 +14,8 @@ from ellar.common import IExceptionHandler, JSONResponse
 from ellar.core import ConfigDefaultTypesMixin
 from ellar.core.versioning import BaseAPIVersioning, DefaultAPIVersioning
 from ellar.pydantic import ENCODERS_BY_TYPE as encoders_by_type
-from starlette.middleware import Middleware
-
 from ellar_storage import Provider, get_driver
+from starlette.middleware import Middleware
 
 BASE_DIRS = Path(__file__).parent
 
@@ -66,27 +66,27 @@ class BaseConfig(ConfigDefaultTypesMixin):
     EXCEPTION_HANDLERS: t.List[IExceptionHandler] = []
 
     # Object Serializer custom encoders
-    SERIALIZER_CUSTOM_ENCODER: t.Dict[
-        t.Any, t.Callable[[t.Any], t.Any]
-    ] = encoders_by_type
-
-    STORAGE_CONFIG = dict(
-        storages=dict(
-            files={
-                "driver": get_driver(Provider.LOCAL),
-                "options": {"key": os.path.join(BASE_DIRS, "media")},
-            },
-            images={
-                "driver": get_driver(Provider.LOCAL),
-                "options": {"key": os.path.join(BASE_DIRS, "media")},
-            },
-            documents={
-                "driver": get_driver(Provider.LOCAL),
-                "options": {"key": os.path.join(BASE_DIRS, "media")},
-            }
-        ),
-        default="files"
+    SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]] = (
+        encoders_by_type
     )
+
+    STORAGE_CONFIG = {
+        "storages": {
+            "files": {
+                "driver": get_driver(Provider.LOCAL),
+                "options": {"key": os.path.join(BASE_DIRS, "media")},
+            },
+            "images": {
+                "driver": get_driver(Provider.LOCAL),
+                "options": {"key": os.path.join(BASE_DIRS, "media")},
+            },
+            "documents": {
+                "driver": get_driver(Provider.LOCAL),
+                "options": {"key": os.path.join(BASE_DIRS, "media")},
+            },
+        },
+        "default": "files",
+    }
 
 
 class DevelopmentConfig(BaseConfig):

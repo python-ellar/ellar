@@ -7,13 +7,15 @@ from ellar.common import (
 )
 from ellar.core import ModuleBase
 from ellar.samples.modules import HomeModule
-
 from ellar_storage import StorageModule
 
 from .controller import FileManagerController
 
 
-@Module(modules=[HomeModule, StorageModule.register_setup()], controllers=[FileManagerController])
+@Module(
+    modules=[HomeModule, StorageModule.register_setup()],
+    controllers=[FileManagerController],
+)
 class ApplicationModule(ModuleBase):
     @exception_handler(404)
     def exception_404_handler(cls, ctx: IExecutionContext, exc: Exception) -> Response:
