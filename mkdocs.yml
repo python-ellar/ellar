@@ -109,7 +109,6 @@ nav:
       - Response Model: techniques/response-model.md
       - Versioning: techniques/versioning.md
       - Caching: techniques/caching.md
-      - Throttling: techniques/rate-limit.md
       - Templating:
           - Html: techniques/templating.md
           - Static Files: techniques/staticfiles.md
@@ -122,7 +121,7 @@ nav:
       - Encryption and Hashing: security/encryption_and_hashing.md
       - CSRF and CORS: security/csrf.md
       - Sessions: security/sessions.md
-      - Rate Limiting: security/throttling.md
+      - Rate Limiting: security/rate-limit.md
 
   - CLI:
     - Introduction: cli/introduction.md
