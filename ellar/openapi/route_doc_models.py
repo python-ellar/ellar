@@ -282,7 +282,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             if field_info.examples:  # pragma: no cover
                 parameter["examples"] = field_info.examples  # type:ignore[assignment]
             if field_info.deprecated:
-                parameter["deprecated"] = field_info.deprecated
+                parameter["deprecated"] = field_info.deprecated  # type:ignore[assignment]
             parameters.append(parameter)
         return parameters
 

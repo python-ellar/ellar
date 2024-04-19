@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from ellar.di import injectable
+from ellar.di import InjectByTag, injectable
 from ellar.di.scopes import RequestORTransientScope, RequestScope, TransientScope
 
 
@@ -103,3 +103,12 @@ class TransientRequestContext(IContext):
     @property
     def user(self):
         return "Example"
+
+
+@injectable
+class InjectByTagTest:
+    def __init__(
+        self, context: TransientRequestContext, connection: InjectByTag("connection")
+    ):
+        self.connection = connection
+        self.context = context

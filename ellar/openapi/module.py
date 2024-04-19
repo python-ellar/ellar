@@ -111,7 +111,7 @@ class OpenAPIDocumentModule:
             docs_ui.template_context.setdefault("openapi_url", openapi_url)
             cls._setup_document_manager(router=router, docs_ui=docs_ui)
 
-        module = Module(
+        module: t.Type = Module(
             template_folder="templates",
             providers=[],
             routers=(router,),
@@ -124,7 +124,7 @@ class OpenAPIDocumentModule:
         app.router.extend(module_ref.routes)  # type: ignore[union-attr]
         app.injector.add_module(module_ref)
 
-        return module  # type: ignore[no-any-return]
+        return module
 
     @classmethod
     def _setup_document_manager(

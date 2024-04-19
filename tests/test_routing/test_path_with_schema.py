@@ -6,6 +6,7 @@ from ellar.core.routing.utils import build_route_handler
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
+from ..utils import pydantic_error_url
 from .sample import Filter, ListOfPrimitiveSchema, NonPrimitiveSchema
 
 mr = ModuleRouter("")
@@ -38,10 +39,11 @@ def test_request():
         "detail": [
             {
                 "ctx": {"expected": "20, 50 or 200"},
-                "input": 100,
+                "input": "100",
                 "loc": ["path", "range"],
                 "msg": "Input should be 20, 50 or 200",
                 "type": "enum",
+                "url": pydantic_error_url("enum"),
             }
         ]
     }
