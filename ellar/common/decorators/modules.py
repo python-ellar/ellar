@@ -8,20 +8,21 @@ from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.models import ControllerBase
 from ellar.common.operations import ModuleRouter
-from ellar.common.types import T
 from ellar.di import ProviderConfig, SingletonScope, injectable
 from ellar.reflect import reflect
 from ellar.utils.importer import get_main_directory_by_stack
 from starlette.routing import Host, Mount
 
+_ModuleClass = t.TypeVar("_ModuleClass", bound=t.Type)
+
 
 def _wrapper(
-    target: t.Type[T],
+    target: _ModuleClass,
     watermark_key: str,
     metadata_keys: t.List[str],
     name: str,
     kwargs: AttributeDict,
-) -> t.Type[T]:
+) -> _ModuleClass:
     if reflect.get_metadata(watermark_key, target):
         raise ImproperConfiguration(f"{target} is already identified as a Module")
 
@@ -38,6 +39,13 @@ def _wrapper(
     return target
 
 
+# @t.overload
+# def Module(
+#     **kwargs: t.Any,
+# ) -> t.Callable[[_ModuleClass], _ModuleClass]:  # pragma: no cover
+#     pass
+
+
 def Module(
     *,
     name: t.Optional[str] = None,
@@ -49,7 +57,7 @@ def Module(
     static_folder: str = "static",
     modules: t.Sequence[t.Union[t.Type, t.Any]] = (),
     commands: t.Sequence[t.Union[click.Command, click.Group, t.Any]] = (),
-) -> t.Callable[..., t.Type[T]]:
+) -> t.Callable[[_ModuleClass], _ModuleClass]:
     """
     ========= MODULE DECORATOR ==============
 
@@ -88,7 +96,7 @@ def Module(
         commands=list(commands),
     )
 
-    def _decorator(klass: t.Type[T]) -> t.Type[T]:
+    def _decorator(klass: _ModuleClass) -> _ModuleClass:
         return _wrapper(
             target=klass,
             metadata_keys=MODULE_METADATA.keys,

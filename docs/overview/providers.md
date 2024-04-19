@@ -121,7 +121,7 @@ By adding `CarRepository` to the list of providers, Ellar ensures that it is ava
 This allows us to use `CarRepository` within any class or object defined within the `CarModule`, 
 providing a seamless integration of services and controllers within the module.
 
-## **Other ways of registering a Provider**
+## **Other ways of registering a Provider/Services**
 
 There are two methods available for registering or configuring providers in EllarInjector IoC.
 
@@ -170,10 +170,10 @@ class AModule(ModuleBase):
 
 def validate_provider_config():
     module_ref = create_module_ref_factor(
-    AModule, container=injector.container, config=Config(),
+      AModule, container=injector.container, config=Config(),
     )
     module_ref.run_module_register_services()
-    a_module_instance: AModule = injector.get(AModule)
+    a_module_instance = injector.get(AModule)
     
     assert isinstance(a_module_instance.ifoo, AFooClass)
     assert isinstance(a_module_instance.ifoo_b, AFooClass)
@@ -187,7 +187,7 @@ if __name__ == "__main__":
 In the above example, `ProviderConfig` is used as a value type for `IFooB` and as a concrete type for `IFoo`.
 
 ### **2. `register_providers`:**
-Another method is by overriding `register_providers` in any Module class.
+Another method is by overriding `register_services` in any Module class.
 
 For example:
 ```python
@@ -226,7 +226,7 @@ class AModule(ModuleBase):
 
 def validate_register_services():
     module_ref = create_module_ref_factor(
-    AModule, container=injector.container, config=Config(),
+       AModule, container=injector.container, config=Config(),
     )
     module_ref.run_module_register_services()
     
@@ -242,4 +242,62 @@ if __name__ == "__main__":
 
 ```
 
-In this example, the `register_services` method in `AModule` is used to register `IFoo` and `IFooB` with their respective concrete implementations.
+In the illustration above, the `AModule` `register_services` method was used to register `IFoo` and `IFooB`
+with their respective concrete implementations.
+
+## **Tagging Registered Providers**
+
+There are situations where you want to **tag** a service with a name and also resolve the service with the tag.
+
+For example:
+
+```python
+from ellar.di import EllarInjector
+
+injector = EllarInjector(auto_bind=False)
+
+
+class Foo:
+    pass
+
+
+class FooB:
+    pass
+
+injector.container.register_singleton(Foo, tag="first_foo")
+injector.container.register(FooB, tag="second_foo")
+
+first_foo_instance = injector.get("first_foo")
+second_foo_instance = injector.get("second_foo")
+
+assert first_foo_instance is injector.get(Foo)
+assert isinstance(second_foo_instance, Foo)
+```
+
+In the above example, we are tagging `Foo` as `first_foo` and `FooB` as `second_foo`. By doing this, we can resolve both services using their tag names, thus providing the possibility of resolving services by tag name or type.
+
+Also, services can be injected as a dependency by using tags. To achieve this, the `InjectByTag` decorator is used.
+
+For example:
+
+```python
+from ellar.di import EllarInjector, InjectByTag
+
+injector = EllarInjector(auto_bind=False)
+
+
+class Foo:
+    name: str = "foo"
+
+
+class FooB:
+    def __init__(self, foo: InjectByTag("fooTag")):
+        self.foo = foo
+
+injector.container.register_singleton(Foo, tag="fooTag")
+injector.container.register(FooB)
+
+assert injector.get(FooB).foo == 'foo'
+```
+
+This allows for more flexibility in managing dependencies and resolving services based on tags.
