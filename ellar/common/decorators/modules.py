@@ -39,13 +39,6 @@ def _wrapper(
     return target
 
 
-# @t.overload
-# def Module(
-#     **kwargs: t.Any,
-# ) -> t.Callable[[_ModuleClass], _ModuleClass]:  # pragma: no cover
-#     pass
-
-
 def Module(
     *,
     name: t.Optional[str] = None,
