@@ -6,6 +6,8 @@ from ellar.common.responses.models import FileResponseModel
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import Test
 
+from ..utils import pydantic_error_url
+
 BASEDIR = Path(__file__).resolve().parent.parent
 FILE_RESPONSE_SCHEMA = {
     "200": {
@@ -112,6 +114,7 @@ def test_invalid_parameter_returned():
                 "loc": ["response_model", "content_disposition_type"],
                 "msg": "Input should be 'inline' or 'attachment'",
                 "type": "enum",
+                "url": pydantic_error_url("enum"),
             }
         ]
     }

@@ -50,10 +50,11 @@ def test_request():
         "detail": [
             {
                 "ctx": {"expected": "20, 50 or 200"},
-                "input": 100,
+                "input": "100",
                 "loc": ["body", "range"],
                 "msg": "Input should be 20, 50 or 200",
                 "type": "enum",
+                "url": pydantic_error_url("enum"),
             }
         ]
     }

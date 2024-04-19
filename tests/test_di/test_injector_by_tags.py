@@ -70,4 +70,4 @@ def test_inject_by_tag():
     injector.container.register(FooDBCatsRepository, tag="connection")
 
     instance1 = injector.get(InjectByTagTest)
-    assert isinstance(instance1.context, FooDBCatsRepository)
+    assert isinstance(instance1.connection, FooDBCatsRepository)

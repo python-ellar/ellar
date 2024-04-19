@@ -218,6 +218,7 @@ item_openapi_schema = {
                         "type": "integer",
                         "title": "Aliasqty",
                         "description": "Product Qty",
+                        "deprecated": True,
                     }
                 },
                 "type": "object",
