@@ -20,6 +20,7 @@ from .scopes import (
     transient_scope,
 )
 from .service_config import (
+    InjectByTag,
     ProviderConfig,
     get_scope,
     has_binding,
@@ -48,6 +49,7 @@ __all__ = [
     "INJECTABLE_ATTRIBUTE",
     "AnnotationToValue",
     "MODULE_REF_TYPES",
+    "InjectByTag",
 ]
 
 

@@ -1,12 +1,14 @@
+import sys
 import typing as t
 from collections import OrderedDict, defaultdict
 from contextlib import asynccontextmanager
 
+from ellar.di.constants import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR, Tag
 from ellar.di.logger import log
 from injector import Injector, Scope, ScopeDecorator
+from typing_extensions import Annotated
 
 from ..asgi_args import RequestScopeContext
-from ..constants import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR
 from ..providers import InstanceProvider, Provider
 from ..types import T
 from .container import Container
@@ -18,6 +20,27 @@ if t.TYPE_CHECKING:  # pragma: no cover
         ModuleSetup,
         ModuleTemplateRef,
     )
+
+
+class _TagInfo(t.NamedTuple):
+    supertype: t.Type
+    tag: str
+
+
+def _tag_info_interface(type_: t.Any) -> t.Optional[_TagInfo]:
+    if (
+        sys.version_info < (3, 10)
+        and getattr(type_, "__qualname__", "") == "NewType.<locals>.new_type"
+        or sys.version_info >= (3, 10)
+        and type(type_).__module__ == "typing"
+        and type(type_).__name__ == "NewType"
+    ):
+        return _TagInfo(supertype=type_.__supertype__, tag=type_.__name__)
+
+    if isinstance(type_, (str, Tag)):
+        return _TagInfo(supertype=Tag, tag=str(type_))
+
+    return None
 
 
 class EllarInjector(Injector):
@@ -36,7 +59,7 @@ class EllarInjector(Injector):
         self._stack = ()
         self.parent = parent
         # Binder
-        self.container = Container(
+        self.container = self.binder = Container(
             self,
             auto_bind=auto_bind,
             parent=parent.binder if parent is not None else None,
@@ -110,15 +133,19 @@ class EllarInjector(Injector):
     @t.no_type_check
     def get(
         self,
-        interface: t.Type[T],
+        interface: t.Union[Annotated[t.Type[T], type], Annotated[str, type]],
         scope: t.Union[ScopeDecorator, t.Type[Scope]] = None,
     ) -> T:
+        data = _tag_info_interface(interface)
+        if data and data.supertype is Tag:
+            interface = self.container.get_interface_by_tag(data.tag)
+
         binding, binder = self.container.get_binding(interface)
         scope = binding.scope
 
         if isinstance(scope, ScopeDecorator):  # pragma: no cover
             scope = scope.scope
-        # Fetch the corresponding Scope instance from the Binder.
+        # Fetch the corresponding Scope instance from the Container.
         scope_binding, _ = binder.get_binding(scope)
         scope_instance = t.cast(Scope, scope_binding.provider.get(self))
 

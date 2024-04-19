@@ -12,6 +12,10 @@ SCOPED_CONTEXT_VAR: contextvars.ContextVar[Optional[RequestScopeContext]] = (
 SCOPED_CONTEXT_VAR.set(None)
 
 
+class Tag(str):
+    """Tag Placeholder Type"""
+
+
 class AnnotationToValue(type):
     keys: List[str]
 

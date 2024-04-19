@@ -1,6 +1,8 @@
 import typing as t
 
+from ellar.di.constants import INJECTABLE_ATTRIBUTE, Tag
 from injector import (
+    CallableT,
     ConstructorOrClassT,
     Scope,
     ScopeDecorator,
@@ -11,7 +13,6 @@ from injector import (
     is_decorated_with_inject as injector_is_decorated_with_inject,
 )
 
-from .constants import INJECTABLE_ATTRIBUTE
 from .exceptions import DIImproperConfiguration
 from .types import T
 from .utils import fail_silently
@@ -25,11 +26,12 @@ __all__ = (
     "is_decorated_with_injectable",
     "get_scope",
     "has_binding",
+    "InjectByTag",
 )
 
 
 class ProviderConfig(t.Generic[T]):
-    __slots__ = ("base_type", "use_value", "use_class", "scope")
+    __slots__ = ("base_type", "use_value", "use_class", "scope", "tag")
 
     def __init__(
         self,
@@ -38,6 +40,7 @@ class ProviderConfig(t.Generic[T]):
         use_value: t.Optional[T] = None,
         use_class: t.Union[t.Type[T], t.Any] = None,
         scope: t.Optional[t.Union[t.Type[Scope], t.Any]] = None,
+        tag: t.Optional[str] = None,
     ):
         self.scope = scope or SingletonScope
         if use_value and use_class:
@@ -48,17 +51,24 @@ class ProviderConfig(t.Generic[T]):
         self.base_type = base_type
         self.use_value = use_value
         self.use_class = use_class
+        self.tag = tag
 
     def register(self, container: "Container") -> None:
         scope = get_scope(self.base_type) or self.scope
         if self.use_class:
             scope = get_scope(self.use_class) or scope
             container.register(
-                base_type=self.base_type, concrete_type=self.use_class, scope=scope
+                base_type=self.base_type,
+                concrete_type=self.use_class,
+                scope=scope,
+                tag=self.tag,
             )
         elif self.use_value:
             container.register(
-                base_type=self.base_type, concrete_type=self.use_value, scope=scope
+                base_type=self.base_type,
+                concrete_type=self.use_value,
+                scope=scope,
+                tag=self.tag,
             )
         elif not isinstance(self.base_type, type):
             raise DIImproperConfiguration(
@@ -67,24 +77,26 @@ class ProviderConfig(t.Generic[T]):
                 f"Module to configure the provider"
             )
         else:
-            container.register(base_type=self.base_type, scope=scope)
+            container.register(base_type=self.base_type, scope=scope, tag=self.tag)
 
 
-class _Injectable:
-    def __init__(
-        self, scope: t.Optional[t.Union[t.Type[Scope], ScopeDecorator]] = None
-    ) -> None:
-        self.scope = scope or SingletonScope
+@t.overload
+def injectable(
+    scope: t.Union[t.Type[Scope], ScopeDecorator, CallableT] = SingletonScope,
+) -> t.Union[CallableT, t.Callable[[t.Any], CallableT]]:  # pragma: no cover
+    pass
 
-    def __call__(self, func_or_class: ConstructorOrClassT) -> ConstructorOrClassT:
-        fail_silently(inject, constructor_or_class=func_or_class)
-        setattr(func_or_class, INJECTABLE_ATTRIBUTE, self.scope)
-        return func_or_class
+
+@t.overload
+def injectable(
+    scope: t.Union[t.Type[Scope], ScopeDecorator, t.Type[T]] = SingletonScope,
+) -> t.Union[t.Type[T], t.Callable[[t.Any], t.Type[T]]]:  # pragma: no cover
+    pass
 
 
 def injectable(
-    scope: t.Optional[t.Union[t.Type[Scope], ScopeDecorator, t.Type]] = SingletonScope,
-) -> t.Union[ConstructorOrClassT, t.Callable]:
+    scope: t.Union[t.Type[Scope], ScopeDecorator, ConstructorOrClassT] = SingletonScope,
+) -> t.Union[ConstructorOrClassT, t.Callable[[t.Any], ConstructorOrClassT]]:
     """Decorates a callable or Type with inject and Defines Type or callable scope injection scope
 
     Example use:
@@ -99,13 +111,23 @@ def injectable(
     ...     def __init__(self):
     ...         pass
     """
-    if (
+
+    def _decorator(func_or_class: ConstructorOrClassT) -> ConstructorOrClassT:
+        fail_silently(inject, constructor_or_class=func_or_class)
+        setattr(func_or_class, INJECTABLE_ATTRIBUTE, scope)
+
+        return func_or_class
+
+    if not (
         isinstance(scope, ScopeDecorator)
         or isinstance(scope, type)
         and issubclass(scope, Scope)
     ):
-        return _Injectable(scope)
-    return _Injectable()(t.cast(ConstructorOrClassT, scope))
+        func_ = scope
+        scope = SingletonScope
+        return _decorator(func_)  # type: ignore[arg-type]
+
+    return _decorator
 
 
 def is_decorated_with_injectable(func_or_class: ConstructorOrClassT) -> bool:
@@ -150,3 +172,35 @@ def get_scope(
             getattr(func_or_class, "__scope__", None),
         ),
     )
+
+
+def InjectByTag(tag: str) -> t.Any:
+    """
+    Inject a provider/service by tag.
+
+    For example:
+
+    class A:
+        name = 'A'
+
+    class AnotherType:
+        name = 'AnotherType'
+
+    class SomeClass:
+        def __init__(self, a: InjectByTag('A'), b: AnotherType):
+            self.a = a
+            self.b = b
+
+    injector = EllarInjector()
+    injector.container.register_exact_scoped(A, tag='A')
+    injector.container.register_exact_scoped(AnotherType)
+    injector.container.register_exact_scoped(SomeClass)
+
+    instance = injector.get(SomeClass)
+    assert instance.a.name == 'A'
+    assert instance.b.name == 'AnotherType'
+
+    :param tag: Registered Provider/Service tag name
+    :return: typing.Any
+    """
+    return t.NewType(Tag(tag), Tag)
