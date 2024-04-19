@@ -132,16 +132,16 @@ You can also try the [quick-project](https://python-ellar.github.io/ellar/quick-
 
 ## **Project Status**
 
-Currently, Ellar is in beta version with the following status:
+Currently, Ellar is in **beta** version with the following status:
 
-- Documentation: 95% complete
-- Authentication and Authorization: In progress
+- Documentation: 98% complete
+- Authorization: In progress
 
 ## **Dependency Summary**
 
 Ellar has the following dependencies:
 
-- Python >= 3.7
+- Python >= 3.8
 - Starlette
 - Pydantic
 - Injector
