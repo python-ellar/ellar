@@ -19,4 +19,8 @@ class EllarMiddleware(Middleware, IEllarMiddleware):
     @t.no_type_check
     def __call__(self, app: ASGIApp, injector: EllarInjector) -> T:
         self.kwargs.update(app=app)
-        return injector.create_object(self.cls, additional_kwargs=self.kwargs)
+        try:
+            return injector.create_object(self.cls, additional_kwargs=self.kwargs)
+        except TypeError:  # pragma: no cover
+            # TODO: Fix future typing for lower python version.
+            return self.cls(**self.kwargs)
