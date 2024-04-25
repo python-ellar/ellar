@@ -1,6 +1,7 @@
 from abc import ABC
 from unittest.mock import patch
 
+import click
 import pytest
 from ellar.app import App
 from ellar.common import (
@@ -21,6 +22,16 @@ from ellar.reflect import reflect
 from ellar.testing import Test
 
 from ..main import router
+
+
+@click.command(name="command-one")
+def command_one():
+    click.echo("Hello World command one")
+
+
+@click.command(name="command-two")
+def command_two():
+    click.echo("Hello World command two")
 
 
 class IDynamic(ABC):
@@ -114,6 +125,17 @@ class LazyModuleImportWithDynamicSetup(ModuleBase):
 )
 class LazyModuleImportWithSetup(ModuleBase):
     pass
+
+
+@Module(commands=[command_one])
+class DynamicModuleRegisterCommand(ModuleBase, IModuleSetup):
+    @classmethod
+    def setup(cls, command_three_text: str) -> DynamicModule:
+        @click.command
+        def command_three():
+            click.echo(command_three_text)
+
+        return DynamicModule(cls, commands=[command_one, command_two, command_three])
 
 
 def test_invalid_lazy_module_import():
@@ -303,3 +325,24 @@ def test_can_not_apply_dynamic_module_twice():
     with patch.object(reflect.__class__, "define_metadata") as mock_define_metadata:
         dynamic_module.apply_configuration()
         assert mock_define_metadata.called is False
+
+
+def test_dynamic_command_register_command(cli_runner):
+    commands = reflect.get_metadata(
+        MODULE_METADATA.COMMANDS, DynamicModuleRegisterCommand
+    )
+    assert len(commands) == 1
+    res = cli_runner.invoke(commands[0], [])
+    assert res.stdout == "Hello World command one\n"
+
+    with reflect.context():
+        DynamicModuleRegisterCommand.setup("Command Three Here").apply_configuration()
+        commands = reflect.get_metadata(
+            MODULE_METADATA.COMMANDS, DynamicModuleRegisterCommand
+        )
+        assert len(commands) == 3
+
+        res = cli_runner.invoke(commands[2], [])
+        assert res.stdout == "Command Three Here\n"
+
+    assert len(reflect._meta_data) > 10

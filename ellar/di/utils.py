@@ -5,6 +5,6 @@ import typing as t
 def fail_silently(func: t.Callable, *args: t.Any, **kwargs: t.Any) -> t.Optional[t.Any]:
     try:
         return func(*args, **kwargs)
-    except Exception:  # pragma: no cover
-        pass
+    except Exception as ee:  # pragma: no cover
+        print(ee)
     return None
