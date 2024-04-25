@@ -1,3 +1,13 @@
+# 0.7.4
+## What's Changed
+* feat(DI): Service registration with tag by @eadwinCode in https://github.com/python-ellar/ellar/pull/200
+* Bump mypy from 1.8.0 to 1.9.0 by @dependabot in https://github.com/python-ellar/ellar/pull/195
+* feat: Dynamic command by @eadwinCode in https://github.com/python-ellar/ellar/pull/201
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.7.3...0.7.4
+
+
 # 0.7.3
 ## What's Changed
 * Bump codecov/codecov-action from 4.0.0 to 4.1.1 by @dependabot in https://github.com/python-ellar/ellar/pull/198
