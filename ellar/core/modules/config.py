@@ -1,6 +1,7 @@
 import dataclasses
 import typing as t
 
+import click
 from ellar.common import ControllerBase, ModuleRouter
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
@@ -34,26 +35,32 @@ class DynamicModule:
     routers: t.Sequence[t.Union[BaseRoute, ModuleRouter]] = dataclasses.field(
         default_factory=lambda: ()
     )
+
+    commands: t.Sequence[t.Union[click.Command, click.Group, t.Any]] = (
+        dataclasses.field(default_factory=lambda: ())
+    )
+
     _is_configured: bool = False
 
     def __post_init__(self) -> None:
         if not reflect.get_metadata(MODULE_WATERMARK, self.module):
             raise ImproperConfiguration(f"{self.module.__name__} is not a valid Module")
 
+        # # Commands needs to be registered so that
+        # if self.commands:
+        #     reflect.define_metadata(MODULE_METADATA.COMMANDS, self.commands, self.module)
+
     def apply_configuration(self) -> None:
         if self._is_configured:
             return
 
         kwargs = {
-            "controllers": list(self.controllers),
-            "routers": list(self.routers),
-            "providers": list(self.providers),
+            MODULE_METADATA.CONTROLLERS: list(self.controllers),
+            MODULE_METADATA.ROUTERS: list(self.routers),
+            MODULE_METADATA.PROVIDERS: list(self.providers),
+            MODULE_METADATA.COMMANDS: list(self.commands),
         }
-        for key in [
-            MODULE_METADATA.CONTROLLERS,
-            MODULE_METADATA.ROUTERS,
-            MODULE_METADATA.PROVIDERS,
-        ]:
+        for key in kwargs.keys():
             value = kwargs[key]
             if value:
                 reflect.delete_metadata(key, self.module)

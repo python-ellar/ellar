@@ -47,7 +47,7 @@ def get_requests_case_2(
     config: Inject[Config],
 ):
     assert isinstance(config, Config)  # True
-    assert host is None  # Starlette TestClient client info is None
+    assert host == "testclient"
     assert isinstance(session, dict) and len(session) == 0
     return True
 

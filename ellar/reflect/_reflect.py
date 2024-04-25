@@ -131,25 +131,17 @@ class _Reflect:
 
     @asynccontextmanager
     async def async_context(self) -> t.AsyncGenerator[None, None]:
-        cached_meta_data = self._meta_data
-        try:
-            self._meta_data = self._clone_meta_data()
-            yield
-        finally:
-            self._meta_data.clear()
-            self._meta_data = cached_meta_data
+        cached_meta_data = self._clone_meta_data()
+        yield
+        reflect._meta_data.clear()
+        reflect._meta_data = WeakKeyDictionary(dict=cached_meta_data)
 
     @contextmanager
-    def context(
-        self,
-    ) -> t.Generator:
-        cached_meta_data = self._meta_data
-        try:
-            self._meta_data = self._clone_meta_data()
-            yield
-        finally:
-            self._meta_data.clear()
-            self._meta_data = cached_meta_data
+    def context(self) -> t.Generator:
+        cached_meta_data = self._clone_meta_data()
+        yield
+        reflect._meta_data.clear()
+        reflect._meta_data = WeakKeyDictionary(dict=cached_meta_data)
 
 
 reflect = _Reflect()

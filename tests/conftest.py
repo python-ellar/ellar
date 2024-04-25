@@ -2,6 +2,7 @@ import functools
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from uuid import uuid4
 
+import click.testing
 import pytest
 from pydantic import create_model
 from starlette.testclient import TestClient
@@ -33,3 +34,8 @@ def fixture_model_with_path(request):
 @pytest.fixture
 def random_type():
     return type(f"Random{uuid4().hex[:6]}", (), {})
+
+
+@pytest.fixture
+def cli_runner():
+    return click.testing.CliRunner()
