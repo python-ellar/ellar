@@ -14,7 +14,7 @@ python-socketio
 ruff ==0.4.2
 types-dataclasses ==0.6.6
 types-orjson ==3.6.2
-types-redis ==4.6.0.20240218
+types-redis ==4.6.0.20240425
 # types
 types-ujson ==5.9.0.0
 ujson >= 4.0.1
