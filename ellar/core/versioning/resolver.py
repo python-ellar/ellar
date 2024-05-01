@@ -123,7 +123,7 @@ class HeaderVersionResolver(BaseAPIVersioningResolver):
 
     def resolve_version(self) -> str:
         message = email.message.Message()
-        message[self.header_parameter] = self.connection.headers.get(  # type: ignore[assignment]
+        message[self.header_parameter] = self.connection.headers.get(
             self.header_parameter
         )
         accept = dict(message.get_params(header=self.header_parameter))  # type: ignore[arg-type]
