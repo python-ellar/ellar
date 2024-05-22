@@ -30,6 +30,7 @@ from .exceptions import (
     WebSocketException,
 )
 from .interfaces import (
+    IApplicationReady,
     IApplicationShutdown,
     IApplicationStartup,
     IExceptionHandler,
@@ -185,6 +186,7 @@ __all__ = [
     "IApplicationStartup",
     "IApplicationShutdown",
     "IIdentitySchemes",
+    "IApplicationReady",
 ]
 
 

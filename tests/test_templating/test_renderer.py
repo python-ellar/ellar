@@ -40,6 +40,14 @@ class EllarController(ControllerBase):
             last_name=last_name,
         )
 
+    @get("/render-as-string")
+    def render_template_as_string(self):
+        """Render template as string with template name"""
+        return render_template_string(
+            request=self.context.switch_to_http_connection().get_request(),
+            template_string="index.html",
+        )
+
 
 @Controller(prefix="/template-static")
 class TemplateWithStaticsController(ControllerBase):
@@ -71,6 +79,18 @@ def test_render_template():
     assert (
         content == '<!DOCTYPE html> <html lang="en"> '
         '<head> <meta charset="UTF-8"> <title>Index Page</title> </head> <body> </body> </html>'
+    )
+
+
+def test_render_template_as_string_from_template_name():
+    client = tm.get_test_client()
+
+    response = client.get("/ellar/render-as-string")
+    assert response.status_code == 200
+
+    content = re.sub("\\s+", " ", response.text).strip()
+    assert (
+        "<title>Index Page</title>\\n</head>\\n<body>\\n\\n</body>\\n</html>" in content
     )
 
 

@@ -82,12 +82,14 @@ class BulkFormParameterResolver(FormParameterResolver, BulkParameterResolver):
         request_logger.debug(
             f"Resolving Form Grouped Field - '{self.__class__.__name__}'"
         )
-        value, resolver_errors = await self._get_resolver_data(ctx, body, by_alias=True)
+        values, resolver_errors = await self._get_resolver_data(
+            ctx, body, by_alias=True
+        )
         if resolver_errors:
-            return value, resolver_errors
+            return values, resolver_errors
         # Combining resolved values into one pydantic model specified by the user in Route function parameter
         processed_value, processed_errors = self.model_field.validate(
-            value,
+            values,
             {},
             loc=(self.model_field.field_info.in_.value, self.model_field.alias),
         )
@@ -148,4 +150,4 @@ class BulkBodyParameterResolver(BulkParameterResolver, BodyParameterResolver):
             return values, self.validate_error_sequence(errors)
 
         _, body_value = values.popitem()
-        return body_value.dict(), []
+        return {k: getattr(body_value, k) for k in body_value.model_fields_set}, []
