@@ -1,3 +1,16 @@
+# 0.7.6
+## What's Changed
+* Bump codecov/codecov-action from 4.1.1 to 4.3.0 by @dependabot in https://github.com/python-ellar/ellar/pull/207
+* Bump ruff from 0.3.4 to 0.4.2 by @dependabot in https://github.com/python-ellar/ellar/pull/206
+* Update mkdocstrings[python] requirement from <0.25.0,>=0.19.0 to >=0.19.0,<0.26.0 by @dependabot in https://github.com/python-ellar/ellar/pull/205
+* Bump types-redis from 4.6.0.20240218 to 4.6.0.20240425 by @dependabot in https://github.com/python-ellar/ellar/pull/204
+* Bump aiohttp from 3.9.3 to 3.9.5 by @dependabot in https://github.com/python-ellar/ellar/pull/203
+* mypy 1.10.0 upgrade by @eadwinCode in https://github.com/python-ellar/ellar/pull/208
+* May 22/24 patches by @eadwinCode in https://github.com/python-ellar/ellar/pull/209
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.7.4...0.7.6
+
 # 0.7.4
 ## What's Changed
 * feat(DI): Service registration with tag by @eadwinCode in https://github.com/python-ellar/ellar/pull/200
