@@ -1,4 +1,4 @@
-from .application import IApplicationShutdown, IApplicationStartup
+from .application import IApplicationReady, IApplicationShutdown, IApplicationStartup
 from .context import (
     IExecutionContext,
     IExecutionContextFactory,
@@ -41,4 +41,5 @@ __all__ = [
     "IAPIVersioningResolver",
     "IEllarMiddleware",
     "IIdentitySchemes",
+    "IApplicationReady",
 ]

@@ -1,6 +1,12 @@
 from contextlib import asynccontextmanager
 
-from ellar.common import IApplicationShutdown, IApplicationStartup, Module, ModuleRouter
+from ellar.common import (
+    IApplicationReady,
+    IApplicationShutdown,
+    IApplicationStartup,
+    Module,
+    ModuleRouter,
+)
 from ellar.testing import Test
 
 router = ModuleRouter("")
@@ -29,6 +35,15 @@ class OnShutdownModule(IApplicationShutdown):
         self.on_shutdown_called = True
 
 
+@Module()
+class OnApplicationReadyModule(IApplicationReady):
+    def __init__(self):
+        self.on_ready_called = False
+
+    def on_ready(self, app) -> None:
+        self.on_ready_called = True
+
+
 @asynccontextmanager
 async def _testing_life_span(app):
     yield {"life_span_testing": "Ellar"}
@@ -38,6 +53,15 @@ tm = Test.create_test_module(
     modules=[OnShutdownModule, OnStartupModule],
     config_module={"DEFAULT_LIFESPAN_HANDLER": _testing_life_span},
 )
+
+
+def test_on_ready_works():
+    _tm = Test.create_test_module(
+        modules=[OnApplicationReadyModule],
+        config_module={"DEFAULT_LIFESPAN_HANDLER": _testing_life_span},
+    )
+    on_ready_module_instance = _tm.get(OnApplicationReadyModule)
+    assert on_ready_module_instance.on_ready_called
 
 
 def test_on_startup_and_on_shutdown_works():

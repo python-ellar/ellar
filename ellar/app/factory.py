@@ -3,7 +3,7 @@ from collections import OrderedDict
 from pathlib import Path
 
 import click
-from ellar.common import Module
+from ellar.common import IApplicationReady, Module
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.models import GuardCanActivate
 from ellar.core import Config, DynamicModule, LazyModuleImport, ModuleBase, ModuleSetup
@@ -174,6 +174,13 @@ class AppFactory:
 
         # app.setup_jinja_environment
         app.setup_jinja_environment()
+
+        for module, module_ref in app.injector.get_modules().items():
+            module_ref.run_module_register_services()
+
+            if issubclass(module, IApplicationReady):
+                app.injector.get(module).on_ready(app)
+
         return app
 
     @classmethod

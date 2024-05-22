@@ -50,16 +50,13 @@ class TestingModule:
     def create_application(self) -> App:
         if self._app:
             return self._app
+
         self._app = AppFactory.create_app(
             modules=[self._testing_module],
             global_guards=self._global_guards,
             config_module=self._config_module,
             providers=self._providers,
         )
-
-        for _, module_ref in self._app.injector.get_modules().items():
-            # setup module just in case lifespan function will not be called during testing.
-            module_ref.run_module_register_services()
 
         return self._app
 

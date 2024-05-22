@@ -41,22 +41,32 @@ def render_template_string(
     :param template_string: Template String
     :param template_context: variables that should be available in the context of the template.
     """
-    jinja_environment = request.service_provider.get(Environment)
-    jinja_template = jinja_environment.from_string(template_string)
+    try:
+        jinja_template, template_context_ = _get_jinja_and_template_context(
+            template_name=template_string,
+            request=request,
+            **process_view_model(template_context),
+        )
+        return jinja_template.render(template_context_)
+    except jinja2.TemplateNotFound:
+        jinja_environment = request.service_provider.get(Environment)
+        jinja_template = jinja_environment.from_string(template_string)
 
-    _template_context = dict(template_context)
-    _template_context.update(request=request)
+        _template_context = dict(template_context)
+        _template_context.update(request=request)
 
-    return jinja_template.render(_template_context)  # type:ignore[no-any-return]
+        return jinja_template.render(_template_context)
 
 
 def render_template(
     template_name: str,
     request: "Request",
     background: t.Optional[BackgroundTask] = None,
+    status_code: int = 200,
     **template_kwargs: t.Any,
 ) -> TemplateResponse:
     """Renders a template from the template folder with the given context.
+    :param status_code: Template Response status code
     :param request: Request instance
     :param template_name: the name of the template to be rendered
     :param template_kwargs: variables that should be available in the context of the template.
@@ -69,5 +79,8 @@ def render_template(
         **process_view_model(template_kwargs),
     )
     return TemplateResponse(
-        template=jinja_template, context=template_context, background=background
+        template=jinja_template,
+        context=template_context,
+        background=background,
+        status_code=status_code,
     )

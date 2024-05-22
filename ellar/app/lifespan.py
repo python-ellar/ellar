@@ -30,8 +30,7 @@ class EllarApplicationLifespan:
         )
 
     def _get_startup_modules(self, app: "App") -> t.Iterator[IApplicationStartup]:
-        for module, module_ref in app.injector.get_modules().items():
-            module_ref.run_module_register_services()
+        for module in app.injector.get_modules():
             if issubclass(module, IApplicationStartup):
                 yield app.injector.get(module)
 
