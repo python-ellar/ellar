@@ -31,5 +31,5 @@ class IApplicationReady:
     """
 
     @abstractmethod
-    async def on_ready(self, app: "App") -> None:
+    def on_ready(self, app: "App") -> None:
         """Application Shutdown Actions"""
