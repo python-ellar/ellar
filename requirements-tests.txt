@@ -16,6 +16,6 @@ types-dataclasses ==0.6.6
 types-orjson ==3.6.2
 types-redis ==4.6.0.20240425
 # types
-types-ujson ==5.9.0.0
+types-ujson ==5.10.0.20240515
 ujson >= 4.0.1
 uvicorn[standard] == 0.29.0
