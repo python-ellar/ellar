@@ -5,9 +5,10 @@ from uuid import uuid4
 from ellar.app import App, AppFactory
 from ellar.common import ControllerBase, Module, ModuleRouter
 from ellar.common.types import T
-from ellar.core import ModuleBase
+from ellar.core import DynamicModule, ModuleBase, ModuleSetup
 from ellar.core.routing import EllarMount
 from ellar.di import ProviderConfig
+from ellar.utils import get_name
 from starlette.routing import Host, Mount
 from starlette.testclient import TestClient as TestClient
 
@@ -100,20 +101,39 @@ class Test:
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
         config_module: t.Optional[t.Union[str, t.Dict]] = None,
+        modify_modules: bool = True,
     ) -> TESTING_MODULE:  # type: ignore[valid-type]
         """
         Create a TestingModule to test controllers and services in isolation
-        :param modules:
-        :param controllers:
-        :param routers:
-        :param providers:
-        :param template_folder:
-        :param base_directory:
-        :param static_folder:
-        :param config_module:
-        :param global_guards:
+        :param modules: Other module dependencies
+        :param controllers: Module Controllers
+        :param routers: Module router
+        :param providers: Module Services
+        :param template_folder: Module Templating folder
+        :param base_directory: Base Directory for static folder and template
+        :param static_folder: Module Static folder
+        :param config_module: Application Config
+        :param global_guards: Application Guard
+        :param modify_modules: Modifies Modules
+        if setup or register_setup is used to avoid module sharing metadata between tests
         :return:
         """
+
+        if modify_modules:
+
+            def modifier_module(
+                _module: t.Union[t.Type, t.Any],
+            ) -> t.Union[t.Type, t.Any]:
+                return Module()(
+                    type(
+                        f"{get_name(_module)}Modified_{uuid4().hex[:6]}", (_module,), {}
+                    )
+                )
+
+            for module_ in modules:
+                if isinstance(module_, (ModuleSetup, DynamicModule)):
+                    module_.module = modifier_module(module_.module)
+
         module = Module(
             modules=modules,
             controllers=controllers,

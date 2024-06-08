@@ -200,7 +200,7 @@ def test_dynamic_module_haves_routes():
     mount0 = ModuleRouterBuilder.build(routers[0])
     assert len(mount0.routes) == 39
     tm = Test.create_test_module(
-        modules=(DynamicInstantiatedModule.setup(a=233, b=344),)
+        modules=(DynamicInstantiatedModule.setup(a=233, b=344),), modify_modules=False
     )
     tm.create_application()
     routers = reflect.get_metadata(MODULE_METADATA.ROUTERS, DynamicInstantiatedModule)
