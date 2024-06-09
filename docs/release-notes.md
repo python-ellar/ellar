@@ -1,3 +1,16 @@
+# 0.7.7
+## What's Changed
+* Bump types-ujson from 5.9.0.0 to 5.10.0.20240515 by @dependabot in https://github.com/python-ellar/ellar/pull/213
+* Bump ruff from 0.4.2 to 0.4.7 by @dependabot in https://github.com/python-ellar/ellar/pull/212
+* Bump uvicorn[standard] from 0.29.0 to 0.30.0 by @dependabot in https://github.com/python-ellar/ellar/pull/211
+* Bump uvicorn[standard] from 0.30.0 to 0.30.1 by @dependabot in https://github.com/python-ellar/ellar/pull/214
+* Bump codecov/codecov-action from 4.3.0 to 4.4.1 by @dependabot in https://github.com/python-ellar/ellar/pull/210
+* Bump mypy from 1.9.0 to 1.10.0 by @dependabot in https://github.com/python-ellar/ellar/pull/202
+* fix: TestingModule metadata sharing during tests by @eadwinCode in https://github.com/python-ellar/ellar/pull/215
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.7.6...0.7.7
+
 # 0.7.6
 ## What's Changed
 * Bump codecov/codecov-action from 4.1.1 to 4.3.0 by @dependabot in https://github.com/python-ellar/ellar/pull/207
