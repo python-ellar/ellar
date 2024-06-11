@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 
 import pytest
-from ellar.auth import BasePolicyHandler, BasePolicyHandlerWithRequirement
+from ellar.auth import Policy, PolicyWithRequirement
 from ellar.common import IExecutionContext
 from ellar.di import EllarInjector
 
@@ -16,7 +16,7 @@ class MyRequirement:
         self.b = b
 
 
-class EllarPolicy(BasePolicyHandlerWithRequirement):
+class EllarPolicy(PolicyWithRequirement):
     requirement_type = MyRequirement
 
     async def handle(
@@ -25,19 +25,19 @@ class EllarPolicy(BasePolicyHandlerWithRequirement):
         return requirement.a == "ellar" and requirement.b == "policy"
 
 
-class AnyPolicy(BasePolicyHandlerWithRequirement):
+class AnyPolicy(PolicyWithRequirement):
     async def handle(self, context: IExecutionContext, requirement=None) -> bool:
         if requirement:
             return requirement.arg_1 == requirement.arg_2
         return requirement is None
 
 
-class TruePolicyHandler(BasePolicyHandler):
+class TruePolicyHandler(Policy):
     async def handle(self, context: IExecutionContext) -> bool:
         return True
 
 
-class FalsePolicyHandler(BasePolicyHandler):
+class FalsePolicyHandler(Policy):
     async def handle(self, context: IExecutionContext) -> bool:
         return False
 

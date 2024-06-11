@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from ellar.auth import RequiredClaimsPolicy, UserIdentity
+from ellar.auth import ClaimsPolicy, UserIdentity
 
 
 def mock_execution_context(**kwargs):
@@ -12,7 +12,7 @@ def mock_execution_context(**kwargs):
 
 async def test_require_claim_raises_an_exception(anyio_backend):
     context = mock_execution_context()
-    claim = RequiredClaimsPolicy("article", "create", "publish")
+    claim = ClaimsPolicy("article", "create", "publish")
 
     assert await claim.handle(context) is False
 

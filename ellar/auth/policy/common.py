@@ -2,10 +2,10 @@ import typing as t
 
 from ellar.common import IExecutionContext
 
-from .base import BasePolicyHandler
+from .base import Policy
 
 
-class RequiredRolePolicy(BasePolicyHandler):
+class RolePolicy(Policy):
     def __init__(self, *role: str):
         self.roles = list(role)
 
@@ -14,7 +14,7 @@ class RequiredRolePolicy(BasePolicyHandler):
         return all(role in user_roles for role in self.roles)
 
 
-class RequiredClaimsPolicy(BasePolicyHandler):
+class ClaimsPolicy(Policy):
     def __init__(self, claim_type: str, *claim_value: t.Any) -> None:
         self.claim_type = claim_type
         self.claim_values = list(claim_value)

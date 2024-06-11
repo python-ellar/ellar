@@ -3,10 +3,10 @@ from .handlers import BaseAuthenticationHandler
 from .identity import UserIdentity
 from .interceptor import AuthorizationInterceptor
 from .policy import (
-    BasePolicyHandler,
-    BasePolicyHandlerWithRequirement,
-    RequiredClaimsPolicy,
-    RequiredRolePolicy,
+    ClaimsPolicy,
+    Policy,
+    PolicyWithRequirement,
+    RolePolicy,
 )
 from .services import AppIdentitySchemes, IdentityAuthenticationService
 
@@ -16,11 +16,11 @@ __all__ = [
     "Authorize",
     "BaseAuthenticationHandler",
     "CheckPolicies",
-    "BasePolicyHandler",
-    "BasePolicyHandlerWithRequirement",
+    "Policy",
+    "PolicyWithRequirement",
     "UserIdentity",
-    "RequiredClaimsPolicy",
-    "RequiredRolePolicy",
+    "ClaimsPolicy",
+    "RolePolicy",
     "AppIdentitySchemes",
     "IdentityAuthenticationService",
     "AuthenticationRequired",

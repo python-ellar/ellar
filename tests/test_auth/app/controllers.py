@@ -1,5 +1,5 @@
 from ellar.auth import AuthenticationRequired, Authorize, CheckPolicies
-from ellar.auth.policy import RequiredClaimsPolicy, RequiredRolePolicy
+from ellar.auth.policy import ClaimsPolicy, RolePolicy
 from ellar.common import Controller, get
 
 from .policies import AdultOnly, AtLeast21
@@ -20,7 +20,7 @@ class MoviesControllers:
 class ArticleController:
     @get("/create")
     @AuthenticationRequired
-    @CheckPolicies(RequiredClaimsPolicy("article", "create", "publish"))
+    @CheckPolicies(ClaimsPolicy("article", "create", "publish"))
     async def create_and_publish(self):
         return "fast and furious 10 Article"
 
@@ -30,13 +30,13 @@ class ArticleController:
 
     @get("/admin-only")
     @AuthenticationRequired("SimpleHeaderAuthHandler")
-    @CheckPolicies(RequiredRolePolicy("admin"))
+    @CheckPolicies(RolePolicy("admin"))
     async def admin_only(self):
         return "List of articles"
 
     @get("/staff-only")
     @AuthenticationRequired("SimpleHeaderAuthHandler")
-    @CheckPolicies(RequiredRolePolicy("staff"))
+    @CheckPolicies(RolePolicy("staff"))
     async def staff_only(self):
         return "List of articles"
 
