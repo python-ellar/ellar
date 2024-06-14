@@ -16,11 +16,21 @@ class EllarMiddleware(Middleware, IEllarMiddleware):
         injectable()(self.cls)
         self.kwargs = build_init_kwargs(self.cls, self.kwargs)
 
+    def __iter__(self) -> t.Iterator[t.Any]:
+        as_tuple = (self, self.args, self.kwargs)
+        return iter(as_tuple)
+
     @t.no_type_check
-    def __call__(self, app: ASGIApp, injector: EllarInjector) -> T:
-        self.kwargs.update(app=app)
+    def __call__(self, app: ASGIApp, *args: t.Any, **kwargs: t.Any) -> T:
+        from ellar.app.context import current_injector
+
+        kwargs.update(app=app)
+        if "ellar_injector" in kwargs:
+            injector: EllarInjector = kwargs.pop("ellar_injector")
+        else:
+            injector = current_injector
         try:
-            return injector.create_object(self.cls, additional_kwargs=self.kwargs)
+            return injector.create_object(self.cls, additional_kwargs=kwargs)
         except TypeError:  # pragma: no cover
             # TODO: Fix future typing for lower python version.
-            return self.cls(**self.kwargs)
+            return self.cls(*args, **kwargs)

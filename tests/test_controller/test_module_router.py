@@ -1,10 +1,19 @@
 import pytest
-from ellar.common import ModuleRouter
+from ellar.common import IHostContext, ModuleRouter
+from ellar.core import Request
+from ellar.core.middleware import FunctionBasedMiddleware, Middleware
 from ellar.core.router_builders import ModuleRouterBuilder
+from ellar.testing import Test
 
 from .sample import router
 
 another_router = ModuleRouter("/prefix/another", name="arouter")
+
+
+async def callable_middleware(ctx: IHostContext, call_next):
+    scope, _, _ = ctx.get_args()
+    scope["callable_middleware"] = "Functional Middleware executed successfully"
+    await call_next()
 
 
 @another_router.get("/sample")
@@ -68,3 +77,20 @@ def test_module_router_url_reverse():
     reversed_path = mount.url_path_for(f"{mount.name}:{mount.routes[0].name}")
     path = mount.path_format.replace("/{path}", mount.routes[0].path)
     assert reversed_path == path
+
+
+def test_module_router_callable_middleware():
+    router_ = ModuleRouter(
+        "",
+        middleware=[Middleware(FunctionBasedMiddleware, dispatch=callable_middleware)],
+    )
+
+    @router_.get
+    async def some_route(req: Request):
+        return {"message": req.scope["callable_middleware"]}
+
+    tm = Test.create_test_module(routers=[router_])
+    res = tm.get_test_client().get("")
+
+    assert res.status_code == 200
+    assert res.json() == {"message": "Functional Middleware executed successfully"}

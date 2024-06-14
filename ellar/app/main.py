@@ -201,8 +201,8 @@ class App:
         )
 
         app = self.router
-        for item in reversed(middleware):
-            app = item(app=app, injector=self.injector)
+        for cls, args, kwargs in reversed(middleware):
+            app = cls(app, *args, **kwargs, ellar_injector=self.injector)
         return app
 
     def application_context(self) -> ApplicationContext:

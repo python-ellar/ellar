@@ -23,6 +23,9 @@ lint:fmt ## Run code linters
 	ruff check ellar tests samples
 	mypy ellar
 
+ruff-fix: ## Run Ruff fixer
+	ruff check ellar tests samples --fix --unsafe-fixes
+
 fmt format:clean ## Run code formatters
 	ruff format ellar tests samples
 	ruff check --fix ellar tests samples

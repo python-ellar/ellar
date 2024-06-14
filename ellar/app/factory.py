@@ -10,9 +10,11 @@ from ellar.core import Config, DynamicModule, LazyModuleImport, ModuleBase, Modu
 from ellar.core.modules import ModuleRefBase
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
-from ellar.utils import get_unique_type
+from ellar.threading.sync_worker import execute_async_context_manager
+from ellar.utils import get_name, get_unique_type
 from starlette.routing import BaseRoute, Host, Mount
 
+from .context import ApplicationContext
 from .main import App
 from .services import EllarAppService
 
@@ -118,6 +120,7 @@ class AppFactory:
         return routes
 
     @classmethod
+    @t.no_type_check
     def _create_app(
         cls,
         module: t.Type[t.Union[ModuleBase, t.Any]],
@@ -147,39 +150,48 @@ class AppFactory:
         service = EllarAppService(injector, config)
         service.register_core_services()
 
-        routes = cls._build_modules(app_module=module, injector=injector, config=config)
-
-        app = App(
-            routes=routes,
-            config=config,
-            injector=injector,
-            lifespan=config.DEFAULT_LIFESPAN_HANDLER,
-            global_guards=global_guards,
-        )
-
-        for module_config in reversed(list(injector.get_app_dependent_modules())):
-            if injector.get_module(module_config.module):  # pragma: no cover
-                continue
-
-            module_ref = module_config.configure_with_factory(
-                config, injector.container
+        with execute_async_context_manager(ApplicationContext(injector)) as context:
+            routes = cls._build_modules(
+                app_module=module, injector=injector, config=config
             )
 
-            assert isinstance(
-                module_ref, ModuleRefBase
-            ), f"{module_config.module} is not properly configured."
+            app = App(
+                routes=routes,
+                config=config,
+                injector=injector,
+                lifespan=config.DEFAULT_LIFESPAN_HANDLER,
+                global_guards=global_guards,
+            )
+            # tag application instance by ApplicationModule name
+            context.injector.container.register_instance(app, App, tag=get_name(module))
 
-            injector.add_module(module_ref)
-            app.router.extend(module_ref.routes)
+            for module_config in reversed(
+                list(context.injector.get_app_dependent_modules())
+            ):
+                if context.injector.get_module(
+                    module_config.module
+                ):  # pragma: no cover
+                    continue
 
-        # app.setup_jinja_environment
-        app.setup_jinja_environment()
+                module_ref = module_config.configure_with_factory(
+                    config, context.injector.container
+                )
 
-        for module, module_ref in app.injector.get_modules().items():
-            module_ref.run_module_register_services()
+                assert isinstance(
+                    module_ref, ModuleRefBase
+                ), f"{module_config.module} is not properly configured."
 
-            if issubclass(module, IApplicationReady):
-                app.injector.get(module).on_ready(app)
+                context.injector.add_module(module_ref)
+                app.router.extend(module_ref.routes)
+
+            # app.setup_jinja_environment
+            app.setup_jinja_environment()
+
+            for module, module_ref in context.injector.get_modules().items():
+                module_ref.run_module_register_services()
+
+                if issubclass(module, IApplicationReady):
+                    context.injector.get(module).on_ready(app)
 
         return app
 
@@ -211,11 +223,12 @@ class AppFactory:
         )
         app_factory_module = get_unique_type()
         module(app_factory_module)
-        return cls._create_app(
+        app = cls._create_app(
             module=app_factory_module,
             config_module=config_module,
             global_guards=global_guards,
         )
+        return t.cast(App, app)
 
     @classmethod
     def create_from_app_module(
@@ -226,6 +239,8 @@ class AppFactory:
         ] = None,
         config_module: t.Union[str, t.Dict, None] = None,
     ) -> App:
-        return cls._create_app(
+        app = cls._create_app(
             module, config_module=config_module, global_guards=global_guards
         )
+
+        return t.cast(App, app)
