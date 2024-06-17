@@ -25,6 +25,30 @@ def test_should_return_an_empty_array_when_there_are_no_targets():
     assert reflector.get_all_and_merge(key, *[]) == []
 
 
+def test_should_original_dict_type_if_one_item_is_found():
+    key = "key"
+    value = {"key": "value"}
+
+    reflect.define_metadata(key, value, SampleTarget)
+    assert reflector.get_all_and_merge(key, *[SampleTarget]) == value
+
+
+def test_should_original_list_type_if_one_item_is_found():
+    key = "key"
+    value = {"key": "value"}
+
+    reflect.define_metadata(key, [value], SampleTarget)
+    assert reflector.get_all_and_merge(key, *[SampleTarget]) == [value]
+
+
+def test_should_original_str_if_one_item_is_found():
+    key = "key"
+    value = "value"
+
+    reflect.define_metadata(key, value, SampleTarget)
+    assert reflector.get_all_and_merge(key, *[SampleTarget]) == [value]
+
+
 def test_should_reflect_metadata_of_all_targets_and_concat_arrays():
     key = "key"
     value = "value"

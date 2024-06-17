@@ -20,7 +20,7 @@ class ModuleBaseMeta(type):
         cls.__MODULE_FIELDS__: t.Dict = {}
 
         for base in reversed(bases):
-            ModuleBaseBuilder(cls).build(getattr(base, MODULE_FIELDS, {}))
+            ModuleBaseBuilder(cls).build(getattr(base, MODULE_FIELDS, base.__dict__))
         ModuleBaseBuilder(cls).build(namespace)
 
 
