@@ -128,6 +128,7 @@ class AppFactory:
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
         config_module: t.Union[str, t.Dict, None] = None,
+        injector: t.Optional[EllarInjector] = None,
     ) -> App:
         def _get_config_kwargs() -> t.Dict:
             if config_module is None:
@@ -144,7 +145,7 @@ class AppFactory:
 
         config = Config(app_configured=True, **_get_config_kwargs())
 
-        injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND)
+        injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND, parent=injector)
         injector.container.register_instance(config, concrete_type=Config)
 
         service = EllarAppService(injector, config)
@@ -210,6 +211,7 @@ class AppFactory:
         ] = None,
         commands: t.Sequence[t.Union[click.Command, click.Group, t.Any]] = (),
         config_module: t.Union[str, t.Dict, None] = None,
+        injector: t.Optional[EllarInjector] = None,
     ) -> App:
         module = Module(
             controllers=controllers,
@@ -227,6 +229,7 @@ class AppFactory:
             module=app_factory_module,
             config_module=config_module,
             global_guards=global_guards,
+            injector=injector,
         )
         return t.cast(App, app)
 
@@ -237,10 +240,14 @@ class AppFactory:
         global_guards: t.Optional[
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
+        injector: t.Optional[EllarInjector] = None,
         config_module: t.Union[str, t.Dict, None] = None,
     ) -> App:
         app = cls._create_app(
-            module, config_module=config_module, global_guards=global_guards
+            module,
+            config_module=config_module,
+            global_guards=global_guards,
+            injector=injector,
         )
 
         return t.cast(App, app)

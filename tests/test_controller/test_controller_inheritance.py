@@ -24,14 +24,22 @@ class MyController(ControllerImplementationBase):
     pass
 
 
-def test_inheritance_fails():
-    with pytest.raises(Exception) as ex:
+def test_inheritance_works():
+    # with pytest.raises(Exception) as ex:
 
-        @Controller
-        class NewController(MyController):
+    @Controller
+    class NewController(MyController):
+        @get("/sample-another")
+        def some_example_another(self):
             pass
 
-    assert "`@Controller` decorated classes does not support inheritance. " in str(ex)
+    ControllerRouterBuilder.build(NewController)
+    routes = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, NewController)
+    assert len(routes) == 3
+
+    for route in routes:
+        controller_type = route.get_controller_type()
+        assert controller_type == NewController
 
 
 def test_control_type_with_more_than_one_type_fails():
@@ -67,9 +75,6 @@ def test_controller_raise_exception_for_controller_operation_without_controller_
             pass
 
     app = AppFactory.create_app(controllers=(Another2SampleController,))
-    reflect.delete_metadata(
-        CONTROLLER_CLASS_KEY, Another2SampleController().endpoint_once
-    )
     operation = reflect.get_metadata(
         CONTROLLER_OPERATION_HANDLER_KEY, Another2SampleController().endpoint_once
     )
@@ -78,18 +83,3 @@ def test_controller_raise_exception_for_controller_operation_without_controller_
     with pytest.raises(Exception, match=r"Operation must have a single control type"):
         operation._controller_type = None
         client.get("/abcd/test")
-
-
-def test_cant_build_operation_route_twice():
-    @Controller("/abcd")
-    class Another2SampleController:
-        @get("/test")
-        @reflect.metadata(CONTROLLER_CLASS_KEY, "b_message")
-        def endpoint_once(self):
-            pass
-
-    with pytest.raises(
-        Exception,
-        match=r"Controller route function can not be reused once its under a `@Controller` decorator.",
-    ):
-        ControllerRouterBuilder.build(Another2SampleController)

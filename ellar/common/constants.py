@@ -72,6 +72,7 @@ class CONTROLLER_METADATA(metaclass=AnnotationToValue):
     NAME: str
     INCLUDE_IN_SCHEMA: str
     PROCESSED: str
+    MIDDLEWARE: str
 
 
 sequence_types = (list, set, tuple)

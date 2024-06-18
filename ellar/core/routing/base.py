@@ -31,14 +31,13 @@ __all__ = [
 
 class RouteOperationBase:
     methods: t.Set[str]
+    _controller_type: t.Optional[t.Union[t.Type, t.Type["ControllerBase"]]] = None
 
     def __init__(self, endpoint: t.Callable) -> None:
         self.endpoint = endpoint
-
-        self._controller_type = None
         _controller_type: t.Type = self.get_controller_type()
 
-        self._controller_type: t.Union[t.Type, t.Type["ControllerBase"]] = t.cast(  # type:ignore[no-redef]
+        self._controller_type: t.Union[t.Type, t.Type["ControllerBase"]] = t.cast(
             t.Union[t.Type, t.Type["ControllerBase"]], _controller_type
         )
 
@@ -86,7 +85,7 @@ class RouteOperationBase:
             _controller_type = reflect.get_metadata(CONTROLLER_CLASS_KEY, self.endpoint)
             if _controller_type is None or not isinstance(_controller_type, type):
                 raise Exception("Operation must have a single control type.")
-            self._controller_type = t.cast(t.Type, _controller_type)
+            return t.cast(t.Type, _controller_type)
 
         return self._controller_type
 
