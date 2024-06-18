@@ -8,7 +8,6 @@ from ellar.common import (
     serialize_object,
 )
 from ellar.common.constants import (
-    CONTROLLER_CLASS_KEY,
     CONTROLLER_OPERATION_HANDLER_KEY,
     EXTRA_ROUTE_ARGS_KEY,
     NOT_SET,
@@ -49,7 +48,11 @@ class SocketOperationConnection:
     )
 
     def __init__(
-        self, event: str, server: AsyncServer, message_handler: t.Callable
+        self,
+        controller_type: t.Type[GatewayBase],
+        event: str,
+        server: AsyncServer,
+        message_handler: t.Callable,
     ) -> None:
         self._event = event
         self._server = server
@@ -57,9 +60,7 @@ class SocketOperationConnection:
         self._name = get_name(self.endpoint)
         self._is_coroutine = inspect.iscoroutinefunction(message_handler)
         self.endpoint_parameter_model = NOT_SET
-        self._controller_type: t.Type[GatewayBase] = reflect.get_metadata(  # type: ignore[assignment]
-            CONTROLLER_CLASS_KEY, self.endpoint
-        )
+        self._controller_type = controller_type
         self._load_model()
         self._register_handler()
         reflect.define_metadata(CONTROLLER_OPERATION_HANDLER_KEY, self, self.endpoint)
@@ -192,12 +193,6 @@ class SocketOperationConnection:
         For operation under ModuleRouter, this will return a unique type created for the router for tracking some properties
         :return: a type that wraps the operation
         """
-        if not self._controller_type:
-            _controller_type = reflect.get_metadata(CONTROLLER_CLASS_KEY, self.endpoint)
-            if _controller_type is None or not isinstance(_controller_type, type):
-                raise Exception("Operation must have a single control type.")
-            self._controller_type = t.cast(t.Type[GatewayBase], _controller_type)
-
         return self._controller_type
 
     def _get_gateway_instance(self, ctx: IExecutionContext) -> GatewayBase:

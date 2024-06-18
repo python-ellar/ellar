@@ -1,9 +1,7 @@
 import inspect
 import typing as t
-from abc import ABC
 
 import socketio
-from ellar.common.constants import CONTROLLER_CLASS_KEY
 from ellar.core.router_builders import RouterBuilder
 from ellar.reflect import reflect
 from ellar.socket_io.adapter import SocketIOASGIApp
@@ -30,7 +28,9 @@ class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
         cls,
         klass: t.Type,
     ) -> t.Iterable[t.Union[t.Callable]]:
-        for method in klass.__dict__.values():
+        for _method_name, method in inspect.getmembers(
+            klass, predicate=inspect.isfunction
+        ):
             if hasattr(method, MESSAGE_MAPPING_METADATA) and getattr(
                 method, MESSAGE_MAPPING_METADATA
             ):
@@ -40,28 +40,16 @@ class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
     def _process_controller_routes(
         cls, klass: t.Type[GatewayBase]
     ) -> t.List[t.Callable]:
-        bases = inspect.getmro(klass)
+        # bases = inspect.getmro(klass)
         results = []
 
         if reflect.get_metadata(GATEWAY_METADATA.PROCESSED, klass):
             return reflect.get_metadata(GATEWAY_MESSAGE_HANDLER_KEY, klass) or []
 
-        for base_cls in reversed(bases):
-            if base_cls not in [ABC, GatewayBase, object]:
-                for method in cls._get_message_handler(base_cls):
-                    if reflect.has_metadata(CONTROLLER_CLASS_KEY, method):
-                        raise Exception(
-                            f"{klass.__name__} Gateway message handler tried to be processed more than once."
-                            f"\n-Message Handler - {method}."
-                            f"\n-Gateway message handler can not be reused once its under a `@Gateway` decorator."
-                        )
+        for method in cls._get_message_handler(klass):
+            results.append(method)
 
-                    results.append(method)
-
-                    reflect.define_metadata(CONTROLLER_CLASS_KEY, klass, method)
-                    reflect.define_metadata(
-                        GATEWAY_MESSAGE_HANDLER_KEY, [method], klass
-                    )
+            reflect.define_metadata(GATEWAY_MESSAGE_HANDLER_KEY, [method], klass)
 
         reflect.define_metadata(GATEWAY_METADATA.PROCESSED, True, klass)
         return results
@@ -91,14 +79,18 @@ class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
             is_disconnection_handler = reflect.get_metadata(DISCONNECT_EVENT, handler)
 
             if is_connection_handler:
-                SocketOperationConnection(CONNECTION_EVENT, socket_server, handler)
+                SocketOperationConnection(
+                    controller_type, CONNECTION_EVENT, socket_server, handler
+                )
             elif is_disconnection_handler:
-                SocketOperationConnection(DISCONNECT_EVENT, socket_server, handler)
+                SocketOperationConnection(
+                    controller_type, DISCONNECT_EVENT, socket_server, handler
+                )
             else:
                 message = reflect.get_metadata_or_raise_exception(
                     MESSAGE_METADATA, handler
                 )
-                SocketMessageOperation(message, socket_server, handler)
+                SocketMessageOperation(controller_type, message, socket_server, handler)
 
         return Mount(app=SocketIOASGIApp(socket_server), path=path, name=name)
 

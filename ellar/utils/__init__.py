@@ -76,7 +76,7 @@ def build_init_kwargs(obj: t.Type, init_kwargs: t.Dict) -> t.Dict:
 
 def get_type_of_base(
     base_type: t.Type[t.Any], reference_type: t.Type[t.Any]
-) -> t.Iterable[t.Type[t.Any]]:
+) -> t.Iterable[t.Type[t.Any]]:  # pragma: no cover
     for base in inspect.getmro(reference_type):
         if issubclass(base, base_type):
             yield base
