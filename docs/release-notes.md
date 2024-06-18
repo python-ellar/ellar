@@ -1,3 +1,16 @@
+# 0.7.8
+## What's Changed
+* Policy Refactor by @eadwinCode in https://github.com/python-ellar/ellar/pull/216/commits/9ebb844d942359645b61412480a0031d3a43d0d7
+* Dropped task execution for module lifespan actions by @eadwinCode in https://github.com/python-ellar/ellar/pull/216/commits/7724b21efbc82d30171d930f6cebab15fcc4eebf
+* feat: Added middleware support to EllarMount and ApplicationContext by @eadwinCode in https://github.com/python-ellar/ellar/pull/216/commits/61ff5c0a97b0e965e6e82e121530de26aea4f528
+* Fixed module template filters and global variables by @eadwinCode in https://github.com/python-ellar/ellar/pull/216/commits/7f883c38e74df54d5b026015420d60ecfb9e4b47
+* Added support for injector to be nested, dropped controller class key and added support for controller inheritance by @eadwinCode in https://github.com/python-ellar/ellar/pull/216/commits/f50cffc3cde44cf868867cff71a712d0358cabf2
+* Added support for gateway controller inheritance by @eadwinCode in https://github.com/python-ellar/ellar/pull/216/commits/aab73fda48c00ac6849d1abbf6b7d4ba67a12449
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.7.7...0.7.8
+
+
 # 0.7.7
 ## What's Changed
 * Bump types-ujson from 5.9.0.0 to 5.10.0.20240515 by @dependabot in https://github.com/python-ellar/ellar/pull/213
