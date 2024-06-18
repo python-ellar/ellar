@@ -1,7 +1,6 @@
 import pytest
 from ellar.common import Controller, ControllerBase, get, http_route, ws_route
 from ellar.common.constants import (
-    CONTROLLER_CLASS_KEY,
     CONTROLLER_OPERATION_HANDLER_KEY,
 )
 from ellar.core.router_builders import ControllerRouterBuilder
@@ -52,7 +51,7 @@ def test_controller_routes_has_controller_type():
     assert routes
 
     for route in routes:
-        controller_type = reflect.get_metadata(CONTROLLER_CLASS_KEY, route.endpoint)
+        controller_type = route.get_controller_type()
         assert controller_type == SampleController
 
 

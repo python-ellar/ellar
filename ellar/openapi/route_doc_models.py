@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 
 from ellar.common.compatible import cached_property
 from ellar.common.constants import (
-    CONTROLLER_CLASS_KEY,
     GUARDS_KEY,
     METHODS_WITH_BODY,
     REF_PREFIX,
@@ -246,7 +245,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
                 methods=method,
                 controller=None
                 if ignore_controller
-                else reflector.get(CONTROLLER_CLASS_KEY, self.route.endpoint),
+                else self.route.get_controller_type(),
             )
         )
         if self.deprecated:

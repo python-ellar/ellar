@@ -1,16 +1,16 @@
 from .base import (
-    BasePolicyHandler,
-    BasePolicyHandlerWithRequirement,
     DefaultRequirementType,
+    Policy,
     PolicyType,
+    PolicyWithRequirement,
 )
-from .common import RequiredClaimsPolicy, RequiredRolePolicy
+from .common import ClaimsPolicy, RolePolicy
 
 __all__ = [
-    "BasePolicyHandler",
-    "BasePolicyHandlerWithRequirement",
+    "Policy",
+    "PolicyWithRequirement",
     "DefaultRequirementType",
     "PolicyType",
-    "RequiredClaimsPolicy",
-    "RequiredRolePolicy",
+    "ClaimsPolicy",
+    "RolePolicy",
 ]

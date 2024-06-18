@@ -10,8 +10,11 @@ from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.models import ControllerBase, ControllerType
 from ellar.di import RequestORTransientScope, injectable
 from ellar.reflect import REFLECT_TYPE, reflect
-from ellar.utils import get_type_of_base
 from injector import Scope
+from starlette.middleware import Middleware
+
+if t.TYPE_CHECKING:
+    from ellar.core.middleware.middleware import EllarMiddleware
 
 
 @t.no_type_check
@@ -20,6 +23,7 @@ def Controller(
     *,
     name: t.Optional[str] = None,
     include_in_schema: bool = True,
+    middleware: t.Optional[t.Sequence[t.Union[Middleware, "EllarMiddleware"]]] = None,
     scope: t.Optional[t.Union[t.Type[Scope], Scope]] = RequestORTransientScope,
 ) -> t.Union[t.Type[ControllerBase], t.Callable[..., t.Any], t.Any]:
     """
@@ -30,6 +34,7 @@ def Controller(
     :param name: route name prefix for url reversing, eg name:route_name default=''
     :param include_in_schema: include controller in OPENAPI schema
     :param scope: Controller Instance Lifetime scope
+    :param middleware: Controller Middlewares
     :return: t.Type[ControllerBase]
     """
     _prefix: t.Optional[t.Any] = prefix if prefix is not None else NOT_SET
@@ -42,7 +47,11 @@ def Controller(
         ), "Controller Prefix must start with '/'"
     # TODO: replace with a ControllerTypeDict and OpenAPITypeDict
     kwargs = AttributeDict(
-        path=_prefix, name=name, include_in_schema=include_in_schema, processed=False
+        path=_prefix,
+        name=name,
+        include_in_schema=include_in_schema,
+        processed=False,
+        middleware=middleware,
     )
 
     def _decorator(cls: t.Type) -> t.Type[ControllerBase]:
@@ -73,25 +82,26 @@ def Controller(
                 .replace("controller", "")
             )
 
-        for base in get_type_of_base(ControllerBase, _controller_type):
-            if reflect.has_metadata(CONTROLLER_WATERMARK, base) and hasattr(
-                cls, "__CONTROLLER_WATERMARK__"
-            ):
-                raise ImproperConfiguration(
-                    f"`@Controller` decorated classes does not support inheritance. \n"
-                    f"{_controller_type}"
-                )
+        # for base in get_type_of_base(ControllerBase, _controller_type):
+        #     if reflect.has_metadata(CONTROLLER_WATERMARK, base) and hasattr(
+        #         cls, "__CONTROLLER_WATERMARK__"
+        #     ):
+        #         raise ImproperConfiguration(
+        #             f"`@Controller` decorated classes does not support inheritance. \n"
+        #             f"{_controller_type}"
+        #         )
 
-        if not reflect.has_metadata(
-            CONTROLLER_WATERMARK, _controller_type
-        ) and not hasattr(cls, "__CONTROLLER_WATERMARK__"):
-            reflect.define_metadata(CONTROLLER_WATERMARK, True, _controller_type)
-            # reflect_all_controller_type_routes(_controller_type)
+        # if not reflect.has_metadata(
+        #     CONTROLLER_WATERMARK, _controller_type
+        # ) and not hasattr(cls, "__CONTROLLER_WATERMARK__"):
 
-            injectable(scope or RequestORTransientScope)(cls)
+        reflect.define_metadata(CONTROLLER_WATERMARK, True, _controller_type)
+        # reflect_all_controller_type_routes(_controller_type)
 
-            for key in CONTROLLER_METADATA.keys:
-                reflect.define_metadata(key, kwargs[key], _controller_type)
+        injectable(scope or RequestORTransientScope)(cls)
+
+        for key in CONTROLLER_METADATA.keys:
+            reflect.define_metadata(key, kwargs[key], _controller_type)
 
         if new_cls:
             # if we forced cls to inherit from ControllerBase, we need to block it from been processed

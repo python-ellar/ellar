@@ -32,11 +32,18 @@ class EllarMount(StarletteMount):
         middleware: t.Optional[t.Sequence[Middleware]] = None,
     ) -> None:
         super(EllarMount, self).__init__(
-            path=path, name=name, app=app, routes=[], middleware=middleware
+            path=path, name=name, app=app, routes=[], middleware=[]
         )
         self.include_in_schema = include_in_schema
         self._current_found_route_key = f"{uuid.uuid4().hex:4}_EllarMountRoute"
         self._control_type = control_type
+        self._middleware_stack = self.build_middleware_stack(middleware or [])
+
+    def build_middleware_stack(self, middleware: t.Sequence[Middleware]) -> ASGIApp:
+        app = self._app_handler
+        for cls, args, kwargs in reversed(middleware):
+            app = cls(app, *args, **kwargs)
+        return app
 
     def get_control_type(self) -> t.Optional[t.Type[t.Any]]:
         return self._control_type
@@ -75,7 +82,7 @@ class EllarMount(StarletteMount):
 
         return Match.NONE, {}
 
-    async def handle(self, scope: TScope, receive: TReceive, send: TSend) -> None:
+    async def _app_handler(self, scope: TScope, receive: TReceive, send: TSend) -> None:
         request_logger.debug(
             f"Executing Matched URL Handler, path={scope['path']} - '{self.__class__.__name__}'"
         )
@@ -86,6 +93,9 @@ class EllarMount(StarletteMount):
         else:
             mount_router = t.cast(Router, self.app)
             await mount_router.default(scope, receive, send)
+
+    async def handle(self, scope: TScope, receive: TReceive, send: TSend) -> None:
+        await self._middleware_stack(scope, receive, send)
 
 
 def router_default_decorator(func: ASGIApp) -> ASGIApp:

@@ -6,7 +6,7 @@ from ellar.di import injectable
 from starlette import status
 
 from .constants import POLICY_KEYS
-from .policy import BasePolicyHandler, PolicyType
+from .policy import Policy, PolicyType
 
 
 @injectable
@@ -26,7 +26,7 @@ class AuthorizationInterceptor(EllarInterceptor):
 
     def _get_policy_instance(
         self, context: IExecutionContext, policy: t.Union[t.Type, t.Any, str]
-    ) -> t.Union[BasePolicyHandler, t.Any]:
+    ) -> t.Union[Policy, t.Any]:
         if isinstance(policy, type):
             return context.get_service_provider().get(policy)
         return policy

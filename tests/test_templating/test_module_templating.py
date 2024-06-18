@@ -9,8 +9,7 @@ from ellar.testing import Test
 from jinja2 import Environment
 
 
-@Module(template_folder="views")
-class SomeModule(ModuleBase):
+class SomeModuleMixin:
     @template_global("dec_global")
     def double_global_dec(cls, n):
         return n * 2
@@ -22,6 +21,11 @@ class SomeModule(ModuleBase):
     @template_global()
     def double_global_dec_2(cls, n):
         return n * 2
+
+
+@Module(template_folder="views")
+class SomeModule(ModuleBase, SomeModuleMixin):
+    pass
 
 
 @Module(

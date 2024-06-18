@@ -9,7 +9,7 @@ class DefaultRequirementType(AttributeDict):
     """
     Stores Policy Requirement Arguments in `arg_[n]` value
     example:
-        class MyPolicyHandler(BasePolicyHandlerWithRequirement):
+        class MyPolicyHandler(PolicyWithRequirement):
             ...
 
         policy = MyPolicyHandler['req1', 'req2', 'req2']
@@ -26,40 +26,40 @@ class DefaultRequirementType(AttributeDict):
 class _PolicyOperandMixin:
     @t.no_type_check
     def __and__(
-        cls: t.Union["BasePolicyHandler", t.Type["BasePolicyHandler"]],
-        other: t.Union["BasePolicyHandler", t.Type["BasePolicyHandler"]],
-    ) -> "BasePolicyHandler":
+        cls: t.Union["Policy", t.Type["Policy"]],
+        other: t.Union["Policy", t.Type["Policy"]],
+    ) -> "Policy":
         return _ANDPolicy(cls, other)
 
     @t.no_type_check
     def __or__(
-        cls: t.Union["BasePolicyHandler", t.Type["BasePolicyHandler"]],
-        other: t.Union["BasePolicyHandler", t.Type["BasePolicyHandler"]],
-    ) -> "BasePolicyHandler":
+        cls: t.Union["Policy", t.Type["Policy"]],
+        other: t.Union["Policy", t.Type["Policy"]],
+    ) -> "Policy":
         return _ORPolicy(cls, other)
 
     @t.no_type_check
     def __invert__(
-        cls: t.Union["BasePolicyHandler", t.Type["BasePolicyHandler"]],
-    ) -> "BasePolicyHandler":
+        cls: t.Union["Policy", t.Type["Policy"]],
+    ) -> "Policy":
         return _NOTPolicy(cls)
 
 
-class BasePolicyHandlerMetaclass(_PolicyOperandMixin, ABCMeta):
+class PolicyMetaclass(_PolicyOperandMixin, ABCMeta):
     pass
 
 
-class BasePolicyHandler(ABC, _PolicyOperandMixin, metaclass=BasePolicyHandlerMetaclass):
+class Policy(ABC, _PolicyOperandMixin, metaclass=PolicyMetaclass):
     @abstractmethod
     async def handle(self, context: IExecutionContext) -> bool:
         """Run Policy Actions and return true or false"""
 
 
-class BasePolicyHandlerWithRequirement(
-    BasePolicyHandler,
+class PolicyWithRequirement(
+    Policy,
     ABC,
 ):
-    __requirements__: t.Dict[int, "BasePolicyHandler"] = {}
+    __requirements__: t.Dict[int, "Policy"] = {}
 
     requirement_type: t.Type = DefaultRequirementType
 
@@ -68,7 +68,7 @@ class BasePolicyHandlerWithRequirement(
     async def handle(self, context: IExecutionContext, requirement: t.Any) -> bool:
         """Handle Policy Action"""
 
-    def __class_getitem__(cls, parameters: t.Any) -> "BasePolicyHandler":
+    def __class_getitem__(cls, parameters: t.Any) -> "Policy":
         _parameters = parameters if isinstance(parameters, tuple) else (parameters,)
         hash_id = hash(_parameters)
         if hash_id not in cls.__requirements__:
@@ -79,24 +79,24 @@ class BasePolicyHandlerWithRequirement(
 
 
 PolicyType = t.Union[
-    BasePolicyHandler,
-    t.Type[BasePolicyHandler],
-    BasePolicyHandlerWithRequirement,
-    t.Type[BasePolicyHandlerWithRequirement],
+    Policy,
+    t.Type[Policy],
+    PolicyWithRequirement,
+    t.Type[PolicyWithRequirement],
 ]
 
 
 class _OperandResolversMixin:
     def _get_policy_object(
         self, context: IExecutionContext, policy: PolicyType
-    ) -> t.Union[BasePolicyHandler, BasePolicyHandlerWithRequirement]:
+    ) -> t.Union[Policy, PolicyWithRequirement]:
         if isinstance(policy, type):
             # resolve instance from EllarInjector, we assume the policy hand been decorated with @injector decorator.
             return context.get_service_provider().get(policy)  # type: ignore[no-any-return]
         return policy
 
 
-class _ORPolicy(BasePolicyHandler, _OperandResolversMixin):
+class _ORPolicy(Policy, _OperandResolversMixin):
     def __init__(self, policy_1: PolicyType, policy_2: PolicyType) -> None:
         self._policy_1 = policy_1
         self._policy_2 = policy_2
@@ -111,7 +111,7 @@ class _ORPolicy(BasePolicyHandler, _OperandResolversMixin):
         return _policy_1_result or _policy_2_result
 
 
-class _NOTPolicy(BasePolicyHandler, _OperandResolversMixin):
+class _NOTPolicy(Policy, _OperandResolversMixin):
     def __init__(self, policy_1: PolicyType) -> None:
         self._policy_1 = policy_1
 
@@ -134,7 +134,7 @@ class _ANDPolicy(_ORPolicy):
         return _policy_1_result and _policy_2_result
 
 
-class _PolicyHandlerWithRequirement(BasePolicyHandler, _OperandResolversMixin):
+class _PolicyHandlerWithRequirement(Policy, _OperandResolversMixin):
     def __init__(self, policy_1: PolicyType, requirement: t.Any) -> None:
         self._policy_1 = policy_1
         self.requirement = requirement

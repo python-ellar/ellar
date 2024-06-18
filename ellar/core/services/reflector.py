@@ -32,7 +32,11 @@ class Reflector:
             return []
 
         if len(metadata_collection) == 1:
-            return [metadata_collection[0]]
+            content = metadata_collection[0]
+            if isinstance(content, (list, tuple, set, dict)):
+                return content
+
+            return [content]
 
         @t.no_type_check
         def inline_function(previous_item: t.Any, next_item: t.Any) -> t.Any:

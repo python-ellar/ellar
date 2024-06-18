@@ -6,12 +6,20 @@ from ellar.common.models import ControllerBase
 
 
 class ControllerRouteOperationBase:
+    _controller_type: t.Optional[t.Type["ControllerBase"]] = None
     endpoint: t.Callable
     get_controller_type: t.Callable
 
+    def __init__(
+        self, controller_type: t.Type[ControllerBase], *args: t.Any, **kwargs: t.Any
+    ) -> None:
+        self._controller_type = controller_type
+
+        super().__init__(*args, **kwargs)
+
     def _get_controller_instance(self, ctx: IExecutionContext) -> ControllerBase:
         request_logger.debug("Getting Controller Instance")
-        controller_type: t.Optional[t.Type[ControllerBase]] = self.get_controller_type()
+        controller_type: t.Type[ControllerBase] = self.get_controller_type()
 
         service_provider = ctx.get_service_provider()
 
