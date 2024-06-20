@@ -11,13 +11,11 @@ from ellar.common.responses import JSONResponse, PlainTextResponse
 from ellar.common.serializer import Serializer, SerializerFilter
 from ellar.common.templating import JinjaLoaderType
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
-from ellar.core.versioning import DefaultAPIVersioning
+from ellar.core.conf.mixins import ConfigDefaultTypesMixin
 from ellar.pydantic import ENCODERS_BY_TYPE as encoders_by_type
 from ellar.pydantic import field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.websockets import WebSocketClose
-
-from .mixins import ConfigDefaultTypesMixin
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.app.main import App
@@ -69,7 +67,7 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     JINJA_LOADERS: t.List[JinjaLoaderType] = []
 
     # Application route versioning scheme
-    VERSIONING_SCHEME: IAPIVersioning = DefaultAPIVersioning()
+    VERSIONING_SCHEME: t.Optional[IAPIVersioning] = None
 
     REDIRECT_SLASHES: bool = False
 

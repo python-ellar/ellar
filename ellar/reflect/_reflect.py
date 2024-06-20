@@ -102,10 +102,14 @@ class _Reflect:
 
     def delete_metadata(
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
-    ) -> None:
+    ) -> t.Any:
         target_metadata = self._get_or_create_metadata(target)
         if target_metadata and metadata_key in target_metadata:
-            target_metadata.pop(metadata_key)
+            value = target_metadata.pop(metadata_key)
+            if isinstance(value, (list, set, tuple, dict)):
+                # return immutable value
+                return type(value)(value)
+            return value
 
     def _get_or_create_metadata(
         self, target: t.Union[t.Type, t.Callable], create: bool = False

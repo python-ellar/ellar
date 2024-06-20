@@ -15,12 +15,13 @@ from ellar.core.routing import (
     ControllerRouteOperation,
     ControllerWebsocketRouteOperation,
     EllarMount,
-    RouteCollection,
 )
 from ellar.reflect import reflect
-from starlette.routing import BaseRoute, Router
+from starlette.routing import BaseRoute
 
 from .base import RouterBuilder
+
+T_ = t.TypeVar("T_")
 
 
 class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase)):
@@ -79,12 +80,12 @@ class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase
 
     @classmethod
     def build(
-        cls, controller_type: t.Union[t.Type[ControllerBase], t.Any], **kwargs: t.Any
-    ) -> EllarMount:
+        cls,
+        controller_type: t.Union[t.Type[ControllerBase], t.Any],
+        base_route_type: t.Type[t.Union[EllarMount, T_]] = EllarMount,
+        **kwargs: t.Any,
+    ) -> t.Union[T_, EllarMount]:
         routes = cls._process_controller_routes(controller_type)
-
-        app = Router()
-        app.routes = RouteCollection(routes)  # type:ignore
 
         include_in_schema = reflect.get_metadata_or_raise_exception(
             CONTROLLER_METADATA.INCLUDE_IN_SCHEMA, controller_type
@@ -95,8 +96,8 @@ class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase
         )
 
         kwargs.setdefault("middleware", middleware)
-        router = EllarMount(
-            app=app,
+        router = base_route_type(  # type:ignore[call-arg]
+            routes=routes,
             path=reflect.get_metadata_or_raise_exception(
                 CONTROLLER_METADATA.PATH, controller_type
             ),

@@ -2,9 +2,9 @@ import logging
 
 import pytest
 from ellar.app import App, config, current_injector
-from ellar.app.context import ApplicationContext
 from ellar.common import Body, post
 from ellar.core import Config
+from ellar.core.context import ApplicationContext
 from ellar.testing import Test
 
 

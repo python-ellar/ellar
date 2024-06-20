@@ -56,7 +56,10 @@ class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
 
     @classmethod
     def build(
-        cls, controller_type: t.Union[t.Type[GatewayBase], t.Any], **kwargs: t.Any
+        cls,
+        controller_type: t.Union[t.Type[GatewayBase], t.Any],
+        base_route_type: t.Type[Mount] = Mount,
+        **kwargs: t.Any,
     ) -> "Mount":
         name = reflect.get_metadata_or_raise_exception(
             GATEWAY_METADATA.NAME, controller_type
@@ -92,7 +95,7 @@ class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
                 )
                 SocketMessageOperation(controller_type, message, socket_server, handler)
 
-        return Mount(app=SocketIOASGIApp(socket_server), path=path, name=name)
+        return base_route_type(app=SocketIOASGIApp(socket_server), path=path, name=name)
 
     @classmethod
     def check_type(cls, controller_type: t.Union[t.Type, t.Any]) -> None:

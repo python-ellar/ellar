@@ -1,4 +1,5 @@
-from .context import config, current_injector
+from ellar.core.context import config, current_injector
+
 from .factory import AppFactory
 from .main import App
 

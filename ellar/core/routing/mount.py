@@ -2,11 +2,15 @@ import functools
 import typing as t
 import uuid
 
+from ellar.common import ControllerBase, ModuleRouter
 from ellar.common.constants import (
+    CONTROLLER_CLASS_KEY,
     SCOPE_API_VERSIONING_RESOLVER,
 )
 from ellar.common.logging import request_logger
 from ellar.common.types import TReceive, TScope, TSend
+from ellar.core.router_builders.base import get_controller_builder_factory
+from ellar.reflect import reflect
 from starlette.middleware import Middleware
 from starlette.routing import BaseRoute, Match, Route, Router
 from starlette.routing import Mount as StarletteMount
@@ -14,7 +18,6 @@ from starlette.types import ASGIApp
 
 from .route import RouteOperation
 from .route_collections import RouteCollection
-from .utils import build_route_handler
 
 if t.TYPE_CHECKING:
     from ellar.core.versioning.resolver import BaseAPIVersioningResolver
@@ -23,30 +26,55 @@ if t.TYPE_CHECKING:
 class EllarMount(StarletteMount):
     def __init__(
         self,
+        *,
         path: str,
+        routes: t.Optional[t.Sequence[t.Union[BaseRoute]]] = None,
         control_type: t.Optional[t.Type] = None,
-        app: t.Optional[ASGIApp] = None,
         name: t.Optional[str] = None,
         include_in_schema: bool = False,
-        *,
         middleware: t.Optional[t.Sequence[Middleware]] = None,
     ) -> None:
-        super(EllarMount, self).__init__(
-            path=path, name=name, app=app, routes=[], middleware=[]
-        )
+        app = Router()
+        app.routes = RouteCollection(routes)  # type:ignore
+        super().__init__(path=path, app=app, name=name, middleware=[])
         self.include_in_schema = include_in_schema
         self._current_found_route_key = f"{uuid.uuid4().hex:4}_EllarMountRoute"
         self._control_type = control_type
-        self._middleware_stack = self.build_middleware_stack(middleware or [])
 
-    def build_middleware_stack(self, middleware: t.Sequence[Middleware]) -> ASGIApp:
+        self.user_middleware = [] if middleware is None else list(middleware)
+        self._middleware_stack: t.Optional[ASGIApp] = None
+
+    def build_middleware_stack(self) -> ASGIApp:
         app = self._app_handler
-        for cls, args, kwargs in reversed(middleware):
+        for cls, args, kwargs in reversed(self.user_middleware):
             app = cls(app, *args, **kwargs)
         return app
 
     def get_control_type(self) -> t.Optional[t.Type[t.Any]]:
         return self._control_type
+
+    def add_route(
+        self, route: t.Union[ControllerBase, ModuleRouter, BaseRoute, t.Callable]
+    ) -> None:
+        if (
+            isinstance(route, type)
+            and issubclass(route, ControllerBase)
+            or isinstance(route, ModuleRouter)
+        ):
+            factory_builder = get_controller_builder_factory(type(route))
+            factory_builder.check_type(route)
+            mount = factory_builder.build(route)
+
+            route = mount
+
+        if not isinstance(route, BaseRoute) and self.get_control_type():
+            reflect.define_metadata(
+                CONTROLLER_CLASS_KEY,
+                route,
+                self.get_control_type(),  # type:ignore[arg-type]
+            )
+
+        self.routes.append(route)  # type:ignore[arg-type]
 
     def matches(self, scope: TScope) -> t.Tuple[Match, TScope]:
         request_logger.debug(
@@ -56,7 +84,7 @@ class EllarMount(StarletteMount):
         if match == Match.FULL:
             scope_copy = dict(scope)
             scope_copy.update(_child_scope)
-            partial: t.Optional[RouteOperation] = None
+            partial: t.Optional["RouteOperation"] = None
             partial_scope = {}
 
             for route in self.routes:
@@ -95,6 +123,8 @@ class EllarMount(StarletteMount):
             await mount_router.default(scope, receive, send)
 
     async def handle(self, scope: TScope, receive: TReceive, send: TSend) -> None:
+        if self._middleware_stack is None:
+            self._middleware_stack = self.build_middleware_stack()
         await self._middleware_stack(scope, receive, send)
 
 
@@ -135,24 +165,25 @@ class ApplicationRouter(Router):
         self.default = router_default_decorator(self.default)
         self.routes: RouteCollection = RouteCollection(routes)
 
-    def append(self, item: t.Union[BaseRoute, t.Callable]) -> None:
-        _items: t.Any = build_route_handler(item)
-        if _items:
-            self.routes.extend(_items)
+    @t.no_type_check
+    def add_route(
+        self, route: t.Union[ControllerBase, ModuleRouter, BaseRoute, t.Callable]
+    ) -> None:
+        if (
+            isinstance(route, type)
+            and issubclass(route, ControllerBase)
+            or isinstance(route, ModuleRouter)
+        ):
+            factory_builder = get_controller_builder_factory(type(route))
+            factory_builder.check_type(route)
+            mount = factory_builder.build(route)
+
+            route = mount
+        self.routes.append(route)
 
     def extend(self, routes: t.Sequence[t.Union[BaseRoute, t.Callable]]) -> None:
         for route in routes:
-            self.append(route)
-
-    def add_route(
-        self,
-        path: str,
-        endpoint: t.Callable,
-        methods: t.Optional[t.List[str]] = None,
-        name: t.Optional[str] = None,
-        include_in_schema: bool = True,
-    ) -> None:  # pragma: no cover
-        """Not supported"""
+            self.add_route(route)
 
     def add_websocket_route(
         self, path: str, endpoint: t.Callable, name: t.Optional[str] = None

@@ -5,7 +5,7 @@ from types import TracebackType
 
 from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.common.logging import logger
-from ellar.core import Config
+from ellar.core.conf import Config
 from ellar.di import EllarInjector
 from ellar.events import app_context_started, app_context_teardown
 from ellar.utils.functional import SimpleLazyObject, empty

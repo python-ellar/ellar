@@ -3,7 +3,7 @@ import typing as t
 from ellar.common.constants import SCOPE_API_VERSIONING_RESOLVER
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.core.conf import Config
-from ellar.core.versioning import BaseAPIVersioning
+from ellar.core.versioning import BaseAPIVersioning, DefaultAPIVersioning
 from starlette.types import ASGIApp
 
 
@@ -18,10 +18,12 @@ class RequestVersioningMiddleware:
             await self.app(scope, receive, send)
             return
 
-        if self.config.VERSIONING_SCHEME:
-            scheme = t.cast(BaseAPIVersioning, self.config.VERSIONING_SCHEME)
+        scheme = (
+            t.cast(BaseAPIVersioning, self.config.VERSIONING_SCHEME)
+            or DefaultAPIVersioning()
+        )
 
-            version_scheme_resolver = scheme.get_version_resolver(scope)
-            version_scheme_resolver.resolve()
-            scope[SCOPE_API_VERSIONING_RESOLVER] = version_scheme_resolver
+        version_scheme_resolver = scheme.get_version_resolver(scope)
+        version_scheme_resolver.resolve()
+        scope[SCOPE_API_VERSIONING_RESOLVER] = version_scheme_resolver
         await self.app(scope, receive, send)

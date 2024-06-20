@@ -14,7 +14,6 @@ from ellar.core import Config
 from ellar.core.connection import Request
 from ellar.core.services.reflector import Reflector
 from ellar.core.versioning import (
-    DefaultAPIVersioning,
     UrlPathAPIVersioning,
 )
 from ellar.core.versioning import (
@@ -103,8 +102,8 @@ class TestEllarApp:
 
     def test_app_enable_versioning_and_versioning_scheme(self):
         app = Test.create_test_module().create_application()
-        assert app.config.VERSIONING_SCHEME
-        assert isinstance(app.config.VERSIONING_SCHEME, DefaultAPIVersioning)
+        assert app.config.VERSIONING_SCHEME is None
+        # assert isinstance(app.config.VERSIONING_SCHEME, DefaultAPIVersioning)
 
         app.enable_versioning(schema=VERSIONING.URL)
         assert isinstance(app.config.VERSIONING_SCHEME, UrlPathAPIVersioning)

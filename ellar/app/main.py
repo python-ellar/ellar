@@ -3,10 +3,14 @@ import logging
 import logging.config
 import typing as t
 
-from ellar.app.context import ApplicationContext
 from ellar.auth.handlers import AuthenticationHandlerType
 from ellar.auth.middleware import IdentityMiddleware, SessionMiddleware
-from ellar.common import GlobalGuard, IIdentitySchemes
+from ellar.common import (
+    GlobalGuard,
+    IHostContext,
+    IHostContextFactory,
+    IIdentitySchemes,
+)
 from ellar.common.compatible import cached_property
 from ellar.common.constants import (
     ELLAR_LOG_FMT_STRING,
@@ -21,12 +25,13 @@ from ellar.common.templating import Environment, ModuleTemplating
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
 from ellar.core.conf import Config
 from ellar.core.connection import Request
+from ellar.core.context import ApplicationContext
 from ellar.core.middleware import (
     CORSMiddleware,
     ExceptionMiddleware,
     Middleware,
-    RequestServiceProviderMiddleware,
     RequestVersioningMiddleware,
+    ServerErrorMiddleware,
     TrustedHostMiddleware,
 )
 from ellar.core.routing import ApplicationRouter, AppStaticFileMount
@@ -151,6 +156,7 @@ class App:
     def build_middleware_stack(self) -> ASGIApp:
         service_middleware = self.injector.get(IExceptionMiddlewareService)
         service_middleware.build_exception_handlers(*self._exception_handlers)
+
         error_handler = service_middleware.get_500_error_handler()
         allowed_hosts = self.config.ALLOWED_HOSTS
 
@@ -175,7 +181,7 @@ class App:
                     max_age=self.config.CORS_MAX_AGE,
                 ),
                 Middleware(
-                    RequestServiceProviderMiddleware,
+                    ServerErrorMiddleware,
                     debug=self.debug,
                     handler=error_handler,
                 ),
@@ -219,19 +225,25 @@ class App:
         return ApplicationContext.create(app=self)
 
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
-        async with self.application_context():
+        async with self.application_context() as context:
             scope["app"] = self
 
-            if self.middleware_stack is None:
-                self.middleware_stack = self.build_middleware_stack()
+            async with context.injector.create_asgi_args() as service_provider:
+                context_factory = service_provider.get(IHostContextFactory)
+                service_provider.update_scoped_context(
+                    IHostContext, context_factory.create_context(scope)
+                )
 
-                if (
-                    self.config.STATIC_MOUNT_PATH
-                    and self.config.STATIC_MOUNT_PATH not in self.router.routes
-                ):
-                    self.router.append(AppStaticFileMount(self))
+                if self.middleware_stack is None:
+                    self.middleware_stack = self.build_middleware_stack()
 
-            await self.middleware_stack(scope, receive, send)
+                    if (
+                        self.config.STATIC_MOUNT_PATH
+                        and self.config.STATIC_MOUNT_PATH not in self.router.routes
+                    ):
+                        self.router.add_route(AppStaticFileMount(self))
+
+                await self.middleware_stack(scope, receive, send)
 
     @property
     def routes(self) -> t.List[BaseRoute]:
@@ -294,6 +306,7 @@ class App:
             yield loader
 
     def _create_jinja_environment(self) -> Environment:
+        # TODO: rename to `create_jinja_environment`
         def select_jinja_auto_escape(filename: str) -> bool:
             if filename is None:  # pragma: no cover
                 return True

@@ -2,6 +2,7 @@ import typing as t
 
 from ellar.common.interfaces import IEllarMiddleware
 from ellar.common.types import ASGIApp
+from ellar.core.context import current_injector
 from ellar.di import EllarInjector, injectable
 from ellar.utils import build_init_kwargs
 from starlette.middleware import Middleware
@@ -22,8 +23,6 @@ class EllarMiddleware(Middleware, IEllarMiddleware):
 
     @t.no_type_check
     def __call__(self, app: ASGIApp, *args: t.Any, **kwargs: t.Any) -> T:
-        from ellar.app.context import current_injector
-
         kwargs.update(app=app)
         if "ellar_injector" in kwargs:
             injector: EllarInjector = kwargs.pop("ellar_injector")

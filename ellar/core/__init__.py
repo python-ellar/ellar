@@ -2,6 +2,7 @@ import typing as t
 
 from .conf import Config, ConfigDefaultTypesMixin
 from .connection import HTTPConnection, Request, WebSocket
+from .context import ApplicationContext, config, current_injector
 from .execution_context import ExecutionContext, HostContext
 from .guards import GuardConsumer
 from .interceptors import EllarInterceptorConsumer
@@ -29,6 +30,9 @@ __all__ = [
     "VersioningSchemes",
     "mount",
     "host",
+    "current_injector",
+    "config",
+    "ApplicationContext",
 ]
 
 
