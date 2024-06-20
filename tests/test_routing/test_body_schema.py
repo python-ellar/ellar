@@ -21,7 +21,7 @@ async def create_item(
     return product
 
 
-tm.create_application().router.append(create_item)
+tm.create_application().router.add_route(create_item)
 
 openapi_schema = {
     "openapi": "3.1.0",

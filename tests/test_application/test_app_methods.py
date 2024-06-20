@@ -34,7 +34,7 @@ class TestEllarApp:
             await res(*ctx.get_args())
 
         app = AppFactory.create_app()
-        app.router.append(homepage)
+        app.router.add_route(homepage)
         client = TestClient(app)
         response = client.get("/")
         assert response.status_code == 200
@@ -47,7 +47,7 @@ class TestEllarApp:
             return res
 
         app = AppFactory.create_app()
-        app.router.append(homepage)
+        app.router.add_route(homepage)
         result = app.url_path_for("homepage")
         assert result == "/homepage-url"
 
@@ -156,7 +156,7 @@ class TestEllarApp:
         def raise_custom_exception():
             raise CustomException("Raised an Exception")
 
-        app.router.append(raise_custom_exception)
+        app.router.add_route(raise_custom_exception)
         client = TestClient(app)
         res = client.get("/404")
         assert res.status_code == 404

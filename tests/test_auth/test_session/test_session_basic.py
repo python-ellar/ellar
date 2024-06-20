@@ -12,7 +12,7 @@ def homepage(req: Inject[Request]):
 
 
 tm = Test.create_test_module()
-tm.create_application().router.append(homepage)
+tm.create_application().router.add_route(homepage)
 
 
 def test_session_object_raise_an_exception():
@@ -27,7 +27,7 @@ def test_session_object_raise_an_exception():
 def test_session_object_raise_an_exception_case_2():
     tm_case_2 = Test.create_test_module(config_module={"SESSION_DISABLED": True})
     tm_case_2.override_provider(SessionStrategy, use_class=SessionClientStrategy)
-    tm_case_2.create_application().router.append(homepage)
+    tm_case_2.create_application().router.add_route(homepage)
     session_service = tm_case_2.get(SessionStrategy)
     assert isinstance(session_service, SessionClientStrategy)
 

@@ -16,7 +16,7 @@ def test_websocket_url(test_client_factory):
         await websocket.close()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/123?a=abc") as websocket:
@@ -33,7 +33,7 @@ def test_websocket_binary_json(test_client_factory):
         await websocket.close()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/123?a=abc") as websocket:
@@ -50,7 +50,7 @@ def test_websocket_query_params(test_client_factory):
         await websocket.close()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/?a=abc&b=456") as websocket:
@@ -74,7 +74,7 @@ def test_websocket_headers(test_client_factory):
         await websocket.close()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/") as websocket:
@@ -99,7 +99,7 @@ def test_websocket_port(test_client_factory):
         await websocket.close()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("ws://example.com:123/123?a=abc") as websocket:
@@ -116,7 +116,7 @@ def test_websocket_send_and_receive_text(test_client_factory):
         await websocket.close()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/") as websocket:
@@ -134,7 +134,7 @@ def test_websocket_send_and_receive_bytes(test_client_factory):
         await websocket.close()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/") as websocket:
@@ -152,7 +152,7 @@ def test_websocket_send_and_receive_json(test_client_factory):
         await websocket.close()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/") as websocket:
@@ -169,7 +169,7 @@ def test_websocket_iter_text(test_client_factory):
             await websocket.send_text("Message was: " + _data)
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/") as websocket:
@@ -186,7 +186,7 @@ def test_websocket_iter_bytes(test_client_factory):
             await websocket.send_bytes(b"Message was: " + data_)
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/") as websocket:
@@ -203,7 +203,7 @@ def test_websocket_iter_json(test_client_factory):
             await websocket.send_json({"message": data_})
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/") as websocket:
@@ -234,7 +234,7 @@ def test_websocket_concurrency_pattern(test_client_factory):
         await websocket.close()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/") as websocket:
@@ -256,7 +256,7 @@ def test_client_close(test_client_factory):
             close_code = exc.code
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/") as websocket:
@@ -271,7 +271,7 @@ def test_application_close(test_client_factory):
         await websocket.close(status.WS_1001_GOING_AWAY)
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/") as websocket:
@@ -286,7 +286,7 @@ def test_rejected_connection(test_client_factory):
         await websocket.close(status.WS_1001_GOING_AWAY)
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with pytest.raises(WebSocketDisconnect) as exc:
@@ -303,7 +303,7 @@ def test_subprotocol(test_client_factory):
         await websocket.close()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/", subprotocols=["soap", "wamp"]) as websocket:
@@ -317,7 +317,7 @@ def test_additional_headers(test_client_factory):
         await websocket.close()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/") as websocket:
@@ -331,7 +331,7 @@ def test_no_additional_headers(test_client_factory):
         await websocket.close()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/") as websocket:
@@ -344,7 +344,7 @@ def test_websocket_exception(test_client_factory):
         raise AssertionError()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with pytest.raises(AssertionError):
@@ -360,7 +360,7 @@ def test_duplicate_close(test_client_factory):
         await websocket.close()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with pytest.raises(RuntimeError):
@@ -377,7 +377,7 @@ def test_duplicate_disconnect(test_client_factory):
         message = await websocket.receive()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with pytest.raises(RuntimeError):
@@ -392,7 +392,7 @@ def test_websocket_close_reason(test_client_factory) -> None:
         await websocket.close(code=status.WS_1001_GOING_AWAY, reason="Going Away")
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with client.websocket_connect("/") as websocket:
@@ -409,7 +409,7 @@ def test_send_json_invalid_mode(test_client_factory):
         await websocket.send_json({}, mode="invalid")
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with pytest.raises(RuntimeError):
@@ -424,7 +424,7 @@ def test_receive_json_invalid_mode(test_client_factory):
         await websocket.receive_json(mode="invalid")
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with pytest.raises(RuntimeError):
@@ -438,7 +438,7 @@ def test_receive_text_before_accept(test_client_factory):
         await websocket.receive_text()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with pytest.raises(RuntimeError):
@@ -452,7 +452,7 @@ def test_receive_bytes_before_accept(test_client_factory):
         await websocket.receive_bytes()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with pytest.raises(RuntimeError):
@@ -466,7 +466,7 @@ def test_receive_json_before_accept(test_client_factory):
         await websocket.receive_json()
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with pytest.raises(RuntimeError):
@@ -480,7 +480,7 @@ def test_send_before_accept(test_client_factory):
         await websocket.send({"type": "websocket.send"})
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with pytest.raises(RuntimeError):
@@ -495,7 +495,7 @@ def test_send_wrong_message_type(test_client_factory):
         await websocket.send({"type": "websocket.accept"})
 
     app = AppFactory.create_app()
-    app.router.append(ws_function)
+    app.router.add_route(ws_function)
 
     client = test_client_factory(app)
     with pytest.raises(RuntimeError):

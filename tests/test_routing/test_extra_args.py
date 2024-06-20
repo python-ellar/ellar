@@ -93,7 +93,7 @@ def query_params_extra(
     return filters.dict()
 
 
-app.router.append(query_params_extra)
+app.router.add_route(query_params_extra)
 
 openapi_schema = {
     "openapi": "3.1.0",
@@ -237,7 +237,7 @@ def test_extra_args_as_grouped_fields():
     ):
         return {}
 
-    tm.create_application().router.append(query_params_extra)
+    tm.create_application().router.add_route(query_params_extra)
     client = tm.get_test_client()
     response = client.get(
         "/test-grouped?from=1&to=2&range=20&foo=1&range2=50&query1=somequery1&query2=somequery2"

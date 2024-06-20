@@ -180,7 +180,7 @@ def test_websocket_setup_fails_when_using_body_without_handler():
         ):
             pass
 
-        tm.create_application().router.append(websocket_with_handler)
+        tm.create_application().router.add_route(websocket_with_handler)
 
 
 def test_websocket_endpoint_on_connect():

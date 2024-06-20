@@ -13,7 +13,7 @@ def test_trusted_host_middleware(test_client_factory):
         config_module={"ALLOWED_HOSTS": ["testserver", "*.testserver"]}
     )
     app = tm.create_application()
-    app.router.append(homepage)
+    app.router.add_route(homepage)
 
     assert app.debug is False
 
@@ -40,7 +40,7 @@ def test_trusted_host_middleware_works_for_debug_true(test_client_factory):
         config_module={"ALLOWED_HOSTS": ["testserver", "*.testserver"]}
     )
     app = tm.create_application()
-    app.router.append(homepage)
+    app.router.add_route(homepage)
 
     assert app.debug is False
     app.debug = True
@@ -71,7 +71,7 @@ def test_www_redirect(test_client_factory):
 
     tm = Test.create_test_module(config_module={"ALLOWED_HOSTS": ["www.example.com"]})
     app = tm.create_application()
-    app.router.append(homepage)
+    app.router.add_route(homepage)
 
     client = tm.get_test_client(base_url="https://example.com")
     response = client.get("/")

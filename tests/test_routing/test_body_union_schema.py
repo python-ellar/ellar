@@ -44,9 +44,9 @@ def alias_qty(
 
 
 app = tm.create_application()
-app.router.append(save_union_body_and_embedded_body)
-app.router.append(embed_qty)
-app.router.append(alias_qty)
+app.router.add_route(save_union_body_and_embedded_body)
+app.router.add_route(embed_qty)
+app.router.add_route(alias_qty)
 
 client = tm.get_test_client()
 
@@ -291,7 +291,7 @@ def test_alias_with_more_body():
 
     _tm = Test.create_test_module()
     _app = _tm.create_application()
-    _app.router.append(create_item)
+    _app.router.add_route(create_item)
 
     _client = _tm.get_test_client()
 

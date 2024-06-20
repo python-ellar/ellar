@@ -83,7 +83,7 @@ async def test_current_config_works_(anyio_backend):
         return a + b
 
     app = tm.create_application()
-    app.router.append(add)
+    app.router.add_route(add)
 
     async with app.application_context():
         res = tm.get_test_client().post("/", json={"a": 1, "b": 4})

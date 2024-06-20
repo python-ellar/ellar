@@ -95,7 +95,7 @@ def test_global_guard_works():
     def _interceptor_demo_endpoint():
         return {"message": "intercepted okay"}
 
-    app.router.append(_interceptor_demo_endpoint)
+    app.router.add_route(_interceptor_demo_endpoint)
     app.use_global_interceptors(Interceptor1(), InterceptCustomException)
 
     _client = tm.get_test_client()

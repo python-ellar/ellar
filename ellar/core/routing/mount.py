@@ -26,8 +26,8 @@ if t.TYPE_CHECKING:
 class EllarMount(StarletteMount):
     def __init__(
         self,
-        *,
         path: str,
+        *,
         routes: t.Optional[t.Sequence[t.Union[BaseRoute]]] = None,
         control_type: t.Optional[t.Type] = None,
         name: t.Optional[str] = None,

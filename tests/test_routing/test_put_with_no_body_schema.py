@@ -15,7 +15,7 @@ def save_item_no_body(item_id: str):
     return {"item_id": item_id}
 
 
-app.router.append(save_item_no_body)
+app.router.add_route(save_item_no_body)
 client = tm.get_test_client()
 
 

@@ -133,7 +133,7 @@ def test_custom_exception_works():
 
     tm = Test.create_test_module()
     app = tm.create_application()
-    app.router.append(homepage)
+    app.router.add_route(homepage)
     app.add_exception_handler(NewExceptionHandler())
 
     client = tm.get_test_client()
@@ -149,7 +149,7 @@ def test_exception_override_works():
 
     tm = Test.create_test_module()
     app = tm.create_application()
-    app.router.append(homepage)
+    app.router.add_route(homepage)
     app.add_exception_handler(OverrideAPIExceptionHandler())
 
     client = tm.get_test_client()
@@ -175,7 +175,7 @@ def test_500_error_as_a_function(exception_handler):
     tm = Test.create_test_module()
     app = tm.create_application()
 
-    app.router.append(homepage)
+    app.router.add_route(homepage)
     app.add_exception_handler(exception_handler)
 
     client = tm.get_test_client(raise_server_exceptions=False)
@@ -192,7 +192,7 @@ def test_raise_default_http_exception():
     tm = Test.create_test_module()
     app = tm.create_application()
 
-    app.router.append(homepage)
+    app.router.add_route(homepage)
     client = tm.get_test_client()
     res = client.get("/")
     assert res.status_code == 400
@@ -208,7 +208,7 @@ def test_raise_default_http_exception_for_204_and_304(status_code):
     tm = Test.create_test_module()
     app = tm.create_application()
 
-    app.router.append(homepage)
+    app.router.add_route(homepage)
 
     client = tm.get_test_client()
     res = client.get("/")
@@ -240,7 +240,7 @@ def test_application_add_exception_handler():
     tm = Test.create_test_module()
     app = tm.create_application()
 
-    app.router.append(homepage)
+    app.router.add_route(homepage)
     app.add_exception_handler(OverrideHTTPException())
 
     client = tm.get_test_client()
@@ -258,7 +258,7 @@ def test_application_http_exception_handler_raise_exception_for_returning_none()
     tm = Test.create_test_module()
     app = tm.create_application()
 
-    app.router.append(homepage)
+    app.router.add_route(homepage)
     app.add_exception_handler(RuntimeHTTPException())
     with pytest.raises(
         RuntimeError, match="HTTP ExceptionHandler must return a response."
@@ -310,8 +310,8 @@ def test_http_exception_handler_case_1(exc):
     tm = Test.create_test_module()
     app = tm.create_application()
 
-    app.router.append(homepage)
-    app.router.append(homepage_2)
+    app.router.add_route(homepage)
+    app.router.add_route(homepage_2)
     client = tm.get_test_client()
 
     res = client.get("/case_1")
@@ -337,7 +337,7 @@ def test_ws_exception_handler():
     tm = Test.create_test_module()
     app = tm.create_application()
 
-    app.router.append(homepage_3)
+    app.router.add_route(homepage_3)
     client = tm.get_test_client()
 
     with client.websocket_connect("/ws"):

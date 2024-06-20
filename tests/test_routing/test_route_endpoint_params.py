@@ -146,4 +146,4 @@ def test_multiple_annotation():
         def multiple_annotation(dep1: Annotated[str, Body(), Query()]):
             pass
 
-        tm.create_application().router.append(multiple_annotation)
+        tm.create_application().router.add_route(multiple_annotation)
