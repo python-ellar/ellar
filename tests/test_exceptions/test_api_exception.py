@@ -27,7 +27,7 @@ def exception_():
     _exception_runner.run()
 
 
-test_module.create_application().router.append(exception_)
+test_module.create_application().router.add_route(exception_)
 client = test_module.get_test_client()
 
 

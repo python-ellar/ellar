@@ -397,7 +397,7 @@ def test_form_file_data_as_bytes(tmpdir):
         }
 
     new_tm = Test.create_test_module()
-    new_tm.create_application().router.append(form_file_as_bytes)
+    new_tm.create_application().router.add_route(form_file_as_bytes)
     client = new_tm.get_test_client()
 
     with open(path, "rb") as f:
@@ -421,7 +421,7 @@ def test_form_file_data_as_list_of_bytes(tmpdir):
         }
 
     new_tm = Test.create_test_module()
-    new_tm.create_application().router.append(form_file_as_bytes)
+    new_tm.create_application().router.add_route(form_file_as_bytes)
     client = new_tm.get_test_client()
 
     with open(path, "rb") as f:

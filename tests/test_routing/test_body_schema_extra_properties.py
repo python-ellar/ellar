@@ -24,7 +24,7 @@ def foo(items: Items_):
 
 
 app = tm.create_application()
-app.router.append(foo)
+app.router.add_route(foo)
 client = tm.get_test_client()
 
 

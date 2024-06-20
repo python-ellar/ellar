@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from ellar.common.constants import (
     CONTROLLER_CLASS_KEY,
     SCOPE_API_VERSIONING_RESOLVER,
-    SCOPE_SERVICE_PROVIDER,
     VERSIONING_KEY,
 )
 from ellar.common.interfaces import (
@@ -15,13 +14,13 @@ from ellar.common.interfaces import (
 )
 from ellar.common.logging import request_logger
 from ellar.common.types import TReceive, TScope, TSend
+from ellar.core.context import current_injector
 from ellar.reflect import reflect
 from starlette.routing import Match
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common import ControllerBase
     from ellar.core.versioning.resolver import BaseAPIVersioningResolver
-    from ellar.di import EllarInjector
 
 __all__ = [
     "RouteOperationBase",
@@ -55,16 +54,15 @@ class RouteOperationBase:
         request_logger.debug(
             f"Started Computing Execution Context - '{self.__class__.__name__}'"
         )
-        service_provider: "EllarInjector" = scope[SCOPE_SERVICE_PROVIDER]
 
-        execution_context_factory = service_provider.get(IExecutionContextFactory)
+        execution_context_factory = current_injector.get(IExecutionContextFactory)
         context = execution_context_factory.create_context(
             operation=self, scope=scope, receive=receive, send=send
         )
-        service_provider.update_scoped_context(IExecutionContext, context)
+        current_injector.update_scoped_context(IExecutionContext, context)
 
-        interceptor_consumer = service_provider.get(IInterceptorsConsumer)
-        guard_consumer = service_provider.get(IGuardsConsumer)
+        interceptor_consumer = current_injector.get(IInterceptorsConsumer)
+        guard_consumer = current_injector.get(IGuardsConsumer)
 
         request_logger.debug(
             f"Running Guards and Interceptors - '{self.__class__.__name__}'"

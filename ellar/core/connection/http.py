@@ -1,7 +1,7 @@
 import typing as t
 
 from ellar.common import Identity
-from ellar.common.constants import SCOPE_SERVICE_PROVIDER
+from ellar.core.context import current_injector
 from starlette.requests import (
     HTTPConnection as StarletteHTTPConnection,
 )
@@ -16,10 +16,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
 class HTTPConnection(StarletteHTTPConnection):
     @property
     def service_provider(self) -> "EllarInjector":
-        assert (
-            SCOPE_SERVICE_PROVIDER in self.scope
-        ), "RequestServiceProviderMiddleware must be installed to access request.service_provider"
-        return t.cast("EllarInjector", self.scope[SCOPE_SERVICE_PROVIDER])
+        return current_injector
 
     @property
     def user(self) -> Identity:

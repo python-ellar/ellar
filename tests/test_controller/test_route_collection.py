@@ -210,15 +210,16 @@ def test_route_collection_create_control_type(collection_model):
     def endpoint_once():
         pass
 
+    def invalid_endpoint():
+        pass
+
     assert reflect.get_metadata(CONTROLLER_CLASS_KEY, endpoint_once) is None
-    operation = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, endpoint_once)
+    assert reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, endpoint_once) is None
 
-    collection_model([operation])
+    collection_model([endpoint_once])
     assert not isinstance(
         reflect.get_metadata(CONTROLLER_CLASS_KEY, endpoint_once), list
     )
 
-    collection_model([operation])
-    assert not isinstance(
-        reflect.get_metadata(CONTROLLER_CLASS_KEY, endpoint_once), list
-    )
+    collection = collection_model([invalid_endpoint])
+    assert len(collection) == 0

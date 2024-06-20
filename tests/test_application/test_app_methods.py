@@ -14,7 +14,6 @@ from ellar.core import Config
 from ellar.core.connection import Request
 from ellar.core.services.reflector import Reflector
 from ellar.core.versioning import (
-    DefaultAPIVersioning,
     UrlPathAPIVersioning,
 )
 from ellar.core.versioning import (
@@ -35,7 +34,7 @@ class TestEllarApp:
             await res(*ctx.get_args())
 
         app = AppFactory.create_app()
-        app.router.append(homepage)
+        app.router.add_route(homepage)
         client = TestClient(app)
         response = client.get("/")
         assert response.status_code == 200
@@ -48,7 +47,7 @@ class TestEllarApp:
             return res
 
         app = AppFactory.create_app()
-        app.router.append(homepage)
+        app.router.add_route(homepage)
         result = app.url_path_for("homepage")
         assert result == "/homepage-url"
 
@@ -103,8 +102,8 @@ class TestEllarApp:
 
     def test_app_enable_versioning_and_versioning_scheme(self):
         app = Test.create_test_module().create_application()
-        assert app.config.VERSIONING_SCHEME
-        assert isinstance(app.config.VERSIONING_SCHEME, DefaultAPIVersioning)
+        assert app.config.VERSIONING_SCHEME is None
+        # assert isinstance(app.config.VERSIONING_SCHEME, DefaultAPIVersioning)
 
         app.enable_versioning(schema=VERSIONING.URL)
         assert isinstance(app.config.VERSIONING_SCHEME, UrlPathAPIVersioning)
@@ -157,7 +156,7 @@ class TestEllarApp:
         def raise_custom_exception():
             raise CustomException("Raised an Exception")
 
-        app.router.append(raise_custom_exception)
+        app.router.add_route(raise_custom_exception)
         client = TestClient(app)
         res = client.get("/404")
         assert res.status_code == 404

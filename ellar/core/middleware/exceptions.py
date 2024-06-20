@@ -1,13 +1,13 @@
 import typing as t
 
-from ellar.common.constants import SCOPE_SERVICE_PROVIDER
 from ellar.common.interfaces import IHostContextFactory
 from ellar.common.types import ASGIApp, TMessage, TReceive, TScope, TSend
+from ellar.core.context import current_injector
 from ellar.core.exceptions import ExceptionMiddlewareService
 from starlette.exceptions import HTTPException
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.di import EllarInjector
+    pass
 
 
 class ExceptionMiddleware:
@@ -57,11 +57,7 @@ class ExceptionMiddleware:
                 msg = "Caught handled exception, but response already started."
                 raise RuntimeError(msg) from exc
 
-            service_provider: "EllarInjector" = t.cast(
-                "EllarInjector", scope[SCOPE_SERVICE_PROVIDER]
-            )
-
-            context_factory = service_provider.get(IHostContextFactory)
+            context_factory = current_injector.get(IHostContextFactory)
             context = context_factory.create_context(scope)
 
             if context.get_type() == "http":

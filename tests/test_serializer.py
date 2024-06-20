@@ -5,12 +5,12 @@ from enum import Enum
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
 
 import pytest
-from ellar.app.context import ApplicationContext
 from ellar.common.serializer.base import (
     Serializer,
     SerializerFilter,
     serialize_object,
 )
+from ellar.core.context import ApplicationContext
 from ellar.pydantic import as_pydantic_validator
 from ellar.testing import Test
 from pydantic import BaseModel, Field, RootModel

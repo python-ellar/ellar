@@ -11,12 +11,10 @@ from ellar.common.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,
     EXTRA_ROUTE_ARGS_KEY,
     NOT_SET,
-    SCOPE_SERVICE_PROVIDER,
 )
 from ellar.common.exceptions import WebSocketRequestValidationError
 from ellar.common.params import WebsocketEndpointArgsModel
-from ellar.core import Config
-from ellar.di import EllarInjector
+from ellar.core.context import config, current_injector
 from ellar.reflect import reflect
 from ellar.socket_io.context import GatewayContext
 from ellar.socket_io.model import GatewayBase
@@ -105,7 +103,6 @@ class SocketOperationConnection:
                 reason=serialize_object(wex.errors()),
             )
         except Exception as ex:
-            config = gateway_instance.context.get_service_provider().get(Config)
             await self._handle_error(
                 sid=sid,
                 code=status.WS_1011_INTERNAL_ERROR,
@@ -117,11 +114,7 @@ class SocketOperationConnection:
         await self._server.disconnect(sid=sid)
 
     async def _context_handler(self, sid: str, environment: t.Dict) -> t.Any:
-        service_provider = t.cast(
-            EllarInjector, environment["asgi.scope"][SCOPE_SERVICE_PROVIDER]
-        )
-
-        execution_context_factory = service_provider.get(IExecutionContextFactory)
+        execution_context_factory = current_injector.get(IExecutionContextFactory)
         context = execution_context_factory.create_context(
             operation=self,
             scope=environment["asgi.scope"],
@@ -226,11 +219,7 @@ class SocketMessageOperation(SocketOperationConnection):
     async def _context_handler(self, sid: str, message: t.Any) -> t.Any:
         sid_environ = self._server.get_environ(sid)
 
-        service_provider = t.cast(
-            EllarInjector, sid_environ["asgi.scope"][SCOPE_SERVICE_PROVIDER]
-        )
-
-        execution_context_factory = service_provider.get(IExecutionContextFactory)
+        execution_context_factory = current_injector.get(IExecutionContextFactory)
         context = execution_context_factory.create_context(
             operation=self,
             scope=sid_environ["asgi.scope"],

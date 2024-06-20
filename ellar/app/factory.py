@@ -7,6 +7,7 @@ from ellar.common import IApplicationReady, Module
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.models import GuardCanActivate
 from ellar.core import Config, DynamicModule, LazyModuleImport, ModuleBase, ModuleSetup
+from ellar.core.context import ApplicationContext
 from ellar.core.modules import ModuleRefBase
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.reflect import reflect
@@ -14,7 +15,6 @@ from ellar.threading.sync_worker import execute_async_context_manager
 from ellar.utils import get_name, get_unique_type
 from starlette.routing import BaseRoute, Host, Mount
 
-from .context import ApplicationContext
 from .main import App
 from .services import EllarAppService
 

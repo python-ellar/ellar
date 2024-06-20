@@ -3,19 +3,16 @@ import json
 import pytest
 from ellar.app.services import EllarAppService
 from ellar.common import IHostContextFactory
-from ellar.common.constants import SCOPE_SERVICE_PROVIDER
 from ellar.common.exceptions import HostContextException
-from ellar.core import Config
-from ellar.core.middleware import RequestServiceProviderMiddleware
+from ellar.core import ApplicationContext, Config, current_injector
+from ellar.core.middleware import ServerErrorMiddleware
 from ellar.di import EllarInjector
+from ellar.threading.sync_worker import execute_async_context_manager
 
 from ..injector_module import Configuration, DummyModule
 
 
 async def assert_service_provider_app(scope, receive, send):
-    assert scope[SCOPE_SERVICE_PROVIDER]
-
-    service_provider = scope[SCOPE_SERVICE_PROVIDER]
     await send(
         {
             "type": "http.response.start",
@@ -23,8 +20,8 @@ async def assert_service_provider_app(scope, receive, send):
             "headers": [[b"content-type", b"application/json"]],
         }
     )
-    _config_repr = repr(service_provider.get(Configuration))
-    str_provider = service_provider.get(str)
+    _config_repr = repr(current_injector.get(Configuration))
+    str_provider = current_injector.get(str)
     await send(
         {
             "type": "http.response.body",
@@ -36,10 +33,7 @@ async def assert_service_provider_app(scope, receive, send):
 
 
 async def assert_iexecute_context_app(scope, receive, send):
-    assert scope[SCOPE_SERVICE_PROVIDER]
-
-    service_provider = scope[SCOPE_SERVICE_PROVIDER]
-    host_context_factory: IHostContextFactory = service_provider.get(
+    host_context_factory: IHostContextFactory = current_injector.get(
         IHostContextFactory
     )
     host_context = host_context_factory.create_context(scope, receive, send)
@@ -63,16 +57,13 @@ async def assert_iexecute_context_app(scope, receive, send):
 
 
 async def assert_iexecute_context_app_websocket(scope, receive, send):
-    assert scope[SCOPE_SERVICE_PROVIDER]
-
-    service_provider = scope[SCOPE_SERVICE_PROVIDER]
-    host_context_factory: IHostContextFactory = service_provider.get(
+    host_context_factory: IHostContextFactory = current_injector.get(
         IHostContextFactory
     )
     host_context = host_context_factory.create_context(scope, receive, send)
 
     websocket = host_context.switch_to_websocket().get_client()
-    assert service_provider is host_context.get_service_provider()
+    assert current_injector is host_context.get_service_provider()
 
     with pytest.raises(HostContextException):
         host_context.switch_to_http_connection().get_request()
@@ -88,12 +79,14 @@ async def assert_iexecute_context_app_websocket(scope, receive, send):
 def test_di_middleware(test_client_factory):
     injector_ = EllarInjector()
     injector_.container.install(DummyModule)
-    asgi_app = RequestServiceProviderMiddleware(
+    asgi_app = ServerErrorMiddleware(
         assert_service_provider_app, debug=False, injector=injector_
     )
     EllarAppService(injector_, config=Config()).register_core_services()
-    client = test_client_factory(asgi_app)
-    response = client.get("/")
+
+    with execute_async_context_manager(ApplicationContext(injector_)):
+        client = test_client_factory(asgi_app)
+        response = client.get("/")
 
     assert response.status_code == 200
     data = response.json()
@@ -103,13 +96,13 @@ def test_di_middleware(test_client_factory):
 
 def test_di_middleware_execution_context_initialization(test_client_factory):
     injector_ = EllarInjector()
-    asgi_app = RequestServiceProviderMiddleware(
+    asgi_app = ServerErrorMiddleware(
         assert_iexecute_context_app, debug=False, injector=injector_
     )
     EllarAppService(injector_, config=Config()).register_core_services()
-
-    client = test_client_factory(asgi_app)
-    response = client.get("/")
+    with execute_async_context_manager(ApplicationContext(injector_)):
+        client = test_client_factory(asgi_app)
+        response = client.get("/")
 
     assert response.status_code == 200
     data = response.json()
@@ -118,12 +111,12 @@ def test_di_middleware_execution_context_initialization(test_client_factory):
 
 def test_di_middleware_execution_context_initialization_websocket(test_client_factory):
     injector_ = EllarInjector()
-    asgi_app = RequestServiceProviderMiddleware(
+    asgi_app = ServerErrorMiddleware(
         assert_iexecute_context_app_websocket, debug=False, injector=injector_
     )
     EllarAppService(injector_, config=Config()).register_core_services()
-
     client = test_client_factory(asgi_app)
-    with client.websocket_connect("/") as session:
-        text = session.receive_text()
-        assert text == "Hello, world!"
+    with execute_async_context_manager(ApplicationContext(injector_)):
+        with client.websocket_connect("/") as session:
+            text = session.receive_text()
+            assert text == "Hello, world!"

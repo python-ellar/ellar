@@ -123,7 +123,7 @@ class TestStarletteCompatibility:
             raise RuntimeError()
 
         app = AppFactory.create_app()
-        app.router.append(homepage)
+        app.router.add_route(homepage)
         app.debug = True
 
         client = TestClient(app, raise_server_exceptions=False)
@@ -139,7 +139,7 @@ class TestStarletteCompatibility:
             raise RuntimeError()
 
         app = AppFactory.create_app()
-        app.router.append(homepage)
+        app.router.add_route(homepage)
         app.debug = True
 
         client = TestClient(app, raise_server_exceptions=False)

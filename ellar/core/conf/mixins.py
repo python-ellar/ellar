@@ -31,7 +31,7 @@ class ConfigDefaultTypesMixin:
     JINJA_LOADERS: t.List[t.Union[JinjaLoaderType, t.Any]]
 
     # Application route versioning scheme
-    VERSIONING_SCHEME: IAPIVersioning
+    VERSIONING_SCHEME: t.Optional[IAPIVersioning]
 
     # Enable or Disable Application Router route searching by appending backslash
     REDIRECT_SLASHES: bool

@@ -18,7 +18,7 @@ def read_items(q: List[int] = Query(None)):
     return {"q": q}
 
 
-app.router.append(read_items)
+app.router.add_route(read_items)
 client = tm.get_test_client()
 
 

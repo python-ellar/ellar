@@ -4,7 +4,7 @@ import pytest
 from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.conf import Config, ConfigDefaultTypesMixin
 from ellar.core.conf.config import ConfigRuntimeError
-from ellar.core.versioning import DefaultAPIVersioning, UrlPathAPIVersioning
+from ellar.core.versioning import UrlPathAPIVersioning
 from ellar.pydantic import ENCODERS_BY_TYPE
 from jinja2.loaders import FileSystemLoader
 from starlette.responses import JSONResponse
@@ -40,7 +40,8 @@ def test_default_configurations():
 
     assert config.JINJA_TEMPLATES_OPTIONS == {}
 
-    assert isinstance(config.VERSIONING_SCHEME, DefaultAPIVersioning)
+    assert config.VERSIONING_SCHEME is None
+    # assert isinstance(config.VERSIONING_SCHEME, DefaultAPIVersioning)
     assert config.REDIRECT_SLASHES is False
 
     assert config.STATIC_FOLDER_PACKAGES == []

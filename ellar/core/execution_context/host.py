@@ -8,12 +8,12 @@ from ellar.common import (
     IWebSocketHostContext,
 )
 from ellar.common.compatible import cached_property
-from ellar.common.constants import SCOPE_SERVICE_PROVIDER
 from ellar.common.interfaces import IHostContext
 from ellar.common.types import TReceive, TScope, TSend
+from ellar.core.context import current_injector
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.main import App
+    from ellar.app.main import App
     from ellar.di import EllarInjector
 
 
@@ -36,11 +36,7 @@ class HostContext(IHostContext):
         self.send = send
 
     def get_service_provider(self) -> "EllarInjector":
-        return self._service_provider
-
-    @cached_property
-    def _service_provider(self) -> "EllarInjector":
-        return self.scope[SCOPE_SERVICE_PROVIDER]  # type:ignore[no-any-return]
+        return current_injector
 
     @cached_property
     def _get_websocket_context(self) -> IWebSocketHostContext:

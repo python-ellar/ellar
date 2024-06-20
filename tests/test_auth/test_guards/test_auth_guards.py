@@ -117,7 +117,7 @@ for _path, auth in [
     def auth_demo_endpoint(request: Inject[Request]):
         return {"authentication": request.user}
 
-    app.router.append(auth_demo_endpoint)
+    app.router.add_route(auth_demo_endpoint)
 
 client = TestClient(app)
 
@@ -273,7 +273,7 @@ def test_global_guard_case_1_works():
     def _auth_demo_endpoint(request: Inject[Request]):
         return {"authentication": request.user}
 
-    _app.router.append(_auth_demo_endpoint)
+    _app.router.add_route(_auth_demo_endpoint)
     _client = TestClient(_app)
     res = _client.get("/global")
 
@@ -292,7 +292,7 @@ def test_global_guard_case_2_works():
     def _auth_demo_endpoint(request: Request):
         return {"authentication": request.user}
 
-    _app.router.append(_auth_demo_endpoint)
+    _app.router.add_route(_auth_demo_endpoint)
     _client = TestClient(_app)
     res = _client.get("/global")
 
@@ -332,7 +332,7 @@ def test_if_an_auth_guard_return_converts_to_identity(
         assert request.user.is_authenticated == is_authenticated
         return {"authentication": request.user}
 
-    _app.router.append(_auth_demo_endpoint)
+    _app.router.add_route(_auth_demo_endpoint)
     _client = TestClient(_app)
     res = _client.get(
         "/global",
