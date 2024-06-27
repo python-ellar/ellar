@@ -33,6 +33,9 @@ class ControllerType(type):
         router: t.Union["ControllerBase", "ModuleRouter"],
         prefix: t.Optional[str] = None,
     ) -> None:
+        if prefix:
+            assert prefix.startswith("/"), "'prefix' must start with '/'"
+
         reflect.define_metadata(
             NESTED_ROUTERS_KEY, [NestedRouterInfo(prefix=prefix, router=router)], cls
         )
