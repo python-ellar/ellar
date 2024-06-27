@@ -178,8 +178,11 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         # self._flatten_routes: t.List[BaseRoute] = []
 
         if isinstance(self.module, type) and issubclass(self.module, ModuleBase):
+            self.module.build_module_actions()
+
             self.scan_templating_filters()
             self.scan_exceptions_handlers()
+
             self.scan_middleware()
 
         self.register_providers()
@@ -224,39 +227,22 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         )
 
     def scan_templating_filters(self) -> None:
-        templating_filter = (
-            reflect.get_metadata(TEMPLATE_FILTER_KEY, self._module_type) or {}
-        )
-        if not self._config.get(TEMPLATE_FILTER_KEY) or not isinstance(
-            self._config[TEMPLATE_FILTER_KEY], dict
-        ):
-            self._config[TEMPLATE_FILTER_KEY] = {}
-        self._config[TEMPLATE_FILTER_KEY].update(templating_filter)
+        templating_filter = self.module.MODULE_FIELDS.get(TEMPLATE_FILTER_KEY, {})
+        self.config.setdefault(TEMPLATE_FILTER_KEY, {}).update(templating_filter)
 
-        templating_global_filter = (
-            reflect.get_metadata(TEMPLATE_GLOBAL_KEY, self._module_type) or {}
+        templating_global_filter = self.module.MODULE_FIELDS.get(
+            TEMPLATE_GLOBAL_KEY, {}
         )
-        if not self._config.get(TEMPLATE_GLOBAL_KEY) or not isinstance(
-            self._config[TEMPLATE_GLOBAL_KEY], dict
-        ):
-            self._config[TEMPLATE_GLOBAL_KEY] = {}
-        self._config[TEMPLATE_GLOBAL_KEY].update(templating_global_filter)
+        self.config.setdefault(TEMPLATE_GLOBAL_KEY, {}).update(templating_global_filter)
 
     def scan_exceptions_handlers(self) -> None:
-        exception_handlers = (
-            reflect.get_metadata(EXCEPTION_HANDLERS_KEY, self._module_type) or []
-        )
-        self._config[EXCEPTION_HANDLERS_KEY].extend(exception_handlers)
+        exception_handlers = self.module.MODULE_FIELDS.get(EXCEPTION_HANDLERS_KEY, [])
+
+        self.config.setdefault(EXCEPTION_HANDLERS_KEY, []).extend(exception_handlers)
 
     def scan_middleware(self) -> None:
-        middleware = (
-            reflect.get_metadata(MIDDLEWARE_HANDLERS_KEY, self._module_type) or []
-        )
-        if not self._config.get(MIDDLEWARE_HANDLERS_KEY) or not isinstance(
-            self._config[MIDDLEWARE_HANDLERS_KEY], list
-        ):
-            self._config[MIDDLEWARE_HANDLERS_KEY] = []
-        self._config[MIDDLEWARE_HANDLERS_KEY].extend(middleware)
+        middleware = self.module.MODULE_FIELDS.get(MIDDLEWARE_HANDLERS_KEY, [])
+        self.config.setdefault(MIDDLEWARE_HANDLERS_KEY, []).extend(middleware)
 
     def register_providers(self) -> None:
         providers = (

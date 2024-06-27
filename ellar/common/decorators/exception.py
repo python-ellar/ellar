@@ -1,6 +1,6 @@
 import typing as t
 
-from ellar.common.constants import EXCEPTION_HANDLERS_KEY
+from ellar.common.constants import EXCEPTION_HANDLERS_KEY, MODULE_DECORATOR_ITEM
 from ellar.pydantic import BaseModel
 
 
@@ -16,6 +16,7 @@ def _add_exception_handler(
     validator = ValidateExceptionHandler(key=exc_class_or_status_code, value=handler)
     exception_handlers = {validator.key: validator.value}
     setattr(handler, EXCEPTION_HANDLERS_KEY, exception_handlers)
+    setattr(handler, MODULE_DECORATOR_ITEM, EXCEPTION_HANDLERS_KEY)
 
 
 def exception_handler(

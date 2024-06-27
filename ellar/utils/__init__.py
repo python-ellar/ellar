@@ -80,3 +80,11 @@ def get_type_of_base(
     for base in inspect.getmro(reference_type):
         if issubclass(base, base_type):
             yield base
+
+
+def get_functions_with_tag(
+    klass: t.Type, tag: str = "OPERATION_ENDPOINT"
+) -> t.Iterable[t.Tuple[str, t.Callable]]:
+    for method_name, method in inspect.getmembers(klass, predicate=inspect.isfunction):
+        if hasattr(method, tag):
+            yield method_name, method

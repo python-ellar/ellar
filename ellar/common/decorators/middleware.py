@@ -1,7 +1,7 @@
 import typing as t
 
 from ellar.common.compatible import AttributeDict
-from ellar.common.constants import MIDDLEWARE_HANDLERS_KEY
+from ellar.common.constants import MIDDLEWARE_HANDLERS_KEY, MODULE_DECORATOR_ITEM
 
 
 def _add_middleware(dispatch: t.Callable, **options: t.Any) -> None:
@@ -10,6 +10,7 @@ def _add_middleware(dispatch: t.Callable, **options: t.Any) -> None:
         MIDDLEWARE_HANDLERS_KEY,
         AttributeDict(dispatch=dispatch, options=options),
     )
+    setattr(dispatch, MODULE_DECORATOR_ITEM, MIDDLEWARE_HANDLERS_KEY)
 
 
 def middleware() -> t.Callable:

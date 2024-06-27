@@ -4,6 +4,7 @@ import typing as t
 import warnings
 
 from ellar.common.constants import (
+    MODULE_DECORATOR_ITEM,
     NOT_SET,
     RESPONSE_OVERRIDE_KEY,
     TEMPLATE_FILTER_KEY,
@@ -113,6 +114,7 @@ def template_filter(
             TEMPLATE_FILTER_KEY,
             TemplateFunctionData(func=f, name=name or get_name(f)),
         )
+        setattr(f, MODULE_DECORATOR_ITEM, TEMPLATE_FILTER_KEY)
         return f
 
     return decorator
@@ -140,6 +142,7 @@ def template_global(
             TEMPLATE_GLOBAL_KEY,
             TemplateFunctionData(func=f, name=name or get_name(f)),
         )
+        setattr(f, MODULE_DECORATOR_ITEM, TEMPLATE_GLOBAL_KEY)
         return f
 
     return decorator
