@@ -1,4 +1,3 @@
-import inspect
 import typing as t
 from types import FunctionType
 
@@ -7,7 +6,6 @@ from ellar.common.constants import (
     CONTROLLER_METADATA,
     CONTROLLER_OPERATION_HANDLER_KEY,
     NESTED_ROUTERS_KEY,
-    OPERATION_ENDPOINT_KEY,
     ROUTE_OPERATION_PARAMETERS,
 )
 from ellar.common.exceptions import ImproperConfiguration
@@ -28,14 +26,6 @@ from .base import get_controller_builder_factory
 T_ = t.TypeVar("T_")
 
 _stack_cycle: t.Tuple = ()
-
-
-def get_route_functions(
-    klass: t.Type, key: str = OPERATION_ENDPOINT_KEY
-) -> t.Iterable[t.Tuple[str, t.Callable]]:
-    for method_name, method in inspect.getmembers(klass, predicate=inspect.isfunction):
-        if hasattr(method, key):
-            yield method_name, method
 
 
 def process_nested_routes(controller: t.Type[t.Any]) -> t.List[BaseRoute]:

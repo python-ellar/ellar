@@ -2,7 +2,6 @@ import typing as t
 
 import socketio
 from ellar.core.router_builders import RouterBuilder
-from ellar.core.router_builders.utils import get_route_functions
 from ellar.reflect import reflect
 from ellar.socket_io.adapter import SocketIOASGIApp
 from ellar.socket_io.constants import (
@@ -17,6 +16,7 @@ from ellar.socket_io.constants import (
 )
 from ellar.socket_io.gateway import SocketMessageOperation, SocketOperationConnection
 from ellar.socket_io.model import GatewayBase, GatewayType
+from ellar.utils import get_functions_with_tag
 from starlette.routing import Mount
 
 _socket_servers: t.Dict[str, socketio.AsyncServer] = {}
@@ -33,7 +33,9 @@ class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
         if reflect.get_metadata(GATEWAY_METADATA.PROCESSED, klass):
             return reflect.get_metadata(GATEWAY_MESSAGE_HANDLER_KEY, klass) or []
 
-        for _name, method in get_route_functions(klass, MESSAGE_MAPPING_METADATA):
+        for _name, method in get_functions_with_tag(
+            klass, tag=MESSAGE_MAPPING_METADATA
+        ):
             results.append(method)
 
             reflect.define_metadata(GATEWAY_MESSAGE_HANDLER_KEY, [method], klass)

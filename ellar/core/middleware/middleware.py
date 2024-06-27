@@ -12,10 +12,16 @@ T = t.TypeVar("T")
 
 class EllarMiddleware(Middleware, IEllarMiddleware):
     @t.no_type_check
-    def __init__(self, cls: t.Type[T], **options: t.Any) -> None:
+    def __init__(
+        self,
+        cls: t.Type[T],
+        provider_token: t.Optional[str] = None,
+        **options: t.Any,
+    ) -> None:
         super().__init__(cls, **options)
         injectable()(self.cls)
         self.kwargs = build_init_kwargs(self.cls, self.kwargs)
+        self.provider_token = provider_token
 
     def __iter__(self) -> t.Iterator[t.Any]:
         as_tuple = (self, self.args, self.kwargs)

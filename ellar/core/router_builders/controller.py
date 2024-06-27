@@ -4,6 +4,7 @@ from ellar.common.constants import (
     CONTROLLER_METADATA,
     CONTROLLER_OPERATION_HANDLER_KEY,
     CONTROLLER_WATERMARK,
+    OPERATION_ENDPOINT_KEY,
     ROUTE_OPERATION_PARAMETERS,
 )
 from ellar.common.logging import logger
@@ -18,8 +19,9 @@ from ellar.core.routing import (
 from ellar.reflect import reflect
 from starlette.routing import BaseRoute
 
+from ...utils import get_functions_with_tag
 from .base import RouterBuilder
-from .utils import get_route_functions, process_nested_routes
+from .utils import process_nested_routes
 
 T_ = t.TypeVar("T_")
 
@@ -30,7 +32,7 @@ def process_controller_routes(controller: t.Type[ControllerBase]) -> t.List[Base
     if reflect.get_metadata(CONTROLLER_METADATA.PROCESSED, controller):
         return reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, controller) or []
 
-    for _, item in get_route_functions(controller):
+    for _, item in get_functions_with_tag(controller, tag=OPERATION_ENDPOINT_KEY):
         parameters = item.__dict__[ROUTE_OPERATION_PARAMETERS]
         operation: t.Union[ControllerRouteOperation, ControllerWebsocketRouteOperation]
 

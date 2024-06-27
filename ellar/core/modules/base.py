@@ -12,16 +12,19 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 
 class ModuleBaseMeta(type):
-    __MODULE_FIELDS__: t.Dict = {}
+    MODULE_FIELDS: t.Dict = {}
+
+    def build_module_actions(cls) -> None:
+        ModuleBaseBuilder(cls).build()
 
     @t.no_type_check
     def __init__(cls, name, bases, namespace) -> None:
         super().__init__(name, bases, namespace)
-        cls.__MODULE_FIELDS__: t.Dict = {}
+        setattr(cls, MODULE_FIELDS, {})
 
-        for base in reversed(bases):
-            ModuleBaseBuilder(cls).build(getattr(base, MODULE_FIELDS, base.__dict__))
-        ModuleBaseBuilder(cls).build(namespace)
+        # for base in reversed(bases):
+        #     ModuleBaseBuilder(cls).build(getattr(base, MODULE_FIELDS, base.__dict__))
+        # ModuleBaseBuilder(cls).build(namespace)
 
 
 class ModuleBase(_InjectorModule, metaclass=ModuleBaseMeta):
