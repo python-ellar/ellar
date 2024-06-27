@@ -1,6 +1,5 @@
 import functools
 import typing as t
-import uuid
 
 from ellar.common import ControllerBase, ModuleRouter
 from ellar.common.constants import (
@@ -11,6 +10,7 @@ from ellar.common.logging import request_logger
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.core.router_builders.base import get_controller_builder_factory
 from ellar.reflect import reflect
+from ellar.utils import get_unique_type
 from starlette.middleware import Middleware
 from starlette.routing import BaseRoute, Match, Route, Router
 from starlette.routing import Mount as StarletteMount
@@ -38,8 +38,7 @@ class EllarMount(StarletteMount):
         app.routes = RouteCollection(routes)  # type:ignore
         super().__init__(path=path, app=app, name=name, middleware=[])
         self.include_in_schema = include_in_schema
-        self._current_found_route_key = f"{uuid.uuid4().hex:4}_EllarMountRoute"
-        self._control_type = control_type
+        self._control_type = control_type or get_unique_type("EllarMountDynamicType")
 
         self.user_middleware = [] if middleware is None else list(middleware)
         self._middleware_stack: t.Optional[ASGIApp] = None
@@ -50,7 +49,7 @@ class EllarMount(StarletteMount):
             app = cls(app, *args, **kwargs)
         return app
 
-    def get_control_type(self) -> t.Optional[t.Type[t.Any]]:
+    def get_control_type(self) -> t.Type[t.Any]:
         return self._control_type
 
     def add_route(
@@ -69,9 +68,7 @@ class EllarMount(StarletteMount):
 
         if not isinstance(route, BaseRoute) and self.get_control_type():
             reflect.define_metadata(
-                CONTROLLER_CLASS_KEY,
-                route,
-                self.get_control_type(),  # type:ignore[arg-type]
+                CONTROLLER_CLASS_KEY, route, self.get_control_type()
             )
 
         self.routes.append(route)  # type:ignore[arg-type]
@@ -93,7 +90,7 @@ class EllarMount(StarletteMount):
                 match, child_scope = route.matches(scope_copy)
                 if match == Match.FULL:
                     _child_scope.update(child_scope)
-                    _child_scope[self._current_found_route_key] = route
+                    _child_scope[str(self.get_control_type())] = route
                     return Match.FULL, _child_scope
                 elif (
                     match == Match.PARTIAL
@@ -105,7 +102,7 @@ class EllarMount(StarletteMount):
                     partial_scope.update(child_scope)
 
             if partial:
-                partial_scope[self._current_found_route_key] = partial
+                partial_scope[str(self.get_control_type())] = partial
                 return Match.PARTIAL, partial_scope
 
         return Match.NONE, {}
@@ -114,9 +111,9 @@ class EllarMount(StarletteMount):
         request_logger.debug(
             f"Executing Matched URL Handler, path={scope['path']} - '{self.__class__.__name__}'"
         )
-        route = t.cast(t.Optional[Route], scope.get(self._current_found_route_key))
+        route = t.cast(t.Optional[Route], scope.get(str(self.get_control_type())))
         if route:
-            del scope[self._current_found_route_key]
+            del scope[str(self.get_control_type())]
             await route.handle(scope, receive, send)
         else:
             mount_router = t.cast(Router, self.app)

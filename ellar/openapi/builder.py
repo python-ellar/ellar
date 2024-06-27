@@ -1,3 +1,4 @@
+import functools
 import typing as t
 
 from ellar.common import IIdentitySchemes
@@ -37,6 +38,16 @@ class DocumentOpenAPIFactory:
     def __init__(self, document_dict: t.Dict) -> None:
         self._build = document_dict
 
+    def _update_openapi_route_models(
+        self,
+        route_models: t.List[OpenAPIRoute],
+        model: OpenAPIMountDocumentation,
+        openapi_tags: AttributeDict,
+    ) -> None:
+        route_models.append(model)
+        if openapi_tags:
+            self._build.setdefault("tags", []).append(openapi_tags)
+
     def _get_openapi_route_document_models(self, app: "App") -> t.List[OpenAPIRoute]:
         openapi_route_models: t.List = []
         reflector = app.reflector
@@ -65,6 +76,9 @@ class DocumentOpenAPIFactory:
                         mount=route,
                         global_guards=guards or app_guards,
                         name=openapi_tags.name,
+                        global_route_models_update=functools.partial(
+                            self._update_openapi_route_models, openapi_route_models
+                        ),
                     )
                 )
                 if openapi_tags:

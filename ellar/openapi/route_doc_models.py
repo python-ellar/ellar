@@ -1,7 +1,7 @@
 import typing as t
 from abc import ABC, abstractmethod
 
-from ellar.common.compatible import cached_property
+from ellar.common.compatible import AttributeDict, cached_property
 from ellar.common.constants import (
     GUARDS_KEY,
     METHODS_WITH_BODY,
@@ -19,7 +19,11 @@ from ellar.common.params.resolvers import (
 from ellar.common.shortcuts import normalize_path
 from ellar.core.routing import EllarMount, RouteOperation
 from ellar.core.services.reflector import reflector
-from ellar.openapi.constants import IGNORE_CONTROLLER_TYPE, OPENAPI_OPERATION_KEY
+from ellar.openapi.constants import (
+    IGNORE_CONTROLLER_TYPE,
+    OPENAPI_OPERATION_KEY,
+    OPENAPI_TAG,
+)
 from ellar.pydantic import (
     JsonSchemaValue,
     ModelField,
@@ -55,15 +59,21 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
     def __init__(
         self,
         mount: t.Union[EllarMount, Mount],
+        global_route_models_update: t.Callable[
+            ["OpenAPIMountDocumentation", t.Dict], t.Any
+        ],
         name: t.Optional[str] = None,
         global_guards: t.Optional[
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
+        path_prefix: t.Optional[str] = None,
     ) -> None:
         self.tag = name
         self.mount = mount
         self.path_regex, self.path_format, self.param_convertors = compile_path(
-            self.mount.path
+            normalize_path(f"/{path_prefix}/{mount.path}")
+            if path_prefix
+            else mount.path
         )
         # if there is some convertor on ModuleMount Object, then we need to convert it to ModelField
         self.global_route_parameters: t.List[ModelField] = [
@@ -71,11 +81,11 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             for name, convertor in self.param_convertors.items()
         ]
         self.global_guards = global_guards or []
-
-        self._routes: t.List["OpenAPIRouteDocumentation"] = self._build_routes()
+        self._global_route_models_update = global_route_models_update
+        self.routes: t.List["OpenAPIRouteDocumentation"] = self._build_routes()
 
     def _build_routes(self) -> t.List["OpenAPIRouteDocumentation"]:
-        _routes: t.List[OpenAPIRouteDocumentation] = []
+        routes: t.List[OpenAPIRouteDocumentation] = []
 
         for route in self.mount.routes:
             if isinstance(route, RouteOperation) and route.include_in_schema:
@@ -85,7 +95,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
                 if not openapi.get("tags", False):
                     openapi.update(tags=[self.tag] if self.tag else ["default"])
 
-                _routes.append(
+                routes.append(
                     OpenAPIRouteDocumentation(
                         route=route,
                         global_route_parameters=self.global_route_parameters,
@@ -93,12 +103,32 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
                         **openapi,
                     )
                 )
-        return _routes
+            elif isinstance(route, EllarMount):
+                openapi_tags = AttributeDict(
+                    reflector.get(OPENAPI_TAG, route.get_control_type()) or {}
+                )
+
+                if route.name:
+                    openapi_tags.setdefault("name", route.name)
+
+                guards = reflector.get(GUARDS_KEY, route.get_control_type())
+
+                self._global_route_models_update(
+                    OpenAPIMountDocumentation(
+                        mount=route,
+                        global_guards=guards or self.global_guards,
+                        name=openapi_tags.name,
+                        global_route_models_update=self._global_route_models_update,
+                        path_prefix=self.path_format,
+                    ),
+                    openapi_tags,
+                )
+        return routes
 
     @cached_property
     def _openapi_models(self) -> t.List[ModelField]:
         _models = []
-        for route in self._routes:
+        for route in self.routes:
             _models.extend(route.get_route_models())
         return _models
 
@@ -121,7 +151,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
             if path_prefix
             else self.path_format
         )
-        for openapi_route in self._routes:
+        for openapi_route in self.routes:
             openapi_route.get_openapi_path(
                 paths=paths,
                 security_schemes=security_schemes,
