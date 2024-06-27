@@ -7,12 +7,12 @@ from ellar.common.constants import (
     CONTROLLER_CLASS_KEY,
     CONTROLLER_OPERATION_HANDLER_KEY,
 )
+from ellar.core.router_builders.utils import build_route_handler
 from ellar.core.routing import (
     RouteCollection,
     RouteOperation,
     WebsocketRouteOperation,
 )
-from ellar.core.routing.utils import build_route_handler
 from ellar.core.versioning import UrlPathAPIVersioning
 from ellar.reflect import reflect
 from ellar.testing import Test

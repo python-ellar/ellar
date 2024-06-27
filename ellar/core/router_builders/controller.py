@@ -1,16 +1,15 @@
-import inspect
 import typing as t
 
 from ellar.common.constants import (
     CONTROLLER_METADATA,
     CONTROLLER_OPERATION_HANDLER_KEY,
     CONTROLLER_WATERMARK,
-    OPERATION_ENDPOINT_KEY,
     ROUTE_OPERATION_PARAMETERS,
 )
 from ellar.common.logging import logger
-from ellar.common.models import ControllerBase, ControllerType
+from ellar.common.models.controller import ControllerBase, ControllerType
 from ellar.common.operations import RouteParameters, WsRouteParameters
+from ellar.common.shortcuts import normalize_path
 from ellar.core.routing import (
     ControllerRouteOperation,
     ControllerWebsocketRouteOperation,
@@ -20,64 +19,48 @@ from ellar.reflect import reflect
 from starlette.routing import BaseRoute
 
 from .base import RouterBuilder
+from .utils import get_route_functions, process_nested_routes
 
 T_ = t.TypeVar("T_")
 
 
-class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase)):
-    @classmethod
-    def _get_route_functions(
-        cls,
-        klass: t.Type,
-    ) -> t.Iterable[t.Callable]:
-        for _method_name, method in inspect.getmembers(
-            klass, predicate=inspect.isfunction
-        ):
-            if hasattr(method, OPERATION_ENDPOINT_KEY):
-                yield method
+def process_controller_routes(controller: t.Type[ControllerBase]) -> t.List[BaseRoute]:
+    res: t.List[BaseRoute] = []
 
-    @classmethod
-    def _process_controller_routes(
-        cls, controller: t.Type[ControllerBase]
-    ) -> t.Sequence[BaseRoute]:
-        res = []
+    if reflect.get_metadata(CONTROLLER_METADATA.PROCESSED, controller):
+        return reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, controller) or []
 
-        if reflect.get_metadata(CONTROLLER_METADATA.PROCESSED, controller):
-            return (
-                reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, controller) or []
-            )
+    for _, item in get_route_functions(controller):
+        parameters = item.__dict__[ROUTE_OPERATION_PARAMETERS]
+        operation: t.Union[ControllerRouteOperation, ControllerWebsocketRouteOperation]
 
-        for item in cls._get_route_functions(controller):
-            parameters = item.__dict__[ROUTE_OPERATION_PARAMETERS]
-            operation: t.Union[
-                ControllerRouteOperation, ControllerWebsocketRouteOperation
-            ]
+        if not isinstance(parameters, list):
+            parameters = [parameters]
 
-            if not isinstance(parameters, list):
-                parameters = [parameters]
-
-            for parameter in parameters:
-                if isinstance(parameter, RouteParameters):
-                    operation = ControllerRouteOperation(controller, **parameter.dict())
-                elif isinstance(parameter, WsRouteParameters):
-                    operation = ControllerWebsocketRouteOperation(
-                        controller, **parameter.dict()
-                    )
-                else:  # pragma: no cover
-                    logger.warning(
-                        f"Parameter type is not recognized. {type(parameter) if not isinstance(parameter, type) else parameter}"
-                    )
-                    continue
-
-                reflect.define_metadata(
-                    CONTROLLER_OPERATION_HANDLER_KEY,
-                    [operation],
-                    controller,
+        for parameter in parameters:
+            if isinstance(parameter, RouteParameters):
+                operation = ControllerRouteOperation(controller, **parameter.dict())
+            elif isinstance(parameter, WsRouteParameters):
+                operation = ControllerWebsocketRouteOperation(
+                    controller, **parameter.dict()
                 )
-                res.append(operation)
-        reflect.define_metadata(CONTROLLER_METADATA.PROCESSED, True, controller)
-        return res
+            else:  # pragma: no cover
+                logger.warning(
+                    f"Parameter type is not recognized. {type(parameter) if not isinstance(parameter, type) else parameter}"
+                )
+                continue
 
+            reflect.define_metadata(
+                CONTROLLER_OPERATION_HANDLER_KEY,
+                [operation],
+                controller,
+            )
+            res.append(operation)
+    reflect.define_metadata(CONTROLLER_METADATA.PROCESSED, True, controller)
+    return res
+
+
+class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase)):
     @classmethod
     def build(
         cls,
@@ -85,7 +68,8 @@ class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase
         base_route_type: t.Type[t.Union[EllarMount, T_]] = EllarMount,
         **kwargs: t.Any,
     ) -> t.Union[T_, EllarMount]:
-        routes = cls._process_controller_routes(controller_type)
+        routes = process_controller_routes(controller_type)
+        routes.extend(process_nested_routes(controller_type))
 
         include_in_schema = reflect.get_metadata_or_raise_exception(
             CONTROLLER_METADATA.INCLUDE_IN_SCHEMA, controller_type
@@ -96,11 +80,18 @@ class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase
         )
 
         kwargs.setdefault("middleware", middleware)
+
+        path = reflect.get_metadata_or_raise_exception(
+            CONTROLLER_METADATA.PATH, controller_type
+        )
+
+        if "prefix" in kwargs:
+            prefix = kwargs.pop("prefix")
+            path = normalize_path(f"{prefix}/{path}")
+
         router = base_route_type(  # type:ignore[call-arg]
             routes=routes,
-            path=reflect.get_metadata_or_raise_exception(
-                CONTROLLER_METADATA.PATH, controller_type
-            ),
+            path=path,
             name=reflect.get_metadata_or_raise_exception(
                 CONTROLLER_METADATA.NAME, controller_type
             ),

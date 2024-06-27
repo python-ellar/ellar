@@ -8,7 +8,6 @@ from ellar.common.constants import (
 )
 from ellar.common.logging import request_logger
 from ellar.common.types import TReceive, TScope, TSend
-from ellar.core.router_builders.base import get_controller_builder_factory
 from ellar.reflect import reflect
 from ellar.utils import get_unique_type
 from starlette.middleware import Middleware
@@ -60,6 +59,8 @@ class EllarMount(StarletteMount):
             and issubclass(route, ControllerBase)
             or isinstance(route, ModuleRouter)
         ):
+            from ellar.core.router_builders.base import get_controller_builder_factory
+
             factory_builder = get_controller_builder_factory(type(route))
             factory_builder.check_type(route)
             mount = factory_builder.build(route)
@@ -171,6 +172,8 @@ class ApplicationRouter(Router):
             and issubclass(route, ControllerBase)
             or isinstance(route, ModuleRouter)
         ):
+            from ellar.core.router_builders.base import get_controller_builder_factory
+
             factory_builder = get_controller_builder_factory(type(route))
             factory_builder.check_type(route)
             mount = factory_builder.build(route)

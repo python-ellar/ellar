@@ -1,8 +1,8 @@
-import inspect
 import typing as t
 
 import socketio
 from ellar.core.router_builders import RouterBuilder
+from ellar.core.router_builders.utils import get_route_functions
 from ellar.reflect import reflect
 from ellar.socket_io.adapter import SocketIOASGIApp
 from ellar.socket_io.constants import (
@@ -24,19 +24,6 @@ _socket_servers: t.Dict[str, socketio.AsyncServer] = {}
 
 class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
     @classmethod
-    def _get_message_handler(
-        cls,
-        klass: t.Type,
-    ) -> t.Iterable[t.Union[t.Callable]]:
-        for _method_name, method in inspect.getmembers(
-            klass, predicate=inspect.isfunction
-        ):
-            if hasattr(method, MESSAGE_MAPPING_METADATA) and getattr(
-                method, MESSAGE_MAPPING_METADATA
-            ):
-                yield method
-
-    @classmethod
     def _process_controller_routes(
         cls, klass: t.Type[GatewayBase]
     ) -> t.List[t.Callable]:
@@ -46,7 +33,7 @@ class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
         if reflect.get_metadata(GATEWAY_METADATA.PROCESSED, klass):
             return reflect.get_metadata(GATEWAY_MESSAGE_HANDLER_KEY, klass) or []
 
-        for method in cls._get_message_handler(klass):
+        for _name, method in get_route_functions(klass, MESSAGE_MAPPING_METADATA):
             results.append(method)
 
             reflect.define_metadata(GATEWAY_MESSAGE_HANDLER_KEY, [method], klass)

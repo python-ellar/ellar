@@ -15,6 +15,9 @@ from ellar.pydantic import (
     model_validator,
 )
 
+if t.TYPE_CHECKING:
+    pass
+
 
 @as_pydantic_validator("__validate_input__")
 class TResponseModel:

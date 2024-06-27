@@ -2,10 +2,8 @@ import typing as t
 from abc import abstractmethod
 
 from ellar.common.logging import logger
+from ellar.core.routing.mount import EllarMount
 from starlette.routing import Host, Mount
-
-if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.routing.mount import EllarMount
 
 _router_builder_factory: t.Dict[t.Type, t.Type["RouterBuilder"]] = {}
 
@@ -66,3 +64,4 @@ class _DefaultRouterBuilder(RouterBuilder, controller_type=Mount):
 
 
 _register_controller_builder(Host, _DefaultRouterBuilder)
+_register_controller_builder(EllarMount, _DefaultRouterBuilder)
