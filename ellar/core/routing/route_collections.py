@@ -6,8 +6,6 @@ from ellar.common.logging import logger
 from ellar.utils import generate_controller_operation_unique_id
 from starlette.routing import BaseRoute, Host, Mount
 
-from .utils import build_route_handler
-
 
 class RouteCollection(t.Sequence[BaseRoute]):
     __slots__ = ("_routes", "_served_routes")
@@ -56,6 +54,8 @@ class RouteCollection(t.Sequence[BaseRoute]):
 
     def _add_operation(self, operation: t.Union[BaseRoute]) -> None:
         if not isinstance(operation, BaseRoute):
+            from ellar.core.router_builders.utils import build_route_handler
+
             operations: t.Any = build_route_handler(operation)
 
             for op in operations or []:

@@ -1,13 +1,22 @@
 import typing as t
 
-from ellar.common.constants import CONTROLLER_CLASS_KEY, GUARDS_KEY, VERSIONING_KEY
+from ellar.common.constants import (
+    CONTROLLER_CLASS_KEY,
+    GUARDS_KEY,
+    NESTED_ROUTERS_KEY,
+    VERSIONING_KEY,
+)
 from ellar.common.models import GuardCanActivate
+from ellar.common.models.controller import NestedRouterInfo
 from ellar.reflect import reflect
 from ellar.utils import get_unique_type
 from starlette.middleware import Middleware
 
 from .base import OperationDefinitions
 from .schema import RouteParameters, WsRouteParameters
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.common import ControllerBase
 
 
 class ModuleRouter(OperationDefinitions):
@@ -39,6 +48,19 @@ class ModuleRouter(OperationDefinitions):
     @property
     def control_type(self) -> t.Type[t.Any]:
         return self._control_type
+
+    def add_router(
+        self,
+        router: t.Union["ModuleRouter", "ControllerBase"],
+        prefix: t.Optional[str] = None,
+    ) -> None:
+        if prefix:
+            assert prefix.startswith("/"), "'prefix' must start with '/'"
+        reflect.define_metadata(
+            NESTED_ROUTERS_KEY,
+            [NestedRouterInfo(prefix=prefix, router=router)],
+            self.control_type,
+        )
 
     def get_mount_init(self) -> t.Dict[str, t.Any]:
         return self._kwargs.copy()

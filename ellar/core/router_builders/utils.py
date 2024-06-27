@@ -1,19 +1,79 @@
+import inspect
 import typing as t
 from types import FunctionType
 
 from ellar.common.constants import (
     CONTROLLER_CLASS_KEY,
+    CONTROLLER_METADATA,
     CONTROLLER_OPERATION_HANDLER_KEY,
+    NESTED_ROUTERS_KEY,
+    OPERATION_ENDPOINT_KEY,
     ROUTE_OPERATION_PARAMETERS,
 )
+from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.logging import logger
+from ellar.common.models.controller import NestedRouterInfo
 from ellar.common.operations import RouteParameters, WsRouteParameters
+from ellar.core.routing import (
+    RouteOperation,
+    RouteOperationBase,
+    WebsocketRouteOperation,
+)
 from ellar.reflect import reflect
 from ellar.utils import get_unique_type
+from starlette.routing import BaseRoute
 
-from .base import RouteOperationBase
-from .route import RouteOperation
-from .websocket import WebsocketRouteOperation
+from .base import get_controller_builder_factory
+
+T_ = t.TypeVar("T_")
+
+_stack_cycle: t.Tuple = ()
+
+
+def get_route_functions(
+    klass: t.Type, key: str = OPERATION_ENDPOINT_KEY
+) -> t.Iterable[t.Tuple[str, t.Callable]]:
+    for method_name, method in inspect.getmembers(klass, predicate=inspect.isfunction):
+        if hasattr(method, key):
+            yield method_name, method
+
+
+def process_nested_routes(controller: t.Type[t.Any]) -> t.List[BaseRoute]:
+    global _stack_cycle
+
+    res: t.List[BaseRoute] = []
+
+    if reflect.get_metadata(CONTROLLER_METADATA.PROCESSED, controller):
+        return []
+
+    if controller in _stack_cycle:
+        raise ImproperConfiguration(
+            "Circular Nested router detected: %s -> %s"
+            % (" -> ".join(map(str, _stack_cycle)), controller)
+        )
+
+    _stack_cycle += (controller,)
+    nested_routers: t.List[NestedRouterInfo] = (
+        reflect.get_metadata(NESTED_ROUTERS_KEY, controller) or []
+    )
+
+    for item in nested_routers:
+        kw = {"prefix": item.prefix} if item.prefix else {}
+
+        factory_builder = get_controller_builder_factory(type(item.router))
+        factory_builder.check_type(item.router)
+
+        operation = factory_builder.build(item.router, **kw)
+        reflect.define_metadata(
+            CONTROLLER_OPERATION_HANDLER_KEY,
+            [operation],
+            controller,
+        )
+
+        res.append(operation)
+
+    _stack_cycle = tuple(_stack_cycle[:-1])
+    return res
 
 
 @t.no_type_check
@@ -48,7 +108,7 @@ def build_route_handler(
 def build_route_parameters(
     items: t.List[t.Union[RouteParameters, WsRouteParameters]],
     control_type: t.Type[t.Any],
-) -> t.List[RouteOperationBase]:
+) -> t.List[t.Union[RouteOperationBase, t.Any]]:
     results = []
     for item in items:
         if isinstance(item, RouteParameters):

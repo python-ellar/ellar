@@ -1,6 +1,18 @@
+import dataclasses
 import typing as t
 
-from ..interfaces import IExecutionContext
+from ellar.common.constants import NESTED_ROUTERS_KEY
+from ellar.common.interfaces import IExecutionContext
+from ellar.reflect import reflect
+
+if t.TYPE_CHECKING:
+    from ellar.common.operations import ModuleRouter
+
+
+@dataclasses.dataclass
+class NestedRouterInfo:
+    router: t.Union["ModuleRouter", "ControllerBase"]
+    prefix: t.Optional[str] = None
 
 
 class ControllerType(type):
@@ -15,6 +27,18 @@ class ControllerType(type):
     def full_view_name(cls, name: str) -> str:
         """ """
         return f"{cls.controller_class_name()}/{name}"
+
+    def add_router(
+        cls,
+        router: t.Union["ControllerBase", "ModuleRouter"],
+        prefix: t.Optional[str] = None,
+    ) -> None:
+        if prefix:
+            assert prefix.startswith("/"), "'prefix' must start with '/'"
+
+        reflect.define_metadata(
+            NESTED_ROUTERS_KEY, [NestedRouterInfo(prefix=prefix, router=router)], cls
+        )
 
 
 class ControllerBase(metaclass=ControllerType):
