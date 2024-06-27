@@ -29,7 +29,9 @@ class ControllerType(type):
         return f"{cls.controller_class_name()}/{name}"
 
     def add_router(
-        cls, router: t.Union["ControllerBase", "ModuleRouter"], prefix: str
+        cls,
+        router: t.Union["ControllerBase", "ModuleRouter"],
+        prefix: t.Optional[str] = None,
     ) -> None:
         reflect.define_metadata(
             NESTED_ROUTERS_KEY, [NestedRouterInfo(prefix=prefix, router=router)], cls

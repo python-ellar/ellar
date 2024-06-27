@@ -56,7 +56,6 @@ def process_controller_routes(controller: t.Type[ControllerBase]) -> t.List[Base
                 controller,
             )
             res.append(operation)
-    reflect.define_metadata(CONTROLLER_METADATA.PROCESSED, True, controller)
     return res
 
 
@@ -101,6 +100,7 @@ class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase
             control_type=controller_type,
             **kwargs,
         )
+        reflect.define_metadata(CONTROLLER_METADATA.PROCESSED, True, controller_type)
         return router
 
     @classmethod

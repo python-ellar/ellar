@@ -50,7 +50,9 @@ class ModuleRouter(OperationDefinitions):
         return self._control_type
 
     def add_router(
-        self, router: t.Union["ModuleRouter", "ControllerBase"], prefix: t.Optional[str]
+        self,
+        router: t.Union["ModuleRouter", "ControllerBase"],
+        prefix: t.Optional[str] = None,
     ) -> None:
         reflect.define_metadata(
             NESTED_ROUTERS_KEY,

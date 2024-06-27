@@ -10,6 +10,7 @@ from ellar.common.constants import (
     OPERATION_ENDPOINT_KEY,
     ROUTE_OPERATION_PARAMETERS,
 )
+from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.logging import logger
 from ellar.common.models.controller import NestedRouterInfo
 from ellar.common.operations import RouteParameters, WsRouteParameters
@@ -26,6 +27,8 @@ from .base import get_controller_builder_factory
 
 T_ = t.TypeVar("T_")
 
+_stack_cycle: t.Tuple = ()
+
 
 def get_route_functions(
     klass: t.Type, key: str = OPERATION_ENDPOINT_KEY
@@ -36,11 +39,20 @@ def get_route_functions(
 
 
 def process_nested_routes(controller: t.Type[t.Any]) -> t.List[BaseRoute]:
+    global _stack_cycle
+
     res: t.List[BaseRoute] = []
 
     if reflect.get_metadata(CONTROLLER_METADATA.PROCESSED, controller):
         return []
 
+    if controller in _stack_cycle:
+        raise ImproperConfiguration(
+            "Circular Nested router detected: %s -> %s"
+            % (" -> ".join(map(str, _stack_cycle)), controller)
+        )
+
+    _stack_cycle += (controller,)
     nested_routers: t.List[NestedRouterInfo] = (
         reflect.get_metadata(NESTED_ROUTERS_KEY, controller) or []
     )
@@ -59,6 +71,8 @@ def process_nested_routes(controller: t.Type[t.Any]) -> t.List[BaseRoute]:
         )
 
         res.append(operation)
+
+    _stack_cycle = tuple(_stack_cycle[:-1])
     return res
 
 
