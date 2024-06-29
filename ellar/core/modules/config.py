@@ -1,12 +1,14 @@
 import dataclasses
 import typing as t
+from functools import cached_property
 
 import click
 from ellar.common import ControllerBase, ModuleRouter
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
+from ellar.common.shortcuts import fail_silently
 from ellar.core.conf import Config
-from ellar.di import MODULE_REF_TYPES, Container, EllarInjector
+from ellar.di import MODULE_REF_TYPES, Container, EllarInjector, ProviderConfig
 from ellar.reflect import reflect
 from ellar.utils.importer import import_from_string
 from starlette.routing import BaseRoute
@@ -115,6 +117,31 @@ class ModuleSetup:
         if "App" in class_names:
             self.ref_type = MODULE_REF_TYPES.APP_DEPENDENT
 
+    @cached_property
+    def name(self) -> str:
+        return t.cast(str, reflect.get_metadata(MODULE_METADATA.NAME, self.module))
+
+    @cached_property
+    def exports(self) -> t.List[t.Type]:
+        return list(reflect.get_metadata(MODULE_METADATA.EXPORTS, self.module) or [])
+
+    @cached_property
+    def providers(self) -> t.Dict[t.Type, t.Type]:
+        _providers = list(
+            reflect.get_metadata(MODULE_METADATA.PROVIDERS, self.module) or []
+        )
+        res = {}
+        for item in _providers:
+            if isinstance(item, ProviderConfig):
+                res.update({item: item.get_type()})
+            else:
+                res.update({item: item})
+        return res  # type:ignore[return-value]
+
+    @property
+    def is_ready(self) -> bool:
+        raise Exception(f"{self.module} is not ready")
+
     @property
     def has_factory_function(self) -> bool:
         if self.factory is not None:
@@ -138,14 +165,19 @@ class ModuleSetup:
         if self.factory is not None:
             return self.configure_with_factory(config, container)
 
-        return create_module_ref_factor(
+        ref = create_module_ref_factor(
             self.module, config, container, **self.init_kwargs
         )
+        ref.initiate_module_build()
+        return ref
 
     def configure_with_factory(
         self, config: "Config", container: Container
     ) -> ModuleRefBase:
         services = self._get_services(container.injector)
+        init_kwargs = dict(self.init_kwargs)
+
+        ref = create_module_ref_factor(self.module, config, container, **init_kwargs)
 
         res = self.factory(self.module, *services)
         if not isinstance(res, DynamicModule):
@@ -155,8 +187,9 @@ class ModuleSetup:
             )
         res.apply_configuration()
 
-        init_kwargs = dict(self.init_kwargs)
-        return create_module_ref_factor(self.module, config, container, **init_kwargs)
+        ref.initiate_module_build()
+
+        return ref
 
     def _get_services(self, injector: EllarInjector) -> t.List:
         """
@@ -168,6 +201,45 @@ class ModuleSetup:
         for service in self.inject:
             res.append(injector.get(service))
         return res
+
+    def build(
+        self,
+        injector: EllarInjector,
+        config: "Config",
+    ) -> ModuleRefBase:
+        # routes = []
+
+        if self.ref_type == MODULE_REF_TYPES.APP_DEPENDENT:
+            app = fail_silently(injector.get, interface="App")
+            assert app, "Application is not ready"
+
+            ref = self.configure_with_factory(
+                container=injector.container, config=config
+            )
+            assert isinstance(
+                ref, ModuleRefBase
+            ), f"{ref.module} is not properly configured."
+
+            # routes.extend(ref.build_modules(MODULE_REF_TYPES.DYNAMIC))
+            # routes.extend(ref.build_modules(ref_type))
+        else:
+            ref = self.get_module_ref(  # type: ignore[assignment]
+                container=injector.container, config=config
+            )
+
+        # ref.initiate_module_build()
+        # ref.build_modules(ref_type)
+        return ref
+
+    def build_and_get_routes(
+        self,
+        injector: EllarInjector,
+        config: "Config",
+    ) -> t.List[BaseRoute]:
+        ref = self.build(injector, config)
+        ref.build_dependencies()
+
+        return ref.get_routes()
 
     def __hash__(self) -> int:  # pragma: no cover
         return hash(self.module)

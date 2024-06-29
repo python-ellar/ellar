@@ -12,6 +12,7 @@ from ellar.common.serializer import Serializer, SerializerFilter
 from ellar.common.templating import JinjaLoaderType
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
 from ellar.core.conf.mixins import ConfigDefaultTypesMixin
+from ellar.di.injector.tree_manager import ModuleTreeManager
 from ellar.pydantic import ENCODERS_BY_TYPE as encoders_by_type
 from ellar.pydantic import field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -54,6 +55,8 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     DEBUG: bool = False
 
     DEFAULT_JSON_CLASS: t.Type[JSONResponse] = JSONResponse
+
+    MODULE_TREE_MANAGER_CLASS: t.Type[ModuleTreeManager] = ModuleTreeManager
 
     SECRET_KEY: str = "your-secret-key"
 

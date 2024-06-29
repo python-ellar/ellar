@@ -1,5 +1,6 @@
 import typing as t
 from abc import ABC, abstractmethod
+from contextlib import asynccontextmanager
 
 from ellar.common.constants import (
     CONTROLLER_CLASS_KEY,
@@ -50,6 +51,23 @@ class RouteOperationBase:
     def _load_model(self) -> None:
         """compute route models"""
 
+    @asynccontextmanager
+    async def _ensure_dependency_availability(
+        self, context: IExecutionContext
+    ) -> t.AsyncGenerator:
+        controller_type = context.get_class()
+        module_scope_owner = next(
+            context.get_app().injector.tree_manager.find_module(
+                lambda data: controller_type in data.providers
+                or controller_type in data.exports
+            )
+        )
+        if module_scope_owner and module_scope_owner.is_ready:
+            async with module_scope_owner.value.context():
+                yield
+        else:
+            yield
+
     async def app(self, scope: TScope, receive: TReceive, send: TSend) -> None:
         request_logger.debug(
             f"Started Computing Execution Context - '{self.__class__.__name__}'"
@@ -67,8 +85,9 @@ class RouteOperationBase:
         request_logger.debug(
             f"Running Guards and Interceptors - '{self.__class__.__name__}'"
         )
-        await guard_consumer.execute(context, self)
-        await interceptor_consumer.execute(context, self)
+        async with self._ensure_dependency_availability(context):
+            await guard_consumer.execute(context, self)
+            await interceptor_consumer.execute(context, self)
 
     def get_controller_type(self) -> t.Type:
         """

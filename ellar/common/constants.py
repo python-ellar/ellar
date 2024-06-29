@@ -66,6 +66,7 @@ class MODULE_METADATA(metaclass=AnnotationToValue):
     TEMPLATE_FOLDER: str
     MODULES: str
     COMMANDS: str
+    EXPORTS: str
 
 
 class CONTROLLER_METADATA(metaclass=AnnotationToValue):

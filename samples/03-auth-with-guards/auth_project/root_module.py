@@ -13,5 +13,5 @@ from ellar.samples.modules import HomeModule
 @Module(modules=[HomeModule, lazyLoad("auth_project.auth.module:AuthModule")])
 class ApplicationModule(ModuleBase):
     @exception_handler(404)
-    def exception_404_handler(cls, ctx: IExecutionContext, exc: Exception) -> Response:
+    def exception_404_handler(self, ctx: IExecutionContext, exc: Exception) -> Response:
         return JSONResponse({"detail": "Resource not found."})

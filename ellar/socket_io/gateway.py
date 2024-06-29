@@ -1,5 +1,6 @@
 import inspect
 import typing as t
+from contextlib import asynccontextmanager
 
 from ellar.common import (
     IExecutionContext,
@@ -113,6 +114,23 @@ class SocketOperationConnection:
         await self._server.emit("error", {"code": code, "reason": reason}, room=sid)
         await self._server.disconnect(sid=sid)
 
+    @asynccontextmanager
+    async def _ensure_dependency_availability(
+        self, context: IExecutionContext
+    ) -> t.AsyncGenerator:
+        controller_type = context.get_class()
+        module_scope_owner = next(
+            context.get_app().injector.tree_manager.find_module(
+                lambda data: controller_type in data.providers
+                or controller_type in data.exports
+            )
+        )
+        if module_scope_owner and module_scope_owner.is_ready:
+            async with module_scope_owner.value.context():
+                yield
+        else:
+            yield
+
     async def _context_handler(self, sid: str, environment: t.Dict) -> t.Any:
         execution_context_factory = current_injector.get(IExecutionContextFactory)
         context = execution_context_factory.create_context(
@@ -121,8 +139,11 @@ class SocketOperationConnection:
             receive=environment["asgi.receive"],
             send=environment["asgi.send"],
         )
-        gateway_instance = self._get_gateway_instance_and_context(ctx=context, sid=sid)
-        await self._run_with_exception_handling(gateway_instance, sid=sid)
+        async with self._ensure_dependency_availability(context):
+            gateway_instance = self._get_gateway_instance_and_context(
+                ctx=context, sid=sid
+            )
+            await self._run_with_exception_handling(gateway_instance, sid=sid)
 
     def _register_handler(self) -> None:
         @self._server.on(self._event)
@@ -227,11 +248,12 @@ class SocketMessageOperation(SocketOperationConnection):
             send=sid_environ["asgi.send"],
         )
 
-        gateway_instance = self._get_gateway_instance_and_context(
-            ctx=context, sid=sid, message=message
-        )
+        async with self._ensure_dependency_availability(context):
+            gateway_instance = self._get_gateway_instance_and_context(
+                ctx=context, sid=sid, message=message
+            )
 
-        await self._run_with_exception_handling(gateway_instance, sid)
+            await self._run_with_exception_handling(gateway_instance, sid)
 
     def _register_handler(self) -> None:
         @self._server.on(self._event)

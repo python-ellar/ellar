@@ -2,6 +2,8 @@ import inspect
 import typing as t
 from functools import wraps
 
+from ellar.core import current_injector
+
 
 def _executor_wrapper_async(
     cls: t.Type,
@@ -9,7 +11,8 @@ def _executor_wrapper_async(
 ) -> t.Callable[..., t.Coroutine]:
     @wraps(func)
     async def _decorator(*args: t.Any, **kwargs: t.Any) -> t.Any:
-        return await func(cls, *args, **kwargs)
+        instance = current_injector.get(cls)
+        return await func(instance, *args, **kwargs)
 
     return _decorator
 
@@ -17,7 +20,8 @@ def _executor_wrapper_async(
 def _executor_wrapper(cls: t.Type, func: t.Callable) -> t.Callable:
     @wraps(func)
     def _decorator(*args: t.Any, **kwargs: t.Any) -> t.Any:
-        return func(cls, *args, **kwargs)
+        instance = current_injector.get(cls)
+        return func(instance, *args, **kwargs)
 
     return _decorator
 

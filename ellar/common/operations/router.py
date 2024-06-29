@@ -8,6 +8,7 @@ from ellar.common.constants import (
 )
 from ellar.common.models import GuardCanActivate
 from ellar.common.models.controller import NestedRouterInfo
+from ellar.di import injectable
 from ellar.reflect import reflect
 from ellar.utils import get_unique_type
 from starlette.middleware import Middleware
@@ -31,7 +32,7 @@ class ModuleRouter(OperationDefinitions):
         include_in_schema: bool = True,
         middleware: t.Optional[t.Sequence[Middleware]] = None,
     ) -> None:
-        self._control_type = get_unique_type()
+        self._control_type: t.Type[t.Any] = injectable(get_unique_type())  # type:ignore[assignment]
         self._kwargs = {
             "path": path,
             "name": name,

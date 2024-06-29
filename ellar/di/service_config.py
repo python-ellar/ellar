@@ -1,6 +1,14 @@
 import typing as t
 
-from ellar.di.constants import INJECTABLE_ATTRIBUTE, Tag
+from ellar.di.constants import (
+    INJECTABLE_ATTRIBUTE,
+    INJECTABLE_WATERMARK,
+    Tag,
+)
+from ellar.di.exceptions import DIImproperConfiguration
+from ellar.di.types import T
+from ellar.di.utils import fail_silently
+from ellar.reflect import reflect
 from injector import (
     CallableT,
     ConstructorOrClassT,
@@ -12,10 +20,6 @@ from injector import (
 from injector import (
     is_decorated_with_inject as injector_is_decorated_with_inject,
 )
-
-from .exceptions import DIImproperConfiguration
-from .types import T
-from .utils import fail_silently
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from .injector import Container
@@ -31,7 +35,7 @@ __all__ = (
 
 
 class ProviderConfig(t.Generic[T]):
-    __slots__ = ("base_type", "use_value", "use_class", "scope", "tag")
+    __slots__ = ("base_type", "use_value", "use_class", "scope", "tag", "export")
 
     def __init__(
         self,
@@ -41,6 +45,7 @@ class ProviderConfig(t.Generic[T]):
         use_class: t.Union[t.Type[T], t.Any] = None,
         scope: t.Optional[t.Union[t.Type[Scope], t.Any]] = None,
         tag: t.Optional[str] = None,
+        export: bool = False,
     ):
         self.scope = scope or SingletonScope
         if use_value and use_class:
@@ -52,6 +57,16 @@ class ProviderConfig(t.Generic[T]):
         self.use_value = use_value
         self.use_class = use_class
         self.tag = tag
+        self.export = export
+
+    def get_type(self) -> t.Type:
+        # if self.is_special_type():
+        #     return self.base_type
+        # if self.use_class:
+        #     return self.use_class
+        # if self.use_value and not inspect.isfunction(self.use_value):
+        #     return type(self.use_value)
+        return self.base_type
 
     def register(self, container: "Container") -> None:
         scope = get_scope(self.base_type) or self.scope
@@ -115,6 +130,8 @@ def injectable(
     def _decorator(func_or_class: ConstructorOrClassT) -> ConstructorOrClassT:
         fail_silently(inject, constructor_or_class=func_or_class)
         setattr(func_or_class, INJECTABLE_ATTRIBUTE, scope)
+
+        reflect.define_metadata(INJECTABLE_WATERMARK, True, func_or_class)
 
         return func_or_class
 

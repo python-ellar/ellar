@@ -15,5 +15,5 @@ from ellar.samples.modules import HomeModule
 )
 class ApplicationModule(ModuleBase):
     @exception_handler(404)
-    def exception_404_handler(cls, ctx: IExecutionContext, exc: Exception) -> Response:
+    def exception_404_handler(self, ctx: IExecutionContext, exc: Exception) -> Response:
         return JSONResponse({"detail": "Resource not found."})

@@ -3,6 +3,7 @@ import typing as t
 from ellar.common.constants import LOG_LEVELS as log_levels
 from ellar.common.interfaces import IAPIVersioning, IEllarMiddleware, IExceptionHandler
 from ellar.common.templating import JinjaLoaderType
+from ellar.di.injector.tree_manager import ModuleTreeManager
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp
 
@@ -23,6 +24,8 @@ class ConfigDefaultTypesMixin:
 
     # Default JSON response class
     DEFAULT_JSON_CLASS: t.Type[JSONResponse]
+
+    MODULE_TREE_MANAGER_CLASS: t.Type[ModuleTreeManager]
 
     # jinja Environment options
     # https://jinja.palletsprojects.com/en/3.0.x/api/#high-level-api

@@ -39,7 +39,10 @@ from .services import AuthService
         ),
     ],
     controllers=[AuthController],
-    providers=[AuthService, ProviderConfig(GlobalGuard, use_class=AuthGuard)],
+    providers=[
+        AuthService,
+        ProviderConfig(GlobalGuard, use_class=AuthGuard, export=True),
+    ],
 )
 class AuthModule(ModuleBase):
     """

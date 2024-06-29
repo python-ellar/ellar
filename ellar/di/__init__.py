@@ -10,7 +10,7 @@ from .constants import (
     SCOPED_CONTEXT_VAR,
     AnnotationToValue,
 )
-from .injector import Container, EllarInjector
+from .injector import Container, EllarInjector, ModuleTreeManager
 from .scopes import (
     RequestORTransientScope,
     RequestScope,
@@ -50,6 +50,7 @@ __all__ = [
     "AnnotationToValue",
     "MODULE_REF_TYPES",
     "InjectByTag",
+    "ModuleTreeManager",
 ]
 
 

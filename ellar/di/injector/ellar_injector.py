@@ -1,9 +1,10 @@
 import sys
 import typing as t
-from collections import OrderedDict, defaultdict
 from contextlib import asynccontextmanager
+from functools import cached_property
 
 from ellar.di.constants import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR, Tag
+from ellar.di.injector.tree_manager import ModuleTreeManager
 from ellar.di.logger import log
 from injector import Injector, Scope, ScopeDecorator
 from typing_extensions import Annotated
@@ -48,13 +49,14 @@ class EllarInjector(Injector):
         "_stack",
         "parent",
         "container",
-        "_modules",
+        "owner",
     )
 
     def __init__(
         self,
         auto_bind: bool = True,
         parent: t.Optional["Injector"] = None,
+        owner: t.Optional["ModuleRefBase"] = None,
     ) -> None:
         self._stack = ()
         self.parent = parent
@@ -64,15 +66,20 @@ class EllarInjector(Injector):
             auto_bind=auto_bind,
             parent=parent.binder if parent is not None else None,
         )
-
+        self.owner = owner
         # Bind some useful types
-        self.container.register_instance(self, EllarInjector)
-        self.container.register_instance(self.binder)
-        self._modules: t.DefaultDict = defaultdict(OrderedDict)
-        self._modules[MODULE_REF_TYPES.TEMPLATE] = OrderedDict()
-        self._modules[MODULE_REF_TYPES.PLAIN] = OrderedDict()
-        self._modules[MODULE_REF_TYPES.DYNAMIC] = OrderedDict()
-        self._modules[MODULE_REF_TYPES.APP_DEPENDENT] = OrderedDict()
+        self.container.register(EllarInjector, self)
+        self.container.register(Container, self.binder)
+        #
+        # self._modules: t.DefaultDict = defaultdict(OrderedDict)
+        # self._modules[MODULE_REF_TYPES.TEMPLATE] = OrderedDict()
+        # self._modules[MODULE_REF_TYPES.PLAIN] = OrderedDict()
+        # self._modules[MODULE_REF_TYPES.DYNAMIC] = OrderedDict()
+        # self._modules[MODULE_REF_TYPES.APP_DEPENDENT] = OrderedDict()
+
+    @cached_property
+    def tree_manager(self) -> ModuleTreeManager:
+        return self.get(ModuleTreeManager)
 
     @property  # type: ignore
     def binder(self) -> Container:
@@ -82,58 +89,35 @@ class EllarInjector(Injector):
     def binder(self, value: t.Any) -> None:
         """Nothing happens"""
 
-    def get_modules(
-        self,
-    ) -> t.Dict[t.Type["ModuleBase"], "ModuleRefBase"]:
-        modules = dict(
-            self._modules[MODULE_REF_TYPES.TEMPLATE],
-        )
-        modules.update(self._modules[MODULE_REF_TYPES.PLAIN])
-        return modules
-
-    def get_dynamic_modules(
-        self,
-    ) -> t.Generator["ModuleSetup", t.Any, None]:
-        for _, module_configure in self._modules[MODULE_REF_TYPES.DYNAMIC].items():
-            yield module_configure
-
-        self._modules[MODULE_REF_TYPES.DYNAMIC].clear()
-
-    def get_app_dependent_modules(
-        self,
-    ) -> t.Generator["ModuleSetup", t.Any, None]:
-        for _, module_configure in self._modules[
-            MODULE_REF_TYPES.APP_DEPENDENT
-        ].items():
-            yield module_configure
-
-        self._modules[MODULE_REF_TYPES.APP_DEPENDENT].clear()
-
     def get_module(self, module: t.Type) -> t.Optional["ModuleRefBase"]:
-        result: t.Optional["ModuleRefBase"] = None
-        if module in self._modules[MODULE_REF_TYPES.TEMPLATE]:
-            result = self._modules[MODULE_REF_TYPES.TEMPLATE][module]
-            return result
-
-        if module in self._modules[MODULE_REF_TYPES.PLAIN]:
-            result = self._modules[MODULE_REF_TYPES.PLAIN][module]
-            return result
-        return result
+        node = self.tree_manager.get_module(module)
+        if node:
+            return t.cast("ModuleRefBase", node.value)
+        return None
 
     def get_templating_modules(
         self,
     ) -> t.Dict[t.Type["ModuleBase"], "ModuleTemplateRef"]:
-        return self._modules.get(  # type:ignore[no-any-return]
-            MODULE_REF_TYPES.TEMPLATE, {}
-        )
+        return {
+            item.value.module: item.value  # type:ignore[misc]
+            for item in self.tree_manager.get_by_ref_type(MODULE_REF_TYPES.TEMPLATE)
+        }
 
-    def add_module(self, module_ref: t.Union["ModuleRefBase", "ModuleSetup"]) -> None:
-        self._modules[module_ref.ref_type].update({module_ref.module: module_ref})
+    def add_module(
+        self,
+        module_ref: t.Union["ModuleRefBase", "ModuleSetup"],
+        parent_module: t.Type[t.Union["ModuleBase", t.Any]],
+    ) -> None:
+        self.tree_manager.add_or_update(
+            module_type=module_ref.module,
+            parent_module=parent_module,
+            value=module_ref,
+        )
 
     @t.no_type_check
     def get(
         self,
-        interface: t.Union[Annotated[t.Type[T], type], Annotated[str, type]],
+        interface: t.Union[Annotated[t.Type[T], type], Annotated[str, type], t.Any],
         scope: t.Union[ScopeDecorator, t.Type[Scope]] = None,
     ) -> T:
         data = _tag_info_interface(interface)
@@ -161,7 +145,7 @@ class EllarInjector(Injector):
 
     def update_scoped_context(self, interface: t.Type[T], value: T) -> None:
         # Sets RequestScope contexts so that they can be available when needed
-        #
+        # TODO: Rename to `register_request_scope_context`
         scoped_context = SCOPED_CONTEXT_VAR.get()
         if scoped_context is None:
             return

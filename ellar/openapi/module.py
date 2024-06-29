@@ -118,11 +118,10 @@ class OpenAPIDocumentModule:
             base_directory=str(__BASE_DIR__),
         )(get_unique_type())
 
-        module_ref = ModuleSetup(module).get_module_ref(
-            app.config, app.injector.container
+        routes = ModuleSetup(module).build_and_get_routes(
+            injector=app.injector, config=app.config
         )
-        app.router.extend(module_ref.routes)  # type: ignore[union-attr]
-        app.injector.add_module(module_ref)
+        app.router.extend(routes)
 
         return module
 

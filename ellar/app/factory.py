@@ -1,22 +1,21 @@
 import typing as t
-from collections import OrderedDict
 from pathlib import Path
 
 import click
+from ellar.app.core_module import get_core_module
 from ellar.common import IApplicationReady, Module
-from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
+from ellar.common.constants import MODULE_METADATA
 from ellar.common.models import GuardCanActivate
 from ellar.core import Config, DynamicModule, LazyModuleImport, ModuleBase, ModuleSetup
-from ellar.core.context import ApplicationContext
-from ellar.core.modules import ModuleRefBase
+from ellar.core.modules import ModuleRefBase, ModuleTemplateRef
 from ellar.di import EllarInjector, ProviderConfig
+from ellar.di.injector.tree_manager import ModuleTreeManager
 from ellar.reflect import reflect
 from ellar.threading.sync_worker import execute_async_context_manager
 from ellar.utils import get_name, get_unique_type
-from starlette.routing import BaseRoute, Host, Mount
+from starlette.routing import Host, Mount
 
 from .main import App
-from .services import EllarAppService
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common import ModuleRouter
@@ -29,29 +28,26 @@ class AppFactory:
     """
 
     @classmethod
-    def get_all_modules(cls, module_config: ModuleSetup) -> t.List[ModuleSetup]:
+    def read_all_module(
+        cls,
+        module_config: t.Union[ModuleSetup, ModuleRefBase],
+        tree_manager: t.Optional[ModuleTreeManager] = None,
+    ) -> ModuleTreeManager:
         """
-        Gets all registered modules from a particular module in their order of dependencies
-        :param module_config: Module Type
-        :return: t.List[t.Type[ModuleBase]]
-        """
-        module_dependency = [module_config] + list(
-            cls.read_all_module(module_config).values()
-        )
-        return module_dependency
+        Retrieves all module dependencies registered in another module
 
-    @classmethod
-    def read_all_module(cls, module_config: ModuleSetup) -> t.Dict[t.Type, ModuleSetup]:
-        """
-        Retrieves all modules dependencies registered in another module
+        :param tree_manager: Module Tree Manager
         :param module_config: Module Type
         :return: t.Dict[t.Type, t.Type[ModuleBase]]
         """
         global_module_config = module_config
+        tree_manager = tree_manager or ModuleTreeManager().add_module(
+            global_module_config.module, value=module_config
+        )
+
         modules = (
             reflect.get_metadata(MODULE_METADATA.MODULES, module_config.module) or []
         )
-        module_dependency = OrderedDict()
         for module in modules:
             if isinstance(module, LazyModuleImport):
                 module = module.get_module(global_module_config.module.__name__)
@@ -64,60 +60,14 @@ class AppFactory:
             else:
                 module_config = ModuleSetup(module)
 
-            module_dependency[module_config.module] = module_config
-            module_dependency.update(cls.read_all_module(module_config))
-        return module_dependency
-
-    @classmethod
-    def _build_modules(
-        cls,
-        app_module: t.Type[t.Union[ModuleBase, t.Any]],
-        config: "Config",
-        injector: EllarInjector,
-    ) -> t.List[BaseRoute]:
-        """
-        builds application module and registers them to EllarInjector
-        :param app_module: Root App Module
-        :param config: App Configuration instance
-        :param injector: App Injector instance
-        :return: `None`
-        """
-        if isinstance(app_module, LazyModuleImport):
-            app_module = app_module.get_module("AppFactory")
-
-        assert reflect.get_metadata(
-            MODULE_WATERMARK, app_module
-        ), "Only Module is allowed"
-
-        app_module_config = ModuleSetup(app_module)
-        module_dependency = cls.get_all_modules(app_module_config)
-        routes = []
-
-        for module_config in reversed(module_dependency):
-            if injector.get_module(module_config.module):  # pragma: no cover
-                continue
-
-            module_ref = module_config.get_module_ref(
-                container=injector.container, config=config
+            tree_manager.add_module(
+                module_type=module_config.module,
+                value=module_config,
+                parent_module=global_module_config.module,
             )
 
-            if isinstance(module_ref, ModuleRefBase):
-                routes.extend(module_ref.routes)
-
-            injector.add_module(module_ref)
-
-        for module_config in reversed(list(injector.get_dynamic_modules())):
-            if injector.get_module(module_config.module):  # pragma: no cover
-                continue
-
-            module_ref = module_config.configure_with_factory(
-                config, injector.container
-            )
-            # module_ref.run_module_register_services()
-            routes.extend(module_ref.routes)
-            injector.add_module(module_ref)
-
-        return routes
+            cls.read_all_module(module_config, tree_manager)
+        return tree_manager
 
     @classmethod
     @t.no_type_check
@@ -145,51 +95,47 @@ class AppFactory:
 
         config = Config(app_configured=True, **_get_config_kwargs())
 
-        injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND, parent=injector)
-        injector.container.register_instance(config, concrete_type=Config)
+        # injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND, parent=injector)
+        # injector.container.register_instance(config, concrete_type=Config)
 
-        service = EllarAppService(injector, config)
-        service.register_core_services()
+        core_module_ref = ModuleTemplateRef(
+            module_type=get_core_module(module, config),
+            parent_container=injector.container if injector else None,
+            config=config,
+        )
+        core_module_ref.initiate_module_build()
 
-        with execute_async_context_manager(ApplicationContext(injector)) as context:
-            routes = cls._build_modules(
-                app_module=module, injector=injector, config=config
-            )
+        # service = EllarAppService(injector, config)
+        # service.register_core_services()
+
+        with execute_async_context_manager(core_module_ref.context()) as context:
+            tree_manager: ModuleTreeManager = core_module_ref.get(ModuleTreeManager)
+            cls.read_all_module(core_module_ref, tree_manager)
+            # Build application first level. This will trigger ApplicationModule to be built
+            core_module_ref.build_dependencies(step=1)
+            app_module_ref = tree_manager.get_root_module()
 
             app = App(
-                routes=routes,
+                routes=[],
                 config=config,
-                injector=injector,
+                injector=app_module_ref.container.injector,
                 lifespan=config.DEFAULT_LIFESPAN_HANDLER,
                 global_guards=global_guards,
             )
             # tag application instance by ApplicationModule name
-            context.injector.container.register_instance(app, App, tag=get_name(module))
+            core_module_ref.add_provider(
+                ProviderConfig(App, use_value=app, tag=get_name(module), export=True)
+            )
+            app_module_ref.build_dependencies()
 
-            for module_config in reversed(
-                list(context.injector.get_app_dependent_modules())
-            ):
-                if context.injector.get_module(
-                    module_config.module
-                ):  # pragma: no cover
-                    continue
-
-                module_ref = module_config.configure_with_factory(
-                    config, context.injector.container
-                )
-
-                assert isinstance(
-                    module_ref, ModuleRefBase
-                ), f"{module_config.module} is not properly configured."
-
-                context.injector.add_module(module_ref)
-                app.router.extend(module_ref.routes)
+            routes = core_module_ref.get_routes()
+            app.router.extend(routes)
 
             # app.setup_jinja_environment
             app.setup_jinja_environment()
 
-            for module, module_ref in context.injector.get_modules().items():
-                module_ref.run_module_register_services()
+            for module, data in context.injector.tree_manager.modules.items():
+                data.value.run_module_register_services()
 
                 if issubclass(module, IApplicationReady):
                     context.injector.get(module).on_ready(app)

@@ -29,15 +29,18 @@ from ellar.core.context import ApplicationContext
 from ellar.core.middleware import (
     CORSMiddleware,
     ExceptionMiddleware,
-    Middleware,
     RequestVersioningMiddleware,
     ServerErrorMiddleware,
     TrustedHostMiddleware,
 )
+from ellar.core.middleware import (
+    Middleware as EllarMiddleware,
+)
 from ellar.core.routing import ApplicationRouter, AppStaticFileMount
 from ellar.core.services import Reflector, reflector
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
-from ellar.di import EllarInjector
+from ellar.di import EllarInjector, ProviderConfig, is_decorated_with_injectable
+from ellar.di.injector.tree_manager import TreeData
 from jinja2 import Environment as JinjaEnvironment
 from jinja2 import pass_context
 from starlette.datastructures import URL
@@ -70,9 +73,8 @@ class App:
         self._global_interceptors: t.List[
             t.Union[EllarInterceptor, t.Type[EllarInterceptor]]
         ] = []
-        self._exception_handlers = list(self.config.EXCEPTION_HANDLERS)
-
-        self._user_middleware = list(t.cast(list, self.config.MIDDLEWARE))
+        self.config.setdefault("EXCEPTION_HANDLERS", [])
+        self.config.setdefault("MIDDLEWARE", [])
 
         self.state = State()
         self.config.DEFAULT_LIFESPAN_HANDLER = (
@@ -153,9 +155,31 @@ class App:
         # TODO: Add warning
         # self.rebuild_stack()
 
+    def _ensure_available_in_providers(self, *items: t.Any) -> None:
+        def _predicate(item_: t.Type) -> t.Callable:
+            def _(data: TreeData) -> bool:
+                return item_ in data.exports or item_ in data.providers
+
+            return _
+
+        for item in items:
+            if isinstance(item, type) and is_decorated_with_injectable(item):
+                module = next(
+                    self.injector.tree_manager.find_module(predicate=_predicate(item))
+                )
+                if not module:
+                    self.injector.tree_manager.get_root_module().add_provider(
+                        provider=item, export=True
+                    )
+                    # self.injector.module_info.ref.add_provider(
+                    #     provider=item, export=True
+                    # )
+
     def build_middleware_stack(self) -> ASGIApp:
         service_middleware = self.injector.get(IExceptionMiddlewareService)
-        service_middleware.build_exception_handlers(*self._exception_handlers)
+        service_middleware.build_exception_handlers(
+            *list(self.config.EXCEPTION_HANDLERS)
+        )
 
         error_handler = service_middleware.get_500_error_handler()
         allowed_hosts = self.config.ALLOWED_HOSTS
@@ -163,14 +187,17 @@ class App:
         if self.debug and allowed_hosts != ["*"]:
             allowed_hosts = ["*"]
 
+        user_middlewares = (
+            list(self.config.MIDDLEWARE) if self.config.MIDDLEWARE else []
+        )
         middleware = (
             [
-                Middleware(
+                EllarMiddleware(
                     TrustedHostMiddleware,
                     allowed_hosts=allowed_hosts,
                     www_redirect=self.config.REDIRECT_HOST,
                 ),
-                Middleware(
+                EllarMiddleware(
                     CORSMiddleware,
                     allow_origins=self.config.CORS_ALLOW_ORIGINS,
                     allow_credentials=self.config.CORS_ALLOW_CREDENTIALS,
@@ -180,25 +207,25 @@ class App:
                     expose_headers=self.config.CORS_EXPOSE_HEADERS,
                     max_age=self.config.CORS_MAX_AGE,
                 ),
-                Middleware(
+                EllarMiddleware(
                     ServerErrorMiddleware,
                     debug=self.debug,
                     handler=error_handler,
                 ),
-                Middleware(
+                EllarMiddleware(
                     RequestVersioningMiddleware,
                     debug=self.debug,
                 ),
-                Middleware(
+                EllarMiddleware(
                     SessionMiddleware,
                 ),
-                Middleware(
+                EllarMiddleware(
                     IdentityMiddleware,
                 ),
             ]
-            + self._user_middleware
+            + user_middlewares
             + [
-                Middleware(
+                EllarMiddleware(
                     ExceptionMiddleware,
                     exception_middleware_service=service_middleware,
                     debug=self.debug,
@@ -208,7 +235,7 @@ class App:
 
         app = self.router
         for cls, args, kwargs in reversed(middleware):
-            app = cls(app, *args, **kwargs, ellar_injector=self.injector)
+            app = cls(app, *args, **kwargs)
         return app
 
     def application_context(self) -> ApplicationContext:
@@ -266,7 +293,16 @@ class App:
         )
 
     def _finalize_app_initialization(self) -> None:
-        self.injector.container.register_instance(self)
+        self._ensure_available_in_providers(*self._global_guards)
+        self._ensure_available_in_providers(*self._global_interceptors)
+        self._ensure_available_in_providers(*self.config.EXCEPTION_HANDLERS)
+        self._ensure_available_in_providers(
+            *[
+                item.cls
+                for item in self.config.MIDDLEWARE
+                if isinstance(item, EllarMiddleware)
+            ]
+        )
 
     def add_exception_handler(
         self,
@@ -274,8 +310,9 @@ class App:
     ) -> None:
         # _added_any = False
         for exception_handler in exception_handlers:
-            if exception_handler not in self._exception_handlers:
-                self._exception_handlers.append(exception_handler)
+            if exception_handler not in self.config.EXCEPTION_HANDLERS:
+                self.config.EXCEPTION_HANDLERS.append(exception_handler)
+                self._ensure_available_in_providers(exception_handler)
 
     @property
     def reflector(self) -> Reflector:
@@ -300,6 +337,7 @@ class App:
     ) -> None:
         for auth in authentication:
             self.__identity_scheme.add_authentication(auth)
+            self._ensure_available_in_providers(auth)
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
         for loader in self._injector.get_templating_modules().values():
@@ -346,6 +384,16 @@ class App:
         """Sets up Jinja2 Environment and adds it to DI"""
         jinja_environment = self._create_jinja_environment()
 
-        self.injector.container.register_instance(jinja_environment, Environment)
-        self.injector.container.register_instance(jinja_environment, JinjaEnvironment)
+        # self.injector.module_info.ref.add_provider(
+        #     ProviderConfig(Environment, use_value=jinja_environment), export=True
+        # )
+        # self.injector.module_info.ref.add_provider(
+        #     ProviderConfig(JinjaEnvironment, use_value=jinja_environment), export=True
+        # )
+        self.injector.tree_manager.get_root_module().add_provider(
+            ProviderConfig(Environment, use_value=jinja_environment), export=True
+        )
+        self.injector.tree_manager.get_root_module().add_provider(
+            ProviderConfig(JinjaEnvironment, use_value=jinja_environment), export=True
+        )
         return jinja_environment

@@ -1,15 +1,12 @@
+import logging
 import typing as t
-from inspect import isabstract
 
 from injector import (
-    AssistedBuilder,
-    Binding,
-    SingletonScope,
-    UnsatisfiedRequirement,
-    _is_specialization,
+    Binder as InjectorBinder,
 )
 from injector import (
-    Binder as InjectorBinder,
+    Binding,
+    UnsatisfiedRequirement,
 )
 from injector import (
     Module as InjectorModule,
@@ -17,12 +14,10 @@ from injector import (
 from injector import NoScope as TransientScope
 from injector import Scope as InjectorScope
 
-from ..providers import Provider
 from ..scopes import (
-    RequestScope,
     ScopeDecorator,
 )
-from ..service_config import get_scope, is_decorated_with_injectable
+from ..service_config import get_scope
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.modules import ModuleBase
@@ -61,31 +56,6 @@ class Container(InjectorBinder):
         if isinstance(scope, ScopeDecorator):
             scope = scope.scope
         return Binding(interface, provider, scope)
-
-    def get_binding(self, interface: t.Type) -> t.Tuple[Binding, InjectorBinder]:
-        is_scope = isinstance(interface, type) and issubclass(interface, InjectorScope)
-        is_assisted_builder = _is_specialization(interface, AssistedBuilder)
-        try:
-            return self._get_binding(
-                interface, only_this_binder=is_scope or is_assisted_builder
-            )
-        except (KeyError, UnsatisfiedRequirement):
-            if is_scope:
-                scope = interface
-                self.bind(scope, to=scope(self.injector))
-                return self._get_binding(interface)
-            # The special interface is added here so that requesting a special
-            # interface with auto_bind disabled works
-            if (
-                self._auto_bind
-                or self._is_special_interface(interface)
-                or is_decorated_with_injectable(interface)
-            ):
-                binding = self.create_binding(interface)
-                self._bindings[interface] = binding
-                return binding, self
-
-        raise UnsatisfiedRequirement(None, interface)
 
     def get_interface_by_tag(self, tag: str) -> t.Type[t.Any]:
         interface = self._bindings_by_tag.get(tag)
@@ -135,97 +105,6 @@ class Container(InjectorBinder):
             _scope = _scope.scope
 
         self.register_binding(base_type, Binding(base_type, provider, _scope), tag=tag)
-
-    def register_instance(
-        self,
-        instance: t.Any,
-        concrete_type: t.Optional[t.Union[t.Type, Provider]] = None,
-        tag: t.Optional[str] = None,
-    ) -> None:
-        assert not isinstance(instance, type)
-        _concrete_type = instance.__class__ if not concrete_type else concrete_type
-        self.register(_concrete_type, instance, scope=SingletonScope, tag=tag)
-
-    def register_singleton(
-        self,
-        base_type: t.Type,
-        concrete_type: t.Union[t.Type, t.Any, Provider] = None,
-        tag: t.Optional[str] = None,
-    ) -> None:
-        """
-
-        :param base_type:
-        :param concrete_type:
-        :return:
-        """
-        if not concrete_type:
-            self.register_exact_singleton(base_type, tag=tag)
-        self.register(base_type, concrete_type, scope=SingletonScope, tag=tag)
-
-    def register_transient(
-        self,
-        base_type: t.Type,
-        concrete_type: t.Optional[t.Union[t.Type, Provider]] = None,
-        tag: t.Optional[str] = None,
-    ) -> None:
-        """
-
-        :param base_type:
-        :param concrete_type:
-        :return:
-        """
-        if not concrete_type:
-            self.register_exact_transient(base_type, tag=tag)
-        self.register(base_type, concrete_type, scope=TransientScope, tag=tag)
-
-    def register_scoped(
-        self,
-        base_type: t.Type,
-        concrete_type: t.Optional[t.Union[t.Type, Provider]] = None,
-        tag: t.Optional[str] = None,
-    ) -> None:
-        """
-
-        :param base_type:
-        :param concrete_type:
-        :return:
-        """
-        if not concrete_type:
-            self.register_exact_scoped(base_type, tag=tag)
-        self.register(base_type, concrete_type, scope=RequestScope, tag=tag)
-
-    def register_exact_singleton(
-        self, concrete_type: t.Type, tag: t.Optional[str] = None
-    ) -> None:
-        """
-
-        :param concrete_type:
-        :return:
-        """
-        assert not isabstract(concrete_type)
-        self.register(base_type=concrete_type, scope=SingletonScope, tag=tag)
-
-    def register_exact_transient(
-        self, concrete_type: t.Type, tag: t.Optional[str] = None
-    ) -> None:
-        """
-
-        :param concrete_type:
-        :return:
-        """
-        assert not isabstract(concrete_type)
-        self.register(base_type=concrete_type, scope=TransientScope, tag=tag)
-
-    def register_exact_scoped(
-        self, concrete_type: t.Type, tag: t.Optional[str] = None
-    ) -> None:
-        """
-
-        :param concrete_type:
-        :return:
-        """
-        assert not isabstract(concrete_type)
-        self.register(base_type=concrete_type, scope=RequestScope, tag=tag)
 
     @t.no_type_check
     def install(
@@ -282,3 +161,43 @@ class Container(InjectorBinder):
 
         instance(self)
         return instance
+
+    def get_binding(self, interface: t.Type) -> t.Tuple[Binding, InjectorBinder]:
+        try:
+            return super().get_binding(interface)
+        except (KeyError, UnsatisfiedRequirement) as uex:
+            try:
+                # All services or providers must have MODULE_SCOPE_OWNER if added in @Module 'providers',
+                # 'controllers' and 'routers'.
+                # So if 'module_scope_owner' is None, it means `Interface` was not registered to any module
+                module_name = self.injector.owner.name if self.injector.owner else None
+
+                module_owner = self.injector.tree_manager.search_module_tree(
+                    filter_item=lambda data: data.name == module_name,
+                    find_predicate=lambda data: interface in data.exports,
+                )
+
+                if module_owner and module_owner.is_ready:
+                    # TODO: possible circular import
+                    return module_owner.value.container._get_binding(interface)
+
+                # current_node = self.injector.tree_manager.find_module(
+                #     predicate=lambda n: n.parent == self.injector.module_name
+                # )
+
+                # root_module_name = self.injector.tree_manager.get_root_module().name
+                #
+                # # module_data = self.injector.tree_manager.search_module_tree(
+                # #     filter_item=lambda data: data.name == module_name,
+                # #     find_predicate=lambda data: interface in data.exports,
+                # # )
+                # module_data = self.injector.tree_manager.search_module_tree(
+                #     filter_item=lambda data: data.name == module_name or data.name == root_module_name,
+                #     find_predicate=lambda data: interface in data.exports,
+                # )
+                # if module_data:
+                #     return module_data.value.container._get_binding(interface)
+
+            except (KeyError, UnsatisfiedRequirement) as ex:
+                logging.exception(ex)
+            raise UnsatisfiedRequirement(None, interface) from uex

@@ -10,7 +10,7 @@ from .schema import CacheModuleSchemaSetup
 from .service import CacheService
 
 
-@Module()
+@Module(exports=[ICacheService])
 class CacheModule(ModuleBase, IModuleSetup):
     @classmethod
     def _create_dynamic_module(cls, schema: CacheModuleSchemaSetup) -> DynamicModule:
