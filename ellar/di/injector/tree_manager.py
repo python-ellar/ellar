@@ -27,17 +27,14 @@ class TreeData(t.NamedTuple):
 
     @property
     def exports(self) -> t.List[t.Type]:
-        # TODO: make function available in ModuleSetup with exception
         return self.value.exports
 
     @property
     def providers(self) -> t.Dict[t.Type, t.Type]:
-        # TODO: make function available in ModuleSetup with exception
         return self.value.providers
 
     @property
     def name(self) -> str:
-        # TODO: make function available in ModuleSetup with exception
         return self.value.name
 
     def __repr__(self) -> str:
