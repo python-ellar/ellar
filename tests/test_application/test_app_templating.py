@@ -7,6 +7,7 @@ from ellar.common import (
 from ellar.common.templating import Environment
 from ellar.core import ModuleBase
 from ellar.core.modules import ModuleTemplateRef
+from ellar.threading.sync_worker import execute_async_context_manager
 
 
 class TestAppTemplating:
@@ -23,23 +24,24 @@ class TestAppTemplating:
     def test_app_get_module_loaders(self):
         app = AppFactory.create_from_app_module(module=self.AppTemplateModuleTest)
         loaders = list(app.get_module_loaders())
-        assert len(loaders) == 1
-        module_ref = loaders[0]
+        assert len(loaders) == 2
+        module_ref = loaders[1]
         assert isinstance(module_ref, ModuleTemplateRef)
         assert isinstance(module_ref.get_module_instance(), self.AppTemplateModuleTest)
 
     def test_app_jinja_environment(self):
         app = AppFactory.create_from_app_module(module=self.AppTemplateModuleTest)
-        environment = app.injector.get(Environment)
-        assert isinstance(environment, Environment)
+        with execute_async_context_manager(app.application_context()):
+            environment = app.injector.get(Environment)
+            assert isinstance(environment, Environment)
 
-        assert "app_filter" in environment.filters
-        assert "app_global" in environment.globals
-        template = environment.from_string(
-            """<html>global: {{app_global(2)}} filter: {{3 | app_filter}}</html>"""
-        )
-        result = template.render()
-        assert result == "<html>global: new global 2 filter: new filter 3</html>"
+            assert "app_filter" in environment.filters
+            assert "app_global" in environment.globals
+            template = environment.from_string(
+                """<html>global: {{app_global(2)}} filter: {{3 | app_filter}}</html>"""
+            )
+            result = template.render()
+            assert result == "<html>global: new global 2 filter: new filter 3</html>"
 
     # def test_app_template_filter(self):
     #     app = Test.create_test_module().create_application()

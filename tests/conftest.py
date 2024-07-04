@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import click.testing
 import pytest
+from ellar.reflect import reflect
 from pydantic import create_model
 from starlette.testclient import TestClient
 
@@ -39,3 +40,15 @@ def random_type():
 @pytest.fixture
 def cli_runner():
     return click.testing.CliRunner()
+
+
+@pytest.fixture
+def reflect_context():
+    with reflect.context():
+        yield
+
+
+@pytest.fixture
+async def async_reflect_context():
+    async with reflect.async_context():
+        yield

@@ -5,6 +5,7 @@ from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.core.conf import Config, ConfigDefaultTypesMixin
 from ellar.core.conf.config import ConfigRuntimeError
 from ellar.core.versioning import UrlPathAPIVersioning
+from ellar.di import ModuleTreeManager
 from ellar.pydantic import ENCODERS_BY_TYPE
 from jinja2.loaders import FileSystemLoader
 from starlette.responses import JSONResponse
@@ -53,6 +54,8 @@ def test_default_configurations():
     assert config.DEFAULT_LIFESPAN_HANDLER is None
 
     assert config.SERIALIZER_CUSTOM_ENCODER == ENCODERS_BY_TYPE
+    assert config.OVERRIDE_CORE_SERVICE == []
+    assert config.MODULE_TREE_MANAGER_CLASS == ModuleTreeManager
 
 
 def test_configuration_export_to_os_environment():
@@ -85,6 +88,9 @@ def test_configuration_raise_runtime_error_for_invalid_settings_module_path():
 
     with pytest.raises(ValueError):
         Config(STATIC_FOLDER_PACKAGES=[("package", "static", "some_whatever")])
+
+    with pytest.raises(ValueError):
+        Config(OVERRIDE_CORE_SERVICE=[("package",), ("package",)])
 
 
 def test_configuration_settings_can_be_loaded_through_constructor():

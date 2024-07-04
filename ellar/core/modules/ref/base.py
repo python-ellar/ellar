@@ -2,6 +2,8 @@ import typing as t
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
 
+from ellar.auth.constants import POLICY_KEYS
+from ellar.auth.policy.base import _PolicyHandlerWithRequirement
 from ellar.common import ControllerBase, ModuleRouter
 from ellar.common.constants import (
     CONTROLLER_OPERATION_HANDLER_KEY,
@@ -10,7 +12,9 @@ from ellar.common.constants import (
     MODULE_WATERMARK,
     ROUTE_INTERCEPTORS,
 )
-from ellar.core import ApplicationContext, Config
+from ellar.common.exceptions import ImproperConfiguration
+from ellar.core.conf import Config
+from ellar.core.context import ApplicationContext
 from ellar.core.modules.base import ModuleBase
 from ellar.core.router_builders import get_controller_builder_factory
 from ellar.core.routing import EllarMount, RouteOperation, RouteOperationBase
@@ -20,7 +24,6 @@ from ellar.di import (
     ProviderConfig,
     is_decorated_with_injectable,
 )
-from ellar.di.constants import INJECTABLE_WATERMARK
 from ellar.reflect import reflect
 from injector import Scope, ScopeDecorator
 from starlette.routing import BaseRoute
@@ -138,7 +141,8 @@ class ModuleRefBase(ABC):
         """Register Module"""
 
     def get_module_instance(self) -> ModuleBase:
-        return self.container.injector.get(self.module)  # type:ignore
+        root_module = self.container.injector.tree_manager.get_root_module()
+        return root_module.container.injector.get(self.module)  # type:ignore
 
     def export_all(self) -> None:
         self._exports = list(set(self._exports + list(self._providers.keys())))
@@ -155,6 +159,9 @@ class ModuleRefBase(ABC):
             ref = module_config
             if not isinstance(module_config.value, ModuleRefBase):
                 ref = module_config.value.build(self.container.injector, self.config)
+
+            if not isinstance(ref, ModuleRefBase):  # pragma: no cover
+                raise ImproperConfiguration(f"Expected 'ModuleRefBase' but got '{ref}'")
 
             ref.build_dependencies(step - 1 if step != -1 else step)
 
@@ -193,7 +200,7 @@ class ModuleRefBase(ABC):
             self._exports.append(provider_type)
 
     def add_provider(
-        self, provider: t.Union[t.Type, ProviderConfig], export: bool = False
+        self, provider: t.Union[t.Type, ProviderConfig, t.Any], export: bool = False
     ) -> None:
         # existing = next(
         #     self.container.injector.tree_manager.find_module(
@@ -208,16 +215,19 @@ class ModuleRefBase(ABC):
 
         provider_type = provider.get_type()
 
-        if provider_type in self._providers:
-            return
-
-        self._providers.update({provider_type: provider_type})
-        provider.register(self.container)
+        if provider.core and provider not in self.config.OVERRIDE_CORE_SERVICE:
+            # this will ensure config.py OVERRIDE_CORE_SERVICE takes higher priority
+            self.config.OVERRIDE_CORE_SERVICE.insert(0, provider)
+        else:
+            self._providers.update({provider_type: provider_type})
+            provider.register(self.container)
 
         if provider.export or export:
             self.add_exports(provider_type)
 
     def _build_module_parameters(self) -> None:
+        from ellar.core.modules.config import ForwardRefModule
+
         if reflect.get_metadata(MODULE_WATERMARK, self.module):
             _routers: t.List[t.Any] = list(
                 reflect.get_metadata(MODULE_METADATA.ROUTERS, self.module) or []
@@ -233,6 +243,8 @@ class ModuleRefBase(ABC):
                 reflect.get_metadata(MODULE_METADATA.EXPORTS, self.module) or []
             )
 
+            modules = reflect.get_metadata(MODULE_METADATA.MODULES, self.module) or []
+
             self._search_providers_in_controller(_controllers)
             self._search_providers_in_controller(_routers)
 
@@ -241,6 +253,10 @@ class ModuleRefBase(ABC):
 
             for export in _exports:
                 self.add_exports(export)
+
+            for module in modules:
+                if isinstance(module, ForwardRefModule):
+                    module.resolve_module_dependency(self)
 
     def _search_providers_in_controller(
         self, controllers: t.List[t.Union[t.Type, t.Any]]
@@ -260,9 +276,7 @@ class ModuleRefBase(ABC):
                 continue
 
             self._search_controller_routes_injectables(control_type)
-            self._search_injectables(control_type)
-            self._search_guards(control_type)
-            self._search_interceptors(control_type)
+            self._run_all_checks(control_type)
 
     def _search_controller_routes_injectables(self, control_type: t.Type) -> None:
         operations: t.List[RouteOperation] = (
@@ -270,16 +284,19 @@ class ModuleRefBase(ABC):
         )
         for operation in operations:
             if isinstance(operation, RouteOperationBase):
-                self._search_guards(operation.endpoint)
-                self._search_interceptors(operation.endpoint)
+                self._run_all_checks(operation.endpoint)
             elif isinstance(operation, EllarMount):
                 self._search_controller_routes_injectables(operation.get_control_type())
-                self._search_injectables(operation.get_control_type())
-                self._search_guards(operation.get_control_type())
-                self._search_interceptors(operation.get_control_type())
+                self._run_all_checks(operation.get_control_type())
+
+    def _run_all_checks(self, item: t.Union[t.Type, t.Any]) -> None:
+        self._search_injectables(item)
+        self._search_guards(item)
+        self._search_interceptors(item)
+        self._search_policies(item)
 
     def _search_injectables(self, item: t.Union[t.Type, t.Any]) -> None:
-        if reflect.get_metadata(INJECTABLE_WATERMARK, item):
+        if is_decorated_with_injectable(item):
             self.add_provider(item)
 
     def _search_guards(self, item: t.Union[t.Type, t.Any]) -> None:
@@ -295,3 +312,13 @@ class ModuleRefBase(ABC):
                 interceptor
             ):
                 self.add_provider(interceptor)
+
+    def _search_policies(self, item: t.Union[t.Type, t.Any]) -> None:
+        policies = reflect.get_metadata(POLICY_KEYS, item) or []
+        for policy in policies:
+            if isinstance(policy, type) and is_decorated_with_injectable(policy):
+                self.add_provider(policy)
+            elif isinstance(
+                policy, _PolicyHandlerWithRequirement
+            ) and is_decorated_with_injectable(policy.policy_type):  # type:ignore[type-var]
+                self.add_provider(policy.policy_type)

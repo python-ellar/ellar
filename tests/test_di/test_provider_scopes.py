@@ -8,28 +8,17 @@ from .examples import AnyContext, Foo, IContext, TransientRequestContext
 
 
 @pytest.mark.parametrize(
-    "action, base_type, concrete_type, ref_type, expected_scope",
+    "provider, ref_type, expected_scope",
     [
-        ("register_instance", Foo(), None, Foo, SingletonScope),
-        ("register_instance", Foo(), Foo, Foo, SingletonScope),
-        ("register_singleton", Foo, None, Foo, SingletonScope),
-        ("register_singleton", Foo, Foo, Foo, SingletonScope),
-        ("register_transient", Foo, None, Foo, TransientScope),
-        ("register_transient", Foo, Foo, Foo, TransientScope),
-        ("register_scoped", Foo, None, Foo, RequestScope),
-        ("register_scoped", Foo, Foo, Foo, RequestScope),
-        ("register_exact_singleton", Foo, None, Foo, SingletonScope),
-        ("register_exact_transient", Foo, None, Foo, TransientScope),
-        ("register_exact_scoped", Foo, None, Foo, RequestScope),
+        (ProviderConfig(Foo, use_value=Foo()), Foo, SingletonScope),
+        (ProviderConfig(Foo), Foo, SingletonScope),
+        (ProviderConfig(Foo, scope=TransientScope), Foo, TransientScope),
+        (ProviderConfig(Foo, scope=RequestScope), Foo, RequestScope),
     ],
 )
-def test_container_scopes(action, base_type, concrete_type, ref_type, expected_scope):
+def test_container_scopes(provider, ref_type, expected_scope):
     container = EllarInjector().container
-    container_action = getattr(container, action)
-    if concrete_type:
-        container_action(base_type, concrete_type)
-    else:
-        container_action(base_type)
+    provider.register(container)
     binding = container.get_binding(ref_type)
     assert binding[0].scope is expected_scope
 

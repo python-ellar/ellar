@@ -272,12 +272,12 @@ def test_application_adding_same_exception_twice():
 
     exception = OverrideHTTPException()
     app.add_exception_handler(exception)
-    assert exception is app._exception_handlers[0]
+    assert exception is app.config.EXCEPTION_HANDLERS[0]
 
     exception2 = OverrideHTTPException()
     app.add_exception_handler(exception2)
-    assert exception2 is not app._exception_handlers[0]
-    assert exception is app._exception_handlers[0]
+    assert exception2 is not app.config.EXCEPTION_HANDLERS[0]
+    assert exception is app.config.EXCEPTION_HANDLERS[0]
 
 
 def test_callable_exception_handler_equality():

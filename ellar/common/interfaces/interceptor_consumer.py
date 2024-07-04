@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from .context import IExecutionContext
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common.routing import RouteOperationBase
+    from ellar.core.routing import RouteOperationBase
 
 
 class IInterceptorsConsumer(ABC):

@@ -10,7 +10,7 @@ from .app import AppModule, SimpleHeaderAuthHandler
 
 
 class TestArticleController:
-    test_module = Test.create_test_module(modules=[AppModule])
+    test_module = Test.create_from_module(module=AppModule)
     test_module.create_application().add_authentication_schemes(SimpleHeaderAuthHandler)
     client = test_module.get_test_client()
 

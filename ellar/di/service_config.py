@@ -35,7 +35,15 @@ __all__ = (
 
 
 class ProviderConfig(t.Generic[T]):
-    __slots__ = ("base_type", "use_value", "use_class", "scope", "tag", "export")
+    __slots__ = (
+        "base_type",
+        "use_value",
+        "use_class",
+        "scope",
+        "tag",
+        "export",
+        "core",
+    )
 
     def __init__(
         self,
@@ -46,6 +54,7 @@ class ProviderConfig(t.Generic[T]):
         scope: t.Optional[t.Union[t.Type[Scope], t.Any]] = None,
         tag: t.Optional[str] = None,
         export: bool = False,
+        core: bool = False,
     ):
         self.scope = scope or SingletonScope
         if use_value and use_class:
@@ -58,14 +67,9 @@ class ProviderConfig(t.Generic[T]):
         self.use_class = use_class
         self.tag = tag
         self.export = export
+        self.core = core
 
     def get_type(self) -> t.Type:
-        # if self.is_special_type():
-        #     return self.base_type
-        # if self.use_class:
-        #     return self.use_class
-        # if self.use_value and not inspect.isfunction(self.use_value):
-        #     return type(self.use_value)
         return self.base_type
 
     def register(self, container: "Container") -> None:

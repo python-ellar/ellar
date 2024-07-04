@@ -31,7 +31,7 @@ class ModulePlainRef(ModuleRefBase):
         super().__init__(
             module_type,
             container=parent_container,
-            name=get_name(self.module),
+            name=get_name(module_type),
             config=config,
         )
         self._init_kwargs = build_init_kwargs(self.module, kwargs)

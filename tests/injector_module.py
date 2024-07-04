@@ -1,5 +1,5 @@
 from ellar.core import ModuleBase
-from ellar.di import Container, singleton_scope
+from ellar.di import Container, ProviderConfig, singleton_scope
 from injector import provider
 
 
@@ -19,4 +19,6 @@ class DummyModule(ModuleBase):
 
     def register_services(self, container: Container) -> None:
         configuration = Configuration(":memory:")
-        container.register_instance(configuration)
+        container.injector.owner.add_provider(
+            ProviderConfig(Configuration, use_value=configuration), export=True
+        )

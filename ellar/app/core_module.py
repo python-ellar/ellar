@@ -45,11 +45,6 @@ def get_core_module(app_module: t.Union[t.Type, t.Any], config: Config) -> t.Typ
         modules=[app_module],
         providers=[
             ProviderConfig(
-                IExceptionMiddlewareService,
-                use_class=ExceptionMiddlewareService,
-                export=True,
-            ),
-            ProviderConfig(
                 Config,
                 use_value=config,
                 export=True,
@@ -59,6 +54,11 @@ def get_core_module(app_module: t.Union[t.Type, t.Any], config: Config) -> t.Typ
                 use_value=lambda: config.MODULE_TREE_MANAGER_CLASS(
                     ModuleSetup(EllarCoreModule)
                 ),
+                export=True,
+            ),
+            ProviderConfig(
+                IExceptionMiddlewareService,
+                use_class=ExceptionMiddlewareService,
                 export=True,
             ),
             ProviderConfig(
@@ -91,7 +91,6 @@ def get_core_module(app_module: t.Union[t.Type, t.Any], config: Config) -> t.Typ
             ProviderConfig(
                 IInterceptorsConsumer, use_value=EllarInterceptorConsumer, export=True
             ),
-            ProviderConfig(Reflector, use_value=reflector, export=True),
             ProviderConfig(IGuardsConsumer, use_class=GuardConsumer, export=True),
             ProviderConfig(IIdentitySchemes, use_class=AppIdentitySchemes, export=True),
             ProviderConfig(
@@ -105,8 +104,8 @@ def get_core_module(app_module: t.Union[t.Type, t.Any], config: Config) -> t.Typ
         ],
     )
     class EllarCoreModule(IApplicationReady, IApplicationStartup, IApplicationShutdown):
-        def __init__(self, config: Config, injector: EllarInjector) -> None:
-            self.config = config
+        def __init__(self, _config: Config, injector: EllarInjector) -> None:
+            self.config = _config
             self.injector = injector
 
         def on_ready(self, app: "App") -> None:

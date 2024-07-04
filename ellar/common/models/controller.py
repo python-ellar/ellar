@@ -11,7 +11,7 @@ if t.TYPE_CHECKING:
 
 @dataclasses.dataclass
 class NestedRouterInfo:
-    router: t.Union["ModuleRouter", "ControllerBase"]
+    router: t.Union["ModuleRouter", t.Type["ControllerBase"]]
     prefix: t.Optional[str] = None
 
 
@@ -30,7 +30,7 @@ class ControllerType(type):
 
     def add_router(
         cls,
-        router: t.Union["ControllerBase", "ModuleRouter"],
+        router: t.Union[t.Type["ControllerBase"], "ModuleRouter"],
         prefix: t.Optional[str] = None,
     ) -> None:
         if prefix:

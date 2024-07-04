@@ -6,7 +6,6 @@ from ellar.di import (
     singleton_scope,
     transient_scope,
 )
-from ellar.di.exceptions import UnsatisfiedRequirement
 
 
 @injectable(scope=transient_scope)
@@ -28,27 +27,6 @@ class MustBeRegisteredToResolve:
     """This class must be registered to resolved or EllarInjector auto_bind must be true"""
 
     pass
-
-
-def test_injectable_class_can_be_resolved_at_runtime_without_if_they_are_not_registered():
-    injector = EllarInjector(auto_bind=False)
-
-    assert isinstance(injector.get(SampleInjectableA), SampleInjectableA)
-    assert isinstance(injector.get(SampleInjectableB), SampleInjectableB)
-    assert isinstance(injector.get(SampleInjectableC), SampleInjectableC)
-
-    with pytest.raises(UnsatisfiedRequirement):
-        injector.get(MustBeRegisteredToResolve)
-
-    injector.container.register_exact_transient(MustBeRegisteredToResolve)
-    assert isinstance(
-        injector.get(MustBeRegisteredToResolve), MustBeRegisteredToResolve
-    )
-
-    injector = EllarInjector(auto_bind=True)
-    assert isinstance(
-        injector.get(MustBeRegisteredToResolve), MustBeRegisteredToResolve
-    )
 
 
 @pytest.mark.asyncio

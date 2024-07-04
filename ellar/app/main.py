@@ -132,6 +132,7 @@ class App:
         self, *interceptors: t.Union[EllarInterceptor, t.Type[EllarInterceptor]]
     ) -> None:
         self._global_interceptors.extend(interceptors)
+        self._ensure_available_in_providers(*interceptors)
 
     @property
     def injector(self) -> EllarInjector:
@@ -302,6 +303,9 @@ class App:
                 for item in self.config.MIDDLEWARE
                 if isinstance(item, EllarMiddleware)
             ]
+        )
+        self.injector.owner.add_provider(
+            ProviderConfig(App, use_value=self, tag=self.__class__.__name__)
         )
 
     def add_exception_handler(

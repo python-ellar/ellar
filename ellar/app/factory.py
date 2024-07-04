@@ -5,8 +5,16 @@ import click
 from ellar.app.core_module import get_core_module
 from ellar.common import IApplicationReady, Module
 from ellar.common.constants import MODULE_METADATA
+from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.models import GuardCanActivate
-from ellar.core import Config, DynamicModule, LazyModuleImport, ModuleBase, ModuleSetup
+from ellar.core import (
+    Config,
+    DynamicModule,
+    ForwardRefModule,
+    LazyModuleImport,
+    ModuleBase,
+    ModuleSetup,
+)
 from ellar.core.modules import ModuleRefBase, ModuleTemplateRef
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.di.injector.tree_manager import ModuleTreeManager
@@ -49,6 +57,10 @@ class AppFactory:
             reflect.get_metadata(MODULE_METADATA.MODULES, module_config.module) or []
         )
         for module in modules:
+            if isinstance(module, ForwardRefModule):
+                # will be initialized using module_config moduleRef setup
+                continue
+
             if isinstance(module, LazyModuleImport):
                 module = module.get_module(global_module_config.module.__name__)
 
@@ -130,6 +142,15 @@ class AppFactory:
 
             routes = core_module_ref.get_routes()
             app.router.extend(routes)
+
+            for item in config.OVERRIDE_CORE_SERVICE:
+                provider_type = item.get_type()
+                if provider_type not in core_module_ref.providers:
+                    raise ImproperConfiguration(
+                        f"There is not core service identify as {provider_type}"
+                    )
+
+                core_module_ref.add_provider(item, export=True)
 
             # app.setup_jinja_environment
             app.setup_jinja_environment()

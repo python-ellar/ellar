@@ -24,7 +24,6 @@ class EllarMiddleware(Middleware, IEllarMiddleware):
         injectable()(self.cls)
         self.kwargs = build_init_kwargs(self.cls, self.kwargs)
         self._provider_token = provider_token
-        self._register_middleware()
 
     def _register_middleware(self) -> None:
         provider_token = self._provider_token
@@ -49,6 +48,7 @@ class EllarMiddleware(Middleware, IEllarMiddleware):
 
     @t.no_type_check
     def __call__(self, app: ASGIApp, *args: t.Any, **kwargs: t.Any) -> T:
+        self._register_middleware()
         kwargs.update(app=app)
         try:
             return current_injector.create_object(self.cls, additional_kwargs=kwargs)

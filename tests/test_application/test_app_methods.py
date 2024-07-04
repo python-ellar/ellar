@@ -1,8 +1,7 @@
 import os
 import typing as t
 
-from ellar.app import App, AppFactory
-from ellar.app.services import EllarAppService
+from ellar.app import AppFactory
 from ellar.common import (
     IExceptionHandler,
     IExecutionContext,
@@ -19,7 +18,6 @@ from ellar.core.versioning import (
 from ellar.core.versioning import (
     VersioningSchemes as VERSIONING,
 )
-from ellar.di import EllarInjector
 from ellar.testing import Test, TestClient
 from starlette.responses import JSONResponse, PlainTextResponse, Response
 
@@ -55,12 +53,7 @@ class TestEllarApp:
         path = os.path.join(tmpdir, "example.txt")
         with open(path, "w") as file:
             file.write("<file content>")
-
-        config = Config(STATIC_DIRECTORIES=[tmpdir])
-        injector = EllarInjector()
-        EllarAppService(injector, config=Config()).register_core_services()
-        injector.container.register_instance(config)
-        app = App(injector=injector, config=config)
+        app = AppFactory.create_app(config_module={"STATIC_DIRECTORIES": [tmpdir]})
         client = TestClient(app)
 
         response = client.get("/static/example.txt")
@@ -76,13 +69,13 @@ class TestEllarApp:
         with open(path, "w") as file:
             file.write("<file content>")
 
-        config = Config(
-            STATIC_MOUNT_PATH="/static-modified", STATIC_DIRECTORIES=[tmpdir]
+        app = AppFactory.create_app(
+            config_module={
+                "STATIC_MOUNT_PATH": "/static-modified",
+                "STATIC_DIRECTORIES": [tmpdir],
+            }
         )
-        injector = EllarInjector()
-        EllarAppService(injector, config=Config()).register_core_services()
-        injector.container.register_instance(config)
-        app = App(injector=injector, config=config)
+
         client = TestClient(app)
 
         response = client.get("/static-modified/example.txt")
@@ -118,18 +111,11 @@ class TestEllarApp:
         assert len(guards) == 2
 
     def test_app_initialization_completion(self):
-        config = Config()
-        injector = EllarInjector(
-            auto_bind=False
-        )  # will raise an exception is service is not registered
-        EllarAppService(injector, config=Config()).register_core_services()
-        injector.container.register_instance(config)
+        app = AppFactory.create_app()
 
-        app = App(config=config, injector=injector)
-        app.setup_jinja_environment()
-        assert injector.get(Reflector)
-        assert injector.get(Config) is config
-        assert injector.get(Environment)
+        assert app.injector.get(Reflector)
+        assert app.injector.get(Config) is app.config
+        assert app.injector.get(Environment)
 
     def test_app_exception_handler(self):
         class CustomException(Exception):
@@ -143,13 +129,7 @@ class TestEllarApp:
             ) -> t.Union[Response, t.Any]:
                 return JSONResponse({"detail": str(exc)}, status_code=404)
 
-        config = Config()
-        injector = EllarInjector(
-            auto_bind=False
-        )  # will raise an exception is service is not registered
-        EllarAppService(injector, config=Config()).register_core_services()
-        injector.container.register_instance(config)
-        app = App(config=config, injector=injector)
+        app = AppFactory.create_app()
         app.add_exception_handler(CustomExceptionHandler())
 
         @get("/404")

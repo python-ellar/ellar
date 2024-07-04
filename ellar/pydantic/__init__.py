@@ -5,6 +5,7 @@ from pydantic import (
     BaseConfig,
     BaseModel,
     Field,
+    GetCoreSchemaHandler,
     PrivateAttr,
     TypeAdapter,
     create_model,
@@ -14,8 +15,13 @@ from pydantic import (
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 from pydantic.fields import FieldInfo
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
+from pydantic_core import CoreSchema
 
-from .decorator import as_pydantic_validator, with_info_plain_validator_function
+from .decorator import (
+    AllowTypeOfSource,
+    as_pydantic_validator,
+    with_info_plain_validator_function,
+)
 from .emails import EmailStr  # type:ignore[attr-defined]
 from .encoder import ENCODERS_BY_TYPE, encoders_by_class_tuples
 from .exceptions import ErrorWrapper
@@ -76,6 +82,9 @@ __all__ = [
     "model_validator",
     "GenerateJsonSchema",
     "JsonSchemaValue",
+    "CoreSchema",
+    "GetCoreSchemaHandler",
+    "AllowTypeOfSource",
 ]
 
 

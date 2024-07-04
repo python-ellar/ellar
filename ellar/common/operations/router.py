@@ -52,7 +52,7 @@ class ModuleRouter(OperationDefinitions):
 
     def add_router(
         self,
-        router: t.Union["ModuleRouter", "ControllerBase"],
+        router: t.Union["ModuleRouter", t.Type["ControllerBase"]],
         prefix: t.Optional[str] = None,
     ) -> None:
         if prefix:

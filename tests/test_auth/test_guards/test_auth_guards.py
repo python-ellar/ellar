@@ -12,6 +12,7 @@ from ellar.common import (
     APIException,
     GlobalGuard,
     Inject,
+    ModuleRouter,
     UseGuards,
     get,
     serialize_object,
@@ -98,7 +99,7 @@ class DigestAuth(GuardHttpDigestAuth):
             return True
 
 
-app = AppFactory.create_app()
+router = ModuleRouter("")
 
 
 for _path, auth in [
@@ -112,12 +113,13 @@ for _path, auth in [
     ("customexception", HeaderSecretKeyCustomException),
 ]:
 
-    @get(f"/{_path}")
+    @router.get(f"/{_path}")
     @UseGuards(auth)
     def auth_demo_endpoint(request: Inject[Request]):
         return {"authentication": request.user}
 
-    app.router.add_route(auth_demo_endpoint)
+
+app = AppFactory.create_app(routers=[router])
 
 client = TestClient(app)
 

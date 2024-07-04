@@ -1,3 +1,4 @@
+import contextvars
 import os
 import typing as t
 from contextvars import ContextVar
@@ -17,6 +18,8 @@ injector_context_var: ContextVar[t.Optional[t.Union["ApplicationContext", t.Any]
     ContextVar("ellar.app.context")
 )
 
+_icv_tokens: t.List[contextvars.Token] = [injector_context_var.set(empty)]
+
 
 class ApplicationContext:
     """
@@ -32,7 +35,6 @@ class ApplicationContext:
         ), "injector must instance of EllarInjector"
 
         self._injector = injector
-        self._reset_token = None
         self._raise_events = raise_events
 
     @property
@@ -40,10 +42,7 @@ class ApplicationContext:
         return self._injector
 
     async def __aenter__(self) -> "ApplicationContext":
-        # injector_context = injector_context_var.get(empty)
-        # if injector_context is empty:
-        # If injector_context exist
-        self._reset_token = injector_context_var.set(self)  # type:ignore[assignment]
+        _icv_tokens.append(injector_context_var.set(self))
         current_injector._wrapped = empty  # type:ignore[attr-defined]
 
         if config._wrapped is not empty:  # pragma: no cover
@@ -61,7 +60,7 @@ class ApplicationContext:
         exc_value: t.Optional[BaseException],
         tb: t.Optional[TracebackType],
     ) -> None:
-        injector_context_var.reset(self._reset_token)
+        injector_context_var.reset(_icv_tokens.pop())
 
         current_injector._wrapped = empty
         config._wrapped = empty

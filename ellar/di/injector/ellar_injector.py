@@ -18,7 +18,6 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.modules import (
         ModuleBase,
         ModuleRefBase,
-        ModuleSetup,
         ModuleTemplateRef,
     )
 
@@ -70,12 +69,6 @@ class EllarInjector(Injector):
         # Bind some useful types
         self.container.register(EllarInjector, self)
         self.container.register(Container, self.binder)
-        #
-        # self._modules: t.DefaultDict = defaultdict(OrderedDict)
-        # self._modules[MODULE_REF_TYPES.TEMPLATE] = OrderedDict()
-        # self._modules[MODULE_REF_TYPES.PLAIN] = OrderedDict()
-        # self._modules[MODULE_REF_TYPES.DYNAMIC] = OrderedDict()
-        # self._modules[MODULE_REF_TYPES.APP_DEPENDENT] = OrderedDict()
 
     @cached_property
     def tree_manager(self) -> ModuleTreeManager:
@@ -102,17 +95,6 @@ class EllarInjector(Injector):
             item.value.module: item.value  # type:ignore[misc]
             for item in self.tree_manager.get_by_ref_type(MODULE_REF_TYPES.TEMPLATE)
         }
-
-    def add_module(
-        self,
-        module_ref: t.Union["ModuleRefBase", "ModuleSetup"],
-        parent_module: t.Type[t.Union["ModuleBase", t.Any]],
-    ) -> None:
-        self.tree_manager.add_or_update(
-            module_type=module_ref.module,
-            parent_module=parent_module,
-            value=module_ref,
-        )
 
     @t.no_type_check
     def get(

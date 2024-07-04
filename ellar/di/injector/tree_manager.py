@@ -56,14 +56,8 @@ class ModuleTreeManager:
             WeakKeyDictionary()
         )  # Dictionary to store modules by their ID or value
 
-        # self._core_module = root_module.module
         self._core_module = app_core_module.module if app_core_module else None
         self._root_module: t.Optional[t.Type[t.Any]] = None
-
-        # if not as_root:
-        #     self._core_module = module.module
-        # else:
-        #     self._root_module = module.module
 
         if app_core_module:
             self.add_module(app_core_module.module, value=app_core_module)
@@ -116,11 +110,29 @@ class ModuleTreeManager:
 
         elif not parent_module and not self._root_module and not self._core_module:
             self._root_module = module_type
-        elif parent_module == self._core_module and self._root_module:
+        elif (
+            self._root_module
+            and parent_module
+            and self._core_module
+            and parent_module == self._core_module
+        ):
             raise Exception(
                 f"EllarCoreModule can only have '{self._root_module}' as dependency"
             )
         return self
+
+    def add_module_dependency(
+        self,
+        parent_module: t.Type,
+        dependency: t.Type,
+    ) -> None:
+        data = self.get_module(parent_module)
+        if data is None:
+            raise ValueError(
+                f"Trying to add module dependency, Module {parent_module} does not exists."
+            )
+
+        data.dependencies.append(dependency)
 
     def update_module(
         self,
@@ -229,5 +241,5 @@ class ModuleTreeManager:
                 return result
         return None
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return str(self.modules)

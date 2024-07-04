@@ -2,11 +2,13 @@ import pytest
 from ellar.app import AppFactory
 from ellar.common import Module
 from ellar.common.constants import MODULE_WATERMARK
-from ellar.core import Config, ModuleBase, ModuleSetup
+from ellar.common.exceptions import ImproperConfiguration
 from ellar.core import LazyModuleImport as lazyLoad
-from ellar.di import EllarInjector
+from ellar.core import ModuleBase, ModuleSetup
+from ellar.di import ProviderConfig
 from ellar.reflect import reflect
 from ellar.testing import TestClient
+from ellar.utils import get_unique_type
 from jinja2 import Environment
 from starlette.routing import Host, Mount
 
@@ -32,32 +34,17 @@ class BModule:
 
 
 def test_factory__read_all_module():
-    modules_dict = AppFactory.read_all_module(ModuleSetup(BModule))
-    assert len(modules_dict) == 2
-    assert list(modules_dict.values())[0].module is AModule
-    assert list(modules_dict.values())[1].module is ApplicationModule
+    modules_tree_manager = AppFactory.read_all_module(ModuleSetup(BModule))
+    dependencies = modules_tree_manager.get_module_dependencies(BModule)
+    assert len(dependencies) == 1
+    assert dependencies[0].value.module == AModule
 
-    modules_list = AppFactory.get_all_modules(ModuleSetup(AModule))
-    assert len(modules_list) == 2
-    assert modules_list[0].module is AModule
-    assert modules_list[1].module is ApplicationModule
+    a_dependencies = modules_tree_manager.get_module_dependencies(AModule)
+    assert len(a_dependencies) == 1
+    assert a_dependencies[0].value.module is ApplicationModule
 
-    modules_dict = AppFactory.read_all_module(ModuleSetup(ApplicationModule))
-    assert len(modules_dict) == 0
-
-
-def test_factory__build_modules():
-    config = Config()
-    injector = EllarInjector()
-    assert len(injector.get_modules()) == 0
-
-    AppFactory._build_modules(app_module=BModule, config=config, injector=injector)
-    module_refs = injector.get_modules()
-    assert len(module_refs) == 3
-
-    modules = [AModule, ApplicationModule, BModule]
-    for k, _v in module_refs.items():
-        assert k in modules
+    c_dependencies = modules_tree_manager.get_module_dependencies(ApplicationModule)
+    assert len(c_dependencies) == 0
 
 
 def test_factory_create_from_app_module():
@@ -75,14 +62,14 @@ def test_factory_create_from_app_module():
 
 def test_factory_create_app_dynamically_creates_module():
     app = AppFactory.create_app()
-    first_module_ref = next(app.get_module_loaders())
+    first_module_ref = app.injector.tree_manager.get_root_module()
     module_instance = first_module_ref.get_module_instance()
     assert not isinstance(module_instance, ModuleBase)
     assert reflect.get_metadata(MODULE_WATERMARK, type(module_instance))
     assert "ellar.utils.DynamicType" in str(module_instance.__class__)
 
 
-def test_factory_create_app_works(tmpdir):
+async def test_factory_create_app_works(tmpdir, anyio_backend):
     create_tmp_template_and_static_dir(tmpdir)
 
     @Module()
@@ -108,10 +95,10 @@ def test_factory_create_app_works(tmpdir):
     res = client.get("/static/example.txt")
     assert res.status_code == 200
     assert res.text == "<file content>"
-
-    template = app.injector.get(Environment).get_template("example.html")
-    result = template.render()
-    assert result == "<html>Hello World<html/>"
+    async with app.application_context():
+        template = app.injector.get(Environment).get_template("example.html")
+        result = template.render()
+        assert result == "<html>Hello World<html/>"
 
 
 def test_invalid_config_module_raise_exception():
@@ -119,3 +106,14 @@ def test_invalid_config_module_raise_exception():
         AppFactory.create_app(config_module=set())
 
     assert str(ex.value) == "config_module should be a importable str or a dict object"
+
+
+def test_config_overrider_core_service_registration():
+    provider_type = get_unique_type()
+    with pytest.raises(
+        ImproperConfiguration,
+        match=f"There is not core service identify as {provider_type}",
+    ):
+        AppFactory.create_app(
+            config_module={"OVERRIDE_CORE_SERVICE": [ProviderConfig(provider_type)]}
+        )

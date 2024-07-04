@@ -100,7 +100,9 @@ def test_can_replace_exception_service():
         controllers=[ExampleController],
         providers=[
             ProviderConfig(
-                IExceptionMiddlewareService, use_class=NewExceptionMiddlewareService
+                IExceptionMiddlewareService,
+                use_class=NewExceptionMiddlewareService,
+                core=True,
             )
         ],
     )
