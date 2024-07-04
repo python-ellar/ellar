@@ -388,12 +388,6 @@ class App:
         """Sets up Jinja2 Environment and adds it to DI"""
         jinja_environment = self._create_jinja_environment()
 
-        # self.injector.module_info.ref.add_provider(
-        #     ProviderConfig(Environment, use_value=jinja_environment), export=True
-        # )
-        # self.injector.module_info.ref.add_provider(
-        #     ProviderConfig(JinjaEnvironment, use_value=jinja_environment), export=True
-        # )
         self.injector.tree_manager.get_root_module().add_provider(
             ProviderConfig(Environment, use_value=jinja_environment), export=True
         )

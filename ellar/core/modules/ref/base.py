@@ -53,18 +53,6 @@ class ModuleRefBase(ABC):
         self._exports: t.List[t.Type] = []
         self._providers: t.Dict[t.Type, t.Type] = {}
 
-        # if self.container.injector.parent:
-        #     parent_module = None
-        #     if self.container.injector.parent.module_info:
-        #         parent_module = self.container.injector.parent.module_info.module
-        #
-        #     self.container.injector.tree_manager.add_or_update(
-        #         module_type=self.module, value=self, parent_module=parent_module
-        #     )
-        #
-        # if not build_manually:
-        # self._init_module_build()
-
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} name={self.name} module={self.module}>"
 
@@ -202,14 +190,6 @@ class ModuleRefBase(ABC):
     def add_provider(
         self, provider: t.Union[t.Type, ProviderConfig, t.Any], export: bool = False
     ) -> None:
-        # existing = next(
-        #     self.container.injector.tree_manager.find_module(
-        #         lambda data: provider.get_type() in data.providers and data.value.module == self.module
-        #     )
-        # )
-        #
-        # self.container.injector.tree_manager.add_provider(self.module, provider_type)
-
         if not isinstance(provider, ProviderConfig):
             provider = ProviderConfig(provider, export=export)
 

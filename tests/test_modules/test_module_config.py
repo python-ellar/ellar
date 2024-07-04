@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import click
 import pytest
+from ellar.app import App
 from ellar.common import (
     Controller,
     ControllerBase,
@@ -248,13 +249,13 @@ def test_dynamic_module_setup_register_works(reflect_context):
 @pytest.mark.parametrize(
     "name, dependencies",
     [
-        # ("depends on nothing but has factory", []),
-        # ("depends only on config", [Config]),
+        ("depends on nothing but has factory", []),
+        ("depends only on config", [Config]),
         ("depends on other services", [Config, Reflector]),
-        # (
-        #     "depends on other services and Application instance",
-        #     [Config, Reflector, App],
-        # ),
+        (
+            "depends on other services and Application instance",
+            [Config, Reflector, App],
+        ),
     ],
 )
 def test_module_setup_with_factory_works(name, dependencies, reflect_context):

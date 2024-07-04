@@ -8,10 +8,10 @@ from ellar.utils import get_unique_type
 
 
 def test_root_module_assert_should_raise_exception():
-    ModuleTreeManager()
+    tree_manager = ModuleTreeManager()
 
     with pytest.raises(AssertionError):
-        pass
+        assert tree_manager.root_module
 
 
 def test_add_provider_fails_for_none_existing_module():
