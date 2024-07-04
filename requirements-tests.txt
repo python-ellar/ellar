@@ -4,7 +4,7 @@ argon2-cffi == 23.1.0
 autoflake
 email_validator >=1.1.1
 itsdangerous >=1.1.0,<3.0.0
-mypy == 1.10.0
+mypy == 1.10.1
 orjson >= 3.2.1
 pytest >= 6.2.4,< 9.0.0
 pytest-asyncio
