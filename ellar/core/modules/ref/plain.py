@@ -39,7 +39,7 @@ class ModulePlainRef(ModuleRefBase):
 
     def _validate_module_type(self) -> None:
         assert (
-            type(self.module) == ModuleBaseMeta
+            type(self.module) is ModuleBaseMeta
         ), f"Module Type must be a subclass of ModuleBase;\n Invalid Type[{self.module}]"
 
     def _register_module(self) -> None:
