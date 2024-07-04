@@ -139,6 +139,10 @@ class _PolicyHandlerWithRequirement(Policy, _OperandResolversMixin):
         self._policy_1 = policy_1
         self.requirement = requirement
 
+    @property
+    def policy_type(self) -> PolicyType:
+        return self._policy_1
+
     @t.no_type_check
     def __call__(
         self, *args: t.Any, **kwargs: t.Any

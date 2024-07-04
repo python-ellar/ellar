@@ -3,17 +3,20 @@ from pathlib import Path
 from uuid import uuid4
 
 from ellar.app import App, AppFactory
-from ellar.common import ControllerBase, Module, ModuleRouter
+from ellar.common import (
+    ControllerBase,
+    GuardCanActivate,
+    Module,
+    ModuleRouter,
+    constants,
+)
 from ellar.common.types import T
-from ellar.core import DynamicModule, ModuleBase, ModuleSetup
+from ellar.core import ModuleBase
 from ellar.core.routing import EllarMount
 from ellar.di import ProviderConfig
-from ellar.utils import get_name
+from ellar.reflect import reflect
 from starlette.routing import Host, Mount
 from starlette.testclient import TestClient as TestClient
-
-if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common import GuardCanActivate
 
 
 class TestingModule:
@@ -28,7 +31,6 @@ class TestingModule:
         self._testing_module = testing_module
         self._config_module = config_module
         self._global_guards = global_guards
-        self._providers: t.List[ProviderConfig] = []
         self._app: t.Optional[App] = None
 
     def override_provider(
@@ -37,26 +39,33 @@ class TestingModule:
         *,
         use_value: t.Optional[T] = None,
         use_class: t.Optional[t.Union[t.Type[T], t.Any]] = None,
+        core: bool = False,
+        export: bool = True,
     ) -> "TestingModule":
         """
         Overrides Service at module level.
         Use this function before creating an application instance.
         """
         provider_config = ProviderConfig(
-            base_type, use_class=use_class, use_value=use_value
+            base_type,
+            use_class=use_class,
+            use_value=use_value,
+            export=export,
+            core=core,
         )
-        self._providers.append(provider_config)
+        reflect.define_metadata(
+            constants.MODULE_METADATA.PROVIDERS, [provider_config], self._testing_module
+        )
         return self
 
     def create_application(self) -> App:
         if self._app:
             return self._app
 
-        self._app = AppFactory.create_app(
-            modules=[self._testing_module],
+        self._app = AppFactory.create_from_app_module(
+            module=self._testing_module,
             global_guards=self._global_guards,
             config_module=self._config_module,
-            providers=self._providers,
         )
 
         return self._app
@@ -101,7 +110,6 @@ class Test:
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
         config_module: t.Optional[t.Union[str, t.Dict]] = None,
-        modify_modules: bool = True,
     ) -> TESTING_MODULE:  # type: ignore[valid-type]
         """
         Create a TestingModule to test controllers and services in isolation
@@ -119,20 +127,28 @@ class Test:
         :return:
         """
 
-        if modify_modules:
-
-            def modifier_module(
-                _module: t.Union[t.Type, t.Any],
-            ) -> t.Union[t.Type, t.Any]:
-                return Module()(
-                    type(
-                        f"{get_name(_module)}Modified_{uuid4().hex[:6]}", (_module,), {}
-                    )
-                )
-
-            for module_ in modules:
-                if isinstance(module_, (ModuleSetup, DynamicModule)):
-                    module_.module = modifier_module(module_.module)
+        # if modify_modules:
+        #
+        #     def modifier_module(
+        #         _module: t.Union[t.Type, t.Any],
+        #     ) -> t.Union[t.Type, t.Any]:
+        #         return Module(
+        #             controllers=,
+        #             routers=,
+        #             providers=,
+        #             template_folder=,
+        #             base_directory=,
+        #             static_folder=,
+        #             modules=
+        #         )(
+        #             type(
+        #                 f"{get_name(_module)}Modified_{uuid4().hex[:6]}", (_module,), {}
+        #             )
+        #         )
+        #
+        #     for module_ in modules:
+        #         if isinstance(module_, (ModuleSetup, DynamicModule)):
+        #             module_.module = modifier_module(module_.module)
 
         module = Module(
             modules=modules,
@@ -147,4 +163,25 @@ class Test:
         module(testing_module)
         return cls.TESTING_MODULE(
             testing_module, global_guards=global_guards, config_module=config_module
+        )
+
+    @classmethod
+    def create_from_module(
+        cls,
+        module: t.Type[t.Union[ModuleBase, t.Any]],
+        global_guards: t.Optional[
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
+        ] = None,
+        config_module: t.Optional[t.Union[str, t.Dict]] = None,
+    ) -> TESTING_MODULE:  # type: ignore[valid-type]
+        """
+        Create a TestingModule from a specific module for isolation test
+        :param module: Root Module
+        :param config_module: Application Config
+        :param global_guards: Application Guard
+        if setup or register_setup is used to avoid module sharing metadata between tests
+        :return:
+        """
+        return cls.TESTING_MODULE(
+            module, global_guards=global_guards, config_module=config_module
         )

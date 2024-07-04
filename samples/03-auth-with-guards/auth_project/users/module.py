@@ -24,9 +24,7 @@ from ellar.core import ModuleBase
 from .services import UsersService
 
 
-@Module(
-    providers=[UsersService],
-)
+@Module(providers=[UsersService], exports=[UsersService])
 class UsersModule(ModuleBase):
     """
     Users Module

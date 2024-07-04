@@ -11,8 +11,8 @@ def test_create_model_field_works():
         model_field_class=ResponseModelField,
     )
     assert isinstance(response_model, ModelField)
-    assert response_model.type_ == dict
-    assert response_model.type_ == dict
+    assert response_model.type_ is dict
+    assert response_model.type_ is dict
 
 
 def test_create_model_field_fails():

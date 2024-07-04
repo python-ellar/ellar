@@ -1,6 +1,6 @@
 import typing as t
 
-from pydantic import GetJsonSchemaHandler
+from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema
 
@@ -41,3 +41,27 @@ def as_pydantic_validator(
         return klass
 
     return wrap
+
+
+class AllowTypeOfSource:
+    def __init__(self, schema: t.Optional[t.Dict[str, t.Any]] = None) -> None:
+        self._schema = schema
+
+    def __get_pydantic_core_schema__(
+        self,
+        source: t.Type[t.Any],
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        def validate(value: t.Any, *args: t.Any) -> t.Any:
+            if not isinstance(value, source):
+                raise ValueError(
+                    f"Expected an instance of {source}, got an instance of {type(value)}"
+                )
+            return value
+
+        return with_info_plain_validator_function(validate)
+
+    def __get_pydantic_json_schema__(
+        self, core_schema: CoreSchema, handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:  # pragma: no cover
+        return self._schema

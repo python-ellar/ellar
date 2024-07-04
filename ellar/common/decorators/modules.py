@@ -1,5 +1,6 @@
 import inspect
 import typing as t
+import uuid
 from pathlib import Path
 
 import click
@@ -10,6 +11,7 @@ from ellar.common.models import ControllerBase
 from ellar.common.operations import ModuleRouter
 from ellar.di import ProviderConfig, SingletonScope, injectable
 from ellar.reflect import reflect
+from ellar.utils import get_name
 from ellar.utils.importer import get_main_directory_by_stack
 from starlette.routing import Host, Mount
 
@@ -32,6 +34,9 @@ def _wrapper(
     if not kwargs.base_directory:
         kwargs.update(base_directory=Path(inspect.getfile(target)).resolve().parent)
 
+    if not kwargs.name:
+        kwargs.name = f"{get_name(target)}{uuid.uuid4().hex[:10]}"
+
     reflect.define_metadata(watermark_key, True, target)
     for key in metadata_keys:
         reflect.define_metadata(key, kwargs[key], target)
@@ -45,6 +50,7 @@ def Module(
     controllers: t.Sequence[t.Union[t.Type[ControllerBase], t.Type]] = (),
     routers: t.Sequence[t.Union[ModuleRouter, Mount, Host]] = (),
     providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = (),
+    exports: t.Sequence[t.Union[t.Type]] = (),
     template_folder: t.Optional[str] = "templates",
     base_directory: t.Optional[t.Union[Path, str]] = None,
     static_folder: str = "static",
@@ -63,6 +69,8 @@ def Module(
     :param routers: List of Module [ModuleRouters, Host, Mount, Router]
 
     :param providers: List of Module Services or `ProviderConfig`
+
+    :param exports: List of Module Providers that are exposed to the other modules
 
     :param template_folder: Module template folder name
 
@@ -84,6 +92,7 @@ def Module(
         static_folder=static_folder,
         routers=list(routers),
         providers=list(providers),
+        exports=list(exports),
         template_folder=template_folder,
         modules=list(modules),
         commands=list(commands),

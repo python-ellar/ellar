@@ -3,6 +3,8 @@ import typing as t
 from ellar.common.constants import LOG_LEVELS as log_levels
 from ellar.common.interfaces import IAPIVersioning, IEllarMiddleware, IExceptionHandler
 from ellar.common.templating import JinjaLoaderType
+from ellar.di import ProviderConfig
+from ellar.di.injector.tree_manager import ModuleTreeManager
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp
 
@@ -15,7 +17,10 @@ __all__ = [
 
 
 class ConfigDefaultTypesMixin:
+    OVERRIDE_CORE_SERVICE: t.List[ProviderConfig]
+
     SECRET_KEY: str
+
     DEBUG: bool
     # injector auto_bind = True allows you to resolve types that are not registered on the container
     # For more info, read: https://injector.readthedocs.io/en/latest/index.html
@@ -23,6 +28,8 @@ class ConfigDefaultTypesMixin:
 
     # Default JSON response class
     DEFAULT_JSON_CLASS: t.Type[JSONResponse]
+
+    MODULE_TREE_MANAGER_CLASS: t.Type[ModuleTreeManager]
 
     # jinja Environment options
     # https://jinja.palletsprojects.com/en/3.0.x/api/#high-level-api

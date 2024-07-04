@@ -12,10 +12,13 @@ from ellar.common.serializer import Serializer, SerializerFilter
 from ellar.common.templating import JinjaLoaderType
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
 from ellar.core.conf.mixins import ConfigDefaultTypesMixin
+from ellar.di import ProviderConfig
+from ellar.di.injector.tree_manager import ModuleTreeManager
 from ellar.pydantic import ENCODERS_BY_TYPE as encoders_by_type
-from ellar.pydantic import field_validator
+from ellar.pydantic import AllowTypeOfSource, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.websockets import WebSocketClose
+from typing_extensions import Annotated
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.app.main import App
@@ -51,9 +54,13 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
 
     model_config = {"validate_assignment": True, "from_attributes": True}
 
+    OVERRIDE_CORE_SERVICE: t.List[Annotated[ProviderConfig, AllowTypeOfSource()]] = []
+
     DEBUG: bool = False
 
     DEFAULT_JSON_CLASS: t.Type[JSONResponse] = JSONResponse
+
+    MODULE_TREE_MANAGER_CLASS: t.Type[ModuleTreeManager] = ModuleTreeManager
 
     SECRET_KEY: str = "your-secret-key"
 

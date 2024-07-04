@@ -6,7 +6,13 @@ from .context import ApplicationContext, config, current_injector
 from .execution_context import ExecutionContext, HostContext
 from .guards import GuardConsumer
 from .interceptors import EllarInterceptorConsumer
-from .modules import DynamicModule, LazyModuleImport, ModuleBase, ModuleSetup
+from .modules import (
+    DynamicModule,
+    ForwardRefModule,
+    LazyModuleImport,
+    ModuleBase,
+    ModuleSetup,
+)
 from .services import Reflector, reflector
 from .shortcuts import host, mount
 from .versioning import VersioningSchemes
@@ -33,6 +39,7 @@ __all__ = [
     "current_injector",
     "config",
     "ApplicationContext",
+    "ForwardRefModule",
 ]
 
 

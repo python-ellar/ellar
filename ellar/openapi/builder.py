@@ -16,7 +16,6 @@ from ellar.pydantic import (
 from ellar.pydantic import (
     types as pydantic_types,
 )
-from starlette.routing import BaseRoute, Mount
 
 from .openapi_v3 import APIKeyIn, OpenAPI
 from .route_doc_models import (
@@ -127,9 +126,9 @@ class DocumentOpenAPIFactory:
             separate_input_output_schemas=True,
         )
 
-        mounts: t.List[t.Union[BaseRoute, EllarMount, Mount]] = []
-        for _, item in app.injector.get_templating_modules().items():
-            mounts.extend(item.routers)
+        # mounts: t.List[t.Union[BaseRoute, EllarMount, Mount]] = []
+        # for _, item in app.injector.get_templating_modules().items():
+        #     mounts.extend(item.routers)
 
         for route in openapi_route_models:
             security_schemes: t.Dict[str, t.Any] = {}

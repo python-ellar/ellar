@@ -10,6 +10,7 @@ SCOPED_CONTEXT_VAR: contextvars.ContextVar[Optional[RequestScopeContext]] = (
     contextvars.ContextVar("SCOPED-CONTEXT-VAR")
 )
 SCOPED_CONTEXT_VAR.set(None)
+INJECTABLE_WATERMARK = "INJECTABLE_WATERMARK"
 
 
 class Tag(str):

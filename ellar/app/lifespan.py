@@ -29,12 +29,12 @@ class EllarApplicationLifespan:
         )
 
     def _get_startup_modules(self, app: "App") -> t.Iterator[IApplicationStartup]:
-        for module in app.injector.get_modules():
+        for module, _ in app.injector.tree_manager.modules.items():
             if issubclass(module, IApplicationStartup):
                 yield app.injector.get(module)
 
     def _get_shutdown_modules(self, app: "App") -> t.Iterator[IApplicationShutdown]:
-        for module in app.injector.get_modules():
+        for module, _ in app.injector.tree_manager.modules.items():
             if issubclass(module, IApplicationShutdown):
                 yield app.injector.get(module)
 
@@ -43,7 +43,7 @@ class EllarApplicationLifespan:
             for module in self._get_startup_modules(app):
                 await module.on_startup(app)
         except Exception as ex:  # pragma: no cover
-            logger.error(ex.exceptions)  # type:ignore[attr-defined]
+            logger.exception(ex.exceptions if hasattr(ex, "exceptions") else ex)
             raise ex
 
     async def run_all_shutdown_actions(self, app: "App") -> None:
@@ -51,7 +51,7 @@ class EllarApplicationLifespan:
             for module in self._get_shutdown_modules(app):
                 await module.on_shutdown()
         except Exception as ex:  # pragma: no cover
-            logger.error(ex.exceptions)  # type:ignore[attr-defined]
+            logger.exception(ex.exceptions if hasattr(ex, "exceptions") else ex)
             raise ex
 
     @asynccontextmanager

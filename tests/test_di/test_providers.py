@@ -8,7 +8,11 @@ from ellar.di import (
 )
 from ellar.di.providers import ClassProvider, ModuleProvider
 from ellar.di.scopes import SingletonScope, TransientScope
-from injector import CircularDependency, is_decorated_with_inject
+from injector import (
+    CircularDependency,
+    UnsatisfiedRequirement,
+    is_decorated_with_inject,
+)
 
 from .examples import (
     AnyDBContext,
@@ -94,12 +98,11 @@ def test_provider_advance_use_case():
     assert isinstance(db_context, AnyDBContext)
     assert repository.context == db_context  # service registered as singleton
 
-    assert isinstance(
-        injector.get(FooDBCatsRepository), FooDBCatsRepository
-    )  # only possible because they are decorated with injectable
-    assert isinstance(
-        injector.get(AnyDBContext), AnyDBContext
-    )  # only possible because they are decorated with injectable
+    with pytest.raises(UnsatisfiedRequirement):
+        injector.get(FooDBCatsRepository)
+
+    with pytest.raises(UnsatisfiedRequirement):
+        injector.get(AnyDBContext)
 
 
 def test_module_provider_works():

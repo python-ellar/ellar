@@ -1,9 +1,10 @@
+from datetime import timedelta
 from unittest.mock import Mock
 
 from ellar.common import Identity
 from ellar.di import ProviderConfig
 from ellar.testing import Test
-from ellar_jwt import JWTService
+from ellar_jwt import JWTModule, JWTService
 
 from ..controllers import AuthController
 from ..module import AuthModule
@@ -48,7 +49,15 @@ class TestAuthController:
 
 class TestAuthControllerE2E:
     def setup_method(self):
-        self.test_module = Test.create_test_module(modules=[AuthModule])
+        self.test_module = Test.create_test_module(
+            modules=[
+                AuthModule,
+                JWTModule.setup(
+                    signing_secret_key="my_poor_secret_key_lol",
+                    lifetime=timedelta(minutes=5),
+                ),
+            ]
+        )
         jwt_service: JWTService = self.test_module.get(JWTService)
         self.token = jwt_service.sign({"username": "john", "id": 23, "sub": "john"})
 

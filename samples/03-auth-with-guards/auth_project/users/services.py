@@ -35,6 +35,9 @@ class UsersService:
 
     async def get_user_by_username(self, username: str) -> t.Optional[UserModel]:
         filtered_list = filter(lambda item: item["username"] == username, self.users)
-        found_user = next(filtered_list)
-        if found_user:
-            return UserModel(**found_user)
+        try:
+            found_user = next(filtered_list)
+            if found_user:
+                return UserModel(**found_user)
+        except StopIteration:
+            return None

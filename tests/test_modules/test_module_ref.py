@@ -16,15 +16,20 @@ from ellar.common.constants import (
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
-from ellar.core import Config, ModuleBase
+from ellar.core import Config, ModuleBase, ModuleSetup
 from ellar.core.modules.ref import (
     InvalidModuleTypeException,
     ModulePlainRef,
-    ModuleProvider,
     ModuleTemplateRef,
     create_module_ref_factor,
 )
-from ellar.di import EllarInjector, TransientScope, injectable
+from ellar.di import (
+    EllarInjector,
+    ModuleTreeManager,
+    TransientScope,
+    injectable,
+)
+from ellar.di.providers import ModuleProvider
 from ellar.reflect import reflect
 from ellar.testing import Test
 from ellar.utils import get_name
@@ -35,7 +40,7 @@ from .sample import AnotherUserService, ModuleBaseExample, SampleController, Use
 
 
 @injectable(scope=TransientScope)
-@Module()
+@Module(name="ModuleProviderTest")
 class ModuleProviderTest(ModuleBase):
     def __init__(self, a: ModuleBaseExample, c: str = "C", d: float = 12.3):
         self.a = a
@@ -85,17 +90,29 @@ def test_module_init_kwargs_build_correctly():
 
 
 def test_module_ref_registers_module_type():
-    config = Config()
-    container = EllarInjector(auto_bind=False).container
+    tm = Test.create_test_module(modules=[ModuleBaseExample, ModuleProviderTest])
+    app = tm.create_application()
 
-    create_module_ref_factor(ModuleBaseExample, config=config, container=container)
-    create_module_ref_factor(ModuleProviderTest, config=config, container=container)
+    instance = tm.get(ModuleBaseExample)
+    instance2 = tm.get(ModuleProviderTest)
 
-    instance = container.injector.get(ModuleBaseExample)
-    instance2 = container.injector.get(ModuleProviderTest)
+    container1 = next(
+        app.injector.tree_manager.find_module(
+            lambda data: data.name == "ModuleBaseExample"
+        )
+    )
+    container2 = next(
+        app.injector.tree_manager.find_module(
+            lambda data: data.name == "ModuleProviderTest"
+        )
+    )
 
-    module_provider_module_base_example = container.get_binding(ModuleBaseExample)
-    module_provider_module_provider_test = container.get_binding(ModuleProviderTest)
+    module_provider_module_base_example = container1.value.container.get_binding(
+        ModuleBaseExample
+    )
+    module_provider_module_provider_test = container2.value.container.get_binding(
+        ModuleProviderTest
+    )
 
     assert isinstance(module_provider_module_base_example[0].provider, ModuleProvider)
     assert isinstance(module_provider_module_provider_test[0].provider, ModuleProvider)
@@ -103,7 +120,7 @@ def test_module_ref_registers_module_type():
     assert isinstance(instance, ModuleBaseExample)
     assert instance2.a is instance
     assert isinstance(instance2, ModuleProviderTest)
-    assert instance2 is not container.injector.get(ModuleProviderTest)
+    assert instance2 is not app.injector.get(ModuleProviderTest)
 
 
 def test_module_template_ref_template_filters():
@@ -120,13 +137,20 @@ def test_module_template_ref_template_filters():
     config = Config(**{TEMPLATE_GLOBAL_KEY: {}})
     container = EllarInjector(auto_bind=False).container
 
+    module_setup = ModuleSetup(ModuleTemplateExample)
+    container.register(
+        ModuleTreeManager,
+        ModuleTreeManager().add_module(ModuleTemplateExample, module_setup),
+    )
+
     template_filter_functions = config[TEMPLATE_FILTER_KEY]
     template_global_filter_functions = config[TEMPLATE_GLOBAL_KEY]
 
     assert "some_template_global" not in template_global_filter_functions
     assert "some_template_filter" not in template_filter_functions
 
-    create_module_ref_factor(ModuleTemplateExample, config=config, container=container)
+    module_setup.get_module_ref(config=config, container=container)
+
     template_filter_functions = config[TEMPLATE_FILTER_KEY]
     template_global_filter_functions = config[TEMPLATE_GLOBAL_KEY]
 
@@ -148,9 +172,14 @@ def test_module_template_ref_scan_exceptions_handlers():
     container = EllarInjector(auto_bind=False).container
     assert 404 not in config[EXCEPTION_HANDLERS_KEY]
 
-    create_module_ref_factor(
-        ModuleExceptionHandlerSample, config=config, container=container
+    module_setup = ModuleSetup(ModuleExceptionHandlerSample)
+    container.register(
+        ModuleTreeManager,
+        ModuleTreeManager().add_module(ModuleExceptionHandlerSample, module_setup),
     )
+
+    module_setup.get_module_ref(config=config, container=container)
+
     exception_handlers = config[EXCEPTION_HANDLERS_KEY]
 
     assert isinstance(exception_handlers, list)
@@ -170,9 +199,14 @@ def test_module_template_ref_scan_middle_ware():
     container = EllarInjector(auto_bind=False).container
     assert len(config[MIDDLEWARE_HANDLERS_KEY]) == 0
 
-    create_module_ref_factor(
-        ModuleMiddlewareExample, config=config, container=container
+    module_setup = ModuleSetup(ModuleMiddlewareExample)
+    container.register(
+        ModuleTreeManager,
+        ModuleTreeManager().add_module(ModuleMiddlewareExample, module_setup),
     )
+
+    module_setup.get_module_ref(config=config, container=container)
+
     config_middleware = config[MIDDLEWARE_HANDLERS_KEY]
 
     assert isinstance(config_middleware, list)
@@ -183,6 +217,12 @@ def test_module_template_ref_get_all_routers():
     some_invalid_router = type("SomeInvalidRouter", (), {})
     config = Config()
     container = EllarInjector(auto_bind=False).container
+
+    module_setup = ModuleSetup(ModuleBaseExample)
+    container.register(
+        ModuleTreeManager,
+        ModuleTreeManager().add_module(ModuleBaseExample, module_setup),
+    )
     with reflect.context():
         reflect.define_metadata(
             MODULE_METADATA.ROUTERS,
@@ -193,10 +233,10 @@ def test_module_template_ref_get_all_routers():
             ],
             ModuleBaseExample,
         )
-        module_ref = create_module_ref_factor(
-            ModuleBaseExample, config=config, container=container
-        )
-    assert len(module_ref.routers) == 5
+        module_ref = module_setup.get_module_ref(config=config, container=container)
+        module_ref.build_dependencies()
+
+    assert len(module_ref.get_routes()) == 5
 
 
 def test_module_template_ref_get_all_routers_fails_for_invalid_controller(caplog):
@@ -208,10 +248,15 @@ def test_module_template_ref_get_all_routers_fails_for_invalid_controller(caplog
         config = Config()
         container = EllarInjector(auto_bind=False).container
 
+        module_setup = ModuleSetup(ModuleBaseExample)
+        container.register(
+            ModuleTreeManager,
+            ModuleTreeManager().add_module(ModuleBaseExample, module_setup),
+        )
+
         with caplog.at_level(logging.WARNING):
-            create_module_ref_factor(
-                ModuleBaseExample, config=config, container=container
-            )
+            module_ref = module_setup.get_module_ref(config=config, container=container)
+            module_ref.build_dependencies()
 
         assert (
             "Router Factory Builder was not found.\nUse `ControllerRouterBuilderFactory` "
@@ -248,19 +293,23 @@ def test_module_template_ref_routes_returns_valid_routes():
     config = Config()
     container = EllarInjector(auto_bind=False).container
     with reflect.context():
+        module_setup = ModuleSetup(ModuleBaseExample)
+        container.register(
+            ModuleTreeManager,
+            ModuleTreeManager().add_module(ModuleBaseExample, module_setup),
+        )
+
         reflect.define_metadata(
             MODULE_METADATA.ROUTERS,
             [some_invalid_router(), Route("/", endpoint=lambda request: "Test")],
             ModuleBaseExample,
         )
-        module_ref = create_module_ref_factor(
-            ModuleBaseExample, config=config, container=container
-        )
+        module_ref = module_setup.get_module_ref(config=config, container=container)
 
         app = AppFactory.create_from_app_module(
             module=ModuleBaseExample, config_module={"STATIC_MOUNT_PATH": None}
         )
-    assert len(module_ref.routers) == 4
+    assert len(module_ref.get_routes()) == 4
     assert len(module_ref.routes) == 4
     assert len(app.routes) == 3
 
@@ -268,12 +317,15 @@ def test_module_template_ref_routes_returns_valid_routes():
 def test_module_template_ref_routes():
     config = Config()
     container = EllarInjector(auto_bind=False).container
-
-    module_ref = create_module_ref_factor(
-        ModuleBaseExample, config=config, container=container
+    module_setup = ModuleSetup(ModuleBaseExample)
+    container.register(
+        ModuleTreeManager,
+        ModuleTreeManager().add_module(ModuleBaseExample, module_setup),
     )
-    assert len(module_ref.routers) == 2
-    counts = sum(len(item.routes) for item in module_ref.routers)
+
+    module_ref = module_setup.get_module_ref(config=config, container=container)
+    assert len(module_ref.get_routes()) == 2
+    counts = sum(len(item.routes) for item in module_ref.get_routes())
     assert counts == 4
 
 
@@ -290,14 +342,18 @@ def test_module_template_registers_providers_and_controllers():
     with pytest.raises(UnsatisfiedRequirement):
         container.injector.get(SampleController)
 
-    module_ref = create_module_ref_factor(
-        ModuleBaseExample, config=config, container=container
+    module_setup = ModuleSetup(ModuleBaseExample)
+    container.register(
+        ModuleTreeManager,
+        ModuleTreeManager().add_module(ModuleBaseExample, module_setup),
     )
+    module_ref = module_setup.get_module_ref(config=config, container=container)
+    module_ref.build_dependencies()
     module_ref.run_module_register_services()
 
-    assert isinstance(container.injector.get(UserService), UserService)
-    assert isinstance(container.injector.get(AnotherUserService), AnotherUserService)
-    assert isinstance(container.injector.get(SampleController), SampleController)
+    assert isinstance(module_ref.get(UserService), UserService)
+    assert isinstance(module_ref.get(AnotherUserService), AnotherUserService)
+    assert isinstance(module_ref.get(SampleController), SampleController)
 
 
 def test_run_application_ready_works():

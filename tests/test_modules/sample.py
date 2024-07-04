@@ -72,6 +72,7 @@ def post_mr():
         UserService,
         ProviderConfig(AnotherUserService, use_value=AnotherUserService()),
     ),
+    name="ModuleBaseExample",
 )
 class ModuleBaseExample(ModuleBase):
     pass
