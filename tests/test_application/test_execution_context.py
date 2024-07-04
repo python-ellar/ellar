@@ -83,7 +83,7 @@ class NewExceptionMiddlewareService(ExceptionMiddlewareService):
 
 def test_can_replace_host_context():
     tm = Test.create_test_module(controllers=[ExampleController]).override_provider(
-        IHostContextFactory, use_class=NewHostContextFactory
+        IHostContextFactory, use_class=NewHostContextFactory, core=True
     )
 
     assert hasattr(NewHostContext, "worked") is False
@@ -127,7 +127,7 @@ def test_can_replace_exception_service():
 
 def test_can_replace_execution_context():
     tm = Test.create_test_module(controllers=[ExampleController]).override_provider(
-        IExecutionContextFactory, use_class=NewExecutionHostFactory
+        IExecutionContextFactory, use_class=NewExecutionHostFactory, core=True
     )
 
     assert hasattr(NewExecutionContext, "worked") is False

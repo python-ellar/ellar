@@ -127,6 +127,7 @@ class App:
         self, *guards: t.Union["GuardCanActivate", t.Type["GuardCanActivate"]]
     ) -> None:
         self._global_guards.extend(guards)
+        self._ensure_available_in_providers(*guards)
 
     def use_global_interceptors(
         self, *interceptors: t.Union[EllarInterceptor, t.Type[EllarInterceptor]]
@@ -332,6 +333,9 @@ class App:
     ) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         try:
             guard = self.injector.get(GlobalGuard)
+            if guard.__class__.__name__ == "GlobalCanActivatePlaceHolder":
+                return []
+
             return [guard]
         except Exception:
             return []

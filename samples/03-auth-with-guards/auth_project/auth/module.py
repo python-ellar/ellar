@@ -18,11 +18,9 @@ class MyModule(ModuleBase):
 
 """
 
-from datetime import timedelta
-
 from ellar.common import GlobalGuard, Module
+from ellar.core import ForwardRefModule, ModuleBase
 from ellar.core import LazyModuleImport as lazyLoad
-from ellar.core import ModuleBase
 from ellar.di import ProviderConfig
 from ellar_jwt import JWTModule
 
@@ -34,14 +32,12 @@ from .services import AuthService
 @Module(
     modules=[
         lazyLoad("auth_project.users.module:UsersModule"),
-        JWTModule.setup(
-            signing_secret_key="my_poor_secret_key_lol", lifetime=timedelta(minutes=5)
-        ),
+        ForwardRefModule(JWTModule),
     ],
     controllers=[AuthController],
     providers=[
         AuthService,
-        ProviderConfig(GlobalGuard, use_class=AuthGuard, export=True),
+        ProviderConfig(GlobalGuard, use_class=AuthGuard, core=True),
     ],
 )
 class AuthModule(ModuleBase):

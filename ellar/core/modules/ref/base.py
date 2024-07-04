@@ -12,7 +12,6 @@ from ellar.common.constants import (
     MODULE_WATERMARK,
     ROUTE_INTERCEPTORS,
 )
-from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.conf import Config
 from ellar.core.context import ApplicationContext
 from ellar.core.modules.base import ModuleBase
@@ -144,12 +143,9 @@ class ModuleRefBase(ABC):
             if step != -1 and idx + 1 > step:
                 break
 
-            ref = module_config
+            ref = module_config.value
             if not isinstance(module_config.value, ModuleRefBase):
-                ref = module_config.value.build(self.container.injector, self.config)
-
-            if not isinstance(ref, ModuleRefBase):  # pragma: no cover
-                raise ImproperConfiguration(f"Expected 'ModuleRefBase' but got '{ref}'")
+                ref = module_config.value.get_module_ref(self.config, self.container)
 
             ref.build_dependencies(step - 1 if step != -1 else step)
 
@@ -202,8 +198,8 @@ class ModuleRefBase(ABC):
             self._providers.update({provider_type: provider_type})
             provider.register(self.container)
 
-        if provider.export or export:
-            self.add_exports(provider_type)
+            if provider.export or export:
+                self.add_exports(provider_type)
 
     def _build_module_parameters(self) -> None:
         from ellar.core.modules.config import ForwardRefModule

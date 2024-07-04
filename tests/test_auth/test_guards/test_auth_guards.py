@@ -287,7 +287,7 @@ def test_global_guard_case_1_works():
 
 def test_global_guard_case_2_works():
     _app = AppFactory.create_app(
-        providers=[ProviderConfig(GlobalGuard, use_class=DigestAuth)]
+        providers=[ProviderConfig(GlobalGuard, use_class=DigestAuth, core=True)]
     )
 
     @get("/global")
@@ -326,7 +326,7 @@ def test_if_an_auth_guard_return_converts_to_identity(
     input_type, is_authenticated, expect_result
 ):
     _app = AppFactory.create_app(
-        providers=[ProviderConfig(GlobalGuard, use_class=DigestAuth)]
+        providers=[ProviderConfig(GlobalGuard, use_class=DigestAuth, core=True)]
     )
 
     @get("/global")

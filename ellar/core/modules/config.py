@@ -97,8 +97,8 @@ class ModuleSetup:
             return DynamicModule(cls, providers=[], controllers=[], routers=[])
 
 
-    def module_a_configuration_factory(module: Type[MyModule], config: Config, foo: Foo):
-        return module.setup(param1=config.param1, param2=config.param2, foo=foo.foo)
+    def module_a_configuration_factory(module_ref: ModuleRefBase, config: Config, foo: Foo):
+        return module_ref.module.setup(param1=config.param1, param2=config.param2, foo=foo.foo)
 
 
     @Module(modules=[ModuleSetup(MyModule, inject=[Config, Foo], factory=module_a_configuration_factory), ])
@@ -162,39 +162,28 @@ class ModuleSetup:
     def is_ready(self) -> bool:
         raise Exception(f"{self.module} is not ready")
 
-    # @property
-    # def has_factory_function(self) -> bool:
-    #     if self.factory is not None:
-    #         # if we have a factory function, we need to check if the services to inject is just config
-    #         # if so, then we can go ahead and have the configuration executed since at this level,
-    #         # the config service is available to be injected.
-    #         inject_size = len(self.inject)
-    #         if inject_size == 0:
-    #             return False
-    #
-    #         if inject_size == 1 and self.inject[0] == Config:
-    #             return False
-    #         return True
-
-    def get_module_ref(
-        self, config: "Config", container: Container
-    ) -> t.Union["ModuleRefBase", "ModuleSetup"]:
-        # if self.has_factory_function or self.ref_type == MODULE_REF_TYPES.APP_DEPENDENT:
-        #     return self
-
+    def get_module_ref(self, config: "Config", container: Container) -> ModuleRefBase:
         if self.factory is not None:
-            ref = self.configure_with_factory(config, container)
+            ref = self._configure_with_factory(config, container)
         else:
             ref = create_module_ref_factor(
                 self.module, config, container, **self.init_kwargs
             )
 
+        assert isinstance(
+            ref, ModuleRefBase
+        ), f"{ref.module} is not properly configured."
+
         ref.initiate_module_build()
         return ref
 
-    def configure_with_factory(
+    def _configure_with_factory(
         self, config: "Config", container: Container
     ) -> "ModuleRefBase":
+        if self.ref_type == MODULE_REF_TYPES.APP_DEPENDENT:
+            app = fail_silently(container.injector.get, interface="App")
+            assert app, "Application is not ready"
+
         services = self._get_services(container.injector)
         init_kwargs = dict(self.init_kwargs)
 
@@ -226,32 +215,12 @@ class ModuleSetup:
             res.append(injector.get(service))
         return res
 
-    def build(
-        self,
-        injector: EllarInjector,
-        config: "Config",
-    ) -> "ModuleRefBase":
-        # routes = []
-
-        if self.ref_type == MODULE_REF_TYPES.APP_DEPENDENT:
-            app = fail_silently(injector.get, interface="App")
-            assert app, "Application is not ready"
-
-        ref = self.get_module_ref(container=injector.container, config=config)
-        assert isinstance(
-            ref, ModuleRefBase
-        ), f"{ref.module} is not properly configured."
-
-        # ref.initiate_module_build()
-        # ref.build_modules(ref_type)
-        return ref
-
     def build_and_get_routes(
         self,
         injector: EllarInjector,
         config: "Config",
     ) -> t.List[BaseRoute]:
-        ref = self.build(injector, config)
+        ref = self.get_module_ref(config, injector.container)
         ref.build_dependencies()
 
         return ref.get_routes()
@@ -319,7 +288,7 @@ class ForwardRefModule(_ModuleValidateBase):
                 )
             except Exception as ex:
                 raise ImproperConfiguration(
-                    f'Unable to import "{self.module}" registered in "{parent_module_ref.module}"'
+                    f"Unable to import '{self.module}' registered in '{parent_module_ref.module}'"
                 ) from ex
         else:
             module_cls = t.cast(t.Type["ModuleBase"], self.module)
@@ -328,8 +297,9 @@ class ForwardRefModule(_ModuleValidateBase):
 
         if not node:
             raise ImproperConfiguration(
-                f"ForwardRefModule module='{self.module_name}' "
-                f"defined in {parent_module_ref.module} could not be found."
+                f"ForwardRefModule module='{self.module}' "
+                f"defined in {parent_module_ref.module} could not be found.\n"
+                f"Please kindly ensure a {self.module} is decorated with @Module() is registered"
             )
 
         return node.value.module

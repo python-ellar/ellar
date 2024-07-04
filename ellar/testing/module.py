@@ -39,13 +39,19 @@ class TestingModule:
         *,
         use_value: t.Optional[T] = None,
         use_class: t.Optional[t.Union[t.Type[T], t.Any]] = None,
+        core: bool = False,
+        export: bool = True,
     ) -> "TestingModule":
         """
         Overrides Service at module level.
         Use this function before creating an application instance.
         """
         provider_config = ProviderConfig(
-            base_type, use_class=use_class, use_value=use_value, export=True
+            base_type,
+            use_class=use_class,
+            use_value=use_value,
+            export=export,
+            core=core,
         )
         reflect.define_metadata(
             constants.MODULE_METADATA.PROVIDERS, [provider_config], self._testing_module
