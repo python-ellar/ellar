@@ -18,4 +18,4 @@ types-redis ==4.6.0.20240425
 # types
 types-ujson ==5.10.0.20240515
 ujson >= 4.0.1
-uvicorn[standard] == 0.30.1
+uvicorn[standard] == 0.30.4
