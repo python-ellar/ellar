@@ -2,8 +2,8 @@ import typing as t
 from pathlib import Path
 
 from ellar.common.constants import (
-    EXCEPTION_HANDLERS_KEY,
-    MIDDLEWARE_HANDLERS_KEY,
+    APP_EXCEPTION_HANDLERS_KEY,
+    APP_MIDDLEWARE_HANDLERS_KEY,
     MODULE_METADATA,
     MODULE_WATERMARK,
     TEMPLATE_FILTER_KEY,
@@ -70,8 +70,6 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         super().initiate_module_build()
 
         if isinstance(self.module, type) and issubclass(self.module, ModuleBase):
-            self.module.build_module_actions()
-
             self.scan_templating_filters()
             self.scan_exceptions_handlers()
 
@@ -94,19 +92,36 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
         )
 
     def scan_templating_filters(self) -> None:
-        templating_filter = self.module.MODULE_FIELDS.get(TEMPLATE_FILTER_KEY, {})
-        self.config.setdefault(TEMPLATE_FILTER_KEY, {}).update(templating_filter)
+        templating_filter = reflect.get_metadata(TEMPLATE_FILTER_KEY, self.module) or {}
+        if templating_filter:
+            self.config.TEMPLATE_FILTERS = {
+                **self.config.TEMPLATE_FILTERS,
+                **templating_filter,
+            }
 
-        templating_global_filter = self.module.MODULE_FIELDS.get(
-            TEMPLATE_GLOBAL_KEY, {}
+        templating_global_filter = (
+            reflect.get_metadata(TEMPLATE_GLOBAL_KEY, self.module) or {}
         )
-        self.config.setdefault(TEMPLATE_GLOBAL_KEY, {}).update(templating_global_filter)
+        if templating_global_filter:
+            self.config.TEMPLATE_GLOBAL_FILTERS = {
+                **self.config.TEMPLATE_GLOBAL_FILTERS,
+                **templating_global_filter,
+            }
 
     def scan_exceptions_handlers(self) -> None:
-        exception_handlers = self.module.MODULE_FIELDS.get(EXCEPTION_HANDLERS_KEY, [])
+        app_exceptions = list(
+            reflect.get_metadata(APP_EXCEPTION_HANDLERS_KEY, self.module) or []
+        )
 
-        self.config.setdefault(EXCEPTION_HANDLERS_KEY, []).extend(exception_handlers)
+        if app_exceptions:
+            self.config.EXCEPTION_HANDLERS = (
+                list(self.config.EXCEPTION_HANDLERS) + app_exceptions
+            )
 
     def scan_middleware(self) -> None:
-        middleware = self.module.MODULE_FIELDS.get(MIDDLEWARE_HANDLERS_KEY, [])
-        self.config.setdefault(MIDDLEWARE_HANDLERS_KEY, []).extend(middleware)
+        app_middleware = list(
+            reflect.get_metadata(APP_MIDDLEWARE_HANDLERS_KEY, self.module) or []
+        )
+
+        if app_middleware:
+            self.config.MIDDLEWARE = list(self.config.MIDDLEWARE) + app_middleware

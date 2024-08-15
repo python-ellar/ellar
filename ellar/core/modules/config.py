@@ -46,6 +46,7 @@ class DynamicModule:
     commands: t.Sequence[t.Union[click.Command, click.Group, t.Any]] = (
         dataclasses.field(default_factory=lambda: ())
     )
+
     exports: t.List[t.Union[t.Type, t.Any]] = dataclasses.field(
         default_factory=lambda: []
     )
@@ -269,7 +270,7 @@ class ForwardRefModule(_ModuleValidateBase):
             tree_manager.find_module(lambda data: data.name == self.module_name)
         )
 
-        if not node:
+        if node is None:
             raise ImproperConfiguration(
                 f"ForwardRefModule module_name='{self.module_name}' "
                 f"defined in {parent_module_ref.module} could not be found.\n"
@@ -295,7 +296,7 @@ class ForwardRefModule(_ModuleValidateBase):
 
         node = tree_manager.get_module(module_cls)
 
-        if not node:
+        if node is None:
             raise ImproperConfiguration(
                 f"ForwardRefModule module='{self.module}' "
                 f"defined in {parent_module_ref.module} could not be found.\n"

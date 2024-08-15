@@ -32,7 +32,7 @@ def create_module_ref_factor(
             **init_kwargs,
         )
         return module_ref
-    elif type(module_type) == ModuleBaseMeta:
+    elif type(module_type) is ModuleBaseMeta:
         assert (
             container is not None
         ), "ModulePlainRef class can't take a nullable 'container'"

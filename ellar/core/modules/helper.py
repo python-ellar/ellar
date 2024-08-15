@@ -6,8 +6,7 @@ from ellar.core import current_injector
 
 
 def _executor_wrapper_async(
-    cls: t.Type,
-    func: t.Callable,
+    cls: t.Type, func: t.Callable
 ) -> t.Callable[..., t.Coroutine]:
     @wraps(func)
     async def _decorator(*args: t.Any, **kwargs: t.Any) -> t.Any:
