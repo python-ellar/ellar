@@ -2,6 +2,7 @@ from ellar.auth.services import IdentityAuthenticationService
 from ellar.common import AnonymousIdentity, IHostContextFactory
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.core.conf import Config
+from ellar.core.middleware import Middleware as EllarMiddleware
 from ellar.di import EllarInjector
 from starlette.routing import compile_path
 from starlette.types import ASGIApp
@@ -45,3 +46,7 @@ class IdentityMiddleware:
         Check is the request is for a static file
         """
         return self._path_regex.match(scope["path"]) is not None
+
+
+# IdentityMiddleware Configuration
+identity_middleware = EllarMiddleware(IdentityMiddleware)

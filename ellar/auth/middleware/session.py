@@ -1,5 +1,6 @@
 from ellar.auth.session import SessionServiceNullStrategy, SessionStrategy
 from ellar.core.conf import Config
+from ellar.core.middleware import Middleware as EllarMiddleware
 from starlette.datastructures import MutableHeaders
 from starlette.requests import HTTPConnection
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -9,7 +10,7 @@ class SessionMiddleware:
     def __init__(
         self, app: ASGIApp, session_strategy: SessionStrategy, config: Config
     ) -> None:
-        config.setdefault("SESSION_DISABLED", False)
+        config.set_defaults(SESSION_DISABLED=False)
         self.app = app
         self._session_strategy = session_strategy
         self._is_active = not isinstance(session_strategy, SessionServiceNullStrategy)
@@ -52,3 +53,7 @@ class SessionMiddleware:
             await send(message)
 
         await self.app(scope, receive, _send_wrapper)
+
+
+# SessionMiddleware Configuration
+session_middleware = EllarMiddleware(SessionMiddleware)

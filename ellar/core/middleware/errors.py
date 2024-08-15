@@ -1,10 +1,10 @@
-import typing as t
-
+from ellar.common import IExceptionMiddlewareService
 from ellar.common.constants import SCOPE_RESPONSE_STARTED
-from ellar.common.interfaces import IExceptionHandler, IHostContextFactory
+from ellar.common.interfaces import IHostContextFactory
 from ellar.common.responses import Response
 from ellar.common.types import ASGIApp, TMessage, TReceive, TScope, TSend
-from ellar.core.connection.http import Request
+from ellar.core import Config
+from ellar.core.connection import Request
 from ellar.di import EllarInjector
 from starlette.middleware.errors import (
     ServerErrorMiddleware as BaseServerErrorMiddleware,
@@ -12,24 +12,22 @@ from starlette.middleware.errors import (
 from starlette.requests import Request as StarletteRequest
 from starlette.responses import JSONResponse
 
+from .middleware import EllarMiddleware
+
 
 class ServerErrorMiddleware(BaseServerErrorMiddleware):
     def __init__(
         self,
         app: ASGIApp,
-        *,
-        debug: bool,
+        config: Config,
+        exception_service: IExceptionMiddlewareService,
         injector: "EllarInjector",
-        handler: t.Optional["IExceptionHandler"] = None,
     ) -> None:
-        _handler = None
-        if handler:
-            self._500_error_handler = handler
-            _handler = self.error_handler
+        self._500_error_handler = exception_service.get_500_error_handler()
 
         super(ServerErrorMiddleware, self).__init__(
-            debug=debug,
-            handler=_handler,  # type:ignore[arg-type]
+            debug=config.DEBUG,
+            handler=self.error_handler if self._500_error_handler else None,
             app=app,
         )
         self.injector = injector
@@ -69,3 +67,7 @@ class ServerErrorMiddleware(BaseServerErrorMiddleware):
         return JSONResponse(
             {"detail": "Internal server error", "status_code": 500}, status_code=500
         )
+
+
+# ServerErrorMiddleware Configuration
+server_error_middleware = EllarMiddleware(ServerErrorMiddleware)
