@@ -7,6 +7,7 @@ from ellar.common.constants import (
     MODULE_DECORATOR_ITEM,
     NOT_SET,
     RESPONSE_OVERRIDE_KEY,
+    TEMPLATE_CONTEXT_PROCESSOR_KEY,
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
@@ -143,6 +144,27 @@ def template_global(
             TemplateFunctionData(func=f, name=name or get_name(f)),
         )
         setattr(f, MODULE_DECORATOR_ITEM, TEMPLATE_GLOBAL_KEY)
+        return f
+
+    return decorator
+
+
+def template_context() -> t.Callable[[TemplateGlobalCallable], TemplateGlobalCallable]:
+    """
+    Registers a template context processor function. These functions run before
+    rendering a template. The keys of the returned dict are added as variables
+    available in the template.
+
+    Example::
+
+    @template_context()
+    def add_my_context(cls) -> dict:
+        return dict(extra_item="extra_item", ...)
+    """
+
+    def decorator(f: TemplateGlobalCallable) -> TemplateGlobalCallable:
+        setattr(f, TEMPLATE_CONTEXT_PROCESSOR_KEY, f)
+        setattr(f, MODULE_DECORATOR_ITEM, TEMPLATE_CONTEXT_PROCESSOR_KEY)
         return f
 
     return decorator
