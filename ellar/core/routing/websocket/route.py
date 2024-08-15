@@ -44,9 +44,10 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
         encoding: str = "json",
         use_extra_handler: bool = False,
         extra_handler_type: t.Optional[t.Type[WebSocketExtraHandler]] = None,
+        controller_class: t.Optional[t.Type] = None,
         **handlers_kwargs: t.Any,
     ) -> None:
-        super().__init__(endpoint=endpoint)
+        super().__init__(endpoint=endpoint, controller_class=controller_class)
         assert path.startswith("/"), "Routed paths must start with '/'"
         self._handlers_kwargs: t.Dict[str, t.Any] = {
             "encoding": encoding,

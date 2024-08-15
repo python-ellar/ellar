@@ -1,16 +1,19 @@
 import functools
 import typing as t
 
-from ellar.common import ControllerBase, ModuleRouter
 from ellar.common.constants import (
-    CONTROLLER_CLASS_KEY,
+    MODULE_COMPONENT,
+    NOT_SET,
     SCOPE_API_VERSIONING_RESOLVER,
 )
-from ellar.common.logging import request_logger
+from ellar.common.logging import logger, request_logger
+from ellar.common.shortcuts import fail_silently
 from ellar.common.types import TReceive, TScope, TSend
 from ellar.reflect import reflect
-from ellar.utils import get_unique_type
+from starlette._utils import get_route_path
+from starlette.datastructures import URL
 from starlette.middleware import Middleware
+from starlette.responses import RedirectResponse
 from starlette.routing import BaseRoute, Match, Route, Router
 from starlette.routing import Mount as StarletteMount
 from starlette.types import ASGIApp
@@ -19,10 +22,15 @@ from .route import RouteOperation
 from .route_collections import RouteCollection
 
 if t.TYPE_CHECKING:
+    from ellar.core.modules import ModuleRefBase
     from ellar.core.versioning.resolver import BaseAPIVersioningResolver
 
 
-class EllarMount(StarletteMount):
+class EllarControllerMount(StarletteMount):
+    """
+    Controller and ModuleRouter Object compiles to this Class at runtime
+    """
+
     def __init__(
         self,
         path: str,
@@ -37,42 +45,27 @@ class EllarMount(StarletteMount):
         app.routes = RouteCollection(routes)  # type:ignore
         super().__init__(path=path, app=app, name=name, middleware=[])
         self.include_in_schema = include_in_schema
-        self._control_type = control_type or get_unique_type("EllarMountDynamicType")
+        self._control_type = control_type or NOT_SET
 
-        self.user_middleware = [] if middleware is None else list(middleware)
+        self.middleware = [] if middleware is None else list(middleware)
         self._middleware_stack: t.Optional[ASGIApp] = None
+
+    @functools.cached_property
+    def _lookup_key(self) -> str:
+        return f"EllarControllerMountRoute_{id(self)}"
 
     def build_middleware_stack(self) -> ASGIApp:
         app = self._app_handler
-        for cls, args, kwargs in reversed(self.user_middleware):
-            app = cls(app, *args, **kwargs)
+        for cls, args, kwargs in reversed(self.middleware):
+            try:
+                app = cls(app, *args, **kwargs)
+            except Exception as ex:
+                logger.exception(f"Unable to setup middleware='{cls}'")
+                raise ex
         return app
 
-    def get_control_type(self) -> t.Type[t.Any]:
+    def get_controller_type(self) -> t.Type[t.Any]:
         return self._control_type
-
-    def add_route(
-        self, route: t.Union[ControllerBase, ModuleRouter, BaseRoute, t.Callable]
-    ) -> None:
-        if (
-            isinstance(route, type)
-            and issubclass(route, ControllerBase)
-            or isinstance(route, ModuleRouter)
-        ):
-            from ellar.core.router_builders.base import get_controller_builder_factory
-
-            factory_builder = get_controller_builder_factory(type(route))
-            factory_builder.check_type(route)
-            mount = factory_builder.build(route)
-
-            route = mount
-
-        if not isinstance(route, BaseRoute) and self.get_control_type():
-            reflect.define_metadata(
-                CONTROLLER_CLASS_KEY, route, self.get_control_type()
-            )
-
-        self.routes.append(route)  # type:ignore[arg-type]
 
     def matches(self, scope: TScope) -> t.Tuple[Match, TScope]:
         request_logger.debug(
@@ -91,7 +84,7 @@ class EllarMount(StarletteMount):
                 match, child_scope = route.matches(scope_copy)
                 if match == Match.FULL:
                     _child_scope.update(child_scope)
-                    _child_scope[str(self.get_control_type())] = route
+                    _child_scope[self._lookup_key] = route
                     return Match.FULL, _child_scope
                 elif (
                     match == Match.PARTIAL
@@ -103,7 +96,7 @@ class EllarMount(StarletteMount):
                     partial_scope.update(child_scope)
 
             if partial:
-                partial_scope[str(self.get_control_type())] = partial
+                partial_scope[self._lookup_key] = partial
                 return Match.PARTIAL, partial_scope
 
         return Match.NONE, {}
@@ -112,9 +105,9 @@ class EllarMount(StarletteMount):
         request_logger.debug(
             f"Executing Matched URL Handler, path={scope['path']} - '{self.__class__.__name__}'"
         )
-        route = t.cast(t.Optional[Route], scope.get(str(self.get_control_type())))
+        route = t.cast(t.Optional[Route], scope.get(self._lookup_key))
         if route:
-            del scope[str(self.get_control_type())]
+            del scope[self._lookup_key]
             await route.handle(scope, receive, send)
         else:
             mount_router = t.cast(Router, self.app)
@@ -163,79 +156,98 @@ class ApplicationRouter(Router):
         self.default = router_default_decorator(self.default)
         self.routes: RouteCollection = RouteCollection(routes)
 
-    @t.no_type_check
-    def add_route(
-        self, route: t.Union[ControllerBase, ModuleRouter, BaseRoute, t.Callable]
-    ) -> None:
-        if (
-            isinstance(route, type)
-            and issubclass(route, ControllerBase)
-            or isinstance(route, ModuleRouter)
-        ):
-            from ellar.core.router_builders.base import get_controller_builder_factory
+    def _get_route_handler(
+        self, scope: TScope
+    ) -> t.Optional[t.Union[BaseRoute, RedirectResponse]]:
+        partial = None
+        partial_scope: t.Dict = {}
 
-            factory_builder = get_controller_builder_factory(type(route))
-            factory_builder.check_type(route)
-            mount = factory_builder.build(route)
+        for route in self.routes:
+            # Determine if any route matches the incoming scope,
+            # and hand over to the matching route if found.
+            match, child_scope = route.matches(scope)
+            if match == Match.FULL:
+                scope.update(child_scope)
+                return route
 
-            route = mount
+            elif match == Match.PARTIAL and partial is None:
+                partial = route
+                partial_scope = dict(child_scope)
+
+        if partial is not None:
+            #  Handle partial matches. These are cases where an endpoint is
+            # able to handle the request, but is not a preferred option.
+            # We use this in particular to deal with "405 Method Not Allowed".
+            scope.update(partial_scope, partial=True)
+            return partial
+
+        route_path = get_route_path(scope)
+        if scope["type"] == "http" and self.redirect_slashes and route_path != "/":
+            redirect_scope = dict(scope)
+            if route_path.endswith("/"):
+                redirect_scope["path"] = redirect_scope["path"].rstrip("/")
+            else:
+                redirect_scope["path"] = redirect_scope["path"] + "/"
+
+            for route in self.routes:
+                match, child_scope = route.matches(redirect_scope)
+                if match != Match.NONE:
+                    redirect_url = URL(scope=redirect_scope)
+                    return RedirectResponse(url=str(redirect_url))
+
+        return None
+
+    async def app(self, scope: TScope, receive: TReceive, send: TSend) -> None:
+        assert scope["type"] in ("http", "websocket", "lifespan")
+
+        if "router" not in scope:
+            scope["router"] = self
+
+        if scope["type"] == "lifespan":
+            return await self.lifespan(scope, receive, send)
+
+        route = self._get_route_handler(scope)
+
+        if route is None:
+            return await self.default(scope, receive, send)
+
+        if isinstance(route, RedirectResponse):
+            return await route(scope, receive, send)
+
+        module_ref: t.Optional["ModuleRefBase"] = t.cast(
+            t.Optional["ModuleRefBase"],
+            fail_silently(reflect.get_metadata_search_safe, MODULE_COMPONENT, route),
+        )
+        if scope.get("partial", False) is False and module_ref:
+            async with module_ref.module_context.context(route) as module_context:
+                return await module_context.handle(scope, receive, send)
+
+        await route.handle(scope, receive, send)
+
+    # @t.no_type_check
+    def add(self, route: t.Union[BaseRoute, t.Callable]) -> None:
+        if not isinstance(route, BaseRoute):
+            raise RuntimeError(f"Invalid type passed to router - {route}")
         self.routes.append(route)
 
     def extend(self, routes: t.Sequence[t.Union[BaseRoute, t.Callable]]) -> None:
         for route in routes:
-            self.add_route(route)
-
-    def add_websocket_route(
-        self, path: str, endpoint: t.Callable, name: t.Optional[str] = None
-    ) -> None:  # pragma: no cover
-        """Not supported"""
-
-    def route(
-        self,
-        path: str,
-        methods: t.Optional[t.List[str]] = None,
-        name: t.Optional[str] = None,
-        include_in_schema: bool = True,
-    ) -> t.Callable:  # pragma: no cover
-        def decorator(func: t.Callable) -> t.Callable:
-            """Not supported"""
-            return func
-
-        return decorator
-
-    def websocket_route(
-        self, path: str, name: t.Optional[str] = None
-    ) -> t.Callable:  # pragma: no cover
-        def decorator(func: t.Callable) -> t.Callable:
-            """Not supported"""
-            return func
-
-        return decorator
-
-    def add_event_handler(
-        self, event_type: str, func: t.Callable
-    ) -> None:  # pragma: no cover
-        """Not supported"""
-
-    def on_event(self, event_type: str) -> t.Callable:  # pragma: no cover
-        def decorator(func: t.Callable) -> t.Callable:
-            """Not supported"""
-            return func
-
-        return decorator
+            self.add(route)
 
     def mount(
         self, path: str, app: ASGIApp, name: t.Optional[str] = None
     ) -> None:  # pragma: no cover
-        raise Exception(
+        logger.info(
             "Not supported. Use mount external asgi app in any @Module decorated "
             "class in `routers` parameter. eg @Module(routers=[ellar.core.mount(my_asgi_app)]"
         )
+        return super().mount(path=path, app=app, name=name)
 
     def host(
         self, host: str, app: ASGIApp, name: t.Optional[str] = None
     ) -> None:  # pragma: no cover
-        raise Exception(
+        logger.info(
             "Not supported. Use host external asgi app in any @Module decorated "
             "class in `routers` parameter. eg @Module(routers=[ellar.core.host(my_asgi_app)]"
         )
+        return super().host(host=host, app=app, name=name)

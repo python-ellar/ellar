@@ -45,8 +45,9 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         response: t.Mapping[int, t.Union[t.Type, t.Any]],
         name: t.Optional[str] = None,
         include_in_schema: bool = True,
+        controller_class: t.Optional[t.Type] = None,
     ) -> None:
-        super().__init__(endpoint=endpoint)
+        super().__init__(endpoint=endpoint, controller_class=controller_class)
         self._is_coroutine = inspect.iscoroutinefunction(endpoint)
         self._defined_responses: t.Dict[int, t.Type] = dict(response)
 

@@ -14,7 +14,7 @@ from ellar.common.shortcuts import normalize_path
 from ellar.core.routing import (
     ControllerRouteOperation,
     ControllerWebsocketRouteOperation,
-    EllarMount,
+    EllarControllerMount,
 )
 from ellar.reflect import reflect
 from starlette.routing import BaseRoute
@@ -41,10 +41,12 @@ def process_controller_routes(controller: t.Type[ControllerBase]) -> t.List[Base
 
         for parameter in parameters:
             if isinstance(parameter, RouteParameters):
-                operation = ControllerRouteOperation(controller, **parameter.dict())
+                operation = ControllerRouteOperation(
+                    **parameter.dict(), controller_class=controller
+                )
             elif isinstance(parameter, WsRouteParameters):
                 operation = ControllerWebsocketRouteOperation(
-                    controller, **parameter.dict()
+                    **parameter.dict(), controller_class=controller
                 )
             else:  # pragma: no cover
                 logger.warning(
@@ -66,9 +68,11 @@ class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase
     def build(
         cls,
         controller_type: t.Union[t.Type[ControllerBase], t.Any],
-        base_route_type: t.Type[t.Union[EllarMount, T_]] = EllarMount,
+        base_route_type: t.Type[
+            t.Union[EllarControllerMount, T_]
+        ] = EllarControllerMount,
         **kwargs: t.Any,
-    ) -> t.Union[T_, EllarMount]:
+    ) -> t.Union[T_, EllarControllerMount]:
         routes = process_controller_routes(controller_type)
         routes.extend(process_nested_routes(controller_type))
 
@@ -80,7 +84,7 @@ class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase
             CONTROLLER_METADATA.MIDDLEWARE, controller_type
         )
 
-        kwargs.setdefault("middleware", middleware)
+        kwargs.update(middleware=middleware)
 
         path = reflect.get_metadata_or_raise_exception(
             CONTROLLER_METADATA.PATH, controller_type

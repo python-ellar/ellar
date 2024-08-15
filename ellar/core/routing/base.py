@@ -1,9 +1,8 @@
 import typing as t
 from abc import ABC, abstractmethod
-from contextlib import asynccontextmanager
 
 from ellar.common.constants import (
-    CONTROLLER_CLASS_KEY,
+    NOT_SET,
     SCOPE_API_VERSIONING_RESOLVER,
     VERSIONING_KEY,
 )
@@ -15,7 +14,8 @@ from ellar.common.interfaces import (
 )
 from ellar.common.logging import request_logger
 from ellar.common.types import TReceive, TScope, TSend
-from ellar.core.context import current_injector
+from ellar.core.execution_context import current_injector
+from ellar.di import register_request_scope_context
 from ellar.reflect import reflect
 from starlette.routing import Match
 
@@ -33,13 +33,11 @@ class RouteOperationBase:
     methods: t.Set[str]
     _controller_type: t.Optional[t.Union[t.Type, t.Type["ControllerBase"]]] = None
 
-    def __init__(self, endpoint: t.Callable) -> None:
+    def __init__(
+        self, endpoint: t.Callable, controller_class: t.Optional[t.Type] = None
+    ) -> None:
         self.endpoint = endpoint
-        _controller_type: t.Type = self.get_controller_type()
-
-        self._controller_type: t.Union[t.Type, t.Type["ControllerBase"]] = t.cast(
-            t.Union[t.Type, t.Type["ControllerBase"]], _controller_type
-        )
+        self._controller_type = controller_class or NOT_SET
 
     # @t.no_type_check
     # def __call__(
@@ -51,23 +49,6 @@ class RouteOperationBase:
     def _load_model(self) -> None:
         """compute route models"""
 
-    @asynccontextmanager
-    async def _ensure_dependency_availability(
-        self, context: IExecutionContext
-    ) -> t.AsyncGenerator:
-        controller_type = context.get_class()
-        module_scope_owner = next(
-            context.get_app().injector.tree_manager.find_module(
-                lambda data: controller_type in data.providers
-                or controller_type in data.exports
-            )
-        )
-        if module_scope_owner and module_scope_owner.is_ready:
-            async with module_scope_owner.value.context():
-                yield
-        else:
-            yield
-
     async def app(self, scope: TScope, receive: TReceive, send: TSend) -> None:
         request_logger.debug(
             f"Started Computing Execution Context - '{self.__class__.__name__}'"
@@ -77,7 +58,7 @@ class RouteOperationBase:
         context = execution_context_factory.create_context(
             operation=self, scope=scope, receive=receive, send=send
         )
-        current_injector.update_scoped_context(IExecutionContext, context)
+        register_request_scope_context(IExecutionContext, context)
 
         interceptor_consumer = current_injector.get(IInterceptorsConsumer)
         guard_consumer = current_injector.get(IGuardsConsumer)
@@ -85,11 +66,11 @@ class RouteOperationBase:
         request_logger.debug(
             f"Running Guards and Interceptors - '{self.__class__.__name__}'"
         )
-        async with self._ensure_dependency_availability(context):
-            await guard_consumer.execute(context, self)
-            await interceptor_consumer.execute(context, self)
 
-    def get_controller_type(self) -> t.Type:
+        await guard_consumer.execute(context, self)
+        await interceptor_consumer.execute(context, self)
+
+    def get_controller_type(self) -> t.Any:
         """
         For operation under a controller, `get_control_type` and `get_class` will return the same result
         For operation under ModuleRouter, this will return a unique type created for the router for tracking some properties
@@ -98,11 +79,6 @@ class RouteOperationBase:
         request_logger.debug(
             f"Resolving Endpoint Handler Controller Type - '{self.__class__.__name__}'"
         )
-        if not self._controller_type:
-            _controller_type = reflect.get_metadata(CONTROLLER_CLASS_KEY, self.endpoint)
-            if _controller_type is None or not isinstance(_controller_type, type):
-                raise Exception("Operation must have a single control type.")
-            return t.cast(t.Type, _controller_type)
 
         return self._controller_type
 

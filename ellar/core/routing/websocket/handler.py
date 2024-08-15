@@ -1,4 +1,5 @@
 import json
+import logging
 import typing as t
 
 from ellar.common.exceptions import WebSocketRequestValidationError
@@ -13,8 +14,9 @@ from starlette.types import Message
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.connection import WebSocket
 
+logger = logging.getLogger("ellar")
 
-# @as_pydantic_validator("__validate_input__")
+
 class WebSocketExtraHandler:
     def __init__(
         self,
@@ -57,6 +59,7 @@ class WebSocketExtraHandler:
             raise RuntimeError(wexc.reason) from wexc
         except Exception as exc:
             close_code = status.WS_1011_INTERNAL_ERROR
+            logger.exception(exc)
             raise exc
 
         finally:
@@ -155,18 +158,3 @@ class WebSocketExtraHandler:
             self.encoding is None
         ), f"Unsupported 'encoding' attribute {self.encoding}"
         return message["text"] if message.get("text") else message["bytes"]
-
-    # THIS HAS BEEN TAKEN CARE OF BY PYDANTIC v2
-    # @classmethod
-    # def __validate_input__(cls, __input_value: t.Any, _: t.Any) -> t.Any:
-    #     if not isinstance(__input_value, type):
-    #         raise ValueError(
-    #             f"Expected Type[WebSocketExtraHandler], received: {type(__input_value)}"
-    #         )
-    #     if WebSocketExtraHandler != __input_value or not issubclass(
-    #         __input_value, WebSocketExtraHandler
-    #     ):
-    #         raise ValueError(
-    #             f"Expected Type[WebSocketExtraHandler], received: {type(__input_value)}"
-    #         )
-    #     return __input_value

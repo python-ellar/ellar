@@ -2,10 +2,10 @@ import typing as t
 from types import FunctionType
 
 from ellar.common.constants import (
-    CONTROLLER_CLASS_KEY,
     CONTROLLER_METADATA,
     CONTROLLER_OPERATION_HANDLER_KEY,
     NESTED_ROUTERS_KEY,
+    NOT_SET,
     ROUTE_OPERATION_PARAMETERS,
 )
 from ellar.common.exceptions import ImproperConfiguration
@@ -18,7 +18,6 @@ from ellar.core.routing import (
     WebsocketRouteOperation,
 )
 from ellar.reflect import reflect
-from ellar.utils import get_unique_type
 from starlette.routing import BaseRoute
 
 from .base import get_controller_builder_factory
@@ -72,11 +71,8 @@ def build_route_handler(
 ) -> t.Optional[t.List[RouteOperationBase]]:
     _item: t.Any = item
 
-    if callable(item) and type(item) == FunctionType:
+    if callable(item) and type(item) is FunctionType:
         _item = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, item)
-
-    if not _item and not reflect.has_metadata(CONTROLLER_CLASS_KEY, item):
-        reflect.define_metadata(CONTROLLER_CLASS_KEY, get_unique_type(), item)
 
     if not _item and hasattr(item, ROUTE_OPERATION_PARAMETERS):
         parameters = item.__dict__[ROUTE_OPERATION_PARAMETERS]
@@ -84,7 +80,7 @@ def build_route_handler(
         if not isinstance(parameters, list):
             parameters = [parameters]
 
-        operations = build_route_parameters(parameters, get_unique_type())
+        operations = build_route_parameters(parameters)
         if isinstance(operations, list):
             return operations
 
@@ -96,15 +92,14 @@ def build_route_handler(
 
 @t.no_type_check
 def build_route_parameters(
-    items: t.List[t.Union[RouteParameters, WsRouteParameters]],
-    control_type: t.Type[t.Any],
+    items: t.List[t.Union[RouteParameters, WsRouteParameters]], **kwargs: t.Any
 ) -> t.List[t.Union[RouteOperationBase, t.Any]]:
     results = []
     for item in items:
         if isinstance(item, RouteParameters):
-            operation = RouteOperation(**item.dict())
+            operation = RouteOperation(**item.dict(), **kwargs)
         elif isinstance(item, WsRouteParameters):
-            operation = WebsocketRouteOperation(**item.dict())
+            operation = WebsocketRouteOperation(**item.dict(), **kwargs)
         else:  # pragma: no cover
             logger.warning(
                 f"Parameter type is not recognized. {type(item) if not isinstance(item, type) else item}"
@@ -115,10 +110,11 @@ def build_route_parameters(
         if ROUTE_OPERATION_PARAMETERS in item.endpoint.__dict__:
             del item.endpoint.__dict__[ROUTE_OPERATION_PARAMETERS]
 
-        reflect.define_metadata(
-            CONTROLLER_OPERATION_HANDLER_KEY,
-            [operation],
-            control_type,
-        )
+        if operation.get_controller_type() is not NOT_SET:
+            reflect.define_metadata(
+                CONTROLLER_OPERATION_HANDLER_KEY,
+                [operation],
+                operation.get_controller_type(),
+            )
 
     return results

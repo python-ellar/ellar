@@ -10,7 +10,7 @@ from .controller import (
     ControllerWebsocketRouteOperation,
 )
 from .file_mount import AppStaticFileMount, ASGIFileMount
-from .mount import ApplicationRouter, EllarMount
+from .mount import ApplicationRouter, EllarControllerMount
 from .route import RouteOperation
 from .route_collections import RouteCollection
 from .websocket import WebsocketRouteOperation
@@ -19,7 +19,7 @@ __all__ = [
     "Param",
     "ParamTypes",
     "RouteCollection",
-    "EllarMount",
+    "EllarControllerMount",
     "RouteOperation",
     "RouteOperationBase",
     "WebsocketRouteOperation",
