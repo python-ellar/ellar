@@ -7,10 +7,15 @@ from .asgi_args import RequestScopeContext
 from .constants import (
     INJECTABLE_ATTRIBUTE,
     MODULE_REF_TYPES,
-    SCOPED_CONTEXT_VAR,
     AnnotationToValue,
+    request_context_var,
 )
-from .injector import Container, EllarInjector, ModuleTreeManager
+from .injector import (
+    Container,
+    EllarInjector,
+    ModuleTreeManager,
+    register_request_scope_context,
+)
 from .scopes import (
     RequestORTransientScope,
     RequestScope,
@@ -45,12 +50,13 @@ __all__ = [
     "has_binding",
     "get_scope",
     "RequestScopeContext",
-    "SCOPED_CONTEXT_VAR",
+    "request_context_var",
     "INJECTABLE_ATTRIBUTE",
     "AnnotationToValue",
     "MODULE_REF_TYPES",
     "InjectByTag",
     "ModuleTreeManager",
+    "register_request_scope_context",
 ]
 
 

@@ -30,8 +30,8 @@ class TreeData(t.NamedTuple):
         return self.value.exports
 
     @property
-    def providers(self) -> t.Dict[t.Type, t.Type]:
-        return self.value.providers
+    def providers(self) -> t.Dict[t.Type, t.Union[t.Type, "ProviderConfig"]]:
+        return self.value.providers  # type:ignore[return-value]
 
     @property
     def name(self) -> str:
@@ -45,7 +45,7 @@ class TreeData(t.NamedTuple):
 
 
 class ModuleTreeManager:
-    __slots__ = ("modules", "_core_module", "_root_module")
+    __slots__ = ("modules", "_core_module", "_app_module")
 
     # , root_module: t.Union["ModuleRefBase", "ModuleSetup"]
     def __init__(
@@ -57,15 +57,16 @@ class ModuleTreeManager:
         )  # Dictionary to store modules by their ID or value
 
         self._core_module = app_core_module.module if app_core_module else None
-        self._root_module: t.Optional[t.Type[t.Any]] = None
+        self._app_module: t.Optional[t.Type[t.Any]] = None
 
         if app_core_module:
             self.add_module(app_core_module.module, value=app_core_module)
 
     @property
     def root_module(self) -> t.Type:
-        assert self._root_module is not None, "RootModule is not ready"
-        return self._root_module
+        root_module = self._core_module or self._app_module
+        assert root_module is not None, "RootModule is not ready"
+        return root_module
 
     def add_provider(
         self,
@@ -105,19 +106,19 @@ class ModuleTreeManager:
 
             self.modules[parent_module].dependencies.append(module_type)
 
-            if parent_module == self._core_module and not self._root_module:
-                self._root_module = data.value.module
+            if parent_module == self._core_module and not self._app_module:
+                self._app_module = data.value.module
 
-        elif not parent_module and not self._root_module and not self._core_module:
-            self._root_module = module_type
+        elif not parent_module and not self._app_module and not self._core_module:
+            self._app_module = module_type
         elif (
-            self._root_module
+            self._app_module
             and parent_module
             and self._core_module
             and parent_module == self._core_module
         ):
             raise Exception(
-                f"EllarCoreModule can only have '{self._root_module}' as dependency"
+                f"EllarCoreModule can only have '{self._app_module}' as dependency"
             )
         return self
 
@@ -204,8 +205,9 @@ class ModuleTreeManager:
         if not found_any:
             yield None  # type:ignore[misc]
 
-    def get_root_module(self) -> t.Union["ModuleRefBase", "ModuleSetup"]:
-        data = self.get_module(self.root_module)
+    def get_app_module(self) -> t.Union["ModuleRefBase", "ModuleSetup"]:
+        assert self._app_module is not None, "AppModule is not ready"
+        data = self.get_module(self._app_module)
         assert data
         return data.value
 

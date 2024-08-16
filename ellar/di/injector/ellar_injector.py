@@ -1,15 +1,13 @@
 import sys
 import typing as t
-from contextlib import asynccontextmanager
 from functools import cached_property
 
-from ellar.di.constants import MODULE_REF_TYPES, SCOPED_CONTEXT_VAR, Tag
+from ellar.di.constants import MODULE_REF_TYPES, Tag, request_context_var
 from ellar.di.injector.tree_manager import ModuleTreeManager
 from ellar.di.logger import log
 from injector import Injector, Scope, ScopeDecorator
 from typing_extensions import Annotated
 
-from ..asgi_args import RequestScopeContext
 from ..providers import InstanceProvider, Provider
 from ..types import T
 from .container import Container
@@ -20,6 +18,19 @@ if t.TYPE_CHECKING:  # pragma: no cover
         ModuleRefBase,
         ModuleTemplateRef,
     )
+
+
+def register_request_scope_context(interface: t.Type[T], value: T) -> None:
+    # Sets RequestScope contexts so that they can be available when needed
+
+    scoped_context = request_context_var.get()
+    if scoped_context is None:
+        return
+
+    if isinstance(value, Provider):
+        scoped_context.context.update({interface: value})
+    else:
+        scoped_context.context.update({interface: InstanceProvider(value)})
 
 
 class _TagInfo(t.NamedTuple):
@@ -124,23 +135,3 @@ class EllarInjector(Injector):
         )
         log.debug(f"{self._log_prefix} -> {result}")
         return t.cast(T, result)
-
-    def update_scoped_context(self, interface: t.Type[T], value: T) -> None:
-        # Sets RequestScope contexts so that they can be available when needed
-        # TODO: Rename to `register_request_scope_context`
-        scoped_context = SCOPED_CONTEXT_VAR.get()
-        if scoped_context is None:
-            return
-
-        if isinstance(value, Provider):
-            scoped_context.context.update({interface: value})
-        else:
-            scoped_context.context.update({interface: InstanceProvider(value)})
-
-    @asynccontextmanager
-    async def create_asgi_args(self) -> t.AsyncGenerator["EllarInjector", None]:
-        try:
-            SCOPED_CONTEXT_VAR.set(RequestScopeContext())
-            yield self
-        finally:
-            SCOPED_CONTEXT_VAR.set(None)

@@ -167,9 +167,6 @@ class Container(InjectorBinder):
             return super().get_binding(interface)
         except (KeyError, UnsatisfiedRequirement) as uex:
             try:
-                # All services or providers must have MODULE_SCOPE_OWNER if added in @Module 'providers',
-                # 'controllers' and 'routers'.
-                # So if 'module_scope_owner' is None, it means `Interface` was not registered to any module
                 if self.injector.owner:
                     module_name = (
                         self.injector.owner.name if self.injector.owner else None
@@ -183,23 +180,6 @@ class Container(InjectorBinder):
                     if module_owner and module_owner.is_ready:
                         # TODO: possible circular import
                         return module_owner.value.container._get_binding(interface)
-
-                # current_node = self.injector.tree_manager.find_module(
-                #     predicate=lambda n: n.parent == self.injector.module_name
-                # )
-
-                # root_module_name = self.injector.tree_manager.get_root_module().name
-                #
-                # # module_data = self.injector.tree_manager.search_module_tree(
-                # #     filter_item=lambda data: data.name == module_name,
-                # #     find_predicate=lambda data: interface in data.exports,
-                # # )
-                # module_data = self.injector.tree_manager.search_module_tree(
-                #     filter_item=lambda data: data.name == module_name or data.name == root_module_name,
-                #     find_predicate=lambda data: interface in data.exports,
-                # )
-                # if module_data:
-                #     return module_data.value.container._get_binding(interface)
 
             except (KeyError, UnsatisfiedRequirement, Exception) as ex:
                 logging.exception(ex)
