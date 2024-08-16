@@ -3,8 +3,10 @@ import typing as t
 from ellar.common.constants import LOG_LEVELS as log_levels
 from ellar.common.interfaces import IAPIVersioning, IEllarMiddleware, IExceptionHandler
 from ellar.common.templating import JinjaLoaderType
+from ellar.common.templating.validator import TemplateContextProcessorValidator
 from ellar.di import ProviderConfig
 from ellar.di.injector.tree_manager import ModuleTreeManager
+from starlette.requests import HTTPConnection, Request
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp
 
@@ -36,6 +38,13 @@ class ConfigDefaultTypesMixin:
     JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any]
 
     JINJA_LOADERS: t.List[t.Union[JinjaLoaderType, t.Any]]
+
+    TEMPLATES_CONTEXT_PROCESSORS: t.List[
+        t.Union[
+            TemplateContextProcessorValidator,
+            t.Callable[[t.Union[Request, HTTPConnection]], t.Dict[str, t.Any]],
+        ]
+    ]
 
     # Application route versioning scheme
     VERSIONING_SCHEME: t.Optional[IAPIVersioning]

@@ -1,9 +1,8 @@
 import typing as t
 
-from ellar.common.compatible.dict import AttributeDictAccessMixin
 from ellar.common.constants import ELLAR_CONFIG_MODULE
 from ellar.common.types import VT
-from ellar.core.conf.app_settings_models import ConfigValidationSchema
+from ellar.core.conf.app_settings_models import ConfigSchema
 from ellar.core.conf.mixins import ConfigDefaultTypesMixin
 from ellar.utils.importer import import_from_string
 from starlette.config import environ
@@ -13,8 +12,13 @@ class ConfigRuntimeError(RuntimeError):
     pass
 
 
-class Config(AttributeDictAccessMixin, dict, ConfigDefaultTypesMixin):
-    __slots__ = ("config_module",)
+class Config(ConfigDefaultTypesMixin):
+    __slots__ = (
+        "_config_module",
+        "_schema",
+    )
+
+    _initialized: bool = False
 
     def __init__(
         self,
@@ -23,52 +27,90 @@ class Config(AttributeDictAccessMixin, dict, ConfigDefaultTypesMixin):
         **mapping: t.Any,
     ):
         """
-        Creates a new instance of Configuration object with the given values.
+        Creates a new instance of a Configuration object with the given values.
         """
-        super().__init__()
-        self.config_module = config_module or environ.get(ELLAR_CONFIG_MODULE, None)
 
-        self.clear()
+        self._config_module = config_module or environ.get(ELLAR_CONFIG_MODULE, None)
 
-        self._load_config_module(config_prefix or "")
+        data = self._load_config_module(config_prefix or "")
+        data.update(**mapping)
 
-        self.update(**mapping)
+        self._schema = ConfigSchema.model_validate(data, from_attributes=True)
+        self._initialized = True
 
-        validate_config = ConfigValidationSchema.model_validate(
-            self, from_attributes=True
-        )
-        self.update(validate_config.serialize())
+    @property
+    def config_module(self) -> t.Optional[str]:
+        return self._config_module
 
-    def _load_config_module(self, prefix: str) -> None:
+    def _load_config_module(self, prefix: str) -> dict:
+        data = {}
         _prefix = prefix.upper()
-        if self.config_module:
+
+        if self._config_module:
             try:
-                mod = import_from_string(self.config_module)
+                mod = import_from_string(self._config_module)
                 for setting in dir(mod):
                     if setting.isupper() and setting.startswith(_prefix):
-                        self[setting.replace(_prefix, "")] = getattr(mod, setting)
+                        data[setting.replace(_prefix, "")] = getattr(mod, setting)
             except Exception as ex:
                 raise ConfigRuntimeError(str(ex)) from ex
 
-    def set_defaults(self, **kwargs: t.Any) -> "Config":
-        for k, v in kwargs.items():
-            self.setdefault(k, v)
-        return self
+        return data
 
     def __repr__(self) -> str:  # pragma: no cover
-        hidden_values = {key: "..." for key in self.keys()}
-        return f"<Configuration {repr(hidden_values)}, settings_module: {self.config_module}>"
+        hidden_values = {key: "..." for key in self._schema.serialize().keys()}
+        return f"<Configuration {repr(hidden_values)}, settings_module: {self._config_module}>"
 
-    def __setattr__(self, key: t.Any, value: t.Any) -> None:
-        if key in self.__slots__:
-            super(Config, self).__setattr__(key, value)
-            return
-
-        self[key] = value
+    def __str__(self) -> str:
+        return repr(self)
 
     @property
     def config_values(self) -> t.ValuesView[VT]:
         """
         Returns a copy of the dictionary of current settings.
         """
-        return super().values()
+        return self._schema.serialize().values()
+
+    def __setattr__(self, key: t.Any, value: t.Any) -> None:
+        if key in self.__slots__ + ("_initialized",):
+            # Assign to __dict__ to avoid infinite __setattr__ loops.
+            if self._initialized:
+                raise ConfigRuntimeError(
+                    f"Invalid Operation: Can not change {key} after configuration object has been created"
+                )
+
+            super().__setattr__(key, value)
+        else:
+            setattr(self._schema, key, value)
+
+    def __delattr__(self, key: t.Any) -> None:
+        if key in self.__slots__ + ("_initialized",):
+            # TODO: add test
+            raise TypeError("can't delete config attributes.")
+        delattr(self._schema, key)
+
+    def __getattr__(self, key: t.Any) -> t.Any:
+        value = getattr(self._schema, key)
+        if isinstance(value, (list, set, tuple, dict)):
+            # return immutable value
+            return type(value)(value)
+        return value
+
+    def set_defaults(self, **kwargs: t.Any) -> "Config":
+        for k, v in kwargs.items():
+            orig_value = getattr(self._schema, k, None)
+            if orig_value is None:
+                setattr(self._schema, k, v)
+        return self
+
+    def get(self, key: t.Any, _default: t.Optional[t.Any] = None) -> t.Optional[t.Any]:
+        return getattr(self, key, _default)
+
+    def __contains__(self, item: t.Any) -> bool:
+        return hasattr(self._schema, item)
+
+    def __getitem__(self, item: t.Any) -> t.Any:
+        return getattr(self, item)
+
+    def __setitem__(self, key: t.Any, value: t.Any) -> None:
+        return setattr(self, key, value)
