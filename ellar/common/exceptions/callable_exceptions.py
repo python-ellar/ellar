@@ -40,8 +40,8 @@ class CallableExceptionHandler(IExceptionHandler):
     def __init__(
         self,
         *func_args: t.Any,
-        exc_class_or_status_code: t.Union[t.Type[Exception], int],
-        callable_exception_handler: t.Union[
+        exc_or_status_code: t.Union[t.Type[Exception], int],
+        handler: t.Union[
             t.Callable[
                 [IHostContext, Exception],
                 t.Union[t.Awaitable[Response], Response, t.Any],
@@ -49,16 +49,16 @@ class CallableExceptionHandler(IExceptionHandler):
             t.Any,
         ],
     ) -> None:
-        self.callable_exception_handler = callable_exception_handler
+        self.callable_exception_handler = handler
         self.is_async = False
         self.func_args = func_args
 
-        if not isinstance(exc_class_or_status_code, int):
-            assert issubclass(exc_class_or_status_code, Exception)
+        if not isinstance(exc_or_status_code, int):
+            assert issubclass(exc_or_status_code, Exception)
 
-        self.exception_type_or_code = exc_class_or_status_code
+        self.exception_type_or_code = exc_or_status_code
 
-        if is_async_callable(callable_exception_handler):
+        if is_async_callable(handler):
             self.is_async = True
 
     async def catch(

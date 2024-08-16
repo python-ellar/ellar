@@ -3,7 +3,7 @@ from functools import partial
 
 from ellar.common.constants import NOT_SET
 from ellar.common.operations.router import ModuleRouter
-from ellar.reflect import reflect
+from ellar.reflect import ensure_target, reflect
 
 
 def set_metadata(
@@ -14,8 +14,9 @@ def set_metadata(
         return partial(set_metadata, meta_key)
 
     def _decorator(target: t.Union[t.Callable, t.Any]) -> t.Callable:
+        target = ensure_target(target)
         if isinstance(target, ModuleRouter):
-            target = target.control_type
+            target = target.get_controller_type()
 
         reflect.define_metadata(meta_key, meta_value, target)
         return target

@@ -31,15 +31,20 @@ def _wrapper(
     if not isinstance(target, type):
         raise ImproperConfiguration(f"{name} is a class decorator - {target}")
 
-    if not kwargs.base_directory:
+    if not kwargs.base_directory and not reflect.get_metadata(
+        MODULE_METADATA.BASE_DIRECTORY, target
+    ):
         kwargs.update(base_directory=Path(inspect.getfile(target)).resolve().parent)
 
-    if not kwargs.name:
+    if not kwargs.name and not reflect.get_metadata(MODULE_METADATA.NAME, target):
         kwargs.name = f"{get_name(target)}{uuid.uuid4().hex[:10]}"
 
     reflect.define_metadata(watermark_key, True, target)
+
     for key in metadata_keys:
-        reflect.define_metadata(key, kwargs[key], target)
+        if not reflect.get_metadata(key, target) or kwargs[key] is not None:
+            reflect.define_metadata(key, kwargs[key], target)
+
     injectable(SingletonScope)(target)
     return target
 

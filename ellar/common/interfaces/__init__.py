@@ -16,7 +16,7 @@ from .interceptor_consumer import IInterceptorsConsumer
 from .middleware import IEllarMiddleware
 from .module import IModuleSetup
 from .response_model import IResponseModel
-from .templating import IModuleTemplateLoader
+from .templating import IModuleTemplateLoader, ITemplateRenderingService
 from .versioning import IAPIVersioning, IAPIVersioningResolver
 
 __all__ = [
@@ -42,4 +42,5 @@ __all__ = [
     "IEllarMiddleware",
     "IIdentitySchemes",
     "IApplicationReady",
+    "ITemplateRenderingService",
 ]

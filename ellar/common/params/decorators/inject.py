@@ -2,14 +2,7 @@ import typing as t
 
 from ellar.common.interfaces import IExecutionContext
 from starlette.background import BackgroundTasks
-from starlette.requests import (
-    HTTPConnection as StarletteHTTPConnection,
-)
-from starlette.requests import (
-    Request as StarletteRequest,
-)
 from starlette.responses import Response
-from starlette.websockets import WebSocket as StarletteWebSocket
 from typing_extensions import Annotated
 
 from ..resolvers import (
@@ -17,21 +10,15 @@ from ..resolvers import (
 )
 from ..resolvers.system_parameters import (
     BackgroundTasksParameter,
-    ConnectionParam,
     ExecutionContextParameter,
     HostRequestParam,
     ProviderParameterInjector,
-    RequestParameter,
     ResponseRequestParam,
     SessionRequestParam,
-    WebSocketParameter,
 )
 
 _DEFAULT_RESOLVERS: t.Dict[t.Union[t.Type, str], t.Type[SystemParameterResolver]] = {
-    StarletteRequest: RequestParameter,
-    StarletteWebSocket: WebSocketParameter,
     Response: ResponseRequestParam,
-    StarletteHTTPConnection: ConnectionParam,
     IExecutionContext: ExecutionContextParameter,
     BackgroundTasks: BackgroundTasksParameter,
     "Session": SessionRequestParam,

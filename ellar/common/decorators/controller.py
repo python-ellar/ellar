@@ -9,7 +9,7 @@ from ellar.common.constants import (
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.models import ControllerBase, ControllerType
 from ellar.di import RequestORTransientScope, injectable
-from ellar.reflect import REFLECT_TYPE, reflect
+from ellar.reflect import reflect, transfer_metadata
 from injector import Scope
 from starlette.middleware import Middleware
 
@@ -64,10 +64,9 @@ def Controller(
         if type(cls) is not ControllerType:
             # We force the cls to inherit from `ControllerBase` by creating another type.
             attrs = {}
-            if hasattr(cls, REFLECT_TYPE):
-                attrs.update({REFLECT_TYPE: cls.__dict__[REFLECT_TYPE]})
             new_cls = type(cls.__name__, (cls, ControllerBase), attrs)
 
+            transfer_metadata(cls, new_cls)
             _controller_type = t.cast(t.Type[ControllerBase], new_cls)
 
         _tag = _controller_type.controller_class_name()
@@ -81,19 +80,6 @@ def Controller(
                 .lower()
                 .replace("controller", "")
             )
-
-        # for base in get_type_of_base(ControllerBase, _controller_type):
-        #     if reflect.has_metadata(CONTROLLER_WATERMARK, base) and hasattr(
-        #         cls, "__CONTROLLER_WATERMARK__"
-        #     ):
-        #         raise ImproperConfiguration(
-        #             f"`@Controller` decorated classes does not support inheritance. \n"
-        #             f"{_controller_type}"
-        #         )
-
-        # if not reflect.has_metadata(
-        #     CONTROLLER_WATERMARK, _controller_type
-        # ) and not hasattr(cls, "__CONTROLLER_WATERMARK__"):
 
         reflect.define_metadata(CONTROLLER_WATERMARK, True, _controller_type)
         # reflect_all_controller_type_routes(_controller_type)

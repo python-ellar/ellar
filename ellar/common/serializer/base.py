@@ -122,7 +122,7 @@ class Serializer(SerializerBase, BaseModel, __skip_filter__=True):
 
 
 def _lazy_current_config() -> t.Any:
-    return LazyStrImport("ellar.app:config")
+    return LazyStrImport("ellar.core:config")
 
 
 def serialize_object(
@@ -145,7 +145,11 @@ def serialize_object(
 
         return serialize_object(obj_dict, _encoders)
     if is_dataclass(obj):
-        return serialize_object(asdict(obj), _encoders, serializer_filter)
+        return serialize_object(
+            asdict(obj),  # type:ignore[call-overload]
+            encoders=_encoders,
+            serializer_filter=serializer_filter,
+        )
     if isinstance(obj, dict):
         return {
             str(k): serialize_object(v, _encoders, serializer_filter)

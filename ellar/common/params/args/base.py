@@ -39,15 +39,82 @@ from .resolver_generators import (
     QueryHeaderResolverGenerator,
 )
 
+BULK_RESOLVERS = {
+    str(params.FormFieldInfo): FormArgsResolverGenerator,
+    str(params.PathFieldInfo): PathArgsResolverGenerator,
+    str(params.QueryFieldInfo): QueryHeaderResolverGenerator,
+    str(params.HeaderFieldInfo): QueryHeaderResolverGenerator,
+}
+
+
+def get_resolver_generator(
+    param: params.ParamFieldInfo,
+) -> t.Type[BulkArgsResolverGenerator]:
+    return BULK_RESOLVERS.get(str(type(param)), BulkArgsResolverGenerator)
+
+
+def get_annotation_type_and_default(
+    param_annotation: t.Any, default_param_default: t.Any
+) -> t.Tuple:
+    if get_origin(param_annotation) is Annotated:
+        annotated_args = get_args(param_annotation)
+        if len(annotated_args) == 2:
+            return annotated_args
+        else:
+            raise ImproperConfiguration(
+                f"Cannot specify multiple `Annotated` Ellar arguments for {annotated_args!r}"
+            )
+
+    return param_annotation, default_param_default
+
+
+def get_typed_annotation(
+    param: inspect.Parameter, globalns: t.Dict[str, t.Any]
+) -> t.Any:
+    annotation = param.annotation
+    if isinstance(annotation, str):
+        annotation = t.ForwardRef(annotation)
+        annotation = evaluate_forwardref(annotation, globalns, globalns)
+    return annotation
+
+
+def process_parameter_file(
+    *,
+    param_default: t.Any,
+    param_name: str,
+    param_annotation: t.Type,
+    body_field_class: t.Type[FieldInfo] = params.BodyFieldInfo,
+) -> ModelField:
+    default_field_info = t.cast(
+        t.Type[params.ParamFieldInfo],
+        param_default
+        if isinstance(param_default, FieldInfo)
+        else params.QueryFieldInfo,
+    )
+    param_field = get_parameter_field(
+        param_default=param_default,
+        param_annotation=param_annotation,
+        default_field_info=default_field_info,
+        param_name=param_name,
+        body_field_class=body_field_class,
+    )
+    if not isinstance(
+        param_field.field_info, (params.BodyFieldInfo, params.FileFieldInfo)
+    ) and not is_scalar_field(field=param_field):
+        if not is_scalar_sequence_field(param_field):
+            if not lenient_issubclass(param_field.type_, BaseModel):
+                raise ImproperConfiguration(
+                    f"{param_field.type_} type can't be processed as a field"
+                )
+
+            bulk_resolver_generator_class = get_resolver_generator(param_default)
+            bulk_resolver_generator_class(param_field).generate_resolvers(
+                body_field_class=body_field_class
+            )
+    return param_field
+
 
 class EndpointArgsModel:
-    _bulk_resolvers_generators = {
-        str(params.FormFieldInfo): FormArgsResolverGenerator,
-        str(params.PathFieldInfo): PathArgsResolverGenerator,
-        str(params.QueryFieldInfo): QueryHeaderResolverGenerator,
-        str(params.HeaderFieldInfo): QueryHeaderResolverGenerator,
-    }
-
     _provider_skip = primitive_types + sequence_types
 
     __slots__ = (
@@ -82,13 +149,6 @@ class EndpointArgsModel:
         self._route_models: t.List[IRouteParameterResolver] = []
         self._extra_endpoint_args: t.List[ExtraEndpointArg] = (
             list(extra_endpoint_args) if extra_endpoint_args else []
-        )
-
-    def get_resolver_generator(
-        self, param: params.ParamFieldInfo
-    ) -> t.Type[BulkArgsResolverGenerator]:
-        return self._bulk_resolvers_generators.get(
-            str(type(param)), BulkArgsResolverGenerator
         )
 
     def get_route_models(self) -> t.List[IRouteParameterResolver]:
@@ -165,7 +225,7 @@ class EndpointArgsModel:
                 param.annotation,
                 param.kind,
             )
-            param_annotation, param_default = self._get_annotation_type_and_default(
+            param_annotation, param_default = get_annotation_type_and_default(
                 param_annotation, param_default
             )
 
@@ -210,51 +270,13 @@ class EndpointArgsModel:
                 ), "Path params must be of one of the supported types"
                 self._add_to_model(field=param_field)
             else:
-                param_field = self._process_parameter_file(
+                param_field = process_parameter_file(
                     param_default=param_default,
                     param_annotation=param_annotation,
                     param_name=param_name,
                     body_field_class=body_field_class,
                 )
                 self._add_to_model(field=param_field)
-
-    def _process_parameter_file(
-        self,
-        *,
-        param_default: t.Any,
-        param_name: str,
-        param_annotation: t.Type,
-        body_field_class: t.Type[FieldInfo] = params.BodyFieldInfo,
-    ) -> ModelField:
-        default_field_info = t.cast(
-            t.Type[params.ParamFieldInfo],
-            param_default
-            if isinstance(param_default, FieldInfo)
-            else params.QueryFieldInfo,
-        )
-        param_field = get_parameter_field(
-            param_default=param_default,
-            param_annotation=param_annotation,
-            default_field_info=default_field_info,
-            param_name=param_name,
-            body_field_class=body_field_class,
-        )
-        if not isinstance(
-            param_field.field_info, (params.BodyFieldInfo, params.FileFieldInfo)
-        ) and not is_scalar_field(field=param_field):
-            if not is_scalar_sequence_field(param_field):
-                if not lenient_issubclass(param_field.type_, BaseModel):
-                    raise ImproperConfiguration(
-                        f"{param_field.type_} type can't be processed as a field"
-                    )
-
-                bulk_resolver_generator_class = self.get_resolver_generator(
-                    param_default
-                )
-                bulk_resolver_generator_class(param_field).generate_resolvers(
-                    body_field_class=body_field_class
-                )
-        return param_field
 
     def _add_system_parameters_to_dependency(
         self,
@@ -283,22 +305,12 @@ class EndpointArgsModel:
                 name=param.name,
                 kind=param.kind,
                 default=param.default,
-                annotation=cls.get_typed_annotation(param, global_ns),
+                annotation=get_typed_annotation(param, global_ns),
             )
             for param in signature.parameters.values()
         ]
         typed_signature = inspect.Signature(typed_params)
         return typed_signature
-
-    @classmethod
-    def get_typed_annotation(
-        cls, param: inspect.Parameter, globalns: t.Dict[str, t.Any]
-    ) -> t.Any:
-        annotation = param.annotation
-        if isinstance(annotation, str):
-            annotation = t.ForwardRef(annotation)
-            annotation = evaluate_forwardref(annotation, globalns, globalns)
-        return annotation
 
     def _add_to_model(self, *, field: ModelField, key: t.Optional[str] = None) -> None:
         field_info = t.cast(params.ParamFieldInfo, field.field_info)
@@ -331,20 +343,6 @@ class EndpointArgsModel:
     def compute_extra_route_args(self) -> None:
         self._add_extra_route_args(*self._extra_endpoint_args)
 
-    def _get_annotation_type_and_default(
-        self, param_annotation: t.Any, default_param_default: t.Any
-    ) -> t.Tuple:
-        if get_origin(param_annotation) is Annotated:
-            annotated_args = get_args(param_annotation)
-            if len(annotated_args) == 2:
-                return annotated_args
-            else:
-                raise ImproperConfiguration(
-                    f"Cannot specify multiple `Annotated` Ellar arguments for {annotated_args!r}"
-                )
-
-        return param_annotation, default_param_default
-
     def _add_extra_route_args(
         self, *extra_operation_args: ExtraEndpointArg, key: t.Optional[str] = None
     ) -> None:
@@ -355,7 +353,7 @@ class EndpointArgsModel:
                 param.annotation,
             )
 
-            param_annotation, param_default = self._get_annotation_type_and_default(
+            param_annotation, param_default = get_annotation_type_and_default(
                 param_annotation, param_default
             )
 
@@ -367,7 +365,7 @@ class EndpointArgsModel:
             ):
                 continue
 
-            param_field = self._process_parameter_file(
+            param_field = process_parameter_file(
                 param_default=param_default,
                 param_annotation=param_annotation,
                 param_name=param_name,
