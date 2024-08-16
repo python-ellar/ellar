@@ -92,7 +92,12 @@ class OpenAPIDocumentModule:
 
                 document = _get_document
 
-            @router.get(openapi_url, include_in_schema=False, response=OpenAPI)
+            @router.get(
+                openapi_url,
+                include_in_schema=False,
+                response=OpenAPI,
+                name="openapi_schema",
+            )
             @set_metadata(OPENAPI_OPERATION_KEY, True)
             def openapi_schema() -> t.Any:
                 _docs = document
@@ -139,9 +144,9 @@ class OpenAPIDocumentModule:
 
             @t.no_type_check
             async def _doc(ctx: IExecutionContext) -> HTMLResponse:
-                request = ctx.switch_to_http_connection().get_request()
+                ctx.switch_to_http_connection().get_request()
                 html_str = render_template_string(
-                    docs_ui.template_string, request, **docs_ui.template_context
+                    docs_ui.template_string, **docs_ui.template_context
                 )
                 return HTMLResponse(html_str)
 

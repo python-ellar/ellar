@@ -4,8 +4,17 @@ import typing as t
 from ellar.common import IIdentitySchemes
 from ellar.common.compatible import AttributeDict, cached_property
 from ellar.common.constants import GUARDS_KEY
-from ellar.core.routing import ControllerRouteOperation, EllarMount, RouteOperation
-from ellar.openapi.constants import OPENAPI_OPERATION_KEY, OPENAPI_TAG, REF_TEMPLATE
+from ellar.core.routing import (
+    ControllerRouteOperation,
+    EllarControllerMount,
+    RouteOperation,
+)
+from ellar.openapi.constants import (
+    IGNORE_CONTROLLER_TYPE,
+    OPENAPI_OPERATION_KEY,
+    OPENAPI_TAG,
+    REF_TEMPLATE,
+)
 from ellar.pydantic import (
     EmailStr,
     GenerateJsonSchema,
@@ -54,16 +63,19 @@ class DocumentOpenAPIFactory:
 
         for route in app.routes:
             if (
-                isinstance(route, EllarMount)
+                isinstance(route, EllarControllerMount)
                 and len(route.routes) > 0
                 and route.include_in_schema
-                and route.get_control_type()
+                and route.get_controller_type()
             ):
-                control_type = route.get_control_type()
+                control_type = route.get_controller_type()
                 assert control_type
 
                 openapi_tags = AttributeDict(
                     reflector.get(OPENAPI_TAG, control_type) or {}
+                )
+                ignore_tag = (
+                    reflector.get(IGNORE_CONTROLLER_TYPE, control_type) or False
                 )
                 if route.name:
                     openapi_tags.setdefault("name", route.name)
@@ -80,7 +92,7 @@ class DocumentOpenAPIFactory:
                         ),
                     )
                 )
-                if openapi_tags:
+                if openapi_tags and not ignore_tag:
                     self._build.setdefault("tags", []).append(openapi_tags)
             elif (
                 isinstance(route, (RouteOperation, ControllerRouteOperation))
@@ -126,7 +138,7 @@ class DocumentOpenAPIFactory:
             separate_input_output_schemas=True,
         )
 
-        # mounts: t.List[t.Union[BaseRoute, EllarMount, Mount]] = []
+        # mounts: t.List[t.Union[BaseRoute, EllarControllerMount, Mount]] = []
         # for _, item in app.injector.get_templating_modules().items():
         #     mounts.extend(item.routers)
 

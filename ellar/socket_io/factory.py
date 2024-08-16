@@ -84,7 +84,12 @@ class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
                 )
                 SocketMessageOperation(controller_type, message, socket_server, handler)
 
-        return base_route_type(app=SocketIOASGIApp(socket_server), path=path, name=name)
+        mount = base_route_type(
+            app=SocketIOASGIApp(socket_server), path=path, name=name
+        )
+        mount.get_controller_type = lambda: controller_type  # type:ignore[attr-defined]
+
+        return mount
 
     @classmethod
     def check_type(cls, controller_type: t.Union[t.Type, t.Any]) -> None:

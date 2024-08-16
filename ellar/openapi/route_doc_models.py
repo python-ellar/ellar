@@ -17,7 +17,7 @@ from ellar.common.params.resolvers import (
     RouteParameterModelField,
 )
 from ellar.common.shortcuts import normalize_path
-from ellar.core.routing import EllarMount, RouteOperation
+from ellar.core.routing import EllarControllerMount, RouteOperation
 from ellar.core.services.reflector import reflector
 from ellar.openapi.constants import (
     IGNORE_CONTROLLER_TYPE,
@@ -58,7 +58,7 @@ class OpenAPIRoute(ABC):
 class OpenAPIMountDocumentation(OpenAPIRoute):
     def __init__(
         self,
-        mount: t.Union[EllarMount, Mount],
+        mount: t.Union[EllarControllerMount, Mount],
         global_route_models_update: t.Callable[
             ["OpenAPIMountDocumentation", t.Dict], t.Any
         ],
@@ -103,15 +103,20 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
                         **openapi,
                     )
                 )
-            elif isinstance(route, EllarMount):
+            elif isinstance(route, EllarControllerMount):
                 openapi_tags = AttributeDict(
-                    reflector.get(OPENAPI_TAG, route.get_control_type()) or {}
+                    reflector.get(OPENAPI_TAG, route.get_controller_type()) or {}
                 )
-
+                ignore_tag = (
+                    reflector.get(IGNORE_CONTROLLER_TYPE, route.get_controller_type())
+                    or False
+                )
                 if route.name:
                     openapi_tags.setdefault("name", route.name)
 
-                guards = reflector.get(GUARDS_KEY, route.get_control_type())
+                openapi_tags.update(name=f"{self.tag}:{openapi_tags.name}")
+
+                guards = reflector.get(GUARDS_KEY, route.get_controller_type())
 
                 self._global_route_models_update(
                     OpenAPIMountDocumentation(
@@ -121,7 +126,7 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
                         global_route_models_update=self._global_route_models_update,
                         path_prefix=self.path_format,
                     ),
-                    openapi_tags,
+                    openapi_tags if not ignore_tag else None,
                 )
         return routes
 

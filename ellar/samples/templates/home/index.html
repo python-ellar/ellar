@@ -57,6 +57,14 @@
       <p class="lead mt-5">
         <a href="{{example_project_url}}" target="_blank" class="btn btn-lg btn-light fw-bold">See Sample Projects</a>
       </p>
+      <div class="d-flex gap-2 justify-content-center">
+          {% for name, url in openapi_schema %}
+            {% if url %}
+                <a class="btn btn-outline-primary btn-sm fw-bold" href="{{ url }}">See {{ name | capitalize }} API Docs</a>
+            {% endif %}
+          {% endfor %}
+      </div>
+
     </main>
 
     <footer class="mt-auto text-white-50">

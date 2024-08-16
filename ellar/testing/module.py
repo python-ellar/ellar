@@ -12,7 +12,7 @@ from ellar.common import (
 )
 from ellar.common.types import T
 from ellar.core import ModuleBase
-from ellar.core.routing import EllarMount
+from ellar.core.routing import EllarControllerMount
 from ellar.di import ProviderConfig
 from ellar.reflect import reflect
 from starlette.routing import Host, Mount
@@ -100,7 +100,9 @@ class Test:
     def create_test_module(
         cls,
         controllers: t.Sequence[t.Union[t.Type[ControllerBase], t.Type]] = (),
-        routers: t.Sequence[t.Union[ModuleRouter, EllarMount, Mount, Host]] = (),
+        routers: t.Sequence[
+            t.Union[ModuleRouter, EllarControllerMount, Mount, Host, t.Callable]
+        ] = (),
         providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = (),
         template_folder: t.Optional[str] = "templates",
         base_directory: t.Optional[t.Union[Path, str]] = None,

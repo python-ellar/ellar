@@ -1,4 +1,4 @@
 from ._reflect import reflect
-from .constants import REFLECT_TYPE
+from .utils import ensure_target, transfer_metadata
 
-__all__ = ["reflect", "REFLECT_TYPE"]
+__all__ = ["reflect", "ensure_target", "transfer_metadata"]

@@ -2,36 +2,81 @@ import logging
 import typing as t
 from contextlib import asynccontextmanager, contextmanager
 from inspect import ismethod
-from weakref import WeakKeyDictionary
+from weakref import WeakKeyDictionary, WeakValueDictionary
 
-from .constants import REFLECT_TYPE
+from .utils import ensure_target, get_original_target
 
 logger = logging.getLogger("ellar")
 
 
+class _Hashable:
+    def __init__(self, item_id: int, item_repr: str) -> None:
+        self.item_id = item_id
+        self.item_repr = item_repr
+        # self._item_repr = item_repr
+
+    def __hash__(self) -> int:
+        # Combine the hash values of the attributes
+        attrs = self.item_id, self.item_repr
+        return hash(attrs)
+
+    def __eq__(self, other: t.Any) -> bool:
+        # Check if another object is equal based on attributes
+        if isinstance(other, _Hashable):
+            return self.item_id == other.item_id
+        return False
+
+    def __repr__(self) -> str:
+        return self.item_repr
+
+    @classmethod
+    def force_hash(cls, item: t.Any) -> t.Union[t.Any, "_Hashable"]:
+        try:
+            hash(item)
+            return item
+        except TypeError:
+            new_target = cls(item_id=id(item), item_repr=repr(item))
+            hash_id = hash(new_target)
+
+            if hash_id in reflect._un_hashable:
+                return reflect._un_hashable[hash_id]
+
+            return reflect.add_un_hashable_type(hash_id, new_target)
+
+
 def _get_actual_target(
-    target: t.Union[t.Type, t.Callable], create: bool = False
+    target: t.Union[t.Type, t.Callable],
 ) -> t.Union[t.Type, t.Callable]:
-    try:
-        reflect_type = target.__dict__[REFLECT_TYPE]
-    except KeyError:
-        if create:
-            try:
-                setattr(target, REFLECT_TYPE, target)
-            except Exception as ex:  # pragma: no cover
-                logger.debug(f"Setting REFLECT_TYPE failed. \nError Message: {ex}")
-        return target
-    else:
-        return t.cast(t.Union[t.Type, t.Callable], reflect_type)
+    target = get_original_target(target)
+    return t.cast(
+        t.Union[t.Type, t.Callable], _Hashable.force_hash(ensure_target(target))
+    )
 
 
 class _Reflect:
     __slots__ = ("_meta_data",)
 
+    _un_hashable: t.Dict[int, _Hashable] = {}
+    _data_type_update_callbacks: t.MutableMapping[t.Type, t.Callable] = (
+        WeakValueDictionary()
+    )
+
     def __init__(self) -> None:
         self._meta_data: t.MutableMapping[t.Union[t.Type, t.Callable], t.Dict] = (
             WeakKeyDictionary()
         )
+
+    def add_type_update_callback(self, type_: t.Type, func: t.Callable) -> None:
+        self._data_type_update_callbacks[type_] = func
+
+    def add_un_hashable_type(self, hash_id: int, value: _Hashable) -> _Hashable:
+        self._un_hashable[hash_id] = value
+        return value
+
+    def _default_update_callback(
+        self, existing_value: t.Any, new_value: t.Any
+    ) -> t.Any:
+        return new_value
 
     def define_metadata(
         self,
@@ -51,16 +96,10 @@ class _Reflect:
         if target_metadata is not None:
             existing = target_metadata.get(metadata_key)
             if existing is not None:
-                if isinstance(existing, (list, tuple)) and isinstance(
-                    metadata_value, (list, tuple)
-                ):
-                    metadata_value = existing + type(existing)(metadata_value)  # type: ignore
-                elif isinstance(existing, set) and isinstance(metadata_value, set):
-                    existing_combined = list(existing) + list(metadata_value)
-                    metadata_value = type(existing)(existing_combined)
-                elif isinstance(existing, dict) and isinstance(metadata_value, dict):
-                    existing.update(dict(metadata_value))
-                    metadata_value = type(existing)(existing)
+                update_callback = self._data_type_update_callbacks.get(
+                    type(existing), self._default_update_callback
+                )
+                metadata_value = update_callback(existing, metadata_value)
             target_metadata[metadata_key] = metadata_value
 
     def metadata(self, metadata_key: str, metadata_value: t.Any) -> t.Any:
@@ -73,14 +112,30 @@ class _Reflect:
     def has_metadata(
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
     ) -> bool:
-        target_metadata: t.Dict = self._get_or_create_metadata(target) or {}
+        _target_actual = _get_actual_target(target)
+        target_metadata = self._meta_data.get(_target_actual) or {}
+
         return metadata_key in target_metadata
 
     def get_metadata(
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
     ) -> t.Optional[t.Any]:
-        target_metadata: t.Dict = self._get_or_create_metadata(target) or {}
+        _target_actual = _get_actual_target(target)
+        target_metadata = self._meta_data.get(_target_actual) or {}
+
         value = target_metadata.get(metadata_key)
+        if isinstance(value, (list, set, tuple, dict)):
+            # return immutable value
+            return type(value)(value)
+        return value
+
+    def get_metadata_search_safe(
+        self, metadata_key: str, target: t.Union[t.Type, t.Callable]
+    ) -> t.Any:
+        _target_actual = _get_actual_target(target)
+        meta = self._meta_data[_target_actual]
+
+        value = meta[metadata_key]
         if isinstance(value, (list, set, tuple, dict)):
             # return immutable value
             return type(value)(value)
@@ -97,13 +152,27 @@ class _Reflect:
     def get_metadata_keys(
         self, target: t.Union[t.Type, t.Callable]
     ) -> t.KeysView[t.Any]:
-        target_metadata: t.Dict = self._get_or_create_metadata(target) or {}
+        _target_actual = _get_actual_target(target)
+        target_metadata = self._meta_data.get(_target_actual) or {}
+
         return target_metadata.keys()
+
+    def get_all_metadata(self, target: t.Union[t.Type, t.Callable]) -> t.Dict:
+        _target_actual = _get_actual_target(target)
+        target_metadata = self._meta_data.get(_target_actual) or {}
+        return type(target_metadata)(target_metadata)
+
+    def delete_all_metadata(self, target: t.Union[t.Type, t.Callable]) -> None:
+        _target = _get_actual_target(target)
+        if _target in self._meta_data:
+            self._meta_data.pop(_target)
 
     def delete_metadata(
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
     ) -> t.Any:
-        target_metadata = self._get_or_create_metadata(target)
+        _target_actual = _get_actual_target(target)
+        target_metadata = self._meta_data.get(_target_actual) or {}
+
         if target_metadata and metadata_key in target_metadata:
             value = target_metadata.pop(metadata_key)
             if isinstance(value, (list, set, tuple, dict)):
@@ -114,7 +183,7 @@ class _Reflect:
     def _get_or_create_metadata(
         self, target: t.Union[t.Type, t.Callable], create: bool = False
     ) -> t.Optional[t.Dict]:
-        _target = _get_actual_target(target, create)
+        _target = _get_actual_target(target)
         if _target in self._meta_data:
             return self._meta_data[_target]
 
@@ -148,4 +217,35 @@ class _Reflect:
         reflect._meta_data = WeakKeyDictionary(dict=cached_meta_data)
 
 
+def _list_update(existing_value: t.Any, new_value: t.Any) -> t.Any:
+    if isinstance(existing_value, (list, tuple)) and isinstance(
+        new_value, (list, tuple)
+    ):
+        return existing_value + type(existing_value)(new_value)  # type: ignore
+    return new_value
+
+
+def _set_update(existing_value: t.Any, new_value: t.Any) -> t.Any:
+    if isinstance(existing_value, set) and isinstance(new_value, set):
+        existing_combined = list(existing_value) + list(new_value)
+        return type(existing_value)(existing_combined)
+    return new_value
+
+
+def _dict_update(existing_value: t.Any, new_value: t.Any) -> t.Any:
+    if isinstance(
+        existing_value, (dict, WeakKeyDictionary, WeakValueDictionary)
+    ) and isinstance(new_value, (dict, WeakKeyDictionary, WeakValueDictionary)):
+        existing_value.update(new_value)
+        return type(existing_value)(existing_value)
+    return new_value
+
+
 reflect = _Reflect()
+
+reflect.add_type_update_callback(tuple, _list_update)
+reflect.add_type_update_callback(list, _list_update)
+reflect.add_type_update_callback(set, _set_update)
+reflect.add_type_update_callback(dict, _dict_update)
+reflect.add_type_update_callback(WeakKeyDictionary, _dict_update)
+reflect.add_type_update_callback(WeakValueDictionary, _dict_update)

@@ -3,7 +3,7 @@ import typing as t
 from ellar.common.compatible import AttributeDict
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.di import RequestORTransientScope, injectable
-from ellar.reflect import REFLECT_TYPE, reflect
+from ellar.reflect import reflect, transfer_metadata
 from ellar.socket_io.constants import (
     GATEWAY_METADATA,
     GATEWAY_OPTIONS,
@@ -39,10 +39,10 @@ def WebSocketGateway(
 
         if type(_gateway_type) is not GatewayType:
             # We force the cls to inherit from `ControllerBase` by creating another type.
-            attrs = {}
-            if hasattr(cls, REFLECT_TYPE):
-                attrs.update({REFLECT_TYPE: cls.__dict__[REFLECT_TYPE]})
+            attrs: t.Dict = {}
+
             new_cls = type(cls.__name__, (cls, GatewayBase), attrs)
+            transfer_metadata(cls, new_cls)
 
             _gateway_type = t.cast(t.Type[GatewayBase], new_cls)
 

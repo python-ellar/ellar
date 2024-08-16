@@ -1,5 +1,6 @@
 import typing as t
 
+from ellar.utils.importer import import_from_string
 from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
 from pydantic.json_schema import JsonSchemaValue
 from pydantic_core import CoreSchema
@@ -44,8 +45,15 @@ def as_pydantic_validator(
 
 
 class AllowTypeOfSource:
-    def __init__(self, schema: t.Optional[t.Dict[str, t.Any]] = None) -> None:
+    def __init__(
+        self,
+        schema: t.Optional[t.Dict[str, t.Any]] = None,
+        validator: t.Callable[..., bool] = None,
+        error_message: t.Optional[t.Callable[..., str]] = None,
+    ) -> None:
         self._schema = schema
+        self.validator = validator
+        self.error_message = error_message
 
     def __get_pydantic_core_schema__(
         self,
@@ -53,13 +61,24 @@ class AllowTypeOfSource:
         handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
         def validate(value: t.Any, *args: t.Any) -> t.Any:
-            if not isinstance(value, source):
-                raise ValueError(
-                    f"Expected an instance of {source}, got an instance of {type(value)}"
-                )
+            if isinstance(value, str) and len(value.split(":")) == 2:
+                value = import_from_string(value)
+
+            if (self.validator and not self.validator(source, value)) or (
+                not self.validator and not isinstance(value, source)
+            ):
+                self._handle_error(source, value)
             return value
 
         return with_info_plain_validator_function(validate)
+
+    def _handle_error(self, source: t.Any, value: t.Any) -> None:
+        error_message = (
+            f"Expected an instance of {source}, got an instance of {type(value)}"
+            if self.error_message is None
+            else self.error_message(source, value)
+        )
+        raise ValueError(error_message)
 
     def __get_pydantic_json_schema__(
         self, core_schema: CoreSchema, handler: GetJsonSchemaHandler
