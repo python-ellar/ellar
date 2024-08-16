@@ -7,7 +7,7 @@ from ellar.common.logging import request_logger
 from ellar.di import injectable
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common.routing import RouteOperationBase
+    from ellar.core.routing import RouteOperationBase
 
 
 @injectable

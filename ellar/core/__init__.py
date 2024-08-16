@@ -2,8 +2,15 @@ import typing as t
 
 from .conf import Config, ConfigDefaultTypesMixin
 from .connection import HTTPConnection, Request, WebSocket
-from .context import ApplicationContext, config, current_injector
-from .execution_context import ExecutionContext, HostContext
+from .execution_context import (
+    ExecutionContext,
+    HostContext,
+    HttpRequestConnectionContext,
+    config,
+    current_connection,
+    current_injector,
+    with_injector_context,
+)
 from .guards import GuardConsumer
 from .interceptors import EllarInterceptorConsumer
 from .modules import (
@@ -15,6 +22,7 @@ from .modules import (
 )
 from .services import Reflector, reflector
 from .shortcuts import host, mount
+from .templating import TemplateRenderingService
 from .versioning import VersioningSchemes
 
 __all__ = [
@@ -38,8 +46,11 @@ __all__ = [
     "host",
     "current_injector",
     "config",
-    "ApplicationContext",
     "ForwardRefModule",
+    "TemplateRenderingService",
+    "HttpRequestConnectionContext",
+    "current_connection",
+    "with_injector_context",
 ]
 
 
