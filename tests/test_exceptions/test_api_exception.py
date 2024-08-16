@@ -16,9 +16,6 @@ from ellar.testing import Test
 
 from .exception_runner import ExceptionRunner
 
-test_module = Test.create_test_module()
-
-
 _exception_runner = ExceptionRunner(APIException)
 
 
@@ -27,7 +24,7 @@ def exception_():
     _exception_runner.run()
 
 
-test_module.create_application().router.add_route(exception_)
+test_module = Test.create_test_module(routers=[exception_])
 client = test_module.get_test_client()
 
 

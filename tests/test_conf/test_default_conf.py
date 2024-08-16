@@ -48,7 +48,8 @@ def test_default_configurations():
     assert config.STATIC_FOLDER_PACKAGES == []
     assert config.STATIC_MOUNT_PATH == "/static"
 
-    assert config.MIDDLEWARE == []
+    assert len(config.MIDDLEWARE) == 7
+    assert len(config.TEMPLATES_CONTEXT_PROCESSORS) == 3
 
     assert callable(config.DEFAULT_NOT_FOUND_HANDLER)
     assert config.DEFAULT_LIFESPAN_HANDLER is None
@@ -136,10 +137,10 @@ def test_can_set_defaults_a_configuration_instance_once():
     with pytest.raises(AttributeError):
         d = config.SOME_NEW_CONFIGS
         assert d
-    config.setdefault("SOME_NEW_CONFIGS", "some new configuration values")
+    config.set_defaults(SOME_NEW_CONFIGS="some new configuration values")
     assert config.SOME_NEW_CONFIGS == "some new configuration values"
 
-    config.setdefault("SOME_NEW_CONFIGS", "some new configuration values changed")
+    config.set_defaults(SOME_NEW_CONFIGS="some new configuration values changed")
     assert config.SOME_NEW_CONFIGS == "some new configuration values"
 
 
@@ -158,9 +159,6 @@ def test_can_change_configuration_values_after_instantiation():
 
     config.SOME_NEW_CONFIGS_2 = "some new configuration values changed"
     assert config.SOME_NEW_CONFIGS_2 == "some new configuration values changed"
-
-    config.config_module = "somethings"
-    assert config.config_module == "somethings"
 
 
 def test_can_export_configuration_values():

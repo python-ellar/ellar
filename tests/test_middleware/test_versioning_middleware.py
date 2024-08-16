@@ -44,9 +44,7 @@ async def assert_version_middleware_app(scope, receive, send):
     )
 
 
-asgi_app = RequestVersioningMiddleware(
-    assert_version_middleware_app, debug=False, config=config
-)
+asgi_app = RequestVersioningMiddleware(assert_version_middleware_app, config=config)
 
 
 @pytest.mark.parametrize(
@@ -59,9 +57,7 @@ asgi_app = RequestVersioningMiddleware(
         (UrlPathAPIVersioning(), UrlPathVersionResolver),
     ],
 )
-def test_di_middleware_execution_context_initialization(
-    versioning_scheme, versioning_resolver_type
-):
+def test_request_versioning_middleware(versioning_scheme, versioning_resolver_type):
     config.VERSIONING_SCHEME = versioning_scheme
     config.VERSION_RESOLVER_TYPE = versioning_resolver_type
 

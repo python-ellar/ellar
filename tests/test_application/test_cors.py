@@ -15,10 +15,9 @@ def test_cors_allow_all():
             "CORS_ALLOW_METHODS": ["*"],
             "CORS_ALLOW_ORIGINS": ["*"],
             "CORS_ALLOW_CREDENTIALS": True,
-        }
+        },
+        routers=[http_route(methods=["GET"])(homepage)],
     )
-    app = tm.create_application()
-    app.router.add_route(http_route(methods=["GET"])(homepage))
     client = tm.get_test_client()
 
     # Test pre-flight response
@@ -70,10 +69,9 @@ def test_cors_allow_all_except_credentials():
             "CORS_ALLOW_HEADERS": ["*"],
             "CORS_ALLOW_METHODS": ["*"],
             "CORS_ALLOW_ORIGINS": ["*"],
-        }
+        },
+        routers=[http_route(methods=["GET"])(homepage)],
     )
-    app = tm.create_application()
-    app.router.add_route(http_route(methods=["GET"])(homepage))
 
     client = tm.get_test_client()
 
@@ -116,10 +114,9 @@ def test_cors_allow_specific_origin():
             "CORS_ALLOW_HEADERS": ["X-Example", "Content-Type"],
             "CORS_ALLOW_ORIGINS": ["https://example.org"],
             "CORS_ALLOW_CREDENTIALS": False,
-        }
+        },
+        routers=[http_route(methods=["GET"])(homepage)],
     )
-    app = tm.create_application()
-    app.router.add_route(http_route(methods=["GET"])(homepage))
 
     client = tm.get_test_client()
 
@@ -161,11 +158,9 @@ def test_cors_disallowed_preflight():
         config_module={
             "CORS_ALLOW_HEADERS": ["X-Example"],
             "CORS_ALLOW_ORIGINS": ["https://example.org"],
-        }
+        },
+        routers=[http_route(methods=["GET"])(homepage)],
     )
-    app = tm.create_application()
-
-    app.router.add_route(http_route(methods=["GET"])(homepage))
     client = tm.get_test_client()
 
     # Test pre-flight response
@@ -199,10 +194,9 @@ def test_preflight_allows_request_origin_if_origins_wildcard_and_credentials_all
             "CORS_ALLOW_ORIGINS": ["*"],
             "CORS_ALLOW_METHODS": ["POST"],
             "CORS_ALLOW_CREDENTIALS": True,
-        }
+        },
+        routers=[http_route(methods=["GET"])(homepage)],
     )
-    app = tm.create_application()
-    app.router.add_route(http_route(methods=["GET"])(homepage))
 
     client = tm.get_test_client()
 
@@ -227,11 +221,9 @@ def test_cors_preflight_allow_all_methods():
         return PlainTextResponse("Homepage", status_code=200)
 
     tm = Test.create_test_module(
-        config_module={"CORS_ALLOW_ORIGINS": ["*"], "CORS_ALLOW_METHODS": ["*"]}
+        routers=[http_route(methods=["GET"])(homepage)],
+        config_module={"CORS_ALLOW_ORIGINS": ["*"], "CORS_ALLOW_METHODS": ["*"]},
     )
-    app = tm.create_application()
-
-    app.router.add_route(http_route(methods=["GET"])(homepage))
     client = tm.get_test_client()
 
     headers = {
@@ -251,10 +243,9 @@ def test_cors_allow_all_methods():
 
     methods = ["delete", "get", "head", "options", "patch", "post", "put"]
     tm = Test.create_test_module(
-        config_module={"CORS_ALLOW_ORIGINS": ["*"], "CORS_ALLOW_METHODS": ["*"]}
+        config_module={"CORS_ALLOW_ORIGINS": ["*"], "CORS_ALLOW_METHODS": ["*"]},
+        routers=[http_route(methods=methods)(homepage)],
     )
-    app = tm.create_application()
-    app.router.add_route(http_route(methods=methods)(homepage))
     client = tm.get_test_client()
 
     headers = {"Origin": "https://example.org"}
@@ -276,10 +267,9 @@ def test_cors_allow_origin_regex():
             "CORS_ALLOW_ORIGIN_REGEX": "https://.*",
             "CORS_ALLOW_HEADERS": ["X-Example", "Content-Type"],
             "CORS_ALLOW_CREDENTIALS": True,
-        }
+        },
+        routers=[http_route(methods=["GET"])(homepage)],
     )
-    app = tm.create_application()
-    app.router.add_route(http_route(methods=["GET"])(homepage))
 
     client = tm.get_test_client()
 
@@ -343,11 +333,9 @@ def test_cors_allow_origin_regex_fullmatch():
         config_module={
             "CORS_ALLOW_ORIGIN_REGEX": r"https://.*\.example.org",
             "CORS_ALLOW_HEADERS": ["X-Example", "Content-Type"],
-        }
+        },
+        routers=[http_route(methods=["GET"])(homepage)],
     )
-    app = tm.create_application()
-    app.router.add_route(http_route(methods=["GET"])(homepage))
-
     client = tm.get_test_client()
 
     # Test standard response
@@ -370,12 +358,13 @@ def test_cors_allow_origin_regex_fullmatch():
 
 
 def test_cors_credentialed_requests_return_specific_origin():
+    @http_route(methods=["GET"])
     def homepage(request: Inject[Request]):
         return PlainTextResponse("Homepage", status_code=200)
 
-    tm = Test.create_test_module(config_module={"CORS_ALLOW_ORIGINS": ["*"]})
-    app = tm.create_application()
-    app.router.add_route(http_route(methods=["GET"])(homepage))
+    tm = Test.create_test_module(
+        routers=[homepage], config_module={"CORS_ALLOW_ORIGINS": ["*"]}
+    )
     client = tm.get_test_client()
 
     # Test credentialed request
@@ -392,11 +381,9 @@ def test_cors_vary_header_defaults_to_origin():
         return PlainTextResponse("Homepage", status_code=200)
 
     tm = Test.create_test_module(
-        config_module={"CORS_ALLOW_ORIGINS": ["https://example.org"]}
+        routers=[http_route(methods=["GET"])(homepage)],
+        config_module={"CORS_ALLOW_ORIGINS": ["https://example.org"]},
     )
-    app = tm.create_application()
-    app.router.add_route(http_route(methods=["GET"])(homepage))
-
     client = tm.get_test_client()
 
     headers = {"Origin": "https://example.org"}
@@ -412,9 +399,10 @@ def test_cors_vary_header_is_not_set_for_non_credentialed_request():
             "Homepage", status_code=200, headers={"Vary": "Accept-Encoding"}
         )
 
-    tm = Test.create_test_module(config_module={"CORS_ALLOW_ORIGINS": ["*"]})
-    app = tm.create_application()
-    app.router.add_route(http_route(methods=["GET"])(homepage))
+    tm = Test.create_test_module(
+        routers=[http_route(methods=["GET"])(homepage)],
+        config_module={"CORS_ALLOW_ORIGINS": ["*"]},
+    )
 
     client = tm.get_test_client()
 
@@ -429,9 +417,10 @@ def test_cors_vary_header_is_properly_set_for_credentialed_request():
             "Homepage", status_code=200, headers={"Vary": "Accept-Encoding"}
         )
 
-    tm = Test.create_test_module(config_module={"CORS_ALLOW_ORIGINS": ["*"]})
-    app = tm.create_application()
-    app.router.add_route(http_route(methods=["GET"])(homepage))
+    tm = Test.create_test_module(
+        routers=[http_route(methods=["GET"])(homepage)],
+        config_module={"CORS_ALLOW_ORIGINS": ["*"]},
+    )
     client = tm.get_test_client()
 
     response = client.get(
@@ -448,10 +437,9 @@ def test_cors_vary_header_is_properly_set_when_allow_origins_is_not_wildcard():
         )
 
     tm = Test.create_test_module(
-        config_module={"CORS_ALLOW_ORIGINS": ["https://example.org"]}
+        routers=[http_route(methods=["GET"])(homepage)],
+        config_module={"CORS_ALLOW_ORIGINS": ["https://example.org"]},
     )
-    app = tm.create_application()
-    app.router.add_route(http_route(methods=["GET"])(homepage))
 
     client = tm.get_test_client()
 
@@ -465,14 +453,13 @@ def test_cors_allowed_origin_does_not_leak_between_credentialed_requests():
         return PlainTextResponse("Homepage", status_code=200)
 
     tm = Test.create_test_module(
+        routers=[http_route(methods=["GET"])(homepage)],
         config_module={
             "CORS_ALLOW_ORIGINS": ["*"],
             "CORS_ALLOW_HEADERS": ["*"],
             "CORS_ALLOW_METHODS": ["*"],
-        }
+        },
     )
-    app = tm.create_application()
-    app.router.add_route(http_route(methods=["GET"])(homepage))
     client = tm.get_test_client()
 
     response = client.get("/", headers={"Origin": "https://someplace.org"})

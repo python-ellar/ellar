@@ -1,4 +1,6 @@
 import pytest
+from ellar.core import HttpRequestConnectionContext
+from ellar.core.execution_context import HostContextFactory
 from ellar.di import EllarInjector, ProviderConfig, has_binding
 from ellar.di.exceptions import DIImproperConfiguration
 from ellar.di.scopes import RequestScope, SingletonScope, TransientScope
@@ -34,9 +36,11 @@ async def test_request_transient_scope_instance():
     assert injector.get(IContext) != injector.get(IContext)
     assert isinstance(injector.get(IContext), TransientRequestContext)
 
-    async with injector.create_asgi_args() as request_provider:
+    async with HttpRequestConnectionContext(
+        HostContextFactory().create_context(scope={})
+    ):
         # resolving RequestScope during request will behave like singleton
-        assert request_provider.get(IContext) == request_provider.get(IContext)
+        assert injector.get(IContext) == injector.get(IContext)
 
 
 @pytest.mark.asyncio
@@ -49,9 +53,11 @@ async def test_request_scope_instance():
     with pytest.raises(UnsatisfiedRequirement):
         assert injector.get(IContext)
 
-    async with injector.create_asgi_args() as request_provider:
+    async with HttpRequestConnectionContext(
+        HostContextFactory().create_context(scope={})
+    ):
         # resolving RequestScope during request will behave like singleton
-        assert request_provider.get(IContext) == request_provider.get(IContext)
+        assert injector.get(IContext) == injector.get(IContext)
         assert isinstance(injector.get(IContext), AnyContext)
 
 

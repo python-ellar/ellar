@@ -1,10 +1,12 @@
 import pytest
 from ellar.common import Module
-from ellar.core import ModuleBase
+from ellar.core import HttpRequestConnectionContext, ModuleBase
+from ellar.core.execution_context import HostContextFactory
 from ellar.di import (
-    SCOPED_CONTEXT_VAR,
     Container,
     EllarInjector,
+    register_request_scope_context,
+    request_context_var,
     request_scope,
     transient_scope,
 )
@@ -96,8 +98,10 @@ async def test_request_service_context():
     injector.container.register(Foo1, scope=request_scope)
     injector.container.register(Foo2, scope=transient_scope)
 
-    async with injector.create_asgi_args():
-        asgi_context = SCOPED_CONTEXT_VAR.get()
+    async with HttpRequestConnectionContext(
+        HostContextFactory().create_context(scope={})
+    ):
+        asgi_context = request_context_var.get()
 
         foo1 = injector.get(Foo1)  # result will be tracked by asgi_context
         injector.get(Foo2)  # registered as transient scoped
@@ -121,16 +125,18 @@ async def test_request_service_context():
 
 @pytest.mark.asyncio
 async def test_injector_update_scoped_context():
-    injector = EllarInjector(auto_bind=False)
+    # injector = EllarInjector(auto_bind=False)
 
-    async with injector.create_asgi_args():
-        asgi_context = SCOPED_CONTEXT_VAR.get()
+    async with HttpRequestConnectionContext(
+        HostContextFactory().create_context(scope={})
+    ):
+        asgi_context = request_context_var.get()
 
-        injector.update_scoped_context(Foo1, Foo1())
-        injector.update_scoped_context(Foo, ClassProvider(Foo))
+        register_request_scope_context(Foo1, Foo1())
+        register_request_scope_context(Foo, ClassProvider(Foo))
 
         assert isinstance(asgi_context.context[Foo1], InstanceProvider)
         assert isinstance(asgi_context.context[Foo], ClassProvider)
 
-    injector.update_scoped_context(Foo1, Foo1())
-    assert SCOPED_CONTEXT_VAR.get() is None
+    register_request_scope_context(Foo1, Foo1())
+    assert request_context_var.get() is None

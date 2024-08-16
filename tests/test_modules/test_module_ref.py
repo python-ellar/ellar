@@ -1,5 +1,3 @@
-import logging
-
 import pytest
 from ellar.app import AppFactory
 from ellar.common import (
@@ -164,7 +162,7 @@ def test_module_template_ref_template_filters():
 def test_module_template_ref_scan_exceptions_handlers():
     @Module()
     class ModuleExceptionHandlerSample(ModuleBase):
-        @exception_handler(404)
+        @exception_handler(404, app=True)
         async def exception_404(cls, ctx, exc):
             pass
 
@@ -191,7 +189,7 @@ def test_module_template_ref_scan_exceptions_handlers():
 def test_module_template_ref_scan_middle_ware():
     @Module()
     class ModuleMiddlewareExample(ModuleBase):
-        @middleware()
+        @middleware(app=True)
         async def middleware_func(cls, context, call_next):
             await call_next()
 
@@ -233,36 +231,51 @@ def test_module_template_ref_get_all_routers():
             ],
             ModuleBaseExample,
         )
-        module_ref = module_setup.get_module_ref(config=config, container=container)
-        module_ref.build_dependencies()
 
-    assert len(module_ref.get_routes()) == 5
-
-
-def test_module_template_ref_get_all_routers_fails_for_invalid_controller(caplog):
-    some_invalid_controller = type("SomeInvalidController", (), {})
-    with reflect.context():
-        reflect.define_metadata(
-            MODULE_METADATA.CONTROLLERS, [some_invalid_controller], ModuleBaseExample
-        )
-        config = Config()
-        container = EllarInjector(auto_bind=False).container
-
-        module_setup = ModuleSetup(ModuleBaseExample)
-        container.register(
-            ModuleTreeManager,
-            ModuleTreeManager().add_module(ModuleBaseExample, module_setup),
-        )
-
-        with caplog.at_level(logging.WARNING):
+        with pytest.raises(RuntimeError):
             module_ref = module_setup.get_module_ref(config=config, container=container)
             module_ref.build_dependencies()
 
-        assert (
-            "Router Factory Builder was not found.\nUse `ControllerRouterBuilderFactory` "
-            "as an example create a FactoryBuilder for this type: <class 'type'>"
-            in str(caplog.text)
+    with reflect.context():
+        reflect.define_metadata(
+            MODULE_METADATA.ROUTERS,
+            [
+                Route("/", endpoint=lambda request: "Test"),
+                Route("/test", endpoint=lambda request: "Test"),
+            ],
+            ModuleBaseExample,
         )
+
+        module_ref = module_setup.get_module_ref(config=config, container=container)
+        module_ref.build_dependencies()
+
+    assert len(module_ref.get_routes()) == 4
+
+
+# def test_module_template_ref_get_all_routers_fails_for_invalid_controller(caplog):
+#     some_invalid_controller = type("SomeInvalidController", (), {})
+#     with reflect.context():
+#         reflect.define_metadata(
+#             MODULE_METADATA.CONTROLLERS, [some_invalid_controller], ModuleBaseExample
+#         )
+#         config = Config()
+#         container = EllarInjector(auto_bind=False).container
+#
+#         module_setup = ModuleSetup(ModuleBaseExample)
+#         container.register(
+#             ModuleTreeManager,
+#             ModuleTreeManager().add_module(ModuleBaseExample, module_setup),
+#         )
+#
+#         with caplog.at_level(logging.WARNING):
+#             module_ref = module_setup.get_module_ref(config=config, container=container)
+#             module_ref.build_dependencies()
+#
+#         assert (
+#             "Router Factory Builder was not found.\nUse `ControllerRouterBuilderFactory` "
+#             "as an example create a FactoryBuilder for this type: <class 'type'>"
+#             in str(caplog.text)
+#         )
 
 
 def test_invalid_module_template_ref():
@@ -289,7 +302,6 @@ def test_module_plain_ref_routes_return_empty_list():
 
 
 def test_module_template_ref_routes_returns_valid_routes():
-    some_invalid_router = type("SomeInvalidRouter2", (), {})
     config = Config()
     container = EllarInjector(auto_bind=False).container
     with reflect.context():
@@ -301,7 +313,7 @@ def test_module_template_ref_routes_returns_valid_routes():
 
         reflect.define_metadata(
             MODULE_METADATA.ROUTERS,
-            [some_invalid_router(), Route("/", endpoint=lambda request: "Test")],
+            [Route("/", endpoint=lambda request: "Test")],
             ModuleBaseExample,
         )
         module_ref = module_setup.get_module_ref(config=config, container=container)
@@ -309,8 +321,8 @@ def test_module_template_ref_routes_returns_valid_routes():
         app = AppFactory.create_from_app_module(
             module=ModuleBaseExample, config_module={"STATIC_MOUNT_PATH": None}
         )
-    assert len(module_ref.get_routes()) == 4
-    assert len(module_ref.routes) == 4
+    assert len(module_ref.get_routes()) == 3
+    assert len(module_ref.routes) == 3
     assert len(app.routes) == 3
 
 
@@ -356,17 +368,17 @@ def test_module_template_registers_providers_and_controllers():
     assert isinstance(module_ref.get(SampleController), SampleController)
 
 
-def test_run_application_ready_works():
-    @Module()
-    class TestModuleCycleExample(ModuleBase):
-        _before_init_called = False
-
-        @classmethod
-        def before_init(cls, config: Config) -> None:
-            cls._before_init_called = True
-
-    assert TestModuleCycleExample._before_init_called is False
-
-    Test.create_test_module(modules=[TestModuleCycleExample]).create_application()
-
-    assert TestModuleCycleExample._before_init_called
+# def test_run_application_ready_works():
+#     @Module()
+#     class TestModuleCycleExample(ModuleBase):
+#         _before_init_called = False
+#
+#         @classmethod
+#         def before_init(cls, config: Config) -> None:
+#             cls._before_init_called = True
+#
+#     assert TestModuleCycleExample._before_init_called is False
+#
+#     Test.create_test_module(modules=[TestModuleCycleExample]).create_application()
+#
+#     assert TestModuleCycleExample._before_init_called

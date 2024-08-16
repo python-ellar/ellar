@@ -200,7 +200,7 @@ class ExceptionHandlerAction405(IExceptionHandler):
         self, ctx: IHostContext, exc: HTTPException
     ) -> t.Union[Response, t.Any]:
         context_kwargs = {}
-        return render_template('405.html', request=ctx.switch_to_http_connection().get_request(), **context_kwargs)
+        return render_template('405.html', **context_kwargs)
 ```
 In this code snippet, we've registered a handler for any `HTTP` exception with a `405` status code, and we return a template, `405.html`, as a response. 
 Similarly, you can create an exception handler for the `500` status code that returns an HTML template.

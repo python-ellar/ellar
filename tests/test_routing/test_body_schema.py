@@ -10,8 +10,6 @@ from ellar.testing import Test
 from ..utils import pydantic_error_url
 from .sample import Product
 
-tm = Test.create_test_module()
-
 
 @post("/product")
 @reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
@@ -21,7 +19,7 @@ async def create_item(
     return product
 
 
-tm.create_application().router.add_route(create_item)
+tm = Test.create_test_module(routers=[create_item])
 
 openapi_schema = {
     "openapi": "3.1.0",

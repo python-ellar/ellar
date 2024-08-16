@@ -21,7 +21,7 @@ class EllarController(ControllerBase):
     def index_render_template(self):
         """Looks for index.html in all template folder"""
         return render_template(
-            "index", self.context.switch_to_http_connection().get_request()
+            "index",
         )
 
     @get("/index")

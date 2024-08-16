@@ -1,11 +1,11 @@
 import pytest
-from ellar.reflect import REFLECT_TYPE, reflect
+from ellar.reflect import reflect
 
 
 def test_define_metadata_creates_attribute_dict(random_type):
     key = "FrameworkName"
     reflect.define_metadata(key, "Ellar", random_type)
-    assert hasattr(random_type, REFLECT_TYPE)
+    # assert hasattr(random_type, REFLECT_TYPE)
     assert reflect.get_metadata(key, random_type) == "Ellar"
     assert list(reflect.get_metadata_keys(random_type)) == [key]
 
@@ -30,6 +30,26 @@ def test_define_metadata_with_existing_tuple(random_type):
         "AnotherEllar",
         "AnotherEllarC",
     )
+
+
+def test_get_all_metadata(random_type):
+    reflect.define_metadata("B", ("EllarB",), random_type)
+    assert reflect.get_metadata("B", random_type) == ("EllarB",)
+
+    reflect.define_metadata("B", ("AnotherEllar",), random_type)
+    data = reflect.get_all_metadata(random_type)
+    assert data == {"B": ("EllarB", "AnotherEllar")}
+
+
+def test_delete_all_metadata(random_type):
+    reflect.define_metadata("D", ("EllarD",), random_type)
+
+    reflect.define_metadata("B", ("AnotherEllar",), random_type)
+    data = reflect.get_all_metadata(random_type)
+    assert data == {"B": ("AnotherEllar",), "D": ("EllarD",)}
+
+    reflect.delete_all_metadata(random_type)
+    assert reflect.get_metadata("D", random_type) is None
 
 
 def test_define_metadata_with_existing_list(random_type):

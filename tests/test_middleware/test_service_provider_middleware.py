@@ -3,7 +3,8 @@ import json
 import pytest
 from ellar.common import IHostContextFactory
 from ellar.common.exceptions import HostContextException
-from ellar.core import ApplicationContext, current_injector
+from ellar.core import Config, current_injector, with_injector_context
+from ellar.core.exceptions import ExceptionMiddlewareService
 from ellar.core.middleware import ServerErrorMiddleware
 from ellar.testing import Test
 from ellar.threading.sync_worker import execute_async_context_manager
@@ -76,12 +77,17 @@ async def assert_iexecute_context_app_websocket(scope, receive, send):
 
 
 def test_di_middleware(test_client_factory):
-    app = Test.create_test_module(modules=[DummyModule]).create_application()
+    app = Test.create_test_module(
+        modules=[DummyModule], config_module={"DEBUG": False}
+    ).create_application()
 
     asgi_app = ServerErrorMiddleware(
-        assert_service_provider_app, debug=False, injector=app.injector
+        assert_service_provider_app,
+        config=app.config,
+        injector=app.injector,
+        exception_service=ExceptionMiddlewareService(),
     )
-    with execute_async_context_manager(app.application_context()):
+    with execute_async_context_manager(with_injector_context(app.injector)):
         client = test_client_factory(asgi_app)
         response = client.get("/")
 
@@ -94,10 +100,13 @@ def test_di_middleware(test_client_factory):
 def test_di_middleware_execution_context_initialization(test_client_factory):
     app = Test.create_test_module(modules=[DummyModule]).create_application()
     asgi_app = ServerErrorMiddleware(
-        assert_iexecute_context_app, debug=False, injector=app.injector
+        assert_iexecute_context_app,
+        config=Config(DEBUG=False),
+        injector=app.injector,
+        exception_service=ExceptionMiddlewareService(),
     )
 
-    with execute_async_context_manager(app.application_context()):
+    with execute_async_context_manager(with_injector_context(app.injector)):
         client = test_client_factory(asgi_app)
         response = client.get("/")
 
@@ -107,12 +116,18 @@ def test_di_middleware_execution_context_initialization(test_client_factory):
 
 
 def test_di_middleware_execution_context_initialization_websocket(test_client_factory):
-    app = Test.create_test_module(modules=[DummyModule]).create_application()
+    app = Test.create_test_module(
+        modules=[DummyModule], config_module={"DEBUG": False}
+    ).create_application()
+
     asgi_app = ServerErrorMiddleware(
-        assert_iexecute_context_app_websocket, debug=False, injector=app.injector
+        assert_iexecute_context_app_websocket,
+        config=app.config,
+        injector=app.injector,
+        exception_service=ExceptionMiddlewareService(),
     )
     client = test_client_factory(asgi_app)
-    with execute_async_context_manager(ApplicationContext(app.injector)):
+    with execute_async_context_manager(with_injector_context(app.injector)):
         with client.websocket_connect("/") as session:
             text = session.receive_text()
             assert text == "Hello, world!"

@@ -88,15 +88,14 @@ def test_interceptor_works_ws():
 
 
 def test_global_guard_works():
-    tm = Test.create_test_module()
-    app = tm.create_application()
-
     @get("/global")
     def _interceptor_demo_endpoint():
         return {"message": "intercepted okay"}
 
-    app.router.add_route(_interceptor_demo_endpoint)
-    app.use_global_interceptors(Interceptor1(), InterceptCustomException)
+    tm = Test.create_test_module(routers=[_interceptor_demo_endpoint])
+    tm.create_application().use_global_interceptors(
+        Interceptor1(), InterceptCustomException
+    )
 
     _client = tm.get_test_client()
 

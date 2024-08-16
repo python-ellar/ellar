@@ -12,9 +12,6 @@ from starlette.responses import Response
 
 from .sample import Filter
 
-tm = Test.create_test_module()
-app = tm.create_application()
-
 
 def add_additional_signature_to_endpoint(func):
     # EXTRA ARGS SETUP
@@ -93,7 +90,7 @@ def query_params_extra(
     return filters.dict()
 
 
-app.router.add_route(query_params_extra)
+tm = Test.create_test_module(routers=[query_params_extra])
 
 openapi_schema = {
     "openapi": "3.1.0",
@@ -208,7 +205,9 @@ openapi_schema = {
 
 
 def test_openapi_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
+    document = serialize_object(
+        OpenAPIDocumentBuilder().build_document(tm.create_application())
+    )
     assert document == openapi_schema
 
 
@@ -237,8 +236,8 @@ def test_extra_args_as_grouped_fields():
     ):
         return {}
 
-    tm.create_application().router.add_route(query_params_extra)
-    client = tm.get_test_client()
+    tm_ = Test.create_test_module(routers=[query_params_extra])
+    client = tm_.get_test_client()
     response = client.get(
         "/test-grouped?from=1&to=2&range=20&foo=1&range2=50&query1=somequery1&query2=somequery2"
     )

@@ -8,9 +8,6 @@ from ellar.testing import Test
 
 from ..utils import pydantic_error_url
 
-tm = Test.create_test_module()
-app = tm.create_application()
-
 
 @get("/items/")
 @reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
@@ -18,9 +15,8 @@ def read_items(q: List[int] = Query(None)):
     return {"q": q}
 
 
-app.router.add_route(read_items)
+tm = Test.create_test_module(routers=[read_items])
 client = tm.get_test_client()
-
 
 openapi_schema = {
     "openapi": "3.1.0",
@@ -118,7 +114,9 @@ multiple_errors = {
 
 
 def test_openapi_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
+    document = serialize_object(
+        OpenAPIDocumentBuilder().build_document(tm.create_application())
+    )
     assert document == openapi_schema
 
 

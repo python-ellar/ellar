@@ -13,8 +13,7 @@ def test_exception_after_response_sent(test_client_factory):
         raise HTTPException(status_code=406)
         # raise RuntimeError("Something went wrong")
 
-    app = AppFactory.create_app()
-    app.router.add_route(home)
+    app = AppFactory.create_app(routers=[home])
 
     client = test_client_factory(app)
     with pytest.raises(RuntimeError):

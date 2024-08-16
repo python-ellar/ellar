@@ -122,8 +122,7 @@ class TestStarletteCompatibility:
         async def homepage(request: Inject[Request]):
             raise RuntimeError()
 
-        app = AppFactory.create_app()
-        app.router.add_route(homepage)
+        app = AppFactory.create_app(routers=[homepage])
         app.debug = True
 
         client = TestClient(app, raise_server_exceptions=False)
@@ -138,8 +137,7 @@ class TestStarletteCompatibility:
         async def homepage(request: Inject[Request]):
             raise RuntimeError()
 
-        app = AppFactory.create_app()
-        app.router.add_route(homepage)
+        app = AppFactory.create_app(routers=[homepage])
         app.debug = True
 
         client = TestClient(app, raise_server_exceptions=False)

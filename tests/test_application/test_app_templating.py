@@ -5,13 +5,13 @@ from ellar.common import (
     template_global,
 )
 from ellar.common.templating import Environment
-from ellar.core import ModuleBase
+from ellar.core import ModuleBase, with_injector_context
 from ellar.core.modules import ModuleTemplateRef
 from ellar.threading.sync_worker import execute_async_context_manager
 
 
 class TestAppTemplating:
-    @Module(template_folder="some_template")
+    @Module(template_folder="some_template", name="app_template")
     class AppTemplateModuleTest(ModuleBase):
         @template_filter(name="app_filter")
         def template_filter_test(self, value):
@@ -31,7 +31,7 @@ class TestAppTemplating:
 
     def test_app_jinja_environment(self):
         app = AppFactory.create_from_app_module(module=self.AppTemplateModuleTest)
-        with execute_async_context_manager(app.application_context()):
+        with execute_async_context_manager(with_injector_context(app.injector)):
             environment = app.injector.get(Environment)
             assert isinstance(environment, Environment)
 

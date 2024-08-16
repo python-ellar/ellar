@@ -8,8 +8,6 @@ from ellar.reflect import reflect
 from ellar.testing import Test
 from pydantic import BaseModel
 
-tm = Test.create_test_module()
-
 
 class Items_(BaseModel):
     items: Dict[str, int]
@@ -23,8 +21,7 @@ def foo(items: Items_):
     return items.items
 
 
-app = tm.create_application()
-app.router.add_route(foo)
+tm = Test.create_test_module(routers=[foo])
 client = tm.get_test_client()
 
 
@@ -136,7 +133,9 @@ item_openapi_schema = {
 
 
 def test_body_extra_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
+    document = serialize_object(
+        OpenAPIDocumentBuilder().build_document(tm.create_application())
+    )
     assert document == item_openapi_schema
 
 

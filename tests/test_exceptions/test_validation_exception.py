@@ -10,8 +10,6 @@ from ellar.testing import Test
 
 from .exception_runner import ExceptionRunner
 
-test_module = Test.create_test_module()
-
 _exception_runner = ExceptionRunner(RequestValidationError)
 
 
@@ -31,8 +29,8 @@ async def exception_ws_2(websocket: Inject[WebSocket], data: WsBody[dict]):
     _exception_runner.run()
 
 
-test_module.create_application().router.extend(
-    [exception_http, exception_ws_2, exception_ws]
+test_module = Test.create_test_module(
+    routers=[exception_http, exception_ws_2, exception_ws]
 )
 client = test_module.get_test_client()
 

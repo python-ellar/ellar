@@ -269,13 +269,14 @@ def test_auth_schema():
 
 
 def test_global_guard_case_1_works():
-    _app = AppFactory.create_app(global_guards=[DigestAuth])
-
     @get("/global")
     def _auth_demo_endpoint(request: Inject[Request]):
         return {"authentication": request.user}
 
-    _app.router.add_route(_auth_demo_endpoint)
+    _app = AppFactory.create_app(
+        routers=[_auth_demo_endpoint], global_guards=[DigestAuth]
+    )
+
     _client = TestClient(_app)
     res = _client.get("/global")
 
@@ -286,15 +287,15 @@ def test_global_guard_case_1_works():
 
 
 def test_global_guard_case_2_works():
-    _app = AppFactory.create_app(
-        providers=[ProviderConfig(GlobalGuard, use_class=DigestAuth, core=True)]
-    )
-
     @get("/global")
     def _auth_demo_endpoint(request: Request):
         return {"authentication": request.user}
 
-    _app.router.add_route(_auth_demo_endpoint)
+    _app = AppFactory.create_app(
+        routers=[_auth_demo_endpoint],
+        providers=[ProviderConfig(GlobalGuard, use_class=DigestAuth, core=True)],
+    )
+
     _client = TestClient(_app)
     res = _client.get("/global")
 
@@ -325,16 +326,15 @@ def test_global_guard_case_2_works():
 def test_if_an_auth_guard_return_converts_to_identity(
     input_type, is_authenticated, expect_result
 ):
-    _app = AppFactory.create_app(
-        providers=[ProviderConfig(GlobalGuard, use_class=DigestAuth, core=True)]
-    )
-
     @get("/global")
     def _auth_demo_endpoint(request: Request):
         assert request.user.is_authenticated == is_authenticated
         return {"authentication": request.user}
 
-    _app.router.add_route(_auth_demo_endpoint)
+    _app = AppFactory.create_app(
+        providers=[ProviderConfig(GlobalGuard, use_class=DigestAuth, core=True)],
+        routers=[_auth_demo_endpoint],
+    )
     _client = TestClient(_app)
     res = _client.get(
         "/global",
