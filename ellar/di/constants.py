@@ -6,10 +6,10 @@ from .asgi_args import RequestScopeContext
 INJECTABLE_ATTRIBUTE = "__DI_SCOPE__"
 
 
-SCOPED_CONTEXT_VAR: contextvars.ContextVar[Optional[RequestScopeContext]] = (
-    contextvars.ContextVar("SCOPED-CONTEXT-VAR")
+request_context_var: contextvars.ContextVar[Optional[RequestScopeContext]] = (
+    contextvars.ContextVar("ellar.di.request_context_var")
 )
-SCOPED_CONTEXT_VAR.set(None)
+request_context_var.set(None)
 INJECTABLE_WATERMARK = "INJECTABLE_WATERMARK"
 
 
@@ -29,7 +29,7 @@ class AnnotationToValue(type):
         annotations.update(namespace.get("__annotations__", {}))
         cls.keys = []
         for k, v in annotations.items():
-            if type(v) == type(str):
+            if type(v) is type(str):
                 value = str(k).lower()
                 setattr(cls, k, value)
                 cls.keys.append(value)

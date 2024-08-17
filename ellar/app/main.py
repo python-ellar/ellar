@@ -4,10 +4,8 @@ import logging.config
 import typing as t
 
 from ellar.auth.handlers import AuthenticationHandlerType
-from ellar.auth.middleware import IdentityMiddleware, SessionMiddleware
 from ellar.common import (
     GlobalGuard,
-    IHostContext,
     IHostContextFactory,
     IIdentitySchemes,
 )
@@ -23,30 +21,30 @@ from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareServi
 from ellar.common.models import EllarInterceptor, GuardCanActivate
 from ellar.common.templating import Environment, ModuleTemplating
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
+from ellar.core import HttpRequestConnectionContext, Request
 from ellar.core.conf import Config
-from ellar.core.connection import Request
-from ellar.core.context import ApplicationContext
-from ellar.core.middleware import (
-    CORSMiddleware,
-    ExceptionMiddleware,
-    RequestVersioningMiddleware,
-    ServerErrorMiddleware,
-    TrustedHostMiddleware,
-)
+from ellar.core.execution_context import injector_context
 from ellar.core.middleware import (
     Middleware as EllarMiddleware,
 )
 from ellar.core.routing import ApplicationRouter, AppStaticFileMount
 from ellar.core.services import Reflector, reflector
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
-from ellar.di import EllarInjector, ProviderConfig, is_decorated_with_injectable
+from ellar.di import (
+    EllarInjector,
+    ProviderConfig,
+    is_decorated_with_injectable,
+)
 from ellar.di.injector.tree_manager import TreeData
 from jinja2 import Environment as JinjaEnvironment
 from jinja2 import pass_context
 from starlette.datastructures import URL
 from starlette.routing import BaseRoute
 
+from ..core.exceptions.service import EXCEPTION_DEFAULT_EXCEPTION_HANDLERS
 from .lifespan import EllarApplicationLifespan
+
+logger = logging.getLogger("ellar")
 
 
 class App:
@@ -73,8 +71,6 @@ class App:
         self._global_interceptors: t.List[
             t.Union[EllarInterceptor, t.Type[EllarInterceptor]]
         ] = []
-        self.config.setdefault("EXCEPTION_HANDLERS", [])
-        self.config.setdefault("MIDDLEWARE", [])
 
         self.state = State()
         self.config.DEFAULT_LIFESPAN_HANDLER = (
@@ -170,109 +166,61 @@ class App:
                     self.injector.tree_manager.find_module(predicate=_predicate(item))
                 )
                 if not module:
-                    self.injector.tree_manager.get_root_module().add_provider(
+                    self.injector.tree_manager.get_app_module().add_provider(
                         provider=item, export=True
                     )
-                    # self.injector.module_info.ref.add_provider(
-                    #     provider=item, export=True
-                    # )
 
     def build_middleware_stack(self) -> ASGIApp:
-        service_middleware = self.injector.get(IExceptionMiddlewareService)
-        service_middleware.build_exception_handlers(
-            *list(self.config.EXCEPTION_HANDLERS)
-        )
-
-        error_handler = service_middleware.get_500_error_handler()
-        allowed_hosts = self.config.ALLOWED_HOSTS
-
-        if self.debug and allowed_hosts != ["*"]:
-            allowed_hosts = ["*"]
-
-        user_middlewares = (
-            list(self.config.MIDDLEWARE) if self.config.MIDDLEWARE else []
-        )
-        middleware = (
-            [
-                EllarMiddleware(
-                    TrustedHostMiddleware,
-                    allowed_hosts=allowed_hosts,
-                    www_redirect=self.config.REDIRECT_HOST,
-                ),
-                EllarMiddleware(
-                    CORSMiddleware,
-                    allow_origins=self.config.CORS_ALLOW_ORIGINS,
-                    allow_credentials=self.config.CORS_ALLOW_CREDENTIALS,
-                    allow_methods=self.config.CORS_ALLOW_METHODS,
-                    allow_headers=self.config.CORS_ALLOW_HEADERS,
-                    allow_origin_regex=self.config.CORS_ALLOW_ORIGIN_REGEX,
-                    expose_headers=self.config.CORS_EXPOSE_HEADERS,
-                    max_age=self.config.CORS_MAX_AGE,
-                ),
-                EllarMiddleware(
-                    ServerErrorMiddleware,
-                    debug=self.debug,
-                    handler=error_handler,
-                ),
-                EllarMiddleware(
-                    RequestVersioningMiddleware,
-                    debug=self.debug,
-                ),
-                EllarMiddleware(
-                    SessionMiddleware,
-                ),
-                EllarMiddleware(
-                    IdentityMiddleware,
-                ),
-            ]
-            + user_middlewares
-            + [
-                EllarMiddleware(
-                    ExceptionMiddleware,
-                    exception_middleware_service=service_middleware,
-                    debug=self.debug,
-                ),
-            ]
+        self.injector.get(IExceptionMiddlewareService).build_exception_handlers(
+            *EXCEPTION_DEFAULT_EXCEPTION_HANDLERS, *list(self.config.EXCEPTION_HANDLERS)
         )
 
         app = self.router
-        for cls, args, kwargs in reversed(middleware):
-            app = cls(app, *args, **kwargs)
+        for cls, args, kwargs in reversed(
+            t.cast(t.List[EllarMiddleware], self.config.MIDDLEWARE)
+        ):
+            try:
+                app = cls(app, *args, **kwargs)
+            except Exception as ex:
+                logger.exception(ex, f"Unable to setup middleware='{cls}'")
+                raise ex
         return app
 
-    def application_context(self) -> ApplicationContext:
+    def request_context(
+        self, scope: TScope, receive: TReceive, send: TSend
+    ) -> HttpRequestConnectionContext:
         """
-        Create an ApplicationContext.
-        Use as a contextmanager block to make `current_app`, `current_injector` and `current_config` point at this application.
+        Create an RequestContext during request and provides instance for `current_connection`.
+        e.g
 
-        It can be used manually outside ellar cli commands or request,
-        e.g.,
-        with app.application_context():
-            assert current_app is app
-            run_some_actions()
+        request = current_connection.switch_http_connection().get_request()
+        websocket = current_connection.switch_to_websocket().get_client()
         """
-        return ApplicationContext.create(app=self)
+        context_factory = self.injector.get(IHostContextFactory)
+        return HttpRequestConnectionContext(
+            host_context=context_factory.create_context(scope, receive, send)
+        )
 
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
-        async with self.application_context() as context:
-            scope["app"] = self
+        lifespan = scope["type"] == "lifespan"
+        scope["app"] = self
 
-            async with context.injector.create_asgi_args() as service_provider:
-                context_factory = service_provider.get(IHostContextFactory)
-                service_provider.update_scoped_context(
-                    IHostContext, context_factory.create_context(scope)
-                )
+        async with injector_context(self.injector):
+            if self.middleware_stack is None:
+                self.middleware_stack = self.build_middleware_stack()
 
-                if self.middleware_stack is None:
-                    self.middleware_stack = self.build_middleware_stack()
+                if (
+                    self.config.STATIC_MOUNT_PATH
+                    and self.config.STATIC_MOUNT_PATH not in self.router.routes
+                ):
+                    self.router.add(AppStaticFileMount(self))
 
-                    if (
-                        self.config.STATIC_MOUNT_PATH
-                        and self.config.STATIC_MOUNT_PATH not in self.router.routes
-                    ):
-                        self.router.add_route(AppStaticFileMount(self))
+            if lifespan:
+                return await self.middleware_stack(scope, receive, send)
 
-                await self.middleware_stack(scope, receive, send)
+            ## setup request_scope context
+            async with self.request_context(scope, receive, send):
+                return await self.middleware_stack(scope, receive, send)
 
     @property
     def routes(self) -> t.List[BaseRoute]:
@@ -298,6 +246,7 @@ class App:
         self._ensure_available_in_providers(*self._global_guards)
         self._ensure_available_in_providers(*self._global_interceptors)
         self._ensure_available_in_providers(*self.config.EXCEPTION_HANDLERS)
+
         self._ensure_available_in_providers(
             *[
                 item.cls
@@ -308,6 +257,9 @@ class App:
         self.injector.owner.add_provider(
             ProviderConfig(App, use_value=self, tag=self.__class__.__name__)
         )
+        # self.injector.owner.add_provider(
+        #     GLOBAL_CONTROLLER_CLASS, export=True
+        # )
 
     def add_exception_handler(
         self,
@@ -316,7 +268,9 @@ class App:
         # _added_any = False
         for exception_handler in exception_handlers:
             if exception_handler not in self.config.EXCEPTION_HANDLERS:
-                self.config.EXCEPTION_HANDLERS.append(exception_handler)
+                self.config.EXCEPTION_HANDLERS = self.config.EXCEPTION_HANDLERS + [
+                    exception_handler
+                ]
                 self._ensure_available_in_providers(exception_handler)
 
     @property
@@ -371,31 +325,31 @@ class App:
             jinja_options.setdefault(k, v)
 
         @pass_context
-        def url_for(context: dict, name: str, **path_params: t.Any) -> URL:
+        def url_for(context: t.Dict, name: str, **path_params: t.Any) -> URL:
             request = t.cast(Request, context["request"])
             return request.url_for(name, **path_params)
 
         jinja_env = Environment(self, **jinja_options)
-        jinja_env.globals.update(
-            url_for=url_for,
-            config=self._config,
-        )
+        jinja_env.globals.update(url_for=url_for, config=self._config)
         jinja_env.policies["json.dumps_function"] = json.dumps
-        # jinja_env.policies["get_messages"] = get_messages
 
+        # jinja_env.policies["get_messages"] = get_messages
         jinja_env.globals.update(self._config.get(TEMPLATE_GLOBAL_KEY, {}))
         jinja_env.filters.update(self._config.get(TEMPLATE_FILTER_KEY, {}))
 
+        self.config.APP_CONTEXT_PROCESSORS = list(
+            self.config.TEMPLATES_CONTEXT_PROCESSORS
+        )
         return jinja_env
 
     def setup_jinja_environment(self) -> Environment:
         """Sets up Jinja2 Environment and adds it to DI"""
         jinja_environment = self._create_jinja_environment()
 
-        self.injector.tree_manager.get_root_module().add_provider(
+        self.injector.tree_manager.get_app_module().add_provider(
             ProviderConfig(Environment, use_value=jinja_environment), export=True
         )
-        self.injector.tree_manager.get_root_module().add_provider(
+        self.injector.tree_manager.get_app_module().add_provider(
             ProviderConfig(JinjaEnvironment, use_value=jinja_environment), export=True
         )
         return jinja_environment

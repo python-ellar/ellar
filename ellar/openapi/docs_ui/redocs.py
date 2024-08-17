@@ -4,7 +4,7 @@ from .base import IDocumentationUI
 class ReDocUI(IDocumentationUI):
     @property
     def name(self) -> str:
-        return "swagger"
+        return "redoc"
 
     @property
     def template_name(self) -> str:

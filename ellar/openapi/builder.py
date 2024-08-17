@@ -2,10 +2,15 @@ import functools
 import typing as t
 
 from ellar.common import IIdentitySchemes
+from ellar.common import constants as common_constants
 from ellar.common.compatible import AttributeDict, cached_property
 from ellar.common.constants import GUARDS_KEY
-from ellar.core.routing import ControllerRouteOperation, EllarMount, RouteOperation
-from ellar.openapi.constants import OPENAPI_OPERATION_KEY, OPENAPI_TAG, REF_TEMPLATE
+from ellar.core.routing import (
+    ControllerRouteOperation,
+    EllarControllerMount,
+    RouteOperation,
+)
+from ellar.openapi import constants
 from ellar.pydantic import (
     EmailStr,
     GenerateJsonSchema,
@@ -54,16 +59,21 @@ class DocumentOpenAPIFactory:
 
         for route in app.routes:
             if (
-                isinstance(route, EllarMount)
+                isinstance(route, EllarControllerMount)
                 and len(route.routes) > 0
                 and route.include_in_schema
-                and route.get_control_type()
             ):
-                control_type = route.get_control_type()
+                control_type = reflector.get(
+                    common_constants.CONTROLLER_CLASS_KEY, route
+                )
                 assert control_type
 
                 openapi_tags = AttributeDict(
-                    reflector.get(OPENAPI_TAG, control_type) or {}
+                    reflector.get(constants.OPENAPI_TAG, control_type) or {}
+                )
+                ignore_tag = (
+                    reflector.get(constants.IGNORE_CONTROLLER_TYPE, control_type)
+                    or False
                 )
                 if route.name:
                     openapi_tags.setdefault("name", route.name)
@@ -80,13 +90,15 @@ class DocumentOpenAPIFactory:
                         ),
                     )
                 )
-                if openapi_tags:
+                if openapi_tags and not ignore_tag:
                     self._build.setdefault("tags", []).append(openapi_tags)
             elif (
                 isinstance(route, (RouteOperation, ControllerRouteOperation))
                 and route.include_in_schema
             ):
-                openapi = reflector.get(OPENAPI_OPERATION_KEY, route.endpoint) or {}
+                openapi = (
+                    reflector.get(constants.OPENAPI_OPERATION_KEY, route.endpoint) or {}
+                )
                 guards = reflector.get(GUARDS_KEY, route.endpoint) or app.get_guards()
                 openapi_route_models.append(
                     OpenAPIRouteDocumentation(route=route, guards=guards, **openapi)
@@ -119,14 +131,14 @@ class DocumentOpenAPIFactory:
         _flat_model = (
             self._get_operations_models(openapi_route_models) + self.error_model_fields
         )
-        schema_generator = GenerateJsonSchema(ref_template=REF_TEMPLATE)
+        schema_generator = GenerateJsonSchema(ref_template=constants.REF_TEMPLATE)
         field_mapping, definitions = get_definitions(
             fields=_flat_model,
             schema_generator=schema_generator,
             separate_input_output_schemas=True,
         )
 
-        # mounts: t.List[t.Union[BaseRoute, EllarMount, Mount]] = []
+        # mounts: t.List[t.Union[BaseRoute, EllarControllerMount, Mount]] = []
         # for _, item in app.injector.get_templating_modules().items():
         #     mounts.extend(item.routers)
 

@@ -30,7 +30,7 @@ class EllarUvicornServer(uvicorn.Server):
         self.config.setup_event_loop()
         self._startup_done.set()
 
-    async def start_up(self) -> None:
+    async def run_server(self) -> None:
         """Start up server asynchronously"""
         self._serve_task = asyncio.create_task(self.serve())
         await self._startup_done.wait()

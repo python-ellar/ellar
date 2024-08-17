@@ -51,4 +51,4 @@ async def get_car_html(repo: Inject[CarRepository]):
 async def get_car_html_with_render(
     repo: Inject[CarRepository], request: Inject[Request]
 ):
-    return render_template("car/list.html", request=request, model=repo.get_all())
+    return render_template("car/list.html", model=repo.get_all())

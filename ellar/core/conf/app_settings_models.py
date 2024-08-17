@@ -17,11 +17,39 @@ from ellar.di.injector.tree_manager import ModuleTreeManager
 from ellar.pydantic import ENCODERS_BY_TYPE as encoders_by_type
 from ellar.pydantic import AllowTypeOfSource, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware import Middleware
+from starlette.requests import HTTPConnection, Request
 from starlette.websockets import WebSocketClose
 from typing_extensions import Annotated
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.app.main import App
+
+TEMPLATE_TYPE = t.Dict[
+    str, t.Union[t.Callable[..., t.Any], t.Dict[str, t.Callable[..., t.Any]]]
+]
+
+
+_TemplateValidator = AllowTypeOfSource(
+    validator=lambda source, value: callable(value),
+    error_message=lambda source, value: f"Expected a callable, got {type(value)}",
+)
+
+_VersioningValidator = AllowTypeOfSource(
+    error_message=lambda source,
+    value: f"Expected BaseAPIVersioning, received: {type(value)}"
+)
+
+_MiddlewareValidator = AllowTypeOfSource(
+    validator=lambda source, value: isinstance(value, (source, Middleware)),
+    error_message=lambda source,
+    value: f"Expected EllarMiddleware or Starlette Middleware object, received: {type(value)}",
+)
+
+_ExceptionHandlerValidator = AllowTypeOfSource(
+    error_message=lambda source,
+    value: f"Expected IExceptionHandler object, received: {type(value)}"
+)
 
 
 async def _not_found(
@@ -42,7 +70,7 @@ async def _not_found(
     await response(scope, receive, send)
 
 
-class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
+class ConfigSchema(Serializer, ConfigDefaultTypesMixin):
     _filter = SerializerFilter(
         exclude={
             "EXCEPTION_HANDLERS_DECORATOR",
@@ -52,7 +80,12 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
         }
     )
 
-    model_config = {"validate_assignment": True, "from_attributes": True}
+    model_config = {
+        "validate_assignment": True,
+        "validate_default": True,
+        "from_attributes": True,
+        "extra": "allow",
+    }
 
     OVERRIDE_CORE_SERVICE: t.List[Annotated[ProviderConfig, AllowTypeOfSource()]] = []
 
@@ -73,8 +106,21 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any] = {}
     JINJA_LOADERS: t.List[JinjaLoaderType] = []
 
+    TEMPLATES_CONTEXT_PROCESSORS: t.List[
+        Annotated[
+            t.Callable[[t.Union[Request, HTTPConnection]], t.Dict[str, t.Any]],
+            _TemplateValidator,
+        ]
+    ] = [  # type:ignore[assignment]
+        "ellar.core.templating.context_processors:request_context",
+        "ellar.core.templating.context_processors:user",
+        "ellar.core.templating.context_processors:request_state",
+    ]
+
     # Application route versioning scheme
-    VERSIONING_SCHEME: t.Optional[IAPIVersioning] = None
+    VERSIONING_SCHEME: t.Optional[Annotated[IAPIVersioning, _VersioningValidator]] = (
+        None
+    )
 
     REDIRECT_SLASHES: bool = False
 
@@ -96,9 +142,23 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     ALLOWED_HOSTS: t.List[str] = ["*"]
     REDIRECT_HOST: bool = True
 
-    MIDDLEWARE: t.List[IEllarMiddleware] = []
-
-    EXCEPTION_HANDLERS: t.List[IExceptionHandler] = []
+    MIDDLEWARE: t.List[Annotated[IEllarMiddleware, _MiddlewareValidator]] = [
+        "ellar.core.middleware.trusted_host:trusted_host_middleware",
+        "ellar.core.middleware.cors:cors_middleware",
+        "ellar.core.middleware.errors:server_error_middleware",
+        "ellar.core.middleware.versioning:versioning_middleware",
+        "ellar.auth.middleware.session:session_middleware",
+        "ellar.auth.middleware.auth:identity_middleware",
+        "ellar.core.middleware.exceptions:exception_middleware",
+    ]
+    # A dictionary mapping either integer status codes,
+    # or exception class types onto callables which handle the exceptions.
+    # Exception handler callables should be of the form
+    # `handler(context:IExecutionContext, exc: Exception) -> response`
+    # and may be either standard functions, or async functions.
+    EXCEPTION_HANDLERS: t.List[
+        Annotated[IExceptionHandler, _ExceptionHandlerValidator]
+    ] = ["ellar.core.exceptions:error_404_handler"]
 
     # Default not found handler
     DEFAULT_NOT_FOUND_HANDLER: ASGIApp = _not_found
@@ -118,8 +178,8 @@ class ConfigValidationSchema(Serializer, ConfigDefaultTypesMixin):
     # logging Level
     LOG_LEVEL: t.Optional[log_levels] = log_levels.info
 
-    TEMPLATE_FILTERS: t.Dict[str, t.Callable[..., t.Any]] = {}
-    TEMPLATE_GLOBAL_FILTERS: t.Dict[str, t.Callable[..., t.Any]] = {}
+    TEMPLATE_FILTERS: TEMPLATE_TYPE = {}
+    TEMPLATE_GLOBAL_FILTERS: TEMPLATE_TYPE = {}
 
     LOGGING: t.Optional[t.Dict[str, t.Any]] = None
     CACHES: t.Dict[str, t.Any] = {}

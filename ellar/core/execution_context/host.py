@@ -10,7 +10,7 @@ from ellar.common import (
 from ellar.common.compatible import cached_property
 from ellar.common.interfaces import IHostContext
 from ellar.common.types import TReceive, TScope, TSend
-from ellar.core.context import current_injector
+from ellar.core.execution_context.injector import current_injector
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.app.main import App

@@ -22,7 +22,7 @@ def generate_operation_unique_id(
     operation_id = re.sub("[^0-9a-zA-Z_]", "_", operation_id)
     operation_id = operation_id + "_" + _methods.lower()
 
-    if controller:
+    if isinstance(controller, type):
         operation_id += (
             f'__{str(controller.__name__).lower().replace("controller", "")}'
         )

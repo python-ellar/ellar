@@ -10,9 +10,6 @@ from pydantic import BaseModel, condecimal
 
 from ..utils import pydantic_error_url
 
-tm = Test.create_test_module()
-app = tm.create_application()
-
 
 class Item2(BaseModel):
     name: str
@@ -25,7 +22,7 @@ def save_item_no_body(item: List[Item2]):
     return {"item": item}
 
 
-app.router.add_route(save_item_no_body)
+tm = Test.create_test_module(routers=[save_item_no_body])
 client = tm.get_test_client()
 
 
@@ -167,7 +164,9 @@ multiple_errors = {
 
 
 def test_openapi_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
+    document = serialize_object(
+        OpenAPIDocumentBuilder().build_document(tm.create_application())
+    )
     assert document == openapi_schema
 
 

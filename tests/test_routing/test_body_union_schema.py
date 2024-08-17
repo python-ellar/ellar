@@ -12,8 +12,6 @@ from ellar.testing import Test
 from ..utils import pydantic_error_url
 from .sample import Item, OtherItem, Product
 
-tm = Test.create_test_module()
-
 
 @post("/items/")
 @reflect.metadata(IGNORE_CONTROLLER_TYPE, True)
@@ -43,11 +41,9 @@ def alias_qty(
     return {"qty": qty}
 
 
-app = tm.create_application()
-app.router.add_route(save_union_body_and_embedded_body)
-app.router.add_route(embed_qty)
-app.router.add_route(alias_qty)
-
+tm = Test.create_test_module(
+    routers=[save_union_body_and_embedded_body, alias_qty, embed_qty]
+)
 client = tm.get_test_client()
 
 
@@ -254,7 +250,9 @@ item_openapi_schema = {
 
 
 def test_item_openapi_schema():
-    document = serialize_object(OpenAPIDocumentBuilder().build_document(app))
+    document = serialize_object(
+        OpenAPIDocumentBuilder().build_document(tm.create_application())
+    )
     assert document == item_openapi_schema
 
 
@@ -289,10 +287,7 @@ def test_alias_with_more_body():
     ):  # just to test get_typed_annotation in ellar.common.params.args.base
         return {"item": product, "aliasQty": qty}
 
-    _tm = Test.create_test_module()
-    _app = _tm.create_application()
-    _app.router.add_route(create_item)
-
+    _tm = Test.create_test_module(routers=[create_item])
     _client = _tm.get_test_client()
 
     body = {

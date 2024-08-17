@@ -64,3 +64,78 @@ def test_cannot_decorate_class_instance_as_a_module():
 def test_decorated_class_default_scope_is_singleton():
     assert is_decorated_with_injectable(ModuleDecoratorTest)
     assert not has_binding(ModuleDecoratorTest)  # __init__ is not overridden
+
+
+def test_module_decorator_does_not_override_module_metadata_if_existing():
+    class ExistingModule:
+        pass
+
+    reflect.define_metadata(
+        MODULE_METADATA.BASE_DIRECTORY, "/path/to/my/base/templates", ExistingModule
+    )
+    reflect.define_metadata(
+        MODULE_METADATA.TEMPLATE_FOLDER, "custom_template", ExistingModule
+    )
+    reflect.define_metadata(
+        MODULE_METADATA.STATIC_FOLDER, "static_custom", ExistingModule
+    )
+
+    Module(name="ExistingModule", controllers=["Controller1", "Controller2"])(
+        ExistingModule
+    )
+
+    data = reflect.get_all_metadata(ExistingModule)
+    assert data == {
+        "base_directory": "/path/to/my/base/templates",
+        "template_folder": "templates",
+        "static_folder": "static",
+        "MODULE_WATERMARK": True,
+        "name": "ExistingModule",
+        "controllers": ["Controller1", "Controller2"],
+        "routers": [],
+        "providers": [],
+        "modules": [],
+        "commands": [],
+        "exports": [],
+        "INJECTABLE_WATERMARK": True,
+    }
+
+
+def test_module_decorator_override_module_metadata_if_provided_in_decorator():
+    class ExistingModule2:
+        pass
+
+    reflect.define_metadata(
+        MODULE_METADATA.BASE_DIRECTORY, "/path/to/my/base/templates", ExistingModule2
+    )
+    reflect.define_metadata(
+        MODULE_METADATA.TEMPLATE_FOLDER, "custom_template", ExistingModule2
+    )
+    reflect.define_metadata(
+        MODULE_METADATA.TEMPLATE_FOLDER, "custom_template", ExistingModule2
+    )
+    reflect.define_metadata(
+        MODULE_METADATA.STATIC_FOLDER, "ExistingModule2", ExistingModule2
+    )
+
+    Module(
+        name="ExistingModule",
+        controllers=["Controller1", "Controller2"],
+        base_directory="/path/to/another/base",
+    )(ExistingModule2)
+
+    data = reflect.get_all_metadata(ExistingModule2)
+    assert data == {
+        "base_directory": "/path/to/another/base",
+        "template_folder": "templates",
+        "static_folder": "static",
+        "MODULE_WATERMARK": True,
+        "name": "ExistingModule",
+        "controllers": ["Controller1", "Controller2"],
+        "routers": [],
+        "providers": [],
+        "modules": [],
+        "commands": [],
+        "exports": [],
+        "INJECTABLE_WATERMARK": True,
+    }

@@ -7,11 +7,12 @@ from ellar.testing.uvicorn_server import EllarUvicornServer
 
 
 class RunWithServerContext:
-    __slots__ = ("sio", "base_url")
+    __slots__ = ("sio", "base_url", "sio_s")
 
     def __init__(self, sio: socketio.AsyncClient, base_url: str) -> None:
         self.sio = sio
         self.base_url: str = base_url
+        self.sio_s = [sio]
 
     async def connect(
         self,
@@ -33,6 +34,7 @@ class RunWithServerContext:
 
     def new_socket_client_context(self) -> "RunWithServerContext":
         sio = socketio.AsyncClient()
+        self.sio_s.append(sio)
         return self.__class__(sio=sio, base_url=self.base_url)
 
 
@@ -45,12 +47,16 @@ class SocketIOTestingModule(TestingModule):
 
         server = EllarUvicornServer(app=self.create_application(), host=host, port=port)
 
-        await server.start_up()
+        await server.run_server()
         sio = socketio.AsyncClient()
 
-        yield RunWithServerContext(sio=sio, base_url=base_url)
+        run_ctx = RunWithServerContext(sio=sio, base_url=base_url)
 
-        await sio.disconnect()
+        yield run_ctx
+
+        for item in run_ctx.sio_s:
+            await item.shutdown()
+
         await server.tear_down()
 
 

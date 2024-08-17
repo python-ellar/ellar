@@ -4,7 +4,7 @@ from ellar.common import Module
 from ellar.common.constants import MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core import LazyModuleImport as lazyLoad
-from ellar.core import ModuleBase, ModuleSetup
+from ellar.core import ModuleBase, ModuleSetup, injector_context
 from ellar.di import ProviderConfig
 from ellar.reflect import reflect
 from ellar.testing import TestClient
@@ -62,7 +62,7 @@ def test_factory_create_from_app_module():
 
 def test_factory_create_app_dynamically_creates_module():
     app = AppFactory.create_app()
-    first_module_ref = app.injector.tree_manager.get_root_module()
+    first_module_ref = app.injector.tree_manager.get_app_module()
     module_instance = first_module_ref.get_module_instance()
     assert not isinstance(module_instance, ModuleBase)
     assert reflect.get_metadata(MODULE_WATERMARK, type(module_instance))
@@ -95,7 +95,7 @@ async def test_factory_create_app_works(tmpdir, anyio_backend):
     res = client.get("/static/example.txt")
     assert res.status_code == 200
     assert res.text == "<file content>"
-    async with app.application_context():
+    async with injector_context(app.injector):
         template = app.injector.get(Environment).get_template("example.html")
         result = template.render()
         assert result == "<html>Hello World<html/>"

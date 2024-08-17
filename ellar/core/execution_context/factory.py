@@ -20,7 +20,7 @@ from .http import HTTPHostContext
 from .websocket import WebSocketHostContext
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common.routing import RouteOperationBase
+    from ellar.core.routing import RouteOperationBase
 
 
 @injectable()

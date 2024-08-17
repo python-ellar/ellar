@@ -7,6 +7,7 @@ from ellar.common.constants import (
     CONTROLLER_CLASS_KEY,
     CONTROLLER_OPERATION_HANDLER_KEY,
 )
+from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.router_builders.utils import build_route_handler
 from ellar.core.routing import (
     RouteCollection,
@@ -169,7 +170,8 @@ def test_module_route_collection_setitem_and_getitem(collection_model, expected_
     routes[2] = create_route_operation("/sample/2", methods=["post"], versions=[])
 
     # add unknown type
-    routes[3] = type("MockRouteOperation", (), {})  # this will be ignored
+    with pytest.raises(ImproperConfiguration):
+        routes[3] = type("MockRouteOperation", (), {})  # this will be ignored
 
     assert len(routes) == 3
     assert routes[0].path == expected_result
@@ -216,10 +218,11 @@ def test_route_collection_create_control_type(collection_model):
     assert reflect.get_metadata(CONTROLLER_CLASS_KEY, endpoint_once) is None
     assert reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, endpoint_once) is None
 
-    collection_model([endpoint_once])
-    assert not isinstance(
-        reflect.get_metadata(CONTROLLER_CLASS_KEY, endpoint_once), list
-    )
+    with pytest.raises(ImproperConfiguration):
+        collection_model([endpoint_once])
 
-    collection = collection_model([invalid_endpoint])
-    assert len(collection) == 0
+    # assert not isinstance(
+    #     reflect.get_metadata(CONTROLLER_CLASS_KEY, endpoint_once), list
+    # )
+    with pytest.raises(ImproperConfiguration):
+        collection_model([invalid_endpoint])

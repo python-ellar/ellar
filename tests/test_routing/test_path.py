@@ -16,7 +16,7 @@ def test_text_get():
 def test_nonexistent():
     response = client.get("/nonexistent")
     assert response.status_code == 404, response.text
-    assert response.json() == {"detail": "Not Found", "status_code": 404}
+    assert response.json() == {"detail": "Not Found"}
 
 
 def test_path_foobar():
@@ -896,28 +896,28 @@ def test_path_param_le_ge_int_2_7():
         (
             "/path/param-starlette-int/42.5",
             404,
-            {"detail": "Not Found", "status_code": 404},
+            {"detail": "Not Found"},
         ),
         (
             "/path/param-starlette-int/-1",
             404,
-            {"detail": "Not Found", "status_code": 404},
+            {"detail": "Not Found"},
         ),
         (
             "/path/param-starlette-int/True",
             404,
-            {"detail": "Not Found", "status_code": 404},
+            {"detail": "Not Found"},
         ),
         (
             "/path/param-starlette-int/foobar",
             404,
-            {"detail": "Not Found", "status_code": 404},
+            {"detail": "Not Found"},
         ),
         # ("/path/param-starlette-int-str/42", 200, "42"), #TODO:research on how to make this possible
         (
             "/path/param-starlette-int-str/42.5",
             404,
-            {"detail": "Not Found", "status_code": 404},
+            {"detail": "Not Found"},
         ),
         (
             "/path/param-starlette-uuid/31ea378c-c052-4b4c-bf0b-679ce5cfcc2a",
@@ -927,7 +927,7 @@ def test_path_param_le_ge_int_2_7():
         (
             "/path/param-starlette-uuid/31ea378c-c052-4b4c-bf0b-679ce5cfcc2",
             404,
-            {"detail": "Not Found", "status_code": 404},
+            {"detail": "Not Found"},
         ),
     ],
 )

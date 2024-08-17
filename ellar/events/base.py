@@ -65,3 +65,7 @@ class EventManager(EventBase[EventHandler]):
     async def run(self, *args: t.Any, **kwargs: t.Any) -> None:
         for handler in self:
             await handler.run(*args, **kwargs)
+
+    def disconnect_all(self) -> None:
+        for handle in list(self):
+            self.disconnect(handle.handler)

@@ -14,8 +14,9 @@ from ellar.common.constants import (
     NOT_SET,
 )
 from ellar.common.exceptions import WebSocketRequestValidationError
+from ellar.common.logging import logger
 from ellar.common.params import WebsocketEndpointArgsModel
-from ellar.core.context import config, current_injector
+from ellar.core.execution_context import config, current_injector
 from ellar.reflect import reflect
 from ellar.socket_io.context import GatewayContext
 from ellar.socket_io.model import GatewayBase
@@ -39,7 +40,7 @@ class SocketOperationConnection:
         "_name",
         "_is_coroutine",
         "endpoint_parameter_model",
-        "_controller_type",
+        "controller",
     )
 
     ws_endpoint_args_model: t.Type[WebsocketEndpointArgsModel] = (
@@ -48,7 +49,7 @@ class SocketOperationConnection:
 
     def __init__(
         self,
-        controller_type: t.Type[GatewayBase],
+        controller: t.Type[GatewayBase],
         event: str,
         server: AsyncServer,
         message_handler: t.Callable,
@@ -59,10 +60,14 @@ class SocketOperationConnection:
         self._name = get_name(self.endpoint)
         self._is_coroutine = inspect.iscoroutinefunction(message_handler)
         self.endpoint_parameter_model = NOT_SET
-        self._controller_type = controller_type
+        self.controller = controller
         self._load_model()
         self._register_handler()
         reflect.define_metadata(CONTROLLER_OPERATION_HANDLER_KEY, self, self.endpoint)
+
+    @property
+    def router_reflect_key(self) -> t.Any:
+        return self.controller
 
     def _load_model(self) -> None:
         path_regex, path_format, param_convertors = compile_path("/")
@@ -82,15 +87,10 @@ class SocketOperationConnection:
             )
             self.endpoint_parameter_model.build_model()
 
-    async def _run_with_exception_handling(
-        self, gateway_instance: GatewayBase, sid: str
-    ) -> None:
+    @asynccontextmanager
+    async def catch(self, sid: t.Any) -> t.AsyncGenerator:
         try:
-            await self.run_route_guards(context=gateway_instance.context)
-            await self._run_handler(
-                context=gateway_instance.context, gateway_instance=gateway_instance
-            )
-
+            yield
         except WebSocketException as aex:
             await self._handle_error(
                 sid=sid,
@@ -114,24 +114,18 @@ class SocketOperationConnection:
         await self._server.emit("error", {"code": code, "reason": reason}, room=sid)
         await self._server.disconnect(sid=sid)
 
-    @asynccontextmanager
-    async def _ensure_dependency_availability(
-        self, context: IExecutionContext
-    ) -> t.AsyncGenerator:
-        controller_type = context.get_class()
-        module_scope_owner = next(
-            context.get_app().injector.tree_manager.find_module(
-                lambda data: controller_type in data.providers
-                or controller_type in data.exports
-            )
-        )
-        if module_scope_owner and module_scope_owner.is_ready:
-            async with module_scope_owner.value.context():
-                yield
-        else:
-            yield
+    async def handle(self, sid: str, gateway_instance: GatewayBase) -> t.Any:
+        try:
+            async with self.catch(sid=sid):
+                await self.run_route_guards(context=gateway_instance.context)
+                await self._run_handler(
+                    context=gateway_instance.context, gateway_instance=gateway_instance
+                )
+        except Exception as ex:
+            logger.exception(ex)
+            raise ex
 
-    async def _context_handler(self, sid: str, environment: t.Dict) -> t.Any:
+    async def _get_context(self, sid: str, environment: t.Dict) -> t.Any:
         execution_context_factory = current_injector.get(IExecutionContextFactory)
         context = execution_context_factory.create_context(
             operation=self,
@@ -139,19 +133,17 @@ class SocketOperationConnection:
             receive=environment["asgi.receive"],
             send=environment["asgi.send"],
         )
-        async with self._ensure_dependency_availability(context):
-            gateway_instance = self._get_gateway_instance_and_context(
-                ctx=context, sid=sid
-            )
-            await self._run_with_exception_handling(gateway_instance, sid=sid)
+
+        return self._get_gateway_instance_and_context(ctx=context, sid=sid)
 
     def _register_handler(self) -> None:
         @self._server.on(self._event)
         async def _handler(sid: str, *environment: t.Any) -> t.Any:
             sid_environ = self._server.get_environ(sid)
-            await self._context_handler(
+            gateway_instance = await self._get_context(
                 sid, environment[0] if len(environment) == 1 else sid_environ
             )
+            await self.handle(sid, gateway_instance)
 
     async def _run_handler(
         self, context: IExecutionContext, gateway_instance: GatewayBase
@@ -207,10 +199,10 @@ class SocketOperationConnection:
         For operation under ModuleRouter, this will return a unique type created for the router for tracking some properties
         :return: a type that wraps the operation
         """
-        return self._controller_type
+        return t.cast(t.Type[GatewayBase], self.router_reflect_key)
 
     def _get_gateway_instance(self, ctx: IExecutionContext) -> GatewayBase:
-        gateway_type = self.get_controller_type()
+        gateway_type = self.controller
         if not gateway_type or (
             gateway_type and not issubclass(gateway_type, GatewayBase)
         ):  # pragma: no cover
@@ -237,7 +229,7 @@ class SocketOperationConnection:
 
 
 class SocketMessageOperation(SocketOperationConnection):
-    async def _context_handler(self, sid: str, message: t.Any) -> t.Any:
+    async def _get_context(self, sid: str, message: t.Any) -> t.Any:
         sid_environ = self._server.get_environ(sid)
 
         execution_context_factory = current_injector.get(IExecutionContextFactory)
@@ -248,14 +240,12 @@ class SocketMessageOperation(SocketOperationConnection):
             send=sid_environ["asgi.send"],
         )
 
-        async with self._ensure_dependency_availability(context):
-            gateway_instance = self._get_gateway_instance_and_context(
-                ctx=context, sid=sid, message=message
-            )
-
-            await self._run_with_exception_handling(gateway_instance, sid)
+        return self._get_gateway_instance_and_context(
+            ctx=context, sid=sid, message=message
+        )
 
     def _register_handler(self) -> None:
         @self._server.on(self._event)
-        async def _handler(sid: str, message: t.Any) -> t.Any:
-            await self._context_handler(sid, message)
+        async def _handler(sid: str, message: t.Any = None) -> t.Any:
+            gateway_instance = await self._get_context(sid, message)
+            await self.handle(sid, gateway_instance)

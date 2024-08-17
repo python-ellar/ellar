@@ -4,9 +4,8 @@ from ellar.common.params.resolvers.system_parameters import (
     RequestParameter,
     WebSocketParameter,
 )
-
-from .http import HTTPConnection, Request
-from .websocket import WebSocket
+from starlette.requests import HTTPConnection, Request
+from starlette.websockets import WebSocket
 
 __all__ = ["HTTPConnection", "Request", "WebSocket"]
 

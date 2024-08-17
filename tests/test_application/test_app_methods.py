@@ -31,8 +31,7 @@ class TestEllarApp:
             res = PlainTextResponse("Ellar Route Handler as an ASGI app")
             await res(*ctx.get_args())
 
-        app = AppFactory.create_app()
-        app.router.add_route(homepage)
+        app = AppFactory.create_app(routers=[homepage])
         client = TestClient(app)
         response = client.get("/")
         assert response.status_code == 200
@@ -44,8 +43,7 @@ class TestEllarApp:
             res = PlainTextResponse("Ellar Route Handler as an ASGI app")
             return res
 
-        app = AppFactory.create_app()
-        app.router.add_route(homepage)
+        app = AppFactory.create_app(routers=[homepage])
         result = app.url_path_for("homepage")
         assert result == "/homepage-url"
 
@@ -129,14 +127,13 @@ class TestEllarApp:
             ) -> t.Union[Response, t.Any]:
                 return JSONResponse({"detail": str(exc)}, status_code=404)
 
-        app = AppFactory.create_app()
-        app.add_exception_handler(CustomExceptionHandler())
-
         @get("/404")
         def raise_custom_exception():
             raise CustomException("Raised an Exception")
 
-        app.router.add_route(raise_custom_exception)
+        app = AppFactory.create_app(routers=[raise_custom_exception])
+        app.add_exception_handler(CustomExceptionHandler())
+
         client = TestClient(app)
         res = client.get("/404")
         assert res.status_code == 404

@@ -1,57 +1,58 @@
+import inspect
 import typing as t
 
 from ellar.common.interfaces import IEllarMiddleware
 from ellar.common.types import ASGIApp
-from ellar.core.context import current_injector
-from ellar.di import injectable
-from ellar.utils import build_init_kwargs
+from ellar.core.execution_context import current_injector
+from ellar.utils.importer import import_from_string
+from injector import _infer_injected_bindings
 from starlette.middleware import Middleware
 
 T = t.TypeVar("T")
 
 
 class EllarMiddleware(Middleware, IEllarMiddleware):
-    _provider_token: t.Optional[str]
-
     @t.no_type_check
     def __init__(
         self,
-        cls: t.Type[T],
-        provider_token: t.Optional[str] = None,
+        cls_or_import_string: t.Union[t.Type[T], str],
         **options: t.Any,
     ) -> None:
-        super().__init__(cls, **options)
-        injectable()(self.cls)
-        self.kwargs = build_init_kwargs(self.cls, self.kwargs)
-        self._provider_token = provider_token
+        super().__init__(cls_or_import_string, **options)
 
-    def _register_middleware(self) -> None:
-        provider_token = self._provider_token
-        if provider_token:
-            module_data = next(
-                current_injector.tree_manager.find_module(
-                    lambda data: data.name == provider_token
-                )
-            )
-
-            if module_data and module_data.is_ready:
-                module_data.value.add_provider(self.cls, export=True)
-                return
-
-        current_injector.tree_manager.get_root_module().add_provider(
-            self.cls, export=True
-        )
+    def _ensure_class(self) -> None:
+        if isinstance(self.cls, str):
+            self.cls = import_from_string(self.cls)
 
     def __iter__(self) -> t.Iterator[t.Any]:
+        self._ensure_class()
         as_tuple = (self, self.args, self.kwargs)
         return iter(as_tuple)
 
+    def create_object(self, **init_kwargs: t.Any) -> t.Any:
+        _result = dict(init_kwargs)
+
+        if hasattr(self.cls, "__init__"):
+            spec = inspect.signature(self.cls.__init__)
+            type_hints = _infer_injected_bindings(
+                self.cls.__init__, only_explicit_bindings=False
+            )
+
+            for k, annotation in type_hints.items():
+                parameter = spec.parameters.get(k)
+                if k in _result or (parameter and parameter.default is None):
+                    continue
+
+                _result[k] = current_injector.get(annotation)
+
+        return self.cls(**_result)
+
     @t.no_type_check
     def __call__(self, app: ASGIApp, *args: t.Any, **kwargs: t.Any) -> T:
-        self._register_middleware()
-        kwargs.update(app=app)
+        self._ensure_class()
+        # kwargs.update(app=app)
         try:
-            return current_injector.create_object(self.cls, additional_kwargs=kwargs)
+            return self.create_object(**kwargs, app=app)
         except TypeError:  # pragma: no cover
             # TODO: Fix future typing for lower python version.
-            return self.cls(*args, **kwargs)
+            return self.cls(*args, **kwargs, app=app)

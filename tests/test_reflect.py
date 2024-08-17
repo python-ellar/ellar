@@ -1,13 +1,22 @@
 import pytest
-from ellar.reflect import REFLECT_TYPE, reflect
+from ellar.reflect import reflect
 
 
 def test_define_metadata_creates_attribute_dict(random_type):
     key = "FrameworkName"
     reflect.define_metadata(key, "Ellar", random_type)
-    assert hasattr(random_type, REFLECT_TYPE)
+    # assert hasattr(random_type, REFLECT_TYPE)
     assert reflect.get_metadata(key, random_type) == "Ellar"
     assert list(reflect.get_metadata_keys(random_type)) == [key]
+
+
+@pytest.mark.parametrize("immutable_type", ["FrameworkName", 23, (33, 45), {34, 45}])
+def test_reflect_works_with_immutable_types(immutable_type, reflect_context):
+    key = "FrameworkName"
+    reflect.define_metadata(key, "Ellar", immutable_type)
+    # assert hasattr(random_type, REFLECT_TYPE)
+    assert reflect.get_metadata(key, immutable_type) == "Ellar"
+    assert list(reflect.get_metadata_keys(immutable_type)) == [key]
 
 
 def test_define_metadata_without_default(random_type):
@@ -30,6 +39,26 @@ def test_define_metadata_with_existing_tuple(random_type):
         "AnotherEllar",
         "AnotherEllarC",
     )
+
+
+def test_get_all_metadata(random_type):
+    reflect.define_metadata("B", ("EllarB",), random_type)
+    assert reflect.get_metadata("B", random_type) == ("EllarB",)
+
+    reflect.define_metadata("B", ("AnotherEllar",), random_type)
+    data = reflect.get_all_metadata(random_type)
+    assert data == {"B": ("EllarB", "AnotherEllar")}
+
+
+def test_delete_all_metadata(random_type):
+    reflect.define_metadata("D", ("EllarD",), random_type)
+
+    reflect.define_metadata("B", ("AnotherEllar",), random_type)
+    data = reflect.get_all_metadata(random_type)
+    assert data == {"B": ("AnotherEllar",), "D": ("EllarD",)}
+
+    reflect.delete_all_metadata(random_type)
+    assert reflect.get_metadata("D", random_type) is None
 
 
 def test_define_metadata_with_existing_list(random_type):
@@ -148,9 +177,6 @@ async def test_reflect_async_context_works():
 
 
 def test_define_metadata_raise_exception():
-    with pytest.raises(Exception, match="`target` is not a valid type"):
-        reflect.define_metadata("defined_key_c", "Eadwin", "defined_key_c")
-
     with pytest.raises(Exception, match="`target` is not a valid type"):
         reflect.define_metadata("defined_key_c", "Eadwin", None)
 

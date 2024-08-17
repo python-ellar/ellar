@@ -15,6 +15,7 @@ from ellar.common.constants import (
     ROUTE_OPERATION_PARAMETERS,
     TRACE,
 )
+from ellar.reflect import ensure_target
 
 from .schema import RouteParameters, WsRouteParameters
 
@@ -25,7 +26,7 @@ def _websocket_connection_attributes(func: t.Callable) -> t.Callable:
     ) -> t.Callable:
         def _wrap(connect_handler: t.Callable) -> t.Callable:
             if not (
-                callable(websocket_handler) and type(websocket_handler) == FunctionType
+                callable(websocket_handler) and type(websocket_handler) is FunctionType
             ):
                 raise Exception(
                     "Invalid type. Please make sure you passed the websocket handler."
@@ -57,18 +58,20 @@ class OperationDefinitions:
     __slots__ = ()
 
     def _get_operation(self, route_parameter: RouteParameters) -> t.Callable:
-        setattr(route_parameter.endpoint, OPERATION_ENDPOINT_KEY, True)
-        route_parameters = getattr(
-            route_parameter.endpoint, ROUTE_OPERATION_PARAMETERS, []
-        )
+        endpoint = ensure_target(route_parameter.endpoint)
+        setattr(endpoint, OPERATION_ENDPOINT_KEY, True)
+        route_parameters = getattr(endpoint, ROUTE_OPERATION_PARAMETERS, [])
         route_parameters.append(route_parameter)
-        setattr(route_parameter.endpoint, ROUTE_OPERATION_PARAMETERS, route_parameters)
+        setattr(endpoint, ROUTE_OPERATION_PARAMETERS, route_parameters)
+
         return route_parameter.endpoint
 
     def _get_ws_operation(self, ws_route_parameters: WsRouteParameters) -> t.Callable:
-        setattr(ws_route_parameters.endpoint, OPERATION_ENDPOINT_KEY, True)
+        endpoint = ensure_target(ws_route_parameters.endpoint)
+
+        setattr(endpoint, OPERATION_ENDPOINT_KEY, True)
         setattr(
-            ws_route_parameters.endpoint,
+            endpoint,
             ROUTE_OPERATION_PARAMETERS,
             ws_route_parameters,
         )

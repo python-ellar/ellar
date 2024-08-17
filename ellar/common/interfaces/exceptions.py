@@ -1,20 +1,12 @@
 import typing as t
 from abc import ABC, abstractmethod
 
-from ellar.pydantic import as_pydantic_validator
 from starlette.responses import Response
 
 from .context import IHostContext
 
 
-@as_pydantic_validator("__validate_input__", schema={"type": "object"})
 class IExceptionHandler(ABC, t.Iterable):
-    @classmethod
-    def __validate_input__(cls, v: t.Any, _: t.Any) -> t.Any:
-        if not isinstance(v, cls):
-            raise ValueError(f"Expected IExceptionHandler object, received: {type(v)}")
-        return v
-
     def __eq__(self, other: t.Any) -> bool:
         if isinstance(other, IExceptionHandler):
             return other.exception_type_or_code == self.exception_type_or_code
@@ -42,7 +34,9 @@ class IExceptionHandler(ABC, t.Iterable):
 
 class IExceptionMiddlewareService:
     @abstractmethod
-    def build_exception_handlers(self, *exception_handlers: IExceptionHandler) -> None:
+    def build_exception_handlers(
+        self, *exception_handlers: IExceptionHandler
+    ) -> "IExceptionMiddlewareService":
         """Build Exception Handlers"""
 
     @abstractmethod

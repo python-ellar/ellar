@@ -1,7 +1,8 @@
 import typing as t
 from functools import partial
 
-from ellar.common import APIException, EllarInterceptor, IExecutionContext
+from ellar.common import APIException, EllarInterceptor, IExecutionContext, constants
+from ellar.core.services import reflector
 from ellar.di import injectable
 from starlette import status
 
@@ -34,6 +35,12 @@ class AuthorizationInterceptor(EllarInterceptor):
     async def intercept(
         self, context: IExecutionContext, next_interceptor: t.Callable[..., t.Coroutine]
     ) -> t.Any:
+        skip_auth = reflector.get_all_and_override(
+            constants.SKIP_AUTH, context.get_handler(), context.get_class()
+        )
+        if skip_auth is True:
+            return await next_interceptor()
+
         if not context.user.is_authenticated:
             raise self.exception_class(status_code=401)
 

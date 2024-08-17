@@ -1,4 +1,6 @@
 import pytest
+from ellar.core import HttpRequestConnectionContext
+from ellar.core.execution_context import HostContextFactory
 from ellar.di import (
     EllarInjector,
     injectable,
@@ -43,6 +45,8 @@ async def test_injectable_class_uses_defined_scope_during_runtime():
         MustBeRegisteredToResolve
     )
 
-    async with injector.create_asgi_args():
+    async with HttpRequestConnectionContext(
+        HostContextFactory().create_context(scope={})
+    ):
         # request scope outside request
         assert injector.get(SampleInjectableB) == injector.get(SampleInjectableB)

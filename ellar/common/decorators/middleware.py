@@ -4,16 +4,16 @@ from ellar.common.compatible import AttributeDict
 from ellar.common.constants import MIDDLEWARE_HANDLERS_KEY, MODULE_DECORATOR_ITEM
 
 
-def _add_middleware(dispatch: t.Callable, **options: t.Any) -> None:
+def _add_middleware(dispatch: t.Callable, app: bool = False, **options: t.Any) -> None:
     setattr(
         dispatch,
         MIDDLEWARE_HANDLERS_KEY,
-        AttributeDict(dispatch=dispatch, options=options),
+        AttributeDict(dispatch=dispatch, options=options, is_global=app),
     )
     setattr(dispatch, MODULE_DECORATOR_ITEM, MIDDLEWARE_HANDLERS_KEY)
 
 
-def middleware() -> t.Callable:
+def middleware(app: bool = False) -> t.Callable:
     """
     ========= MODULE DECORATOR ==============
 
@@ -32,7 +32,7 @@ def middleware() -> t.Callable:
     """
 
     def decorator(func: t.Callable) -> t.Callable:
-        _add_middleware(dispatch=func)
+        _add_middleware(dispatch=func, app=app)
         return func
 
     return decorator

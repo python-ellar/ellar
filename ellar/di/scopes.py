@@ -1,6 +1,7 @@
+import logging
 import typing as t
 
-from ellar.di import SCOPED_CONTEXT_VAR, RequestScopeContext
+from ellar.di import RequestScopeContext, request_context_var
 from injector import (
     NoScope as TransientScope,
 )
@@ -23,7 +24,11 @@ from .types import T
 
 class RequestScope(InjectorScope):
     def get_context(self) -> t.Optional[RequestScopeContext]:
-        return SCOPED_CONTEXT_VAR.get()
+        try:
+            return request_context_var.get()
+        except Exception as ex:
+            logging.exception(ex)
+            return None
 
     def get(self, key: t.Type[T], provider: Provider[T]) -> Provider[T]:
         scoped_context = self.get_context()

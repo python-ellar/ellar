@@ -10,7 +10,7 @@ from ellar.common.serializer.base import (
     SerializerFilter,
     serialize_object,
 )
-from ellar.core.context import ApplicationContext
+from ellar.core import injector_context
 from ellar.pydantic import as_pydantic_validator
 from ellar.testing import Test
 from pydantic import BaseModel, Field, RootModel
@@ -295,7 +295,7 @@ async def test_serialize_object_under_app_context(anyio_backend):
         config_module={"SERIALIZER_CUSTOM_ENCODER": {safe_datetime: decoder_func}}
     )
 
-    async with ApplicationContext.create(tm.create_application()):
+    async with injector_context(tm.create_application().injector):
         result = serialize_object(safe_datetime.fromisocalendar(2023, 45, 5))
         assert result == "2023-11-10T00:00:00"
 

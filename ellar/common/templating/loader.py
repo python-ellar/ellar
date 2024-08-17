@@ -3,6 +3,7 @@ import typing as t
 from ellar.pydantic import as_pydantic_validator
 from jinja2 import TemplateNotFound
 from jinja2.loaders import BaseLoader
+from uvicorn.importer import import_from_string
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.app.main import App
@@ -56,6 +57,9 @@ class JinjaLoader(BaseLoader):
 class JinjaLoaderType(BaseLoader):
     @classmethod
     def __validate_input__(cls, v: t.Any, _: t.Any) -> t.Any:
+        if isinstance(v, str):
+            v = import_from_string(v)
+
         if not isinstance(v, BaseLoader):
             raise ValueError(f"Expected {BaseLoader} object, received: {type(v)}")
         return v

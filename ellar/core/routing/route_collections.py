@@ -2,7 +2,7 @@ import typing as t
 import uuid
 from collections import OrderedDict
 
-from ellar.common.logging import logger
+from ellar.common.exceptions import ImproperConfiguration
 from ellar.utils import generate_controller_operation_unique_id
 from starlette.routing import BaseRoute, Host, Mount
 
@@ -23,7 +23,7 @@ class RouteCollection(t.Sequence[BaseRoute]):
         return self._served_routes.__getitem__(i)
 
     def __setitem__(self, i: int, o: BaseRoute) -> None:
-        self._add_operation(o)
+        self._compute_operation_hash(o)
         self.sort_routes()
 
     def __len__(self) -> int:
@@ -33,7 +33,7 @@ class RouteCollection(t.Sequence[BaseRoute]):
         return iter(self._served_routes)
 
     def append(self, __item: t.Any) -> None:
-        self._add_operation(__item)
+        self._compute_operation_hash(__item)
         self.sort_routes()
 
     def get_routes(self) -> t.List[BaseRoute]:
@@ -41,7 +41,7 @@ class RouteCollection(t.Sequence[BaseRoute]):
 
     def extend(self, routes: t.Sequence[BaseRoute]) -> "RouteCollection":
         for item in routes:
-            self._add_operation(item)
+            self._compute_operation_hash(item)
         self.sort_routes()
         return self
 
@@ -52,18 +52,11 @@ class RouteCollection(t.Sequence[BaseRoute]):
             key=lambda e: e.host if isinstance(e, Host) else e.path  # type: ignore
         )
 
-    def _add_operation(self, operation: t.Union[BaseRoute]) -> None:
+    def _compute_operation_hash(self, operation: BaseRoute) -> None:
         if not isinstance(operation, BaseRoute):
-            from ellar.core.router_builders.utils import build_route_handler
-
-            operations: t.Any = build_route_handler(operation)
-
-            for op in operations or []:
-                if not isinstance(op, BaseRoute):
-                    logger.warning("Tried Adding an operation that is not supported.")
-                    continue
-                self._add_operation(op)
-            return
+            raise ImproperConfiguration(
+                f"Invalid type {operation}. Expected 'BaseRoute' object."
+            )
 
         _methods = getattr(operation, "methods", {"WS"})
         _versioning = list(

@@ -6,7 +6,6 @@ import click
 from ellar.common import ControllerBase, ModuleRouter
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
-from ellar.common.shortcuts import fail_silently
 from ellar.core.conf import Config
 from ellar.di import (
     MODULE_REF_TYPES,
@@ -15,7 +14,7 @@ from ellar.di import (
     ModuleTreeManager,
     ProviderConfig,
 )
-from ellar.reflect import reflect
+from ellar.reflect import fail_silently, reflect
 from ellar.utils.importer import import_from_string
 from starlette.routing import BaseRoute
 
@@ -46,6 +45,7 @@ class DynamicModule:
     commands: t.Sequence[t.Union[click.Command, click.Group, t.Any]] = (
         dataclasses.field(default_factory=lambda: ())
     )
+
     exports: t.List[t.Union[t.Type, t.Any]] = dataclasses.field(
         default_factory=lambda: []
     )
@@ -269,7 +269,7 @@ class ForwardRefModule(_ModuleValidateBase):
             tree_manager.find_module(lambda data: data.name == self.module_name)
         )
 
-        if not node:
+        if node is None:
             raise ImproperConfiguration(
                 f"ForwardRefModule module_name='{self.module_name}' "
                 f"defined in {parent_module_ref.module} could not be found.\n"
@@ -295,7 +295,7 @@ class ForwardRefModule(_ModuleValidateBase):
 
         node = tree_manager.get_module(module_cls)
 
-        if not node:
+        if node is None:
             raise ImproperConfiguration(
                 f"ForwardRefModule module='{self.module}' "
                 f"defined in {parent_module_ref.module} could not be found.\n"

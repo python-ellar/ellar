@@ -7,8 +7,7 @@ from ellar.di.constants import (
 )
 from ellar.di.exceptions import DIImproperConfiguration
 from ellar.di.types import T
-from ellar.di.utils import fail_silently
-from ellar.reflect import reflect
+from ellar.reflect import fail_silently, reflect
 from injector import (
     CallableT,
     ConstructorOrClassT,

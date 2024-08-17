@@ -1,25 +1,28 @@
 import typing as t
 
+from ellar.common import APIException, IExceptionMiddlewareService
 from ellar.common.interfaces import IHostContextFactory
 from ellar.common.types import ASGIApp, TMessage, TReceive, TScope, TSend
-from ellar.core.context import current_injector
-from ellar.core.exceptions import ExceptionMiddlewareService
+from ellar.core.conf import Config
+from ellar.core.exceptions.service import ExceptionMiddlewareService
+from ellar.core.execution_context import current_injector
 from starlette.exceptions import HTTPException
 
-if t.TYPE_CHECKING:  # pragma: no cover
-    pass
+from .middleware import EllarMiddleware
 
 
 class ExceptionMiddleware:
     def __init__(
         self,
         app: ASGIApp,
-        exception_middleware_service: ExceptionMiddlewareService,
-        debug: bool = False,
+        exception_middleware_service: IExceptionMiddlewareService,
+        config: Config,
     ) -> None:
         self.app = app
-        self.debug = debug
-        self._exception_middleware_service = exception_middleware_service
+        self.debug = config.DEBUG
+        self._exception_middleware_service: ExceptionMiddlewareService = t.cast(
+            ExceptionMiddlewareService, exception_middleware_service
+        )
 
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
         if scope["type"] not in ("http", "websocket"):
@@ -40,7 +43,7 @@ class ExceptionMiddleware:
         except Exception as exc:
             handler = None
 
-            if isinstance(exc, HTTPException):
+            if isinstance(exc, (HTTPException, APIException)):
                 handler = self._exception_middleware_service.lookup_status_code_exception_handler(
                     exc.status_code
                 )
@@ -69,3 +72,7 @@ class ExceptionMiddleware:
             elif context.get_type() == "websocket":
                 ws_context = context_factory.create_context(scope, receive, send)
                 await handler.catch(ws_context, exc)
+
+
+# ExceptionMiddleware Configuration
+exception_middleware = EllarMiddleware(ExceptionMiddleware)

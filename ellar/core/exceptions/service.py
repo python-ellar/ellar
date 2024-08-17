@@ -9,28 +9,30 @@ from ellar.common.exceptions.handlers import (
 from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
 from ellar.di import injectable
 
+EXCEPTION_DEFAULT_EXCEPTION_HANDLERS: t.List[IExceptionHandler] = [
+    HTTPExceptionHandler(),
+    APIExceptionHandler(),
+    WebSocketExceptionHandler(),
+    RequestValidationErrorHandler(),
+]
+
 
 @injectable()
 class ExceptionMiddlewareService(IExceptionMiddlewareService):
-    DEFAULTS: t.List[IExceptionHandler] = [
-        HTTPExceptionHandler(),
-        APIExceptionHandler(),
-        WebSocketExceptionHandler(),
-        RequestValidationErrorHandler(),
-    ]
-
     def __init__(self) -> None:
         self._status_handlers: t.Dict[int, IExceptionHandler] = {}
         self._exception_handlers: t.Dict[t.Type[Exception], IExceptionHandler] = {}
         self._500_error_handler: t.Optional[IExceptionHandler] = None
 
-    def build_exception_handlers(self, *exception_handlers: IExceptionHandler) -> None:
-        handlers = list(self.DEFAULTS) + list(exception_handlers)
-        for key, value in handlers:
+    def build_exception_handlers(
+        self, *exception_handlers: IExceptionHandler
+    ) -> "ExceptionMiddlewareService":
+        for key, value in exception_handlers:
             if key == 500:
                 self._500_error_handler = value
                 continue
             self._add_exception_handler(key, value)
+        return self
 
     def get_500_error_handler(
         self,
@@ -58,3 +60,10 @@ class ExceptionMiddlewareService(IExceptionMiddlewareService):
         self, status_code: int
     ) -> t.Optional[IExceptionHandler]:
         return self._status_handlers.get(status_code)
+
+    def __repr__(self) -> str:  # praga: no cover
+        return (
+            f"<{self.__class__.__name__} id={id(self)}"
+            f"status-handlers={self._status_handlers} "
+            f"exc-handlers={self._exception_handlers}>"
+        )

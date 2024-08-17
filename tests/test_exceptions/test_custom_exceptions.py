@@ -131,10 +131,10 @@ def test_custom_exception_works():
     def homepage():
         raise NewException("New Exception")
 
-    tm = Test.create_test_module()
-    app = tm.create_application()
-    app.router.add_route(homepage)
-    app.add_exception_handler(NewExceptionHandler())
+    tm = Test.create_test_module(
+        routers=[homepage],
+        config_module={"EXCEPTION_HANDLERS": [NewExceptionHandler()]},
+    )
 
     client = tm.get_test_client()
     res = client.get("/")
@@ -147,10 +147,10 @@ def test_exception_override_works():
     def homepage():
         raise APIException("New APIException")
 
-    tm = Test.create_test_module()
-    app = tm.create_application()
-    app.router.add_route(homepage)
-    app.add_exception_handler(OverrideAPIExceptionHandler())
+    tm = Test.create_test_module(
+        routers=[homepage],
+        config_module={"EXCEPTION_HANDLERS": [OverrideAPIExceptionHandler()]},
+    )
 
     client = tm.get_test_client()
     res = client.get("/")
@@ -161,9 +161,7 @@ def test_exception_override_works():
 @pytest.mark.parametrize(
     "exception_handler",
     [
-        CallableExceptionHandler(
-            exc_class_or_status_code=500, callable_exception_handler=error_500
-        ),
+        CallableExceptionHandler(exc_or_status_code=500, handler=error_500),
         ServerErrorHandler(),
     ],
 )
@@ -172,11 +170,9 @@ def test_500_error_as_a_function(exception_handler):
     def homepage():
         raise RuntimeError("Server Error")
 
-    tm = Test.create_test_module()
-    app = tm.create_application()
-
-    app.router.add_route(homepage)
-    app.add_exception_handler(exception_handler)
+    tm = Test.create_test_module(
+        routers=[homepage], config_module={"EXCEPTION_HANDLERS": [exception_handler]}
+    )
 
     client = tm.get_test_client(raise_server_exceptions=False)
     res = client.get("/")
@@ -189,10 +185,8 @@ def test_raise_default_http_exception():
     def homepage():
         raise HTTPException(detail="Bad Request", status_code=400)
 
-    tm = Test.create_test_module()
-    app = tm.create_application()
+    tm = Test.create_test_module(routers=[homepage])
 
-    app.router.add_route(homepage)
     client = tm.get_test_client()
     res = client.get("/")
     assert res.status_code == 400
@@ -205,10 +199,7 @@ def test_raise_default_http_exception_for_204_and_304(status_code):
     def homepage():
         raise HTTPException(detail="Server Error", status_code=status_code)
 
-    tm = Test.create_test_module()
-    app = tm.create_application()
-
-    app.router.add_route(homepage)
+    tm = Test.create_test_module(routers=[homepage])
 
     client = tm.get_test_client()
     res = client.get("/")
@@ -224,7 +215,7 @@ def test_debug_after_response_sent(test_client_factory):
 
     app = ExceptionMiddleware(
         app,
-        debug=True,
+        config=Config(DEBUG=True),
         exception_middleware_service=ExceptionMiddlewareService(),
     )
     client = test_client_factory(app)
@@ -237,11 +228,10 @@ def test_application_add_exception_handler():
     def homepage():
         raise HTTPException(detail="Bad Request", status_code=400)
 
-    tm = Test.create_test_module()
-    app = tm.create_application()
-
-    app.router.add_route(homepage)
-    app.add_exception_handler(OverrideHTTPException())
+    tm = Test.create_test_module(
+        routers=[homepage],
+        config_module={"EXCEPTION_HANDLERS": [OverrideHTTPException()]},
+    )
 
     client = tm.get_test_client()
     res = client.get("/")
@@ -255,11 +245,11 @@ def test_application_http_exception_handler_raise_exception_for_returning_none()
     def homepage():
         raise HTTPException(detail="Bad Request", status_code=400)
 
-    tm = Test.create_test_module()
-    app = tm.create_application()
+    tm = Test.create_test_module(
+        routers=[homepage],
+        config_module={"EXCEPTION_HANDLERS": [RuntimeHTTPException()]},
+    )
 
-    app.router.add_route(homepage)
-    app.add_exception_handler(RuntimeHTTPException())
     with pytest.raises(
         RuntimeError, match="HTTP ExceptionHandler must return a response."
     ):
@@ -272,12 +262,12 @@ def test_application_adding_same_exception_twice():
 
     exception = OverrideHTTPException()
     app.add_exception_handler(exception)
-    assert exception is app.config.EXCEPTION_HANDLERS[0]
+    assert exception is app.config.EXCEPTION_HANDLERS[1]
 
     exception2 = OverrideHTTPException()
     app.add_exception_handler(exception2)
-    assert exception2 is not app.config.EXCEPTION_HANDLERS[0]
-    assert exception is app.config.EXCEPTION_HANDLERS[0]
+    assert exception2 is not app.config.EXCEPTION_HANDLERS[1]
+    assert exception is app.config.EXCEPTION_HANDLERS[1]
 
 
 def test_callable_exception_handler_equality():
@@ -285,10 +275,10 @@ def test_callable_exception_handler_equality():
         return "Bad Request"
 
     exception_400_handler = CallableExceptionHandler(
-        exc_class_or_status_code=400, callable_exception_handler=exception_handler_fun
+        exc_or_status_code=400, handler=exception_handler_fun
     )
     exception_500_handler = CallableExceptionHandler(
-        exc_class_or_status_code=500, callable_exception_handler=exception_handler_fun
+        exc_or_status_code=500, handler=exception_handler_fun
     )
 
     assert exception_500_handler != exception_400_handler
@@ -307,11 +297,7 @@ def test_http_exception_handler_case_1(exc):
     def homepage_2():
         raise exc(detail={"message": "Bad Request"}, status_code=400)
 
-    tm = Test.create_test_module()
-    app = tm.create_application()
-
-    app.router.add_route(homepage)
-    app.router.add_route(homepage_2)
+    tm = Test.create_test_module(routers=[homepage, homepage_2])
     client = tm.get_test_client()
 
     res = client.get("/case_1")
@@ -334,10 +320,7 @@ def test_ws_exception_handler():
         await session.accept()
         raise WebSocketException(reason="bad request", code=1001)
 
-    tm = Test.create_test_module()
-    app = tm.create_application()
-
-    app.router.add_route(homepage_3)
+    tm = Test.create_test_module(routers=[homepage_3])
     client = tm.get_test_client()
 
     with client.websocket_connect("/ws"):

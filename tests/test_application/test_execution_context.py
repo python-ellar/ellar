@@ -13,7 +13,8 @@ from ellar.core import ModuleBase
 from ellar.core.exceptions.service import ExceptionMiddlewareService
 from ellar.core.execution_context import ExecutionContext, HostContext
 from ellar.core.services import Reflector
-from ellar.di import ProviderConfig, injectable
+from ellar.di import ProviderConfig, injectable, register_request_scope_context
+from ellar.reflect import reflect
 from ellar.testing import Test
 from starlette.exceptions import HTTPException
 from starlette.responses import PlainTextResponse
@@ -31,10 +32,12 @@ class ExampleController:
 
 
 class NewExecutionContext(ExecutionContext):
+    worked = False
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.instantiated = True
-        self.__class__.worked = True
+        self.worked = True
 
 
 @injectable()
@@ -50,8 +53,12 @@ class NewExecutionHostFactory(IExecutionContextFactory):
             receive=receive,
             send=send,
             operation_handler=operation.endpoint,
-            operation_handler_type=operation.get_controller_type(),
+            operation_handler_type=operation.router_reflect_key,
             reflector=self.reflector,
+        )
+
+        reflect.define_metadata(
+            "NewExecutionContext", i_execution_context, NewExecutionContext
         )
 
         return i_execution_context
@@ -61,9 +68,7 @@ class NewExecutionHostFactory(IExecutionContextFactory):
 class NewHostContextFactory(IHostContextFactory):
     def create_context(self, scope, receive=None, send=None) -> IHostContext:
         host_context = NewHostContext(scope=scope, receive=receive, send=send)
-        host_context.get_service_provider().update_scoped_context(
-            IHostContext, host_context
-        )
+        register_request_scope_context(IHostContext, host_context)
         return host_context
 
 
@@ -76,8 +81,13 @@ class NewHostContext(HostContext):
 
 @injectable()
 class NewExceptionMiddlewareService(ExceptionMiddlewareService):
+    worked = False
+
     def lookup_status_code_exception_handler(self, status_code: int):
-        self.__class__.worked = True
+        reflect.define_metadata(
+            "NewExceptionMiddlewareService", self, NewExceptionMiddlewareService
+        )
+        self.worked = True
         return self._status_handlers.get(status_code)
 
 
@@ -95,7 +105,7 @@ def test_can_replace_host_context():
     assert NewHostContext.worked is True
 
 
-def test_can_replace_exception_service():
+def test_can_replace_exception_service(reflect_context):
     @Module(
         controllers=[ExampleController],
         providers=[
@@ -114,15 +124,17 @@ def test_can_replace_exception_service():
             )
 
     tm = Test.create_test_module(modules=[ExampleModule])
-
-    assert hasattr(NewExceptionMiddlewareService, "worked") is False
     client = tm.get_test_client()
+    assert NewExceptionMiddlewareService.worked is False
+
     res = client.get("/example/exception")
     assert res.status_code == 200
     assert res.text == "Exception 400 handled by ExampleModule.exception_400"
 
-    assert hasattr(NewExceptionMiddlewareService, "worked") is True
-    assert NewExceptionMiddlewareService.worked is True
+    new_exc_instance = reflect.get_metadata(
+        "NewExceptionMiddlewareService", NewExceptionMiddlewareService
+    )
+    assert new_exc_instance.worked is True
 
 
 def test_can_replace_execution_context():
@@ -130,11 +142,12 @@ def test_can_replace_execution_context():
         IExecutionContextFactory, use_class=NewExecutionHostFactory, core=True
     )
 
-    assert hasattr(NewExecutionContext, "worked") is False
+    assert NewExecutionContext.worked is False
     client = tm.get_test_client()
+
     res = client.get("/example/")
     assert res.status_code == 200
-    assert res.text == '"NewExecutionContext"'
 
-    assert hasattr(NewExecutionContext, "worked") is True
-    assert NewExecutionContext.worked is True
+    assert res.text == '"NewExecutionContext"'
+    new_ctx_instance = reflect.get_metadata("NewExecutionContext", NewExecutionContext)
+    assert new_ctx_instance.worked is True

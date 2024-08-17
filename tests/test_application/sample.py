@@ -103,14 +103,14 @@ class ClassBaseController:
     controllers=[ClassBaseController],
 )
 class ApplicationModule(ModuleBase):
-    @exception_handler(405)
+    @exception_handler(405, app=True)
     async def method_not_allow_exception(self, ctx, exec):
         return JSONResponse({"detail": "Custom message"}, status_code=405)
 
-    @exception_handler(500)
+    @exception_handler(500, app=True)
     async def error_500(self, ctx, exec):
         return JSONResponse({"detail": "Server Error"}, status_code=500)
 
-    @exception_handler(HTTPException)
+    @exception_handler(HTTPException, app=True)
     async def http_exception(self, ctx, exc):
         return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)

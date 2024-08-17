@@ -13,6 +13,7 @@ from ellar.core import ConfigDefaultTypesMixin
 from ellar.core.versioning import BaseAPIVersioning, DefaultAPIVersioning
 from ellar.pydantic import ENCODERS_BY_TYPE as encoders_by_type
 from starlette.middleware import Middleware
+from starlette.requests import Request
 
 
 class BaseConfig(ConfigDefaultTypesMixin):
@@ -28,6 +29,15 @@ class BaseConfig(ConfigDefaultTypesMixin):
     # jinja Environment options
     # https://jinja.palletsprojects.com/en/3.0.x/api/#high-level-api
     JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any] = {}
+
+    # Injects context to jinja templating context values
+    TEMPLATES_CONTEXT_PROCESSORS: t.List[
+        t.Union[str, t.Callable[[t.Union[Request]], t.Dict[str, t.Any]]]
+    ] = [
+        "ellar.core.templating.context_processors:request_context",
+        "ellar.core.templating.context_processors:user",
+        "ellar.core.templating.context_processors:request_state",
+    ]
 
     # Application route versioning scheme
     VERSIONING_SCHEME: BaseAPIVersioning = DefaultAPIVersioning()
@@ -51,14 +61,24 @@ class BaseConfig(ConfigDefaultTypesMixin):
     ALLOWED_HOSTS: t.List[str] = ["*"]
 
     # Application middlewares
-    MIDDLEWARE: t.Sequence[Middleware] = []
+    MIDDLEWARE: t.Union[str, Middleware] = [
+        "ellar.core.middleware.trusted_host:trusted_host_middleware",
+        "ellar.core.middleware.cors:cors_middleware",
+        "ellar.core.middleware.errors:server_error_middleware",
+        "ellar.core.middleware.versioning:versioning_middleware",
+        "ellar.auth.middleware.session:session_middleware",
+        "ellar.auth.middleware.auth:identity_middleware",
+        "ellar.core.middleware.exceptions:exception_middleware",
+    ]
 
     # A dictionary mapping either integer status codes,
     # or exception class types onto callables which handle the exceptions.
     # Exception handler callables should be of the form
     # `handler(context:IExecutionContext, exc: Exception) -> response`
     # and may be either standard functions, or async functions.
-    EXCEPTION_HANDLERS: t.List[IExceptionHandler] = []
+    EXCEPTION_HANDLERS: t.Union[str, IExceptionHandler] = [
+        "ellar.core.exceptions:error_404_handler"
+    ]
 
     # Object Serializer custom encoders
     SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]] = (

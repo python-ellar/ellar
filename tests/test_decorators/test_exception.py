@@ -11,7 +11,7 @@ def exception_decorator_test():
     """ignore"""
 
 
-@exception_handler(exc_class_or_status_code=404)
+@exception_handler(exc_or_status_code=404, app=True)
 def exception_decorator_test_2():
     """ignore"""
 
@@ -19,9 +19,9 @@ def exception_decorator_test_2():
 def test_exception_decorators_sets_exception_key():
     assert hasattr(exception_decorator_test, EXCEPTION_HANDLERS_KEY)
     exception_details: dict = getattr(exception_decorator_test, EXCEPTION_HANDLERS_KEY)
-    assert exception_details[CustomException] is exception_decorator_test
+    assert exception_details[CustomException] == (exception_decorator_test, False)
 
     exception_details: dict = getattr(
         exception_decorator_test_2, EXCEPTION_HANDLERS_KEY
     )
-    assert exception_details[404] is exception_decorator_test_2
+    assert exception_details[404] == (exception_decorator_test_2, True)

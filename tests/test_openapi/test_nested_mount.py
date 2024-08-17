@@ -35,7 +35,7 @@ NESTED_SCHEMA = {
     "paths": {
         "/cat2/cat1/create": {
             "get": {
-                "tags": ["cat1"],
+                "tags": ["cat2:cat1"],
                 "operationId": "create_cat_create_get__cat1",
                 "responses": {
                     "200": {
@@ -96,5 +96,5 @@ NESTED_SCHEMA = {
             },
         }
     },
-    "tags": [{"name": "cat1"}, {"name": "cat2"}],
+    "tags": [{"name": "cat2:cat1"}, {"name": "cat2"}],
 }

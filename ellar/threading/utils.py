@@ -5,9 +5,9 @@ import typing as t
 from ellar.threading.sync_worker import execute_coroutine
 
 
-def run_as_async(f: t.Callable) -> t.Callable:
+def run_as_sync(f: t.Callable) -> t.Callable:
     """
-    Runs async click commands
+    Runs Coroutines Synchronously
 
     eg:
     ```python

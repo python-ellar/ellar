@@ -103,7 +103,7 @@ from ellar.common import Controller, get
 
 
 @Controller("/limit")
-@Throttle(apply_interceptor=True)
+@Throttle(intercept=True)
 class LimitController:
     def __init__(self, app_service: AppService):
         self.app_service = app_service
@@ -113,7 +113,7 @@ class LimitController:
         return self.app_service.success(use_auth)
 ```
 
-In the above example, by setting `apply_interceptor=True` within **@Throttle**, 
+In the above example, by setting `intercept=True` within **@Throttle**, 
 the `ThrottlerInterceptor` is applied to all routes within the `LimitController`. 
 This feature is particularly useful when `ThrottlerInterceptor` is not globally applied.
 
@@ -121,7 +121,7 @@ Additionally, the **@Throttle** decorator can be used on a route level:
 
 ```python
 @get()
-@Throttle(apply_interceptor=True)
+@Throttle(intercept=True)
 def get_throttled(self, use_auth: bool):
     return self.app_service.success(use_auth)
 ```
@@ -130,7 +130,7 @@ Another application of the **@Throttle** decorator is to override `ttl` and `lim
 
 ```python
 @Controller("/limit")
-@Throttle(apply_interceptor=True, anon={'ttl': 100, 'limit': 30})
+@Throttle(intercept=True, anon={'ttl': 100, 'limit': 30})
 class LimitController:
     def __init__(self, app_service: AppService):
         self.app_service = app_service

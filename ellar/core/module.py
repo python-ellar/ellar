@@ -5,7 +5,6 @@ from ellar.auth.session import SessionServiceNullStrategy, SessionStrategy
 from ellar.common import (
     GlobalGuard,
     GuardCanActivate,
-    IApplicationReady,
     IApplicationShutdown,
     IApplicationStartup,
     IExceptionMiddlewareService,
@@ -20,11 +19,14 @@ from ellar.common import (
     IWebSocketContextFactory,
     Module,
 )
-from ellar.core import ModuleSetup
+from ellar.common.interfaces import ITemplateRenderingService
+from ellar.common.logging import logger
+from ellar.core import ModuleSetup, TemplateRenderingService
 from ellar.core.conf import Config
 from ellar.core.exceptions.service import ExceptionMiddlewareService
-from ellar.core.execution_context import ExecutionContextFactory, HostContextFactory
 from ellar.core.execution_context.factory import (
+    ExecutionContextFactory,
+    HostContextFactory,
     HTTPConnectionContextFactory,
     WebSocketContextFactory,
 )
@@ -33,6 +35,7 @@ from ellar.core.interceptors import EllarInterceptorConsumer
 from ellar.core.services import Reflector, reflector
 from ellar.di import EllarInjector, ProviderConfig, injectable, request_scope
 from ellar.di.injector.tree_manager import ModuleTreeManager
+from ellar.events import app_context_started, app_context_teardown
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.app import App
@@ -62,6 +65,11 @@ def get_core_module(app_module: t.Union[t.Type, t.Any], config: Config) -> t.Typ
             ProviderConfig(
                 GlobalGuard,
                 use_class=GlobalCanActivatePlaceHolder,
+                export=True,
+            ),
+            ProviderConfig(
+                ITemplateRenderingService,
+                use_class=TemplateRenderingService,
                 export=True,
             ),
             ProviderConfig(
@@ -118,18 +126,23 @@ def get_core_module(app_module: t.Union[t.Type, t.Any], config: Config) -> t.Typ
             ),
         ],
     )
-    class EllarCoreModule(IApplicationReady, IApplicationStartup, IApplicationShutdown):
+    class EllarCoreModule(IApplicationStartup, IApplicationShutdown):
         def __init__(self, _config: Config, injector: EllarInjector) -> None:
             self.config = _config
             self.injector = injector
 
-        def on_ready(self, app: "App") -> None:
-            pass
-
         async def on_startup(self, app: "App") -> None:
-            pass
+            try:
+                await app_context_started.run(app=app)
+            except Exception as ex:  # pragma: no cover
+                logger.exception(ex)
+                raise ex
 
         async def on_shutdown(self) -> None:
-            pass
+            try:
+                await app_context_teardown.run()
+            except Exception as ex:  # pragma: no cover
+                logger.exception(ex)
+                raise ex
 
     return EllarCoreModule

@@ -94,7 +94,7 @@ def test_staticfiles_with_directory_returns_404(tmpdir):
 
     response = client.get("/")
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not Found", "status_code": 404}
+    assert response.json() == {"detail": "Not Found"}
 
 
 def test_staticfiles_with_missing_file_returns_404(tmpdir):
@@ -108,7 +108,7 @@ def test_staticfiles_with_missing_file_returns_404(tmpdir):
 
     response = client.get("/404.txt")
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not Found", "status_code": 404}
+    assert response.json() == {"detail": "Not Found"}
 
 
 def test_staticfiles_instantiated_with_missing_directory(tmpdir):
@@ -390,7 +390,7 @@ def test_staticfiles_with_missing_dir_returns_404(tmpdir):
 
     response = client.get("/foo/example.txt")
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not Found", "status_code": 404}
+    assert response.json() == {"detail": "Not Found"}
 
 
 def test_staticfiles_access_file_as_dir_returns_404(tmpdir):
@@ -404,7 +404,7 @@ def test_staticfiles_access_file_as_dir_returns_404(tmpdir):
 
     response = client.get("/example.txt/foo")
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not Found", "status_code": 404}
+    assert response.json() == {"detail": "Not Found"}
 
 
 def test_staticfiles_unhandled_os_error_returns_500(tmpdir, monkeypatch):

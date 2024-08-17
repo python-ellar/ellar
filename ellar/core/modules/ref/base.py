@@ -1,31 +1,44 @@
 import typing as t
 from abc import ABC, abstractmethod
-from contextlib import asynccontextmanager
+from functools import cached_property
 
 from ellar.auth.constants import POLICY_KEYS
 from ellar.auth.policy.base import _PolicyHandlerWithRequirement
-from ellar.common import ControllerBase, ModuleRouter
+from ellar.common import ControllerBase
 from ellar.common.constants import (
-    CONTROLLER_OPERATION_HANDLER_KEY,
+    CONTROLLER_CLASS_KEY,
     GUARDS_KEY,
+    MODULE_COMPONENT,
     MODULE_METADATA,
     MODULE_WATERMARK,
     ROUTE_INTERCEPTORS,
 )
 from ellar.core.conf import Config
-from ellar.core.context import ApplicationContext
-from ellar.core.modules.base import ModuleBase
+from ellar.core.modules.base import ModuleBase, ModuleBaseMeta
+from ellar.core.modules.ref.context import ModuleExecutionContext
 from ellar.core.router_builders import get_controller_builder_factory
-from ellar.core.routing import EllarMount, RouteOperation, RouteOperationBase
+from ellar.core.routing import EllarControllerMount, RouteOperationBase
 from ellar.di import (
     MODULE_REF_TYPES,
     Container,
+    ModuleTreeManager,
     ProviderConfig,
     is_decorated_with_injectable,
 )
 from ellar.reflect import reflect
 from injector import Scope, ScopeDecorator
-from starlette.routing import BaseRoute
+from starlette.routing import (
+    BaseRoute,
+    Host,
+    Mount,
+    WebSocketRoute,
+)
+from starlette.routing import (
+    Route as StarletteRoute,
+)
+from starlette.routing import (
+    Router as StarletteRouter,
+)
 from typing_extensions import Annotated
 
 _T = t.TypeVar("_T", bound=t.Type)
@@ -50,10 +63,18 @@ class ModuleRefBase(ABC):
 
         self._routers: t.List[t.Union[BaseRoute]] = []
         self._exports: t.List[t.Type] = []
-        self._providers: t.Dict[t.Type, t.Type] = {}
+        self._providers: t.Dict[t.Type, ProviderConfig] = {}
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} name={self.name} module={self.module}>"
+
+    @cached_property
+    def module_context(self) -> ModuleExecutionContext:
+        return ModuleExecutionContext(container=self.container, module=self.module)
+
+    @property
+    def tree_manager(self) -> ModuleTreeManager:
+        return self.container.injector.tree_manager
 
     @property
     def is_ready(self) -> bool:
@@ -65,7 +86,7 @@ class ModuleRefBase(ABC):
         return self._exports
 
     @property
-    def providers(self) -> t.Dict[t.Type, t.Type]:
+    def providers(self) -> t.Dict[t.Type, ProviderConfig]:
         """gets module ref config"""
         return self._providers.copy()
 
@@ -107,28 +128,38 @@ class ModuleRefBase(ABC):
 
     def initiate_module_build(self) -> None:
         self._register_module()
-        self._build_module_parameters()
+        self._build_module_parameters_and_routes()
 
-        self.container.injector.tree_manager.add_or_update(
-            module_type=self.module, value=self
+        self.tree_manager.add_or_update(
+            module_type=self.module,
+            value=self,
+            parent_module=(
+                self.container.parent.injector.owner.module  # type:ignore[attr-defined]
+                if self.container.parent and self.container.parent.injector.owner  # type:ignore[attr-defined]
+                else None
+            ),
         )
+
+        if isinstance(self.module, ModuleBaseMeta):
+            self.module.post_build(self)
 
     def run_module_register_services(self) -> None:
         """
         Defer module instantiation till lifespan call
         """
-        if hasattr(self.module, "before_init"):
-            self.module.before_init(config=self.config)
         _module_type_instance = self.get_module_instance()
         self.container.install(_module_type_instance)  # support for injector module
         # _module_type_instance.register_services(self.container)
+        modules = list(self.tree_manager.get_module_dependencies(self.module))
+        for module_config in reversed(modules):
+            module_config.value.run_module_register_services()
 
     @abstractmethod
     def _register_module(self) -> None:
         """Register Module"""
 
     def get_module_instance(self) -> ModuleBase:
-        root_module = self.container.injector.tree_manager.get_root_module()
+        root_module = self.tree_manager.get_app_module()
         return root_module.container.injector.get(self.module)  # type:ignore
 
     def export_all(self) -> None:
@@ -136,9 +167,7 @@ class ModuleRefBase(ABC):
 
     @t.no_type_check
     def build_dependencies(self, step: int = -1) -> None:
-        modules = list(
-            self.container.injector.tree_manager.get_module_dependencies(self.module)
-        )
+        modules = list(self.tree_manager.get_module_dependencies(self.module))
         for idx, module_config in enumerate(reversed(modules)):
             if step != -1 and idx + 1 > step:
                 break
@@ -151,25 +180,18 @@ class ModuleRefBase(ABC):
 
     def get_routes(self) -> t.List[BaseRoute]:
         routes = [] + self.routes
-        modules = list(
-            self.container.injector.tree_manager.get_module_dependencies(self.module)
-        )
+        modules = list(self.tree_manager.get_module_dependencies(self.module))
         for module_config in reversed(modules):
             routes.extend(module_config.value.get_routes())
 
         return routes
-
-    @asynccontextmanager
-    async def context(self) -> t.AsyncGenerator[ApplicationContext, None]:
-        async with ApplicationContext(self.container.injector) as context:
-            yield context
 
     def add_exports(self, provider_type: t.Type) -> None:
         # validate export
         def _validate_() -> None:
             if provider_type not in self._providers:
                 module = next(
-                    self.container.injector.tree_manager.find_module(
+                    self.tree_manager.find_module(
                         lambda data: provider_type in data.exports
                         and data.parent == self.module
                     )
@@ -193,24 +215,32 @@ class ModuleRefBase(ABC):
 
         if provider.core and provider not in self.config.OVERRIDE_CORE_SERVICE:
             # this will ensure config.py OVERRIDE_CORE_SERVICE takes higher priority
-            self.config.OVERRIDE_CORE_SERVICE.insert(0, provider)
+            self.config.OVERRIDE_CORE_SERVICE = [
+                provider
+            ] + self.config.OVERRIDE_CORE_SERVICE
         else:
-            self._providers.update({provider_type: provider_type})
+            self._providers.update({provider_type: provider})
             provider.register(self.container)
 
             if provider.export or export:
                 self.add_exports(provider_type)
 
-    def _build_module_parameters(self) -> None:
+    def build_controllers_and_routers(self) -> None:
+        self._routers = []
+
+        _routers: t.List[t.Any] = list(
+            reflect.get_metadata(MODULE_METADATA.ROUTERS, self.module) or []
+        )
+        _controllers: t.List[t.Type[ControllerBase]] = (
+            reflect.get_metadata(MODULE_METADATA.CONTROLLERS, self.module) or []
+        )
+        self._search_providers_and_build_controller(_controllers)
+        self._search_providers_and_build_controller(_routers)
+
+    def _build_module_parameters_and_routes(self) -> None:
         from ellar.core.modules.config import ForwardRefModule
 
         if reflect.get_metadata(MODULE_WATERMARK, self.module):
-            _routers: t.List[t.Any] = list(
-                reflect.get_metadata(MODULE_METADATA.ROUTERS, self.module) or []
-            )
-            _controllers: t.List[t.Type[ControllerBase]] = (
-                reflect.get_metadata(MODULE_METADATA.CONTROLLERS, self.module) or []
-            )
             _providers = list(
                 reflect.get_metadata(MODULE_METADATA.PROVIDERS, self.module) or []
             )
@@ -221,8 +251,7 @@ class ModuleRefBase(ABC):
 
             modules = reflect.get_metadata(MODULE_METADATA.MODULES, self.module) or []
 
-            self._search_providers_in_controller(_controllers)
-            self._search_providers_in_controller(_routers)
+            self.build_controllers_and_routers()
 
             for provider in _providers:
                 self.add_provider(provider)
@@ -234,36 +263,49 @@ class ModuleRefBase(ABC):
                 if isinstance(module, ForwardRefModule):
                     module.resolve_module_dependency(self)
 
-    def _search_providers_in_controller(
+    def _search_providers_and_build_controller(
         self, controllers: t.List[t.Union[t.Type, t.Any]]
     ) -> None:
         for controller in controllers:
             factory_builder = get_controller_builder_factory(type(controller))
             factory_builder.check_type(controller)
 
-            self._routers.append(factory_builder.build(controller))
+            routes_or_mount = factory_builder.build(controller)
+            self._run_all_checks(controller)
 
-            control_type = controller
-            if isinstance(controller, ModuleRouter):
-                control_type = controller.control_type
-            elif isinstance(controller, EllarMount):
-                control_type = controller.get_control_type()
-            elif not isinstance(controller, type):
-                continue
+            for item in (
+                routes_or_mount
+                if isinstance(routes_or_mount, list)
+                else [routes_or_mount]
+            ):
+                if not isinstance(item, BaseRoute):
+                    raise RuntimeError(
+                        f"Invalid type registered as a route or router - {item}"
+                    )
+                self._routers.append(item)
 
-            self._search_controller_routes_injectables(control_type)
-            self._run_all_checks(control_type)
+            self._search_controller_routes_injectables(self._routers)
 
-    def _search_controller_routes_injectables(self, control_type: t.Type) -> None:
-        operations: t.List[RouteOperation] = (
-            reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, control_type) or []
-        )
-        for operation in operations:
-            if isinstance(operation, RouteOperationBase):
+    def _search_controller_routes_injectables(
+        self, routes: t.List[BaseRoute], grouped: bool = False
+    ) -> None:
+        for operation in routes:
+            if isinstance(
+                operation, (StarletteRoute, RouteOperationBase, WebSocketRoute)
+            ):
                 self._run_all_checks(operation.endpoint)
-            elif isinstance(operation, EllarMount):
-                self._search_controller_routes_injectables(operation.get_control_type())
-                self._run_all_checks(operation.get_control_type())
+            elif isinstance(
+                operation, (StarletteRouter, Host, Mount, EllarControllerMount)
+            ):
+                self._search_controller_routes_injectables(
+                    operation.routes, grouped=True
+                )
+                self._run_all_checks(
+                    reflect.get_metadata(CONTROLLER_CLASS_KEY, operation) or ()
+                )
+
+            if not grouped:
+                reflect.define_metadata(MODULE_COMPONENT, self, operation)
 
     def _run_all_checks(self, item: t.Union[t.Type, t.Any]) -> None:
         self._search_injectables(item)

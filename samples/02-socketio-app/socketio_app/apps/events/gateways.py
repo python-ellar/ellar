@@ -22,7 +22,7 @@ class EventsGateway:
 
     @subscribe_message("join")
     async def join(self, message: MessageRoom = WsBody()):
-        self.context.server.enter_room(self.context.sid, message.room)
+        await self.context.server.enter_room(self.context.sid, message.room)
         await self.context.server.emit(
             "my_response",
             {"data": "Entered room: " + message.room},

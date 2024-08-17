@@ -1,13 +1,8 @@
 import typing as t
 
-from ellar.common.interfaces import IExecutionContext
+from ellar.common.interfaces import IExecutionContext, ITemplateRenderingService
 from ellar.common.logging import request_logger
-from ellar.common.templating import (
-    Environment,
-    TemplateResponse,
-    get_template_name,
-    process_view_model,
-)
+from ellar.common.templating import TemplateResponse
 
 from ..response_types import Response
 from .base import ResponseModel
@@ -18,7 +13,7 @@ class HTMLResponseModelRuntimeError(RuntimeError):
 
 
 class HTMLResponseModel(ResponseModel):
-    response_type: t.Type[Response] = TemplateResponse
+    response_type: t.Type[TemplateResponse] = TemplateResponse
 
     def __init__(
         self,
@@ -35,18 +30,19 @@ class HTMLResponseModel(ResponseModel):
         request_logger.debug(
             f"Creating Response from returned Handler value - '{self.__class__.__name__}'"
         )
-        jinja_environment = context.get_service_provider().get(Environment)
         template_name = self._get_template_name(ctx=context)
-        template_context = {
-            "request": context.switch_to_http_connection().get_request()
-        }
-        template_context.update(**process_view_model(response_obj))
-        template = jinja_environment.get_template(template_name)
+        rendering_service: ITemplateRenderingService = (
+            context.get_service_provider().get(ITemplateRenderingService)
+        )
 
         response_args, headers = self.get_context_response(context=context)
-        response_args.update(template=template, context=template_context)
-        response = self._response_type(**response_args, headers=headers)
-        return response
+        return rendering_service.render_template(
+            template_name=template_name,
+            template_context=response_obj,
+            headers=headers,
+            **response_args,
+            response_type=self.response_type,
+        )
 
     def _get_template_name(self, ctx: IExecutionContext) -> str:
         template_name = self.template_name
@@ -57,4 +53,4 @@ class HTMLResponseModel(ResponseModel):
                     "cannot find Controller in request context"
                 )
             template_name = controller_class.full_view_name(self.template_name)
-        return get_template_name(template_name)
+        return template_name

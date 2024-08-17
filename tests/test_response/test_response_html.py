@@ -88,7 +88,9 @@ def test_ellar_index_should_use_controller_name_with_function_name(path, templat
         "</html>"
     )
     assert response.template.name == template
-    assert set(response.context.keys()) == {"index", "request", "use_mvc"}
+    assert set(response.context.keys()).intersection(
+        {"index", "request", "use_mvc"}
+    ) == {"index", "request", "use_mvc"}
 
 
 @pytest.mark.parametrize(
@@ -147,9 +149,13 @@ def test_runtime_exception_works():
     def runtime_controller_error_1():
         pass
 
-    test_module.create_application().router.extend(
-        [runtime_error_1, runtime_error_2, runtime_controller_error_1]
+    test_module_ = Test.create_test_module(
+        routers=[runtime_error_1, runtime_error_2, runtime_controller_error_1],
+        template_folder="templates",
+        base_directory=BASEDIR,
     )
+    client = test_module_.get_test_client()
+
     runtime_error_1_handler = reflect.get_metadata(
         CONTROLLER_OPERATION_HANDLER_KEY, runtime_error_1
     )
@@ -163,7 +169,6 @@ def test_runtime_exception_works():
     assert isinstance(
         runtime_error_2_handler.response_model.models[200], HTMLResponseModel
     )
-    client = test_module.get_test_client()
 
     with pytest.raises(TemplateNotFound):
         client.get("/runtime_error_1")

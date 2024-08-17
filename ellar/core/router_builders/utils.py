@@ -1,13 +1,7 @@
 import typing as t
 from types import FunctionType
 
-from ellar.common.constants import (
-    CONTROLLER_CLASS_KEY,
-    CONTROLLER_METADATA,
-    CONTROLLER_OPERATION_HANDLER_KEY,
-    NESTED_ROUTERS_KEY,
-    ROUTE_OPERATION_PARAMETERS,
-)
+from ellar.common import constants
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.logging import logger
 from ellar.common.models.controller import NestedRouterInfo
@@ -18,7 +12,6 @@ from ellar.core.routing import (
     WebsocketRouteOperation,
 )
 from ellar.reflect import reflect
-from ellar.utils import get_unique_type
 from starlette.routing import BaseRoute
 
 from .base import get_controller_builder_factory
@@ -33,7 +26,7 @@ def process_nested_routes(controller: t.Type[t.Any]) -> t.List[BaseRoute]:
 
     res: t.List[BaseRoute] = []
 
-    if reflect.get_metadata(CONTROLLER_METADATA.PROCESSED, controller):
+    if reflect.get_metadata(constants.CONTROLLER_METADATA.PROCESSED, controller):
         return []
 
     if controller in _stack_cycle:
@@ -44,7 +37,7 @@ def process_nested_routes(controller: t.Type[t.Any]) -> t.List[BaseRoute]:
 
     _stack_cycle += (controller,)
     nested_routers: t.List[NestedRouterInfo] = (
-        reflect.get_metadata(NESTED_ROUTERS_KEY, controller) or []
+        reflect.get_metadata(constants.NESTED_ROUTERS_KEY, controller) or []
     )
 
     for item in nested_routers:
@@ -55,7 +48,7 @@ def process_nested_routes(controller: t.Type[t.Any]) -> t.List[BaseRoute]:
 
         operation = factory_builder.build(item.router, **kw)
         reflect.define_metadata(
-            CONTROLLER_OPERATION_HANDLER_KEY,
+            constants.CONTROLLER_OPERATION_HANDLER_KEY,
             [operation],
             controller,
         )
@@ -72,19 +65,16 @@ def build_route_handler(
 ) -> t.Optional[t.List[RouteOperationBase]]:
     _item: t.Any = item
 
-    if callable(item) and type(item) == FunctionType:
-        _item = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, item)
+    if callable(item) and type(item) is FunctionType:
+        _item = reflect.get_metadata(constants.CONTROLLER_OPERATION_HANDLER_KEY, item)
 
-    if not _item and not reflect.has_metadata(CONTROLLER_CLASS_KEY, item):
-        reflect.define_metadata(CONTROLLER_CLASS_KEY, get_unique_type(), item)
-
-    if not _item and hasattr(item, ROUTE_OPERATION_PARAMETERS):
-        parameters = item.__dict__[ROUTE_OPERATION_PARAMETERS]
+    if not _item and hasattr(item, constants.ROUTE_OPERATION_PARAMETERS):
+        parameters = item.__dict__[constants.ROUTE_OPERATION_PARAMETERS]
 
         if not isinstance(parameters, list):
             parameters = [parameters]
 
-        operations = build_route_parameters(parameters, get_unique_type())
+        operations = build_route_parameters(parameters)
         if isinstance(operations, list):
             return operations
 
@@ -97,7 +87,7 @@ def build_route_handler(
 @t.no_type_check
 def build_route_parameters(
     items: t.List[t.Union[RouteParameters, WsRouteParameters]],
-    control_type: t.Type[t.Any],
+    controller_type: t.Any = constants.NOT_SET,
 ) -> t.List[t.Union[RouteOperationBase, t.Any]]:
     results = []
     for item in items:
@@ -110,15 +100,18 @@ def build_route_parameters(
                 f"Parameter type is not recognized. {type(item) if not isinstance(item, type) else item}"
             )
             continue
+
+        operation.router_reflect_key = controller_type
         results.append(operation)
 
-        if ROUTE_OPERATION_PARAMETERS in item.endpoint.__dict__:
-            del item.endpoint.__dict__[ROUTE_OPERATION_PARAMETERS]
+        if constants.ROUTE_OPERATION_PARAMETERS in item.endpoint.__dict__:
+            del item.endpoint.__dict__[constants.ROUTE_OPERATION_PARAMETERS]
 
-        reflect.define_metadata(
-            CONTROLLER_OPERATION_HANDLER_KEY,
-            [operation],
-            control_type,
-        )
+        if operation.router_reflect_key is not constants.NOT_SET:
+            reflect.define_metadata(
+                constants.CONTROLLER_OPERATION_HANDLER_KEY,
+                [operation],
+                operation.router_reflect_key,
+            )
 
     return results

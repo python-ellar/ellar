@@ -107,10 +107,13 @@ warn_unused_ignores = true
 disallow_untyped_defs = true
 check_untyped_defs = true
 implicit_reexport = false
-disable_error_code = ['union-attr']
+disable_error_code = ['union-attr', 'type-abstract', 'arg-type']
 
 [[tool.mypy.overrides]]
 module = "ellar.common.compatible.*"
+ignore_errors = true
+[[tool.mypy.overrides]]
+module = "ellar.core.conf.*"
 ignore_errors = true
 [[tool.mypy.overrides]]
 module = "ellar.core.services.*"

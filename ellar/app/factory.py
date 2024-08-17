@@ -2,7 +2,6 @@ import typing as t
 from pathlib import Path
 
 import click
-from ellar.app.core_module import get_core_module
 from ellar.common import IApplicationReady, Module
 from ellar.common.constants import MODULE_METADATA
 from ellar.common.exceptions import ImproperConfiguration
@@ -15,19 +14,22 @@ from ellar.core import (
     ModuleBase,
     ModuleSetup,
 )
+from ellar.core.execution_context import injector_context
+from ellar.core.module import get_core_module
 from ellar.core.modules import ModuleRefBase, ModuleTemplateRef
 from ellar.di import EllarInjector, ProviderConfig
 from ellar.di.injector.tree_manager import ModuleTreeManager
 from ellar.reflect import reflect
-from ellar.threading.sync_worker import execute_async_context_manager
+from ellar.threading.sync_worker import execute_async_context_manager, execute_coroutine
 from ellar.utils import get_name, get_unique_type
 from starlette.routing import Host, Mount
 
+from ..events.build import build_with_context_event
 from .main import App
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common import ModuleRouter
-    from ellar.core.routing import EllarMount
+    from ellar.core.routing import EllarControllerMount
 
 
 class AppFactory:
@@ -115,17 +117,23 @@ class AppFactory:
             parent_container=injector.container if injector else None,
             config=config,
         )
-        core_module_ref.initiate_module_build()
+        with execute_async_context_manager(
+            injector_context(core_module_ref.container.injector)
+        ) as context:
+            core_module_ref.initiate_module_build()
 
-        # service = EllarAppService(injector, config)
-        # service.register_core_services()
-
-        with execute_async_context_manager(core_module_ref.context()) as context:
             tree_manager: ModuleTreeManager = core_module_ref.get(ModuleTreeManager)
             cls.read_all_module(core_module_ref, tree_manager)
+
+            # service = EllarAppService(injector, config)
+            # service.register_core_services()
+
             # Build application first level. This will trigger ApplicationModule to be built
             core_module_ref.build_dependencies(step=1)
-            app_module_ref = tree_manager.get_root_module()
+            app_module_ref = tree_manager.get_app_module()
+
+            execute_coroutine(build_with_context_event.run())
+            build_with_context_event.disconnect_all()
 
             app = App(
                 routes=[],
@@ -155,11 +163,11 @@ class AppFactory:
             # app.setup_jinja_environment
             app.setup_jinja_environment()
 
-            for module, data in context.injector.tree_manager.modules.items():
+            for module, data in context.tree_manager.modules.items():
                 data.value.run_module_register_services()
 
                 if issubclass(module, IApplicationReady):
-                    context.injector.get(module).on_ready(app)
+                    context.get(module).on_ready(app)
 
         return app
 
@@ -167,7 +175,9 @@ class AppFactory:
     def create_app(
         cls,
         controllers: t.Sequence[t.Union[t.Type]] = (),
-        routers: t.Sequence[t.Union["ModuleRouter", "EllarMount", Mount, Host]] = (),
+        routers: t.Sequence[
+            t.Union["ModuleRouter", "EllarControllerMount", Mount, Host, t.Callable]
+        ] = (),
         providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = (),
         modules: t.Sequence[t.Type[t.Union[ModuleBase, t.Any]]] = (),
         template_folder: t.Optional[str] = None,

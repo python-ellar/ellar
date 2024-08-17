@@ -10,10 +10,10 @@ def test_trusted_host_middleware(test_client_factory):
         return PlainTextResponse("OK", status_code=200)
 
     tm = Test.create_test_module(
-        config_module={"ALLOWED_HOSTS": ["testserver", "*.testserver"]}
+        routers=[homepage],
+        config_module={"ALLOWED_HOSTS": ["testserver", "*.testserver"]},
     )
     app = tm.create_application()
-    app.router.add_route(homepage)
 
     assert app.debug is False
 
@@ -37,10 +37,10 @@ def test_trusted_host_middleware_works_for_debug_true(test_client_factory):
         return PlainTextResponse("OK", status_code=200)
 
     tm = Test.create_test_module(
-        config_module={"ALLOWED_HOSTS": ["testserver", "*.testserver"]}
+        routers=[homepage],
+        config_module={"ALLOWED_HOSTS": ["testserver", "*.testserver"]},
     )
     app = tm.create_application()
-    app.router.add_route(homepage)
 
     assert app.debug is False
     app.debug = True
@@ -69,9 +69,9 @@ def test_www_redirect(test_client_factory):
     def homepage(request: Inject[Request]):
         return PlainTextResponse("OK", status_code=200)
 
-    tm = Test.create_test_module(config_module={"ALLOWED_HOSTS": ["www.example.com"]})
-    app = tm.create_application()
-    app.router.add_route(homepage)
+    tm = Test.create_test_module(
+        routers=[homepage], config_module={"ALLOWED_HOSTS": ["www.example.com"]}
+    )
 
     client = tm.get_test_client(base_url="https://example.com")
     response = client.get("/")

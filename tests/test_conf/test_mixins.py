@@ -32,10 +32,15 @@ def test_invalid_versioning_config():
 
 def test_invalid_middleware_config():
     invalid_type = type("whatever", (), {})
-    with pytest.raises(
-        ValueError, match=r"Expected EllarMiddleware object, received: "
-    ):
+    with pytest.raises(ValueError):
         Config(MIDDLEWARE=[invalid_type()])
+
+
+def test_invalid_middleware_set_after_configuration():
+    invalid_type = type("whatever", (), {})
+    with pytest.raises(ValueError):
+        config = Config()
+        config.MIDDLEWARE = config.MIDDLEWARE + [invalid_type()]
 
 
 def test_invalid_template_loaders():

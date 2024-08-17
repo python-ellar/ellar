@@ -1,8 +1,8 @@
 import typing as t
 
-from ellar.common.interfaces import IHostContext, IHostContextFactory
+from ellar.common.interfaces import IHostContext
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
-from ellar.core.connection import HTTPConnection
+from ellar.core.execution_context import current_connection
 from starlette.responses import Response
 
 AwaitableCallable = t.Callable[..., t.Awaitable]
@@ -57,18 +57,10 @@ class FunctionBasedMiddleware:
             await self.app(scope, receive, send)
             return
 
-        connection = HTTPConnection(scope, receive)
-
-        if not connection.service_provider:  # pragma: no cover
-            raise Exception("Service Provider is required")
-
-        context_factory = connection.service_provider.get(IHostContextFactory)
-        context = context_factory.create_context(scope, receive, send)
-
         async def call_next() -> None:
             await self.app(scope, receive, send)
 
-        response = await self.dispatch_function(context, call_next)
+        response = await self.dispatch_function(current_connection, call_next)
 
         if response and isinstance(response, Response):
             await response(scope, receive, send)
