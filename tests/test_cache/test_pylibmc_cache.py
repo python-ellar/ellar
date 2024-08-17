@@ -3,7 +3,9 @@ import sys
 import pytest
 
 if sys.version_info >= (3, 12):
-    pytest.skip(reason="This test requires Python 3.11 or lower")
+    pytest.skip(
+        reason="This test requires Python 3.11 or lower", allow_module_level=True
+    )
 
 from time import sleep
 from unittest.mock import patch
