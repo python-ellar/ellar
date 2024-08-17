@@ -1,6 +1,9 @@
 import time
 
-from pylibmc import Client
+try:
+    from pylibmc import Client
+except ImportError:
+    Client = type("pylibmc.Client", (), {})
 
 
 class MockClient(Client):
