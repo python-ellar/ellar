@@ -1,7 +1,15 @@
+import sys
+
+import pytest
+
+if sys.version_info >= (3, 12):
+    pytest.skip(
+        reason="This test requires Python 3.11 or lower", allow_module_level=True
+    )
+
 from time import sleep
 from unittest.mock import patch
 
-import pytest
 from ellar.cache.backends.pylib_cache import PyLibMCCacheBackend
 from ellar.cache.backends.pymem_cache import PyMemcacheCacheBackend
 from ellar.cache.model import CacheKeyWarning
