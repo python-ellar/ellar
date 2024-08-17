@@ -5,33 +5,35 @@ from ellar.common import (
     template_global,
 )
 from ellar.common.templating import Environment
-from ellar.core import ModuleBase, with_injector_context
+from ellar.core import ModuleBase, injector_context
 from ellar.core.modules import ModuleTemplateRef
 from ellar.threading.sync_worker import execute_async_context_manager
 
 
+@Module(template_folder="some_template", name="app_template")
+class AppTemplateModuleTest(ModuleBase):
+    @template_filter(name="app_filter")
+    def template_filter_test(self, value):
+        return f"new filter {value}"
+
+    @template_global(name="app_global")
+    def template_global_test(self, value):
+        return f"new global {value}"
+
+
+app = AppFactory.create_from_app_module(module=AppTemplateModuleTest)
+
+
 class TestAppTemplating:
-    @Module(template_folder="some_template", name="app_template")
-    class AppTemplateModuleTest(ModuleBase):
-        @template_filter(name="app_filter")
-        def template_filter_test(self, value):
-            return f"new filter {value}"
-
-        @template_global(name="app_global")
-        def template_global_test(self, value):
-            return f"new global {value}"
-
     def test_app_get_module_loaders(self):
-        app = AppFactory.create_from_app_module(module=self.AppTemplateModuleTest)
         loaders = list(app.get_module_loaders())
         assert len(loaders) == 2
         module_ref = loaders[1]
         assert isinstance(module_ref, ModuleTemplateRef)
-        assert isinstance(module_ref.get_module_instance(), self.AppTemplateModuleTest)
+        assert isinstance(module_ref.get_module_instance(), AppTemplateModuleTest)
 
     def test_app_jinja_environment(self):
-        app = AppFactory.create_from_app_module(module=self.AppTemplateModuleTest)
-        with execute_async_context_manager(with_injector_context(app.injector)):
+        with execute_async_context_manager(injector_context(app.injector)):
             environment = app.injector.get(Environment)
             assert isinstance(environment, Environment)
 

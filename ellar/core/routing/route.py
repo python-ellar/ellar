@@ -1,12 +1,7 @@
 import inspect
 import typing as t
 
-from ellar.common.constants import (
-    CONTROLLER_OPERATION_HANDLER_KEY,
-    EXTRA_ROUTE_ARGS_KEY,
-    NOT_SET,
-    RESPONSE_OVERRIDE_KEY,
-)
+from ellar.common import constants
 from ellar.common.exceptions import ImproperConfiguration, RequestValidationError
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.logging import request_logger
@@ -45,9 +40,8 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         response: t.Mapping[int, t.Union[t.Type, t.Any]],
         name: t.Optional[str] = None,
         include_in_schema: bool = True,
-        controller_class: t.Optional[t.Type] = None,
     ) -> None:
-        super().__init__(endpoint=endpoint, controller_class=controller_class)
+        super().__init__(endpoint=endpoint)
         self._is_coroutine = inspect.iscoroutinefunction(endpoint)
         self._defined_responses: t.Dict[int, t.Type] = dict(response)
 
@@ -61,20 +55,22 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         self.include_in_schema = include_in_schema
         self.methods = self.get_methods(methods)
 
-        self.endpoint_parameter_model: RequestEndpointArgsModel = NOT_SET
-        self.response_model: RouteResponseModel = NOT_SET
+        self.endpoint_parameter_model: RequestEndpointArgsModel = constants.NOT_SET
+        self.response_model: RouteResponseModel = constants.NOT_SET
 
-        reflect.define_metadata(CONTROLLER_OPERATION_HANDLER_KEY, self, self.endpoint)
+        reflect.define_metadata(
+            constants.CONTROLLER_OPERATION_HANDLER_KEY, self, self.endpoint
+        )
         self._load_model()
 
     def _load_model(self) -> None:
         extra_route_args: t.Union[t.List["ExtraEndpointArg"], "ExtraEndpointArg"] = (
-            reflect.get_metadata(EXTRA_ROUTE_ARGS_KEY, self.endpoint) or []
+            reflect.get_metadata(constants.EXTRA_ROUTE_ARGS_KEY, self.endpoint) or []
         )
         if not isinstance(extra_route_args, list):  # pragma: no cover
             extra_route_args = [extra_route_args]
 
-        if self.endpoint_parameter_model is NOT_SET:
+        if self.endpoint_parameter_model is constants.NOT_SET:
             self.endpoint_parameter_model = self.request_endpoint_args_model(
                 path=self.path_format,
                 endpoint=self.endpoint,
@@ -85,9 +81,10 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         self.endpoint_parameter_model.build_model()
 
         response_override: t.Union[t.Dict, t.Any] = reflect.get_metadata(
-            RESPONSE_OVERRIDE_KEY, self.endpoint
+            constants.RESPONSE_OVERRIDE_KEY, self.endpoint
         )
         if response_override:
+            reflect.delete_metadata(constants.RESPONSE_OVERRIDE_KEY, self.endpoint)
             if not isinstance(response_override, dict):
                 raise ImproperConfiguration(
                     f"`RESPONSE_OVERRIDE` is must be of type `Dict` - {response_override}"

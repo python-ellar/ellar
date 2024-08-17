@@ -6,11 +6,11 @@ from ellar.auth.constants import POLICY_KEYS
 from ellar.auth.policy.base import _PolicyHandlerWithRequirement
 from ellar.common import ControllerBase
 from ellar.common.constants import (
+    CONTROLLER_CLASS_KEY,
     GUARDS_KEY,
     MODULE_COMPONENT,
     MODULE_METADATA,
     MODULE_WATERMARK,
-    NOT_SET,
     ROUTE_INTERCEPTORS,
 )
 from ellar.core.conf import Config
@@ -271,6 +271,7 @@ class ModuleRefBase(ABC):
             factory_builder.check_type(controller)
 
             routes_or_mount = factory_builder.build(controller)
+            self._run_all_checks(controller)
 
             for item in (
                 routes_or_mount
@@ -283,12 +284,6 @@ class ModuleRefBase(ABC):
                     )
                 self._routers.append(item)
 
-                if (
-                    hasattr(item, "get_controller_type")
-                    and item.get_controller_type() is not NOT_SET
-                ):
-                    self._run_all_checks(item.get_controller_type())
-
             self._search_controller_routes_injectables(self._routers)
 
     def _search_controller_routes_injectables(
@@ -299,14 +294,14 @@ class ModuleRefBase(ABC):
                 operation, (StarletteRoute, RouteOperationBase, WebSocketRoute)
             ):
                 self._run_all_checks(operation.endpoint)
-            elif isinstance(operation, EllarControllerMount):
+            elif isinstance(
+                operation, (StarletteRouter, Host, Mount, EllarControllerMount)
+            ):
                 self._search_controller_routes_injectables(
                     operation.routes, grouped=True
                 )
-                self._run_all_checks(operation.get_controller_type())
-            elif isinstance(operation, (StarletteRouter, Host, Mount)):
-                self._search_controller_routes_injectables(
-                    operation.routes, grouped=True
+                self._run_all_checks(
+                    reflect.get_metadata(CONTROLLER_CLASS_KEY, operation) or ()
                 )
 
             if not grouped:

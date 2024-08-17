@@ -3,7 +3,7 @@ import json
 import pytest
 from ellar.common import IHostContextFactory
 from ellar.common.exceptions import HostContextException
-from ellar.core import Config, current_injector, with_injector_context
+from ellar.core import Config, current_injector, injector_context
 from ellar.core.exceptions import ExceptionMiddlewareService
 from ellar.core.middleware import ServerErrorMiddleware
 from ellar.testing import Test
@@ -87,7 +87,7 @@ def test_di_middleware(test_client_factory):
         injector=app.injector,
         exception_service=ExceptionMiddlewareService(),
     )
-    with execute_async_context_manager(with_injector_context(app.injector)):
+    with execute_async_context_manager(injector_context(app.injector)):
         client = test_client_factory(asgi_app)
         response = client.get("/")
 
@@ -106,7 +106,7 @@ def test_di_middleware_execution_context_initialization(test_client_factory):
         exception_service=ExceptionMiddlewareService(),
     )
 
-    with execute_async_context_manager(with_injector_context(app.injector)):
+    with execute_async_context_manager(injector_context(app.injector)):
         client = test_client_factory(asgi_app)
         response = client.get("/")
 
@@ -127,7 +127,7 @@ def test_di_middleware_execution_context_initialization_websocket(test_client_fa
         exception_service=ExceptionMiddlewareService(),
     )
     client = test_client_factory(asgi_app)
-    with execute_async_context_manager(with_injector_context(app.injector)):
+    with execute_async_context_manager(injector_context(app.injector)):
         with client.websocket_connect("/") as session:
             text = session.receive_text()
             assert text == "Hello, world!"

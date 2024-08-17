@@ -9,7 +9,7 @@ from .execution_context import (
     config,
     current_connection,
     current_injector,
-    with_injector_context,
+    injector_context,
 )
 from .guards import GuardConsumer
 from .interceptors import EllarInterceptorConsumer
@@ -50,7 +50,7 @@ __all__ = [
     "TemplateRenderingService",
     "HttpRequestConnectionContext",
     "current_connection",
-    "with_injector_context",
+    "injector_context",
 ]
 
 

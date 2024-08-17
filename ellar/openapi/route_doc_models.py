@@ -104,19 +104,14 @@ class OpenAPIMountDocumentation(OpenAPIRoute):
                     )
                 )
             elif isinstance(route, EllarControllerMount):
-                openapi_tags = AttributeDict(
-                    reflector.get(OPENAPI_TAG, route.get_controller_type()) or {}
-                )
-                ignore_tag = (
-                    reflector.get(IGNORE_CONTROLLER_TYPE, route.get_controller_type())
-                    or False
-                )
+                openapi_tags = AttributeDict(reflector.get(OPENAPI_TAG, route) or {})
+                ignore_tag = reflector.get(IGNORE_CONTROLLER_TYPE, route) or False
                 if route.name:
                     openapi_tags.setdefault("name", route.name)
 
                 openapi_tags.update(name=f"{self.tag}:{openapi_tags.name}")
 
-                guards = reflector.get(GUARDS_KEY, route.get_controller_type())
+                guards = reflector.get(GUARDS_KEY, route)
 
                 self._global_route_models_update(
                     OpenAPIMountDocumentation(
@@ -278,9 +273,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             self.operation_id
             or self.route.get_operation_unique_id(
                 methods=method,
-                controller=None
-                if ignore_controller
-                else self.route.get_controller_type(),
+                controller=None if ignore_controller else self.route.router_reflect_key,
             )
         )
         if self.deprecated:

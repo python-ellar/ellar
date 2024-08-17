@@ -1,6 +1,7 @@
 import typing as t
 
 import socketio
+from ellar.common.constants import CONTROLLER_CLASS_KEY
 from ellar.core.router_builders import RouterBuilder
 from ellar.reflect import reflect
 from ellar.socket_io.adapter import SocketIOASGIApp
@@ -87,8 +88,7 @@ class GatewayRouterFactory(RouterBuilder, controller_type=type(GatewayBase)):
         mount = base_route_type(
             app=SocketIOASGIApp(socket_server), path=path, name=name
         )
-        mount.get_controller_type = lambda: controller_type  # type:ignore[attr-defined]
-
+        reflect.define_metadata(CONTROLLER_CLASS_KEY, controller_type, mount)
         return mount
 
     @classmethod

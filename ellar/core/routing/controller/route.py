@@ -11,6 +11,10 @@ from .base import ControllerRouteOperationBase
 class ControllerRouteOperation(ControllerRouteOperationBase, RouteOperation):
     methods: t.Set[str]
 
+    @property
+    def router_reflect_key(self) -> t.Any:
+        return self.controller
+
     async def run(self, context: IExecutionContext, kwargs: t.Dict) -> t.Any:
         request_logger.debug(
             f"Executing Controller Endpoint from '{self.__class__.__name__}'"

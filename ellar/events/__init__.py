@@ -1,4 +1,5 @@
 from .base import EventHandler, EventManager
+from .build import ensure_context
 
 app_context_started = EventManager()
 app_context_teardown = EventManager()
@@ -13,4 +14,5 @@ __all__ = [
     "request_teardown",
     "EventHandler",
     "EventManager",
+    "ensure_context",
 ]

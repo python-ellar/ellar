@@ -23,7 +23,7 @@ from ellar.common.templating import Environment, ModuleTemplating
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
 from ellar.core import HttpRequestConnectionContext, Request
 from ellar.core.conf import Config
-from ellar.core.execution_context import with_injector_context
+from ellar.core.execution_context import injector_context
 from ellar.core.middleware import (
     Middleware as EllarMiddleware,
 )
@@ -205,7 +205,7 @@ class App:
         lifespan = scope["type"] == "lifespan"
         scope["app"] = self
 
-        async with with_injector_context(self.injector):
+        async with injector_context(self.injector):
             if self.middleware_stack is None:
                 self.middleware_stack = self.build_middleware_stack()
 
@@ -334,7 +334,6 @@ class App:
         jinja_env.policies["json.dumps_function"] = json.dumps
 
         # jinja_env.policies["get_messages"] = get_messages
-
         jinja_env.globals.update(self._config.get(TEMPLATE_GLOBAL_KEY, {}))
         jinja_env.filters.update(self._config.get(TEMPLATE_FILTER_KEY, {}))
 

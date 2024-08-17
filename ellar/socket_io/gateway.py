@@ -40,7 +40,7 @@ class SocketOperationConnection:
         "_name",
         "_is_coroutine",
         "endpoint_parameter_model",
-        "_controller_type",
+        "controller",
     )
 
     ws_endpoint_args_model: t.Type[WebsocketEndpointArgsModel] = (
@@ -49,7 +49,7 @@ class SocketOperationConnection:
 
     def __init__(
         self,
-        controller_type: t.Type[GatewayBase],
+        controller: t.Type[GatewayBase],
         event: str,
         server: AsyncServer,
         message_handler: t.Callable,
@@ -60,10 +60,14 @@ class SocketOperationConnection:
         self._name = get_name(self.endpoint)
         self._is_coroutine = inspect.iscoroutinefunction(message_handler)
         self.endpoint_parameter_model = NOT_SET
-        self._controller_type = controller_type
+        self.controller = controller
         self._load_model()
         self._register_handler()
         reflect.define_metadata(CONTROLLER_OPERATION_HANDLER_KEY, self, self.endpoint)
+
+    @property
+    def router_reflect_key(self) -> t.Any:
+        return self.controller
 
     def _load_model(self) -> None:
         path_regex, path_format, param_convertors = compile_path("/")
@@ -195,10 +199,10 @@ class SocketOperationConnection:
         For operation under ModuleRouter, this will return a unique type created for the router for tracking some properties
         :return: a type that wraps the operation
         """
-        return self._controller_type
+        return t.cast(t.Type[GatewayBase], self.router_reflect_key)
 
     def _get_gateway_instance(self, ctx: IExecutionContext) -> GatewayBase:
-        gateway_type = self.get_controller_type()
+        gateway_type = self.controller
         if not gateway_type or (
             gateway_type and not issubclass(gateway_type, GatewayBase)
         ):  # pragma: no cover

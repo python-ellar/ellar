@@ -4,7 +4,7 @@ from ellar.common.params.resolvers.system_parameters import ExecutionContextPara
 from .execution import ExecutionContext
 from .factory import ExecutionContextFactory, HostContextFactory
 from .host import HostContext
-from .injector import config, current_injector, with_injector_context
+from .injector import config, current_injector, injector_context
 from .request import HttpRequestConnectionContext, current_connection
 
 __all__ = [
@@ -16,7 +16,7 @@ __all__ = [
     "config",
     "HttpRequestConnectionContext",
     "current_connection",
-    "with_injector_context",
+    "injector_context",
 ]
 
 add_default_resolver(ExecutionContext, ExecutionContextParameter)

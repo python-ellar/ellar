@@ -193,7 +193,7 @@ def test_openapi_module_with_route_guards():
     client = TestClient(app)
 
     routers = reflect.get_metadata(MODULE_METADATA.ROUTERS, module)
-    guards = reflect.get_metadata(GUARDS_KEY, routers[0].get_controller_type())
+    guards = reflect.get_metadata(GUARDS_KEY, routers[0])
     assert len(guards) == 2
     assert AllowAnyGuard in guards
 
@@ -257,7 +257,7 @@ def test_app_global_guard_blocks_openapi_doc_page():
     )
 
     routers = reflect.get_metadata(MODULE_METADATA.ROUTERS, module)
-    guards = reflect.get_metadata(GUARDS_KEY, routers[0].get_controller_type())
+    guards = reflect.get_metadata(GUARDS_KEY, routers[0])
 
     assert len(guards) == 1
     assert AllowAnyGuard not in guards

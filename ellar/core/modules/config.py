@@ -6,7 +6,6 @@ import click
 from ellar.common import ControllerBase, ModuleRouter
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
-from ellar.common.shortcuts import fail_silently
 from ellar.core.conf import Config
 from ellar.di import (
     MODULE_REF_TYPES,
@@ -15,7 +14,7 @@ from ellar.di import (
     ModuleTreeManager,
     ProviderConfig,
 )
-from ellar.reflect import reflect
+from ellar.reflect import fail_silently, reflect
 from ellar.utils.importer import import_from_string
 from starlette.routing import BaseRoute
 

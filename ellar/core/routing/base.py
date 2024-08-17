@@ -1,11 +1,8 @@
 import typing as t
 from abc import ABC, abstractmethod
+from functools import cached_property
 
-from ellar.common.constants import (
-    NOT_SET,
-    SCOPE_API_VERSIONING_RESOLVER,
-    VERSIONING_KEY,
-)
+from ellar.common import constants
 from ellar.common.interfaces import (
     IExecutionContext,
     IExecutionContextFactory,
@@ -20,7 +17,6 @@ from ellar.reflect import reflect
 from starlette.routing import Match
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.common import ControllerBase
     from ellar.core.versioning.resolver import BaseAPIVersioningResolver
 
 __all__ = [
@@ -31,19 +27,16 @@ __all__ = [
 
 class RouteOperationBase:
     methods: t.Set[str]
-    _controller_type: t.Optional[t.Union[t.Type, t.Type["ControllerBase"]]] = None
 
-    def __init__(
-        self, endpoint: t.Callable, controller_class: t.Optional[t.Type] = None
-    ) -> None:
+    def __init__(self, endpoint: t.Callable) -> None:
         self.endpoint = endpoint
-        self._controller_type = controller_class or NOT_SET
 
-    # @t.no_type_check
-    # def __call__(
-    #     self, context: IExecutionContext, *args: t.Any, **kwargs: t.Any
-    # ) -> t.Any:
-    #     return self.endpoint(*args, **kwargs)
+    @cached_property
+    def router_reflect_key(self) -> t.Any:
+        return (
+            reflect.get_metadata("ROUTER_REFLECT_KEY", self.endpoint)
+            or constants.NOT_SET
+        )
 
     @abstractmethod
     def _load_model(self) -> None:
@@ -76,11 +69,8 @@ class RouteOperationBase:
         For operation under ModuleRouter, this will return a unique type created for the router for tracking some properties
         :return: a type that wraps the operation
         """
-        request_logger.debug(
-            f"Resolving Endpoint Handler Controller Type - '{self.__class__.__name__}'"
-        )
 
-        return self._controller_type
+        return self.router_reflect_key
 
     @abstractmethod
     async def handle_request(
@@ -94,14 +84,19 @@ class RouteOperationBase:
     ) -> None:  # pragma: no cover
         """returns a any"""
 
-    def get_allowed_version(self) -> t.Set[t.Union[int, float, str]]:
+    @cached_property
+    def allowed_version(self) -> t.Set[t.Union[int, float, str]]:
         request_logger.debug(
             f"Resolving Endpoint Versions - '{self.__class__.__name__}'"
         )
-        versions = reflect.get_metadata(VERSIONING_KEY, self.endpoint) or set()
+        versions = (
+            reflect.get_metadata(constants.VERSIONING_KEY, self.endpoint) or set()
+        )
         if not versions:
             versions = (
-                reflect.get_metadata(VERSIONING_KEY, self.get_controller_type())
+                reflect.get_metadata(
+                    constants.VERSIONING_KEY, self.get_controller_type()
+                )
                 or set()
             )
         return versions
@@ -124,10 +119,11 @@ class RouteOperationBase:
         match = super().matches(scope)  # type: ignore
         if match[0] is Match.FULL:
             version_scheme_resolver: "BaseAPIVersioningResolver" = t.cast(
-                "BaseAPIVersioningResolver", scope[SCOPE_API_VERSIONING_RESOLVER]
+                "BaseAPIVersioningResolver",
+                scope[constants.SCOPE_API_VERSIONING_RESOLVER],
             )
             if not version_scheme_resolver.can_activate(
-                route_versions=self.get_allowed_version()
+                route_versions=self.allowed_version
             ):
                 request_logger.debug(
                     f"URL Matched with invalid Version - '{self.__class__.__name__}'"

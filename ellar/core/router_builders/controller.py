@@ -1,12 +1,6 @@
 import typing as t
 
-from ellar.common.constants import (
-    CONTROLLER_METADATA,
-    CONTROLLER_OPERATION_HANDLER_KEY,
-    CONTROLLER_WATERMARK,
-    OPERATION_ENDPOINT_KEY,
-    ROUTE_OPERATION_PARAMETERS,
-)
+from ellar.common import constants
 from ellar.common.logging import logger
 from ellar.common.models.controller import ControllerBase, ControllerType
 from ellar.common.operations import RouteParameters, WsRouteParameters
@@ -29,11 +23,16 @@ T_ = t.TypeVar("T_")
 def process_controller_routes(controller: t.Type[ControllerBase]) -> t.List[BaseRoute]:
     res: t.List[BaseRoute] = []
 
-    if reflect.get_metadata(CONTROLLER_METADATA.PROCESSED, controller):
-        return reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, controller) or []
+    if reflect.get_metadata(constants.CONTROLLER_METADATA.PROCESSED, controller):
+        return (
+            reflect.get_metadata(constants.CONTROLLER_OPERATION_HANDLER_KEY, controller)
+            or []
+        )
 
-    for _, item in get_functions_with_tag(controller, tag=OPERATION_ENDPOINT_KEY):
-        parameters = item.__dict__[ROUTE_OPERATION_PARAMETERS]
+    for _, item in get_functions_with_tag(
+        controller, tag=constants.OPERATION_ENDPOINT_KEY
+    ):
+        parameters = item.__dict__[constants.ROUTE_OPERATION_PARAMETERS]
         operation: t.Union[ControllerRouteOperation, ControllerWebsocketRouteOperation]
 
         if not isinstance(parameters, list):
@@ -42,11 +41,11 @@ def process_controller_routes(controller: t.Type[ControllerBase]) -> t.List[Base
         for parameter in parameters:
             if isinstance(parameter, RouteParameters):
                 operation = ControllerRouteOperation(
-                    **parameter.dict(), controller_class=controller
+                    **parameter.dict(), controller=controller
                 )
             elif isinstance(parameter, WsRouteParameters):
                 operation = ControllerWebsocketRouteOperation(
-                    **parameter.dict(), controller_class=controller
+                    **parameter.dict(), controller=controller
                 )
             else:  # pragma: no cover
                 logger.warning(
@@ -55,7 +54,7 @@ def process_controller_routes(controller: t.Type[ControllerBase]) -> t.List[Base
                 continue
 
             reflect.define_metadata(
-                CONTROLLER_OPERATION_HANDLER_KEY,
+                constants.CONTROLLER_OPERATION_HANDLER_KEY,
                 [operation],
                 controller,
             )
@@ -77,17 +76,17 @@ class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase
         routes.extend(process_nested_routes(controller_type))
 
         include_in_schema = reflect.get_metadata_or_raise_exception(
-            CONTROLLER_METADATA.INCLUDE_IN_SCHEMA, controller_type
+            constants.CONTROLLER_METADATA.INCLUDE_IN_SCHEMA, controller_type
         )
 
         middleware = reflect.get_metadata(
-            CONTROLLER_METADATA.MIDDLEWARE, controller_type
+            constants.CONTROLLER_METADATA.MIDDLEWARE, controller_type
         )
 
         kwargs.update(middleware=middleware)
 
         path = reflect.get_metadata_or_raise_exception(
-            CONTROLLER_METADATA.PATH, controller_type
+            constants.CONTROLLER_METADATA.PATH, controller_type
         )
 
         if "prefix" in kwargs:
@@ -98,19 +97,21 @@ class ControllerRouterBuilder(RouterBuilder, controller_type=type(ControllerBase
             routes=routes,
             path=path,
             name=reflect.get_metadata_or_raise_exception(
-                CONTROLLER_METADATA.NAME, controller_type
+                constants.CONTROLLER_METADATA.NAME, controller_type
             ),
             include_in_schema=include_in_schema
             if include_in_schema is not None
             else True,
-            control_type=controller_type,
             **kwargs,
         )
-        reflect.define_metadata(CONTROLLER_METADATA.PROCESSED, True, controller_type)
+        reflect.define_metadata(
+            constants.CONTROLLER_METADATA.PROCESSED, True, controller_type
+        )
+        reflect.define_metadata(constants.CONTROLLER_CLASS_KEY, controller_type, router)
         return router
 
     @classmethod
     def check_type(cls, controller_type: t.Union[t.Type, t.Any]) -> None:
         assert reflect.get_metadata(
-            CONTROLLER_WATERMARK, controller_type
+            constants.CONTROLLER_WATERMARK, controller_type
         ) and isinstance(controller_type, ControllerType), "Invalid Controller Type."

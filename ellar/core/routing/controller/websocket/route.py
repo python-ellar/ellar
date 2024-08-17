@@ -13,6 +13,10 @@ class ControllerWebsocketRouteOperation(
 ):
     _extra_handler_type: t.Optional[t.Type[ControllerWebSocketExtraHandler]]
 
+    @property
+    def router_reflect_key(self) -> t.Any:
+        return self.controller
+
     @classmethod
     def get_websocket_handler(cls) -> t.Type[ControllerWebSocketExtraHandler]:
         return ControllerWebSocketExtraHandler

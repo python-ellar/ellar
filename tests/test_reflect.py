@@ -10,6 +10,15 @@ def test_define_metadata_creates_attribute_dict(random_type):
     assert list(reflect.get_metadata_keys(random_type)) == [key]
 
 
+@pytest.mark.parametrize("immutable_type", ["FrameworkName", 23, (33, 45), {34, 45}])
+def test_reflect_works_with_immutable_types(immutable_type, reflect_context):
+    key = "FrameworkName"
+    reflect.define_metadata(key, "Ellar", immutable_type)
+    # assert hasattr(random_type, REFLECT_TYPE)
+    assert reflect.get_metadata(key, immutable_type) == "Ellar"
+    assert list(reflect.get_metadata_keys(immutable_type)) == [key]
+
+
 def test_define_metadata_without_default(random_type):
     key = "FrameworkName"
 
@@ -168,9 +177,6 @@ async def test_reflect_async_context_works():
 
 
 def test_define_metadata_raise_exception():
-    with pytest.raises(Exception, match="`target` is not a valid type"):
-        reflect.define_metadata("defined_key_c", "Eadwin", "defined_key_c")
-
     with pytest.raises(Exception, match="`target` is not a valid type"):
         reflect.define_metadata("defined_key_c", "Eadwin", None)
 

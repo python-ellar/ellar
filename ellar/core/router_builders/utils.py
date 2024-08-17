@@ -1,13 +1,7 @@
 import typing as t
 from types import FunctionType
 
-from ellar.common.constants import (
-    CONTROLLER_METADATA,
-    CONTROLLER_OPERATION_HANDLER_KEY,
-    NESTED_ROUTERS_KEY,
-    NOT_SET,
-    ROUTE_OPERATION_PARAMETERS,
-)
+from ellar.common import constants
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.logging import logger
 from ellar.common.models.controller import NestedRouterInfo
@@ -32,7 +26,7 @@ def process_nested_routes(controller: t.Type[t.Any]) -> t.List[BaseRoute]:
 
     res: t.List[BaseRoute] = []
 
-    if reflect.get_metadata(CONTROLLER_METADATA.PROCESSED, controller):
+    if reflect.get_metadata(constants.CONTROLLER_METADATA.PROCESSED, controller):
         return []
 
     if controller in _stack_cycle:
@@ -43,7 +37,7 @@ def process_nested_routes(controller: t.Type[t.Any]) -> t.List[BaseRoute]:
 
     _stack_cycle += (controller,)
     nested_routers: t.List[NestedRouterInfo] = (
-        reflect.get_metadata(NESTED_ROUTERS_KEY, controller) or []
+        reflect.get_metadata(constants.NESTED_ROUTERS_KEY, controller) or []
     )
 
     for item in nested_routers:
@@ -54,7 +48,7 @@ def process_nested_routes(controller: t.Type[t.Any]) -> t.List[BaseRoute]:
 
         operation = factory_builder.build(item.router, **kw)
         reflect.define_metadata(
-            CONTROLLER_OPERATION_HANDLER_KEY,
+            constants.CONTROLLER_OPERATION_HANDLER_KEY,
             [operation],
             controller,
         )
@@ -72,10 +66,10 @@ def build_route_handler(
     _item: t.Any = item
 
     if callable(item) and type(item) is FunctionType:
-        _item = reflect.get_metadata(CONTROLLER_OPERATION_HANDLER_KEY, item)
+        _item = reflect.get_metadata(constants.CONTROLLER_OPERATION_HANDLER_KEY, item)
 
-    if not _item and hasattr(item, ROUTE_OPERATION_PARAMETERS):
-        parameters = item.__dict__[ROUTE_OPERATION_PARAMETERS]
+    if not _item and hasattr(item, constants.ROUTE_OPERATION_PARAMETERS):
+        parameters = item.__dict__[constants.ROUTE_OPERATION_PARAMETERS]
 
         if not isinstance(parameters, list):
             parameters = [parameters]
@@ -92,29 +86,32 @@ def build_route_handler(
 
 @t.no_type_check
 def build_route_parameters(
-    items: t.List[t.Union[RouteParameters, WsRouteParameters]], **kwargs: t.Any
+    items: t.List[t.Union[RouteParameters, WsRouteParameters]],
+    controller_type: t.Any = constants.NOT_SET,
 ) -> t.List[t.Union[RouteOperationBase, t.Any]]:
     results = []
     for item in items:
         if isinstance(item, RouteParameters):
-            operation = RouteOperation(**item.dict(), **kwargs)
+            operation = RouteOperation(**item.dict())
         elif isinstance(item, WsRouteParameters):
-            operation = WebsocketRouteOperation(**item.dict(), **kwargs)
+            operation = WebsocketRouteOperation(**item.dict())
         else:  # pragma: no cover
             logger.warning(
                 f"Parameter type is not recognized. {type(item) if not isinstance(item, type) else item}"
             )
             continue
+
+        operation.router_reflect_key = controller_type
         results.append(operation)
 
-        if ROUTE_OPERATION_PARAMETERS in item.endpoint.__dict__:
-            del item.endpoint.__dict__[ROUTE_OPERATION_PARAMETERS]
+        if constants.ROUTE_OPERATION_PARAMETERS in item.endpoint.__dict__:
+            del item.endpoint.__dict__[constants.ROUTE_OPERATION_PARAMETERS]
 
-        if operation.get_controller_type() is not NOT_SET:
+        if operation.router_reflect_key is not constants.NOT_SET:
             reflect.define_metadata(
-                CONTROLLER_OPERATION_HANDLER_KEY,
+                constants.CONTROLLER_OPERATION_HANDLER_KEY,
                 [operation],
-                operation.get_controller_type(),
+                operation.router_reflect_key,
             )
 
     return results

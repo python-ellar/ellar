@@ -5,7 +5,7 @@ from ellar.common import IExceptionMiddlewareService
 from ellar.common.constants import EXCEPTION_HANDLERS_KEY, MIDDLEWARE_HANDLERS_KEY
 from ellar.common.logging import logger
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
-from ellar.core.execution_context import with_injector_context
+from ellar.core.execution_context import injector_context
 from ellar.core.middleware import ExceptionMiddleware
 from ellar.core.middleware.middleware import EllarMiddleware
 from ellar.di import Container
@@ -65,7 +65,7 @@ class ModuleExecutionContext:
     async def context(
         self, operation: BaseRoute
     ) -> t.AsyncGenerator["ModuleExecutionContext", t.Any]:
-        async with with_injector_context(self.container.injector):
+        async with injector_context(self.container.injector):
             # set Operation
             self._operation = operation
 

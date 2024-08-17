@@ -49,7 +49,7 @@ def _clear_lazy_objects() -> None:
 
 
 @asynccontextmanager
-async def with_injector_context(
+async def injector_context(
     injector: EllarInjector,
 ) -> t.AsyncGenerator[EllarInjector, t.Any]:
     _clear_lazy_objects()

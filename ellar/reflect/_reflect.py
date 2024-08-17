@@ -1,12 +1,20 @@
 import logging
 import typing as t
+import weakref
 from contextlib import asynccontextmanager, contextmanager
-from inspect import ismethod
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
-from .utils import ensure_target, get_original_target
+from .utils import ensure_target, fail_silently, get_original_target
 
 logger = logging.getLogger("ellar")
+
+
+def _try_hash(item: t.Any) -> bool:
+    try:
+        hash(item), weakref.ref(item)
+        return True
+    except TypeError:
+        return False
 
 
 class _Hashable:
@@ -31,17 +39,16 @@ class _Hashable:
 
     @classmethod
     def force_hash(cls, item: t.Any) -> t.Union[t.Any, "_Hashable"]:
-        try:
-            hash(item)
-            return item
-        except TypeError:
+        if not _try_hash(item):
+            hashable = fail_silently(
+                lambda: reflect._un_hashable[hash((id(item), repr(item)))]
+            )
+            if hashable:
+                return hashable
+
             new_target = cls(item_id=id(item), item_repr=repr(item))
-            hash_id = hash(new_target)
-
-            if hash_id in reflect._un_hashable:
-                return reflect._un_hashable[hash_id]
-
-            return reflect.add_un_hashable_type(hash_id, new_target)
+            return reflect.add_un_hashable_type(new_target)
+        return item
 
 
 def _get_actual_target(
@@ -69,8 +76,8 @@ class _Reflect:
     def add_type_update_callback(self, type_: t.Type, func: t.Callable) -> None:
         self._data_type_update_callbacks[type_] = func
 
-    def add_un_hashable_type(self, hash_id: int, value: _Hashable) -> _Hashable:
-        self._un_hashable[hash_id] = value
+    def add_un_hashable_type(self, value: _Hashable) -> _Hashable:
+        self._un_hashable[hash(value)] = value
         return value
 
     def _default_update_callback(
@@ -84,13 +91,15 @@ class _Reflect:
         metadata_value: t.Any,
         target: t.Union[t.Type, t.Callable],
     ) -> t.Any:
-        if (
-            not isinstance(target, type)
-            and not callable(target)
-            and not ismethod(target)
-            or target is None
-        ):
+        if target is None:
             raise Exception("`target` is not a valid type")
+        # if (
+        #     not isinstance(target, type)
+        #     and not callable(target)
+        #     and not ismethod(target)
+        #     or target is None
+        # ):
+        #     raise Exception("`target` is not a valid type")
 
         target_metadata = self._get_or_create_metadata(target, create=True)
         if target_metadata is not None:

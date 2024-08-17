@@ -4,7 +4,7 @@ import warnings
 
 from ellar.common.constants import NOT_SET, RESPONSE_OVERRIDE_KEY
 from ellar.common.interfaces import IResponseModel
-from ellar.common.shortcuts import fail_silently
+from ellar.reflect import fail_silently
 
 from ..responses.models import FileResponseModel, StreamingResponseModel
 from .base import set_metadata as set_meta

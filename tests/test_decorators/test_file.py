@@ -11,6 +11,7 @@ from ellar.common.responses.models import (
 )
 from ellar.core import Request
 from ellar.core.router_builders import ControllerRouterBuilder
+from ellar.core.routing import RouteOperation
 from ellar.reflect import reflect
 
 
@@ -69,12 +70,13 @@ def test_file_decorator_uses_endpoint_name_as_template_name():
         CONTROLLER_OPERATION_HANDLER_KEY, AFileController
     )
     assert len(a_controller_operations) == 1
-    endpoint_render_operation = a_controller_operations[0]
-    response_override = reflect.get_metadata(
-        RESPONSE_OVERRIDE_KEY, endpoint_render_operation.endpoint
+    endpoint_render_operation: RouteOperation = a_controller_operations[0]
+    assert (
+        reflect.get_metadata(RESPONSE_OVERRIDE_KEY, endpoint_render_operation.endpoint)
+        is None
     )
+    file_response = endpoint_render_operation.response_model.models[200]
 
-    file_response: FileResponseModel = response_override[200]
     assert isinstance(file_response, FileResponseModel)
     assert file_response.media_type == "text/javascript"
     assert isinstance(file_response.get_init_kwargs_schema(), ResponseModelField)
@@ -93,11 +95,12 @@ def test_file_stream_decorator_uses_endpoint_name_as_template_name():
         CONTROLLER_OPERATION_HANDLER_KEY, AStreamFileController
     )
     assert len(a_controller_operations) == 1
-    endpoint_render_operation = a_controller_operations[0]
-    response_override = reflect.get_metadata(
-        RESPONSE_OVERRIDE_KEY, endpoint_render_operation.endpoint
+    endpoint_render_operation: RouteOperation = a_controller_operations[0]
+    assert (
+        reflect.get_metadata(RESPONSE_OVERRIDE_KEY, endpoint_render_operation.endpoint)
+        is None
     )
 
-    file_response: StreamingResponseModel = response_override[200]
+    file_response = endpoint_render_operation.response_model.models[200]
     assert isinstance(file_response, StreamingResponseModel)
     assert file_response.media_type == "text/javascript"

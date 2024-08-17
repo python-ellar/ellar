@@ -1,8 +1,7 @@
 import typing as t
 
-from ellar.common import ModuleRouter
+from ellar.common import ModuleRouter, constants
 from ellar.common.compatible import AttributeDict
-from ellar.common.constants import CONTROLLER_METADATA, CONTROLLER_OPERATION_HANDLER_KEY
 from ellar.common.shortcuts import normalize_path
 from ellar.core.routing import EllarControllerMount
 from ellar.reflect import reflect
@@ -23,31 +22,42 @@ class ModuleRouterBuilder(RouterBuilder, controller_type=ModuleRouter):
         ] = EllarControllerMount,
         **kwargs: t.Any,
     ) -> t.Union[T_, EllarControllerMount]:
-        if reflect.get_metadata(
-            CONTROLLER_METADATA.PROCESSED, controller_type.get_controller_type()
-        ):
-            routes = reflect.get_metadata(
-                CONTROLLER_OPERATION_HANDLER_KEY, controller_type.get_controller_type()
+        pre_build_routes = (
+            reflect.get_metadata(
+                constants.ROUTER_PRE_BUILD_ROUTES, target=controller_type
+            )
+            or []
+        )
+        if len(pre_build_routes) > 0:
+            routes = build_route_parameters(
+                pre_build_routes,
+                controller_type=controller_type,
+            )
+            routes.extend(process_nested_routes(controller_type))
+            reflect.delete_metadata(
+                constants.ROUTER_PRE_BUILD_ROUTES, target=controller_type
             )
         else:
-            routes = build_route_parameters(
-                controller_type.get_pre_build_routes(),
-                controller_class=controller_type.get_controller_type(),
+            routes = reflect.get_metadata(
+                constants.CONTROLLER_OPERATION_HANDLER_KEY, controller_type
             )
-            routes.extend(process_nested_routes(controller_type.get_controller_type()))
 
-        init_kwargs = AttributeDict(controller_type.get_mount_init())
+        init_kwargs = AttributeDict(
+            {
+                "path": controller_type.path,
+                "name": controller_type.name,
+                "include_in_schema": controller_type.include_in_schema,
+                # "control_type": self.get_controller_type(),
+                "middleware": controller_type.middleware,
+            }
+        )
 
         if "prefix" in kwargs:
             prefix = kwargs.pop("prefix")
             init_kwargs.path = normalize_path(f"{prefix}/{init_kwargs.path}")
 
-        controller_type.clear_pre_build_routes()
         router = base_route_type(**init_kwargs, routes=routes)  # type:ignore[call-arg]
-
-        reflect.define_metadata(
-            CONTROLLER_METADATA.PROCESSED, True, controller_type.get_controller_type()
-        )
+        reflect.define_metadata(constants.CONTROLLER_CLASS_KEY, controller_type, router)
         return router
 
     @classmethod

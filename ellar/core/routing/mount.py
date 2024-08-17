@@ -3,13 +3,11 @@ import typing as t
 
 from ellar.common.constants import (
     MODULE_COMPONENT,
-    NOT_SET,
     SCOPE_API_VERSIONING_RESOLVER,
 )
 from ellar.common.logging import logger, request_logger
-from ellar.common.shortcuts import fail_silently
 from ellar.common.types import TReceive, TScope, TSend
-from ellar.reflect import reflect
+from ellar.reflect import fail_silently, reflect
 from starlette._utils import get_route_path
 from starlette.datastructures import URL
 from starlette.middleware import Middleware
@@ -36,7 +34,6 @@ class EllarControllerMount(StarletteMount):
         path: str,
         *,
         routes: t.Optional[t.Sequence[t.Union[BaseRoute]]] = None,
-        control_type: t.Optional[t.Type] = None,
         name: t.Optional[str] = None,
         include_in_schema: bool = False,
         middleware: t.Optional[t.Sequence[Middleware]] = None,
@@ -45,7 +42,6 @@ class EllarControllerMount(StarletteMount):
         app.routes = RouteCollection(routes)  # type:ignore
         super().__init__(path=path, app=app, name=name, middleware=[])
         self.include_in_schema = include_in_schema
-        self._control_type = control_type or NOT_SET
 
         self.middleware = [] if middleware is None else list(middleware)
         self._middleware_stack: t.Optional[ASGIApp] = None
@@ -63,9 +59,6 @@ class EllarControllerMount(StarletteMount):
                 logger.exception(f"Unable to setup middleware='{cls}'")
                 raise ex
         return app
-
-    def get_controller_type(self) -> t.Type[t.Any]:
-        return self._control_type
 
     def matches(self, scope: TScope) -> t.Tuple[Match, TScope]:
         request_logger.debug(

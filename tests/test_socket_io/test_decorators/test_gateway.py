@@ -97,7 +97,7 @@ def test_sub_message_building_works():
     assert (
         reflect.get_metadata_or_raise_exception(
             CONTROLLER_OPERATION_HANDLER_KEY, SampleAGateway().a_message
-        ).get_controller_type()
+        ).controller
         is SampleAGateway
     )
 

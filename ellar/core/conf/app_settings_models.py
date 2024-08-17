@@ -31,22 +31,24 @@ TEMPLATE_TYPE = t.Dict[
 
 
 _TemplateValidator = AllowTypeOfSource(
-    validator=lambda s, v: callable(v),
-    error_message=lambda v: f"Expected a callable, got {type(v)}",
+    validator=lambda source, value: callable(value),
+    error_message=lambda source, value: f"Expected a callable, got {type(value)}",
 )
 
 _VersioningValidator = AllowTypeOfSource(
-    error_message=lambda s, v: f"Expected BaseAPIVersioning, received: {type(v)}"
+    error_message=lambda source,
+    value: f"Expected BaseAPIVersioning, received: {type(value)}"
 )
 
 _MiddlewareValidator = AllowTypeOfSource(
-    validator=lambda s, v: isinstance(v, (s, Middleware)),
-    error_message=lambda s,
-    v: f"Expected EllarMiddleware or Starlette Middleware object, received: {type(v)}",
+    validator=lambda source, value: isinstance(value, (source, Middleware)),
+    error_message=lambda source,
+    value: f"Expected EllarMiddleware or Starlette Middleware object, received: {type(value)}",
 )
 
 _ExceptionHandlerValidator = AllowTypeOfSource(
-    error_message=lambda s, v: f"Expected IExceptionHandler object, received: {type(v)}"
+    error_message=lambda source,
+    value: f"Expected IExceptionHandler object, received: {type(value)}"
 )
 
 

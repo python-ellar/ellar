@@ -1,6 +1,6 @@
 import ellar
 from ellar.common import Controller, ControllerBase, UseGuards, get, render
-from ellar.common.shortcuts import fail_silently
+from ellar.reflect import fail_silently
 
 from .guard import HomeGuard
 
