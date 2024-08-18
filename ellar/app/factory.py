@@ -132,9 +132,6 @@ class AppFactory:
             core_module_ref.build_dependencies(step=1)
             app_module_ref = tree_manager.get_app_module()
 
-            execute_coroutine(build_with_context_event.run())
-            build_with_context_event.disconnect_all()
-
             app = App(
                 routes=[],
                 config=config,
@@ -168,6 +165,9 @@ class AppFactory:
 
                 if issubclass(module, IApplicationReady):
                     context.get(module).on_ready(app)
+
+            execute_coroutine(build_with_context_event.run())
+            build_with_context_event.disconnect_all()
 
         return app
 

@@ -145,4 +145,6 @@ class InterceptCustomException(EllarInterceptor):
             return {"message": str(cex)}
 ```
 
-In the above code, the `InterceptCustomException` interceptor catches any `CustomException` raised during the execution of the request/response cycle. It then modifies the response object to set the status code to 400 and returns a JSON response containing the exception message. This allows for custom handling of exceptions within the interceptor before they are propagated to the system's exception handlers.
+In the above code, the `InterceptCustomException` interceptor catches any `CustomException` raised during the execution of the request/response cycle. 
+It then modifies the response object to set the status code to 400 and returns a JSON response containing the exception message. 
+This allows for custom handling of exceptions within the interceptor before they are propagated to the system's exception handlers.

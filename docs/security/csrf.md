@@ -14,15 +14,17 @@ For example, using [Starlette CSRF](https://pypi.org/project/starlette-csrf/) Mi
 # config.py
 import typing as t
 from ellar.core.middleware import Middleware
+from ellar.core.conf import ConfigDefaultTypesMixin
 from starlette_csrf import CSRFMiddleware
 
-class Development(BaseConfig):
+class Development(ConfigDefaultTypesMixin):
     DEBUG: bool = True
+    SECRET_KEY = "xxxxxxxxxxxxxx"
     # Application middlewares
     MIDDLEWARE: t.Sequence[Middleware] = [
         Middleware(
             CSRFMiddleware, 
-            secret="__CHANGE_ME__", 
+            secret=SECRET_KEY, 
             cookie_name='csrftoken', 
             safe_methods={"GET", "HEAD", "OPTIONS", "TRACE"}
         )

@@ -14,6 +14,7 @@ from .decorators import (
     render,
     serializer_filter,
     set_metadata,
+    template_context,
     template_filter,
     template_global,
 )
@@ -152,6 +153,7 @@ __all__ = [
     "serializer_filter",
     "template_filter",
     "template_global",
+    "template_context",
     "UploadFile",
     "file",
     "extra_args",

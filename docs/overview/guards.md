@@ -1,7 +1,8 @@
 # **Guards**
 
 A **Guard** in Ellar is a way to add **authentication** and **authorization** checks to your application. 
-It acts as a middleware and runs before executing the route handler. If the guard returns **false**, the request is rejected and the execution is stopped. 
+It acts as middleware and runs before executing the route handler. 
+If the guard returns **false**, the request is rejected and the execution is stopped. 
 
 **Guards** can be used to check for specific roles, permissions, or any other arbitrary condition. 
 They can be easily applied to individual routes or groups of routes using `@guard` decorator.

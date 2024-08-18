@@ -48,6 +48,7 @@ from ellar.core import ModuleBase
     modules=[], 
     providers=[],
     controllers=[],
+    exports=[],
     routers=[],
     commands=[],
     base_directory=None, 
@@ -63,6 +64,7 @@ class BookModule(ModuleBase):
 | `name`            | The name of the module. It's relevant for identification purposes.                                                      |
 | `modules`         | A list of dependencies required by this module.                                                                         |
 | `providers`       | Providers to be instantiated by the Ellar injector, possibly shared across this module.                                 |
+| `exports`         | List of services accessible at application scope level.                                                                 |
 | `controllers`     | Controllers defined in this module that need instantiation.                                                             |
 | `routers`         | ModuleRouters defined in this module.                                                                                   |
 | `commands`        | Functions decorated with `EllarTyper` or `command` that serve as commands.                                              |
@@ -76,19 +78,19 @@ class BookModule(ModuleBase):
 The Ellar framework offers additional module configurations to handle various aspects of the application lifecycle and behavior.
 
 ### Module Events
-Modules can define `before_init` class method to configure additional initialization parameters before instantiation. This method receives the current application config as a parameter, allowing for further customization.
+Modules can define `post_build` class method
+can be used to define additional `Module` properties after `Module` has built successfully.
 
 ```python linenums="1"
-import typing
 from ellar.common import Module
-from ellar.core import ModuleBase, Config
+from ellar.core.modules import ModuleBase, ModuleRefBase
 
 
 @Module()
 class ModuleEventSample(ModuleBase):
     @classmethod
-    def before_init(cls, config: Config) -> typing.Any:
-        """Called before creating Module object"""
+    def post_build(cls, module_ref: ModuleRefBase) -> None:
+        """Executed after a module build process is done"""
 ```
 
 ### Module Application Cycle
@@ -127,7 +129,7 @@ from ellar.core import ModuleBase
 @Module()
 class ModuleExceptionSample(ModuleBase):
     @exception_handler(404)
-    def exception_404_handler(cls, context: IHostContext, exc: Exception) -> Response:
+    def exception_404_handler(self, context: IHostContext, exc: Exception) -> Response:
         return JSONResponse(dict(detail="Resource not found."))
 ```
 
@@ -141,15 +143,15 @@ from ellar.core import ModuleBase
 @Module()
 class ModuleTemplateFilterSample(ModuleBase):
     @template_filter()
-    def double_filter(cls, n):
+    def double_filter(self, n):
         return n * 2
 
     @template_global()
-    def double_global(cls, n):
+    def double_global(self, n):
         return n * 2
 
     @template_filter(name="dec_filter")
-    def double_filter_dec(cls, n):
+    def double_filter_dec(self, n):
         return n * 2
 ```
 
@@ -198,20 +200,20 @@ from ellar.core import ModuleBase
 @Module()
 class ModuleMiddlewareSample(ModuleBase):
     @middleware()
-    async def my_middleware_function_1(cls, context: IHostContext, call_next):
+    async def my_middleware_function_1(self, context: IHostContext, call_next):
         request = context.switch_to_http_connection().get_request() # for HTTP response only
         request.state.my_middleware_function_1 = True
         await call_next()
     
     @middleware()
-    async def my_middleware_function_2(cls, context: IHostContext, call_next):
+    async def my_middleware_function_2(self, context: IHostContext, call_next):
         if context.get_type() == 'websocket':
             websocket = context.switch_to_websocket().get_client()
             websocket.state.my_middleware_function_2 = True
         await call_next()
 
     @middleware()
-    async def my_middleware_function_3(cls, context: IHostContext, call_next):
+    async def my_middleware_function_3(self, context: IHostContext, call_next):
         connection = context.switch_to_http_connection().get_client() # for HTTP response only
         if connection.headers['somekey']:
             # response = context.get_response() -> use the `response` to add extra definitions to things you want to see on

@@ -76,3 +76,34 @@ class CallableExceptionHandler(IExceptionHandler):
                 and other.callable_exception_handler == other.callable_exception_handler
             )
         return False
+
+
+def as_exception_handler(
+    exc_or_status_code: t.Union[t.Type[Exception], int],
+) -> t.Callable[..., CallableExceptionHandler]:
+    """
+    Convert function to Functional ExceptionHandler ready to be used as an application exception handler
+    :param exc_or_status_code: Exception Type or status code
+    :return: CallableExceptionHandler
+
+    eg:
+
+    @as_exception_handler(404)
+    async def error_404_handler(ctx: IExecutionContext, exc: HTTPException) -> Response:
+        json_response_class = ctx.get_app().config.DEFAULT_JSON_CLASS
+        return json_response_class({"detail": exc.detail}, status_code=exc.status_code)
+
+    # in config.py
+
+    EXCEPTION_HANDLERS = [
+        ...,
+        error_404_handler
+    ]
+    """
+
+    def _decorator(f: t.Callable) -> CallableExceptionHandler:
+        return CallableExceptionHandler(
+            handler=f, exc_or_status_code=exc_or_status_code
+        )
+
+    return _decorator

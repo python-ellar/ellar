@@ -45,8 +45,9 @@ The **Inject[Type]** annotation is used to inject a service registered in Ellar 
 
 For example:
 ```python
+from ellar.app import App
 from ellar.common import ModuleRouter, Inject
-from ellar.core import App, Config
+from ellar.core import Config
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -172,7 +173,7 @@ def get_requests_case_2(
 ## **Custom Parameter Decorators**
 You can create your own route parameter decorators whenever necessary. You simply need to follow a contract, `NonParameterResolver`, and override the resolve function.
 
-The `NonParameterResolver` has two attribute, `type_annotation` and `parameter_name`, that are provided automatically when computing route function parameter dependencies.
+The `NonParameterResolver` has two attributes, `type_annotation` and `parameter_name`, that are provided automatically when computing route function parameter dependencies.
 The `type_annotation` and `parameter_name` are determined from the parameter declaration like so - `def route_function(parameter_name:type_annotation = NonParameterResolver())`.
 
 All `NonParameterResolver` receives current `IExecutionContext` during route function execution, and it must return a tuple of dict object of the resulting resolve data with `parameter_name` and list of errors if any. 
@@ -445,11 +446,13 @@ See [Ellar-CLI Custom Commands](../cli/introduction.md){target="_blank"}
 
 - `@exception_handler`: This decorator is used to register a function as an exception handler. This function will be called when an unhandled exception occurs during a request. It should take the exception instance as its only argument and return a response object.
 
-- `@middleware`: This decorator is used to register a function as a middleware. Middlewares are called for each incoming request and can be used to modify the request or response, or perform any other actions before or after the request is handled.
+- `@middleware`: This decorator is used to register a function as middleware. Middlewares are called for each incoming request and can be used to modify the request or response, or perform any other actions before or after the request is handled.
 
-- `@template_filter`: This decorator is used to register a function as a Jinja2 template filter. The function should take one or more arguments and return a modified value.
+- `@template_filter`: This decorator is used to register a function as a Jinja2 template filter. 
 
-- `@template_global`: This decorator is used to register a function as a global variable available in all Jinja2 templates. The function can be called without any arguments and should return a value.
+- `@template_global`: This decorator is used to register a function as a global variable available in all Jinja2 templates.
 
+- `@template_context`: This decorator is used to register a function as a global template context for dynamic template context processing.
+  
 These decorators can be used to define functions that will be executed at specific points in the application's lifecycle. 
 They provide a way to separate and organize the different parts of an application. See [Module Additional Configuration](modules.md#additional-module-configurations){target="_blank"} for examples on how these decorator functions are used.

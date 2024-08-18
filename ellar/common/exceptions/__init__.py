@@ -1,7 +1,8 @@
 from starlette.exceptions import HTTPException, WebSocketException
 
-from .api import (
-    APIException,
+from .base import APIException
+from .context import ExecutionContextException, HostContextException
+from .exceptions_types import (
     AuthenticationFailed,
     ImproperConfiguration,
     MethodNotAllowed,
@@ -11,8 +12,6 @@ from .api import (
     PermissionDenied,
     UnsupportedMediaType,
 )
-from .callable_exceptions import CallableExceptionHandler
-from .context import ExecutionContextException, HostContextException
 from .validation import RequestValidationError, WebSocketRequestValidationError
 
 __all__ = [
@@ -31,5 +30,4 @@ __all__ = [
     "MethodNotAllowed",
     "NotAcceptable",
     "UnsupportedMediaType",
-    "CallableExceptionHandler",
 ]

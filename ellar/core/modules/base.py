@@ -11,7 +11,7 @@ from ellar.common.constants import (
     TEMPLATE_FILTER_KEY,
     TEMPLATE_GLOBAL_KEY,
 )
-from ellar.common.exceptions import CallableExceptionHandler
+from ellar.core.exceptions import CallableExceptionHandler
 from ellar.core.middleware import FunctionBasedMiddleware
 from ellar.core.middleware.middleware import EllarMiddleware
 from ellar.core.modules.helper import module_callable_factory

@@ -92,12 +92,12 @@ Ellar offers `ASGIFileMount` to easily mount files on your application outside o
 ```python
 import ellar.common as ec
 
-from ellar.core.middleware import FunctionBasedMiddleware
+from ellar.core.middleware import as_middleware
 from ellar.core.routing import ASGIFileMount
-from starlette.middleware import Middleware
 
 
-async def asgi_middleware(execution_context, call_next):
+@as_middleware
+async def asgi_middleware(context, call_next):
     """Run some actions"""
     await call_next()
 
@@ -109,7 +109,7 @@ async def asgi_middleware(execution_context, call_next):
        name="media",
        base_directory='base/path/to/locate/directories',
        middleware=[
-           Middleware(FunctionBasedMiddleware, dispatch=asgi_middleware)
+           asgi_middleware
        ],
    )
 ])

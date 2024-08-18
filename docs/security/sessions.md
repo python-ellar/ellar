@@ -102,7 +102,7 @@ from ellar_sql import model, first_or_none
 from datetime import datetime, timedelta
 
 from ellar.auth.session import SessionStrategy, SessionCookieObject, SessionCookieOption
-from ellar.threading import run_as_async
+from ellar.threading import run_as_sync
 
 from itsdangerous import want_bytes
 
@@ -154,7 +154,7 @@ class EllarSQLSessionStrategy(SessionStrategy):
         if isinstance(func, t.Coroutine):
             await func
 
-    @run_as_async
+    @run_as_sync
     async def _fetch_record(self, key: str) -> SessionCookieObject:
         """Get the saved session (record) from the database"""
         key  = key or secrets.token_urlsafe(5)
@@ -182,7 +182,7 @@ class EllarSQLSessionStrategy(SessionStrategy):
 
         return SessionCookieObject(sid=key)
 
-    @run_as_async
+    @run_as_sync
     async def _save_session_data(self, session: t.Union[str, SessionCookieObject], ) -> str:
         """Generate a prefixed session id"""
         prefixed_session_id = self.key_prefix + session.sid

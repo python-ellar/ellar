@@ -91,7 +91,8 @@ Service Unavailable
 
 
 ## **Exception Handlers**
-Exception Handlers are classes or functions that handles what response that is returned to the client for specific exception types.
+Exception Handlers are classes or functions
+that handle what response that is returned to the client for specific exception types.
 
 Here is an example of an ExceptionHandler that handles `HTTPException` in the application:
 
@@ -298,38 +299,31 @@ To make the `exception_handler_fun` work as an ExceptionHandler, you will need t
 ```python
 from starlette.responses import PlainTextResponse
 from ellar.common import IExecutionContext
-from ellar.common.exceptions import CallableExceptionHandler
+from ellar.core.exceptions import CallableExceptionHandler, as_exception_handler
 
 
-def exception_handler_fun(ctx: IExecutionContext, exc: Exception):
+@as_exception_handler
+def exception_400_handler(ctx: IExecutionContext, exc: Exception):
     return PlainTextResponse('Bad Request', status_code=400)
-
-
-exception_400_handler = CallableExceptionHandler(
-    exc_class_or_status_code=400, callable_exception_handler=exception_handler_fun
-)
 ```
 In the example above, you have created an `exception_400_handler` Exception Handler to handle HTTP exceptions with a status code of 400. 
 You can then register it as an exception handler in your configuration, as we did in the previous section:
 
-Additionally, `exception_handler_fun` can be configured to handle a custom exception type, as shown below:
+Additionally, We can create a handler to handle custom exception types, as shown below:
 
 ```python
 from starlette.responses import PlainTextResponse
 from ellar.common import IExecutionContext
-from ellar.common.exceptions import CallableExceptionHandler
+from ellar.core.exceptions import as_exception_handler
 
 
 class CustomException(Exception):
     pass
 
 
-def exception_handler_fun(ctx: IExecutionContext, exc: Exception):
+@as_exception_handler(CustomException)
+def exception_custom_handler(ctx: IExecutionContext, exc: Exception):
     return PlainTextResponse('Bad Request', status_code=400)
 
-
-exception_custom_handler = CallableExceptionHandler(
-    exc_class_or_status_code=CustomException, callable_exception_handler=exception_handler_fun
-)
 ```
 In this example, `exception_custom_handler` is configured to handle a custom exception type, CustomException.

@@ -39,7 +39,7 @@ ARGUMENTS:
 ```
 
 ## **With App Context Decorator**
-The `ellar_cli.click` module includes a command decorator function called `with_app_context`. 
+The `ellar_cli.click` module includes a command decorator function called `with_injector_context`. 
 This decorator ensures that a click command is executed within the application context, 
 allowing `current_injector`, and `config` to have values.
 
@@ -47,35 +47,33 @@ For instance:
 
 ```python
 import ellar_cli.click as click
-from ellar.core import Config
-from ellar.app import current_injector
+from ellar.core import Config, current_injector
 
 @click.command()
 @click.argument("arg1", required=True, help="Arg1 description")
-@click.with_app_context
+@click.with_injector_context
 def command_context(arg1):
     config = current_injector.get(Config) 
     print("ALLOWED_HOSTS:", config.ALLOWED_HOSTS, ";ELLAR_CONFIG_MODULE:", config.config_module)
 
 @click.command()
 @click.argument("arg1", required=True, help="Arg1 description")
-def command_wc(arg1):
+def command_woc(arg1):
     config = current_injector.get(Config) 
     print("ALLOWED_HOSTS:", config.ALLOWED_HOSTS, ";ELLAR_CONFIG_MODULE:", config.config_module)
 ```
 
-In this example, `command_context` is wrapped with `with_app_context`, while `command_wc` is not. 
+In this example, `command_context` is wrapped with `with_injector_context`, while `command_woc` is not. 
 When executing both commands, `command_context` will run successfully, and `command_wc` will raise a RuntimeError 
 because it attempts to access a value outside the context.
 
 ## **AppContextGroup**
-`AppContextGroup` extended from `click.Group` to wrap all its commands with `with_app_context` decorator.
+`AppContextGroup` extended from `click.Group` to wrap all its commands with `with_injector_context` decorator.
 
 
 ```python
 import ellar_cli.click as click
-from ellar.core import Config
-from ellar.app import current_injector
+from ellar.core import Config, current_injector
 
 cm = click.AppContextGroup(name='cm')
 
@@ -94,16 +92,16 @@ def command_wc(arg1):
 ```
 All commands registered under `cm` will be executed under within the context of the application. 
 
-### **Disabling `with_app_context` in AppContextGroup**
+### **Disabling `with_injector_context` in AppContextGroup**
 There are some cases where you may want to execute a command under `AppContextGroup` outside application context.
-This can be done by setting `with_app_context=False` as command parameter.
+This can be done by setting `with_injector_context=False` as command parameter.
 
 ```python
 import ellar_cli.click as click
 
 cm = click.AppContextGroup(name='cm')
 
-@cm.command(with_app_context=False)
+@cm.command(with_injector_context=False)
 @click.argument("arg1", required=True, help="Arg1 description")
 def command_wc(arg1):
     # config = current_injector.get(Config) 
@@ -111,20 +109,19 @@ def command_wc(arg1):
 ```
 
 ## Async Command
-The `ellar_cli.click` package provides a utility decorator function, `run_as_async`, 
+The `ellar_cli.click` package provides a utility decorator function, `run_as_sync`, 
 specifically designed to execute coroutine commands. 
 This is useful when you want to define asynchronous commands using the `click` package. 
 Here's an example:
 
 ```python
 import ellar_cli.click as click
-from ellar.core import Config
-from ellar.app import current_injector
+from ellar.core import Config,current_injector
 
 @click.command()
 @click.argument("arg1", required=True, help="Arg1 description")
-@click.with_app_context
-@click.run_as_async
+@click.with_injector_context
+@click.run_as_sync
 async def command_context(arg1):
     config = current_injector.get(Config) 
     print("ALLOWED_HOSTS:", config.ALLOWED_HOSTS, ";ELLAR_CONFIG_MODULE:", config.config_module)
@@ -148,7 +145,7 @@ def makemigrations():
     """Create DB Migration """
 
 @db.command()
-def migrate():
+async def migrate():
     """Applies Migrations"""
 ```
 
@@ -184,7 +181,7 @@ Commands:
 
 ```
 
-Having explored various methods for crafting commands and understanding the roles of `wrap_app_context` and `run_as_async` decorators, 
+Having explored various methods for crafting commands and understanding the roles of `with_injector_context` and `run_as_sync` decorators, 
 you now possess the knowledge to create diverse commands for your Ellar application. 
 
 It's crucial to keep in mind that any custom command you develop needs to be registered within a `@Module` class, which, 

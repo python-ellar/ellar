@@ -29,7 +29,7 @@ class HttpRequestConnectionContext(RequestScopeContext):
 
         _clear_lazy_objects()
 
-        await request_started.run()
+        await request_started.run(context=self.host_context)
         return self
 
     @t.no_type_check
@@ -41,12 +41,11 @@ class HttpRequestConnectionContext(RequestScopeContext):
     ) -> None:
         try:
             request_context_var.reset(self._reset_token)
+            await request_teardown.run(context=self.host_context)
         except ValueError as vex:
             logger.exception(vex)
         finally:
             _clear_lazy_objects()
-
-        await request_teardown.run()
 
 
 def _get_connection() -> IHostContext:

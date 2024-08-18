@@ -5,6 +5,8 @@ from ellar.common.types import ASGIApp, TReceive, TScope, TSend
 from ellar.core.execution_context import current_connection
 from starlette.responses import Response
 
+from .middleware import EllarMiddleware
+
 AwaitableCallable = t.Callable[..., t.Awaitable]
 DispatchFunction = t.Callable[
     [IHostContext, AwaitableCallable], t.Awaitable[t.Optional[Response]]
@@ -64,3 +66,34 @@ class FunctionBasedMiddleware:
 
         if response and isinstance(response, Response):
             await response(scope, receive, send)
+
+
+@t.no_type_check
+def as_middleware(f: t.Callable) -> EllarMiddleware:
+    """
+    Convert function to Functional Middleware ready to be used in application middleware
+    :param f: middleware callback function
+    :return: EllarMiddleware
+
+    eg:
+
+    @as_middleware
+    async def session_middleware(
+        context: IHostContext, call_next: t.Callable[..., t.Coroutine]
+    ):
+        connection = context.switch_to_http_connection().get_client()
+
+        db_service = context.get_service_provider().get(EllarSQLService)
+        session = db_service.session_factory()
+
+        connection.state.session = session
+
+        await call_next()
+
+    # in Config.py
+    MIDDLEWARE = [
+        ...,
+        session_middleware
+    ]
+    """
+    return EllarMiddleware(FunctionBasedMiddleware, dispatch=f)
