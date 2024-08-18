@@ -4,7 +4,7 @@ from ellar.common.params.resolvers.system_parameters import ExecutionContextPara
 from .execution import ExecutionContext
 from .factory import ExecutionContextFactory, HostContextFactory
 from .host import HostContext
-from .injector import config, current_injector, injector_context
+from .injector import current_config, current_injector, injector_context
 from .request import HttpRequestConnectionContext, current_connection
 
 __all__ = [
@@ -13,7 +13,7 @@ __all__ = [
     "ExecutionContextFactory",
     "HostContextFactory",
     "current_injector",
-    "config",
+    "current_config",
     "HttpRequestConnectionContext",
     "current_connection",
     "injector_context",

@@ -36,7 +36,7 @@ def _get_application_config() -> Config:
     return Config(config_module=config_module)
 
 
-config: Config = t.cast(Config, SimpleLazyObject(func=_get_application_config))
+current_config: Config = t.cast(Config, SimpleLazyObject(func=_get_application_config))
 
 current_injector: EllarInjector = t.cast(
     EllarInjector, SimpleLazyObject(func=_get_injector)
@@ -45,7 +45,7 @@ current_injector: EllarInjector = t.cast(
 
 def _clear_lazy_objects() -> None:
     current_injector._wrapped = empty  # type:ignore[attr-defined]
-    config._wrapped = empty
+    current_config._wrapped = empty
 
 
 @asynccontextmanager

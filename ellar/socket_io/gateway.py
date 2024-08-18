@@ -16,7 +16,7 @@ from ellar.common.constants import (
 from ellar.common.exceptions import WebSocketRequestValidationError
 from ellar.common.logging import logger
 from ellar.common.params import WebsocketEndpointArgsModel
-from ellar.core.execution_context import config, current_injector
+from ellar.core.execution_context import current_config, current_injector
 from ellar.reflect import reflect
 from ellar.socket_io.context import GatewayContext
 from ellar.socket_io.model import GatewayBase
@@ -107,7 +107,7 @@ class SocketOperationConnection:
             await self._handle_error(
                 sid=sid,
                 code=status.WS_1011_INTERNAL_ERROR,
-                reason=str(ex) if config.DEBUG else "Something went wrong",
+                reason=str(ex) if current_config.DEBUG else "Something went wrong",
             )
 
     async def _handle_error(self, sid: str, code: int, reason: t.Any) -> None:

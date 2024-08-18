@@ -33,6 +33,10 @@ class TestingModule:
         self._global_guards = global_guards
         self._app: t.Optional[App] = None
 
+    @property
+    def module(self) -> t.Type[ModuleBase]:
+        return self._testing_module
+
     def override_provider(
         self,
         base_type: t.Union[t.Type[T], t.Type],
