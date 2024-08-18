@@ -10,8 +10,8 @@ it is intercepted by this middleware, which then automatically sends an appropri
 }
 ```
 Depending on the application's configuration and the value of `DEBUG`, the exception handling behavior differs. 
-When `config.DEBUG` is True, the exception that is raised is shown to the client for easy error debugging. 
-However, when `config.DEBUG` is False, a 500 error is returned to the client, as illustrated below:
+When `current_config.DEBUG` is True, the exception that is raised is shown to the client for easy error debugging. 
+However, when `current_config.DEBUG` is False, a 500 error is returned to the client, as illustrated below:
 
 ```json
 {

@@ -3,7 +3,7 @@ import logging
 import pytest
 from ellar.app import App
 from ellar.common import Body, post
-from ellar.core import Config, config, current_injector, injector_context
+from ellar.core import Config, current_config, current_injector, injector_context
 from ellar.testing import Test
 
 
@@ -25,12 +25,12 @@ async def test_current_config_fails_when_there_is_no_ellar_config_module(
 
         async with injector_context(tm.create_application().injector):
             assert current_injector.get(App) is not None
-            assert config.DEBUG is False
+            assert current_config.DEBUG is False
 
         assert caplog.text == ""
 
     with caplog.at_level(logging.WARNING):
-        assert config.DEBUG is False
+        assert current_config.DEBUG is False
         print(caplog.text)
         assert (
             "You are trying to access app config outside app "
@@ -64,7 +64,7 @@ async def test_current_config_works(anyio_backend):
 
     async with injector_context(tm.create_application().injector):
         app = current_injector.get(App)
-        assert app.config.FRAMEWORK_NAME == config.FRAMEWORK_NAME
+        assert app.config.FRAMEWORK_NAME == current_config.FRAMEWORK_NAME
 
     with pytest.raises(RuntimeError):
         current_injector.get(App)
@@ -76,7 +76,7 @@ async def test_current_config_works_(anyio_backend):
         from ellar.core import current_injector
 
         config_ = current_injector.get(Config)
-        assert config_.FRAMEWORK_NAME == config.FRAMEWORK_NAME
+        assert config_.FRAMEWORK_NAME == current_config.FRAMEWORK_NAME
         return a + b
 
     tm = Test.create_test_module(
@@ -87,7 +87,7 @@ async def test_current_config_works_(anyio_backend):
         res = tm.get_test_client().post("/", json={"a": 1, "b": 4})
         assert res.json() == 5
         config_ = current_injector.get(Config)
-        assert config_.FRAMEWORK_NAME == config.FRAMEWORK_NAME
+        assert config_.FRAMEWORK_NAME == current_config.FRAMEWORK_NAME
 
     with pytest.raises(RuntimeError):
         current_injector.get(Config)

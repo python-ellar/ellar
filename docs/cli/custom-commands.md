@@ -38,10 +38,10 @@ ARGUMENTS:
   --help     Show this message and exit.
 ```
 
-## **With App Context Decorator**
+## **With Injector Context Decorator**
 The `ellar_cli.click` module includes a command decorator function called `with_injector_context`. 
 This decorator ensures that a click command is executed within the application context, 
-allowing `current_injector`, and `config` to have values.
+allowing `current_injector`, and `current_config` to have values.
 
 For instance:
 
