@@ -1,6 +1,7 @@
 import typing as t
 from abc import ABC, abstractmethod
 from functools import cached_property
+from typing import Type
 
 from ellar.auth.constants import POLICY_KEYS
 from ellar.auth.policy.base import _PolicyHandlerWithRequirement
@@ -83,12 +84,20 @@ class ModuleRefBase(ABC):
     @property
     def exports(self) -> t.List[t.Type]:
         """gets module ref config"""
-        return self._exports
+        return self._exports.copy()
 
     @property
     def providers(self) -> t.Dict[t.Type, ProviderConfig]:
         """gets module ref config"""
         return self._providers.copy()
+
+    @property
+    def modules(self) -> t.List[Type["ModuleBase"]]:
+        """gets module ref config"""
+        return [
+            i.value.module  # type:ignore[misc]
+            for i in self.tree_manager.get_module_dependencies(self.module)
+        ]
 
     @t.no_type_check
     def get(

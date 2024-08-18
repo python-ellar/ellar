@@ -2,9 +2,9 @@ import typing as t
 
 import pytest
 from ellar.common import IExceptionHandler, IHostContext, Inject, get, ws_route
-from ellar.common.exceptions.callable_exceptions import CallableExceptionHandler
-from ellar.common.exceptions.handlers import APIException, APIExceptionHandler
 from ellar.core import Config, WebSocket
+from ellar.core.exceptions.callable_exceptions import CallableExceptionHandler
+from ellar.core.exceptions.handlers import APIException, APIExceptionHandler
 from ellar.core.exceptions.service import ExceptionMiddlewareService
 from ellar.core.middleware import ExceptionMiddleware
 from ellar.testing import Test

@@ -259,3 +259,80 @@ These can then be resolved if required by any object in the application.
 
 For more details on the use cases of the `injector` module, 
 you can refer to the documentation [here](https://injector.readthedocs.io/en/latest/terminology.html#module).
+
+
+## **ForwardRefModule**
+`ForwardRefModule` is a powerful feature that allows you to reference a `@Module()` class in your application 
+without needing to instantiate or configure it directly at the point of reference. 
+This is particularly useful in scenarios where you have circular dependencies between modules 
+or when you want to declare dependencies without tightly coupling your modules.
+
+### Forward Reference by Class
+
+In the following example, we have two modules, `ModuleA` and `ModuleB`. `ModuleB` 
+needs to reference `ModuleA` as a dependency, but instead of instantiating `ModuleA` 
+directly, it uses `ForwardRefModule` to declare the dependency.
+
+```python
+from ellar.common import Module
+from ellar.core.modules import ForwardRefModule, ModuleBase, ModuleRefBase
+
+@Module(name="moduleA")
+class ModuleA:
+    pass
+
+
+@Module(name="ModuleB", modules=[ForwardRefModule(ModuleA)])
+class ModuleB(ModuleBase):
+    @classmethod
+    def post_build(cls, module_ref: ModuleRefBase) -> None:
+        assert ModuleA in module_ref.modules
+
+        
+@Module(modules=[ModuleA, ModuleB])
+class ApplicationModule(ModuleBase):
+    pass
+```
+
+In this example:
+- `ModuleB` references `ModuleA` using `ForwardRefModule`, meaning `ModuleB` knows about `ModuleA` but doesn't instantiate it.
+- When `ApplicationModule` is built, both `ModuleA` and `ModuleB` are instantiated. During this build process, `ModuleB` can reference the instance of `ModuleA`, ensuring that all dependencies are resolved properly.
+
+This pattern is particularly useful when modules need to reference each other, creating a situation where they might otherwise be instantiated out of order or cause circular dependencies.
+
+### Forward Reference by Name
+
+`ForwardRefModule` also supports referencing a module by its name, allowing for even more flexibility. This is beneficial when module classes are defined in separate files or when the module class may not be available at the time of reference.
+
+```python
+from ellar.common import Module
+from ellar.core.modules import ForwardRefModule, ModuleBase, ModuleRefBase
+
+@Module(name="moduleA")
+class ModuleA:
+    pass
+
+
+@Module(name="ModuleB", modules=[ForwardRefModule(module_name="moduleA")])
+class ModuleB(ModuleBase):
+    @classmethod
+    def post_build(cls, module_ref: ModuleRefBase) -> None:
+        assert ModuleA in module_ref.modules
+
+        
+@Module(modules=[ModuleA, ModuleB])
+class ApplicationModule(ModuleBase):
+    pass
+```
+
+In this second example:
+- `ModuleB` references `ModuleA` by its name, `"moduleA"`. 
+- During the build process of `ApplicationModule`, the name reference is resolved, ensuring that `ModuleA` is instantiated and injected into `ModuleB` correctly.
+
+This method allows you to define module dependencies without worrying about the order of their definition, 
+providing greater modularity and flexibility in your application's architecture.
+
+By using `ForwardRefModule`, you can build complex, 
+interdependent module structures without running into 
+issues related to instantiation order or circular dependencies, 
+making your codebase more maintainable and easier to manage.
