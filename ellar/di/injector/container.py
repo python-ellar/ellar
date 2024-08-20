@@ -25,6 +25,7 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from .ellar_injector import EllarInjector
 
 NOT_SET = object()
+logger = logging.getLogger("ellar.di")
 
 
 class Container(InjectorBinder):
@@ -182,5 +183,8 @@ class Container(InjectorBinder):
                         return module_owner.value.container._get_binding(interface)
 
             except (KeyError, UnsatisfiedRequirement, Exception) as ex:
-                logging.exception(ex)
+                logger.error(
+                    f"Ensure {interface} is exported by a module. eg @Module(exports=[{interface}])"
+                )
+                logger.exception(ex)
             raise UnsatisfiedRequirement(None, interface) from uex

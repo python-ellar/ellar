@@ -7,6 +7,7 @@ from ellar.common import ControllerBase, ModuleRouter
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core.conf import Config
+from ellar.core.modules.ref.forward import ModuleForwardRef
 from ellar.di import (
     MODULE_REF_TYPES,
     Container,
@@ -253,16 +254,18 @@ class ForwardRefModule(_ModuleValidateBase):
 
     def resolve_module_dependency(self, parent_module_ref: "ModuleRefBase") -> None:
         tree_manager = parent_module_ref.container.injector.tree_manager
-        module = (
+        module_ref = (
             self.get_module_dependency_by_name(tree_manager, parent_module_ref)
             if self.module_name
             else self.get_module_dependency_by_type(tree_manager, parent_module_ref)
         )
-        tree_manager.add_module_dependency(parent_module_ref.module, module)
+        forward_ref = ModuleForwardRef(module_ref)
+
+        tree_manager.add_forward_ref(parent_module_ref.module, forward_ref)
 
     def get_module_dependency_by_name(
         self, tree_manager: ModuleTreeManager, parent_module_ref: "ModuleRefBase"
-    ) -> t.Type:
+    ) -> "ModuleRefBase":
         assert self.module_name, "'module_name' can't be None"
 
         node = next(
@@ -276,11 +279,11 @@ class ForwardRefModule(_ModuleValidateBase):
                 f"Please kindly ensure a @Module(name={self.module_name}) is registered"
             )
 
-        return node.value.module
+        return t.cast(ModuleRefBase, node.value)
 
     def get_module_dependency_by_type(
         self, tree_manager: ModuleTreeManager, parent_module_ref: "ModuleRefBase"
-    ) -> t.Type:
+    ) -> "ModuleRefBase":
         if isinstance(self.module, str):
             try:
                 module_cls: t.Type["ModuleBase"] = t.cast(
@@ -302,7 +305,7 @@ class ForwardRefModule(_ModuleValidateBase):
                 f"Please kindly ensure a {self.module} is decorated with @Module() is registered"
             )
 
-        return node.value.module
+        return t.cast(ModuleRefBase, node.value)
 
     def __hash__(self) -> int:  # pragma: no cover
         return hash((self.module, "ForwardRefModule"))

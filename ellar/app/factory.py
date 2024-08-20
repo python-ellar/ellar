@@ -159,10 +159,9 @@ class AppFactory:
 
             # app.setup_jinja_environment
             app.setup_jinja_environment()
+            core_module_ref.run_module_register_services()
 
-            for module, data in context.tree_manager.modules.items():
-                data.value.run_module_register_services()
-
+            for module in context.tree_manager.modules.keys():
                 if issubclass(module, IApplicationReady):
                     context.get(module).on_ready(app)
 

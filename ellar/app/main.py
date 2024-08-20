@@ -91,20 +91,25 @@ class App:
             if self.config.LOG_LEVEL
             else constants.LOG_LEVELS.info.value
         )
-        logger_ = logging.getLogger("ellar")
-        if not logger_.handlers:
+        logger_ellar = logging.getLogger("ellar")
+        logger_ellar_request = logging.getLogger("ellar.request")
+        logger_ellar_di = logging.getLogger("ellar.di")
+
+        if not logger_ellar.handlers:
             formatter = logging.Formatter(constants.ELLAR_LOG_FMT_STRING)
             stream_handler = logging.StreamHandler()
             # file_handler = logging.FileHandler("my_app.log")
             # file_handler.setFormatter(formatter)
             # logger_.addHandler(file_handler)
             stream_handler.setFormatter(formatter)
-            logger_.addHandler(stream_handler)
 
-            logger_.setLevel(log_level)
-        else:
-            logging.getLogger("ellar").setLevel(log_level)
-            logging.getLogger("ellar.request").setLevel(log_level)
+            logger_ellar.addHandler(stream_handler)
+            logger_ellar_request.addHandler(stream_handler)
+            logger_ellar_di.addHandler(stream_handler)
+
+        logger_ellar.setLevel(log_level)
+        logger_ellar_request.setLevel(log_level)
+        logger_ellar_di.setLevel(log_level)
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         return self.__global_guard + self._global_guards
