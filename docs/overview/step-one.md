@@ -127,10 +127,6 @@ The result of this CLI command is stored in `project-name/project_name/apps`
 ```
 apps/
 ├─ car/
-│  ├─ tests/
-│  │  ├─ test_controllers.py
-│  │  ├─ test_routers.py
-│  │  ├─ test_services.py
 │  ├─ controllers.py
 │  ├─ module.py
 │  ├─ schemas.py
@@ -145,7 +141,6 @@ Brief overview of the generated files:
 | `car.module.py`   | car module/app `Module` metadata definition.      |
 | `car.services.py` | For Car module service declarations.              |
 | `car.schemas.py`  | Data-transfer-object or Serializers declarations. |
-| `car.tests/`      | testing directory for the car module.             |
 
 To finish up with the created `car` module, we need to register it to the 
 `project_name.root_module.py`
@@ -179,7 +174,7 @@ then add the below.
 
 import os
 from ellar.common.constants import ELLAR_CONFIG_MODULE
-from ellar.core.factory import AppFactory
+from ellar.app import AppFactory
 from ellar.openapi import OpenAPIDocumentModule, OpenAPIDocumentBuilder, SwaggerUI
 from .root_module import ApplicationModule
 
@@ -197,12 +192,12 @@ document_builder.set_title('Project Name API') \
     .set_license('MIT Licence', url='https://www.google.com')
 
 document = document_builder.build_document(application)
-module_config = OpenAPIDocumentModule.setup(
+OpenAPIDocumentModule.setup(
+    app=application,
     docs_ui=SwaggerUI(),
     document=document,
     guards=[]
 )
-application.install_module(module_config)
 ```
 
 Goto your browser and visit: [http://localhost:8000/docs/](http://localhost:8000/docs){target="_blank"}

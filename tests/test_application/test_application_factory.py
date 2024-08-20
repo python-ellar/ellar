@@ -4,8 +4,9 @@ from ellar.common import Module
 from ellar.common.constants import MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.core import LazyModuleImport as lazyLoad
-from ellar.core import ModuleBase, ModuleSetup, injector_context
+from ellar.core import ModuleBase, ModuleSetup, current_config, injector_context
 from ellar.di import ProviderConfig
+from ellar.events import ensure_build_context
 from ellar.reflect import reflect
 from ellar.testing import TestClient
 from ellar.utils import get_unique_type
@@ -117,3 +118,20 @@ def test_config_overrider_core_service_registration():
         AppFactory.create_app(
             config_module={"OVERRIDE_CORE_SERVICE": [ProviderConfig(provider_type)]}
         )
+
+
+async def test_ensure_build_works(anyio_backend):
+    @ensure_build_context
+    def set_xxx(key, value):
+        current_config[key] = value
+
+    set_xxx("DES", 12)
+    set_xxx("DES_34", 34)
+
+    app = AppFactory.create_app()
+    async with injector_context(app.injector):
+        set_xxx("DES_345", 23432)
+
+    assert app.config.DES == 12
+    assert app.config.DES_34 == 34
+    assert app.config.DES_345 == 23432

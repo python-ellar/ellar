@@ -8,14 +8,9 @@ from ellar.common import (
     GlobalGuard,
     IHostContextFactory,
     IIdentitySchemes,
+    constants,
 )
 from ellar.common.compatible import cached_property
-from ellar.common.constants import (
-    ELLAR_LOG_FMT_STRING,
-    LOG_LEVELS,
-    TEMPLATE_FILTER_KEY,
-    TEMPLATE_GLOBAL_KEY,
-)
 from ellar.common.datastructures import State, URLPath
 from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
 from ellar.common.models import EllarInterceptor, GuardCanActivate
@@ -94,22 +89,27 @@ class App:
         log_level = (
             self.config.LOG_LEVEL.value
             if self.config.LOG_LEVEL
-            else LOG_LEVELS.info.value
+            else constants.LOG_LEVELS.info.value
         )
-        logger_ = logging.getLogger("ellar")
-        if not logger_.handlers:
-            formatter = logging.Formatter(ELLAR_LOG_FMT_STRING)
+        logger_ellar = logging.getLogger("ellar")
+        logger_ellar_request = logging.getLogger("ellar.request")
+        logger_ellar_di = logging.getLogger("ellar.di")
+
+        if not logger_ellar.handlers:
+            formatter = logging.Formatter(constants.ELLAR_LOG_FMT_STRING)
             stream_handler = logging.StreamHandler()
             # file_handler = logging.FileHandler("my_app.log")
             # file_handler.setFormatter(formatter)
             # logger_.addHandler(file_handler)
             stream_handler.setFormatter(formatter)
-            logger_.addHandler(stream_handler)
 
-            logger_.setLevel(log_level)
-        else:
-            logging.getLogger("ellar").setLevel(log_level)
-            logging.getLogger("ellar.request").setLevel(log_level)
+            logger_ellar.addHandler(stream_handler)
+            logger_ellar_request.addHandler(stream_handler)
+            logger_ellar_di.addHandler(stream_handler)
+
+        logger_ellar.setLevel(log_level)
+        logger_ellar_request.setLevel(log_level)
+        logger_ellar_di.setLevel(log_level)
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
         return self.__global_guard + self._global_guards
@@ -187,7 +187,10 @@ class App:
         return app
 
     def request_context(
-        self, scope: TScope, receive: TReceive, send: TSend
+        self,
+        scope: TScope,
+        receive: TReceive = constants.empty_receive,
+        send: TSend = constants.empty_send,
     ) -> HttpRequestConnectionContext:
         """
         Create an RequestContext during request and provides instance for `current_connection`.
@@ -334,8 +337,8 @@ class App:
         jinja_env.policies["json.dumps_function"] = json.dumps
 
         # jinja_env.policies["get_messages"] = get_messages
-        jinja_env.globals.update(self._config.get(TEMPLATE_GLOBAL_KEY, {}))
-        jinja_env.filters.update(self._config.get(TEMPLATE_FILTER_KEY, {}))
+        jinja_env.globals.update(self._config.get(constants.TEMPLATE_GLOBAL_KEY, {}))
+        jinja_env.filters.update(self._config.get(constants.TEMPLATE_FILTER_KEY, {}))
 
         self.config.APP_CONTEXT_PROCESSORS = list(
             self.config.TEMPLATES_CONTEXT_PROCESSORS

@@ -1,14 +1,14 @@
-# **Application Context**
+# **Injector Context**
 
 In the complex web of dependencies within Ellar, 
 accessing the application instance without triggering circular import errors can be a daunting task. 
 
-To address this challenge, Ellar introduces the concept of an application context, 
+To address this challenge, Ellar introduces the concept of an injector context, 
 a powerful mechanism that facilitates smooth access to the application instance throughout various parts of the codebase.
 
-## **Understanding the Application Context**
+## **Understanding the Injector Context**
 
-The application context serves as a bridge between different components of the application, making the application object 
+The Injector context serves as a bridge between different components of the application, making the application object 
 readily available through the application Dependency Injection (DI) container. This ensures that you can access the 
 application instance without encountering import issues, whether it's during request handling, execution of CLI commands, 
 or manual invocation of the context.
@@ -16,7 +16,7 @@ or manual invocation of the context.
 Two key elements of the application context are:
 
 - **current_injector**: This proxy variable refers to the current application **injector**, providing access to any service or the application instance itself.
-- **config**: A lazy loader for application configuration, which is based on the `ELLAR_CONFIG_MODULE` reference or accessed through `application.config` when the application context is active.
+- **current_config**: A lazy loader for application configuration, which is based on the `ELLAR_CONFIG_MODULE` reference or accessed through `application.config` when the application context is active.
 
 ## **Integration with Click Commands**
 
@@ -27,7 +27,7 @@ For instance, consider the following example:
 
 ```python
 import ellar_cli.click as click
-from ellar.app import current_injector
+from ellar.core import current_injector
 from ellar.di import injectable
 
 @injectable
@@ -37,7 +37,7 @@ class MyService:
 
 @click.command()
 @click.argument('name')
-@click.with_app_context
+@click.with_injector_context
 def my_command(name: str):
     my_service = current_injector.get(MyService)
     my_service.do_something()
@@ -63,8 +63,9 @@ For example, consider the following event handling setup:
 
 ```python
 from ellar.events import app_context_teardown, app_context_started
-from ellar.app import App, AppFactory, current_injector
-from ellar.threading import run_as_async
+from ellar.app import App, AppFactory
+from ellar.core import current_injector, injector_context
+from ellar.threading import run_as_sync
 
 @app_context_started.connect
 async def on_context_started():
@@ -76,9 +77,9 @@ def on_context_ended():
 
 app = AppFactory.create_app()
 
-@run_as_async
+@run_as_sync
 async def run_app_context():
-    async with app.application_context() as ctx:
+    async with injector_context(app.injector) as ctx:
         print("-----> Context is now available <------")
 
         app_instance = ctx.injector.get(App)

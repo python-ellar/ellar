@@ -60,15 +60,17 @@ class ModuleWithModuleRefByType:
 
 
 def test_sample_controller_fails_for_module_without_module_ref_as_dependency():
-    app = Test.create_test_module(
-        modules=[ModuleToBeReference, ModuleWithoutModuleRef]
-    ).create_application()
-    module_ref = app.injector.tree_manager.get_module(ModuleWithoutModuleRef).value
+    tm = Test.create_test_module(modules=[ModuleToBeReference, ModuleWithoutModuleRef])
+    app = tm.create_application()
+    tm_module_ref = app.injector.tree_manager.get_module(tm.module).value
+
+    assert ModuleToBeReference in tm_module_ref.modules
 
     with pytest.raises(
         di_exceptions.UnsatisfiedRequirement,
         match="SampleController has an unsatisfied requirement on UserService",
     ):
+        module_ref = app.injector.tree_manager.get_module(ModuleWithoutModuleRef).value
         assert module_ref.get(SampleController)
 
 

@@ -74,7 +74,7 @@ This will add some files like:
 - `tests`: place to add unit test or E2E test for out car module
 
 ## **Add Schema**
-In `car/schema.py`, lets add some serializer for car input and output data
+In `car/schema.py`, let's add some serializer for car input and output data
 ```python
 from ellar.common import Serializer
 
@@ -89,7 +89,7 @@ class RetrieveCarSerializer(CarSerializer):
 ```
 
 ## **Add Services**
-In `car/services.py`, lets create a dummy repository `CarDummyDB` to manage our car data.
+In `car/services.py`, 'lets' create a dummy repository `CarDummyDB` to manage our car data.
 ```python
 """
 Create a provider and declare its scope

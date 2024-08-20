@@ -88,6 +88,7 @@ from .services import UsersService
 
 @Module(
     providers=[UsersService],
+    exports=[UsersService]
 )
 class UserModule(ModuleBase):
     """
@@ -270,7 +271,8 @@ from ellar.common.serializer.guard import (
 from ellar.auth.guards import GuardHttpBearerAuth
 from ellar.di import injectable
 from ellar_jwt import JWTService
-from ellar.common import logger, IExecutionContext
+from ellar.common import IExecutionContext
+from ellar.common.logging import logger
 
 
 @injectable

@@ -132,9 +132,6 @@ class AppFactory:
             core_module_ref.build_dependencies(step=1)
             app_module_ref = tree_manager.get_app_module()
 
-            execute_coroutine(build_with_context_event.run())
-            build_with_context_event.disconnect_all()
-
             app = App(
                 routes=[],
                 config=config,
@@ -162,12 +159,14 @@ class AppFactory:
 
             # app.setup_jinja_environment
             app.setup_jinja_environment()
+            core_module_ref.run_module_register_services()
 
-            for module, data in context.tree_manager.modules.items():
-                data.value.run_module_register_services()
-
+            for module in context.tree_manager.modules.keys():
                 if issubclass(module, IApplicationReady):
                     context.get(module).on_ready(app)
+
+            execute_coroutine(build_with_context_event.run())
+            build_with_context_event.disconnect_all()
 
         return app
 

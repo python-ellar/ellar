@@ -1,12 +1,12 @@
 import typing as t
 
-from ellar.common.exceptions.handlers import (
+from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
+from ellar.core.exceptions.handlers import (
     APIExceptionHandler,
     HTTPExceptionHandler,
     RequestValidationErrorHandler,
     WebSocketExceptionHandler,
 )
-from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
 from ellar.di import injectable
 
 EXCEPTION_DEFAULT_EXCEPTION_HANDLERS: t.List[IExceptionHandler] = [

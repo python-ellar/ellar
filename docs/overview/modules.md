@@ -48,6 +48,7 @@ from ellar.core import ModuleBase
     modules=[], 
     providers=[],
     controllers=[],
+    exports=[],
     routers=[],
     commands=[],
     base_directory=None, 
@@ -63,6 +64,7 @@ class BookModule(ModuleBase):
 | `name`            | The name of the module. It's relevant for identification purposes.                                                      |
 | `modules`         | A list of dependencies required by this module.                                                                         |
 | `providers`       | Providers to be instantiated by the Ellar injector, possibly shared across this module.                                 |
+| `exports`         | List of services accessible at application scope level.                                                                 |
 | `controllers`     | Controllers defined in this module that need instantiation.                                                             |
 | `routers`         | ModuleRouters defined in this module.                                                                                   |
 | `commands`        | Functions decorated with `EllarTyper` or `command` that serve as commands.                                              |
@@ -76,19 +78,19 @@ class BookModule(ModuleBase):
 The Ellar framework offers additional module configurations to handle various aspects of the application lifecycle and behavior.
 
 ### Module Events
-Modules can define `before_init` class method to configure additional initialization parameters before instantiation. This method receives the current application config as a parameter, allowing for further customization.
+Modules can define `post_build` class method
+can be used to define additional `Module` properties after `Module` has built successfully.
 
 ```python linenums="1"
-import typing
 from ellar.common import Module
-from ellar.core import ModuleBase, Config
+from ellar.core.modules import ModuleBase, ModuleRefBase
 
 
 @Module()
 class ModuleEventSample(ModuleBase):
     @classmethod
-    def before_init(cls, config: Config) -> typing.Any:
-        """Called before creating Module object"""
+    def post_build(cls, module_ref: ModuleRefBase) -> None:
+        """Executed after a module build process is done"""
 ```
 
 ### Module Application Cycle
@@ -127,7 +129,7 @@ from ellar.core import ModuleBase
 @Module()
 class ModuleExceptionSample(ModuleBase):
     @exception_handler(404)
-    def exception_404_handler(cls, context: IHostContext, exc: Exception) -> Response:
+    def exception_404_handler(self, context: IHostContext, exc: Exception) -> Response:
         return JSONResponse(dict(detail="Resource not found."))
 ```
 
@@ -141,15 +143,15 @@ from ellar.core import ModuleBase
 @Module()
 class ModuleTemplateFilterSample(ModuleBase):
     @template_filter()
-    def double_filter(cls, n):
+    def double_filter(self, n):
         return n * 2
 
     @template_global()
-    def double_global(cls, n):
+    def double_global(self, n):
         return n * 2
 
     @template_filter(name="dec_filter")
-    def double_filter_dec(cls, n):
+    def double_filter_dec(self, n):
         return n * 2
 ```
 
@@ -198,20 +200,20 @@ from ellar.core import ModuleBase
 @Module()
 class ModuleMiddlewareSample(ModuleBase):
     @middleware()
-    async def my_middleware_function_1(cls, context: IHostContext, call_next):
+    async def my_middleware_function_1(self, context: IHostContext, call_next):
         request = context.switch_to_http_connection().get_request() # for HTTP response only
         request.state.my_middleware_function_1 = True
         await call_next()
     
     @middleware()
-    async def my_middleware_function_2(cls, context: IHostContext, call_next):
+    async def my_middleware_function_2(self, context: IHostContext, call_next):
         if context.get_type() == 'websocket':
             websocket = context.switch_to_websocket().get_client()
             websocket.state.my_middleware_function_2 = True
         await call_next()
 
     @middleware()
-    async def my_middleware_function_3(cls, context: IHostContext, call_next):
+    async def my_middleware_function_3(self, context: IHostContext, call_next):
         connection = context.switch_to_http_connection().get_client() # for HTTP response only
         if connection.headers['somekey']:
             # response = context.get_response() -> use the `response` to add extra definitions to things you want to see on
@@ -257,3 +259,80 @@ These can then be resolved if required by any object in the application.
 
 For more details on the use cases of the `injector` module, 
 you can refer to the documentation [here](https://injector.readthedocs.io/en/latest/terminology.html#module).
+
+
+## **ForwardRefModule**
+`ForwardRefModule` is a powerful feature that allows you to reference a `@Module()` class in your application 
+without needing to instantiate or configure it directly at the point of reference. 
+This is particularly useful in scenarios where you have circular dependencies between modules 
+or when you want to declare dependencies without tightly coupling your modules.
+
+### Forward Reference by Class
+
+In the following example, we have two modules, `ModuleA` and `ModuleB`. `ModuleB` 
+needs to reference `ModuleA` as a dependency, but instead of instantiating `ModuleA` 
+directly, it uses `ForwardRefModule` to declare the dependency.
+
+```python
+from ellar.common import Module
+from ellar.core.modules import ForwardRefModule, ModuleBase, ModuleRefBase
+
+@Module(name="moduleA")
+class ModuleA:
+    pass
+
+
+@Module(name="ModuleB", modules=[ForwardRefModule(ModuleA)])
+class ModuleB(ModuleBase):
+    @classmethod
+    def post_build(cls, module_ref: ModuleRefBase) -> None:
+        assert ModuleA in module_ref.modules
+
+        
+@Module(modules=[ModuleA, ModuleB])
+class ApplicationModule(ModuleBase):
+    pass
+```
+
+In this example:
+- `ModuleB` references `ModuleA` using `ForwardRefModule`, meaning `ModuleB` knows about `ModuleA` but doesn't instantiate it.
+- When `ApplicationModule` is built, both `ModuleA` and `ModuleB` are instantiated. During this build process, `ModuleB` can reference the instance of `ModuleA`, ensuring that all dependencies are resolved properly.
+
+This pattern is particularly useful when modules need to reference each other, creating a situation where they might otherwise be instantiated out of order or cause circular dependencies.
+
+### Forward Reference by Name
+
+`ForwardRefModule` also supports referencing a module by its name, allowing for even more flexibility. This is beneficial when module classes are defined in separate files or when the module class may not be available at the time of reference.
+
+```python
+from ellar.common import Module
+from ellar.core.modules import ForwardRefModule, ModuleBase, ModuleRefBase
+
+@Module(name="moduleA")
+class ModuleA:
+    pass
+
+
+@Module(name="ModuleB", modules=[ForwardRefModule(module_name="moduleA")])
+class ModuleB(ModuleBase):
+    @classmethod
+    def post_build(cls, module_ref: ModuleRefBase) -> None:
+        assert ModuleA in module_ref.modules
+
+        
+@Module(modules=[ModuleA, ModuleB])
+class ApplicationModule(ModuleBase):
+    pass
+```
+
+In this second example:
+- `ModuleB` references `ModuleA` by its name, `"moduleA"`. 
+- During the build process of `ApplicationModule`, the name reference is resolved, ensuring that `ModuleA` is instantiated and injected into `ModuleB` correctly.
+
+This method allows you to define module dependencies without worrying about the order of their definition, 
+providing greater modularity and flexibility in your application's architecture.
+
+By using `ForwardRefModule`, you can build complex, 
+interdependent module structures without running into 
+issues related to instantiation order or circular dependencies, 
+making your codebase more maintainable and easier to manage.

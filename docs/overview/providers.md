@@ -220,7 +220,7 @@ a_foo_instance = AFooClass()
 @Module()
 class AModule(ModuleBase):
     def register_services(self, container: Container) -> None:
-        container.register_singleton(IFoo, AFooClass)
+        container.register(IFoo, AFooClass)
         container.register(IFooB, a_foo_instance)
 
 
@@ -281,7 +281,7 @@ Also, services can be injected as a dependency by using tags. To achieve this, t
 For example:
 
 ```python
-from ellar.di import EllarInjector, InjectByTag
+from ellar.di import EllarInjector, InjectByTag, scopes
 
 injector = EllarInjector(auto_bind=False)
 
@@ -294,7 +294,7 @@ class FooB:
     def __init__(self, foo: InjectByTag("fooTag")):
         self.foo = foo
 
-injector.container.register_singleton(Foo, tag="fooTag")
+injector.container.register(Foo, tag="fooTag", scope=scopes.singleton_scope)
 injector.container.register(FooB)
 
 assert injector.get(FooB).foo == 'foo'

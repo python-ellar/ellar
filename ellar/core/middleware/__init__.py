@@ -7,7 +7,7 @@ from starlette.middleware.wsgi import WSGIMiddleware as WSGIMiddleware
 from .cors import CORSMiddleware
 from .errors import ServerErrorMiddleware
 from .exceptions import ExceptionMiddleware
-from .function import FunctionBasedMiddleware
+from .function import FunctionBasedMiddleware, as_middleware
 from .middleware import EllarMiddleware as Middleware
 from .trusted_host import TrustedHostMiddleware
 from .versioning import RequestVersioningMiddleware
@@ -24,4 +24,5 @@ __all__ = [
     "WSGIMiddleware",
     "RequestVersioningMiddleware",
     "ServerErrorMiddleware",
+    "as_middleware",
 ]

@@ -1,6 +1,6 @@
 from .base import ModuleBase, ModuleBaseMeta
 from .config import DynamicModule, ForwardRefModule, LazyModuleImport, ModuleSetup
-from .ref import ModulePlainRef, ModuleRefBase, ModuleTemplateRef
+from .ref import ModuleForwardRef, ModulePlainRef, ModuleRefBase, ModuleTemplateRef
 
 __all__ = [
     "ModuleBase",
@@ -11,5 +11,6 @@ __all__ = [
     "DynamicModule",
     "ModuleBaseMeta",
     "LazyModuleImport",
+    "ModuleForwardRef",
     "ForwardRefModule",
 ]

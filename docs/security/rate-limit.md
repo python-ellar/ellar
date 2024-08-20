@@ -287,8 +287,8 @@ you need to extend the class and set the `cache_backend` to point to the desired
 
 ```python
 from ellar.di import injectable
-from ellar.cache import ICacheService
-from ellar_throttler import CacheThrottlerStorageService
+from ellar.cache import ICacheService, CacheModule
+from ellar_throttler import CacheThrottlerStorageService, ThrottlerModule
 
 
 @injectable()
@@ -354,3 +354,18 @@ Additionally,
 note
 that `WebsocketThrottler` workers like `UserThrottler` for an authenticated 
 request and `AnonymousThrottler` for anonymous request.
+
+## Inline Throttling Definition
+It is possible to define throttling models at the point usage and they will override the globally registered models.
+
+For example:
+```python
+@get("/shorter-inline-throttling")
+@Throttle(AnonymousThrottler(ttl=5, limit=3), UserThrottler(ttl=3, limit=3)) # overriding global throttling options
+def get_shorter_inline_version(self, use_auth: bool):
+    return self.app_service.success(use_auth)
+```
+
+In `get_shorter_inline_version`, `AnonymousThrottler(ttl=5, limit=3)`
+and `UserThrottler(ttl=3, limit=3)` throttling models were defined in it.
+This will be used as throttling models for `get_shorter_inline_version` during runtime.

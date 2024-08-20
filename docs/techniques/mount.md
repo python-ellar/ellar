@@ -5,7 +5,7 @@ Let's see how to mount sub-routes in ellar
 ```python
 
 from starlette.routing import Mount
-from ellar.common.routing import RouteOperation
+from ellar.core.routing import RouteOperation
 from ellar.core import Request
 
 def users(request:Request):

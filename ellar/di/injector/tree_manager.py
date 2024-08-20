@@ -6,16 +6,13 @@ from ellar.di.service_config import (
 )
 
 if t.TYPE_CHECKING:  # pragma: no cover
-    from ellar.core.modules import (
-        ModuleRefBase,
-        ModuleSetup,
-    )
+    from ellar.core.modules import ModuleForwardRef, ModuleRefBase, ModuleSetup
 
 
 class TreeData(t.NamedTuple):
-    value: t.Union["ModuleRefBase", "ModuleSetup"]
+    value: t.Union["ModuleRefBase", "ModuleSetup", "ModuleForwardRef"]
     parent: t.Optional[t.Type]
-    dependencies: t.List[t.Type]
+    dependencies: t.List[t.Union[t.Any, t.Type]]
 
     @property
     def is_ready(self) -> bool:
@@ -45,7 +42,7 @@ class TreeData(t.NamedTuple):
 
 
 class ModuleTreeManager:
-    __slots__ = ("modules", "_core_module", "_app_module")
+    __slots__ = ("modules", "_core_module", "_app_module", "_forward_refs")
 
     # , root_module: t.Union["ModuleRefBase", "ModuleSetup"]
     def __init__(
@@ -55,6 +52,7 @@ class ModuleTreeManager:
         self.modules: t.MutableMapping[t.Type, TreeData] = (
             WeakKeyDictionary()
         )  # Dictionary to store modules by their ID or value
+        self._forward_refs: t.MutableMapping["ModuleForwardRef", TreeData] = {}
 
         self._core_module = app_core_module.module if app_core_module else None
         self._app_module: t.Optional[t.Type[t.Any]] = None
@@ -122,10 +120,28 @@ class ModuleTreeManager:
             )
         return self
 
+    def add_forward_ref(
+        self,
+        module_type: t.Type,
+        forward_ref: "ModuleForwardRef",
+    ) -> "ModuleTreeManager":
+        module_node = self.get_module(module_type)
+        module_node.dependencies.append(forward_ref)
+
+        data = TreeData(
+            value=forward_ref,
+            parent=module_node.parent,
+            dependencies=module_node.dependencies,
+        )
+
+        self._forward_refs[forward_ref] = data
+
+        return self
+
     def add_module_dependency(
         self,
         parent_module: t.Type,
-        dependency: t.Type,
+        dependency: t.Union[t.Any, t.Type],
     ) -> None:
         data = self.get_module(parent_module)
         if data is None:
@@ -166,7 +182,13 @@ class ModuleTreeManager:
         return self
 
     def get_module(self, module_type: t.Type) -> t.Optional[TreeData]:
-        return self.modules.get(module_type)
+        try:
+            if not isinstance(module_type, type):
+                return self._forward_refs[t.cast(t.Any, module_type)]
+
+            return self.modules[module_type]
+        except KeyError:
+            return None
 
     def get_by_ref_type(self, ref_type: str) -> t.List[t.Union[TreeData, t.Any]]:
         return [v for k, v in self.modules.items() if v.ref_type == ref_type]
@@ -209,7 +231,7 @@ class ModuleTreeManager:
         assert self._app_module is not None, "AppModule is not ready"
         data = self.get_module(self._app_module)
         assert data
-        return data.value
+        return data.value  # type:ignore[return-value]
 
     def search_module_tree(
         self,

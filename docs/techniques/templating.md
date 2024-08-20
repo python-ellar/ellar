@@ -87,7 +87,7 @@ For example:
 # main.py
 import uvicorn
 from ellar.common import render, Controller, get
-from ellar.core import AppFactory
+from ellar.app import AppFactory
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
@@ -116,7 +116,7 @@ For example:
 # main.py
 import uvicorn
 from ellar.common import render, Controller, get
-from ellar.core import AppFactory
+from ellar.app import AppFactory
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
@@ -150,7 +150,8 @@ A quick example:
 # main.py
 
 import uvicorn
-from ellar.core import Request, AppFactory
+from ellar.app import AppFactory
+from ellar.core import Request
 from ellar.common import ModuleRouter, render
 from pathlib import Path
 
@@ -219,8 +220,9 @@ For example:
 ```python
 # main.py
 import uvicorn
+from ellar.app import AppFactory
 from ellar.common import render, Controller, get
-from ellar.core import AppFactory, Request
+from ellar.core import Request
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
@@ -292,8 +294,9 @@ Just like in controller, we can also reverse URLs that belongs to `ModuleRouter`
 ```python
 # main.py
 import uvicorn
+from ellar.app import AppFactory
 from ellar.common import ModuleRouter
-from ellar.core import AppFactory, Request
+from ellar.core import Request
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
@@ -360,3 +363,59 @@ This allows for greater control and readability when reversing URLs, and makes i
 
 ### **Adding template filters and template globals.**
 Jinja template filter and global functions can be defined at module level as shown here: [Module Templating Filters](../overview/modules.md#module-templating-filters){target="_blank"}
+
+
+## **Templating Context**
+A context processor is a function that returns a dictionary, which is then merged into the template context. 
+Each function accepts only one argument, the request, and must return a dictionary to be added to the context.
+
+A common use of context processors is to extend the template context with shared variables.
+
+```python
+import typing
+from starlette.requests import Request
+
+def app_context(request: Request) -> typing.Dict[str, typing.Any]:
+    return {'app': request.app}
+```
+
+### **Registering context templates**
+=== "in config.py"
+    In the case of `app_context`, we can register it by adding to the `config.py` `TEMPLATES_CONTEXT_PROCESSORS`
+    
+    for example:
+        
+    ```python
+    # project_name/config.py
+    
+    from ellar.core import ConfigDefaultTypesMixin
+    from path/to/context import app_context
+    
+    class DevelopmentConfig(ConfigDefaultTypesMixin):
+        TEMPLATES_CONTEXT_PROCESSORS: t.List[t.Callable[[t.Union[Request, HTTPConnection]], t.Dict[str, t.Any]]] = [
+            "ellar.core.templating.context_processors:request_context",
+            "ellar.core.templating.context_processors:user",
+            "ellar.core.templating.context_processors:request_state",
+            app_context
+            ## OR
+            "path/to/context:app_context"
+        ]
+    ```
+=== "in @Module() class"
+    @Module() classes can define template contexts 
+    that will be automatically registered to config.TEMPLATES_CONTEXT_PROCESSORS at runtime
+    
+    for example:
+
+    ```python
+    # project_name/root_module.py
+    from ellar.common import Module, template_context
+    from ellar.core import Request
+    
+    
+    @Module()
+    class ApplicationModule:
+        @template_context()
+        def app_context(self, request: Request):
+            return {'app': request.app}
+    ```

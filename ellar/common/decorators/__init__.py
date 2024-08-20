@@ -6,7 +6,7 @@ from .exception import exception_handler
 from .extra_args import extra_args
 from .file import file
 from .guards import UseGuards
-from .html import render, template_filter, template_global
+from .html import render, template_context, template_filter, template_global
 from .interceptor import UseInterceptors
 from .middleware import middleware
 from .modules import Module
@@ -20,6 +20,7 @@ __all__ = [
     "UseGuards",
     "template_filter",
     "template_global",
+    "template_context",
     "file",
     "render",
     "exception_handler",

@@ -40,4 +40,5 @@ class MODULE_REF_TYPES(metaclass=AnnotationToValue):
     PLAIN: str
     TEMPLATE: str
     DYNAMIC: str
+    FORWARD_REF: str
     APP_DEPENDENT: str

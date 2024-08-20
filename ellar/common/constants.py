@@ -169,6 +169,11 @@ DEFAULT_LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+        "ellar.di": {
+            "handlers": ["ellar-default"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
 }
 

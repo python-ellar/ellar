@@ -1,6 +1,7 @@
 import typing as t
 from abc import ABC, abstractmethod
 from functools import cached_property
+from typing import Type
 
 from ellar.auth.constants import POLICY_KEYS
 from ellar.auth.policy.base import _PolicyHandlerWithRequirement
@@ -16,6 +17,7 @@ from ellar.common.constants import (
 from ellar.core.conf import Config
 from ellar.core.modules.base import ModuleBase, ModuleBaseMeta
 from ellar.core.modules.ref.context import ModuleExecutionContext
+from ellar.core.modules.ref.forward import ModuleForwardRef
 from ellar.core.router_builders import get_controller_builder_factory
 from ellar.core.routing import EllarControllerMount, RouteOperationBase
 from ellar.di import (
@@ -68,6 +70,9 @@ class ModuleRefBase(ABC):
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} name={self.name} module={self.module}>"
 
+    def __hash__(self) -> int:
+        return hash(self.module)
+
     @cached_property
     def module_context(self) -> ModuleExecutionContext:
         return ModuleExecutionContext(container=self.container, module=self.module)
@@ -83,12 +88,20 @@ class ModuleRefBase(ABC):
     @property
     def exports(self) -> t.List[t.Type]:
         """gets module ref config"""
-        return self._exports
+        return self._exports.copy()
 
     @property
     def providers(self) -> t.Dict[t.Type, ProviderConfig]:
         """gets module ref config"""
         return self._providers.copy()
+
+    @property
+    def modules(self) -> t.List[Type["ModuleBase"]]:
+        """gets module ref config"""
+        return [
+            i.value.module  # type:ignore[misc]
+            for i in self.tree_manager.get_module_dependencies(self.module)
+        ]
 
     @t.no_type_check
     def get(
@@ -145,14 +158,27 @@ class ModuleRefBase(ABC):
 
     def run_module_register_services(self) -> None:
         """
-        Defer module instantiation till lifespan call
+        Defer module instantiation till lifespan/modules ready call
         """
+        from ellar.core.modules.config import ForwardRefModule
+
         _module_type_instance = self.get_module_instance()
         self.container.install(_module_type_instance)  # support for injector module
         # _module_type_instance.register_services(self.container)
         modules = list(self.tree_manager.get_module_dependencies(self.module))
+
         for module_config in reversed(modules):
+            if isinstance(module_config.value, ModuleForwardRef):
+                continue
             module_config.value.run_module_register_services()
+
+        registered_modules = (
+            reflect.get_metadata(MODULE_METADATA.MODULES, self.module) or []
+        )
+
+        for module in registered_modules:
+            if isinstance(module, ForwardRefModule):
+                module.resolve_module_dependency(self)
 
     @abstractmethod
     def _register_module(self) -> None:
@@ -238,8 +264,6 @@ class ModuleRefBase(ABC):
         self._search_providers_and_build_controller(_routers)
 
     def _build_module_parameters_and_routes(self) -> None:
-        from ellar.core.modules.config import ForwardRefModule
-
         if reflect.get_metadata(MODULE_WATERMARK, self.module):
             _providers = list(
                 reflect.get_metadata(MODULE_METADATA.PROVIDERS, self.module) or []
@@ -249,8 +273,6 @@ class ModuleRefBase(ABC):
                 reflect.get_metadata(MODULE_METADATA.EXPORTS, self.module) or []
             )
 
-            modules = reflect.get_metadata(MODULE_METADATA.MODULES, self.module) or []
-
             self.build_controllers_and_routers()
 
             for provider in _providers:
@@ -258,10 +280,6 @@ class ModuleRefBase(ABC):
 
             for export in _exports:
                 self.add_exports(export)
-
-            for module in modules:
-                if isinstance(module, ForwardRefModule):
-                    module.resolve_module_dependency(self)
 
     def _search_providers_and_build_controller(
         self, controllers: t.List[t.Union[t.Type, t.Any]]
