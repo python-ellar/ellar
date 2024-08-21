@@ -56,14 +56,12 @@ def ensure_build_context(app_ready: bool = False) -> t.Callable:
                     functools.partial(_on_context, f, _func_args)
                 )
 
-            if _injector_context_var.get() is empty and not app_ready:
+            if _injector_context_var.get() is empty:
                 # Defer till when injector_context is ready
                 return _reg()
-            elif (
-                _injector_context_var.get() is not empty
-                and app_ready
-                and fail_silently(_injector_context_var.get().get, "App") is None
-            ):
+
+            app = fail_silently(_injector_context_var.get().get, "App")
+            if _injector_context_var.get() is not empty and app_ready and app is None:
                 # Defer till when the app is ready
                 return _reg()
 
