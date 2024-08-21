@@ -1,3 +1,62 @@
+# 0.8.1
+## What's new
+- **Module Service/Providers Encapsulation**:  Modules has the ability to define services that won't be accessible to other application modules. This provides a proper graph of module dependencies amongst each other and gives a clear information on services exposed and managed by each modules.
+- **Module ForwardRef**: Modules that depends on another imported module can forward ref the module object to be able to utilize services/providers exposed by that module. 
+- **ModuleRouter Nesting**: ModuleRouter objects can be nested with other ModuleRouter object as necessary for the user
+
+## What's Changed
+* fix: Application Context Round Usage by @eadwinCode in https://github.com/python-ellar/ellar/pull/217
+* feat: Nested ModuleRouter support by @eadwinCode in https://github.com/python-ellar/ellar/pull/218
+* Module Builder Refactor by @eadwinCode in https://github.com/python-ellar/ellar/pull/219
+* Bump pypa/gh-action-pypi-publish from 1.8.14 to 1.9.0 by @dependabot in https://github.com/python-ellar/ellar/pull/221
+* Bump codecov/codecov-action from 4.4.1 to 4.5.0 by @dependabot in https://github.com/python-ellar/ellar/pull/220
+* Bump mypy from 1.10.0 to 1.10.1 by @dependabot in https://github.com/python-ellar/ellar/pull/223
+* Bump ruff from 0.4.7 to 0.5.0 by @dependabot in https://github.com/python-ellar/ellar/pull/222
+* feat: Module Container Services Encapsulation by @eadwinCode in https://github.com/python-ellar/ellar/pull/224
+* Bump uvicorn[standard] from 0.30.1 to 0.30.4 by @dependabot in https://github.com/python-ellar/ellar/pull/228
+* Bump aiohttp from 3.9.5 to 3.10.0 by @dependabot in https://github.com/python-ellar/ellar/pull/226
+* Bump injector from 0.21.0 to 0.22.0 by @dependabot in https://github.com/python-ellar/ellar/pull/227
+* Bump starlette from 0.37.2 to 0.38.2 by @dependabot in https://github.com/python-ellar/ellar/pull/229
+* Bump ruff from 0.5.0 to 0.5.5 by @dependabot in https://github.com/python-ellar/ellar/pull/225
+* Ft: Module Routes Execution Context by @eadwinCode in https://github.com/python-ellar/ellar/pull/230
+* Added py3.12 support by @eadwinCode in https://github.com/python-ellar/ellar/pull/190
+* Documentation Updates Aug2024 by @eadwinCode in https://github.com/python-ellar/ellar/pull/231
+* fix: Drop Global Guard as Provider by @eadwinCode in https://github.com/python-ellar/ellar/pull/232
+* fixed app ready check by @eadwinCode in https://github.com/python-ellar/ellar/pull/233
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.7.8...0.8.1
+
+# 0.8b1
+## What's Changed
+* Bump uvicorn[standard] from 0.30.1 to 0.30.4 by @dependabot in https://github.com/python-ellar/ellar/pull/228
+* Bump aiohttp from 3.9.5 to 3.10.0 by @dependabot in https://github.com/python-ellar/ellar/pull/226
+* Bump injector from 0.21.0 to 0.22.0 by @dependabot in https://github.com/python-ellar/ellar/pull/227
+* Bump starlette from 0.37.2 to 0.38.2 by @dependabot in https://github.com/python-ellar/ellar/pull/229
+* Bump ruff from 0.5.0 to 0.5.5 by @dependabot in https://github.com/python-ellar/ellar/pull/225
+* Ft: Module Routes Execution Context by @eadwinCode in https://github.com/python-ellar/ellar/pull/230
+* Added py3.12 support by @eadwinCode in https://github.com/python-ellar/ellar/pull/190
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.8.0a1...0.8b1
+
+#0.8.a1
+## What's new
+- **Module Service/Providers Encapsulation**:  Modules has the ability to define services that won't be accessible to other application modules. This provides a proper graph of module dependencies amongst each other and gives a clear information on services exposed and managed by each modules.
+- **Module ForwardRef**: Modules that depends on another imported module can forward ref the module object to be able to utilize services/providers exposed by that module. 
+- **ModuleRouter Nesting**: ModuleRouter objects can be nested with other ModuleRouter object as necessary for the user
+
+## What' changed
+* fix: Application Context Round Usage by @eadwinCode in https://github.com/python-ellar/ellar/pull/217
+* Module Builder Refactor by @eadwinCode in https://github.com/python-ellar/ellar/pull/219
+* Bump pypa/gh-action-pypi-publish from 1.8.14 to 1.9.0 by @dependabot in https://github.com/python-ellar/ellar/pull/221
+* Bump codecov/codecov-action from 4.4.1 to 4.5.0 by @dependabot in https://github.com/python-ellar/ellar/pull/220
+* Bump mypy from 1.10.0 to 1.10.1 by @dependabot in https://github.com/python-ellar/ellar/pull/223
+* Bump ruff from 0.4.7 to 0.5.0 by @dependabot in https://github.com/python-ellar/ellar/pull/222
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.7.8...0.8.0a1
+
 # 0.7.8
 ## What's Changed
 * Policy Refactor by @eadwinCode in https://github.com/python-ellar/ellar/pull/216/commits/9ebb844d942359645b61412480a0031d3a43d0d7
