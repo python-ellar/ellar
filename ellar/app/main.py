@@ -5,12 +5,9 @@ import typing as t
 
 from ellar.auth.handlers import AuthenticationHandlerType
 from ellar.common import (
-    GlobalGuard,
     IHostContextFactory,
-    IIdentitySchemes,
     constants,
 )
-from ellar.common.compatible import cached_property
 from ellar.common.datastructures import State, URLPath
 from ellar.common.interfaces import IExceptionHandler, IExceptionMiddlewareService
 from ellar.common.models import EllarInterceptor, GuardCanActivate
@@ -18,6 +15,7 @@ from ellar.common.templating import Environment, ModuleTemplating
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
 from ellar.core import HttpRequestConnectionContext, Request
 from ellar.core.conf import Config
+from ellar.core.exceptions.service import EXCEPTION_DEFAULT_EXCEPTION_HANDLERS
 from ellar.core.execution_context import injector_context
 from ellar.core.middleware import (
     Middleware as EllarMiddleware,
@@ -25,18 +23,21 @@ from ellar.core.middleware import (
 from ellar.core.routing import ApplicationRouter, AppStaticFileMount
 from ellar.core.services import Reflector, reflector
 from ellar.core.versioning import BaseAPIVersioning, VersioningSchemes
-from ellar.di import (
-    EllarInjector,
-    ProviderConfig,
-    is_decorated_with_injectable,
-)
-from ellar.di.injector.tree_manager import TreeData
+from ellar.di import EllarInjector, ProviderConfig
+from ellar.threading import run_as_sync
 from jinja2 import Environment as JinjaEnvironment
 from jinja2 import pass_context
 from starlette.datastructures import URL
 from starlette.routing import BaseRoute
 
-from ..core.exceptions.service import EXCEPTION_DEFAULT_EXCEPTION_HANDLERS
+from .context import (
+    enable_versioning,
+    ensure_available_in_providers,
+    use_authentication_schemes,
+    use_exception_handler,
+    use_global_guards,
+    use_global_interceptors,
+)
 from .lifespan import EllarApplicationLifespan
 
 logger = logging.getLogger("ellar")
@@ -49,9 +50,6 @@ class App:
         injector: EllarInjector,
         routes: t.Optional[t.List[BaseRoute]] = None,
         lifespan: t.Optional[t.Callable[["App"], t.AsyncContextManager]] = None,
-        global_guards: t.Optional[
-            t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]
-        ] = None,
     ):
         _routes = routes or []
         assert isinstance(config, Config), "config must instance of Config"
@@ -61,11 +59,6 @@ class App:
 
         self._config = config
         self._injector: EllarInjector = injector
-
-        self._global_guards = [] if global_guards is None else list(global_guards)
-        self._global_interceptors: t.List[
-            t.Union[EllarInterceptor, t.Type[EllarInterceptor]]
-        ] = []
 
         self.state = State()
         self.config.DEFAULT_LIFESPAN_HANDLER = (
@@ -112,24 +105,28 @@ class App:
         logger_ellar_di.setLevel(log_level)
 
     def get_guards(self) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
-        return self.__global_guard + self._global_guards
+        return self.config.GLOBAL_GUARDS
 
     def get_interceptors(
         self,
     ) -> t.List[t.Union[EllarInterceptor, t.Type[EllarInterceptor]]]:
-        return self._global_interceptors
+        return self.config.GLOBAL_INTERCEPTORS
 
-    def use_global_guards(
+    @run_as_sync
+    @t.no_type_check
+    async def use_global_guards(
         self, *guards: t.Union["GuardCanActivate", t.Type["GuardCanActivate"]]
     ) -> None:
-        self._global_guards.extend(guards)
-        self._ensure_available_in_providers(*guards)
+        async with self.with_injector_context():
+            use_global_guards(*guards)
 
-    def use_global_interceptors(
+    @run_as_sync
+    @t.no_type_check
+    async def use_global_interceptors(
         self, *interceptors: t.Union[EllarInterceptor, t.Type[EllarInterceptor]]
     ) -> None:
-        self._global_interceptors.extend(interceptors)
-        self._ensure_available_in_providers(*interceptors)
+        async with self.with_injector_context():
+            use_global_interceptors(*interceptors)
 
     @property
     def injector(self) -> EllarInjector:
@@ -152,23 +149,6 @@ class App:
         self._config.DEBUG = value
         # TODO: Add warning
         # self.rebuild_stack()
-
-    def _ensure_available_in_providers(self, *items: t.Any) -> None:
-        def _predicate(item_: t.Type) -> t.Callable:
-            def _(data: TreeData) -> bool:
-                return item_ in data.exports or item_ in data.providers
-
-            return _
-
-        for item in items:
-            if isinstance(item, type) and is_decorated_with_injectable(item):
-                module = next(
-                    self.injector.tree_manager.find_module(predicate=_predicate(item))
-                )
-                if not module:
-                    self.injector.tree_manager.get_app_module().add_provider(
-                        provider=item, export=True
-                    )
 
     def build_middleware_stack(self) -> ASGIApp:
         self.injector.get(IExceptionMiddlewareService).build_exception_handlers(
@@ -204,11 +184,16 @@ class App:
             host_context=context_factory.create_context(scope, receive, send)
         )
 
+    @t.no_type_check
+    def with_injector_context(self) -> t.AsyncGenerator[EllarInjector, t.Any]:
+        return injector_context(self.injector)
+
+    @t.no_type_check
     async def __call__(self, scope: TScope, receive: TReceive, send: TSend) -> None:
         lifespan = scope["type"] == "lifespan"
         scope["app"] = self
 
-        async with injector_context(self.injector):
+        async with self.with_injector_context():
             if self.middleware_stack is None:
                 self.middleware_stack = self.build_middleware_stack()
 
@@ -232,77 +217,65 @@ class App:
     def url_path_for(self, name: str, **path_params: t.Any) -> URLPath:
         return self.router.url_path_for(name, **path_params)
 
-    def enable_versioning(
+    @run_as_sync
+    @t.no_type_check
+    async def enable_versioning(
         self,
         schema: VersioningSchemes,
         version_parameter: str = "version",
         default_version: t.Optional[str] = None,
         **init_kwargs: t.Any,
     ) -> None:
-        self.config.VERSIONING_SCHEME = schema.value(
-            version_parameter=version_parameter,
-            default_version=default_version,
-            **init_kwargs,
-        )
+        async with self.with_injector_context():
+            enable_versioning(
+                schema,
+                version_parameter=version_parameter,
+                default_version=default_version,
+                **init_kwargs,
+            )
 
-    def _finalize_app_initialization(self) -> None:
-        self._ensure_available_in_providers(*self._global_guards)
-        self._ensure_available_in_providers(*self._global_interceptors)
-        self._ensure_available_in_providers(*self.config.EXCEPTION_HANDLERS)
+    @run_as_sync
+    @t.no_type_check
+    async def _finalize_app_initialization(self) -> None:
+        async with self.with_injector_context():
+            self.injector.owner.add_provider(
+                ProviderConfig(App, use_value=self, tag=self.__class__.__name__)
+            )
+            ensure_available_in_providers(*self.get_guards())
+            ensure_available_in_providers(*self.get_interceptors())
+            ensure_available_in_providers(*self.config.EXCEPTION_HANDLERS)
 
-        self._ensure_available_in_providers(
-            *[
-                item.cls
-                for item in self.config.MIDDLEWARE
-                if isinstance(item, EllarMiddleware)
-            ]
-        )
-        self.injector.owner.add_provider(
-            ProviderConfig(App, use_value=self, tag=self.__class__.__name__)
-        )
-        # self.injector.owner.add_provider(
-        #     GLOBAL_CONTROLLER_CLASS, export=True
-        # )
+            ensure_available_in_providers(
+                *[
+                    item.cls
+                    for item in self.config.MIDDLEWARE
+                    if isinstance(item, EllarMiddleware)
+                ]
+            )
+            # self.injector.owner.add_provider(
+            #     GLOBAL_CONTROLLER_CLASS, export=True
+            # )
 
-    def add_exception_handler(
+    @run_as_sync
+    @t.no_type_check
+    async def add_exception_handler(
         self,
         *exception_handlers: IExceptionHandler,
     ) -> None:
-        # _added_any = False
-        for exception_handler in exception_handlers:
-            if exception_handler not in self.config.EXCEPTION_HANDLERS:
-                self.config.EXCEPTION_HANDLERS = self.config.EXCEPTION_HANDLERS + [
-                    exception_handler
-                ]
-                self._ensure_available_in_providers(exception_handler)
+        async with self.with_injector_context():
+            use_exception_handler(*exception_handlers)
 
     @property
     def reflector(self) -> Reflector:
         return reflector
 
-    @cached_property
-    def __identity_scheme(self) -> IIdentitySchemes:
-        return self.injector.get(IIdentitySchemes)  # type: ignore[no-any-return]
-
-    @cached_property
-    def __global_guard(
-        self,
-    ) -> t.List[t.Union[t.Type[GuardCanActivate], GuardCanActivate]]:
-        try:
-            guard = self.injector.get(GlobalGuard)
-            if guard.__class__.__name__ == "GlobalCanActivatePlaceHolder":
-                return []
-
-            return [guard]
-        except Exception:
-            return []
-
-    def add_authentication_schemes(
+    @run_as_sync
+    @t.no_type_check
+    async def add_authentication_schemes(
         self, *authentication: AuthenticationHandlerType
     ) -> None:
-        for auth in authentication:
-            self.__identity_scheme.add_authentication(auth)
-            self._ensure_available_in_providers(auth)
+        async with self.with_injector_context():
+            use_authentication_schemes(*authentication)
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
         for loader in self._injector.get_templating_modules().values():

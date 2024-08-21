@@ -3,8 +3,6 @@ import typing as t
 from ellar.auth import AppIdentitySchemes, IdentityAuthenticationService
 from ellar.auth.session import SessionServiceNullStrategy, SessionStrategy
 from ellar.common import (
-    GlobalGuard,
-    GuardCanActivate,
     IApplicationShutdown,
     IApplicationStartup,
     IExceptionMiddlewareService,
@@ -33,7 +31,7 @@ from ellar.core.execution_context.factory import (
 from ellar.core.guards import GuardConsumer
 from ellar.core.interceptors import EllarInterceptorConsumer
 from ellar.core.services import Reflector, reflector
-from ellar.di import EllarInjector, ProviderConfig, injectable, request_scope
+from ellar.di import EllarInjector, ProviderConfig, request_scope
 from ellar.di.injector.tree_manager import ModuleTreeManager
 from ellar.events import app_context_started, app_context_teardown
 
@@ -45,14 +43,6 @@ def _raise_unavailable_exception() -> None:
     raise Exception("Service is only available during request")
 
 
-@injectable
-class GlobalCanActivatePlaceHolder(GuardCanActivate):
-    placeholder: bool = True
-
-    async def can_activate(self, context: IExecutionContext) -> bool:
-        return True
-
-
 def get_core_module(app_module: t.Union[t.Type, t.Any], config: Config) -> t.Type:
     @Module(
         modules=[app_module],
@@ -60,11 +50,6 @@ def get_core_module(app_module: t.Union[t.Type, t.Any], config: Config) -> t.Typ
             ProviderConfig(
                 Config,
                 use_value=config,
-                export=True,
-            ),
-            ProviderConfig(
-                GlobalGuard,
-                use_class=GlobalCanActivatePlaceHolder,
                 export=True,
             ),
             ProviderConfig(

@@ -20,13 +20,18 @@ class MyModule(ModuleBase):
 
 from datetime import timedelta
 
+from ellar.app import use_authentication_schemes
 from ellar.common import Module
 from ellar.core import LazyModuleImport as lazyLoad
 from ellar.core import ModuleBase
 from ellar_jwt import JWTModule
 
+from .auth_scheme import JWTAuthentication
 from .controllers import AuthController
 from .services import AuthService
+
+# Register JWTAuthentication as an authentication scheme
+use_authentication_schemes(JWTAuthentication)
 
 
 @Module(

@@ -21,7 +21,7 @@ from ellar.di import EllarInjector, ProviderConfig
 from ellar.di.injector.tree_manager import ModuleTreeManager
 from ellar.reflect import reflect
 from ellar.threading.sync_worker import execute_async_context_manager, execute_coroutine
-from ellar.utils import get_name, get_unique_type
+from ellar.utils import get_unique_type
 from starlette.routing import Host, Mount
 
 from ..events.build import build_with_context_event
@@ -108,6 +108,7 @@ class AppFactory:
             return dict(config_module)
 
         config = Config(app_configured=True, **_get_config_kwargs())
+        config.GLOBAL_GUARDS += list(global_guards or [])
 
         # injector = EllarInjector(auto_bind=config.INJECTOR_AUTO_BIND, parent=injector)
         # injector.container.register_instance(config, concrete_type=Config)
@@ -137,11 +138,10 @@ class AppFactory:
                 config=config,
                 injector=app_module_ref.container.injector,
                 lifespan=config.DEFAULT_LIFESPAN_HANDLER,
-                global_guards=global_guards,
             )
             # tag application instance by ApplicationModule name
             core_module_ref.add_provider(
-                ProviderConfig(App, use_value=app, tag=get_name(module), export=True)
+                ProviderConfig(App, use_value=app, tag="App", export=True)
             )
             app_module_ref.build_dependencies()
 

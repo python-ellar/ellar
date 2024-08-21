@@ -1,5 +1,6 @@
 import typing as t
 
+from ellar.common import EllarInterceptor, GuardCanActivate
 from ellar.common.constants import LOG_LEVELS as log_levels
 from ellar.common.interfaces import IAPIVersioning, IEllarMiddleware, IExceptionHandler
 from ellar.common.templating import JinjaLoaderType
@@ -102,5 +103,9 @@ class ConfigDefaultTypesMixin:
     # TrustHostMiddleware setup
     ALLOWED_HOSTS: t.List[str]
     REDIRECT_HOST: bool
-
+    # Cache Module setup
     CACHES: t.Dict[str, t.Any]
+    # Application Global Guards
+    GLOBAL_GUARDS: t.List[t.Union[GuardCanActivate, t.Type[GuardCanActivate]]]
+    # Application Global Interceptors
+    GLOBAL_INTERCEPTORS: t.List[t.Union[EllarInterceptor, t.Type[EllarInterceptor]]]

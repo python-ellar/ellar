@@ -10,7 +10,6 @@ from ellar.auth.guards import (
 )
 from ellar.common import (
     APIException,
-    GlobalGuard,
     Inject,
     ModuleRouter,
     UseGuards,
@@ -18,7 +17,7 @@ from ellar.common import (
     serialize_object,
 )
 from ellar.core import Reflector, Request
-from ellar.di import ProviderConfig, injectable
+from ellar.di import injectable
 from ellar.openapi import OpenAPIDocumentBuilder
 from ellar.testing import TestClient
 from starlette.status import HTTP_401_UNAUTHORIZED
@@ -292,8 +291,7 @@ def test_global_guard_case_2_works():
         return {"authentication": request.user}
 
     _app = AppFactory.create_app(
-        routers=[_auth_demo_endpoint],
-        providers=[ProviderConfig(GlobalGuard, use_class=DigestAuth, core=True)],
+        routers=[_auth_demo_endpoint], config_module={"GLOBAL_GUARDS": [DigestAuth]}
     )
 
     _client = TestClient(_app)
@@ -332,7 +330,7 @@ def test_if_an_auth_guard_return_converts_to_identity(
         return {"authentication": request.user}
 
     _app = AppFactory.create_app(
-        providers=[ProviderConfig(GlobalGuard, use_class=DigestAuth, core=True)],
+        config_module={"GLOBAL_GUARDS": [DigestAuth]},
         routers=[_auth_demo_endpoint],
     )
     _client = TestClient(_app)

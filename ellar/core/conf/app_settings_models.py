@@ -1,5 +1,6 @@
 import typing as t
 
+from ellar.common import EllarInterceptor, GuardCanActivate
 from ellar.common.constants import (
     DEFAULT_LOGGING as default_logging,
 )
@@ -30,26 +31,55 @@ TEMPLATE_TYPE = t.Dict[
 ]
 
 
-_TemplateValidator = AllowTypeOfSource(
+_TemplateProcessorValidator = AllowTypeOfSource(
     validator=lambda source, value: callable(value),
     error_message=lambda source, value: f"Expected a callable, got {type(value)}",
 )
+TemplateProcessorType = Annotated[
+    t.Callable[[t.Union[Request, HTTPConnection]], t.Dict[str, t.Any]],
+    _TemplateProcessorValidator,
+]
 
 _VersioningValidator = AllowTypeOfSource(
     error_message=lambda source,
     value: f"Expected BaseAPIVersioning, received: {type(value)}"
 )
+VersioningType = Annotated[IAPIVersioning, _VersioningValidator]
 
 _MiddlewareValidator = AllowTypeOfSource(
     validator=lambda source, value: isinstance(value, (source, Middleware)),
     error_message=lambda source,
     value: f"Expected EllarMiddleware or Starlette Middleware object, received: {type(value)}",
 )
+MiddlewareType = Annotated[IEllarMiddleware, _MiddlewareValidator]
 
 _ExceptionHandlerValidator = AllowTypeOfSource(
     error_message=lambda source,
     value: f"Expected IExceptionHandler object, received: {type(value)}"
 )
+ExceptionHandlerType = Annotated[IExceptionHandler, _ExceptionHandlerValidator]
+
+_GuardValidator = AllowTypeOfSource(
+    validator=lambda source, value: (
+        issubclass(value, GuardCanActivate)
+        if isinstance(value, type)
+        else isinstance(value, GuardCanActivate)
+    ),
+    error_message=lambda source,
+    value: f"Expected GuardCanActivate object or type, received: {type(value)}",
+)
+GuardCanActivateType = Annotated[GuardCanActivate, _GuardValidator]
+
+_InterceptorValidator = AllowTypeOfSource(
+    validator=lambda source, value: (
+        issubclass(value, EllarInterceptor)
+        if isinstance(value, type)
+        else isinstance(value, EllarInterceptor)
+    ),
+    error_message=lambda source,
+    value: f"Expected GuardCanActivate object or type, received: {type(value)}",
+)
+InterceptorType = Annotated[EllarInterceptor, _InterceptorValidator]
 
 
 async def _not_found(
@@ -89,6 +119,10 @@ class ConfigSchema(Serializer, ConfigDefaultTypesMixin):
 
     OVERRIDE_CORE_SERVICE: t.List[Annotated[ProviderConfig, AllowTypeOfSource()]] = []
 
+    GLOBAL_GUARDS: t.List[GuardCanActivateType] = []
+
+    GLOBAL_INTERCEPTORS: t.List[InterceptorType] = []
+
     DEBUG: bool = False
 
     DEFAULT_JSON_CLASS: t.Type[JSONResponse] = JSONResponse
@@ -106,21 +140,14 @@ class ConfigSchema(Serializer, ConfigDefaultTypesMixin):
     JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any] = {}
     JINJA_LOADERS: t.List[JinjaLoaderType] = []
 
-    TEMPLATES_CONTEXT_PROCESSORS: t.List[
-        Annotated[
-            t.Callable[[t.Union[Request, HTTPConnection]], t.Dict[str, t.Any]],
-            _TemplateValidator,
-        ]
-    ] = [  # type:ignore[assignment]
+    TEMPLATES_CONTEXT_PROCESSORS: t.List[TemplateProcessorType] = [  # type:ignore[assignment]
         "ellar.core.templating.context_processors:request_context",
         "ellar.core.templating.context_processors:user",
         "ellar.core.templating.context_processors:request_state",
     ]
 
     # Application route versioning scheme
-    VERSIONING_SCHEME: t.Optional[Annotated[IAPIVersioning, _VersioningValidator]] = (
-        None
-    )
+    VERSIONING_SCHEME: t.Optional[VersioningType] = None
 
     REDIRECT_SLASHES: bool = False
 
@@ -142,7 +169,7 @@ class ConfigSchema(Serializer, ConfigDefaultTypesMixin):
     ALLOWED_HOSTS: t.List[str] = ["*"]
     REDIRECT_HOST: bool = True
 
-    MIDDLEWARE: t.List[Annotated[IEllarMiddleware, _MiddlewareValidator]] = [
+    MIDDLEWARE: t.List[MiddlewareType] = [
         "ellar.core.middleware.trusted_host:trusted_host_middleware",
         "ellar.core.middleware.cors:cors_middleware",
         "ellar.core.middleware.errors:server_error_middleware",
@@ -156,9 +183,9 @@ class ConfigSchema(Serializer, ConfigDefaultTypesMixin):
     # Exception handler callables should be of the form
     # `handler(context:IExecutionContext, exc: Exception) -> response`
     # and may be either standard functions, or async functions.
-    EXCEPTION_HANDLERS: t.List[
-        Annotated[IExceptionHandler, _ExceptionHandlerValidator]
-    ] = ["ellar.core.exceptions:error_404_handler"]
+    EXCEPTION_HANDLERS: t.List[ExceptionHandlerType] = [
+        "ellar.core.exceptions:error_404_handler"
+    ]
 
     # Default not found handler
     DEFAULT_NOT_FOUND_HANDLER: ASGIApp = _not_found

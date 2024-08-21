@@ -12,7 +12,6 @@ def bootstrap() -> App:
         config_module=os.environ.get(
             ELLAR_CONFIG_MODULE, "db_learning.config:DevelopmentConfig"
         ),
-        global_guards=[],
     )
 
     # uncomment this section if you want API documentation
