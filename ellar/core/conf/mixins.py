@@ -3,9 +3,9 @@ import typing as t
 from ellar.common import EllarInterceptor, GuardCanActivate
 from ellar.common.constants import LOG_LEVELS as log_levels
 from ellar.common.interfaces import IAPIVersioning, IEllarMiddleware, IExceptionHandler
-from ellar.common.templating import JinjaLoaderType
 from ellar.di import ProviderConfig
 from ellar.di.injector.tree_manager import ModuleTreeManager
+from jinja2 import BaseLoader
 from starlette.requests import HTTPConnection, Request
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp
@@ -37,7 +37,7 @@ class ConfigDefaultTypesMixin:
     # https://jinja.palletsprojects.com/en/3.0.x/api/#high-level-api
     JINJA_TEMPLATES_OPTIONS: t.Dict[str, t.Any]
 
-    JINJA_LOADERS: t.List[t.Union[JinjaLoaderType, t.Any]]
+    JINJA_LOADERS: t.List[BaseLoader]
 
     TEMPLATES_CONTEXT_PROCESSORS: t.List[
         t.Callable[[t.Union[Request, HTTPConnection]], t.Dict[str, t.Any]]

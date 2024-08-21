@@ -1,7 +1,7 @@
 from starlette.templating import _TemplateResponse as TemplateResponse
 
 from .environment import Environment
-from .loader import JinjaLoader, JinjaLoaderType
+from .loader import JinjaLoader
 from .model import ModuleTemplating
 from .renderer import (
     render_template,
@@ -13,7 +13,6 @@ __all__ = [
     "TemplateFunctionData",
     "Environment",
     "JinjaLoader",
-    "JinjaLoaderType",
     "ModuleTemplating",
     "TemplateResponse",
     "render_template",

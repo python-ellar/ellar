@@ -1,9 +1,9 @@
 import typing as t
 
 from ellar.pydantic import as_pydantic_validator
+from ellar.utils.importer import import_from_string
 from jinja2 import TemplateNotFound
 from jinja2.loaders import BaseLoader
-from uvicorn.importer import import_from_string
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.app.main import App
