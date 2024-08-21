@@ -10,13 +10,13 @@ from ellar.common.constants import (
 from ellar.common.interfaces import IAPIVersioning, IEllarMiddleware, IExceptionHandler
 from ellar.common.responses import JSONResponse, PlainTextResponse
 from ellar.common.serializer import Serializer, SerializerFilter
-from ellar.common.templating import JinjaLoaderType
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
 from ellar.core.conf.mixins import ConfigDefaultTypesMixin
 from ellar.di import ProviderConfig
 from ellar.di.injector.tree_manager import ModuleTreeManager
 from ellar.pydantic import ENCODERS_BY_TYPE as encoders_by_type
 from ellar.pydantic import AllowTypeOfSource, field_validator
+from jinja2 import BaseLoader
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware import Middleware
 from starlette.requests import HTTPConnection, Request
@@ -80,6 +80,12 @@ _InterceptorValidator = AllowTypeOfSource(
     value: f"Expected GuardCanActivate object or type, received: {type(value)}",
 )
 InterceptorType = Annotated[EllarInterceptor, _InterceptorValidator]
+
+_JinjaLoaderValidator = AllowTypeOfSource(
+    error_message=lambda source,
+    value: f"Expected {BaseLoader} object, received: {type(value)}",
+)
+JinjaLoaderType = Annotated[BaseLoader, _JinjaLoaderValidator]
 
 
 async def _not_found(
