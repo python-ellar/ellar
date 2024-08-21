@@ -1,3 +1,10 @@
+# 0.8.2
+## What's Changed
+* Removed jinja validator by @eadwinCode in https://github.com/python-ellar/ellar/pull/234
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.8.1...0.8.2
+
 # 0.8.1
 ## What's new
 - **Module Service/Providers Encapsulation**:  Modules has the ability to define services that won't be accessible to other application modules. This provides a proper graph of module dependencies amongst each other and gives a clear information on services exposed and managed by each modules.
