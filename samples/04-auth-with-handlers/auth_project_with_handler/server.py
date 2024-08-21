@@ -9,16 +9,12 @@ from ellar.openapi import (
     SwaggerUI,
 )
 
-from .auth.auth_scheme import JWTAuthentication
-
 application = AppFactory.create_from_app_module(
     lazyLoad("auth_project_with_handler.root_module:ApplicationModule"),
     config_module=os.environ.get(
         ELLAR_CONFIG_MODULE, "auth_project_with_handler.config:DevelopmentConfig"
     ),
 )
-# Register JWTAuthentication as an authentication scheme
-application.add_authentication_schemes(JWTAuthentication)
 
 # uncomment this section if you want API documentation
 

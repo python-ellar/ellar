@@ -116,7 +116,9 @@ nav:
       - Background Tasks: techniques/background-task.md
 
   - Security:
-      - Authentication: security/authentication.md
+      - Authentication:
+          - Guard Strategy: security/authentication/guard-strategy.md
+          - Authentication Scheme Strategy: security/authentication/auth-handler-strategy.md
       - Authorization: security/authorization.md
       - Encryption and Hashing: security/encryption_and_hashing.md
       - CSRF and CORS: security/csrf.md

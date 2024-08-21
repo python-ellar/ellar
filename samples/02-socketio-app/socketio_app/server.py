@@ -12,7 +12,6 @@ application = AppFactory.create_from_app_module(
     config_module=os.environ.get(
         ELLAR_CONFIG_MODULE, "socketio_app.config:DevelopmentConfig"
     ),
-    global_guards=[],
 )
 
 # uncomment this section if you want API documentation

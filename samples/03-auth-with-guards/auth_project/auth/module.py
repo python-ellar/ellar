@@ -18,15 +18,18 @@ class MyModule(ModuleBase):
 
 """
 
-from ellar.common import GlobalGuard, Module
+from ellar.app import use_global_guards
+from ellar.common import Module
 from ellar.core import ForwardRefModule, ModuleBase
 from ellar.core import LazyModuleImport as lazyLoad
-from ellar.di import ProviderConfig
 from ellar_jwt import JWTModule
 
 from .controllers import AuthController
 from .guards import AuthGuard
 from .services import AuthService
+
+## Sets AuthGuard as a GLOBAL GUARD in application config.
+use_global_guards(AuthGuard)
 
 
 @Module(
@@ -37,7 +40,6 @@ from .services import AuthService
     controllers=[AuthController],
     providers=[
         AuthService,
-        ProviderConfig(GlobalGuard, use_class=AuthGuard, core=True),
     ],
 )
 class AuthModule(ModuleBase):

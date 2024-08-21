@@ -121,7 +121,7 @@ def test_config_overrider_core_service_registration():
 
 
 async def test_ensure_build_works(anyio_backend):
-    @ensure_build_context
+    @ensure_build_context()
     def set_xxx(key, value):
         current_config[key] = value
 
@@ -129,7 +129,7 @@ async def test_ensure_build_works(anyio_backend):
     set_xxx("DES_34", 34)
 
     app = AppFactory.create_app()
-    async with injector_context(app.injector):
+    async with app.with_injector_context():
         set_xxx("DES_345", 23432)
 
     assert app.config.DES == 12
