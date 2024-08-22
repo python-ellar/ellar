@@ -75,14 +75,14 @@ class MotoController(ControllerBase):
         self._service = service
     
     @post()
-    async def create(self, payload: CreateCarSerializer = Body()):
+    async def create(self, payload: Body[CreateCarSerializer]):
         assert self._service.detail == 'a service'
         result = payload.dict()
         result.update(message='This action adds a new car')
         return result
 
     @put('/{car_id:str}')
-    async def update(self, car_id: str, payload: CreateCarSerializer = Body()):
+    async def update(self, car_id: str, payload: Body[CreateCarSerializer]):
         result = payload.dict()
         result.update(message=f'This action updated #{car_id} car resource')
         return result
