@@ -112,7 +112,7 @@ document_builder.set_title('Ellar API') \
 document = document_builder.build_document(app)
 
 # Setup OpenAPI documentation module
-module = OpenAPIDocumentModule.setup(
+OpenAPIDocumentModule.setup(
     app=app,
     docs_ui=SwaggerUI(),
     document=document,
