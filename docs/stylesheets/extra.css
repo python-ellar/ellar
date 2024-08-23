@@ -20,7 +20,19 @@ nav.md-nav--primary ul.md-nav__list li.md-nav__item--active.md-nav__item--nested
     margin-right: auto;
     max-width: 80%;
 }
+/* Styles for devices with a screen width of 768px or less (e.g., tablets and mobile phones) */
+@media only screen and (max-width: 768px) {
+    .md-grid {
+        max-width: 90%;
+    }
+}
 
+/* Styles for devices with a screen width of 480px or less (e.g., mobile phones) */
+@media only screen and (max-width: 480px) {
+    .md-grid {
+        max-width: 95%;
+    }
+}
 .md-tabs {
     background-color: #a50a3e !important;
     text-transform: uppercase;
