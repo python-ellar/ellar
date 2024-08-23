@@ -17,8 +17,8 @@ Ellar is a lightweight ASGI framework designed to simplify the development of ef
 applications. Whether you're building web services, APIs, or full-fledged web applications, 
 Ellar offers a high level of abstraction and powerful features to streamline your development process.
 
-Ellar provides developers with the flexibility to embrace both Object-Oriented Programming (OOP) and Functional Programming (FP) paradigms. 
-It is built on top of Starlette, a renowned ASGI toolkit, ensuring robust asynchronous request handling capabilities.
+Ellar allows developers to embrace both Object-Oriented Programming (OOP) and Functional Programming (FP) paradigms. 
+It is built on top of Starlette, a renowned ASGI toolkit, ensuring robust asynchronous request-handling capabilities.
 
 ## **Key Features**
 
@@ -26,7 +26,7 @@ It is built on top of Starlette, a renowned ASGI toolkit, ensuring robust asynch
 - **Dependency Injection (DI)**: Ellar includes a built-in DI system, enabling easy management of dependencies and reducing coupling between components.
 - **Pydantic Integration**: Integrated with Pydantic for seamless data validation, ensuring that input data is always valid.
 - **Templating with Jinja2**: Built-in support for Jinja2 templates simplifies the creation of dynamic web pages.
-- **OpenAPI Documentation**: Ellar comes with built-in support for generating OpenAPI documentation, facilitating API documentation generation with Swagger or ReDoc.
+- **OpenAPI Documentation**: Ellar has built-in support for generating OpenAPI documentation and facilitating API documentation generation with Swagger or ReDoc.
 - **Controller (MVC) Architecture**: Ellar follows the Model-View-Controller (MVC) pattern, aiding in organizing code and separating concerns.
 - **Guards for Authentication and Authorization**: Offers built-in support for guards, making it easy to implement authentication and authorization in applications.
 - **Modularity**: Inspired by NestJS, Ellar follows a modular architecture, allowing developers to organize code into reusable modules.
@@ -130,11 +130,7 @@ Now we can test our API at [http://127.0.0.1:5000/docs](http://127.0.0.1:5000/do
 You can also try the [quick-project](https://python-ellar.github.io/ellar/quick-project/) setup to get a good idea of the library.
 
 
-## **Project Status**
-
-Currently, Ellar is in **beta** version with the following status:
-
-- Documentation: 98% complete
+## **Project Documentation Status**
 - Authorization: In progress
 
 ## **Dependency Summary**
