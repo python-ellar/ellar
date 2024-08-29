@@ -16,7 +16,6 @@ from ellar.pydantic import (
     is_scalar_field,
     is_scalar_sequence_field,
 )
-from ellar.pydantic.utils import is_field_annotation_nullable
 
 from .factory import get_parameter_field
 
@@ -83,11 +82,6 @@ class BulkArgsResolverGenerator:
     def generate_resolvers(self, body_field_class: t.Type[FieldInfo]) -> None:
         resolvers = []
         for k, field in self.pydantic_outer_type.model_fields.items():
-            field.default = (
-                None
-                if is_field_annotation_nullable(field.annotation)
-                else field.default
-            )
             model_field = create_model_field(
                 name=k,
                 type_=field.annotation,  # type:ignore[arg-type]
