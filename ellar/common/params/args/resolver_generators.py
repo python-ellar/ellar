@@ -158,13 +158,7 @@ class FormArgsResolverGenerator(QueryHeaderResolverGenerator):
         ] = True
 
 
-class PathArgsResolverGenerator(BulkArgsResolverGenerator):
-    def validate(self, field_name: str, field: ModelField) -> None:
-        if not is_scalar_field(field=field):
-            raise ImproperConfiguration(
-                "Path params must be of one of the supported types. Only primitive types"
-            )
-
+class PathArgsResolverGenerator(CookieResolverGenerator):
     def get_parameter_field(
         self,
         field_name: str,
