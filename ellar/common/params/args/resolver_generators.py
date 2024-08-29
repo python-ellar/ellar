@@ -141,6 +141,15 @@ class QueryHeaderResolverGenerator(BulkArgsResolverGenerator):
             )
 
 
+class CookieResolverGenerator(BulkArgsResolverGenerator):
+    def validate(self, field_name: str, field: ModelField) -> None:
+        if not is_scalar_field(field=field):
+            raise ImproperConfiguration(
+                f"field: '{field_name}' with annotation:'{field.type_}' in '{self.param_field.type_}'"
+                f"can't be processed. Field type is not a primitive type"
+            )
+
+
 class FormArgsResolverGenerator(QueryHeaderResolverGenerator):
     def generate_resolvers(self, body_field_class: t.Type[FieldInfo]) -> None:
         super().generate_resolvers(body_field_class=body_field_class)

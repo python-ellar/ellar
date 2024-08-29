@@ -34,6 +34,7 @@ from .extra_args import ExtraEndpointArg
 from .factory import get_parameter_field
 from .resolver_generators import (
     BulkArgsResolverGenerator,
+    CookieResolverGenerator,
     FormArgsResolverGenerator,
     PathArgsResolverGenerator,
     QueryHeaderResolverGenerator,
@@ -44,6 +45,7 @@ __BULK_RESOLVERS__ = {
     str(params.PathFieldInfo): PathArgsResolverGenerator,
     str(params.QueryFieldInfo): QueryHeaderResolverGenerator,
     str(params.HeaderFieldInfo): QueryHeaderResolverGenerator,
+    str(params.CookieFieldInfo): CookieResolverGenerator,
 }
 
 
