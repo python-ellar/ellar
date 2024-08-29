@@ -39,7 +39,7 @@ from .resolver_generators import (
     QueryHeaderResolverGenerator,
 )
 
-BULK_RESOLVERS = {
+__BULK_RESOLVERS__ = {
     str(params.FormFieldInfo): FormArgsResolverGenerator,
     str(params.PathFieldInfo): PathArgsResolverGenerator,
     str(params.QueryFieldInfo): QueryHeaderResolverGenerator,
@@ -47,10 +47,22 @@ BULK_RESOLVERS = {
 }
 
 
+def add_get_resolver_generator(
+    param: params.ParamFieldInfo, resolver_gen: t.Type[BulkArgsResolverGenerator]
+) -> None:
+    """
+    Add a custom Bulk resolver generator a custom route function parameter field type
+    :param param:
+    :param resolver_gen:
+    :return:
+    """
+    __BULK_RESOLVERS__[str(param)] = resolver_gen  # pragma: no cover
+
+
 def get_resolver_generator(
     param: params.ParamFieldInfo,
 ) -> t.Type[BulkArgsResolverGenerator]:
-    return BULK_RESOLVERS.get(str(type(param)), BulkArgsResolverGenerator)
+    return __BULK_RESOLVERS__.get(str(type(param)), BulkArgsResolverGenerator)
 
 
 def get_annotation_type_and_default(

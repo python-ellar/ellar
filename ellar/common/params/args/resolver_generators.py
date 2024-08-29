@@ -54,12 +54,11 @@ class BulkArgsResolverGenerator:
         self.param_field = pydantic_type
 
     def validate(self, field_name: str, field: ModelField) -> None:
-        pass
-        # if not (is_scalar_field(field=field) or is_scalar_sequence_field(field)):
-        #     raise ImproperConfiguration(
-        #         f"field: '{field_name}' with annotation:'{field.type_}' in '{self.param_field.type_}'"
-        #         f"can't be processed. Field type is not a primitive type"
-        #     )
+        if not (is_scalar_field(field=field) or is_scalar_sequence_field(field)):
+            raise ImproperConfiguration(
+                f"field: '{field_name}' with annotation:'{field.type_}' in '{self.param_field.type_}'"
+                f"can't be processed. Field type is not a primitive type"
+            )
 
     def get_parameter_field(
         self,
@@ -97,42 +96,38 @@ class BulkArgsResolverGenerator:
                 field_info=field,
             )
             self.validate(k, model_field)
-            field_info = model_field.field_info
 
-            if not isinstance(model_field.field_info, params.ParamFieldInfo):
-                convert_underscores = getattr(
-                    self.param_field.field_info,
+            convert_underscores = getattr(
+                self.param_field.field_info,
+                "convert_underscores",
+                getattr(
+                    self.param_field.field_info.json_schema_extra,
                     "convert_underscores",
-                    getattr(
-                        self.param_field.field_info.json_schema_extra,
-                        "convert_underscores",
-                        None,
-                    ),
-                )
+                    None,
+                ),
+            )
 
-                keys = dict(
-                    FieldConstraintsDefaultValues,
-                    **model_field.field_info.extract_attributes_keys()
-                    if hasattr(model_field.field_info, "extract_attributes_keys")
-                    else {},
-                    **{"convert_underscores": convert_underscores}
-                    if convert_underscores
-                    else {},
-                )
+            keys = dict(
+                FieldConstraintsDefaultValues,
+                **model_field.field_info.extract_attributes_keys()
+                if hasattr(model_field.field_info, "extract_attributes_keys")
+                else {},
+                **{"convert_underscores": convert_underscores}
+                if convert_underscores
+                else {},
+            )
 
-                attrs = {
-                    k: getattr(model_field.field_info, k, v) for k, v in keys.items()
-                }
+            attrs = {k: getattr(model_field.field_info, k, v) for k, v in keys.items()}
 
-                model_field, field_info = self.get_parameter_field(
-                    k, model_field, attrs, body_field_class
-                )
-            resolver = field_info.create_resolver(model_field=model_field)  # type:ignore[attr-defined]
+            model_field, field_info = self.get_parameter_field(
+                k, model_field, attrs, body_field_class
+            )
+            resolver = field_info.create_resolver(model_field=model_field)
             resolvers.append(resolver)
 
         if isinstance(self.param_field.field_info.json_schema_extra, dict):
             self.param_field.field_info.json_schema_extra[MULTI_RESOLVER_KEY] = (
-                resolvers
+                resolvers  # type:ignore[assignment]
             )
 
 
