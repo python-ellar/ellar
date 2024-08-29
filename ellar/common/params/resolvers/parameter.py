@@ -31,7 +31,7 @@ from starlette.datastructures import (
 )
 from starlette.exceptions import HTTPException
 
-from .base import BaseRouteParameterResolver
+from .base import BaseRouteParameterResolver, ResolverResult
 
 
 class HeaderParameterResolver(BaseRouteParameterResolver):
@@ -44,7 +44,7 @@ class HeaderParameterResolver(BaseRouteParameterResolver):
 
     async def resolve_handle(
         self, ctx: IExecutionContext, *args: t.Any, **kwargs: t.Any
-    ) -> t.Tuple:
+    ) -> ResolverResult:
         request_logger.debug(
             f"Resolving Header Parameters - '{self.__class__.__name__}'"
         )
@@ -66,15 +66,21 @@ class HeaderParameterResolver(BaseRouteParameterResolver):
                         loc=(field_info.in_.value, self.model_field.alias)
                     )
                 ]
-                return {}, errors
+                return ResolverResult({}, errors, raw_data=self.create_raw_data(value))
             else:
-                values[self.model_field.name] = copy.deepcopy(self.model_field.default)
-                return values, []
+                value = copy.deepcopy(self.model_field.default)
+                values[self.model_field.name] = value
+                return ResolverResult(values, [], raw_data=self.create_raw_data(value))
 
         v_, errors_ = self.model_field.validate(
             value, values, loc=(field_info.in_.value, self.model_field.alias)
         )
-        return {self.model_field.name: v_}, self.validate_error_sequence(errors_)
+
+        return ResolverResult(
+            data={self.model_field.name: v_},
+            errors=self.validate_error_sequence(errors_),
+            raw_data=self.create_raw_data(value),
+        )
 
 
 class QueryParameterResolver(HeaderParameterResolver):
@@ -92,7 +98,9 @@ class PathParameterResolver(BaseRouteParameterResolver):
         connection = ctx.switch_to_http_connection().get_client()
         return connection.path_params
 
-    async def resolve_handle(self, ctx: IExecutionContext, **kwargs: t.Any) -> t.Tuple:
+    async def resolve_handle(
+        self, ctx: IExecutionContext, **kwargs: t.Any
+    ) -> ResolverResult:
         request_logger.debug(f"Resolving Path Parameters - '{self.__class__.__name__}'")
         received_params = self.get_received_parameter(ctx=ctx)
         value = received_params.get(str(self.model_field.alias))
@@ -103,7 +111,11 @@ class PathParameterResolver(BaseRouteParameterResolver):
             {},
             loc=(self.model_field.field_info.in_.value, self.model_field.alias),
         )
-        return {self.model_field.name: v_}, self.validate_error_sequence(errors_)
+        return ResolverResult(
+            data={self.model_field.name: v_},
+            errors=self.validate_error_sequence(errors_),
+            raw_data=self.create_raw_data(value),
+        )
 
 
 class CookieParameterResolver(PathParameterResolver):
@@ -131,17 +143,28 @@ class WsBodyParameterResolver(BaseRouteParameterResolver):
 
             if value is None:
                 if self.model_field.required:
-                    return None, [self.create_error(loc=loc)]
+                    return ResolverResult(
+                        None,
+                        [self.create_error(loc=loc)],
+                        raw_data=self.create_raw_data(value),
+                    )
                 else:
-                    return {
-                        self.model_field.name: copy.deepcopy(self.model_field.default)
-                    }, []
+                    value = copy.deepcopy(self.model_field.default)
+                    return ResolverResult(
+                        {self.model_field.name: value},
+                        [],
+                        raw_data=self.create_raw_data(value),
+                    )
 
             v_, errors_ = self.model_field.validate(value, {}, loc=loc)
-            return {self.model_field.name: v_}, self.validate_error_sequence(errors_)
+            return ResolverResult(
+                data={self.model_field.name: v_},
+                errors=self.validate_error_sequence(errors_),
+                raw_data=self.create_raw_data(value),
+            )
         except AttributeError:
             errors = [self.create_error(loc=loc)]
-            return None, errors
+            return ResolverResult(None, errors, raw_data=self.create_raw_data(None))
 
 
 class BodyParameterResolver(WsBodyParameterResolver):
@@ -209,7 +232,11 @@ class FormParameterResolver(BodyParameterResolver):
     ) -> t.Tuple:
         v_, errors_ = self.model_field.validate(value, values, loc=loc)
         values[self.model_field.name] = v_
-        return values, errors_
+        return ResolverResult(
+            data=values,
+            errors=self.validate_error_sequence(errors_),
+            raw_data=self.create_raw_data(value),
+        )
 
     async def get_request_body(self, ctx: IExecutionContext) -> t.Any:
         request_logger.debug(
@@ -260,11 +287,16 @@ class FormParameterResolver(BodyParameterResolver):
             )
         ):
             if self.model_field.required:
-                return None, [self.create_error(loc=loc)]
+                return ResolverResult(
+                    None, [self.create_error(loc=loc)], self.create_raw_data(value)
+                )
             else:
-                return {
-                    self.model_field.name: copy.deepcopy(self.model_field.default)
-                }, []
+                value = copy.deepcopy(self.model_field.default)
+                return ResolverResult(
+                    {self.model_field.name: value},
+                    [],
+                    raw_data=self.create_raw_data(value),
+                )
 
         return await self.process_and_validate(values={}, value=value, loc=loc)
 
@@ -297,4 +329,9 @@ class FileParameterResolver(FormParameterResolver):
 
         v_, errors_ = self.model_field.validate(value, values, loc=loc)
         values[self.model_field.name] = v_
-        return values, self.validate_error_sequence(errors_)
+
+        return ResolverResult(
+            data=values,
+            errors=self.validate_error_sequence(errors_),
+            raw_data=self.create_raw_data(value),
+        )

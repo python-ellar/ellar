@@ -18,6 +18,7 @@ from ..resolvers import (
     IRouteParameterResolver,
     RouteParameterModelField,
 )
+from ..resolvers.base import ResolverResult
 from .base import EndpointArgsModel
 from .extra_args import ExtraEndpointArg
 
@@ -166,7 +167,7 @@ class RequestEndpointArgsModel(EndpointArgsModel):
             final_field = create_model_field(
                 name="body",
                 type_=pydantic_body_model,
-                field_info=body_field_info(**field_info_kwargs),
+                field_info=body_field_info(**field_info_kwargs, ellar_body=True),
             )
             final_field.field_info = t.cast(
                 params.ParamFieldInfo, final_field.field_info
@@ -174,15 +175,8 @@ class RequestEndpointArgsModel(EndpointArgsModel):
             check_file_field(final_field)
             self.body_resolver = final_field.field_info.create_resolver(final_field)
 
-    async def resolve_body(
-        self, ctx: IExecutionContext, values: t.Dict, errors: t.List
-    ) -> None:
+    async def resolve_body(self, ctx: IExecutionContext) -> ResolverResult:
         if not self.body_resolver:
-            return
+            return ResolverResult({}, [], {})
 
-        body, errors_ = await self.body_resolver.resolve(ctx=ctx)
-        if errors_:
-            assert isinstance(errors_, list)
-            errors.extend(errors_)
-            return
-        values.update(body)
+        return await self.body_resolver.resolve(ctx=ctx)

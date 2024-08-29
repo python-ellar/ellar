@@ -5,6 +5,8 @@ from pydantic_core import PydanticUndefined, PydanticUndefinedType
 from pydantic_core import Url as Url
 
 UnionType = getattr(types, "UnionType", t.Union)
+NoneType = getattr(types, "NoneType", type(None))
+
 IncEx = t.Union[t.Set[int], t.Set[str], t.Dict[int, t.Any], t.Dict[str, t.Any]]
 
 

@@ -123,13 +123,11 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
         request_logger.debug(
             f"Resolving Request Endpoint Handler Dependencies - '{self.__class__.__name__}'"
         )
-        func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
-            ctx=context
-        )
-        if errors:
-            raise RequestValidationError(errors)
+        res = await self.endpoint_parameter_model.resolve_dependencies(ctx=context)
+        if res.errors:
+            raise RequestValidationError(res.errors)
 
-        return await self.run(context, func_kwargs)
+        return await self.run(context, res.data)
 
     async def handle_response(
         self, context: IExecutionContext, response_obj: t.Any

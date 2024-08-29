@@ -71,21 +71,18 @@ class WebSocketExtraHandler:
         request_logger.debug(
             f"Resolving Receiver Dependencies from '{self.__class__.__name__}'"
         )
-        (
-            extra_kwargs,
-            errors,
-        ) = await self.route_parameter_model.resolve_ws_body_dependencies(
+        res = await self.route_parameter_model.resolve_ws_body_dependencies(
             ctx=context, body_data=data
         )
-        if errors:
-            exc = WebSocketRequestValidationError(errors)
+        if res.errors:
+            exc = WebSocketRequestValidationError(res.errors)
             await (
                 context.switch_to_websocket()
                 .get_client()
                 .send_json({"code": WS_1008_POLICY_VIOLATION, "errors": exc.errors()})
             )
             raise exc
-        return extra_kwargs
+        return t.cast(t.Dict, res.data)
 
     async def execute_on_receive(
         self, *, context: "IExecutionContext", data: t.Any, **receiver_kwargs: t.Any

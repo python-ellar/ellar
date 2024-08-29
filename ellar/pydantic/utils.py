@@ -1,5 +1,6 @@
 import typing as t
 from collections import deque
+from copy import copy
 from dataclasses import is_dataclass
 
 from pydantic import (
@@ -14,11 +15,14 @@ from pydantic._internal._utils import lenient_issubclass
 from pydantic.fields import FieldInfo
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 from starlette.datastructures import UploadFile
-from typing_extensions import Literal, get_args, get_origin
+from typing_extensions import Annotated, Literal, get_args, get_origin
 
 from .exceptions import InvalidModelFieldSetupException
 from .fields import ModelField
-from .types import Undefined, UnionType
+from .types import NoneType, Undefined, UnionType
+
+FieldInfoType = t.TypeVar("FieldInfoType", bound=FieldInfo)
+
 
 sequence_annotation_to_type = {
     t.Sequence: list,
@@ -94,6 +98,17 @@ def get_definitions(
     return field_mapping, definitions  # type: ignore[return-value]
 
 
+def copy_from_field_info(
+    *, from_: FieldInfo, to_: t.Type[t.Union[FieldInfoType, FieldInfo]], **kwargs: t.Any
+) -> t.Union[FieldInfoType, FieldInfo]:
+    # copy_of_from = copy(from_)
+    _attributes_set = getattr(from_, "_attributes_set", {})
+    _attributes_set.update(kwargs)
+    new_field = to_(**_attributes_set)
+    new_field.metadata = copy(from_.metadata)
+    return new_field
+
+
 def is_scalar_field(field: ModelField) -> bool:
     from ellar.common.params.params import BodyFieldInfo, WsBodyFieldInfo
 
@@ -105,7 +120,7 @@ def is_scalar_field(field: ModelField) -> bool:
 
 
 def is_sequence_field(field: ModelField) -> bool:
-    return is_sequence_field_annotation(field.field_info.annotation)
+    return annotation_is_sequence(field.field_info.annotation)
 
 
 def is_scalar_sequence_field(field: ModelField) -> bool:
@@ -151,12 +166,18 @@ def regenerate_error_with_loc(
 def annotation_is_sequence(annotation: t.Union[t.Type[t.Any], None]) -> bool:
     if lenient_issubclass(annotation, (str, bytes)):
         return False
-    return lenient_issubclass(annotation, sequence_types)
 
+    origin = get_origin(annotation) or annotation
 
-def is_sequence_field_annotation(annotation: t.Union[t.Type[t.Any], None]) -> bool:
-    return annotation_is_sequence(annotation) or annotation_is_sequence(
-        get_origin(annotation)
+    if origin is UnionType or origin is t.Union or origin is Annotated:
+        return search_in_annotation(
+            get_args(annotation),
+            sequence_types,
+            skip=lambda n: lenient_issubclass(n, (str, bytes)),
+        )
+
+    return lenient_issubclass(annotation, sequence_types) or lenient_issubclass(
+        origin, sequence_types
     )
 
 
@@ -199,7 +220,7 @@ def field_annotation_is_scalar_sequence(
             elif not field_annotation_is_scalar(arg):
                 return False
         return at_least_one_scalar_sequence
-    return is_sequence_field_annotation(annotation) and all(
+    return annotation_is_sequence(annotation) and all(
         field_annotation_is_scalar(sub_annotation)
         for sub_annotation in get_args(annotation)
     )
@@ -214,7 +235,7 @@ def is_bytes_sequence_annotation(annotation: t.Any) -> bool:
                 at_least_one = True
                 break
         return at_least_one
-    return is_sequence_field_annotation(annotation) and all(
+    return annotation_is_sequence(annotation) and all(
         is_bytes_annotation(sub_annotation) for sub_annotation in get_args(annotation)
     )
 
@@ -228,6 +249,55 @@ def is_bytes_annotation(annotation: t.Any) -> bool:
             if lenient_issubclass(arg, bytes):
                 return True
     return False
+
+
+def __default_skip(type_: t.Any) -> bool:
+    return False
+
+
+def search_in_annotation(
+    annotations: t.Sequence[t.Any],
+    lookup: t.Tuple,
+    skip: t.Callable[..., bool] = __default_skip,
+) -> t.Union[bool, t.Any]:
+    for item in annotations:
+        item_origin = get_origin(item) or item
+
+        if skip(item_origin):
+            continue
+
+        if (
+            item_origin is UnionType
+            or item_origin is t.Union
+            or item_origin is Annotated
+        ):
+            return search_in_annotation(get_args(item), lookup)
+
+        if lenient_issubclass(item_origin, lookup) or lenient_issubclass(item, lookup):
+            return True
+    return False
+
+
+def is_field_annotation_nullable(annotation: t.Any) -> bool:
+    origin = get_origin(annotation)
+
+    if origin is Annotated or origin is t.Union or origin is UnionType:
+        return search_in_annotation(get_args(annotation), (NoneType,))
+    return False
+
+
+def get_sequence_type(annotation: t.Any) -> t.Optional[t.Type]:
+    origin = get_origin(annotation) or annotation
+
+    if lenient_issubclass(origin, sequence_types):
+        return get_args(annotation)[0]
+
+    if origin is Annotated or origin is t.Union or origin is UnionType:
+        for i in get_args(annotation):
+            res = get_sequence_type(i)
+            if res:
+                return res
+    return None
 
 
 def create_model_field(

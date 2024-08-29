@@ -19,3 +19,8 @@ class ModuleForwardRef:
 
     def __hash__(self) -> int:
         return hash((self._module_ref.module, "ForwardRef"))
+
+    def __eq__(self, other: t.Union[t.Any, "ModuleForwardRef"]) -> bool:
+        if isinstance(other, ModuleForwardRef):
+            return self._module_ref is other._module_ref
+        return False
