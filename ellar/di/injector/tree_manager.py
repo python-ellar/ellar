@@ -126,15 +126,20 @@ class ModuleTreeManager:
         forward_ref: "ModuleForwardRef",
     ) -> "ModuleTreeManager":
         module_node = self.get_module(module_type)
-        module_node.dependencies.append(forward_ref)
+        _forward_data = self._forward_refs.get(forward_ref)
 
-        data = TreeData(
-            value=forward_ref,
-            parent=module_node.parent,
-            dependencies=module_node.dependencies,
-        )
+        if not _forward_data:
+            # Get referenced module node
+            _forward_module_node = self.get_module(forward_ref.module)
+            _forward_data = TreeData(
+                value=forward_ref,
+                parent=_forward_module_node.parent,
+                dependencies=_forward_module_node.dependencies,
+            )
 
-        self._forward_refs[forward_ref] = data
+            self._forward_refs[forward_ref] = _forward_data
+
+        module_node.dependencies.append(_forward_data.value)
 
         return self
 
@@ -245,14 +250,18 @@ class ModuleTreeManager:
         :param find_predicate:
         :return: The node with the given ID, or None if not found.
         """
+        _stack_cycle: t.Tuple[t.Any] = ()  # type:ignore[assignment]
 
         def dfs(current_node: TreeData) -> t.Optional[TreeData]:
+            nonlocal _stack_cycle
+            _stack_cycle += (current_node.value.module,)  # type:ignore[assignment]
+
             if find_predicate(current_node):
                 return current_node
 
             for child_id in current_node.dependencies:
                 child_node = self.get_module(child_id)
-                if child_node:
+                if child_node and child_node.value.module not in _stack_cycle:
                     res = dfs(child_node)
                     if res:
                         return res

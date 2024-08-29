@@ -53,7 +53,7 @@ def Module(
     *,
     name: t.Optional[str] = None,
     controllers: t.Sequence[t.Union[t.Type[ControllerBase], t.Type]] = (),
-    routers: t.Sequence[t.Union[ModuleRouter, Mount, Host]] = (),
+    routers: t.Sequence[t.Union[ModuleRouter, Mount, Host, t.Callable]] = (),
     providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = (),
     exports: t.Sequence[t.Union[t.Type]] = (),
     template_folder: t.Optional[str] = "templates",

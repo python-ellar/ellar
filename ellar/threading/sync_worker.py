@@ -17,7 +17,7 @@ from contextvars import Context, copy_context
 
 _Item = t.TypeVar("_Item")
 
-logger = logging.getLogger("ellar.sync_worker")
+logger = logging.getLogger("ellar")
 
 
 class _Sentinel(enum.Enum):
@@ -96,7 +96,7 @@ class _SyncWorkerThread(threading.Thread):
         except (SystemExit, KeyboardInterrupt):  # pragma: no cover
             pass
         except Exception as ex:
-            logger.error(ex)
+            logger.exception(ex)
         finally:
             loop.run_until_complete(loop.shutdown_asyncgens())
             loop.stop()
@@ -191,6 +191,7 @@ class _SyncWorkerThread(threading.Thread):
                 self.stream_block.wait()
         except Exception as e:
             self.stream_queue.put((e, None))
+            logger.exception(e)
 
     def interrupt_generator(self) -> None:
         self.agen_shutdown = True
