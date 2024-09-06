@@ -12,7 +12,7 @@ pytest-asyncio
 pytest-cov >= 2.12.0,< 6.0.0
 python-multipart >= 0.0.5
 python-socketio
-ruff ==0.5.5
+ruff ==0.6.3
 types-dataclasses ==0.6.6
 types-orjson ==3.6.2
 types-redis ==4.6.0.20240425
