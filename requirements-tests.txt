@@ -3,6 +3,7 @@ anyio[trio] >= 3.2.1
 argon2-cffi == 23.1.0
 autoflake
 bcrypt; python_version >= '3.12'
+click >= 8.1.7,<9.0.0,
 email_validator >=1.1.1
 itsdangerous >=1.1.0,<3.0.0
 mypy == 1.11.2

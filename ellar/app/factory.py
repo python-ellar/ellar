@@ -1,7 +1,6 @@
 import typing as t
 from pathlib import Path
 
-import click
 from ellar.common import IApplicationReady, Module
 from ellar.common.constants import MODULE_METADATA
 from ellar.common.exceptions import ImproperConfiguration
@@ -28,6 +27,7 @@ from ..events.build import build_with_context_event
 from .main import App
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    import click
     from ellar.common import ModuleRouter
     from ellar.core.routing import EllarControllerMount
 
@@ -185,7 +185,7 @@ class AppFactory:
         global_guards: t.Optional[
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
-        commands: t.Sequence[t.Union[click.Command, click.Group, t.Any]] = (),
+        commands: t.Sequence[t.Union["click.Command", "click.Group", t.Any]] = (),
         config_module: t.Union[str, t.Dict, None] = None,
         injector: t.Optional[EllarInjector] = None,
     ) -> App:
