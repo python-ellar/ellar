@@ -70,8 +70,7 @@ def test_schema():
         {
             "required": False,
             "schema": {
-                "allOf": [{"$ref": "#/components/schemas/Range"}],
-                "title": "Range",
+                "$ref": "#/components/schemas/Range",
                 "default": 20,
                 "repr": True,
             },

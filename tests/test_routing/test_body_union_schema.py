@@ -131,12 +131,7 @@ item_openapi_schema = {
                     "content": {
                         "application/json": {
                             "schema": {
-                                "allOf": [
-                                    {
-                                        "$ref": "#/components/schemas/body_embed_qty_items_embed_post"
-                                    }
-                                ],
-                                "title": "Body",
+                                "$ref": "#/components/schemas/body_embed_qty_items_embed_post",
                             }
                         }
                     }
