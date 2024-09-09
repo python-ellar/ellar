@@ -1,6 +1,5 @@
 import typing as t
 from collections import deque
-from copy import copy
 from dataclasses import is_dataclass
 
 from pydantic import (
@@ -20,9 +19,6 @@ from typing_extensions import Annotated, Literal, get_args, get_origin
 from .exceptions import InvalidModelFieldSetupException
 from .fields import ModelField
 from .types import NoneType, Undefined, UnionType
-
-FieldInfoType = t.TypeVar("FieldInfoType", bound=FieldInfo)
-
 
 sequence_annotation_to_type = {
     t.Sequence: list,
@@ -96,17 +92,6 @@ def get_definitions(
     ]
     field_mapping, definitions = schema_generator.generate_definitions(inputs=inputs)
     return field_mapping, definitions  # type: ignore[return-value]
-
-
-def copy_from_field_info(
-    *, from_: FieldInfo, to_: t.Type[t.Union[FieldInfoType, FieldInfo]], **kwargs: t.Any
-) -> t.Union[FieldInfoType, FieldInfo]:
-    # copy_of_from = copy(from_)
-    _attributes_set = getattr(from_, "_attributes_set", {})
-    _attributes_set.update(kwargs)
-    new_field = to_(**_attributes_set)
-    new_field.metadata = copy(from_.metadata)
-    return new_field
 
 
 def is_scalar_field(field: ModelField) -> bool:
@@ -251,14 +236,14 @@ def is_bytes_annotation(annotation: t.Any) -> bool:
     return False
 
 
-def __default_skip(type_: t.Any) -> bool:
+def __default_skip__(type_: t.Any) -> bool:
     return False
 
 
 def search_in_annotation(
     annotations: t.Sequence[t.Any],
     lookup: t.Tuple,
-    skip: t.Callable[..., bool] = __default_skip,
+    skip: t.Callable[..., bool] = __default_skip__,
 ) -> t.Union[bool, t.Any]:
     for item in annotations:
         item_origin = get_origin(item) or item

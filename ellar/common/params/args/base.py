@@ -50,7 +50,8 @@ __BULK_RESOLVERS__ = {
 
 
 def add_get_resolver_generator(
-    param: params.ParamFieldInfo, resolver_gen: t.Type[BulkArgsResolverGenerator]
+    param: t.Type[params.ParamFieldInfo],
+    resolver_gen: t.Type[BulkArgsResolverGenerator],
 ) -> None:
     """
     Add a custom Bulk resolver generator a custom route function parameter field type
@@ -383,20 +384,6 @@ class EndpointArgsModel:
     async def resolve_body(self, ctx: IExecutionContext) -> ResolverResult:
         """Body Resolver Implementation"""
         return ResolverResult({}, [], {})
-
-    def __deepcopy__(
-        self, memodict: t.Optional[t.Dict] = None
-    ) -> "EndpointArgsModel":  # pragma: no cover
-        if memodict is None:
-            memodict = {}
-        return self.__copy__(memodict)
-
-    def __copy__(
-        self, memodict: t.Optional[t.Dict] = None
-    ) -> "EndpointArgsModel":  # pragma: no cover
-        if memodict is None:
-            memodict = {}
-        return self
 
     def build_body_field(self) -> None:  # pragma: no cover
         raise NotImplementedError

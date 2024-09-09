@@ -276,15 +276,8 @@ class FormParameterResolver(BodyParameterResolver):
 
         if (
             value is None
-            or (
-                isinstance(self.model_field.field_info.resolver, FormParameterResolver)
-                and value == ""
-            )
-            or (
-                isinstance(self.model_field.field_info.resolver, FormParameterResolver)
-                and is_sequence_field(self.model_field)
-                and len(value) == 0
-            )
+            or value == ""
+            or (is_sequence_field(self.model_field) and len(value) == 0)
         ):
             if self.model_field.required:
                 return ResolverResult(
