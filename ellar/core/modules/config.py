@@ -2,7 +2,6 @@ import dataclasses
 import typing as t
 from functools import cached_property
 
-import click
 from ellar.common import ControllerBase, ModuleRouter
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
@@ -23,6 +22,7 @@ from .base import ModuleBase, ModuleBaseMeta
 from .ref import ModuleRefBase, create_module_ref_factor
 
 if t.TYPE_CHECKING:  # pragma: no cover
+    import click
     from ellar.common import IModuleSetup
 
 
@@ -43,7 +43,7 @@ class DynamicModule:
         default_factory=lambda: ()
     )
 
-    commands: t.Sequence[t.Union[click.Command, click.Group, t.Any]] = (
+    commands: t.Sequence[t.Union["click.Command", "click.Group", t.Any]] = (
         dataclasses.field(default_factory=lambda: ())
     )
 

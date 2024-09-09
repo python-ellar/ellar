@@ -1,3 +1,10 @@
+try:
+    import passlib  # noqa
+except Exception:  # pragma: no cover
+    raise Exception(
+        "passlib package is required. Use `pip install passlib >= 1.7.4`."
+    ) from None
+
 import typing as t
 
 from ellar.utils.crypto import get_random_string

@@ -3,7 +3,6 @@ import typing as t
 import uuid
 from pathlib import Path
 
-import click
 from ellar.common.compatible import AttributeDict
 from ellar.common.constants import MODULE_METADATA, MODULE_WATERMARK
 from ellar.common.exceptions import ImproperConfiguration
@@ -14,6 +13,9 @@ from ellar.reflect import reflect
 from ellar.utils import get_name
 from ellar.utils.importer import get_main_directory_by_stack
 from starlette.routing import Host, Mount
+
+if t.TYPE_CHECKING:
+    import click
 
 _ModuleClass = t.TypeVar("_ModuleClass", bound=t.Type)
 
@@ -60,7 +62,7 @@ def Module(
     base_directory: t.Optional[t.Union[Path, str]] = None,
     static_folder: str = "static",
     modules: t.Sequence[t.Union[t.Type, t.Any]] = (),
-    commands: t.Sequence[t.Union[click.Command, click.Group, t.Any]] = (),
+    commands: t.Sequence[t.Union["click.Command", "click.Group", t.Any]] = (),
 ) -> t.Callable[[_ModuleClass], _ModuleClass]:
     """
     ========= MODULE DECORATOR ==============
