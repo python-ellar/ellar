@@ -59,7 +59,7 @@ class SocketOperationConnection:
         self.endpoint = message_handler
         self._name = get_name(self.endpoint)
         self._is_coroutine = inspect.iscoroutinefunction(message_handler)
-        self.endpoint_parameter_model = NOT_SET
+        self.endpoint_parameter_model: WebsocketEndpointArgsModel = NOT_SET
         self.controller = controller
         self._load_model()
         self._register_handler()
@@ -148,28 +148,27 @@ class SocketOperationConnection:
     async def _run_handler(
         self, context: IExecutionContext, gateway_instance: GatewayBase
     ) -> t.Any:
-        func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
+        resolver_result_ = await self.endpoint_parameter_model.resolve_dependencies(
             ctx=context
         )
 
         if gateway_instance.context.message:
-            (
-                _func_kwargs,
-                _errors,
-            ) = await self.endpoint_parameter_model.resolve_ws_body_dependencies(
-                ctx=context, body_data=gateway_instance.context.message
+            body_resolver_result_ = (
+                await self.endpoint_parameter_model.resolve_ws_body_dependencies(
+                    ctx=context, body_data=gateway_instance.context.message
+                )
             )
 
-            func_kwargs.update(_func_kwargs)
-            errors = errors + _errors
+            resolver_result_.data.update(body_resolver_result_.data)
+            resolver_result_.errors.extend(body_resolver_result_.errors)
 
-        if errors:
-            raise WebSocketRequestValidationError(errors)
+        if resolver_result_.errors:
+            raise WebSocketRequestValidationError(resolver_result_.errors)
         if self._is_coroutine:
-            res = await self.endpoint(gateway_instance, **func_kwargs)
+            res = await self.endpoint(gateway_instance, **resolver_result_.data)
         else:
             res = await run_in_threadpool(
-                self.endpoint, gateway_instance, **func_kwargs
+                self.endpoint, gateway_instance, **resolver_result_.data
             )
 
         if res and isinstance(res, WsResponse):

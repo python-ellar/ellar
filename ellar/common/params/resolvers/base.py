@@ -11,6 +11,12 @@ if t.TYPE_CHECKING:  # pragma: no cover
     from ..params import ParamFieldInfo
 
 
+class ResolverResult(t.NamedTuple):
+    data: t.Optional[t.Any]
+    errors: t.Optional[t.List[t.Dict[str, t.Any]]]
+    raw_data: t.Dict[str, t.Any]
+
+
 class RouteParameterModelField(ModelField):
     field_info: "ParamFieldInfo"
 
@@ -20,8 +26,13 @@ class IRouteParameterResolver(ABC, metaclass=ABCMeta):
 
     @abstractmethod
     @t.no_type_check
-    async def resolve(self, *args: t.Any, **kwargs: t.Any) -> t.Tuple:
+    async def resolve(self, *args: t.Any, **kwargs: t.Any) -> ResolverResult:
         """Resolve handle"""
+
+    @abstractmethod
+    @t.no_type_check
+    def create_raw_data(self, data: t.Any) -> t.Dict:
+        """Essential for debugging"""
 
 
 class BaseRouteParameterResolver(IRouteParameterResolver, ABC):
@@ -29,6 +40,10 @@ class BaseRouteParameterResolver(IRouteParameterResolver, ABC):
         self.model_field: RouteParameterModelField = t.cast(
             RouteParameterModelField, model_field
         )
+
+    def create_raw_data(self, data: t.Any) -> t.Dict:
+        """Essential for debugging"""
+        return {self.model_field.name: data}
 
     def assert_field_info(self) -> None:
         from .. import params
@@ -47,11 +62,11 @@ class BaseRouteParameterResolver(IRouteParameterResolver, ABC):
             return []
         return regenerate_error_with_loc(errors=errors, loc_prefix=())
 
-    async def resolve(self, *args: t.Any, **kwargs: t.Any) -> t.Tuple:
+    async def resolve(self, *args: t.Any, **kwargs: t.Any) -> ResolverResult:
         value_ = await self.resolve_handle(*args, **kwargs)
         return value_
 
     @abstractmethod
     @t.no_type_check
-    async def resolve_handle(self, *args: t.Any, **kwargs: t.Any) -> t.Tuple:
+    async def resolve_handle(self, *args: t.Any, **kwargs: t.Any) -> ResolverResult:
         """resolver action"""

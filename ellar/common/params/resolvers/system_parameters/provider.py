@@ -3,6 +3,7 @@ import typing as t
 
 from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.interfaces import IExecutionContext
+from ellar.common.params.resolvers.base import ResolverResult
 from ellar.common.types import T
 
 from .base import SystemParameterResolver
@@ -34,11 +35,11 @@ class ProviderParameterInjector(SystemParameterResolver):
             self.data = self.type_annotation
         return self
 
-    async def resolve(
-        self, ctx: IExecutionContext, **kwargs: t.Any
-    ) -> t.Tuple[t.Dict, t.List]:
+    async def resolve(self, ctx: IExecutionContext, **kwargs: t.Any) -> ResolverResult:
         service_provider = ctx.get_service_provider()
         if not self.data:
             raise RuntimeError("ProviderParameterInjector not properly setup")
         value = service_provider.get(self.data)
-        return {self.parameter_name: value}, []
+        return ResolverResult(
+            {self.parameter_name: value}, [], self.create_raw_data(value)
+        )

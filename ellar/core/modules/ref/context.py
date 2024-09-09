@@ -6,7 +6,7 @@ from ellar.common.constants import EXCEPTION_HANDLERS_KEY, MIDDLEWARE_HANDLERS_K
 from ellar.common.logging import logger
 from ellar.common.types import ASGIApp, TReceive, TScope, TSend
 from ellar.core.execution_context import injector_context
-from ellar.core.middleware import ExceptionMiddleware
+from ellar.core.middleware import ExceptionMiddleware, ServerErrorMiddleware
 from ellar.core.middleware.middleware import EllarMiddleware
 from ellar.di import Container
 from ellar.reflect import reflect
@@ -30,6 +30,7 @@ class ModuleExecutionContext:
             )
         )
 
+        error_handler = exception_middleware_service.get_500_error_handler()
         self._middleware.insert(
             0,
             EllarMiddleware(
@@ -37,6 +38,15 @@ class ModuleExecutionContext:
                 exception_middleware_service=exception_middleware_service,
             ),
         )
+        if error_handler:
+            self._middleware.insert(
+                0,
+                EllarMiddleware(
+                    ServerErrorMiddleware,
+                    exception_service=exception_middleware_service,
+                ),
+            )
+
         self.container = container
 
         self._operation: t.Optional[BaseRoute] = None

@@ -6,6 +6,7 @@ from ellar.common.constants import (
     sequence_types,
 )
 from ellar.common.exceptions import ImproperConfiguration
+from ellar.common.params import params
 from ellar.pydantic import (
     BaseModel,
     FieldConstraintsDefaultValues,
@@ -16,7 +17,6 @@ from ellar.pydantic import (
     is_scalar_sequence_field,
 )
 
-from .. import params
 from .factory import get_parameter_field
 
 
@@ -53,7 +53,7 @@ class BulkArgsResolverGenerator:
         self.param_field = pydantic_type
 
     def validate(self, field_name: str, field: ModelField) -> None:
-        if not is_scalar_field(field=field):
+        if not (is_scalar_field(field=field) or is_scalar_sequence_field(field)):
             raise ImproperConfiguration(
                 f"field: '{field_name}' with annotation:'{field.type_}' in '{self.param_field.type_}'"
                 f"can't be processed. Field type is not a primitive type"
@@ -103,6 +103,9 @@ class BulkArgsResolverGenerator:
 
             keys = dict(
                 FieldConstraintsDefaultValues,
+                **model_field.field_info.extract_attributes_keys()
+                if hasattr(model_field.field_info, "extract_attributes_keys")
+                else {},
                 **{"convert_underscores": convert_underscores}
                 if convert_underscores
                 else {},
@@ -132,6 +135,15 @@ class QueryHeaderResolverGenerator(BulkArgsResolverGenerator):
             )
 
 
+class CookieResolverGenerator(BulkArgsResolverGenerator):
+    def validate(self, field_name: str, field: ModelField) -> None:
+        if not is_scalar_field(field=field):
+            raise ImproperConfiguration(
+                f"field: '{field_name}' with annotation:'{field.type_}' in '{self.param_field.type_}'"
+                f"can't be processed. Field type is not a primitive type"
+            )
+
+
 class FormArgsResolverGenerator(QueryHeaderResolverGenerator):
     def generate_resolvers(self, body_field_class: t.Type[FieldInfo]) -> None:
         super().generate_resolvers(body_field_class=body_field_class)
@@ -140,13 +152,7 @@ class FormArgsResolverGenerator(QueryHeaderResolverGenerator):
         ] = True
 
 
-class PathArgsResolverGenerator(BulkArgsResolverGenerator):
-    def validate(self, field_name: str, field: ModelField) -> None:
-        if not is_scalar_field(field=field):
-            raise ImproperConfiguration(
-                "Path params must be of one of the supported types. Only primitive types"
-            )
-
+class PathArgsResolverGenerator(CookieResolverGenerator):
     def get_parameter_field(
         self,
         field_name: str,

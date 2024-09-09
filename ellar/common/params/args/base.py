@@ -12,7 +12,6 @@ from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.interfaces import IExecutionContext
 from ellar.pydantic import (
     BaseModel,
-    ErrorWrapper,
     FieldInfo,
     ModelField,
     evaluate_forwardref,
@@ -30,27 +29,43 @@ from ..resolvers import (
     IRouteParameterResolver,
     SystemParameterResolver,
 )
+from ..resolvers.base import ResolverResult
 from .extra_args import ExtraEndpointArg
 from .factory import get_parameter_field
 from .resolver_generators import (
     BulkArgsResolverGenerator,
+    CookieResolverGenerator,
     FormArgsResolverGenerator,
     PathArgsResolverGenerator,
     QueryHeaderResolverGenerator,
 )
 
-BULK_RESOLVERS = {
+__BULK_RESOLVERS__ = {
     str(params.FormFieldInfo): FormArgsResolverGenerator,
     str(params.PathFieldInfo): PathArgsResolverGenerator,
     str(params.QueryFieldInfo): QueryHeaderResolverGenerator,
     str(params.HeaderFieldInfo): QueryHeaderResolverGenerator,
+    str(params.CookieFieldInfo): CookieResolverGenerator,
 }
+
+
+def add_get_resolver_generator(
+    param: t.Type[params.ParamFieldInfo],
+    resolver_gen: t.Type[BulkArgsResolverGenerator],
+) -> None:
+    """
+    Add a custom Bulk resolver generator a custom route function parameter field type
+    :param param:
+    :param resolver_gen:
+    :return:
+    """
+    __BULK_RESOLVERS__[str(param)] = resolver_gen  # pragma: no cover
 
 
 def get_resolver_generator(
     param: params.ParamFieldInfo,
 ) -> t.Type[BulkArgsResolverGenerator]:
-    return BULK_RESOLVERS.get(str(type(param)), BulkArgsResolverGenerator)
+    return __BULK_RESOLVERS__.get(str(type(param)), BulkArgsResolverGenerator)
 
 
 def get_annotation_type_and_default(
@@ -318,27 +333,21 @@ class EndpointArgsModel:
             field_info.create_resolver(model_field=field)
         )
 
-    async def resolve_dependencies(
-        self, *, ctx: IExecutionContext
-    ) -> t.Tuple[t.Dict[str, t.Any], t.List[ErrorWrapper]]:
-        values: t.Dict[str, t.Any] = {}
-        errors: t.List[ErrorWrapper] = []
+    async def resolve_dependencies(self, *, ctx: IExecutionContext) -> ResolverResult:
+        body_resolver = await self.resolve_body(ctx)
 
-        await self.resolve_body(ctx, values, errors)
-
-        if not errors:
+        if body_resolver and not body_resolver.errors:
             for parameter_resolver in self._route_models:
-                value_, value_errors = await parameter_resolver.resolve(ctx=ctx)
-                if value_:
-                    values.update(value_)
-                if value_errors:
+                res = await parameter_resolver.resolve(ctx=ctx)
+                if res.data:
+                    body_resolver.data.update(res.data)
+                if res.errors:
                     _errors = (
-                        value_errors
-                        if isinstance(value_errors, list)
-                        else [value_errors]
+                        res.errors if isinstance(res.errors, list) else [res.errors]
                     )
-                    errors += _errors
-        return values, errors
+                    body_resolver.errors.extend(_errors)
+                body_resolver.raw_data.update(res.raw_data)
+        return body_resolver
 
     def compute_extra_route_args(self) -> None:
         self._add_extra_route_args(*self._extra_endpoint_args)
@@ -372,24 +381,9 @@ class EndpointArgsModel:
             )
             self._add_to_model(field=param_field, key=key)
 
-    async def resolve_body(
-        self, ctx: IExecutionContext, values: t.Dict, errors: t.List
-    ) -> None:
+    async def resolve_body(self, ctx: IExecutionContext) -> ResolverResult:
         """Body Resolver Implementation"""
-
-    def __deepcopy__(
-        self, memodict: t.Optional[t.Dict] = None
-    ) -> "EndpointArgsModel":  # pragma: no cover
-        if memodict is None:
-            memodict = {}
-        return self.__copy__(memodict)
-
-    def __copy__(
-        self, memodict: t.Optional[t.Dict] = None
-    ) -> "EndpointArgsModel":  # pragma: no cover
-        if memodict is None:
-            memodict = {}
-        return self
+        return ResolverResult({}, [], {})
 
     def build_body_field(self) -> None:  # pragma: no cover
         raise NotImplementedError

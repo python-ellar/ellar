@@ -5,7 +5,7 @@ from ellar.common.exceptions import ImproperConfiguration
 from ellar.common.interfaces import IExecutionContext
 from ellar.common.types import T
 
-from ..base import IRouteParameterResolver
+from ..base import IRouteParameterResolver, ResolverResult
 
 
 class SystemParameterResolver(IRouteParameterResolver, ABC):
@@ -38,6 +38,9 @@ class SystemParameterResolver(IRouteParameterResolver, ABC):
         self.type_annotation = parameter_annotation
         return self
 
+    def create_raw_data(self, data: t.Any) -> t.Dict:
+        return {self.parameter_name: data}
+
     @abstractmethod
     async def resolve(self, ctx: IExecutionContext, **kwargs: t.Any) -> t.Any:
         raise NotImplementedError
@@ -67,8 +70,8 @@ class BaseConnectionParameterResolver(SystemParameterResolver):
         connection = ctx.switch_to_http_connection().get_client()
         return connection.get(self.lookup_connection_field)
 
-    async def resolve(
-        self, ctx: IExecutionContext, **kwargs: t.Any
-    ) -> t.Tuple[t.Dict, t.List]:
+    async def resolve(self, ctx: IExecutionContext, **kwargs: t.Any) -> ResolverResult:
         value = await self.get_value(ctx)
-        return {self.parameter_name: value}, []
+        return ResolverResult(
+            {self.parameter_name: value}, [], raw_data=self.create_raw_data(value)
+        )

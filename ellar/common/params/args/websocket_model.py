@@ -1,11 +1,12 @@
 import typing as t
 
 from ellar.common.interfaces import IExecutionContext
-from ellar.pydantic import ErrorWrapper, FieldInfo
+from ellar.pydantic import FieldInfo
 from starlette.convertors import Convertor
 
 from .. import params
 from ..resolvers import BaseRouteParameterResolver, WsBodyParameterResolver
+from ..resolvers.base import ResolverResult
 from .base import EndpointArgsModel
 from .extra_args import ExtraEndpointArg
 
@@ -50,15 +51,17 @@ class WebsocketEndpointArgsModel(EndpointArgsModel):
 
     async def resolve_ws_body_dependencies(
         self, *, ctx: IExecutionContext, body_data: t.Any
-    ) -> t.Tuple[t.Dict[str, t.Any], t.List[ErrorWrapper]]:
+    ) -> ResolverResult:
         values: t.Dict[str, t.Any] = {}
-        errors: t.List[ErrorWrapper] = []
+        errors = []
+        raw_data = {}
         for parameter_resolver in self.body_resolver or []:
             parameter_resolver = t.cast(WsBodyParameterResolver, parameter_resolver)
-            value_, errors_ = await parameter_resolver.resolve(ctx=ctx, body=body_data)
-            if value_:
-                values.update(value_)
-            if errors_:
-                assert isinstance(errors_, list)
-                errors.extend(errors_)
-        return values, errors
+            res = await parameter_resolver.resolve(ctx=ctx, body=body_data)
+            if res.data:
+                values.update(res.data)
+            if res.errors:
+                assert isinstance(res.errors, list)
+                errors.extend(res.errors)
+            raw_data.update({parameter_resolver.model_field.name: res.raw_data})
+        return ResolverResult(values, errors, raw_data)

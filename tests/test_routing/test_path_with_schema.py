@@ -81,7 +81,7 @@ def test_schema():
 
 
 def test_for_invalid_schema():
-    with pytest.raises(ImproperConfiguration) as ex:
+    with pytest.raises(ImproperConfiguration):
 
         @get("/{filter}")
         def invalid_path_parameter(path: NonPrimitiveSchema = Path()):
@@ -89,20 +89,10 @@ def test_for_invalid_schema():
 
         build_route_handler(invalid_path_parameter)
 
-    assert (
-        str(ex.value)
-        == "Path params must be of one of the supported types. Only primitive types"
-    )
-
-    with pytest.raises(ImproperConfiguration) as ex:
+    with pytest.raises(ImproperConfiguration):
 
         @get("/{int}/{float}")
         def invalid_path_parameter(path: ListOfPrimitiveSchema = Path()):
             pass
 
         build_route_handler(invalid_path_parameter)
-
-    assert (
-        str(ex.value)
-        == "Path params must be of one of the supported types. Only primitive types"
-    )

@@ -108,12 +108,10 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
         request_logger.debug(
             f"Resolving request handler dependencies '{self.__class__.__name__}'"
         )
-        func_kwargs, errors = await self.endpoint_parameter_model.resolve_dependencies(
-            ctx=context
-        )
-        if errors:
+        res = await self.endpoint_parameter_model.resolve_dependencies(ctx=context)
+        if res.errors:
             websocket = context.switch_to_websocket().get_client()
-            exc = WebSocketRequestValidationError(errors)
+            exc = WebSocketRequestValidationError(res.errors)
             if websocket.client_state == WebSocketState.CONNECTING:
                 await websocket.accept()
             await websocket.send_json(
@@ -122,7 +120,7 @@ class WebsocketRouteOperation(WebsocketRouteOperationBase, StarletteWebSocketRou
             await websocket.close(code=WS_1008_POLICY_VIOLATION)
             raise exc
 
-        return await self.run(context, func_kwargs)
+        return await self.run(context, res.data)
 
     async def handle_response(
         self, context: IExecutionContext, response_obj: t.Any

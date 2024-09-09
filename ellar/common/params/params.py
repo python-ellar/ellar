@@ -15,6 +15,7 @@ from .resolvers import (
     FileParameterResolver,
     FormParameterResolver,
     HeaderParameterResolver,
+    IRouteParameterResolver,
     PathParameterResolver,
     QueryParameterResolver,
     WsBodyParameterResolver,
@@ -67,6 +68,9 @@ class ParamFieldInfo(FieldInfo):
         json_schema_extra: t.Union[t.Dict[str, t.Any], None] = None,
         **extra: t.Any,
     ):
+        # identifies a field wrapping many resolvers/field-infos
+        self._ellar_body = extra.pop("ellar_body", False)
+
         self.deprecated = deprecated
         self.include_in_schema = include_in_schema
 
@@ -108,7 +112,9 @@ class ParamFieldInfo(FieldInfo):
 
         super().__init__(**init_kwargs)
 
-    def create_resolver(self, model_field: ModelField) -> BaseRouteParameterResolver:
+    def create_resolver(
+        self, model_field: ModelField
+    ) -> t.Union[BaseRouteParameterResolver, IRouteParameterResolver]:
         multiple_resolvers = model_field.field_info.json_schema_extra.pop(  # type:ignore[union-attr]
             MULTI_RESOLVER_KEY, None
         )
@@ -417,7 +423,9 @@ class FormFieldInfo(ParamFieldInfo):
         self.embed = True
         self.media_type = media_type or self.MEDIA_TYPE
 
-    def create_resolver(self, model_field: ModelField) -> BaseRouteParameterResolver:
+    def create_resolver(
+        self, model_field: ModelField
+    ) -> t.Union[BaseRouteParameterResolver, IRouteParameterResolver]:
         multiple_resolvers = model_field.field_info.json_schema_extra.pop(  # type:ignore[union-attr]
             MULTI_RESOLVER_KEY, []
         )
