@@ -118,12 +118,7 @@ FORM_OPENAPI_DOC = {
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "allOf": [
-                                    {
-                                        "$ref": "#/components/schemas/body_form_upload_multiple_case_2_mixed_optional_post"
-                                    }
-                                ],
-                                "title": "Body",
+                                "$ref": "#/components/schemas/body_form_upload_multiple_case_2_mixed_optional_post"
                             }
                         }
                     }
@@ -236,7 +231,7 @@ FORM_OPENAPI_DOC = {
                         "repr": True,
                     },
                     "range": {
-                        "allOf": [{"$ref": "#/components/schemas/Range"}],
+                        "$ref": "#/components/schemas/Range",
                         "default": 20,
                         "repr": True,
                     },

@@ -461,9 +461,8 @@ def test_open_api_route__get_openapi_path_object_works_for_routes_with_multiple_
                 "content": {
                     "application/json": {
                         "schema": {
-                            "allOf": [{"$ref": "#/$defs/CreateCarSchema"}],
+                            "$ref": "#/$defs/CreateCarSchema",
                             "default": None,
-                            "title": "Car",
                         }
                     }
                 }
@@ -497,9 +496,8 @@ def test_open_api_route__get_openapi_path_object_works_for_routes_with_multiple_
                 "content": {
                     "application/json": {
                         "schema": {
-                            "allOf": [{"$ref": "#/$defs/CreateCarSchema"}],
+                            "$ref": "#/$defs/CreateCarSchema",
                             "default": None,
-                            "title": "Car",
                         }
                     }
                 }

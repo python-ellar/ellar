@@ -147,7 +147,7 @@ def test_schema():
                 "repr": True,
             },
             "range": {
-                "allOf": [{"$ref": "#/components/schemas/Range"}],
+                "$ref": "#/components/schemas/Range",
                 "default": 20,
                 "repr": True,
             },
