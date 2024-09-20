@@ -115,6 +115,20 @@ class ParamFieldInfo(FieldInfo):
     def create_resolver(
         self, model_field: ModelField
     ) -> t.Union[BaseRouteParameterResolver, IRouteParameterResolver]:
+        """
+        Create a resolver for a given model field.
+
+        This method is responsible for creating the appropriate resolver for a given
+        model field.
+        It checks if the model field has been split into many sub-models that are referred to as MultipleResolvers.
+        And then creates an appropriate resolver for each of them.
+
+        Args:
+            model_field (ModelField): The model field to create a resolver for.
+
+        Returns:
+            BaseRouteParameterResolver: The created resolver.
+        """
         multiple_resolvers = model_field.field_info.json_schema_extra.pop(  # type:ignore[union-attr]
             MULTI_RESOLVER_KEY, None
         )

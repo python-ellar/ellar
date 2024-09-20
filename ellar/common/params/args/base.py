@@ -49,7 +49,7 @@ __BULK_RESOLVERS__ = {
 }
 
 
-def add_get_resolver_generator(
+def add_resolver_generator(
     param: t.Type[params.ParamFieldInfo],
     resolver_gen: t.Type[BulkArgsResolverGenerator],
 ) -> None:
