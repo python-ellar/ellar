@@ -1,3 +1,19 @@
+# 0.8.3
+## What's Changed
+* fix: ForwardRef and Service lookup by @eadwinCode in https://github.com/python-ellar/ellar/pull/235
+* Bump ruff from 0.5.5 to 0.6.3 by @dependabot in https://github.com/python-ellar/ellar/pull/241
+* Bump mypy from 1.11.1 to 1.11.2 by @dependabot in https://github.com/python-ellar/ellar/pull/240
+* Bump aiohttp from 3.10.0 to 3.10.5 by @dependabot in https://github.com/python-ellar/ellar/pull/239
+* Bump types-redis from 4.6.0.20240425 to 4.6.0.20240819 by @dependabot in https://github.com/python-ellar/ellar/pull/238
+* Bump uvicorn[standard] from 0.30.4 to 0.30.6 by @dependabot in https://github.com/python-ellar/ellar/pull/237
+* fix: allOf for latest Pydantic version by @eadwinCode in https://github.com/python-ellar/ellar/pull/244
+* Fix: Moved Passlib and click package as an optional dependency by @eadwinCode in https://github.com/python-ellar/ellar/pull/243
+* Bump types-redis from 4.6.0.20240819 to 4.6.0.20240903 by @dependabot in https://github.com/python-ellar/ellar/pull/242
+* fix: Unified route function resolvers by @eadwinCode in https://github.com/python-ellar/ellar/pull/236
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.8.2...0.8.3
+
+
 # 0.8.2
 ## What's Changed
 * Removed jinja validator by @eadwinCode in https://github.com/python-ellar/ellar/pull/234
