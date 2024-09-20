@@ -12,6 +12,10 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 
 class ResolverResult(t.NamedTuple):
+    """
+    A named tuple containing the resolved value, any errors, and the raw data.
+    """
+
     data: t.Optional[t.Any]
     errors: t.Optional[t.List[t.Dict[str, t.Any]]]
     raw_data: t.Dict[str, t.Any]
@@ -27,12 +31,29 @@ class IRouteParameterResolver(ABC, metaclass=ABCMeta):
     @abstractmethod
     @t.no_type_check
     async def resolve(self, *args: t.Any, **kwargs: t.Any) -> ResolverResult:
-        """Resolve handle"""
+        """
+        Resolves the value of the parameter during request processing.
+
+        Args:
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            `ResolverResult`: A named tuple containing the resolved value, any errors, and the raw data.
+        """
 
     @abstractmethod
     @t.no_type_check
     def create_raw_data(self, data: t.Any) -> t.Dict:
-        """Essential for debugging"""
+        """
+        Creates the raw data for the parameter.
+
+        Args:
+            data: The resolved value of the parameter.
+
+        Returns:
+            `dict`: A dictionary containing the raw data.
+        """
 
 
 class BaseRouteParameterResolver(IRouteParameterResolver, ABC):
@@ -42,10 +63,12 @@ class BaseRouteParameterResolver(IRouteParameterResolver, ABC):
         )
 
     def create_raw_data(self, data: t.Any) -> t.Dict:
-        """Essential for debugging"""
         return {self.model_field.name: data}
 
     def assert_field_info(self) -> None:
+        """
+        Asserts that the field info is of the correct type.
+        """
         from .. import params
 
         assert isinstance(
@@ -69,4 +92,13 @@ class BaseRouteParameterResolver(IRouteParameterResolver, ABC):
     @abstractmethod
     @t.no_type_check
     async def resolve_handle(self, *args: t.Any, **kwargs: t.Any) -> ResolverResult:
-        """resolver action"""
+        """
+        Resolves the value of the parameter during request processing.
+
+        Args:
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            `ResolverResult`: A named tuple containing the resolved value, any errors, and the raw data.
+        """
