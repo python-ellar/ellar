@@ -1,3 +1,10 @@
+# 0.8.4
+## What's Changed
+* Custom resolver gen by @eadwinCode in https://github.com/python-ellar/ellar/pull/245
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.8.3...0.8.4
+
 # 0.8.3
 ## What's Changed
 * fix: ForwardRef and Service lookup by @eadwinCode in https://github.com/python-ellar/ellar/pull/235
