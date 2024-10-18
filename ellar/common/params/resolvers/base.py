@@ -44,12 +44,15 @@ class IRouteParameterResolver(ABC, metaclass=ABCMeta):
 
     @abstractmethod
     @t.no_type_check
-    def create_raw_data(self, data: t.Any) -> t.Dict:
+    def create_raw_data(
+        self, data: t.Any, field_name: t.Optional[str] = None
+    ) -> t.Dict:
         """
         Creates the raw data for the parameter.
 
         Args:
             data: The resolved value of the parameter.
+            field_name: The name of the field.
 
         Returns:
             `dict`: A dictionary containing the raw data.
@@ -62,8 +65,10 @@ class BaseRouteParameterResolver(IRouteParameterResolver, ABC):
             RouteParameterModelField, model_field
         )
 
-    def create_raw_data(self, data: t.Any) -> t.Dict:
-        return {self.model_field.name: data}
+    def create_raw_data(
+        self, data: t.Any, field_name: t.Optional[str] = None
+    ) -> t.Dict:
+        return {field_name or self.model_field.name: data}
 
     def assert_field_info(self) -> None:
         """
@@ -91,13 +96,21 @@ class BaseRouteParameterResolver(IRouteParameterResolver, ABC):
 
     @abstractmethod
     @t.no_type_check
-    async def resolve_handle(self, *args: t.Any, **kwargs: t.Any) -> ResolverResult:
+    async def resolve_handle(
+        self,
+        *args: t.Any,
+        alias: t.Optional[str] = None,
+        name: t.Optional[str] = None,
+        **kwargs: t.Any,
+    ) -> ResolverResult:
         """
         Resolves the value of the parameter during request processing.
 
         Args:
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
+            alias: The alias of the parameter. Optional.
+            name: The name of the parameter. Optional.
 
         Returns:
             `ResolverResult`: A named tuple containing the resolved value, any errors, and the raw data.
