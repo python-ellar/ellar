@@ -1,3 +1,4 @@
+import os
 import typing as t
 from functools import lru_cache
 
@@ -13,8 +14,14 @@ from starlette.background import BackgroundTask
 
 @lru_cache(1200)
 def get_template_name(template_name: str) -> str:
-    if not template_name.endswith(".html"):
+    # Split the filename and extension
+    name, ext = os.path.splitext(template_name)
+
+    # If there's no extension, add .html
+    if not ext:
         return template_name + ".html"
+
+    # Otherwise, return the original name
     return template_name
 
 
