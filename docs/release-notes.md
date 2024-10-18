@@ -1,3 +1,12 @@
+# 0.8.5
+## What's Changed
+* Bump pypa/gh-action-pypi-publish from 1.9.0 to 1.10.2 by @dependabot in https://github.com/python-ellar/ellar/pull/246
+* fix:Route Resolvers with custom alias and name by @eadwinCode in https://github.com/python-ellar/ellar/pull/247
+* fix: Skip template name with any extension  by @eadwinCode in https://github.com/python-ellar/ellar/pull/248
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.8.4...0.8.5
+
 # 0.8.4
 ## What's Changed
 * Custom resolver gen by @eadwinCode in https://github.com/python-ellar/ellar/pull/245
