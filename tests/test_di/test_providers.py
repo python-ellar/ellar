@@ -8,6 +8,7 @@ from ellar.di import (
 )
 from ellar.di.providers import ClassProvider, ModuleProvider
 from ellar.di.scopes import SingletonScope, TransientScope
+from ellar.utils.importer import get_class_import
 from injector import (
     CircularDependency,
     UnsatisfiedRequirement,
@@ -20,10 +21,12 @@ from .examples import (
     Foo1,
     Foo2,
     FooDBCatsRepository,
+    IContext,
     IDBContext,
     InjectType,
     InjectType2,
     IRepository,
+    TransientRequestContext,
 )
 
 
@@ -84,6 +87,9 @@ def test_provider_advance_use_case():
             IRepository, use_class=FooDBCatsRepository
         ),  # register base type against a concrete_type
         ProviderConfig(
+            IContext, use_class=get_class_import(TransientRequestContext)
+        ),  # register base type against a concrete_type
+        ProviderConfig(
             IDBContext, use_class=AnyDBContext
         ),  # register base type against a concrete_type
         ProviderConfig(Foo1, use_value=Foo1()),  # register concrete_type as singleton
@@ -93,8 +99,10 @@ def test_provider_advance_use_case():
         provider.register(injector.container)
 
     repository = injector.get(IRepository)
+    ictx = injector.get(IContext)
     db_context = injector.get(IDBContext)
     assert isinstance(repository, FooDBCatsRepository)
+    assert isinstance(ictx, TransientRequestContext)
     assert isinstance(db_context, AnyDBContext)
     assert repository.context == db_context  # service registered as singleton
 
