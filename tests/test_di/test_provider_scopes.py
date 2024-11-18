@@ -4,6 +4,7 @@ from ellar.core.execution_context import HostContextFactory
 from ellar.di import EllarInjector, ProviderConfig, has_binding
 from ellar.di.exceptions import DIImproperConfiguration
 from ellar.di.scopes import RequestScope, SingletonScope, TransientScope
+from ellar.utils.importer import get_class_import
 from injector import UnsatisfiedRequirement, inject
 
 from .examples import AnyContext, Foo, IContext, TransientRequestContext
@@ -12,6 +13,7 @@ from .examples import AnyContext, Foo, IContext, TransientRequestContext
 @pytest.mark.parametrize(
     "provider, ref_type, expected_scope",
     [
+        (ProviderConfig(get_class_import(Foo)), Foo, SingletonScope),
         (ProviderConfig(Foo, use_value=Foo()), Foo, SingletonScope),
         (ProviderConfig(Foo), Foo, SingletonScope),
         (ProviderConfig(Foo, scope=TransientScope), Foo, TransientScope),

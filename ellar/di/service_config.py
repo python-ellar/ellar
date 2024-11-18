@@ -34,6 +34,54 @@ __all__ = (
 
 
 class ProviderConfig(t.Generic[T]):
+    """
+    ProviderConfig is a class that configures a provider for a service.
+
+    Example:
+
+    >>> class SomeClass:
+    ...     def __init__(self, a: InjectByTag('A'), b: AnotherType):
+    ...         self.a = a
+    ...         self.b = b
+
+    >>> provider_config = ProviderConfig(SomeClass)
+    >>> provider_config.register(container)
+
+    Example with string:
+
+    >>> provider_config = ProviderConfig('path.to:SomeClass')
+    >>> provider_config.register(container)
+
+    Example with value:
+
+    >>> provider_config = ProviderConfig(SomeClass, use_value=SomeValue)
+    >>> provider_config.register(container)
+
+    Example with class:
+
+    >>> provider_config = ProviderConfig(SomeClass, use_class=AnotherType)
+    >>> provider_config.register(container)
+
+    Example with use_class as string:
+
+    >>> provider_config = ProviderConfig(SomeClass, use_class='path.to:AnotherType')
+    >>> provider_config.register(container)
+
+    Example with scope:
+
+    >>> provider_config = ProviderConfig(SomeClass, scope=request_scope)
+    >>> provider_config.register(container)
+
+    Example with tag:
+
+    >>> provider_config = ProviderConfig(SomeClass, tag='some_tag')
+    >>> provider_config.register(container)
+    >>> instance = container.get(InjectByTag('some_tag'))
+    >>> assert isinstance(instance, SomeClass)
+
+
+    """
+
     __slots__ = (
         "base_type",
         "use_value",
@@ -46,7 +94,7 @@ class ProviderConfig(t.Generic[T]):
 
     def __init__(
         self,
-        base_type: t.Union[t.Type[T], t.Type],
+        base_type: t.Union[t.Type[T], t.Type, str],
         *,
         use_value: t.Optional[T] = None,
         use_class: t.Union[t.Type[T], t.Any] = None,
@@ -69,33 +117,46 @@ class ProviderConfig(t.Generic[T]):
         self.core = core
 
     def get_type(self) -> t.Type:
-        return self.base_type
+        return self._resolve_type(self.base_type)
+
+    def get_use_class(self) -> t.Type:
+        return self._resolve_type(self.use_class)
+
+    def _resolve_type(self, type_or_str: t.Union[t.Type, str]) -> t.Type:
+        from ellar.utils.importer import import_from_string
+
+        if isinstance(type_or_str, str):
+            return t.cast(t.Type, import_from_string(type_or_str))
+        return type_or_str
 
     def register(self, container: "Container") -> None:
-        scope = get_scope(self.base_type) or self.scope
-        if self.use_class:
-            scope = get_scope(self.use_class) or scope
+        base_type = self.get_type()
+        scope = get_scope(base_type) or self.scope
+        use_class = self.get_use_class()
+
+        if use_class:
+            scope = get_scope(use_class) or scope
             container.register(
-                base_type=self.base_type,
-                concrete_type=self.use_class,
+                base_type=base_type,
+                concrete_type=use_class,
                 scope=scope,
                 tag=self.tag,
             )
         elif self.use_value:
             container.register(
-                base_type=self.base_type,
+                base_type=base_type,
                 concrete_type=self.use_value,
                 scope=scope,
                 tag=self.tag,
             )
-        elif not isinstance(self.base_type, type):
+        elif not isinstance(base_type, type):
             raise DIImproperConfiguration(
-                f"couldn't determine provider setup for {self.base_type}. "
+                f"couldn't determine provider setup for {base_type}. "
                 f"Please use `ProviderConfig` or `register_services` function in a "
                 f"Module to configure the provider"
             )
         else:
-            container.register(base_type=self.base_type, scope=scope, tag=self.tag)
+            container.register(base_type=base_type, scope=scope, tag=self.tag)
 
 
 @t.overload
