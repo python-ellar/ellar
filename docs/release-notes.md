@@ -1,3 +1,11 @@
+# 0.8.6
+## What's Changed
+* Bump codecov/codecov-action from 4.5.0 to 4.6.0 by @dependabot in https://github.com/python-ellar/ellar/pull/249
+* fix: Provider Config with string import by @eadwinCode in https://github.com/python-ellar/ellar/pull/251
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.8.5...0.8.6
+
 # 0.8.5
 ## What's Changed
 * Bump pypa/gh-action-pypi-publish from 1.9.0 to 1.10.2 by @dependabot in https://github.com/python-ellar/ellar/pull/246
