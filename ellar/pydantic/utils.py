@@ -303,7 +303,10 @@ def create_model_field(
 
     try:
         return model_field_class(**kwargs)  # type: ignore[arg-type]
-    except (PydanticUndefinedAnnotation, PydanticSchemaGenerationError) as e:
+    except (
+        PydanticUndefinedAnnotation,
+        PydanticSchemaGenerationError,
+    ) as e:  # pragma: no cover
         raise InvalidModelFieldSetupException(
             f"Invalid args for response field! Hint: check that {type_} is a valid pydantic field type"
         ) from e

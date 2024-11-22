@@ -181,6 +181,7 @@ def test_open_api_route_get_openapi_operation_parameters_works_for_empty_model_n
             "in": "query",
             "required": True,
             "schema": {
+                "deprecated": True,
                 "type": "integer",
                 "description": "input field description",
                 "title": "Schema",
