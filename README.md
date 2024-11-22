@@ -31,13 +31,42 @@ It is built on top of Starlette, a renowned ASGI toolkit, ensuring robust asynch
 - **Guards for Authentication and Authorization**: Offers built-in support for guards, making it easy to implement authentication and authorization in applications.
 - **Modularity**: Inspired by NestJS, Ellar follows a modular architecture, allowing developers to organize code into reusable modules.
 - **Asynchronous Programming**: Leveraging Python's async/await feature, Ellar enables the development of efficient and high-performance applications capable of handling concurrent requests.
+- **Type Hints Support**: Built with modern Python type hints for better IDE support and code reliability.
+- **WebSocket Support**: Native WebSocket support for real-time bidirectional communication.
+- **Database Agnostic**: Freedom to use any database with built-in support for popular ORMs.
+- **Testing Utilities**: Comprehensive testing utilities for unit and integration testing.
 
 ## **Installation**
 
 You can install Ellar using pip:
 
 ```bash
-$(venv) pip install ellar
+# Create and activate virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+
+# Install Ellar
+pip install ellar
+```
+
+## **Quick Start**
+
+```python
+# main.py
+from ellar.common import get, Controller, ControllerBase
+from ellar.app import AppFactory
+
+@Controller()
+class HomeController(ControllerBase):
+    @get('/')
+    async def index(self):
+        return {'message': 'Welcome to Ellar Framework!'}
+
+app = AppFactory.create_app(controllers=[HomeController])
+
+# Run the application
+if __name__ == "__main__":
+    uvicorn.run("main:app", port=5000, reload=True)
 ```
 
 ## **Getting Started**
@@ -132,15 +161,23 @@ You can also try the [quick-project](https://python-ellar.github.io/ellar/quick-
 
 ## **Project Documentation Status**
 - Authorization: In progress
+- Complete documentation available at: https://python-ellar.github.io/ellar/
+- API Reference: https://python-ellar.github.io/ellar/references/
 
 ## **Dependency Summary**
 
-Ellar has the following dependencies:
+Ellar has the following core dependencies:
 
 - Python >= 3.8
-- Starlette
-- Pydantic
-- Injector
+- Starlette >= 0.27.0
+- Pydantic >= 2.0
+- Injector >= 0.19.0
+- typing-extensions >= 4.5.0
+
+Optional dependencies:
+- jinja2 - For template rendering
+- python-multipart - For form data parsing
+- itsdangerous - For security features
 
 ## **Contributing**
 Contributions are Welcome! You can contribute in the following ways.

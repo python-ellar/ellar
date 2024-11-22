@@ -1,17 +1,16 @@
 # **Ellar - ASGI Python Framework**
 <p align="center">
-  <a href="#" target="blank"><img src="img/EllarLogoB.png" width="200" alt="Ellar Logo" /></a>
+  <a href="#" target="blank"><img src="https://python-ellar.github.io/ellar/img/EllarLogoB.png" width="200" alt="Ellar Logo" /></a>
 </p>
+<p align="end">logo by: <a target="_blank" href="https://www.behance.net/azadvertised">Azad</a></p>
 
-<p align="center"> Ellar - Python ASGI web framework for building fast, efficient, and scalable RESTAPIs and server-side applications. </p>
+<p align="center"> Ellar - Python ASGI web framework for building fast, efficient, and scalable RESTful APIs and server-side applications. </p>
 
 ![Test](https://github.com/python-ellar/ellar/actions/workflows/test_full.yml/badge.svg)
 ![Coverage](https://img.shields.io/codecov/c/github/python-ellar/ellar)
 [![PyPI version](https://badge.fury.io/py/ellar.svg)](https://badge.fury.io/py/ellar)
 [![PyPI version](https://img.shields.io/pypi/v/ellar.svg)](https://pypi.python.org/pypi/ellar)
 [![PyPI version](https://img.shields.io/pypi/pyversions/ellar.svg)](https://pypi.python.org/pypi/ellar)
-
----
 
 ## **Introduction**
 
@@ -33,13 +32,42 @@ It is built on top of Starlette, a renowned ASGI toolkit, ensuring robust asynch
 - **Guards for Authentication and Authorization**: Offers built-in support for guards, making it easy to implement authentication and authorization in applications.
 - **Modularity**: Inspired by NestJS, Ellar follows a modular architecture, allowing developers to organize code into reusable modules.
 - **Asynchronous Programming**: Leveraging Python's async/await feature, Ellar enables the development of efficient and high-performance applications capable of handling concurrent requests.
+- **Type Hints Support**: Built with modern Python type hints for better IDE support and code reliability.
+- **WebSocket Support**: Native WebSocket support for real-time bidirectional communication.
+- **Database Agnostic**: Freedom to use any database with built-in support for popular ORMs.
+- **Testing Utilities**: Comprehensive testing utilities for unit and integration testing.
 
 ## **Installation**
 
 You can install Ellar using pip:
 
 ```bash
-$(venv) pip install ellar
+# Create and activate virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+
+# Install Ellar
+pip install ellar
+```
+
+## **Quick Start**
+
+```python
+# main.py
+from ellar.common import get, Controller, ControllerBase
+from ellar.app import AppFactory
+
+@Controller()
+class HomeController(ControllerBase):
+    @get('/')
+    async def index(self):
+        return {'message': 'Welcome to Ellar Framework!'}
+
+app = AppFactory.create_app(controllers=[HomeController])
+
+# Run the application
+if __name__ == "__main__":
+    uvicorn.run("main:app", port=5000, reload=True)
 ```
 
 ## **Getting Started**
@@ -126,10 +154,46 @@ if __name__ == "__main__":
     uvicorn.run("main:app", port=5000, reload=True)
 ```
 
+You can access the Ellar API documentation at [http://127.0.0.1:5000/docs](http://127.0.0.1:5000/docs#/). Additionally, you can try the [quick-project setup](quick-project.md) to get started quickly with Ellar.
 
-Now we can test our API at [http://127.0.0.1:5000/docs](http://127.0.0.1:5000/docs#/)
 
-You can also try the [quick-project](https://python-ellar.github.io/ellar/quick-project/) setup to get a good idea of the library.
+## **Project Documentation Status**
+- Authorization: In progress
+- Complete documentation available at: https://python-ellar.github.io/ellar/
+- API Reference: https://python-ellar.github.io/ellar/references/
+
+## **Dependency Summary**
+
+Ellar has the following core dependencies:
+
+- Python >= 3.8
+- Starlette >= 0.27.0
+- Pydantic >= 2.0
+- Injector >= 0.19.0
+- typing-extensions >= 4.5.0
+
+Optional dependencies:
+- jinja2 - For template rendering
+- python-multipart - For form data parsing
+- itsdangerous - For security features
+
+## **Contributing**
+Contributions are Welcome! You can contribute in the following ways.
+
+- **Create an Issue** - Propose a new feature. Report a bug.
+- **Pull Request** - Fix a bug and typo. Refactor the code.
+- **Create third-party module** - Just like ellar-throttling, ellar-jwt, ellar-sql that can solve common problem in web application development.
+- **Share** - Share your thoughts on the a Blog, Twitter, and others.
+- **Build your application** - Please try to use Ellar. For more details, see [docs/CONTRIBUTING.md](https://github.com/python-ellar/ellar/blob/main/docs/contribution.md).
+
+## **Contributors**
+Thanks to all contributors!
+
+## **Author**
+Ezeudoh Tochukwu https://github.com/eadwinCode
+
+## **License**
+Ellar is [MIT License](https://github.com/python-ellar/ellar/blob/main/LICENSE).
 
 
 ## **Project Documentation Status**
@@ -143,7 +207,3 @@ Ellar has the following dependencies:
 - Starlette
 - Pydantic
 - Injector
-
-## **Try It Out**
-
-You can access the Ellar API documentation at [http://127.0.0.1:5000/docs](http://127.0.0.1:5000/docs#/). Additionally, you can try the [quick-project setup](quick-project.md) to get started quickly with Ellar.
