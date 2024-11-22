@@ -31,9 +31,7 @@ from .controllers import CarController
     providers=[CarRepository],
 )
 class CarModule(ModuleBase):
-    def register_providers(self, container: Container) -> None:
-        # Additional provider registrations can be done here
-        pass
+    pass
 ```
 
 ## **Module Parameters**
@@ -179,15 +177,10 @@ from .controllers import CarController
 class CarModule(ModuleBase):
     def __init__(self, config: Config):
         self.config = config
-    
-    def register_providers(self, container: Container) -> None:
-        # Additional provider registrations can be performed here
-        pass
 ```
 
 In this example, the `CarModule` class accepts a `Config` object in its constructor. 
 This allows us to access configuration parameters within the module. 
-Additionally, the `register_providers` method can be utilized for more advanced provider registrations within the container.
 
 ## **Module Middleware**
 Middleware functions can be defined at the module level using the `@middleware()` function decorator. Let's illustrate this with an example:
@@ -264,8 +257,41 @@ you can refer to the documentation [here](https://injector.readthedocs.io/en/lat
 ## **ForwardRefModule**
 `ForwardRefModule` is a powerful feature that allows you to reference a `@Module()` class in your application 
 without needing to instantiate or configure it directly at the point of reference. 
+
 This is particularly useful in scenarios where you have circular dependencies between modules 
 or when you want to declare dependencies without tightly coupling your modules.
+
+#### What problem does it solve?    
+Let's consider an example where we have two modules, `ModuleA` and `ModuleB`. `ModuleB` depends on a service/provider, which is exported, from `ModuleA` and `ModuleB` does not want to instantiate `ModuleA` directly but rather reference its existing instance from the application scope. `ModuleB` can use `ForwardRefModule` to declare the `ModuleA` as a dependency. And `ModuleA` can be setup differently in any random order.
+
+A typical example is a `CustomModule` that depends on `JWTModule` to sign the JWT tokens. The `CustomModule` would declare `JWTModule` as a dependency using `ForwardRefModule` and `JWTModule` can be configured separately in `ApplicationModule`.
+
+```python
+from ellar.common import Module
+from ellar.core import ModuleBase, ForwardRefModule
+from ellar_jwt import JWTModule, JWTService
+
+
+@Module(name="CustomModule", modules=[ForwardRefModule(JWTModule)])
+class CustomModule(ModuleBase):
+    def __init__(self, jwt_service: JWTService):
+        self.jwt_service = jwt_service
+        assert self.jwt_service
+
+
+@Module(modules=[
+    CustomModule, 
+    JWTModule.setup(secret_key="super-secret")
+])
+class ApplicationModule(ModuleBase):
+    pass
+```
+The `JWTModule` provides `JWTService` which is injected into `CustomModule`. By declaring `ForwardRefModule(JWTModule)` in `CustomModule`, the `JWTService` will be properly resolved during instantiation of `CustomModule`, regardless of the order in which the modules are configured in the application.
+
+This pattern is particularly useful when:
+- You want to avoid direct module instantiation
+- You need to configure a module differently in different parts of your application
+- You want to maintain loose coupling between modules
 
 ### Forward Reference by Class
 

@@ -67,10 +67,7 @@ from .routers import math_router
     routers=[math_router],
 )
 class CarModule(ModuleBase):
-    def register_providers(self, container: Container) -> None:
-        # for more complicated provider registrations
-        # container.register_instance(...)
-        pass
+    pass
 ```
 
 ![math_router.png](../img/math_router.png)

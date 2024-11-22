@@ -115,7 +115,7 @@ class ModuleBase(_InjectorModule, metaclass=ModuleBaseMeta):
         """Executed after a Subclass build process is done"""
 
     def register_services(self, container: Container) -> None:
-        """Register other services manually"""
+        """This method is used to register other services manually. But its advised to use the `ProviderConfig` class instead."""
 
     def configure(self, container: Binder) -> None:
         """Injector Module Support. Override register_services instead"""

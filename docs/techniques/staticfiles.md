@@ -51,10 +51,7 @@ from .controllers import CarController
     controllers=[CarController], static_folder='my_static'
 )
 class CarModule(ModuleBase):
-    def register_providers(self, container: Container) -> None:
-        # for more complicated provider registrations
-        # container.register_instance(...)
-        pass
+    pass
 ```
 
 ## **Other Static Configurations**

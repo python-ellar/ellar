@@ -220,10 +220,7 @@ from .services import CarDummyDB
     routers=[],
 )
 class CarModule(ModuleBase):
-    def register_providers(self, container: Container) -> None:
-        # for more complicated provider registrations
-        # container.register_instance(...)
-        pass
+    pass
 ```
 
 ## **Registering Module**

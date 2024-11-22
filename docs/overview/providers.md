@@ -111,10 +111,7 @@ from .controllers import CarController
     routers=[],
 )
 class CarModule(ModuleBase):
-    def register_providers(self, container: Container) -> None:
-        # for more complicated provider registrations
-        # container.register_instance(...)
-        pass
+    pass
 ```
 
 By adding `CarRepository` to the list of providers, Ellar ensures that it is available for dependency injection within the `CarModule`. 
@@ -159,7 +156,8 @@ a_foo_instance = AFooClass()
 @Module(
     providers=[
         ProviderConfig(IFoo, use_class=AFooClass),
-        ProviderConfig(IFooB, use_value=a_foo_instance)
+        ProviderConfig(IFooB, use_value=a_foo_instance),
+        ProviderConfig(IFoo, use_class="path.to:AFooClass")
     ]
 )
 class AModule(ModuleBase):
@@ -184,66 +182,7 @@ if __name__ == "__main__":
     validate_provider_config()
 ```
 
-In the above example, `ProviderConfig` is used as a value type for `IFooB` and as a concrete type for `IFoo`.
-
-### **2. `register_providers`:**
-Another method is by overriding `register_services` in any Module class.
-
-For example:
-```python
-# main.py
-
-from ellar.common import Module
-from ellar.core import ModuleBase, Config
-from ellar.di import Container, EllarInjector, injectable
-from ellar.core.modules.ref import create_module_ref_factor
-
-injector = EllarInjector(auto_bind=False)
-
-
-class IFoo:
-    pass
-
-
-class IFooB:
-    pass
-
-
-@injectable
-class AFooClass(IFoo, IFooB):
-    pass
-
-
-a_foo_instance = AFooClass()
-
-
-@Module()
-class AModule(ModuleBase):
-    def register_services(self, container: Container) -> None:
-        container.register(IFoo, AFooClass)
-        container.register(IFooB, a_foo_instance)
-
-
-def validate_register_services():
-    module_ref = create_module_ref_factor(
-       AModule, container=injector.container, config=Config(),
-    )
-    module_ref.run_module_register_services()
-    
-    ifoo_b = injector.get(IFooB)
-    ifoo = injector.get(IFoo)
-    
-    assert isinstance(ifoo_b, AFooClass)
-    assert isinstance(ifoo, AFooClass)
-    assert ifoo_b == a_foo_instance
-
-if __name__ == "__main__":
-    validate_register_services()
-
-```
-
-In the illustration above, the `AModule` `register_services` method was used to register `IFoo` and `IFooB`
-with their respective concrete implementations.
+In the above example, `ProviderConfig` is used as a value type for `IFooB` and as a concrete type for `IFoo`. Also, the `use_class` argument can be used to specify the path to the class to be used as the provider which is useful when you want to lazy load the provider class.
 
 ## **Tagging Registered Providers**
 
@@ -264,40 +203,23 @@ class Foo:
 class FooB:
     pass
 
-injector.container.register_singleton(Foo, tag="first_foo")
-injector.container.register(FooB, tag="second_foo")
 
-first_foo_instance = injector.get("first_foo")
-second_foo_instance = injector.get("second_foo")
+@Module(
+    providers=[
+        ProviderConfig(Foo, tag="first_foo"),
+        ProviderConfig(FooB, tag="second_foo"),
+    ]
+)
+class AModule(ModuleBase):
+    def __init__(self, foo: InjectByTag("first_foo"), foo_b: InjectByTag("second_foo")):
+        self.foo = foo
+        self.foo_b = foo_b
 
-assert first_foo_instance is injector.get(Foo)
-assert isinstance(second_foo_instance, Foo)
+        assert isinstance(self.foo, Foo)
+        assert isinstance(self.foo_b, FooB)
 ```
 
 In the above example, we are tagging `Foo` as `first_foo` and `FooB` as `second_foo`. By doing this, we can resolve both services using their tag names, thus providing the possibility of resolving services by tag name or type.
 
-Also, services can be injected as a dependency by using tags. To achieve this, the `InjectByTag` decorator is used.
-
-For example:
-
-```python
-from ellar.di import EllarInjector, InjectByTag, scopes
-
-injector = EllarInjector(auto_bind=False)
-
-
-class Foo:
-    name: str = "foo"
-
-
-class FooB:
-    def __init__(self, foo: InjectByTag("fooTag")):
-        self.foo = foo
-
-injector.container.register(Foo, tag="fooTag", scope=scopes.singleton_scope)
-injector.container.register(FooB)
-
-assert injector.get(FooB).foo == 'foo'
-```
-
+Also, services can be injected as a dependency by using tags. To achieve this, the `InjectByTag` decorator is used as a `**constructor**` argument.
 This allows for more flexibility in managing dependencies and resolving services based on tags.
