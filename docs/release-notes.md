@@ -1,3 +1,12 @@
+# 0.8.7
+## What's Changed
+* fix: Pydantic Version 2.10.2 bug by @eadwinCode in https://github.com/python-ellar/ellar/pull/254
+* Bump pypa/gh-action-pypi-publish from 1.10.2 to 1.12.2 by @dependabot in https://github.com/python-ellar/ellar/pull/253
+* Bump codecov/codecov-action from 4.6.0 to 5.0.7 by @dependabot in https://github.com/python-ellar/ellar/pull/252
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.8.6...0.8.7
+
 # 0.8.6
 ## What's Changed
 * Bump codecov/codecov-action from 4.5.0 to 4.6.0 by @dependabot in https://github.com/python-ellar/ellar/pull/249
