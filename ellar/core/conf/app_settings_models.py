@@ -26,6 +26,8 @@ from typing_extensions import Annotated
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.app.main import App
 
+AppType = t.TypeVar("AppType", bound="App")
+
 TEMPLATE_TYPE = t.Dict[
     str, t.Union[t.Callable[..., t.Any], t.Dict[str, t.Callable[..., t.Any]]]
 ]
@@ -197,9 +199,9 @@ class ConfigSchema(Serializer, ConfigDefaultTypesMixin):
     DEFAULT_NOT_FOUND_HANDLER: ASGIApp = _not_found
     # The lifespan context function is a newer style that replaces
     # on_startup / on_shutdown handlers. Use one or the other, not both.
-    DEFAULT_LIFESPAN_HANDLER: t.Optional[t.Callable[["App"], t.AsyncContextManager]] = (
-        None
-    )
+    DEFAULT_LIFESPAN_HANDLER: t.Optional[
+        t.Callable[[AppType], t.AsyncContextManager]
+    ] = None
 
     # Object Serializer custom encoders
     SERIALIZER_CUSTOM_ENCODER: t.Dict[t.Any, t.Callable[[t.Any], t.Any]] = (
@@ -248,3 +250,6 @@ class ConfigSchema(Serializer, ConfigDefaultTypesMixin):
         if value and not value.get("default"):
             raise ValueError("CACHES configuration must have a 'default' key")
         return value
+
+
+ConfigSchema.model_rebuild()
