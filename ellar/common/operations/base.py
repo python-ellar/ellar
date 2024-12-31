@@ -20,10 +20,50 @@ from ellar.reflect import ensure_target
 from .schema import RouteParameters, WsRouteParameters
 
 
-def _websocket_connection_attributes(func: t.Callable) -> t.Callable:
-    def _advance_function(
-        websocket_handler: t.Callable, handler_name: str
+class _WebSocketConnectionAttributes:
+    """
+    This class is used to add connection attributes to a websocket handler.
+    """
+
+    __slots__ = ("_original_func", "_func")
+
+    def __init__(self, func: t.Callable) -> None:
+        self._original_func = func
+        self._func: t.Optional[t.Callable] = None
+
+    def __call__(
+        self,
+        path: str = "/",
+        *,
+        name: t.Optional[str] = None,
+        encoding: t.Optional[str] = "json",
+        use_extra_handler: bool = False,
+        extra_handler_type: t.Optional[t.Type] = None,
     ) -> t.Callable:
+        if self._func is None:  # pragma: no cover
+            raise Exception("Something went wrong")
+
+        res = self._func(
+            path=path,
+            name=name,
+            encoding=encoding,
+            use_extra_handler=use_extra_handler,
+            extra_handler_type=extra_handler_type,
+        )
+        return t.cast(t.Callable, res)
+
+    def __get__(self, instance: t.Any, owner: t.Any) -> t.Callable:
+        self._func = functools.partial(self._original_func, instance)
+        return self
+
+    @classmethod
+    def _advance_function(
+        cls, websocket_handler: t.Callable, handler_name: str
+    ) -> t.Callable:
+        """
+        This method is used to register the connection attributes to a websocket handler.
+        """
+
         def _wrap(connect_handler: t.Callable) -> t.Callable:
             if not (
                 callable(websocket_handler) and type(websocket_handler) is FunctionType
@@ -49,12 +89,49 @@ def _websocket_connection_attributes(func: t.Callable) -> t.Callable:
 
         return _wrap
 
-    func.connect = functools.partial(_advance_function, handler_name="on_connect")  # type: ignore[attr-defined]
-    func.disconnect = functools.partial(_advance_function, handler_name="on_disconnect")  # type: ignore[attr-defined]
-    return func
+    def connect(self, f: t.Callable) -> t.Callable:
+        """
+        This method is used to register the connect handler to a websocket handler.
+        """
+        return self._advance_function(f, "on_connect")
+
+    def disconnect(self, f: t.Callable) -> t.Callable:
+        """
+        This method is used to register the disconnect handler to a websocket handler.
+        """
+        return self._advance_function(f, "on_disconnect")
 
 
 class OperationDefinitions:
+    """Defines HTTP and WebSocket route operations for the Ellar framework.
+
+    This class provides decorators for defining different types of route handlers:
+    - HTTP methods (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, TRACE)
+    - Generic HTTP routes with custom methods
+    - WebSocket routes with connection handling
+
+    Each route decorator registers the endpoint with appropriate parameters and
+    metadata for the framework to process requests.
+
+    Example:
+        ```python
+        from ellar.common import get, post, ws_route
+
+        @get("/users")
+        def get_users():
+            return {"users": [...]}
+
+        @post("/users")
+        def create_user(user_data: dict):
+            return {"status": "created"}
+
+        @ws_route("/ws")
+        def websocket_handler():
+            # Handle WebSocket connections
+            pass
+        ```
+    """
+
     __slots__ = ()
 
     def _get_operation(self, route_parameter: RouteParameters) -> t.Callable:
@@ -279,7 +356,7 @@ class OperationDefinitions:
 
         return _decorator
 
-    @_websocket_connection_attributes
+    @_WebSocketConnectionAttributes
     def ws_route(
         self,
         path: str = "/",
