@@ -15,6 +15,7 @@ from .identity_schemes import IIdentitySchemes
 from .interceptor_consumer import IInterceptorsConsumer
 from .middleware import IEllarMiddleware
 from .module import IModuleSetup
+from .operation import IWebSocketConnectionAttributes
 from .response_model import IResponseModel
 from .templating import IModuleTemplateLoader, ITemplateRenderingService
 from .versioning import IAPIVersioning, IAPIVersioningResolver
@@ -43,4 +44,5 @@ __all__ = [
     "IIdentitySchemes",
     "IApplicationReady",
     "ITemplateRenderingService",
+    "IWebSocketConnectionAttributes",
 ]

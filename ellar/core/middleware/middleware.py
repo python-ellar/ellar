@@ -32,10 +32,11 @@ class EllarMiddleware(Middleware, IEllarMiddleware):
     def create_object(self, **init_kwargs: t.Any) -> t.Any:
         _result = dict(init_kwargs)
 
-        if hasattr(self.cls, "__init__"):
-            spec = inspect.signature(self.cls.__init__)
+        init_method = getattr(self.cls, "__init__", None)
+        if init_method is not None:
+            spec = inspect.signature(init_method)
             type_hints = _infer_injected_bindings(
-                self.cls.__init__, only_explicit_bindings=False
+                init_method, only_explicit_bindings=False
             )
 
             for k, annotation in type_hints.items():
@@ -45,7 +46,7 @@ class EllarMiddleware(Middleware, IEllarMiddleware):
 
                 _result[k] = current_injector.get(annotation)
 
-        return self.cls(**_result)
+        return self.cls(**_result)  # type: ignore[call-arg]
 
     @t.no_type_check
     def __call__(self, app: ASGIApp, *args: t.Any, **kwargs: t.Any) -> T:

@@ -1,6 +1,5 @@
 import functools
 import typing as t
-from functools import partial
 from types import FunctionType
 
 from ellar.common.constants import (
@@ -15,12 +14,15 @@ from ellar.common.constants import (
     ROUTE_OPERATION_PARAMETERS,
     TRACE,
 )
+from ellar.common.interfaces.operation import IWebSocketConnectionAttributes
 from ellar.reflect import ensure_target
 
 from .schema import RouteParameters, WsRouteParameters
 
 
-def _websocket_connection_attributes(func: t.Callable) -> t.Callable:
+def _websocket_connection_attributes(
+    func: t.Callable,
+) -> IWebSocketConnectionAttributes:
     def _advance_function(
         websocket_handler: t.Callable, handler_name: str
     ) -> t.Callable:
@@ -51,10 +53,40 @@ def _websocket_connection_attributes(func: t.Callable) -> t.Callable:
 
     func.connect = functools.partial(_advance_function, handler_name="on_connect")  # type: ignore[attr-defined]
     func.disconnect = functools.partial(_advance_function, handler_name="on_disconnect")  # type: ignore[attr-defined]
-    return func
+
+    return t.cast(IWebSocketConnectionAttributes, func)
 
 
 class OperationDefinitions:
+    """Defines HTTP and WebSocket route operations for the Ellar framework.
+
+    This class provides decorators for defining different types of route handlers:
+    - HTTP methods (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, TRACE)
+    - Generic HTTP routes with custom methods
+    - WebSocket routes with connection handling
+
+    Each route decorator registers the endpoint with appropriate parameters and
+    metadata for the framework to process requests.
+
+    Example:
+        ```python
+        from ellar.common import get, post, ws_route
+
+        @get("/users")
+        def get_users():
+            return {"users": [...]}
+
+        @post("/users")
+        def create_user(user_data: dict):
+            return {"status": "created"}
+
+        @ws_route("/ws")
+        def websocket_handler():
+            # Handle WebSocket connections
+            pass
+        ```
+    """
+
     __slots__ = ()
 
     def _get_operation(self, route_parameter: RouteParameters) -> t.Callable:
@@ -105,7 +137,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [GET]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -125,7 +157,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [POST]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -145,7 +177,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [PUT]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -165,7 +197,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [PATCH]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -185,7 +217,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [DELETE]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -205,7 +237,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [HEAD]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -225,7 +257,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [OPTIONS]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -245,7 +277,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [TRACE]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
