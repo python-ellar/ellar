@@ -1,7 +1,7 @@
 import typing as t
 
-from ..constants import NOT_SET
-from ..types import T
+from ellar.common.constants import NOT_SET
+from ellar.common.types import T
 
 try:
     from functools import cached_property

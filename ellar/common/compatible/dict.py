@@ -1,6 +1,6 @@
 import typing as t
 
-from ..types import KT, VT
+from ellar.common.types import KT, VT
 
 
 class AttributeDictAccessMixin:
