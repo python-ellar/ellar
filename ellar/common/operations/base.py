@@ -1,6 +1,5 @@
 import functools
 import typing as t
-from functools import partial
 from types import FunctionType
 
 from ellar.common.constants import (
@@ -15,55 +14,18 @@ from ellar.common.constants import (
     ROUTE_OPERATION_PARAMETERS,
     TRACE,
 )
+from ellar.common.interfaces.operation import IWebSocketConnectionAttributes
 from ellar.reflect import ensure_target
 
 from .schema import RouteParameters, WsRouteParameters
 
 
-class _WebSocketConnectionAttributes:
-    """
-    This class is used to add connection attributes to a websocket handler.
-    """
-
-    __slots__ = ("_original_func", "_func")
-
-    def __init__(self, func: t.Callable) -> None:
-        self._original_func = func
-        self._func: t.Optional[t.Callable] = None
-
-    def __call__(
-        self,
-        path: str = "/",
-        *,
-        name: t.Optional[str] = None,
-        encoding: t.Optional[str] = "json",
-        use_extra_handler: bool = False,
-        extra_handler_type: t.Optional[t.Type] = None,
-    ) -> t.Callable:
-        if self._func is None:  # pragma: no cover
-            raise Exception("Something went wrong")
-
-        res = self._func(
-            path=path,
-            name=name,
-            encoding=encoding,
-            use_extra_handler=use_extra_handler,
-            extra_handler_type=extra_handler_type,
-        )
-        return t.cast(t.Callable, res)
-
-    def __get__(self, instance: t.Any, owner: t.Any) -> t.Callable:
-        self._func = functools.partial(self._original_func, instance)
-        return self
-
-    @classmethod
+def _websocket_connection_attributes(
+    func: t.Callable,
+) -> IWebSocketConnectionAttributes:
     def _advance_function(
-        cls, websocket_handler: t.Callable, handler_name: str
+        websocket_handler: t.Callable, handler_name: str
     ) -> t.Callable:
-        """
-        This method is used to register the connection attributes to a websocket handler.
-        """
-
         def _wrap(connect_handler: t.Callable) -> t.Callable:
             if not (
                 callable(websocket_handler) and type(websocket_handler) is FunctionType
@@ -89,17 +51,10 @@ class _WebSocketConnectionAttributes:
 
         return _wrap
 
-    def connect(self, f: t.Callable) -> t.Callable:
-        """
-        This method is used to register the connect handler to a websocket handler.
-        """
-        return self._advance_function(f, "on_connect")
+    func.connect = functools.partial(_advance_function, handler_name="on_connect")  # type: ignore[attr-defined]
+    func.disconnect = functools.partial(_advance_function, handler_name="on_disconnect")  # type: ignore[attr-defined]
 
-    def disconnect(self, f: t.Callable) -> t.Callable:
-        """
-        This method is used to register the disconnect handler to a websocket handler.
-        """
-        return self._advance_function(f, "on_disconnect")
+    return t.cast(IWebSocketConnectionAttributes, func)
 
 
 class OperationDefinitions:
@@ -182,7 +137,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [GET]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -202,7 +157,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [POST]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -222,7 +177,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [PUT]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -242,7 +197,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [PATCH]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -262,7 +217,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [DELETE]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -282,7 +237,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [HEAD]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -302,7 +257,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [OPTIONS]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -322,7 +277,7 @@ class OperationDefinitions:
         ] = None,
     ) -> t.Callable:
         methods = [TRACE]
-        endpoint_parameter_partial = partial(
+        endpoint_parameter_partial = functools.partial(
             RouteParameters,
             name=name,
             methods=methods,
@@ -356,7 +311,7 @@ class OperationDefinitions:
 
         return _decorator
 
-    @_WebSocketConnectionAttributes
+    @_websocket_connection_attributes
     def ws_route(
         self,
         path: str = "/",
