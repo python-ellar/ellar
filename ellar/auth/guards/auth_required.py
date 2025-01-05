@@ -9,6 +9,10 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 
 class AuthenticatedRequiredGuard(GuardCanActivate):
+    """
+    This guard will check if the user is authenticated and also allow you to define the authentication scheme and openapi scope.
+    """
+
     status_code = starlette.status.HTTP_401_UNAUTHORIZED
 
     def __init__(

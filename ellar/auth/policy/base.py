@@ -70,7 +70,7 @@ class PolicyWithRequirement(
 
     def __class_getitem__(cls, parameters: t.Any) -> "Policy":
         _parameters = parameters if isinstance(parameters, tuple) else (parameters,)
-        hash_id = hash(_parameters)
+        hash_id = hash((id(cls), _parameters))
         if hash_id not in cls.__requirements__:
             cls.__requirements__[hash_id] = _PolicyHandlerWithRequirement(
                 cls, cls.requirement_type(*_parameters)
