@@ -7,7 +7,7 @@ happens just before route function is executed.
 Ellar provides `BaseAuthenticationHandler` contract which defines what is required to set up any authentication strategy. 
 We are going to make some modifications on the existing project to see how we can achieve the same result and to show how authentication handlers in ellar.
 
-### Creating a JWT Authentication Handler
+### **Creating a JWT Authentication Handler**
 Just like AuthGuard, we need to create its equivalent. But first we need to create a `auth_scheme.py` at the root level 
 of your application for us to define a `JWTAuthentication` handler. 
 

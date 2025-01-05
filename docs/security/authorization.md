@@ -1,8 +1,8 @@
-# Authorization
+# **Authorization**
 
 Authorization is a crucial security feature in Ellar that determines what resources authenticated users can access. Ellar provides a flexible and powerful authorization system through policies, roles, and claims.
 
-## Table of Contents
+## **Table of Contents**
 
 1. [Basic Authorization](#basic-authorization)
 2. [Policies](./authorization/policies.md)
@@ -11,7 +11,7 @@ Authorization is a crucial security feature in Ellar that determines what resour
 5. [Custom Policies with Requirements](./authorization/custom-policies.md)
 6. [Combining Policies](./authorization/combining-policies.md)
 
-## Basic Authorization
+## **Basic Authorization**
 
 To use authorization in your Ellar application, you need to:
 

@@ -1,8 +1,8 @@
-# API Key Authentication in Ellar
+# **API Key Authentication in Ellar**
 
 This guide demonstrates how to implement API Key authentication in Ellar using both header-based and query parameter-based approaches.
 
-## Overview
+## **Overview**
 
 API Key authentication is a simple yet effective way to secure your APIs. Ellar provides built-in support for three types of API Key authentication:
 
@@ -10,9 +10,9 @@ API Key authentication is a simple yet effective way to secure your APIs. Ellar 
 2. Query Parameter-based API Key
 3. Cookie-based API Key
 
-## Implementation Methods
+## **Implementation Methods**
 
-### 1. Using Authentication Handler
+### 1. **Using Authentication Handler**
 
 ```python
 # auth/api_key_scheme.py
@@ -69,7 +69,7 @@ application = AppFactory.create_from_app_module(
 use_authentication_schemes([HeaderAPIKeyAuth, QueryAPIKeyAuth])
 ```
 
-### 2. Using Guard Strategy
+### 2. **Using Guard Strategy**
 
 ```python
 # auth/guards.py
@@ -111,7 +111,7 @@ class QueryAPIKeyGuard(GuardAPIKeyQuery):
         self.raise_exception()
 ```
 
-## Controller Implementation
+## **Controller Implementation**
 
 ```python
 from ellar.common import Controller, get
@@ -126,7 +126,7 @@ class APIController:
         return {"message": "Protected data"}
 ```
 
-## Testing the Implementation
+## **Testing the Implementation**
 
 ```bash
 # Using Header-based API Key
@@ -137,26 +137,26 @@ curl http://localhost:8000/api/data \
 curl "http://localhost:8000/api/data?api_key=your-secret-api-key"
 ```
 
-## Security Best Practices
+## **Security Best Practices**
 
 1. **API Key Storage**:
-   - Never hardcode API keys in source code
-   - Use environment variables or secure key management systems
-   - Rotate API keys periodically
+    - Never hardcode API keys in source code
+    - Use environment variables or secure key management systems
+    - Rotate API keys periodically
 
 2. **Transport Security**:
-   - Always use HTTPS in production
-   - Consider implementing rate limiting
-   - Log and monitor API key usage
+    - Always use HTTPS in production
+    - Consider implementing rate limiting
+    - Log and monitor API key usage
 
 3. **Key Management**:
-   - Implement API key rotation
-   - Maintain an audit trail of API key usage
-   - Implement key revocation mechanisms
+    - Implement API key rotation
+    - Maintain an audit trail of API key usage
+    - Implement key revocation mechanisms
 
-## Advanced Implementation
+## **Advanced Implementation**
 
-### API Key with Scopes
+### **API Key with Scopes**
 
 ```python
 from typing import List
@@ -186,7 +186,7 @@ class ScopedAPIKeyAuth(HeaderAPIKeyAuthenticationHandler):
         return None
 ```
 
-## Manual OpenAPI Integration
+## **Manual OpenAPI Integration**
 
 Ellar automatically generates OpenAPI documentation when you use and class in `ellar.auth.handlers` and `ellar.auth.guards`. But if you want to manually add it, you can do so by using the `OpenAPIDocumentBuilder` class.
 
@@ -210,7 +210,7 @@ document_builder.add_security_scheme(
 )
 ```
 
-## Custom Error Handling
+## **Custom Error Handling**
 
 ```python
 from ellar.common import IExecutionContext
@@ -228,8 +228,8 @@ def invalid_api_key_exception_handler(ctx: IExecutionContext, exc: Exception) ->
         }
     )
 ```
-See [Custom Error Handling](../overview/exception_handling.md) for more information.
+See [Custom Error Handling](../../overview/exception_handling.md) for more information.
 
-## Complete Examples
+## **Complete Examples**
 
 For a complete working example of API Key authentication, visit the [Ellar examples repository](https://github.com/python-ellar/ellar/tree/main/examples). 

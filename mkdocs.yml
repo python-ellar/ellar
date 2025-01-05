@@ -119,7 +119,15 @@ nav:
       - Authentication:
           - Guard Strategy: security/authentication/guard-strategy.md
           - Authentication Scheme Strategy: security/authentication/auth-handler-strategy.md
-      - Authorization: security/authorization.md
+          - JWT Authentication: security/authentication/jwt-authentication.md
+          - API Key Authentication: security/authentication/api-key-authentication.md
+      - Authorization: 
+          - index: security/authorization.md
+          - Policies: security/authorization/policies.md
+          - Role-Based Authorization: security/authorization/role-based.md
+          - Claims-Based Authorization: security/authorization/claims-based.md
+          - Custom Policies with Requirements: security/authorization/custom-policies.md
+          - Combining Policies: security/authorization/combining-policies.md
       - Encryption and Hashing: security/encryption_and_hashing.md
       - CSRF and CORS: security/csrf.md
       - Sessions: security/sessions.md

@@ -1,8 +1,8 @@
-# Custom Policies with Requirements
+# **Custom Policies with Requirements**
 
 Custom policies with requirements provide the most flexible way to implement authorization logic in Ellar. They allow you to pass additional parameters to your policies and implement complex authorization rules.
 
-## Creating a Policy with Requirements
+## **Creating a Policy with Requirements**
 
 To create a policy with requirements, inherit from `PolicyWithRequirement`:
 
@@ -27,7 +27,7 @@ class TeamMemberPolicy(PolicyWithRequirement):
         return team_name in user_teams
 ```
 
-## Using Policies with Requirements
+## **Using Policies with Requirements**
 
 Apply policies with requirements using square bracket notation:
 
@@ -49,7 +49,7 @@ class ContentController:
         return "Team Content"
 ```
 
-## Multiple Requirements
+## **Multiple Requirements**
 
 You can pass multiple requirements to a policy:
 
@@ -80,7 +80,7 @@ class ProjectController:
         return "Project Administration"
 ```
 
-## Custom Requirement Types
+## **Custom Requirement Types**
 
 You can define custom requirement types for more structured requirements:
 
@@ -114,7 +114,7 @@ class EnhancedProjectController:
         return "Manage Project"
 ```
 
-## Complex Example: Multi-Factor Authorization
+## **Complex Example: Multi-Factor Authorization**
 
 Here's an example of a policy that requires both age verification and location-based access:
 
@@ -159,7 +159,7 @@ class RegionalController:
         return "Special Content with Different Regional Requirements"
 ```
 
-## Best Practices
+## **Best Practices**
 
 1. Use descriptive names for policy and requirement classes
 2. Keep requirement parameters simple and type-safe
@@ -168,7 +168,7 @@ class RegionalController:
 5. Consider combining policies for complex authorization scenarios
 6. Handle edge cases and invalid requirement values gracefully
 
-## Combining with Other Policy Types
+## **Combining with Other Policy Types**
 
 Policies with requirements can be combined with other policy types using logical operators:
 

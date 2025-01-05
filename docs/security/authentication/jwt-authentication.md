@@ -1,8 +1,8 @@
-# JWT Authentication in Ellar
+# **JWT Authentication in Ellar****
 
 This guide demonstrates how to implement JWT (JSON Web Token) authentication in an Ellar application using both Guard and Authentication Handler strategies.
 
-## Prerequisites
+## **Prerequisites**
 
 - Ellar application setup
 - `ellar-jwt` package installed:
@@ -10,7 +10,7 @@ This guide demonstrates how to implement JWT (JSON Web Token) authentication in 
   pip install ellar-jwt
   ```
 
-## Basic Setup
+## **Basic Setup**
 
 First, let's set up the basic structure with user management:
 
@@ -48,7 +48,7 @@ class UsersService:
             return UserModel(**found_user)
 ```
 
-## Method 1: Using Authentication Handler
+## **Method 1: Using Authentication Handler**
 
 The Authentication Handler approach processes authentication at the middleware layer:
 
@@ -93,7 +93,7 @@ application = AppFactory.create_from_app_module(
 use_authentication_schemes(JWTAuthentication)
 ```
 
-## Method 2: Using Guard Strategy
+## **Method 2: Using Guard Strategy**
 
 The Guard strategy processes authentication at the route handler level:
 
@@ -122,7 +122,7 @@ class JWTGuard(GuardHttpBearerAuth):
             self.raise_exception()
 ```
 
-## Authentication Service
+## **Authentication Service**
 
 Implement the authentication service:
 
@@ -172,7 +172,7 @@ class AuthService:
             raise exceptions.AuthenticationFailed()
 ```
 
-## Controller Implementation
+## **Controller Implementation**
 
 ```python
 # auth/controllers.py
@@ -204,7 +204,7 @@ class AuthController(ControllerBase):
         return await self.auth_service.refresh_token(payload)
 ```
 
-## Module Configuration
+## **Module Configuration**
 
 Configure the authentication module:
 
@@ -232,7 +232,7 @@ class AuthModule(ModuleBase):
     pass
 ```
 
-## Testing the Implementation
+## **Testing the Implementation**
 
 ```bash
 # Login
@@ -250,39 +250,39 @@ curl -X POST http://localhost:8000/auth/refresh \
   -d '{"payload": "<your-refresh-token>"}'
 ```
 
-## Security Considerations
+## **Security Considerations**
 
 1. **Secret Key**: 
-   - Use a strong, environment-specific secret key
-   - Never commit secrets to version control
+    - Use a strong, environment-specific secret key
+    - Never commit secrets to version control
 
 2. **Token Lifetime**:
-   - Set appropriate expiration times
-   - Implement token refresh mechanism
-   - Consider using sliding sessions
+    - Set appropriate expiration times
+    - Implement token refresh mechanism
+    - Consider using sliding sessions
 
 3. **Error Handling**:
-   - Provide secure, non-revealing error messages
-   - Implement proper logging
-   - Handle token expiration gracefully
+    - Provide secure, non-revealing error messages
+    - Implement proper logging
+    - Handle token expiration gracefully
 
-## Best Practices
+## **Best Practices**
 
 1. **Token Storage**:
-   - Store tokens securely (e.g., HttpOnly cookies for web apps)
-   - Implement proper token revocation
-   - Consider token rotation strategies
+    - Store tokens securely (e.g., HttpOnly cookies for web apps)
+    - Implement proper token revocation
+    - Consider token rotation strategies
 
 2. **Refresh Token Handling**:
-   - Use longer expiration for refresh tokens
-   - Implement proper refresh token rotation
-   - Consider implementing a token blacklist
+    - Use longer expiration for refresh tokens
+    - Implement proper refresh token rotation
+    - Consider implementing a token blacklist
 
 3. **API Security**:
-   - Use HTTPS in production
-   - Implement rate limiting
-   - Consider implementing CSRF protection
+    - Use HTTPS in production
+    - Implement rate limiting
+    - Consider implementing CSRF protection
 
-## Complete Example
+## **Complete Example**
 
 Find a complete working example in the [Ellar GitHub repository](https://github.com/python-ellar/ellar/tree/main/examples/04-auth-with-handlers). 

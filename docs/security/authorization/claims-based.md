@@ -1,8 +1,8 @@
-# Claims-Based Authorization
+# **Claims-Based Authorization**
 
 Claims-based authorization provides a more flexible and granular approach to authorization compared to role-based authorization. Claims are key-value pairs that represent attributes of the user and their access rights.
 
-## Using ClaimsPolicy
+## **Using ClaimsPolicy**
 
 Ellar provides the `ClaimsPolicy` class for implementing claims-based authorization:
 
@@ -25,7 +25,7 @@ class ArticleController:
         return "Publish Article"
 ```
 
-## How ClaimsPolicy Works
+## **How ClaimsPolicy Works**
 
 The `ClaimsPolicy` checks if the user has specific claim values for a given claim type. Claims are typically stored in the user's identity:
 
@@ -39,7 +39,7 @@ user_data = {
 }
 ```
 
-## Single vs Multiple Claim Values
+## **Single vs Multiple Claim Values**
 
 Claims can have single or multiple values:
 
@@ -58,7 +58,7 @@ class ContentController:
         return "Content Management"
 ```
 
-## Combining Claims Policies
+## **Combining Claims Policies**
 
 You can combine multiple claims policies using logical operators:
 
@@ -83,7 +83,7 @@ class AdvancedController:
         return "Moderator Dashboard"
 ```
 
-## Best Practices
+## **Best Practices**
 
 1. Use descriptive claim types and values
 2. Keep claim values simple and atomic
@@ -91,7 +91,7 @@ class AdvancedController:
 4. Consider using claims instead of roles for more flexible authorization
 5. Document your claim types and their possible values
 
-## Example: E-commerce Authorization
+## **Example: E-commerce Authorization**
 
 Here's a comprehensive example showing claims-based authorization in an e-commerce application:
 
@@ -129,7 +129,7 @@ class StoreController:
         return "Store Reports"
 ```
 
-## Claims vs Roles
+## **Claims vs Roles**
 
 While roles are a form of claims, dedicated claims offer several advantages:
 

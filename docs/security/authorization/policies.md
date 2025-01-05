@@ -1,8 +1,8 @@
-# Policies in Ellar
+# **Policies in Ellar**
 
 Policies are rules that determine whether a user can perform a specific action or access a particular resource. In Ellar, policies are implemented as classes that inherit from the `Policy` base class.
 
-## Basic Policy Structure
+## **Basic Policy Structure**
 
 A basic policy must inherit from `Policy` and implement the `handle` method:
 
@@ -19,7 +19,7 @@ class AdultOnlyPolicy(Policy):
         return user_age >= 18
 ```
 
-## Using Policies
+## **Using Policies**
 
 To apply policies to your routes or controllers, use the `@CheckPolicies` decorator:
 
@@ -36,7 +36,7 @@ class ContentController:
         return "Adult Only Content"
 ```
 
-## Policy Context
+## **Policy Context**
 
 The `IExecutionContext` passed to the policy's `handle` method provides access to:
 
@@ -45,7 +45,7 @@ The `IExecutionContext` passed to the policy's `handle` method provides access t
 - Application context
 - Service provider for dependency injection
 
-## Best Practices
+## **Best Practices**
 
 1. Always decorate policy classes with `@injectable` for proper dependency injection
 2. Keep policies focused on a single responsibility
@@ -53,7 +53,7 @@ The `IExecutionContext` passed to the policy's `handle` method provides access t
 4. Use type hints for better code maintainability
 5. Return boolean values from the `handle` method
 
-## Example: Premium User Policy
+## **Example: Premium User Policy**
 
 Here's an example of a policy that checks if a user has premium access:
 

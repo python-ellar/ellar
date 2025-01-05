@@ -1,8 +1,8 @@
-# Combining Policies
+# **Combining Policies**
 
 Ellar provides powerful operators to combine different types of policies for complex authorization scenarios. This guide shows you how to use these combinations effectively.
 
-## Basic Policy Operators
+## **Basic Policy Operators**
 
 Ellar supports three logical operators for combining policies:
 
@@ -10,7 +10,7 @@ Ellar supports three logical operators for combining policies:
 - `|` (OR): At least one policy must return `True`
 - `~` (NOT): Inverts the policy result
 
-## Simple Combinations
+## **Simple Combinations**
 
 Here are basic examples of combining policies:
 
@@ -39,7 +39,7 @@ class ExampleController:
         return "Access allowed if not banned"
 ```
 
-## Complex Combinations
+## **Complex Combinations**
 
 You can create more complex authorization rules by combining multiple policies:
 
@@ -66,7 +66,7 @@ class AdvancedController:
         return "Nested policy rules"
 ```
 
-## Combining Different Policy Types
+## **Combining Different Policy Types**
 
 You can mix and match different types of policies:
 
@@ -96,11 +96,11 @@ class MixedPolicyController:
         return "Team-specific access"
 ```
 
-## Real-World Examples
+## **Real-World Examples**
 
 Here are some practical examples of policy combinations:
 
-### Content Management System
+### **Content Management System**   
 
 ```python
 @Controller("/cms")
@@ -125,7 +125,7 @@ class CMSController:
         return "Publish Article"
 ```
 
-### E-commerce Platform
+### **E-commerce Platform**
 
 ```python
 @Controller("/store")
@@ -148,29 +148,29 @@ class StoreController:
         return "Process Refund"
 ```
 
-## Best Practices
+## **Best Practices**
 
 1. **Readability**
-   - Use parentheses to make complex combinations clear
-   - Break long policy combinations into multiple lines
-   - Consider creating custom policies for very complex rules
+    - Use parentheses to make complex combinations clear
+    - Break long policy combinations into multiple lines
+    - Consider creating custom policies for very complex rules
 
 2. **Performance**
-   - Order OR conditions with the most likely to succeed first
-   - Order AND conditions with the least expensive to evaluate first
-   - Consider caching policy results for expensive evaluations
+    - Order OR conditions with the most likely to succeed first
+    - Order AND conditions with the least expensive to evaluate first
+    - Consider caching policy results for expensive evaluations
 
 3. **Maintenance**
-   - Document complex policy combinations
-   - Create reusable policy combinations for common patterns
-   - Keep policy logic modular and testable
+    - Document complex policy combinations
+    - Create reusable policy combinations for common patterns
+    - Keep policy logic modular and testable
 
 4. **Security**
-   - Always start with the principle of least privilege
-   - Use OR combinations carefully as they broaden access
-   - Regularly audit policy combinations for security implications
+    - Always start with the principle of least privilege
+    - Use OR combinations carefully as they broaden access
+    - Regularly audit policy combinations for security implications
 
-## Common Patterns
+## **Common Patterns**
 
 Here are some common patterns for combining policies:
 

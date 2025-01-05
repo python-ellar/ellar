@@ -11,11 +11,11 @@
 [![PyPI version](https://img.shields.io/pypi/v/ellar.svg)](https://pypi.python.org/pypi/ellar)
 [![PyPI version](https://img.shields.io/pypi/pyversions/ellar.svg)](https://pypi.python.org/pypi/ellar)
 
-## Overview
+## **Overview**
 
 Ellar is a modern, fast, and lightweight ASGI framework for building scalable web applications and APIs with Python. Built on top of Starlette and inspired by the best practices of frameworks like NestJS, Ellar combines the power of async Python with elegant architecture patterns.
 
-## ✨ Key Features
+## **✨ Key Features**
 
 - 🚀 **High Performance**: Built on ASGI standards for maximum performance and scalability
 - 💉 **Dependency Injection**: Built-in DI system for clean and maintainable code architecture
@@ -27,9 +27,9 @@ Ellar is a modern, fast, and lightweight ASGI framework for building scalable we
 - 🔌 **WebSocket Support**: Real-time bidirectional communication capabilities
 - 🧪 **Testing Utilities**: Comprehensive testing tools for unit and integration tests
 
-## 🚀 Getting Started
+## **🚀 Getting Started**
 
-### Installation
+### **Installation**
 
 ```bash
 # Create and activate virtual environment (recommended)
@@ -40,7 +40,7 @@ source venv/bin/activate  # On Windows use: venv\Scripts\activate
 pip install ellar
 ```
 
-### Basic Example
+### **Basic Example**
 
 ```python
 from ellar.common import get, Controller, ControllerBase
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     uvicorn.run("main:app", port=5000, reload=True)
 ```
 
-## 📚 Complete Example
+## **📚 Complete Example**
 
 ```python
 from ellar.common import Body, Controller, ControllerBase, delete, get, post, put, Serializer
@@ -101,7 +101,7 @@ app = AppFactory.create_app(
 )
 ```
 
-## 🔧 Requirements
+## **🔧 Requirements**
 
 ### Core Dependencies
 - Python >= 3.8
@@ -115,15 +115,15 @@ app = AppFactory.create_app(
 - python-multipart - For form data parsing
 - itsdangerous - For security features
 
-## 📖 Documentation Structure
+## **📖 Documentation Structure**
 
 - [Quick Start Guide](quick-project.md)
-- [Basic Concepts](basics/index.md)
+- [Basic Concepts](overview/step-one.md)
 - [Security & Authentication](security/authentication/index.md)
 - [OpenAPI Integration](openapi/index.md)
 - [API Reference](references/index.md)
 
-## 🤝 Contributing
+## **🤝 Contributing**
 
 We welcome contributions! Here's how you can help:
 
@@ -135,10 +135,10 @@ We welcome contributions! Here's how you can help:
 
 See [CONTRIBUTING.md](https://github.com/python-ellar/ellar/blob/main/docs/contribution.md) for detailed guidelines.
 
-## 📝 License
+## **📝 License**
 
 Ellar is [MIT Licensed](https://github.com/python-ellar/ellar/blob/main/LICENSE).
 
-## 👤 Author
+## **👤 Author**
 
 Ezeudoh Tochukwu [@eadwinCode](https://github.com/eadwinCode)

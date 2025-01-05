@@ -1,8 +1,8 @@
-# Role-Based Authorization
+# **Role-Based Authorization**
 
 Role-based authorization is a common approach where access to resources is determined by the roles assigned to a user. Ellar provides built-in support for role-based authorization through the `RolePolicy` class.
 
-## Using RolePolicy
+## **Using RolePolicy**
 
 The `RolePolicy` class allows you to check if a user has specific roles:
 
@@ -25,7 +25,7 @@ class AdminController:
         return "Admin Reports"
 ```
 
-## How RolePolicy Works
+## **How RolePolicy Works**
 
 The `RolePolicy` checks the user's roles against the required roles. The roles are typically stored in the user's claims under the "roles" key:
 
@@ -38,7 +38,7 @@ user_data = {
 }
 ```
 
-## Multiple Role Requirements
+## **Multiple Role Requirements**
 
 You can require multiple roles in different ways:
 
@@ -62,14 +62,14 @@ class OrganizationController:
         return "Super Admin Dashboard"
 ```
 
-## Best Practices
+## **Best Practices**
 
 1. Use role names that are descriptive and follow a consistent naming convention
 2. Keep the number of roles manageable
 3. Consider using claims for more fine-grained permissions
 4. Use role combinations when more complex access rules are needed
 
-## Example: Multi-Department Access
+## **Example: Multi-Department Access**
 
 Here's an example showing how to handle access for users with different department roles:
 
@@ -97,6 +97,6 @@ class DepartmentController:
         return "Department Managers Only"
 ```
 
-## Combining with Other Policies
+## **Combining with Other Policies**
 
 Role-based authorization can be combined with other policy types for more complex authorization scenarios. See [Combining Policies](./combining-policies.md) for more information. 
