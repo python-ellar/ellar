@@ -12,7 +12,7 @@ Just like AuthGuard, we need to create its equivalent. But first we need to crea
 of your application for us to define a `JWTAuthentication` handler. 
 
 
-```python title='prject_name/auth_scheme.py' linenums='1'
+```python title='project_name/auth_scheme.py' linenums='1'
 import typing as t
 from ellar.common.serializer.guard import (
     HTTPAuthorizationCredentials,

@@ -33,8 +33,6 @@ def process_controller_routes(controller: t.Type[ControllerBase]) -> t.List[Base
         controller, tag=constants.OPERATION_ENDPOINT_KEY
     ):
         parameters = item.__dict__.get(constants.ROUTE_OPERATION_PARAMETERS)
-        if parameters is None:
-            print("Something is not right")
         operation: t.Union[ControllerRouteOperation, ControllerWebsocketRouteOperation]
 
         if not isinstance(parameters, list):
