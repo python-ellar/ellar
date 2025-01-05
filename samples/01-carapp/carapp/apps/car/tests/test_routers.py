@@ -45,6 +45,7 @@ class TestCarRouter:
     def test_get_car_html_with_render(self, mock_get_all):
         res = self.client.get("/car-as-router/html/outside")
         assert res.status_code == 200
+        print(res.content)
         assert (
             res.content
             == b'<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <title>Index.html</title>\n</head>\n<body>\n    \n        <p>Mercedes</p>\n    \n</body>\n</html>'
