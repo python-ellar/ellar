@@ -13,7 +13,6 @@ from ellar.common import Controller, get
 
 @Controller("/admin")
 @Authorize()
-@AuthenticationRequired()
 class AdminController:
     @get("/dashboard")
     @CheckPolicies(RolePolicy("admin"))
@@ -46,7 +45,6 @@ You can require multiple roles in different ways:
 ```python
 @Controller("/organization")
 @Authorize()
-@AuthenticationRequired()
 class OrganizationController:
     @get("/finance")
     @CheckPolicies(RolePolicy("admin") | RolePolicy("finance"))  # Requires either role
@@ -78,7 +76,6 @@ Here's an example showing how to handle access for users with different departme
 ```python
 @Controller("/departments")
 @Authorize()
-@AuthenticationRequired()
 class DepartmentController:
     @get("/it")
     @CheckPolicies(RolePolicy("it_staff") | RolePolicy("it_manager"))

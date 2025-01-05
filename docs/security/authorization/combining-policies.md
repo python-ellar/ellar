@@ -77,7 +77,6 @@ from .custom_policies import AgeRequirementPolicy, TeamMemberPolicy
 
 @Controller("/mixed")
 @Authorize()
-@AuthenticationRequired()
 class MixedPolicyController:
     @get("/content")
     @CheckPolicies(
@@ -106,7 +105,6 @@ Here are some practical examples of policy combinations:
 ```python
 @Controller("/cms")
 @Authorize()
-@AuthenticationRequired()
 class CMSController:
     @get("/articles/{id}/edit")
     @CheckPolicies(
@@ -132,7 +130,6 @@ class CMSController:
 ```python
 @Controller("/store")
 @Authorize()
-@AuthenticationRequired()
 class StoreController:
     @get("/products/{id}/manage")
     @CheckPolicies(

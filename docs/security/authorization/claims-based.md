@@ -13,7 +13,6 @@ from ellar.common import Controller, get
 
 @Controller("/articles")
 @Authorize()
-@AuthenticationRequired()
 class ArticleController:
     @get("/create")
     @CheckPolicies(ClaimsPolicy("article", "create"))
@@ -47,7 +46,6 @@ Claims can have single or multiple values:
 ```python
 @Controller("/content")
 @Authorize()
-@AuthenticationRequired()
 class ContentController:
     @get("/premium")
     @CheckPolicies(ClaimsPolicy("subscription", "premium"))  # Single claim value
@@ -67,7 +65,6 @@ You can combine multiple claims policies using logical operators:
 ```python
 @Controller("/advanced")
 @Authorize()
-@AuthenticationRequired()
 class AdvancedController:
     @get("/editor")
     @CheckPolicies(
@@ -101,7 +98,6 @@ Here's a comprehensive example showing claims-based authorization in an e-commer
 ```python
 @Controller("/store")
 @Authorize()
-@AuthenticationRequired()
 class StoreController:
     @get("/products")
     @CheckPolicies(ClaimsPolicy("store", "view_products"))

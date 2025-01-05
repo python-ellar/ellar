@@ -29,7 +29,6 @@ from ellar.common import Controller, get
 
 @Controller("/content")
 @Authorize()
-@AuthenticationRequired()
 class ContentController:
     @get("/adult")
     @CheckPolicies(AdultOnlyPolicy)
@@ -67,7 +66,6 @@ class PremiumUserPolicy(Policy):
 
 @Controller("/premium")
 @Authorize()
-@AuthenticationRequired()
 class PremiumController:
     @get("/content")
     @CheckPolicies(PremiumUserPolicy)

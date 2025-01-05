@@ -37,7 +37,6 @@ from ellar.common import Controller, get
 
 @Controller("/content")
 @Authorize()
-@AuthenticationRequired()
 class ContentController:
     @get("/adult")
     @CheckPolicies(AgeRequirementPolicy[21])  # Requires age >= 21
