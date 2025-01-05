@@ -47,6 +47,6 @@ class TestCarRouter:
         assert res.status_code == 200
         assert (
             res.content
-            == b'<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <title>Index.html</title>\n</head>\n<body>\n    \n        <p>Mercedes</p>\n    \n</body>\n</html>'
+            == b'<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Index.html</title>\n</head>\n<body>\n    \n        <p>Mercedes</p>\n    \n</body>\n</html>'
         )
         assert res.template.name == "car/list.html"
