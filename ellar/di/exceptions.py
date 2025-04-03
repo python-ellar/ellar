@@ -12,6 +12,10 @@ class DIImproperConfiguration(Exception):
     pass
 
 
+class RequestScopeContextNotFound(Exception):
+    pass
+
+
 __all__ = [
     "CallError",
     "CircularDependency",
@@ -21,4 +25,5 @@ __all__ = [
     "UnknownProvider",
     "UnsatisfiedRequirement",
     "DIImproperConfiguration",
+    "RequestScopeContextNotFound",
 ]

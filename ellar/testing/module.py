@@ -94,7 +94,19 @@ class TestingModule:
         )
 
     def get(self, interface: t.Type[T]) -> T:
-        return self.create_application().injector.get(interface)  # type: ignore[no-any-return]
+        try:
+            return t.cast(T, self.create_application().injector.get(interface))
+        except Exception as ex:
+            # try to find module to which the interface belongs
+            module = self.create_application().injector.tree_manager.search_module_tree(
+                filter_item=lambda data: True,
+                find_predicate=lambda data: interface in data.exports
+                or interface in data.providers,
+            )
+            if module:
+                return t.cast(T, module.value.get(interface))
+
+            raise ex
 
 
 class Test:
