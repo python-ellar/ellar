@@ -1,3 +1,20 @@
+# 0.8.9
+## What's Changed
+* fix: Python 3.13 Support by @eadwinCode in https://github.com/python-ellar/ellar/pull/257
+* fix:Starlette 0.45.1 Upgrade by @eadwinCode in https://github.com/python-ellar/ellar/pull/258
+* Bump pypa/gh-action-pypi-publish from 1.12.2 to 1.12.3 by @dependabot in https://github.com/python-ellar/ellar/pull/260
+* Bump codecov/codecov-action from 5.0.7 to 5.1.2 by @dependabot in https://github.com/python-ellar/ellar/pull/259
+* fix: Authorization Documentation by @eadwinCode in https://github.com/python-ellar/ellar/pull/261
+* fix: Added more context to authentication docs by @eadwinCode in https://github.com/python-ellar/ellar/pull/262
+* Bump pypa/gh-action-pypi-publish from 1.12.3 to 1.12.4 by @dependabot in https://github.com/python-ellar/ellar/pull/264
+* Bump codecov/codecov-action from 5.1.2 to 5.3.1 by @dependabot in https://github.com/python-ellar/ellar/pull/263
+* Bump codecov/codecov-action from 5.3.1 to 5.4.0 by @dependabot in https://github.com/python-ellar/ellar/pull/265
+* Fixed CI Test and Test Module Resolving Internal Services by @eadwinCode in https://github.com/python-ellar/ellar/pull/266
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.8.7...0.8.9
+
+
 # 0.8.7
 ## What's Changed
 * fix: Pydantic Version 2.10.2 bug by @eadwinCode in https://github.com/python-ellar/ellar/pull/254
