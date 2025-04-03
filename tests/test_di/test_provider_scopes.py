@@ -2,10 +2,10 @@ import pytest
 from ellar.core import HttpRequestConnectionContext
 from ellar.core.execution_context import HostContextFactory
 from ellar.di import EllarInjector, ProviderConfig, has_binding
-from ellar.di.exceptions import DIImproperConfiguration
+from ellar.di.exceptions import DIImproperConfiguration, RequestScopeContextNotFound
 from ellar.di.scopes import RequestScope, SingletonScope, TransientScope
 from ellar.utils.importer import get_class_import
-from injector import UnsatisfiedRequirement, inject
+from injector import inject
 
 from .examples import AnyContext, Foo, IContext, TransientRequestContext
 
@@ -52,7 +52,7 @@ async def test_request_scope_instance():
 
     # resolving RequestScope Providers outside RequestServiceProvider will behave like TransientScope
 
-    with pytest.raises(UnsatisfiedRequirement):
+    with pytest.raises(RequestScopeContextNotFound):
         assert injector.get(IContext)
 
     async with HttpRequestConnectionContext(

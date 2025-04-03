@@ -10,6 +10,7 @@ from ellar.di import (
     request_scope,
     transient_scope,
 )
+from ellar.di.exceptions import RequestScopeContextNotFound
 from ellar.di.providers import ClassProvider, InstanceProvider
 from injector import Binder, Injector, UnsatisfiedRequirement
 
@@ -119,7 +120,7 @@ async def test_request_service_context():
         with pytest.raises(UnsatisfiedRequirement):
             injector.get(Foo)
 
-    with pytest.raises(UnsatisfiedRequirement):
+    with pytest.raises(RequestScopeContextNotFound):
         injector.get(Foo1)
 
 

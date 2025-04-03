@@ -18,6 +18,7 @@ from injector import (
     UnsatisfiedRequirement,
 )
 
+from .exceptions import RequestScopeContextNotFound
 from .providers import InstanceProvider, Provider
 from .types import T
 
@@ -34,7 +35,7 @@ class RequestScope(InjectorScope):
         scoped_context = self.get_context()
 
         if scoped_context is None:
-            raise Exception(
+            raise RequestScopeContextNotFound(
                 "RequestScope is not available. Trying to access RequestScope outside request",
                 UnsatisfiedRequirement(None, key),
             )
