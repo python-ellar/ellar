@@ -14,7 +14,7 @@ pytest-cov >= 2.12.0,< 6.0.0
 python-multipart >= 0.0.5
 python-socketio
 regex==2025.7.34
-ruff ==0.6.3
+ruff ==0.12.7
 types-dataclasses ==0.6.6
 types-orjson ==3.6.2
 types-redis ==4.6.0.20240903
