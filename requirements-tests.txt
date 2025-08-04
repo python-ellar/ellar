@@ -1,6 +1,6 @@
 aiohttp == 3.10.5
 anyio[trio] >= 3.2.1
-argon2-cffi == 23.1.0
+argon2-cffi == 25.1.0
 autoflake
 bcrypt; python_version >= '3.12'
 click >= 8.1.7,<9.0.0,
