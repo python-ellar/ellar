@@ -21,7 +21,7 @@ class ASGIFileMount(Mount):
         middleware: t.Optional[t.Sequence[Middleware]] = None,
         base_directory: t.Optional[str] = None,
     ) -> None:
-        base_directory = get_main_directory_by_stack(base_directory, stack_level=2)  # type: ignore[arg-type]
+        base_directory = get_main_directory_by_stack(base_directory, stack_level=2)
         if base_directory:
             directories = [
                 str(os.path.join(base_directory, directory))
@@ -30,7 +30,7 @@ class ASGIFileMount(Mount):
 
         self._middleware = middleware
 
-        _files_app = StaticFiles(directories=directories, packages=packages)  # type:ignore[arg-type]
+        _files_app = StaticFiles(directories=directories, packages=packages)
         super().__init__(
             path=path, name=name, app=self._combine_app_with_middleware(_files_app)
         )

@@ -171,9 +171,9 @@ class ModuleSetup:
                 self.module, config, container, **self.init_kwargs
             )
 
-        assert isinstance(
-            ref, ModuleRefBase
-        ), f"{ref.module} is not properly configured."
+        assert isinstance(ref, ModuleRefBase), (
+            f"{ref.module} is not properly configured."
+        )
 
         ref.initiate_module_build()
         return ref

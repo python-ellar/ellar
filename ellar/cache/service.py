@@ -84,9 +84,9 @@ class CacheService(_CacheServiceSync, ICacheService):
         self, backends: t.Optional[t.Dict[str, BaseCacheBackend]] = None
     ) -> None:
         if backends:
-            assert backends.get(
-                "default"
-            ), "CACHES configuration must have a 'default' key."
+            assert backends.get("default"), (
+                "CACHES configuration must have a 'default' key."
+            )
         self._backends = backends or {
             "default": LocalMemCacheBackend(key_prefix="ellar", version=1, ttl=300)
         }

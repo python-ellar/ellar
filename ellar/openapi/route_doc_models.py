@@ -228,7 +228,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
         _models: t.List[ModelField] = []
         for _, model in self.route.response_model.models.items():
             if model.get_model_field():
-                _models.append(model.get_model_field())  # type: ignore
+                _models.append(model.get_model_field())
         return _models
 
     def get_route_models(self) -> t.List[ModelField]:
@@ -249,9 +249,7 @@ class OpenAPIRouteDocumentation(OpenAPIRoute):
             keys = list(security_scheme.keys())
             if keys:
                 scheme_name = keys[0]
-                operation_security.append(
-                    {scheme_name: item.openapi_scope}  # type:ignore[union-attr]
-                )
+                operation_security.append({scheme_name: item.openapi_scope})
 
         return security_definitions, operation_security
 

@@ -28,9 +28,9 @@ class RouteResponseModel:
     ) -> None:
         self.validate_route_response(route_responses)
         for status_code, response_schema in route_responses.items():
-            assert (
-                isinstance(status_code, int) or status_code == Ellipsis
-            ), "status_code must be a number"
+            assert isinstance(status_code, int) or status_code == Ellipsis, (
+                "status_code must be a number"
+            )
             description: str = "Successful Response"
             if isinstance(response_schema, (tuple, list)):
                 response_schema, description = response_schema

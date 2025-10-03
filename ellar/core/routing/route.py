@@ -92,7 +92,7 @@ class RouteOperation(RouteOperationBase, StarletteRoute):
             self._defined_responses.update(response_override)
 
         self.response_model = RouteResponseModel(
-            route_responses=self._defined_responses  # type: ignore
+            route_responses=self._defined_responses
         )
 
     def get_operation_unique_id(

@@ -105,8 +105,10 @@ class _Reflect:
         if target_metadata is not None:
             existing = target_metadata.get(metadata_key)
             if existing is not None:
-                update_callback = self._data_type_update_callbacks.get(
-                    type(existing), self._default_update_callback
+                update_callback: t.Callable[[t.Any, t.Any], t.Any] = (
+                    self._data_type_update_callbacks.get(
+                        type(existing), self._default_update_callback
+                    )
                 )
                 metadata_value = update_callback(existing, metadata_value)
             target_metadata[metadata_key] = metadata_value

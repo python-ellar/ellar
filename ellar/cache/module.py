@@ -34,7 +34,7 @@ class CacheModule(ModuleBase, IModuleSetup):
         args = {"default": default}
         args.update(kwargs)
 
-        schema = CacheModuleSchemaSetup(**{"CACHES": args})  # type: ignore[arg-type]
+        schema = CacheModuleSchemaSetup(**{"CACHES": args})
         return cls._create_dynamic_module(schema)
 
     @classmethod

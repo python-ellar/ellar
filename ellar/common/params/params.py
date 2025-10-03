@@ -129,13 +129,13 @@ class ParamFieldInfo(FieldInfo):
         Returns:
             BaseRouteParameterResolver: The created resolver.
         """
-        multiple_resolvers = model_field.field_info.json_schema_extra.pop(  # type:ignore[union-attr]
+        multiple_resolvers = model_field.field_info.json_schema_extra.pop(
             MULTI_RESOLVER_KEY, None
         )
         if multiple_resolvers:
             return self.bulk_resolver(
                 model_field=model_field,
-                resolvers=multiple_resolvers,  # type:ignore[arg-type]
+                resolvers=multiple_resolvers,
             )
         return self.resolver(model_field)
 
@@ -440,17 +440,17 @@ class FormFieldInfo(ParamFieldInfo):
     def create_resolver(
         self, model_field: ModelField
     ) -> t.Union[BaseRouteParameterResolver, IRouteParameterResolver]:
-        multiple_resolvers = model_field.field_info.json_schema_extra.pop(  # type:ignore[union-attr]
+        multiple_resolvers = model_field.field_info.json_schema_extra.pop(
             MULTI_RESOLVER_KEY, []
         )
-        is_grouped = model_field.field_info.json_schema_extra.pop(  # type:ignore[union-attr]
+        is_grouped = model_field.field_info.json_schema_extra.pop(
             MULTI_RESOLVER_FORM_GROUPED_KEY, False
         )
 
         if multiple_resolvers:
             return self.bulk_resolver(
                 model_field=model_field,
-                resolvers=multiple_resolvers,  # type:ignore[arg-type]
+                resolvers=multiple_resolvers,
                 is_grouped=is_grouped,
             )
         return self.resolver(model_field)

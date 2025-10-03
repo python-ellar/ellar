@@ -57,7 +57,7 @@ class FileResponseModel(ResponseModel):
         )
 
         init_kwargs = self.serialize(response_obj)
-        response_args.update(init_kwargs)  # type:ignore[arg-type]
+        response_args.update(init_kwargs)
 
         response = self._response_type(
             **response_args,

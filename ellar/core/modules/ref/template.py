@@ -77,9 +77,9 @@ class ModuleTemplateRef(ModuleRefBase, ModuleTemplating):
 
     def _validate_module_type(self) -> None:
         res = reflect.get_metadata(MODULE_WATERMARK, self.module)
-        assert (
-            res is True
-        ), f"Module Type must be decorated with @Module decorator;\n Invalid Module type[{self.module}]"
+        assert res is True, (
+            f"Module Type must be decorated with @Module decorator;\n Invalid Module type[{self.module}]"
+        )
 
     def _register_module(self) -> None:
         self.add_provider(

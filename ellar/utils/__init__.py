@@ -24,7 +24,7 @@ def generate_operation_unique_id(
 
     if isinstance(controller, type):
         operation_id += (
-            f'__{str(controller.__name__).lower().replace("controller", "")}'
+            f"__{str(controller.__name__).lower().replace('controller', '')}"
         )
     return operation_id
 

@@ -84,7 +84,7 @@ class BulkArgsResolverGenerator:
         for k, field in self.pydantic_outer_type.model_fields.items():
             model_field = create_model_field(
                 name=k,
-                type_=field.annotation,  # type:ignore[arg-type]
+                type_=field.annotation,
                 default=field.default,
                 alias=field.alias,
                 field_info=field,

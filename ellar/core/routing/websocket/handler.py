@@ -151,7 +151,7 @@ class WebSocketExtraHandler:
                     reason="Malformed JSON data received.",
                 ) from e
 
-        assert (
-            self.encoding is None
-        ), f"Unsupported 'encoding' attribute {self.encoding}"
+        assert self.encoding is None, (
+            f"Unsupported 'encoding' attribute {self.encoding}"
+        )
         return message["text"] if message.get("text") else message["bytes"]

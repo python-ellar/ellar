@@ -23,13 +23,13 @@ class IExceptionHandler(ABC, t.Iterable):
         """Catch implementation"""
 
     def __init_subclass__(cls, **kwargs: t.Any) -> None:
-        assert (
-            cls.exception_type_or_code
-        ), f"'exception_type_or_code' must be defined. {cls}"
+        assert cls.exception_type_or_code, (
+            f"'exception_type_or_code' must be defined. {cls}"
+        )
         if not isinstance(cls.exception_type_or_code, int):
-            assert issubclass(
-                cls.exception_type_or_code, Exception
-            ), "'exception_type_or_code' is not a valid type"
+            assert issubclass(cls.exception_type_or_code, Exception), (
+                "'exception_type_or_code' is not a valid type"
+            )
 
 
 class IExceptionMiddlewareService:

@@ -206,7 +206,7 @@ def injectable(
     ):
         func_ = scope
         scope = SingletonScope
-        return _decorator(func_)  # type: ignore[arg-type]
+        return _decorator(func_)
 
     return _decorator
 

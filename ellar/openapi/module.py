@@ -140,7 +140,9 @@ class OpenAPIDocumentModule:
         _path = docs_ui.path.lstrip("/").rstrip("/")
 
         if not docs_ui.template_name:
-            assert docs_ui.template_string, f"`{docs_ui.__class__.__name__}` class requires the `template_string` attribute to be provided."
+            assert docs_ui.template_string, (
+                f"`{docs_ui.__class__.__name__}` class requires the `template_string` attribute to be provided."
+            )
 
             @t.no_type_check
             async def _doc(ctx: IExecutionContext) -> HTMLResponse:
@@ -151,7 +153,9 @@ class OpenAPIDocumentModule:
                 return HTMLResponse(html_str)
 
         else:
-            assert docs_ui.template_name, f"`{docs_ui.__class__.__name__}` class requires the `template_name` attribute to be provided."
+            assert docs_ui.template_name, (
+                f"`{docs_ui.__class__.__name__}` class requires the `template_name` attribute to be provided."
+            )
 
             @render(docs_ui.template_name)
             async def _doc() -> t.Any:

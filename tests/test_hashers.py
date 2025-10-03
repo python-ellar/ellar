@@ -351,7 +351,7 @@ class TestUtilsHashPassArgon2:
     def test_argon2_version_upgrade(self):
         state = {"upgraded": False}
         encoded = (
-            "$argon2id$v=19$m=102400,t=2,p=8$Y041dExhNkljRUUy$TMa6A8fPJh" "CAUXRhJXCXdw"
+            "$argon2id$v=19$m=102400,t=2,p=8$Y041dExhNkljRUUy$TMa6A8fPJhCAUXRhJXCXdw"
         )
 
         def setter(password):

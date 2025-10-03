@@ -53,9 +53,9 @@ class App:
     ):
         _routes = routes or []
         assert isinstance(config, Config), "config must instance of Config"
-        assert isinstance(
-            injector, EllarInjector
-        ), "injector must instance of EllarInjector"
+        assert isinstance(injector, EllarInjector), (
+            "injector must instance of EllarInjector"
+        )
 
         self._config = config
         self._injector: EllarInjector = injector
@@ -70,7 +70,7 @@ class App:
             redirect_slashes=self.config.REDIRECT_SLASHES,
             default=self.config.DEFAULT_NOT_FOUND_HANDLER,
             lifespan=EllarApplicationLifespan(
-                self.config.DEFAULT_LIFESPAN_HANDLER  # type: ignore[arg-type]
+                self.config.DEFAULT_LIFESPAN_HANDLER
             ).lifespan,
         )
 

@@ -157,11 +157,11 @@ def test_search_module_tree_works():
     tree_manager.add_module(app_module_type, ModuleSetup(app_module_type))
 
     for _ in range(5):
-        module_type = Module()(get_unique_type(f"ModuleType{_+1}"))
+        module_type = Module()(get_unique_type(f"ModuleType{_ + 1}"))
         tree_manager.add_module(module_type, ModuleSetup(module_type), app_module_type)
 
     for _ in range(5):
-        module_type_ = Module()(get_unique_type(f"ModuleType{_+1}"))
+        module_type_ = Module()(get_unique_type(f"ModuleType{_ + 1}"))
         tree_manager.add_module(module_type_, ModuleSetup(module_type_), module_type)
 
     res = tree_manager.search_module_tree(
@@ -182,7 +182,7 @@ def test_find_module_return_list_of_items():
     tree_manager.add_module(app_module_type, ModuleSetup(app_module_type))
 
     for _ in range(10):
-        module_type = Module()(get_unique_type(f"ModuleType{_+1}"))
+        module_type = Module()(get_unique_type(f"ModuleType{_ + 1}"))
         tree_manager.add_module(module_type, ModuleSetup(module_type), app_module_type)
 
     res = list(

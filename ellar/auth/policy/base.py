@@ -19,7 +19,7 @@ class DefaultRequirementType(AttributeDict):
     """
 
     def __init__(self, *args: t.Any) -> None:
-        kwargs_args = {f"arg_{idx+1}": value for idx, value in enumerate(args)}
+        kwargs_args = {f"arg_{idx + 1}": value for idx, value in enumerate(args)}
         super().__init__(kwargs_args)
 
 
