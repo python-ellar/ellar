@@ -146,7 +146,7 @@ def serialize_object(
         return serialize_object(obj_dict, _encoders)
     if is_dataclass(obj):
         return serialize_object(
-            asdict(obj),  # type:ignore[call-overload]
+            asdict(obj),
             encoders=_encoders,
             serializer_filter=serializer_filter,
         )

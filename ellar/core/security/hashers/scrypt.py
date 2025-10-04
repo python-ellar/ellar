@@ -27,9 +27,9 @@ class ScryptHasher(BaseHasher):
         p: int,
         salt: EncodingSalt,
     ) -> str:
-        hash_ = self.hasher(  # type:ignore[misc]
-            password.encode(),  # type:ignore[union-attr]
-            salt=salt.encode(),  # type:ignore[union-attr]
+        hash_ = self.hasher(  # type: ignore[misc]
+            password.encode(),
+            salt=salt.encode(),
             n=n,
             r=r,
             p=p,

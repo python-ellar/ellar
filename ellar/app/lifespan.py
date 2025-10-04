@@ -60,7 +60,7 @@ class EllarApplicationLifespan:
             logger.debug("Executing Modules Startup Handlers")
             await self.run_all_startup_actions(app)
 
-            async with self._lifespan_context(app) as ctx:  # type:ignore[attr-defined]
+            async with self._lifespan_context(app) as ctx:
                 logger.info("Application is ready.")
                 yield ctx
         finally:

@@ -42,9 +42,9 @@ def Controller(
         _prefix = NOT_SET
 
     if _prefix is not NOT_SET:
-        assert _prefix == "" or str(_prefix).startswith(
-            "/"
-        ), "Controller Prefix must start with '/'"
+        assert _prefix == "" or str(_prefix).startswith("/"), (
+            "Controller Prefix must start with '/'"
+        )
     # TODO: replace with a ControllerTypeDict and OpenAPITypeDict
     kwargs = AttributeDict(
         path=_prefix,

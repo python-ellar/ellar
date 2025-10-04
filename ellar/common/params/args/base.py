@@ -187,9 +187,9 @@ class EndpointArgsModel:
         cls, param_name: str, convertor: Convertor
     ) -> ModelField:
         _converter_signature = inspect.signature(convertor.convert)
-        assert (
-            _converter_signature.return_annotation is not inspect.Parameter.empty
-        ), f"{convertor.__class__.__name__} Convertor must have return type"
+        assert _converter_signature.return_annotation is not inspect.Parameter.empty, (
+            f"{convertor.__class__.__name__} Convertor must have return type"
+        )
         _type = _converter_signature.return_annotation
         return get_parameter_field(
             param_default=params.PathFieldInfo(),
@@ -280,9 +280,9 @@ class EndpointArgsModel:
                     default_field_info=params.PathFieldInfo,
                     ignore_default=ignore_default,
                 )
-                assert is_scalar_field(
-                    field=param_field
-                ), "Path params must be of one of the supported types"
+                assert is_scalar_field(field=param_field), (
+                    "Path params must be of one of the supported types"
+                )
                 self._add_to_model(field=param_field)
             else:
                 param_field = process_parameter_file(
@@ -302,7 +302,7 @@ class EndpointArgsModel:
         key: t.Optional[str] = None,
     ) -> t.Optional[bool]:
         if isinstance(param_default, SystemParameterResolver):
-            model = param_default(param_name, param_annotation)  # type:ignore
+            model = param_default(param_name, param_annotation)
             self._computation_models[key or model.in_].append(model)
             return True
         return None

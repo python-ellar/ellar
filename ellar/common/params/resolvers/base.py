@@ -76,9 +76,9 @@ class BaseRouteParameterResolver(IRouteParameterResolver, ABC):
         """
         from .. import params
 
-        assert isinstance(
-            self.model_field.field_info, params.ParamFieldInfo
-        ), "Params must be subclasses of Param"
+        assert isinstance(self.model_field.field_info, params.ParamFieldInfo), (
+            "Params must be subclasses of Param"
+        )
 
     @classmethod
     def create_error(cls, loc: t.Any) -> t.Any:
@@ -92,7 +92,7 @@ class BaseRouteParameterResolver(IRouteParameterResolver, ABC):
 
     async def resolve(self, *args: t.Any, **kwargs: t.Any) -> ResolverResult:
         value_ = await self.resolve_handle(*args, **kwargs)
-        return value_
+        return t.cast(ResolverResult, value_)
 
     @abstractmethod
     @t.no_type_check

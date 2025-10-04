@@ -222,9 +222,9 @@ class ModuleRefBase(ABC):
                         and data.parent == self.module
                     )
                 )
-                assert (
-                    module
-                ), f"Unknown Export '{provider_type}' found in '{self.module}'"
+                assert module, (
+                    f"Unknown Export '{provider_type}' found in '{self.module}'"
+                )
 
         _validate_()
 

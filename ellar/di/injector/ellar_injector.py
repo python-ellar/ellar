@@ -83,7 +83,7 @@ class EllarInjector(Injector):
 
     @cached_property
     def tree_manager(self) -> ModuleTreeManager:
-        return self.get(ModuleTreeManager)
+        return t.cast(ModuleTreeManager, self.get(ModuleTreeManager))
 
     @property  # type: ignore
     def binder(self) -> Container:

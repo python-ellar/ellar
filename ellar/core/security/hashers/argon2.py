@@ -32,7 +32,7 @@ class Argon2Hasher(BaseHasher):
     def encode(
         self, password: EncodingType, salt: EncodingSalt = None
     ) -> t.Union[str, t.Any]:
-        salt = bytes(salt, "utf-8") if salt else salt  # type:ignore[arg-type]
+        salt = bytes(salt, "utf-8") if salt else salt
         return super().encode(password, salt)
 
     def decode(self, encoded: str) -> dict:

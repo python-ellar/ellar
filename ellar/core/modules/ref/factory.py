@@ -33,9 +33,9 @@ def create_module_ref_factor(
         )
         return module_ref
     elif type(module_type) is ModuleBaseMeta:
-        assert (
-            container is not None
-        ), "ModulePlainRef class can't take a nullable 'container'"
+        assert container is not None, (
+            "ModulePlainRef class can't take a nullable 'container'"
+        )
 
         module_ref = ModulePlainRef(
             module_type,

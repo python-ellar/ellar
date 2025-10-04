@@ -58,7 +58,7 @@ class Config(ConfigDefaultTypesMixin):
         return data
 
     def __repr__(self) -> str:  # pragma: no cover
-        hidden_values = {key: "..." for key in self._schema.serialize().keys()}
+        hidden_values = dict.fromkeys(self._schema.serialize().keys(), "...")
         return f"<Configuration {repr(hidden_values)}, settings_module: {self._config_module}>"
 
     def __str__(self) -> str:

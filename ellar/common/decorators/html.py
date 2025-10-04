@@ -41,9 +41,9 @@ def render(template_name: t.Optional[str] = NOT_SET) -> t.Callable:
     :return:
     """
     if template_name is not NOT_SET:
-        assert isinstance(
-            template_name, str
-        ), "Render Operation must invoked eg. @render()"
+        assert isinstance(template_name, str), (
+            "Render Operation must invoked eg. @render()"
+        )
     template_name = None if template_name is NOT_SET else template_name
 
     def _decorator(func: t.Union[t.Callable, t.Any]) -> t.Union[t.Callable, t.Any]:

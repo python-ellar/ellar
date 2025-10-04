@@ -43,9 +43,9 @@ class TemplateRenderingService(ITemplateRenderingService):
         org_context = template_context.copy()
         for processor in self.config.APP_CONTEXT_PROCESSORS or []:
             res = processor(request)
-            assert isinstance(
-                res, dict
-            ), f"{processor} is expected to return a dict object"
+            assert isinstance(res, dict), (
+                f"{processor} is expected to return a dict object"
+            )
             template_context.update(res)
 
         template_context.update(org_context)

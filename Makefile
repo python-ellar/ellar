@@ -5,11 +5,11 @@ help:
 	@fgrep -h "##" $(MAKEFILE_LIST) | fgrep -v fgrep | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 clean: ## Removing cached python compiled files
-	find . -name \*pyc  | xargs  rm -fv
-	find . -name \*pyo | xargs  rm -fv
-	find . -name \*~  | xargs  rm -fv
-	find . -name __pycache__  | xargs  rm -rfv
-	find . -name .ruff_cache  | xargs  rm -rfv
+	find . -name "*.pyc" -type f -delete
+	find . -name "*.pyo" -type f -delete
+	find . -name "*~" -type f -delete
+	find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+	find . -name ".ruff_cache" -type d -exec rm -rf {} + 2>/dev/null || true
 
 install: ## Install dependencies
 	pip install -r requirements.txt

@@ -75,7 +75,7 @@ class _SyncWorkerThread(threading.Thread):
                     break
                 coro, ctx = item
                 if inspect.isasyncgen(coro):
-                    ctx.run(loop.run_until_complete, self.agen_wrapper(coro))  # type: ignore[arg-type]
+                    ctx.run(loop.run_until_complete, self.agen_wrapper(coro))
                 elif isinstance(coro, t.AsyncContextManager):
                     ctx.run(
                         loop.run_until_complete,
@@ -83,8 +83,7 @@ class _SyncWorkerThread(threading.Thread):
                     )
                 else:
                     try:
-                        # FIXME: Once python/mypy#12756 is resolved, remove the type-ignore tag.
-                        result = ctx.run(loop.run_until_complete, coro)  # type: ignore[arg-type]
+                        result = ctx.run(loop.run_until_complete, coro)
                     except Exception as e:
                         self.done_queue.put_nowait(e)
                         self.work_queue.task_done()
@@ -250,8 +249,8 @@ def execute_async_gen(
     _worker_thread.join()
 
 
-@contextlib.contextmanager  # type:ignore[arg-type]
-def execute_async_context_manager(  # type:ignore[misc]
+@contextlib.contextmanager
+def execute_async_context_manager(  # type: ignore[misc]
     async_gen: t.AsyncContextManager, context_update: bool = True
 ) -> t.ContextManager:
     """

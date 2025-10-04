@@ -38,9 +38,9 @@ class ModulePlainRef(ModuleRefBase):
         self._register_module()
 
     def _validate_module_type(self) -> None:
-        assert (
-            type(self.module) is ModuleBaseMeta
-        ), f"Module Type must be a subclass of ModuleBase;\n Invalid Type[{self.module}]"
+        assert type(self.module) is ModuleBaseMeta, (
+            f"Module Type must be a subclass of ModuleBase;\n Invalid Type[{self.module}]"
+        )
 
     def _register_module(self) -> None:
         if not is_decorated_with_injectable(self.module):

@@ -91,7 +91,7 @@ def Module(
 
     :return: t.TYPE[ModuleBase]
     """
-    base_directory = get_main_directory_by_stack(base_directory, stack_level=2)  # type:ignore[arg-type]
+    base_directory = get_main_directory_by_stack(base_directory, stack_level=2)
     kwargs = AttributeDict(
         name=name,
         controllers=list(controllers),

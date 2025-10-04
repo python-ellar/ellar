@@ -69,5 +69,5 @@ def WebSocketGateway(
     if callable(path):
         func = path
         path = "/socket.io"
-        return _decorator(func)  # type:ignore[arg-type]
+        return _decorator(func)
     return _decorator

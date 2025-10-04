@@ -128,7 +128,7 @@ class HeaderVersionResolver(BaseAPIVersioningResolver):
         assert value
 
         message[self.header_parameter] = value
-        accept = dict(message.get_params(header=self.header_parameter))  # type: ignore[arg-type]
+        accept = dict(message.get_params(header=self.header_parameter))
         version = accept.get(self.version_parameter, self.default_version)
         return str(version)
 

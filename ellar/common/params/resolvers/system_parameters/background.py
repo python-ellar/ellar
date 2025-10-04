@@ -23,7 +23,9 @@ class BackgroundTasksParameter(SystemParameterResolver):
         background_tasks = BackgroundTasks()
 
         if res.background and isinstance(res.background, BackgroundTask):
-            background_tasks.add_task(res.background.func)
+            background_tasks.add_task(
+                res.background.func, *res.background.args, **res.background.kwargs
+            )
 
         res.background = background_tasks
 
