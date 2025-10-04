@@ -2,7 +2,7 @@ aiohttp == 3.10.5
 anyio[trio] >= 3.2.1
 argon2-cffi == 25.1.0
 autoflake
-bcrypt; python_version >= '3.12'
+bcrypt; python_version >= '3.9'
 click >= 8.1.7,<9.0.0,
 email_validator >=1.1.1
 itsdangerous >=1.1.0,<3.0.0
@@ -17,8 +17,8 @@ regex==2025.9.18
 ruff ==0.13.3
 types-dataclasses ==0.6.6
 types-orjson ==3.6.2
-types-redis ==4.6.0.20240903
+types-redis ==4.6.0.20241004
 # types
-types-ujson ==5.10.0.20250326
+types-ujson ==5.10.0.20250822
 ujson >= 4.0.1
 uvicorn[standard] == 0.30.6

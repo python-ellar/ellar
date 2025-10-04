@@ -2,6 +2,7 @@ import hashlib
 import math
 import typing as t
 
+import bcrypt
 from ellar.utils.crypto import RANDOM_STRING_CHARS
 from passlib.hash import django_bcrypt, django_bcrypt_sha256
 
@@ -30,18 +31,6 @@ class BCryptSHA256Hasher(BaseHasher):
             "rounds": self.rounds,
         }
 
-    def _sha256_hash(self, password: EncodingType) -> str:
-        """
-        Hash password with SHA256 and return as hex string.
-        This matches what passlib's django_bcrypt_sha256 does internally.
-        """
-        if isinstance(password, str):
-            password_bytes = password.encode("utf-8")
-        else:
-            password_bytes = password
-
-        return hashlib.sha256(password_bytes).hexdigest()
-
     def encode(
         self, password: EncodingType, salt: EncodingSalt = None
     ) -> t.Union[str, t.Any]:
@@ -53,31 +42,44 @@ class BCryptSHA256Hasher(BaseHasher):
         using_kw = {"default_salt_size": default_salt_size, "salt": salt}
         using_kw.update(self._get_using_kwargs())
 
-        # Try passlib first (works on Python < 3.13)
-        try:
-            return self.hasher.using(**using_kw).hash(password)
-        except ValueError as e:
-            # Python 3.13+ bcrypt enforces 72-byte limit before passlib can pre-hash
-            # So we pre-hash manually and use the plain bcrypt hasher
-            if "password cannot be longer than 72 bytes" in str(e):
-                hashed = self._sha256_hash(password)
-                return self.hasher.using(**using_kw).hash(hashed)
-            raise
+        # Avoid passlib's backend long-secret detection which raises on Python 3.13+
+        # Pre-hash the secret with SHA256 and then use plain django_bcrypt,
+        # rewriting the prefix to bcrypt_sha256 for compatibility.
+        if isinstance(password, str):
+            secret_bytes = password.encode("utf-8")
+        else:
+            secret_bytes = password
+
+        digest_hex = hashlib.sha256(secret_bytes).hexdigest().encode("ascii")
+
+        if salt is not None:
+            salt_str = (
+                salt.decode("ascii")
+                if isinstance(salt, (bytes, bytearray))
+                else str(salt)
+            )
+            salt_full = f"$2b${self.rounds:02d}${salt_str}".encode("ascii")
+        else:
+            salt_full = bcrypt.gensalt(self.rounds)
+
+        hashed = bcrypt.hashpw(digest_hex, salt_full)
+        return f"bcrypt_sha256${hashed.decode('ascii')}"
 
     def verify(self, secret: EncodingType, hash_secret: str) -> bool:
         """
         Verify secret against an existing hash.
         """
-        # Try passlib first (works on Python < 3.13)
-        try:
-            return self.hasher.verify(secret, hash_secret)  # type:ignore[no-any-return]
-        except ValueError as e:
-            # Python 3.13+ bcrypt enforces 72-byte limit before passlib can pre-hash
-            # So we pre-hash manually
-            if "password cannot be longer than 72 bytes" in str(e):
-                hashed = self._sha256_hash(secret)
-                return self.hasher.verify(hashed, hash_secret)  # type:ignore[no-any-return]
-            raise
+        # Verify by pre-hashing secret and delegating to django_bcrypt
+        if isinstance(secret, str):
+            secret_bytes = secret.encode("utf-8")
+        else:
+            secret_bytes = secret
+
+        digest_hex = hashlib.sha256(secret_bytes).hexdigest().encode("ascii")
+        if not hash_secret.startswith("bcrypt_sha256$"):
+            return False
+        hashed = hash_secret[len("bcrypt_sha256$") :].encode("ascii")
+        return bcrypt.checkpw(digest_hex, hashed)
 
     def decode(self, encoded: str) -> dict:
         algorithm, empty, algostr, work_factor, data = encoded.split("$", 4)
@@ -117,27 +119,35 @@ class BCryptHasher(BCryptSHA256Hasher):
     ) -> t.Union[str, t.Any]:
         self._check_encode_args(password, salt)
 
-        # Truncate password to 72 bytes for bcrypt compatibility (Python 3.13+)
+        # Truncate password to 72 bytes for bcrypt compatibility
         if isinstance(password, str):
             password_bytes = password.encode("utf-8")[:72]
         else:
             password_bytes = password[:72]
 
-        default_salt_size = math.ceil(
-            self.salt_entropy / math.log2(len(RANDOM_STRING_CHARS))
-        )
-        using_kw = {"default_salt_size": default_salt_size, "salt": salt}
-        using_kw.update(self._get_using_kwargs())
-        return self.hasher.using(**using_kw).hash(password_bytes)
+        if salt is not None:
+            salt_str = (
+                salt.decode("ascii")
+                if isinstance(salt, (bytes, bytearray))
+                else str(salt)
+            )
+            salt_full = f"$2b${self.rounds:02d}${salt_str}".encode("ascii")
+        else:
+            salt_full = bcrypt.gensalt(self.rounds)
+
+        hashed = bcrypt.hashpw(password_bytes, salt_full)
+        return f"bcrypt${hashed.decode('ascii')}"
 
     def verify(self, secret: EncodingType, hash_secret: str) -> bool:
         """
         Verify secret against an existing hash, truncating to 72 bytes.
         """
-        # Truncate secret to 72 bytes for bcrypt compatibility (Python 3.13+)
         if isinstance(secret, str):
             secret_bytes = secret.encode("utf-8")[:72]
         else:
             secret_bytes = secret[:72]
 
-        return self.hasher.verify(secret_bytes, hash_secret)  # type:ignore[no-any-return]
+        if not hash_secret.startswith("bcrypt$"):
+            return False
+        hashed = hash_secret[len("bcrypt$") :].encode("ascii")
+        return bcrypt.checkpw(secret_bytes, hashed)
