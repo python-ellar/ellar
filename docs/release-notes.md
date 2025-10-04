@@ -1,3 +1,25 @@
+# 0.9.0
+## What's Changed
+* Starlette 0.46.1 upgrade by @eadwinCode in https://github.com/python-ellar/ellar/pull/267
+* Update python-multipart requirement from <0.0.10,>=0.0.5 to >=0.0.5,<0.0.21 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/274
+* Bump argon2-cffi from 23.1.0 to 25.1.0 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/273
+* Bump regex from 2024.11.6 to 2025.7.34 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/271
+* Bump types-ujson from 5.10.0.20240515 to 5.10.0.20250326 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/270
+* Bump codecov/codecov-action from 5.4.0 to 5.4.3 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/269
+* Update mkdocstrings[python] requirement from <0.26.0,>=0.19.0 to >=0.19.0,<0.31.0 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/278
+* Update pytest-cov requirement from <6.0.0,>=2.12.0 to >=2.12.0,<8.0.0 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/292
+* Bump mypy from 1.11.2 to 1.18.2 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/291
+* Bump regex from 2025.7.34 to 2025.9.18 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/290
+* Bump actions/setup-python from 5 to 6 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/288
+* Bump pypa/gh-action-pypi-publish from 1.12.4 to 1.13.0 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/287
+* Bump codecov/codecov-action from 5.4.3 to 5.5.1 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/286
+* Bump actions/checkout from 4 to 5 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/275
+* Bump ruff from 0.6.3 to 0.13.2 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/289
+* Fix mypy errors: resolve type issues and remove unused type ignores by @eadwinCode in https://github.com/python-ellar/ellar/pull/293
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.8.9...0.9.0
+
 # 0.8.9
 ## What's Changed
 * fix: Python 3.13 Support by @eadwinCode in https://github.com/python-ellar/ellar/pull/257
