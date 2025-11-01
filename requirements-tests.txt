@@ -1,4 +1,4 @@
-aiohttp == 3.10.5
+aiohttp == 3.13.2
 anyio[trio] >= 3.2.1
 argon2-cffi == 25.1.0
 autoflake
