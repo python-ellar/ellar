@@ -32,7 +32,7 @@ class ParamTypes(Enum):
     body = "body"
 
 
-class ParamFieldInfo(FieldInfo):
+class ParamFieldInfo(FieldInfo):  # type: ignore[misc]
     in_: ParamTypes = ParamTypes.query
     resolver: t.Type[BaseRouteParameterResolver] = QueryParameterResolver
     bulk_resolver: t.Type[BulkParameterResolver] = BulkParameterResolver
@@ -143,7 +143,7 @@ class ParamFieldInfo(FieldInfo):
         return f"{self.__class__.__name__}({self.default})"
 
 
-class PathFieldInfo(ParamFieldInfo):
+class PathFieldInfo(ParamFieldInfo):  # type: ignore[misc]
     in_ = ParamTypes.path
     resolver: t.Type[BaseRouteParameterResolver] = PathParameterResolver
 
@@ -209,12 +209,12 @@ class PathFieldInfo(ParamFieldInfo):
         )
 
 
-class QueryFieldInfo(ParamFieldInfo):
+class QueryFieldInfo(ParamFieldInfo):  # type: ignore[misc]
     in_ = ParamTypes.query
     resolver: t.Type[BaseRouteParameterResolver] = QueryParameterResolver
 
 
-class HeaderFieldInfo(ParamFieldInfo):
+class HeaderFieldInfo(ParamFieldInfo):  # type: ignore[misc]
     in_ = ParamTypes.header
     resolver: t.Type[BaseRouteParameterResolver] = HeaderParameterResolver
 
@@ -282,12 +282,12 @@ class HeaderFieldInfo(ParamFieldInfo):
         )
 
 
-class CookieFieldInfo(ParamFieldInfo):
+class CookieFieldInfo(ParamFieldInfo):  # type: ignore[misc]
     in_ = ParamTypes.cookie
     resolver: t.Type[BaseRouteParameterResolver] = CookieParameterResolver
 
 
-class BodyFieldInfo(ParamFieldInfo):
+class BodyFieldInfo(ParamFieldInfo):  # type: ignore[misc]
     in_ = ParamTypes.body
     MEDIA_TYPE: str = "application/json"
     resolver: t.Type[BaseRouteParameterResolver] = BodyParameterResolver
@@ -363,11 +363,11 @@ class BodyFieldInfo(ParamFieldInfo):
         return f"{self.__class__.__name__}({self.default})"
 
 
-class WsBodyFieldInfo(BodyFieldInfo):
+class WsBodyFieldInfo(BodyFieldInfo):  # type: ignore[misc]
     resolver: t.Type[BaseRouteParameterResolver] = WsBodyParameterResolver
 
 
-class FormFieldInfo(ParamFieldInfo):
+class FormFieldInfo(ParamFieldInfo):  # type: ignore[misc]
     in_ = ParamTypes.body
     resolver: t.Type[BaseRouteParameterResolver] = FormParameterResolver
     MEDIA_TYPE: str = "application/form-data"
@@ -456,6 +456,6 @@ class FormFieldInfo(ParamFieldInfo):
         return self.resolver(model_field)
 
 
-class FileFieldInfo(FormFieldInfo):
+class FileFieldInfo(FormFieldInfo):  # type: ignore[misc]
     resolver: t.Type[BaseRouteParameterResolver] = FileParameterResolver
     MEDIA_TYPE: str = "multipart/form-data"
