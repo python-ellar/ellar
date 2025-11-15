@@ -40,22 +40,29 @@ class SessionClientStrategy(SessionStrategy):
     def serialize_session(
         self,
         session: t.Union[str, SessionCookieObject],
+        config: t.Optional[SessionCookieOption] = None,
     ) -> str:
+        session_config = config or self._session_config
         if isinstance(session, SessionCookieObject):
             data = b64encode(json.dumps(dict(session)).encode("utf-8"))
             data = self._signer.sign(data)
 
-            return self.get_cookie_header_value(data.decode("utf-8"))
+            return self.get_cookie_header_value(
+                data.decode("utf-8"), config=session_config
+            )
 
-        return self.get_cookie_header_value(session, delete=True)
+        return self.get_cookie_header_value(session, delete=True, config=session_config)
 
-    def deserialize_session(self, session_data: t.Optional[str]) -> SessionCookieObject:
+    def deserialize_session(
+        self,
+        session_data: t.Optional[str],
+        config: t.Optional[SessionCookieOption] = None,
+    ) -> SessionCookieObject:
+        session_config = config or self._session_config
         if session_data:
             data = session_data.encode("utf-8")
             try:
-                data = self._signer.unsign(
-                    data, max_age=self.session_cookie_options.MAX_AGE
-                )
+                data = self._signer.unsign(data, max_age=session_config.MAX_AGE)
                 return SessionCookieObject(json.loads(b64decode(data)))
             except BadSignature:
                 pass
