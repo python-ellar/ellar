@@ -289,9 +289,22 @@ class ApplicationModule(ModuleBase):
 The `JWTModule` provides `JWTService` which is injected into `CustomModule`. By declaring `ForwardRefModule(JWTModule)` in `CustomModule`, the `JWTService` will be properly resolved during instantiation of `CustomModule`, regardless of the order in which the modules are configured in the application.
 
 This pattern is particularly useful when:
+
 - You want to avoid direct module instantiation
 - You need to configure a module differently in different parts of your application
 - You want to maintain loose coupling between modules
+
+### When not to use `ForwardRefModule`
+If the @Module class is registered in the application module, ApplicationModule, there is no need to use `ForwardRefModule`. Services/Providers exported from the module will be available in the application module. And all other modules will be able to resolve the dependencies from the application module.
+
+```python
+from ellar.common import Module
+from ellar.core.modules import ForwardRefModule, ModuleBase
+
+@Module(modules=[ModuleA])
+class ApplicationModule(ModuleBase):
+    pass
+```
 
 ### Forward Reference by Class
 
@@ -321,6 +334,7 @@ class ApplicationModule(ModuleBase):
 ```
 
 In this example:
+
 - `ModuleB` references `ModuleA` using `ForwardRefModule`, meaning `ModuleB` knows about `ModuleA` but doesn't instantiate it.
 - When `ApplicationModule` is built, both `ModuleA` and `ModuleB` are instantiated. During this build process, `ModuleB` can reference the instance of `ModuleA`, ensuring that all dependencies are resolved properly.
 
@@ -352,6 +366,7 @@ class ApplicationModule(ModuleBase):
 ```
 
 In this second example:
+
 - `ModuleB` references `ModuleA` by its name, `"moduleA"`. 
 - During the build process of `ApplicationModule`, the name reference is resolved, ensuring that `ModuleA` is instantiated and injected into `ModuleB` correctly.
 

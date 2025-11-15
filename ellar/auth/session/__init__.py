@@ -23,12 +23,15 @@ class SessionServiceNullStrategy(SessionStrategy):
         return SessionCookieOption()
 
     def deserialize_session(
-        self, session_data: t.Optional[str]
+        self,
+        session_data: t.Optional[str],
+        config: t.Optional[SessionCookieOption] = None,
     ) -> SessionCookieObject:  # pragma: no cover
         return SessionCookieObject()
 
     def serialize_session(
         self,
         session: t.Union[str, SessionCookieObject],
+        config: t.Optional[SessionCookieOption] = None,
     ) -> str:  # pragma: no cover
         return ""

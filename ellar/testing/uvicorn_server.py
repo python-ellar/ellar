@@ -25,10 +25,17 @@ class EllarUvicornServer(uvicorn.Server):
         super().__init__(config=uvicorn.Config(app, host=host, port=port))
 
     async def startup(self, sockets: t.Optional[t.List[t.Any]] = None) -> None:
-        """Override uvicorn startup"""
-        await super().startup(sockets)
-        self.config.setup_event_loop()
-        self._startup_done.set()
+        """Override uvicorn startup to prevent sys.exit on errors"""
+        try:
+            await super().startup(sockets)
+            self._startup_done.set()
+        except SystemExit as exc:
+            # Convert sys.exit() calls into RuntimeError for testing
+            # This happens when uvicorn fails to bind to a port
+            await self.lifespan.shutdown()
+            raise RuntimeError(
+                f"Server failed to start on {self.config.host}:{self.config.port}"
+            ) from exc
 
     async def run_server(self) -> None:
         """Start up server asynchronously"""

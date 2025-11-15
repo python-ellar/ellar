@@ -88,7 +88,10 @@ openapi_schema = {
                     "age": {
                         "anyOf": [
                             {"type": "number", "exclusiveMinimum": 0.0},
-                            {"type": "string"},
+                            {
+                                "type": "string",
+                                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                            },
                         ],
                         "title": "Age",
                     },

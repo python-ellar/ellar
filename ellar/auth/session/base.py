@@ -17,37 +17,48 @@ class SessionStrategy(ABC):
     def serialize_session(
         self,
         session: t.Union[str, SessionCookieObject],
+        config: t.Optional[SessionCookieOption] = None,
     ) -> str:
         """
         :param session: Collection ExtraEndpointArg
+        :param config: SessionCookieOption
         :return: string
         """
 
     @abstractmethod
-    def deserialize_session(self, session_data: t.Optional[str]) -> SessionCookieObject:
+    def deserialize_session(
+        self,
+        session_data: t.Optional[str],
+        config: t.Optional[SessionCookieOption] = None,
+    ) -> SessionCookieObject:
         """
         :param session_data:
         :return: SessionCookieObject
+        :param config: SessionCookieOption
         """
 
-    def get_cookie_header_value(self, data: t.Any, delete: bool = False) -> str:
-        security_flags = "httponly; samesite=" + self.session_cookie_options.SAME_SITE
-        if self.session_cookie_options.SECURE:
+    def get_cookie_header_value(
+        self,
+        data: t.Any,
+        delete: bool = False,
+        config: t.Optional[SessionCookieOption] = None,
+    ) -> str:
+        session_config = config or self.session_cookie_options
+        security_flags = "httponly; samesite=" + session_config.SAME_SITE
+        if session_config.SECURE:
             security_flags += "; secure"
 
         if not delete:
             max_age = (
-                f"Max-Age={self.session_cookie_options.MAX_AGE}; "
-                if self.session_cookie_options.MAX_AGE
-                else ""
+                f"Max-Age={session_config.MAX_AGE}; " if session_config.MAX_AGE else ""
             )
         else:
             max_age = "Max-Age=0; "
 
         header_value = "{session_cookie}={data}; path={path}; {max_age}{security_flags}".format(  # E501
-            session_cookie=self.session_cookie_options.NAME,
+            session_cookie=session_config.NAME,
             data=data,
-            path=self.session_cookie_options.PATH,
+            path=session_config.PATH,
             max_age=max_age,
             security_flags=security_flags,
         )

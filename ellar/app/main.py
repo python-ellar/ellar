@@ -1,7 +1,7 @@
 import json
 import logging
-import logging.config
 import typing as t
+from contextlib import _AsyncGeneratorContextManager
 
 from ellar.auth.handlers import AuthenticationHandlerType
 from ellar.common import (
@@ -185,7 +185,7 @@ class App:
         )
 
     @t.no_type_check
-    def with_injector_context(self) -> t.AsyncGenerator[EllarInjector, t.Any]:
+    def with_injector_context(self) -> _AsyncGeneratorContextManager[t.Any]:
         return injector_context(self.injector)
 
     @t.no_type_check
