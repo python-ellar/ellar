@@ -1,3 +1,11 @@
+# 0.9.3
+## What's Changed
+* feat: implement recursive forward ref resolution in test module dependencies by @eadwinCode in https://github.com/python-ellar/ellar/pull/302
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.9.2...0.9.3
+
+
 # 0.9.2
 ## What's Changed
 * fix(testing): handle uvicorn SystemExit in EllarUvicornServer startup by @eadwinCode in https://github.com/python-ellar/ellar/pull/300
