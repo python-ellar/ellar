@@ -1,3 +1,14 @@
+# 0.9.2
+## What's Changed
+* fix(testing): handle uvicorn SystemExit in EllarUvicornServer startup by @eadwinCode in https://github.com/python-ellar/ellar/pull/300
+* Bump ruff from 0.13.3 to 0.14.3 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/299
+* Bump uvicorn[standard] from 0.30.6 to 0.38.0 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/296
+* Bump starlette from 0.48.0 to 0.49.1 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/298
+* feat: Add InjectByTag support and global TagRegistry for testing by @eadwinCode in https://github.com/python-ellar/ellar/pull/301
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.9.0...0.9.2
+
 # 0.9.0
 ## What's Changed
 * Starlette 0.46.1 upgrade by @eadwinCode in https://github.com/python-ellar/ellar/pull/267
