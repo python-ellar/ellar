@@ -271,7 +271,10 @@ class Test:
             for dep_type in dependencies:
                 # Handle tagged dependencies (InjectByTag)
                 if isinstance(dep_type, t.NewType):
-                    dep_type = app_analyzer.get_type_from_tag(dep_type)
+                    resolved_type = app_analyzer.get_type_from_tag(dep_type)
+                    if not resolved_type:
+                        continue
+                    dep_type = resolved_type
 
                 providing_module = app_analyzer.find_module_providing_service(dep_type)
 

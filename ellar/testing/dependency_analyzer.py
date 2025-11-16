@@ -68,7 +68,7 @@ class ApplicationModuleDependencyAnalyzer:
         module_setup = ModuleSetup(self.application_module)
         return AppFactory.read_all_module(module_setup)
 
-    def get_type_from_tag(self, tag: t.NewType) -> t.Optional[t.Type[t.Any]]:
+    def get_type_from_tag(self, tag: t.Any) -> t.Optional[t.Type[t.Any]]:
         """
         Get the type/interface associated with a given tag from ApplicationModule tree
 
@@ -86,7 +86,7 @@ class ApplicationModuleDependencyAnalyzer:
         if not hasattr(tag, "__name__"):
             return None
 
-        tag_instance = tag.__name__
+        tag_instance = getattr(tag, "__name__", None)
         if not isinstance(tag_instance, Tag):
             return None
 
