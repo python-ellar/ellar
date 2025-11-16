@@ -270,7 +270,8 @@ class Test:
             # For each dependency, find the providing module
             for dep_type in dependencies:
                 # Handle tagged dependencies (InjectByTag)
-                if isinstance(dep_type, t.NewType):
+                # NewType creates callables with __supertype__ attribute
+                if hasattr(dep_type, "__supertype__"):
                     resolved_type = app_analyzer.get_type_from_tag(dep_type)
                     if not resolved_type:
                         continue
