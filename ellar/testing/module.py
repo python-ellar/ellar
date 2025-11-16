@@ -11,7 +11,7 @@ from ellar.common import (
     constants,
 )
 from ellar.common.types import T
-from ellar.core import ModuleBase
+from ellar.core import ModuleBase, ModuleSetup
 from ellar.core.routing import EllarControllerMount
 from ellar.di import ProviderConfig
 from ellar.reflect import reflect
@@ -166,16 +166,12 @@ class Test:
             app_analyzer = ApplicationModuleDependencyAnalyzer(application_module)
             controller_analyzer = ControllerDependencyAnalyzer()
 
-            # 1. Resolve ForwardRefs in registered modules
-            resolved_modules = cls._resolve_forward_refs(modules_list, app_analyzer)
-            modules_list = resolved_modules
-
             # 2. Analyze controllers and find required modules (with recursive dependencies)
             required_modules = cls._analyze_and_resolve_controller_dependencies(
                 controllers, controller_analyzer, app_analyzer
             )
 
-            # 3. Add required modules that aren't already registered
+            # 2. Add required modules that aren't already registered
             # Use type comparison to avoid duplicates
             existing_module_types = {
                 m if isinstance(m, type) else m.module if hasattr(m, "module") else m
@@ -185,6 +181,15 @@ class Test:
                 if required_module not in existing_module_types:
                     modules_list.append(required_module)
                     existing_module_types.add(required_module)
+
+            # 4. Resolve ForwardRefs in registered modules
+            resolved_modules = cls._resolve_forward_refs(modules_list, app_analyzer)
+            modules_list.extend(resolved_modules)
+
+            providers = list(providers)
+            # 5. Add application module providers, since this is the root module
+            # and it will be used to resolve dependencies
+            providers.extend(app_analyzer.get_application_module_providers())
 
         # Create the module with complete dependency list
         module = Module(
@@ -229,20 +234,30 @@ class Test:
         modules: t.List[t.Any],
         app_analyzer: "ApplicationModuleDependencyAnalyzer",
     ) -> t.List[t.Any]:
-        """Resolve ForwardRefModule instances from ApplicationModule"""
+        """Resolve ForwardRefModule instances from ApplicationModule recursively"""
         from ellar.core import ForwardRefModule
 
         resolved = []
         for module in modules:
+            # Resolve current module if it's a ForwardRefModule
             if isinstance(module, ForwardRefModule):
                 actual_module = app_analyzer.resolve_forward_ref(module)
-                if actual_module:
-                    resolved.append(actual_module)
-                else:
-                    # Keep original if can't resolve (might be test-specific)
-                    resolved.append(module)
+                current_module = actual_module.module
+                resolved.append(actual_module)
+            elif isinstance(module, ModuleSetup):
+                current_module = module.module
             else:
-                resolved.append(module)
+                current_module = module
+
+            # Recursively resolve forward refs in module's dependencies
+            registered_modules = (
+                reflect.get_metadata(constants.MODULE_METADATA.MODULES, current_module)
+                or []
+            )
+            if registered_modules:
+                resolved.extend(
+                    cls._resolve_forward_refs(registered_modules, app_analyzer)
+                )
 
         return resolved
 

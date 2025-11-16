@@ -12,7 +12,7 @@ from ellar.utils.importer import import_from_string
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.common import ControllerBase
-    from ellar.core import ForwardRefModule, ModuleBase
+    from ellar.core import ForwardRefModule, ModuleBase, ModuleSetup
     from ellar.di import ModuleTreeManager
 
 
@@ -59,6 +59,13 @@ class ApplicationModuleDependencyAnalyzer:
             self.application_module = application_module
 
         self._module_tree = self._build_module_tree()
+
+    def get_application_module_providers(self) -> t.List[t.Type]:
+        """Get all provider types from the ApplicationModule tree"""
+        mod_data = self._module_tree.get_app_module()
+        if mod_data:
+            return list(mod_data.providers.values())
+        return []
 
     def _build_module_tree(self) -> "ModuleTreeManager":
         """Build complete module tree for ApplicationModule"""
@@ -164,7 +171,7 @@ class ApplicationModuleDependencyAnalyzer:
 
     def resolve_forward_ref(
         self, forward_ref: "ForwardRefModule"
-    ) -> t.Optional[t.Type["ModuleBase"]]:
+    ) -> t.Optional["ModuleSetup"]:
         """
         Resolve a ForwardRefModule to its actual module from ApplicationModule tree
 
@@ -181,7 +188,7 @@ class ApplicationModuleDependencyAnalyzer:
                 filter_item=lambda data: True,
                 find_predicate=lambda data: data.name == forward_ref.module_name,
             )
-            return t.cast(t.Type["ModuleBase"], result.value.module) if result else None
+            return t.cast("ModuleSetup", result.value) if result else None
 
         elif hasattr(forward_ref, "module") and forward_ref.module:
             # Module can be a Type or a string import path
@@ -197,12 +204,8 @@ class ApplicationModuleDependencyAnalyzer:
 
             # Search for this module type in the tree
             module_data = self._module_tree.get_module(module_cls)
-            return (
-                t.cast(t.Type["ModuleBase"], module_data.value.module)
-                if module_data
-                else None
-            )
-
+            if module_data:
+                return t.cast("ModuleSetup", module_data.value)
         return None
 
 
