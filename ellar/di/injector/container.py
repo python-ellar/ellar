@@ -33,7 +33,6 @@ class Container(InjectorBinder):
         "injector",
         "_auto_bind",
         "_bindings",
-        "_bindings_by_tag",
         "parent",
         "_aliases",
         "_exact_aliases",
@@ -43,7 +42,6 @@ class Container(InjectorBinder):
 
     def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         super().__init__(*args, **kwargs)
-        self._bindings_by_tag: t.Dict[str, t.Type[t.Any]] = {}
 
     @t.no_type_check
     def create_binding(
@@ -58,22 +56,13 @@ class Container(InjectorBinder):
             scope = scope.scope
         return Binding(interface, provider, scope)
 
-    def get_interface_by_tag(self, tag: str) -> t.Type[t.Any]:
-        interface = self._bindings_by_tag.get(tag)
-        if interface:
-            return interface
-        if isinstance(self.parent, Container):
-            return self.parent.get_interface_by_tag(tag)
-
-        raise UnsatisfiedRequirement(None, t.cast(t.Any, tag))
-
     def register_binding(
         self, interface: t.Type, binding: Binding, tag: t.Optional[str] = None
     ) -> None:
         self._bindings[interface] = binding
 
         if tag:
-            self._bindings_by_tag[tag] = interface
+            self.injector.tag_registry.register(tag, interface)
 
     @t.no_type_check
     def register(

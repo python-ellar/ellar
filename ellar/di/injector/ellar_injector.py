@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 import typing as t
 from functools import cached_property
@@ -5,18 +7,20 @@ from functools import cached_property
 from ellar.di.constants import MODULE_REF_TYPES, Tag, request_context_var
 from ellar.di.injector.tree_manager import ModuleTreeManager
 from ellar.di.logger import log
+from ellar.di.providers import InstanceProvider, Provider
+from ellar.di.types import T
 from injector import Injector, Scope, ScopeDecorator
 from typing_extensions import Annotated
 
-from ..providers import InstanceProvider, Provider
-from ..types import T
 from .container import Container
+from .tag_registry import TagRegistry
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from ellar.core.modules import (
         ModuleBase,
+        ModuleForwardRef,
         ModuleRefBase,
-        ModuleTemplateRef,
+        ModuleSetup,
     )
 
 
@@ -62,6 +66,9 @@ class EllarInjector(Injector):
         "owner",
     )
 
+    # Global tag registry shared across all injector instances
+    tag_registry: t.ClassVar[TagRegistry] = TagRegistry()
+
     def __init__(
         self,
         auto_bind: bool = True,
@@ -101,9 +108,11 @@ class EllarInjector(Injector):
 
     def get_templating_modules(
         self,
-    ) -> t.Dict[t.Type["ModuleBase"], "ModuleTemplateRef"]:
+    ) -> dict[
+        type[ModuleBase] | type, ModuleRefBase | "ModuleSetup" | ModuleForwardRef
+    ]:
         return {
-            item.value.module: item.value  # type:ignore[misc]
+            item.value.module: item.value
             for item in self.tree_manager.get_by_ref_type(MODULE_REF_TYPES.TEMPLATE)
         }
 
@@ -115,7 +124,7 @@ class EllarInjector(Injector):
     ) -> T:
         data = _tag_info_interface(interface)
         if data and data.supertype is Tag:
-            interface = self.container.get_interface_by_tag(data.tag)
+            interface = self.tag_registry.get_interface(data.tag)
 
         binding, binder = self.container.get_binding(interface)
         scope = binding.scope

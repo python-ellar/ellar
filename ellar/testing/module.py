@@ -18,6 +18,12 @@ from ellar.reflect import reflect
 from starlette.routing import Host, Mount
 from starlette.testclient import TestClient as TestClient
 
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.testing.dependency_analyzer import (
+        ApplicationModuleDependencyAnalyzer,
+        ControllerDependencyAnalyzer,
+    )
+
 
 class TestingModule:
     def __init__(
@@ -124,6 +130,7 @@ class Test:
         base_directory: t.Optional[t.Union[Path, str]] = None,
         static_folder: str = "static",
         modules: t.Sequence[t.Union[t.Type, t.Any]] = (),
+        application_module: t.Optional[t.Union[t.Type[ModuleBase], str]] = None,
         global_guards: t.Optional[
             t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
         ] = None,
@@ -131,45 +138,57 @@ class Test:
     ) -> TESTING_MODULE:  # type: ignore[valid-type]
         """
         Create a TestingModule to test controllers and services in isolation
-        :param modules: Other module dependencies
+
         :param controllers: Module Controllers
         :param routers: Module router
         :param providers: Module Services
         :param template_folder: Module Templating folder
         :param base_directory: Base Directory for static folder and template
         :param static_folder: Module Static folder
-        :param config_module: Application Config
+        :param modules: Other module dependencies
+        :param application_module: Optional ApplicationModule to resolve dependencies from.
+                                   Can be a module type or import string (e.g., "app.module:ApplicationModule")
         :param global_guards: Application Guard
-        :param modify_modules: Modifies Modules
-        if setup or register_setup is used to avoid module sharing metadata between tests
-        :return:
+        :param config_module: Application Config
+        :return: TestingModule instance
         """
 
-        # if modify_modules:
-        #
-        #     def modifier_module(
-        #         _module: t.Union[t.Type, t.Any],
-        #     ) -> t.Union[t.Type, t.Any]:
-        #         return Module(
-        #             controllers=,
-        #             routers=,
-        #             providers=,
-        #             template_folder=,
-        #             base_directory=,
-        #             static_folder=,
-        #             modules=
-        #         )(
-        #             type(
-        #                 f"{get_name(_module)}Modified_{uuid4().hex[:6]}", (_module,), {}
-        #             )
-        #         )
-        #
-        #     for module_ in modules:
-        #         if isinstance(module_, (ModuleSetup, DynamicModule)):
-        #             module_.module = modifier_module(module_.module)
+        # Convert to mutable list
+        modules_list = list(modules)
 
+        # If application_module provided, analyze and auto-register dependencies
+        if application_module:
+            from ellar.testing.dependency_analyzer import (
+                ApplicationModuleDependencyAnalyzer,
+                ControllerDependencyAnalyzer,
+            )
+
+            app_analyzer = ApplicationModuleDependencyAnalyzer(application_module)
+            controller_analyzer = ControllerDependencyAnalyzer()
+
+            # 1. Resolve ForwardRefs in registered modules
+            resolved_modules = cls._resolve_forward_refs(modules_list, app_analyzer)
+            modules_list = resolved_modules
+
+            # 2. Analyze controllers and find required modules (with recursive dependencies)
+            required_modules = cls._analyze_and_resolve_controller_dependencies(
+                controllers, controller_analyzer, app_analyzer
+            )
+
+            # 3. Add required modules that aren't already registered
+            # Use type comparison to avoid duplicates
+            existing_module_types = {
+                m if isinstance(m, type) else m.module if hasattr(m, "module") else m
+                for m in modules_list
+            }
+            for required_module in required_modules:
+                if required_module not in existing_module_types:
+                    modules_list.append(required_module)
+                    existing_module_types.add(required_module)
+
+        # Create the module with complete dependency list
         module = Module(
-            modules=modules,
+            modules=modules_list,
             controllers=controllers,
             routers=routers,
             providers=providers,
@@ -203,3 +222,64 @@ class Test:
         return cls.TESTING_MODULE(
             module, global_guards=global_guards, config_module=config_module
         )
+
+    @classmethod
+    def _resolve_forward_refs(
+        cls,
+        modules: t.List[t.Any],
+        app_analyzer: "ApplicationModuleDependencyAnalyzer",
+    ) -> t.List[t.Any]:
+        """Resolve ForwardRefModule instances from ApplicationModule"""
+        from ellar.core import ForwardRefModule
+
+        resolved = []
+        for module in modules:
+            if isinstance(module, ForwardRefModule):
+                actual_module = app_analyzer.resolve_forward_ref(module)
+                if actual_module:
+                    resolved.append(actual_module)
+                else:
+                    # Keep original if can't resolve (might be test-specific)
+                    resolved.append(module)
+            else:
+                resolved.append(module)
+
+        return resolved
+
+    @classmethod
+    def _analyze_and_resolve_controller_dependencies(
+        cls,
+        controllers: t.Sequence[t.Type[ControllerBase]],
+        controller_analyzer: "ControllerDependencyAnalyzer",
+        app_analyzer: "ApplicationModuleDependencyAnalyzer",
+    ) -> t.List[t.Type[ModuleBase]]:
+        """
+        Find modules that provide services required by controllers
+
+        This method finds direct modules that provide the required services.
+        Nested module dependencies are automatically handled by Ellar's module system
+        when AppFactory.read_all_module processes the modules.
+        """
+        required_modules = []
+        required_modules_set = set()
+
+        for controller in controllers:
+            # Get dependencies from controller
+            dependencies = controller_analyzer.get_dependencies(controller)
+
+            # For each dependency, find the providing module
+            for dep_type in dependencies:
+                # Handle tagged dependencies (InjectByTag)
+                if isinstance(dep_type, t.NewType):
+                    dep_type = app_analyzer.get_type_from_tag(dep_type)
+
+                providing_module = app_analyzer.find_module_providing_service(dep_type)
+
+                if providing_module:
+                    # Add only the direct providing module
+                    # Nested dependencies will be handled by AppFactory.read_all_module
+                    if providing_module not in required_modules_set:
+                        required_modules.append(providing_module)
+                        required_modules_set.add(providing_module)
+
+        return required_modules

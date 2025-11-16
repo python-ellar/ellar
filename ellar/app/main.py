@@ -279,7 +279,7 @@ class App:
 
     def get_module_loaders(self) -> t.Generator[ModuleTemplating, None, None]:
         for loader in self._injector.get_templating_modules().values():
-            yield loader
+            yield t.cast(ModuleTemplating, loader)
 
     def _create_jinja_environment(self) -> Environment:
         # TODO: rename to `create_jinja_environment`

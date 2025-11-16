@@ -116,6 +116,66 @@ class ProviderConfig(t.Generic[T]):
         self.export = export
         self.core = core
 
+    def __repr__(self) -> str:
+        """Developer-friendly representation showing all configuration details"""
+        parts = [f"base_type={self._type_repr(self.base_type)}"]
+
+        if self.use_value is not None:
+            parts.append(f"use_value={self._type_repr(self.use_value)}")
+        if self.use_class is not None:
+            parts.append(f"use_class={self._type_repr(self.use_class)}")
+        if self.scope != SingletonScope:
+            parts.append(f"scope={self._type_repr(self.scope)}")
+        if self.tag:
+            parts.append(f"tag={self.tag!r}")
+        if self.export:
+            parts.append("export=True")
+        if self.core:
+            parts.append("core=True")
+
+        return f"ProviderConfig({', '.join(parts)})"
+
+    def __str__(self) -> str:
+        """User-friendly string representation"""
+        base = self._type_name(self.base_type)
+
+        if self.use_class:
+            impl = self._type_name(self.use_class)
+            desc = f"{base} -> {impl}"
+        elif self.use_value is not None:
+            desc = f"{base} -> <value>"
+        else:
+            desc = base
+
+        if self.tag:
+            desc = f"{desc} [tag:{self.tag}]"
+
+        return desc
+
+    @staticmethod
+    def _type_repr(obj: t.Any) -> str:
+        """Get a repr-style string for a type or value"""
+        if isinstance(obj, type):
+            return (
+                f"{obj.__module__}.{obj.__qualname__}"
+                if hasattr(obj, "__module__")
+                else obj.__qualname__
+            )
+        elif isinstance(obj, str):
+            return repr(obj)
+        else:
+            return repr(obj)
+
+    @staticmethod
+    def _type_name(obj: t.Any) -> str:
+        """Get a simple name for a type or value"""
+        if isinstance(obj, type):
+            return obj.__qualname__ if hasattr(obj, "__qualname__") else obj.__name__
+        elif isinstance(obj, str):
+            return obj
+        else:
+            return type(obj).__name__
+
     def get_type(self) -> t.Type:
         return self._resolve_type(self.base_type)
 

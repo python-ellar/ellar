@@ -147,17 +147,17 @@ class ModuleSetup:
         return list(reflect.get_metadata(MODULE_METADATA.EXPORTS, self.module) or [])
 
     @cached_property
-    def providers(self) -> t.Dict[t.Type, t.Type]:
+    def providers(self) -> t.Dict[t.Type, ProviderConfig]:
         _providers = list(
             reflect.get_metadata(MODULE_METADATA.PROVIDERS, self.module) or []
         )
-        res = {}
+        res: t.Dict[t.Type, ProviderConfig] = {}
         for item in _providers:
             if isinstance(item, ProviderConfig):
-                res.update({item: item.get_type()})
+                res.update({item.get_type(): item})
             else:
-                res.update({item: item})
-        return res  # type:ignore[return-value]
+                res.update({item: ProviderConfig(item)})
+        return res
 
     @property
     def is_ready(self) -> bool:
