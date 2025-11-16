@@ -347,7 +347,7 @@ def test_forward_ref_resolution_by_name():
     resolved = analyzer.resolve_forward_ref(forward_ref)
 
     # When resolving by name, it returns the module type directly
-    assert resolved == DatabaseModule
+    assert resolved.module == DatabaseModule
 
 
 def test_forward_ref_resolution_not_found():
