@@ -99,7 +99,13 @@ from .responses import (
 from .serializer import Serializer, serialize_object
 from .templating import TemplateResponse, render_template, render_template_string
 
+
+def T(tag: str) -> str:
+    return tag
+
+
 __all__ = [
+    "T",
     "AnonymousIdentity",
     "ControllerBase",
     "serialize_object",

@@ -305,6 +305,7 @@ When controllers use `InjectByTag` for dependency injection, the resolver automa
 
 ```python
 from ellar.di import InjectByTag, ProviderConfig
+from ellar.common.types import T
 
 # Module with tagged provider
 @Module(
@@ -316,11 +317,13 @@ from ellar.di import InjectByTag, ProviderConfig
 class UserModule:
     pass
 
-# Controller using tagged dependency
+# Controller using tagged dependency (supports both syntaxes)
 @Controller()
 class UserController:
-    def __init__(self, user_repo: InjectByTag('user_repo')):
+    def __init__(self, user_repo: InjectByTag[T("user_repo")]):  # Generic syntax
         self.user_repo = user_repo
+
+# Or use callable syntax: InjectByTag('user_repo')
 
 # Automatic resolution works with tags!
 test_module = Test.create_test_module(

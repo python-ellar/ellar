@@ -3,7 +3,7 @@ Tests for TestModule automatic dependency resolution feature.
 """
 
 import pytest
-from ellar.common import Controller, Module, get
+from ellar.common import Controller, Module, T, get
 from ellar.core import ForwardRefModule, ModuleBase
 from ellar.di import InjectByTag, ProviderConfig, injectable
 from ellar.di.exceptions import UnsatisfiedRequirement
@@ -519,7 +519,7 @@ def test_create_test_module_complex_hierarchy(reflect_context):
 
     @Controller()
     class ComplexController:
-        def __init__(self, user_repo: InjectByTag("user_repo"), auth: IAuthService):
+        def __init__(self, user_repo: InjectByTag[T("user_repo")], auth: IAuthService):
             self.user_repo = user_repo
             self.auth = auth
 

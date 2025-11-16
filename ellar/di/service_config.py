@@ -72,11 +72,12 @@ class ProviderConfig(t.Generic[T]):
     >>> provider_config = ProviderConfig(SomeClass, scope=request_scope)
     >>> provider_config.register(container)
 
-    Example with tag:
+    Example with tag (supports both callable and generic syntax):
 
     >>> provider_config = ProviderConfig(SomeClass, tag='some_tag')
     >>> provider_config.register(container)
-    >>> instance = container.get(InjectByTag('some_tag'))
+    >>> instance = container.get(InjectByTag('some_tag'))  # Callable syntax
+    >>> # or: instance = container.get(InjectByTag[T('some_tag')])  # Generic syntax
     >>> assert isinstance(instance, SomeClass)
 
 
@@ -315,9 +316,13 @@ def get_scope(
     )
 
 
-def InjectByTag(tag: str) -> t.Any:
+class _InjectByTagClass:
     """
     Inject a provider/service by tag.
+
+    Supports both callable and generic syntax:
+    - InjectByTag('A')  # callable syntax
+    - InjectByTag['A']  # generic syntax
 
     For example:
 
@@ -332,6 +337,12 @@ def InjectByTag(tag: str) -> t.Any:
             self.a = a
             self.b = b
 
+    # Or using generic syntax:
+    class SomeClass:
+        def __init__(self, a: InjectByTag['A'], b: AnotherType):
+            self.a = a
+            self.b = b
+
     injector = EllarInjector()
     injector.container.register_exact_scoped(A, tag='A')
     injector.container.register_exact_scoped(AnotherType)
@@ -340,8 +351,30 @@ def InjectByTag(tag: str) -> t.Any:
     instance = injector.get(SomeClass)
     assert instance.a.name == 'A'
     assert instance.b.name == 'AnotherType'
-
-    :param tag: Registered Provider/Service tag name
-    :return: typing.Any
     """
-    return t.NewType(Tag(tag), Tag)
+
+    def __call__(self, tag: str) -> t.Any:
+        """
+        Callable syntax: InjectByTag('tag_name')
+
+        :param tag: Registered Provider/Service tag name
+        :return: A NewType for tagged dependency injection
+        """
+        return t.NewType(Tag(tag), Tag)
+
+    def __getitem__(self, tag: str) -> t.Any:
+        """
+        Generic syntax: InjectByTag['tag_name']
+
+        :param tag: Registered Provider/Service tag name
+        :return: A NewType for tagged dependency injection
+        """
+        return t.NewType(Tag(tag), Tag)
+
+    def __repr__(self) -> str:
+        """Return a string representation for debugging"""
+        return "InjectByTag"
+
+
+# Create singleton instance to support both syntaxes
+InjectByTag = _InjectByTagClass()
