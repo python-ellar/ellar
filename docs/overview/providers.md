@@ -221,5 +221,11 @@ class AModule(ModuleBase):
 
 In the above example, we are tagging `Foo` as `first_foo` and `FooB` as `second_foo`. By doing this, we can resolve both services using their tag names, thus providing the possibility of resolving services by tag name or type.
 
-Also, services can be injected as a dependency by using tags. To achieve this, the `InjectByTag` decorator is used as a `**constructor**` argument.
+Also, services can be injected as a dependency by using tags. To achieve this, `InjectByTag` is used as a `**constructor**` argument.
 This allows for more flexibility in managing dependencies and resolving services based on tags.
+
+`InjectByTag` supports two syntaxes:
+- **Callable syntax**: `InjectByTag('tag_name')` 
+- **Generic syntax**: `InjectByTag[T("tag_name")]` where T is from `ellar.common.types.T`
+
+Both syntaxes work identically and can be used interchangeably based on your preference.

@@ -117,42 +117,528 @@ This method returns a `TestingModule` instance which in turn provides a few meth
 - [**`create_application`**](#create-application): This method will return an application instance for the isolated testing module.
 - [**`get_test_client`**](#testclient): creates and return a `TestClient` for the application which will allow you to make requests against your application, using the `httpx` library.
 
+## **Automatic Dependency Resolution**
+When testing controllers that depend on services from other modules, manually registering all required modules in your test setup can be tedious and error-prone. 
+Ellar provides automatic dependency resolution to eliminate this boilerplate.
+
+### **The Problem**
+Consider a controller that requires services from multiple modules:
+
+```python
+@Controller('/users')
+class UserController:
+    def __init__(self, auth_service: IAuthService, db: IDatabaseService):
+        self.auth_service = auth_service
+        self.db = db
+```
+
+Without automatic resolution, you must manually register all dependencies:
+
+```python
+# Manual approach - error-prone!
+test_module = Test.create_test_module(
+    controllers=[UserController],
+    modules=[AuthModule, DatabaseModule, LoggingModule]  # Must list EVERYTHING
+)
+```
+
+If you forget to register a module, you get an `UnsatisfiedRequirement` error during test execution.
+
+### **The Solution:**
+By providing the `ApplicationModule` in the `Test.create_test_module()` method, Ellar will automatically resolve missing dependencies needed to test the controller.
+
+You can provide the ApplicationModule in two ways:
+
+**1. As a module type (direct import):**
+```python
+# New approach - automatic!
+test_module = Test.create_test_module(
+    controllers=[UserController],
+    application_module=ApplicationModule  # Automatically resolves dependencies!
+)
+```
+
+**2. As an import string (avoids circular imports):**
+```python
+# Using import string - useful to avoid circular imports
+test_module = Test.create_test_module(
+    controllers=[UserController],
+    application_module="app.module:ApplicationModule"  # Import string!
+)
+```
+
+When you provide `application_module`, Ellar:
+1. Analyzes the controller's `__init__` parameters to identify required services
+2. Searches the ApplicationModule tree to find modules that provide those services
+3. Automatically includes those modules (and their nested dependencies) in the test module
+
+### **How It Works**
+
+#### **Controller Dependency Analysis**
+Ellar inspects your controller's `__init__` signature to identify required services:
+
+```python
+@Controller()
+class AdminController:
+    def __init__(self, auth: IAuthService, db: IDatabaseService):
+        # Ellar detects: needs IAuthService and IDatabaseService
+        self.auth = auth
+        self.db = db
+```
+
+#### **Recursive Module Resolution**
+When a module depends on other modules, all nested dependencies are automatically included:
+
+```python
+@Module(
+    modules=[LoggingModule],  # Nested dependency
+    providers=[ProviderConfig(IDatabaseService, use_class=DatabaseService)],
+    exports=[IDatabaseService]
+)
+class DatabaseModule:
+    pass
+
+# When DatabaseModule is needed, LoggingModule is automatically included!
+```
+
+#### **ForwardRefModule Support**
+`ForwardRefModule` instances are automatically resolved:
+
+```python
+@Module(
+    modules=[
+        DatabaseModule,
+        ForwardRefModule(CacheModule)  # Reference without setup
+    ]
+)
+class ApplicationModule:
+    pass
+
+# CacheModule is automatically resolved when needed!
+test_module = Test.create_test_module(
+    controllers=[ProductController],  # Needs ICacheService
+    application_module=ApplicationModule  # Resolves ForwardRef automatically
+)
+```
+
+### **Mocking and Overriding**
+You can still override specific modules for mocking - explicitly provided modules take precedence:
+
+```python
+class MockAuthService(IAuthService):
+    def authenticate(self, token: str):
+        return {"user": "test_user"}
+
+@Module(
+    providers=[ProviderConfig(IAuthService, use_class=MockAuthService)],
+    exports=[IAuthService]
+)
+class MockAuthModule:
+    pass
+
+test_module = Test.create_test_module(
+    controllers=[UserController],
+    modules=[MockAuthModule],  # Explicitly provided - takes precedence!
+    application_module=ApplicationModule  # Still resolves other dependencies
+)
+# Result: Uses MockAuthModule for IAuthService, but DatabaseModule from ApplicationModule
+```
+
+### **Complete Isolation**
+When you need complete test isolation, simply omit the `application_module` parameter:
+
+```python
+# Full isolation - no automatic resolution
+test_module = Test.create_test_module(
+    controllers=[UserController],
+    modules=[MockAuthModule, MockDatabaseModule],  # Must provide everything
+    # No application_module - complete isolation
+)
+```
+
+### **Using Import Strings (Avoid Circular Imports)**
+If importing your ApplicationModule directly causes circular import issues, use an import string:
+
+```python
+# In your test file - no direct import needed!
+test_module = Test.create_test_module(
+    controllers=[UserController],
+    application_module="myapp.root_module:ApplicationModule"  # String reference
+)
+```
+
+This is especially useful when:
+- Your test file and ApplicationModule would create circular imports
+- You want to keep test files independent of the main application structure
+- You're testing across different packages
+
+### **Example: Before and After**
+
+=== "Before (Manual)"
+
+    ```python
+    # Must manually register ALL dependencies
+    test_module = Test.create_test_module(
+        controllers=[AdminController],
+        modules=[
+            AuthModule,
+            DatabaseModule,
+            LoggingModule,  # Don't forget nested deps!
+            CacheModule
+        ]
+    )
+    ```
+
+=== "After (Automatic)"
+
+    ```python
+    # Dependencies automatically resolved!
+    test_module = Test.create_test_module(
+        controllers=[AdminController],
+        application_module=ApplicationModule
+    )
+    # AuthModule, DatabaseModule, LoggingModule, CacheModule all auto-included!
+    ```
+
+### **Tagged Dependencies Support**
+When controllers use `InjectByTag` for dependency injection, the resolver automatically finds and registers the appropriate modules:
+
+```python
+from ellar.di import InjectByTag, ProviderConfig
+from ellar.common.types import T
+
+# Module with tagged provider
+@Module(
+    providers=[
+        ProviderConfig(IUserRepository, use_class=UserRepository, tag="user_repo")
+    ],
+    exports=[IUserRepository]
+)
+class UserModule:
+    pass
+
+# Controller using tagged dependency (supports both syntaxes)
+@Controller()
+class UserController:
+    def __init__(self, user_repo: InjectByTag[T("user_repo")]):  # Generic syntax
+        self.user_repo = user_repo
+
+# Or use callable syntax: InjectByTag('user_repo')
+
+# Automatic resolution works with tags!
+test_module = Test.create_test_module(
+    controllers=[UserController],
+    application_module=ApplicationModule
+)
+# UserModule is automatically included because UserController needs tag 'user_repo'
+```
+
+### **Complex Nested Dependencies**
+The resolver handles deep dependency trees automatically:
+
+```python
+@Module(
+    providers=[ProviderConfig(ILogger, use_class=Logger)],
+    exports=[ILogger]
+)
+class LoggingModule:
+    pass
+
+@Module(
+    modules=[LoggingModule],  # Nested dependency
+    providers=[ProviderConfig(IDatabase, use_class=PostgresDB)],
+    exports=[IDatabase]
+)
+class DatabaseModule:
+    pass
+
+@Module(
+    modules=[DatabaseModule],  # Even deeper nesting
+    providers=[ProviderConfig(IUserService, use_class=UserService)],
+    exports=[IUserService]
+)
+class UserModule:
+    pass
+
+# Controller only knows about IUserService
+@Controller()
+class UserController:
+    def __init__(self, user_service: IUserService):
+        self.user_service = user_service
+
+# All nested dependencies automatically resolved!
+test_module = Test.create_test_module(
+    controllers=[UserController],
+    application_module=ApplicationModule
+)
+# Result: UserModule, DatabaseModule, and LoggingModule all included
+```
+
+### **Error Messages**
+When dependencies cannot be resolved, you get clear, actionable error messages:
+
+```python
+@Controller()
+class OrderController:
+    def __init__(self, payment_service: IPaymentService):
+        self.payment_service = payment_service
+
+# If IPaymentService isn't provided by any module:
+test_module = Test.create_test_module(
+    controllers=[OrderController],
+    application_module=ApplicationModule
+)
+# Raises: DependencyResolutionError with suggestions:
+#   OrderController requires IPaymentService, but it's not found in ApplicationModule.
+#   Please either:
+#     1. Register the module providing IPaymentService in ApplicationModule
+#     2. Register it explicitly in Test.create_test_module(modules=[...])
+#     3. Provide it as a mock in providers=[...]
+```
+
+### **Benefits**
+- **Zero Boilerplate**: No need to manually track module dependencies
+- **Maintainable**: Tests automatically adapt when module structure changes
+- **Fail-Fast**: Missing dependencies caught at test setup time, not during execution
+- **Supports All Patterns**: Works with regular DI, ForwardRef, and InjectByTag
+- **Flexible**: Can still override specific modules for mocking
+
+### **Practical Testing Patterns**
+
+#### **Pattern 1: Integration Testing with Real Dependencies**
+Test controllers with actual service implementations:
+
+```python
+def test_user_registration_flow():
+    """Test full user registration with real services"""
+    test_module = Test.create_test_module(
+        controllers=[UserController],
+        application_module=ApplicationModule
+    )
+    
+    client = test_module.get_test_client()
+    response = client.post("/users/register", json={
+        "email": "user@example.com",
+        "password": "secure123"
+    })
+    
+    assert response.status_code == 201
+    assert response.json()["email"] == "user@example.com"
+```
+
+#### **Pattern 2: Partial Mocking**
+Mock specific services while using real implementations for others:
+
+```python
+def test_user_login_with_mock_email():
+    """Test login flow with mocked email service"""
+    
+    class MockEmailService(IEmailService):
+        sent_emails = []
+        
+        def send(self, to: str, subject: str, body: str):
+            self.sent_emails.append({"to": to, "subject": subject})
+    
+    @Module(
+        providers=[ProviderConfig(IEmailService, use_class=MockEmailService)],
+        exports=[IEmailService]
+    )
+    class MockEmailModule:
+        pass
+    
+    test_module = Test.create_test_module(
+        controllers=[UserController],
+        modules=[MockEmailModule],  # Override email service
+        application_module=ApplicationModule  # Use real auth, database, etc.
+    )
+    
+    client = test_module.get_test_client()
+    response = client.post("/users/login", json={
+        "email": "user@example.com",
+        "password": "password123"
+    })
+    
+    # Verify email was sent
+    email_service = test_module.get(IEmailService)
+    assert len(email_service.sent_emails) == 1
+    assert "Login successful" in email_service.sent_emails[0]["subject"]
+```
+
+#### **Pattern 3: Testing with Tagged Dependencies**
+Test controllers that use `InjectByTag` for flexible dependency injection:
+
+```python
+def test_payment_processing_with_different_gateways():
+    """Test payment with different gateway implementations"""
+    
+    @Module(
+        providers=[
+            ProviderConfig(IPaymentGateway, use_class=StripeGateway, tag="stripe"),
+            ProviderConfig(IPaymentGateway, use_class=PayPalGateway, tag="paypal"),
+        ],
+        exports=[IPaymentGateway]
+    )
+    class PaymentModule:
+        pass
+    
+    @Controller()
+    class PaymentController:
+        def __init__(self, stripe: InjectByTag('stripe'), paypal: InjectByTag('paypal')):
+            self.stripe = stripe
+            self.paypal = paypal
+    
+    test_module = Test.create_test_module(
+        controllers=[PaymentController],
+        application_module=ApplicationModule
+    )
+    
+    controller = test_module.get(PaymentController)
+    assert isinstance(controller.stripe, StripeGateway)
+    assert isinstance(controller.paypal, PayPalGateway)
+```
+
+#### **Pattern 4: Complete Test Isolation**
+For unit tests, provide all dependencies explicitly:
+
+```python
+def test_user_service_logic_in_isolation():
+    """Unit test UserService without any external dependencies"""
+    
+    class InMemoryUserRepo(IUserRepository):
+        def __init__(self):
+            self.users = {}
+        
+        def save(self, user):
+            self.users[user.id] = user
+    
+    test_module = Test.create_test_module(
+        providers=[
+            UserService,
+            ProviderConfig(IUserRepository, use_class=InMemoryUserRepo)
+        ]
+        # No application_module - complete isolation
+    )
+    
+    service = test_module.get(UserService)
+    user = service.create_user("test@example.com", "password")
+    assert user.email == "test@example.com"
+```
+
 ### **Overriding Providers**
-`TestingModule` `override_provider` method allows you to provide an alternative for a provider type or a guard type. For example:
+Ellar provides two ways to override providers for testing:
+
+#### **Method 1: Using `override_provider()` on TestingModule**
+This is the recommended approach for quickly overriding specific services after creating the test module:
 
 ```python
 from ellar.testing import Test
 
-class MockCarRepository(CarRepository):
-    pass
+class MockAuthService(IAuthService):
+    def authenticate(self, token: str):
+        return {"user": "test_user", "authenticated": True}
 
-class TestCarController:
-    def setup(self):
-        test_module = Test.create_test_module(
-            controllers=[CarController,]
-        ).override_provider(
-            CarRepository, use_class=MockCarRepository
-        )
+# Create test module with automatic resolution
+test_module = Test.create_test_module(
+    controllers=[UserController],
+    application_module=ApplicationModule
+)
+
+# Override specific provider
+test_module.override_provider(IAuthService, use_class=MockAuthService)
+
+# Or override with a specific instance
+mock_instance = MockAuthService()
+test_module.override_provider(IAuthService, use_value=mock_instance)
+
+# Now create the application
+app = test_module.create_application()
 ```
-`override_provider` takes the same arguments as `ellar.di.ProviderConfig` and in fact, it builds to `ProvideConfig` behind the scenes.
-In example above, we created a `MockCarRepository` for `CarRepository` and applied it as shown above. 
-We can also create an instance of `MockCarRepository` and have it behave as a singleton within the scope of `test_module` instance.
+
+**Key Features:**
+- Called on the `TestingModule` instance
+- Supports both `use_class` and `use_value` parameters
+- Must be called **before** `create_application()`
+- Perfect for quick overrides without creating mock modules
+
+#### **Method 2: Providing Mock Modules**
+Create a dedicated mock module and pass it in the `modules` parameter. This approach is useful when:
+- You want to organize mock implementations into reusable modules
+- You need to override multiple related services at once
+- You want to share mock modules across multiple tests
 
 ```python
 from ellar.testing import Test
+from ellar.common import Module, ProviderConfig
 
-class MockCarRepository(CarRepository):
+class MockAuthService(IAuthService):
+    def authenticate(self, token: str):
+        return {"user": "test_user", "authenticated": True}
+
+# Create a mock module
+@Module(
+    providers=[ProviderConfig(IAuthService, use_class=MockAuthService)],
+    exports=[IAuthService]
+)
+class MockAuthModule:
     pass
 
-class TestCarController:
-    def setup(self):
-        test_module = Test.create_test_module(
-            controllers=[CarController,]
-        ).override_provider(CarRepository, use_value=MockCarRepository())
-```
-We this, anywhere `CarRepository` is needed, a `MockCarRepository()` instance will be applied.
+# Pass the mock module explicitly
+test_module = Test.create_test_module(
+    controllers=[UserController],
+    modules=[MockAuthModule],  # Explicitly provided - takes precedence
+    application_module=ApplicationModule  # Still resolves other dependencies
+)
 
-In same way, we can override `UseGuards` used in controllers during testing. For example, lets assume `CarController` has a guard `JWTGuard`
+app = test_module.create_application()
+# Result: Uses MockAuthService, but other dependencies (like Database) come from ApplicationModule
+```
+
+**Key Features:**
+- Mock modules explicitly passed take precedence over ApplicationModule
+- Can override multiple related services in one module
+- Great for organizing test fixtures
+- Reusable across multiple test cases
+
+#### **Choosing Between Methods**
+
+| Use Case | Method 1 (`override_provider`) | Method 2 (Mock Modules) |
+|----------|-------------------------------|------------------------|
+| **Quick single service override** | ✅ Recommended | ❌ Overkill |
+| **Override multiple related services** | ⚠️ Multiple calls needed | ✅ Recommended |
+| **Reusable across tests** | ⚠️ Needs duplication | ✅ Recommended |
+| **Simple test scenarios** | ✅ Recommended | ⚠️ More setup |
+| **Complex mock setup** | ⚠️ Can get verbose | ✅ Recommended |
+
+**Example: Choosing the right method**
+
+```python
+# Use Method 1 for simple overrides
+test_module = Test.create_test_module(
+    controllers=[UserController],
+    application_module=ApplicationModule
+).override_provider(IAuthService, use_class=MockAuthService)
+
+# Use Method 2 when overriding multiple services
+@Module(
+    providers=[
+        ProviderConfig(IAuthService, use_class=MockAuthService),
+        ProviderConfig(IEmailService, use_class=MockEmailService),
+        ProviderConfig(ISmsService, use_class=MockSmsService),
+    ],
+    exports=[IAuthService, IEmailService, ISmsService]
+)
+class MockNotificationModule:
+    pass
+
+test_module = Test.create_test_module(
+    controllers=[UserController],
+    modules=[MockNotificationModule],
+    application_module=ApplicationModule
+)
+```
+
+### **Overriding Guards**
+You can override `UseGuards` used in controllers during testing. For example, let's assume `CarController` has a guard `JWTGuard`
 
 ```python
 import typing

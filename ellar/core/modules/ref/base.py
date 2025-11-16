@@ -1,6 +1,5 @@
 import typing as t
 from abc import ABC, abstractmethod
-from functools import cached_property
 from typing import Type
 
 from ellar.auth.constants import POLICY_KEYS
@@ -66,6 +65,7 @@ class ModuleRefBase(ABC):
         self._routers: t.List[t.Union[BaseRoute]] = []
         self._exports: t.List[t.Type] = []
         self._providers: t.Dict[t.Type, ProviderConfig] = {}
+        self._module_execution_context: t.Optional[ModuleExecutionContext] = None
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} name={self.name} module={self.module}>"
@@ -73,9 +73,13 @@ class ModuleRefBase(ABC):
     def __hash__(self) -> int:
         return hash(self.module)
 
-    @cached_property
+    @property
     def module_context(self) -> ModuleExecutionContext:
-        return ModuleExecutionContext(container=self.container, module=self.module)
+        if self._module_execution_context is None:
+            self._module_execution_context = ModuleExecutionContext(
+                container=self.container, module=self.module
+            )
+        return self._module_execution_context
 
     @property
     def tree_manager(self) -> ModuleTreeManager:
