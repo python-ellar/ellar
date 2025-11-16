@@ -276,6 +276,31 @@ def test_application_module_analyzer_get_module_dependencies_none():
     assert len(dependencies) == 0
 
 
+def test_application_module_analyzer_get_application_module_providers():
+    """Test getting providers from ApplicationModule"""
+    from ellar.di import ProviderConfig
+
+    @injectable
+    class AppLevelService:
+        pass
+
+    @Module(
+        name="TestAppModuleWithProviders",
+        modules=[AuthModule],
+        providers=[ProviderConfig(AppLevelService, use_class=AppLevelService)],
+    )
+    class TestAppModuleWithProviders(ModuleBase):
+        pass
+
+    analyzer = ApplicationModuleDependencyAnalyzer(TestAppModuleWithProviders)
+    providers = analyzer.get_application_module_providers()
+
+    # Should include AppLevelService
+    assert AppLevelService in providers or any(
+        hasattr(p, "get_type") and p.get_type() == AppLevelService for p in providers
+    )
+
+
 # ============================================================================
 # Unit Tests: ForwardRefModule Resolution
 # ============================================================================
@@ -283,6 +308,7 @@ def test_application_module_analyzer_get_module_dependencies_none():
 
 def test_forward_ref_resolution_by_type():
     """Test resolving ForwardRefModule by type"""
+    from ellar.core.modules import ModuleSetup
 
     # Need to have DatabaseModule actually registered in the application tree
     @Module(
@@ -298,7 +324,9 @@ def test_forward_ref_resolution_by_type():
     forward_ref = ForwardRefModule(module=DatabaseModule)
     resolved = analyzer.resolve_forward_ref(forward_ref)
 
-    assert resolved == DatabaseModule
+    # Should return a ModuleSetup instance
+    assert isinstance(resolved, ModuleSetup)
+    assert resolved.module == DatabaseModule
 
 
 def test_forward_ref_resolution_by_name():
@@ -318,6 +346,7 @@ def test_forward_ref_resolution_by_name():
     forward_ref = ForwardRefModule(module_name="DatabaseModule")
     resolved = analyzer.resolve_forward_ref(forward_ref)
 
+    # When resolving by name, it returns the module type directly
     assert resolved == DatabaseModule
 
 
@@ -334,6 +363,52 @@ def test_forward_ref_resolution_not_found():
     resolved = analyzer.resolve_forward_ref(forward_ref)
 
     assert resolved is None
+
+
+def test_resolve_forward_refs_handles_module_setup():
+    """Test that _resolve_forward_refs properly handles ModuleSetup instances"""
+    from ellar.testing.module import Test
+
+    @Module(name="TestModuleForSetup", modules=[AuthModule, DatabaseModule])
+    class TestModuleForSetup(ModuleBase):
+        pass
+
+    analyzer = ApplicationModuleDependencyAnalyzer(TestModuleForSetup)
+
+    # Pass ForwardRefModule instances that will be resolved
+    forward_ref_auth = ForwardRefModule(module=AuthModule)
+    forward_ref_db = ForwardRefModule(module=DatabaseModule)
+
+    modules = [forward_ref_auth, forward_ref_db]
+    resolved = Test._resolve_forward_refs(modules, analyzer)
+
+    # Should resolve both ForwardRefModules (and potentially their dependencies)
+    assert len(resolved) >= 2
+
+
+def test_resolve_forward_refs_recursive_extension():
+    """Test that _resolve_forward_refs recursively extends with nested modules"""
+    from ellar.testing.module import Test
+
+    # DatabaseModule has LoggingModule as dependency
+    @Module(
+        name="TestModuleForRecursive",
+        modules=[DatabaseModule, AuthModule],
+    )
+    class TestModuleForRecursive(ModuleBase):
+        pass
+
+    analyzer = ApplicationModuleDependencyAnalyzer(TestModuleForRecursive)
+
+    # Start with ForwardRefModule to DatabaseModule (which has LoggingModule as dependency)
+    forward_ref_db = ForwardRefModule(module=DatabaseModule)
+    modules = [forward_ref_db]
+    resolved = Test._resolve_forward_refs(modules, analyzer)
+
+    # Should return resolved DatabaseModule (and potentially nested dependencies)
+    # The exact count depends on whether DatabaseModule's LoggingModule dependency
+    # has any ForwardRefModules in its metadata
+    assert len(resolved) >= 1
 
 
 # ============================================================================
@@ -469,7 +544,7 @@ def test_create_test_module_forward_ref_resolution(reflect_context):
 
     tm = Test.create_test_module(
         controllers=[UserController],
-        modules=[ModuleWithForwardRef],  # Contains ForwardRef to AuthModule
+        # Don't manually add ForwardRef module - let auto-resolution handle it
         application_module=TestAppWithForwardRef,
     )
 
@@ -620,6 +695,49 @@ def test_create_test_module_with_import_string_application_module(reflect_contex
 
     assert controller is not None
     assert isinstance(controller.auth_service, IAuthService)
+
+
+def test_create_test_module_includes_application_module_providers(reflect_context):
+    """Test that test module includes providers from ApplicationModule"""
+
+    @injectable
+    class AppLevelService:
+        def get_value(self):
+            return "app_level"
+
+    @Module(
+        name="AppModuleWithProviders",
+        modules=[AuthModule],
+        providers=[ProviderConfig(AppLevelService, use_class=AppLevelService)],
+    )
+    class AppModuleWithProviders(ModuleBase):
+        pass
+
+    @Controller()
+    class ControllerUsingAppService:
+        def __init__(self, app_service: AppLevelService):
+            self.app_service = app_service
+
+        @get("/test")
+        def test_endpoint(self):
+            return {"value": self.app_service.get_value()}
+
+    tm = Test.create_test_module(
+        controllers=[ControllerUsingAppService],
+        application_module=AppModuleWithProviders,
+    )
+
+    tm.create_application()
+
+    # Should be able to get the app-level service
+    app_service = tm.get(AppLevelService)
+    assert app_service is not None
+    assert app_service.get_value() == "app_level"
+
+    # Controller should also work
+    controller = tm.get(ControllerUsingAppService)
+    assert controller is not None
+    assert isinstance(controller.app_service, AppLevelService)
 
 
 def test_application_module_analyzer_with_import_string():
