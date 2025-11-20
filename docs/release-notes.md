@@ -1,3 +1,11 @@
+# 0.9.4
+## What's Changed
+* chores: Response Model Tuple Refactor by @eadwinCode in https://github.com/python-ellar/ellar/pull/303
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.9.3...0.9.4
+
+
 # 0.9.3
 ## What's Changed
 * feat: implement recursive forward ref resolution in test module dependencies by @eadwinCode in https://github.com/python-ellar/ellar/pull/302
