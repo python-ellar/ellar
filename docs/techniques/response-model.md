@@ -129,6 +129,73 @@ They include:
 - `model_field_or_schema`: `Optional` property. For return data validation. Default: `None` **Optional**
 
 
+## **Response Resolution Process**
+
+When a route handler returns a response, Ellar goes through a resolution process to determine which response model to use. 
+This process is handled by the `response_resolver` method and follows these steps:
+
+### **1. Determine the Status Code**
+
+The status code is determined in the following priority order:
+
+1. **Single Model Case**: If only one response model is defined, its status code is used as the default.
+   ```python
+   @get("/item", response=UserSchema)  # Defaults to status code 200
+   def get_item(self):
+       return dict(username='Ellar')
+   ```
+
+2. **Response Object Status Code**: If a Response object was created and has a status code set, that takes precedence.
+   ```python
+   @get("/item", response={200: UserSchema, 201: UserSchema})
+   def get_item(self, res: Response):
+       res.status_code = 201  # This status code will be used
+       return dict(username='Ellar')
+   ```
+
+3. **Tuple Return Value**: If the handler returns a tuple of `(response_obj, status_code)`, the status code from the tuple is used.
+   ```python
+   @get("/item", response={200: UserSchema, 201: UserSchema})
+   def get_item(self):
+       return dict(username='Ellar'), 201  # Returns with status code 201
+   ```
+
+### **2. Match to Response Model**
+
+After determining the status code, Ellar matches it to the appropriate response model:
+
+1. **Exact Match**: If a response model is defined for the specific status code, it's used.
+2. **Ellipsis Fallback**: If no exact match is found but an `Ellipsis` (`...`) key exists, that model is used as a catch-all.
+3. **Default Fallback**: If no match is found, `EmptyAPIResponseModel` is used with a warning logged.
+
+Example with Ellipsis fallback:
+
+```python
+from ellar.common import Controller, get, ControllerBase, Serializer
+
+class UserSchema(Serializer):
+    username: str
+    email: str = None
+
+class ErrorSchema(Serializer):
+    message: str
+    code: int
+
+@Controller
+class ItemsController(ControllerBase):
+    @get("/item", response={200: UserSchema, ...: ErrorSchema})
+    def get_item(self, status: int):
+        if status == 200:
+            return dict(username='Ellar', email='ellar@example.com')
+        # Any other status code will use ErrorSchema
+        return dict(message='Error occurred', code=status), status
+```
+
+In this example, returning with status code 200 uses `UserSchema`, but any other status code (404, 500, etc.) will use `ErrorSchema` as the fallback.
+
+!!! tip
+    Using the `Ellipsis` (`...`) key is useful when you want to define a catch-all response model for various status codes (like error responses) without defining each one explicitly.
+
 ## **Different Response Models**
 Let's see different `ResponseModel` available in Ellar and how you can create one too.
 
