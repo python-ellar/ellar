@@ -76,7 +76,7 @@ class RouteResponseModel:
             status_code = http_connection.get_response().status_code
 
         if isinstance(response_obj, tuple) and len(response_obj) == 2:
-            status_code, response_obj = endpoint_response_content
+            response_obj, status_code = endpoint_response_content
 
         if status_code in self.models:
             response_model = self.models[status_code]

@@ -89,10 +89,10 @@ def get_valid_ellipsis(switch: common.Query[str]):
             Item(aliased_name="bar", price=1.0),
             Item(aliased_name="bar2", price=2.0),
         ]
-    return 201, {
+    return {
         "k1": ItemSerializer(aliased_name="foo"),
         "k3": ItemSerializer(aliased_name="baz", price=2.0, owner_ids=[1, 2, 3]),
-    }
+    }, 201
 
 
 app = AppFactory.create_app(routers=(mr,))
