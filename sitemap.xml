@@ -2,282 +2,282 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://github.com/python-ellar/ellar/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/contribution/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/custom-setup/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/quick-project/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/release-notes/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/basics/api-docs/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/basics/application-context/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/basics/dynamic-modules/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/basics/execution-context/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/basics/file-streaming/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/basics/injector-scopes/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/basics/lifespan/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/basics/model-view-controller/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/basics/storage/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/basics/testing/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/cli/click/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/cli/command-grouping/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/cli/create-module-command/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/cli/create-project-command/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/cli/custom-commands/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/cli/introduction/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/cli/new-command/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/cli/runserver-command/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/openapi/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/openapi/document-ui/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/openapi/security/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/overview/controllers/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/overview/custom_decorators/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/overview/exception_handling/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/overview/guards/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/overview/interceptors/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/overview/middleware/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/overview/module-router/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/overview/modules/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/overview/providers/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/overview/step-one/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/authorization/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/csrf/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/encryption_and_hashing/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/rate-limit/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/sessions/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/authentication/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/authentication/api-key-authentication/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/authentication/auth-handler-strategy/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/authentication/guard-strategy/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/authentication/jwt-authentication/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/authorization/claims-based/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/authorization/combining-policies/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/authorization/custom-policies/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/authorization/policies/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/security/authorization/role-based/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/background-task/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/caching/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/configurations/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/mount/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/response-model/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/serializers/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/staticfiles/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/templating/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/versioning/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/validations/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/validations/body/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/validations/cookie-params/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/validations/file-params/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/validations/form-params/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/validations/header-params/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/validations/path-params/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/techniques/validations/query-params/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/websockets/socketio/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
     <url>
          <loc>https://github.com/python-ellar/ellar/websockets/websockets/</loc>
-         <lastmod>2025-11-16</lastmod>
+         <lastmod>2025-11-20</lastmod>
     </url>
 </urlset>
