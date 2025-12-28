@@ -10,6 +10,12 @@ logger = logging.getLogger("ellar")
 
 
 def _try_hash(item: t.Any) -> bool:
+    """
+    Try to hash an item.
+
+    :param item: The item to try and hash.
+    :return: True if the item is hashable, False otherwise.
+    """
     try:
         hash(item), weakref.ref(item)
         return True
@@ -18,6 +24,10 @@ def _try_hash(item: t.Any) -> bool:
 
 
 class _Hashable:
+    """
+    A wrapper class to make unhashable items hashable by using their ID and string representation.
+    """
+
     def __init__(self, item_id: int, item_repr: str) -> None:
         self.item_id = item_id
         self.item_repr = item_repr
@@ -39,6 +49,13 @@ class _Hashable:
 
     @classmethod
     def force_hash(cls, item: t.Any) -> t.Union[t.Any, "_Hashable"]:
+        """
+        Force an item to be hashable. If it's already hashable, return it.
+        If not, return a _Hashable wrapper or retrieve an existing one.
+
+        :param item: The item to hash.
+        :return: The item or its _Hashable wrapper.
+        """
         if not _try_hash(item):
             hashable = fail_silently(
                 lambda: reflect._un_hashable[hash((id(item), repr(item)))]
@@ -54,6 +71,13 @@ class _Hashable:
 def _get_actual_target(
     target: t.Union[t.Type, t.Callable],
 ) -> t.Union[t.Type, t.Callable]:
+    """
+    Get the actual target for metadata operations.
+    Resolves proxies and ensures the target is hashable.
+
+    :param target: The target to resolve.
+    :return: The resolved, hashable target.
+    """
     target = get_original_target(target)
     return t.cast(
         t.Union[t.Type, t.Callable], _Hashable.force_hash(ensure_target(target))
@@ -61,6 +85,11 @@ def _get_actual_target(
 
 
 class _Reflect:
+    """
+    Metadata manager class for storage and retrieval of metadata associated with types and callables.
+    Use `reflect` instance for all operations.
+    """
+
     __slots__ = ("_meta_data",)
 
     _un_hashable: t.Dict[int, _Hashable] = {}
@@ -74,9 +103,21 @@ class _Reflect:
         )
 
     def add_type_update_callback(self, type_: t.Type, func: t.Callable) -> None:
+        """
+        Register a callback to handle updates for a specific metadata type.
+
+        :param type_: The type of the metadata value.
+        :param func: The call back function to handle the update.
+        """
         self._data_type_update_callbacks[type_] = func
 
     def add_un_hashable_type(self, value: _Hashable) -> _Hashable:
+        """
+        Store an unhashable item wrapper.
+
+        :param value: The _Hashable wrapper.
+        :return: The stored _Hashable wrapper.
+        """
         self._un_hashable[hash(value)] = value
         return value
 
@@ -91,6 +132,14 @@ class _Reflect:
         metadata_value: t.Any,
         target: t.Union[t.Type, t.Callable],
     ) -> t.Any:
+        """
+        Define metadata for a target.
+
+        :param metadata_key: The key for the metadata.
+        :param metadata_value: The value of the metadata.
+        :param target: The target object to associate the metadata with.
+        :return: The value returned by type update callback or new value.
+        """
         if target is None:
             raise Exception("`target` is not a valid type")
         # if (
@@ -114,6 +163,14 @@ class _Reflect:
             target_metadata[metadata_key] = metadata_value
 
     def metadata(self, metadata_key: str, metadata_value: t.Any) -> t.Any:
+        """
+        Decorator to define metadata on a class or function.
+
+        :param metadata_key: The key for the metadata.
+        :param metadata_value: The value of the metadata.
+        :return: A decorator function.
+        """
+
         def _wrapper(target: t.Union[t.Type, t.Callable]) -> t.Any:
             self.define_metadata(metadata_key, metadata_value, target)
             return target
@@ -123,6 +180,13 @@ class _Reflect:
     def has_metadata(
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
     ) -> bool:
+        """
+        Check if metadata key exists for a target.
+
+        :param metadata_key: The key to check.
+        :param target: The target object.
+        :return: True if metadata key exists, False otherwise.
+        """
         _target_actual = _get_actual_target(target)
         target_metadata = self._meta_data.get(_target_actual) or {}
 
@@ -131,6 +195,13 @@ class _Reflect:
     def get_metadata(
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
     ) -> t.Optional[t.Any]:
+        """
+        Retrieve metadata value for a target.
+
+        :param metadata_key: The key to retrieve.
+        :param target: The target object.
+        :return: The metadata value or None if not found.
+        """
         _target_actual = _get_actual_target(target)
         target_metadata = self._meta_data.get(_target_actual) or {}
 
@@ -143,6 +214,14 @@ class _Reflect:
     def get_metadata_search_safe(
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
     ) -> t.Any:
+        """
+        Retrieve metadata value safely. Raises KeyError if key is not found in the target's metadata.
+        This behaves like `dict[key]`.
+
+        :param metadata_key: The key to retrieve.
+        :param target: The target object.
+        :return: The metadata value.
+        """
         _target_actual = _get_actual_target(target)
         meta = self._meta_data[_target_actual]
 
@@ -155,6 +234,14 @@ class _Reflect:
     def get_metadata_or_raise_exception(
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
     ) -> t.Any:
+        """
+        Retrieve metadata or raise an Exception if not found.
+
+        :param metadata_key: The key to retrieve.
+        :param target: The target object.
+        :return: The metadata value.
+        :raises Exception: If metadata key is not found.
+        """
         value = self.get_metadata(metadata_key=metadata_key, target=target)
         if value is not None:
             return value
@@ -163,17 +250,34 @@ class _Reflect:
     def get_metadata_keys(
         self, target: t.Union[t.Type, t.Callable]
     ) -> t.KeysView[t.Any]:
+        """
+        Get all metadata keys for a target.
+
+        :param target: The target object.
+        :return: A view of the metadata keys.
+        """
         _target_actual = _get_actual_target(target)
         target_metadata = self._meta_data.get(_target_actual) or {}
 
         return target_metadata.keys()
 
     def get_all_metadata(self, target: t.Union[t.Type, t.Callable]) -> t.Dict:
+        """
+        Get all metadata for a target as a dictionary.
+
+        :param target: The target object.
+        :return: A dictionary containing all metadata.
+        """
         _target_actual = _get_actual_target(target)
         target_metadata = self._meta_data.get(_target_actual) or {}
         return type(target_metadata)(target_metadata)
 
     def delete_all_metadata(self, target: t.Union[t.Type, t.Callable]) -> None:
+        """
+        Delete all metadata for a target.
+
+        :param target: The target object.
+        """
         _target = _get_actual_target(target)
         if _target in self._meta_data:
             self._meta_data.pop(_target)
@@ -181,6 +285,13 @@ class _Reflect:
     def delete_metadata(
         self, metadata_key: str, target: t.Union[t.Type, t.Callable]
     ) -> t.Any:
+        """
+        Delete a specific metadata key for a target.
+
+        :param metadata_key: The key to delete.
+        :param target: The target object.
+        :return: The deleted value or None.
+        """
         _target_actual = _get_actual_target(target)
         target_metadata = self._meta_data.get(_target_actual) or {}
 
@@ -215,6 +326,10 @@ class _Reflect:
 
     @asynccontextmanager
     async def async_context(self) -> t.AsyncGenerator[None, None]:
+        """
+        Async context manager that isolates metadata changes within the context.
+        Metadata changes made inside the context are discarded after exit.
+        """
         cached_meta_data = self._clone_meta_data()
         yield
         reflect._meta_data.clear()
@@ -222,6 +337,10 @@ class _Reflect:
 
     @contextmanager
     def context(self) -> t.Generator:
+        """
+        Context manager that isolates metadata changes within the context.
+        Metadata changes made inside the context are discarded after exit.
+        """
         cached_meta_data = self._clone_meta_data()
         yield
         reflect._meta_data.clear()
@@ -229,6 +348,13 @@ class _Reflect:
 
 
 def _list_update(existing_value: t.Any, new_value: t.Any) -> t.Any:
+    """
+    Update callback for list/tuple types. Concatenates the new value to the existing value.
+
+    :param existing_value: The existing list or tuple.
+    :param new_value: The new list or tuple.
+    :return: The concatenated list or tuple.
+    """
     if isinstance(existing_value, (list, tuple)) and isinstance(
         new_value, (list, tuple)
     ):
@@ -237,6 +363,13 @@ def _list_update(existing_value: t.Any, new_value: t.Any) -> t.Any:
 
 
 def _set_update(existing_value: t.Any, new_value: t.Any) -> t.Any:
+    """
+    Update callback for set types. Unions the new value with the existing value.
+
+    :param existing_value: The existing set.
+    :param new_value: The new set.
+    :return: The union of the sets.
+    """
     if isinstance(existing_value, set) and isinstance(new_value, set):
         existing_combined = list(existing_value) + list(new_value)
         return type(existing_value)(existing_combined)
@@ -244,6 +377,13 @@ def _set_update(existing_value: t.Any, new_value: t.Any) -> t.Any:
 
 
 def _dict_update(existing_value: t.Any, new_value: t.Any) -> t.Any:
+    """
+    Update callback for dict types. Updates the existing dictionary with new values.
+
+    :param existing_value: The existing dictionary.
+    :param new_value: The new dictionary.
+    :return: The updated dictionary.
+    """
     if isinstance(
         existing_value, (dict, WeakKeyDictionary, WeakValueDictionary)
     ) and isinstance(new_value, (dict, WeakKeyDictionary, WeakValueDictionary)):

@@ -56,9 +56,15 @@ class _BasePylibMemcachedCacheSync(BaseCacheBackend, ABC):
         return t.cast(int, result)
 
     def close(self, **kwargs: t.Any) -> None:
-        """Many clients don't clean up connections properly."""
+        """
+        Close the cache connection.
+        Many clients don't clean up connections properly.
+        """
 
     def clear(self) -> None:
+        """
+        Clear the cache.
+        """
         self._cache_client.flush_all()
 
 
@@ -115,10 +121,16 @@ class BasePylibMemcachedCache(_BasePylibMemcachedCacheSync):
         return bool(result)
 
     async def close_async(self, **kwargs: t.Any) -> None:
-        # Many clients don't clean up connections properly.
+        """
+        Close the cache connection asynchronously.
+        Many clients don't clean up connections properly.
+        """
         await self.executor(self._cache_client.disconnect_all)
 
     async def clear_async(self) -> None:
+        """
+        Clear the cache asynchronously.
+        """
         await self.executor(self._cache_client.flush_all)
 
     def validate_key(self, key: str) -> None:

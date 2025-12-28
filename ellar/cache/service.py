@@ -77,7 +77,7 @@ class _CacheServiceSync(ICacheServiceSync):
 @injectable
 class CacheService(_CacheServiceSync, ICacheService):
     """
-    A Cache Backend Service that wraps Ellar cache backends
+    A Cache Backend Service that wraps Ellar cache backends.
     """
 
     def __init__(

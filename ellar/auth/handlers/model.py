@@ -5,6 +5,13 @@ from ellar.common import Identity, IHostContext
 
 
 class BaseAuthenticationHandler(ABC):
+    """
+    Base class for all authentication handlers.
+
+    To create a custom authentication scheme, inherit from this class and implement the `authenticate` method.
+    You must also define a `scheme` attribute (e.g., 'bearer', 'basic', 'api-key').
+    """
+
     scheme: str
 
     def __init_subclass__(cls, **kwargs: str) -> None:
@@ -17,7 +24,9 @@ class BaseAuthenticationHandler(ABC):
 
     @abstractmethod
     async def authenticate(self, context: IHostContext) -> t.Optional[Identity]:
-        """Authenticate Action goes here"""
+        """
+        authenticate the request and return an Identity or None
+        """
 
 
 AuthenticationHandlerType = t.Union[

@@ -7,15 +7,19 @@ from ellar.common.compatible import AttributeDict
 
 class DefaultRequirementType(AttributeDict):
     """
-    Stores Policy Requirement Arguments in `arg_[n]` value
-    example:
-        class MyPolicyHandler(PolicyWithRequirement):
-            ...
+    Standard container for Policy Requirement Arguments.
 
-        policy = MyPolicyHandler['req1', 'req2', 'req2']
-        policy.requirement.arg_1 = 'req1'
-        policy.requirement.arg_2 = 'req2'
-        policy.requirement.arg_3 = 'req2'
+    Arguments passed to a policy are stored in `arg_[n]` keys.
+
+    Example:
+    ```python
+    class MyPolicyHandler(PolicyWithRequirement):
+        ...
+
+    policy = MyPolicyHandler['req1', 'req2']
+    # policy.requirement.arg_1 == 'req1'
+    # policy.requirement.arg_2 == 'req2'
+    ```
     """
 
     def __init__(self, *args: t.Any) -> None:
@@ -50,15 +54,33 @@ class PolicyMetaclass(_PolicyOperandMixin, ABCMeta):
 
 
 class Policy(ABC, _PolicyOperandMixin, metaclass=PolicyMetaclass):
+    """
+    Abstract base class for all Policies.
+
+    Policies are used to check permissions or conditions for accessing a route.
+    They can be combined using logical operators (&, |, ~).
+    """
+
     @abstractmethod
     async def handle(self, context: IExecutionContext) -> bool:
-        """Run Policy Actions and return true or false"""
+        """
+        Executes the policy check.
+
+        :param context: The execution context.
+        :return: True if the policy is satisfied, False otherwise.
+        """
 
 
 class PolicyWithRequirement(
     Policy,
     ABC,
 ):
+    """
+    Base class for policies that accept parameters or requirements.
+
+    Example: `MyPolicy['admin', 'manager']`
+    """
+
     __requirements__: t.Dict[int, "Policy"] = {}
 
     requirement_type: t.Type = DefaultRequirementType
@@ -66,7 +88,13 @@ class PolicyWithRequirement(
     @abstractmethod
     @t.no_type_check
     async def handle(self, context: IExecutionContext, requirement: t.Any) -> bool:
-        """Handle Policy Action"""
+        """
+        Executes the policy check with the provided requirement.
+
+        :param context: The execution context.
+        :param requirement: The requirement data (instance of `requirement_type`).
+        :return: True if the policy is satisfied.
+        """
 
     def __class_getitem__(cls, parameters: t.Any) -> "Policy":
         _parameters = parameters if isinstance(parameters, tuple) else (parameters,)

@@ -12,6 +12,11 @@ from .policy import Policy, PolicyType
 
 @injectable
 class AuthorizationInterceptor(EllarInterceptor):
+    """
+    Interceptor responsible for handling request authorization.
+    Verifies user authentication and evaluates policies required for route access.
+    """
+
     status_code = status.HTTP_403_FORBIDDEN
     exception_class = APIException
 
@@ -21,6 +26,9 @@ class AuthorizationInterceptor(EllarInterceptor):
     def get_route_handler_policy(
         self, context: IExecutionContext
     ) -> t.Optional[t.List[t.Union[PolicyType, str]]]:
+        """
+        Retrieves policy requirements for the current route handler.
+        """
         return context.get_app().reflector.get_all_and_override(
             POLICY_KEYS, context.get_handler(), context.get_class()
         )
@@ -35,6 +43,13 @@ class AuthorizationInterceptor(EllarInterceptor):
     async def intercept(
         self, context: IExecutionContext, next_interceptor: t.Callable[..., t.Coroutine]
     ) -> t.Any:
+        """
+        Intercepts the request to enforce authorization logic.
+
+        - Checks if `@SkipAuth` is present.
+        - Verifies if the user is authenticated.
+        - Evaluates any registered policies.
+        """
         skip_auth = reflector.get_all_and_override(
             constants.SKIP_AUTH, context.get_handler(), context.get_class()
         )

@@ -89,7 +89,19 @@ def Module(
 
     :param commands: List of Command Decorated functions and EllarTyper
 
-    :return: t.TYPE[ModuleBase]
+    ### Example
+
+    ```python
+    from ellar.common import Module, Controller
+
+    @Controller()
+    class MyController:
+        pass
+
+    @Module(controllers=[MyController])
+    class MyModule:
+        pass
+    ```
     """
     base_directory = get_main_directory_by_stack(base_directory, stack_level=2)
     kwargs = AttributeDict(

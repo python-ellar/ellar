@@ -38,7 +38,14 @@ def render(template_name: t.Optional[str] = NOT_SET) -> t.Callable:
 
     :param template_name: template name.
 
-    :return:
+    ### Example
+
+    ```python
+    @get("/html")
+    @render("index.html")
+    def get_html():
+        return {"message": "Hello World"}
+    ```
     """
     if template_name is not NOT_SET:
         assert isinstance(template_name, str), (

@@ -24,6 +24,10 @@ def _get_origin(outer_type_: t.Any) -> object:
 
 
 class TypeDefinitionConverter(ABC):
+    """
+    TypeDefinitionConverter is a base class for converting type definitions.
+    """
+
     def __init__(self, outer_type_: t.Any) -> None:
         self.type_origin = _get_origin(outer_type_)
         self.sub_fields = self.get_sub_fields(get_args(outer_type_))

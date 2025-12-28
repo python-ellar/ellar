@@ -8,6 +8,10 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 
 class MakeKeyDecorator:
+    """
+    A helper class to create decorators that handle cache key generation and validation.
+    """
+
     __slots__ = ("_func", "_validate", "_is_async")
 
     def __init__(self, func: t.Callable, validate: bool = False) -> None:
@@ -55,11 +59,23 @@ class MakeKeyDecorator:
 
 @t.no_type_check
 def make_key_decorator(func: t.Callable) -> t.Callable[..., t.Awaitable]:
+    """
+    Decorator to automatically generate a cache key for the backend method.
+
+    :param func: The backend method to decorate.
+    :return: Wrapped function with key generation.
+    """
     make_key = MakeKeyDecorator(func, validate=False)
     return make_key.get_decorator()
 
 
 @t.no_type_check
 def make_key_decorator_and_validate(func: t.Callable) -> t.Callable[..., t.Awaitable]:
+    """
+    Decorator to generate a cache key and validate it for the backend method.
+
+    :param func: The backend method to decorate.
+    :return: Wrapped function with key generation and validation.
+    """
     make_key = MakeKeyDecorator(func, validate=True)
     return make_key.get_decorator()

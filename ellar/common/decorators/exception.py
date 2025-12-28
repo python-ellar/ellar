@@ -29,7 +29,19 @@ def exception_handler(
     Defines Exception Handler at Module Level
     :param exc_or_status_code: Exception Class or Status Code
     :param app: Indicates Exception Handler will be global to the application
-    :return: Function
+
+    ### Example
+
+    ```python
+    from ellar.common import Module, IHostContext
+    from ellar.common.responses import JSONResponse
+
+    @Module()
+    class AModule:
+        @exception_handler(404)
+        def not_found(self, context: IHostContext, exc: Exception) -> Response:
+            return JSONResponse({"message": "Not Found"}, status_code=404)
+    ```
     """
 
     def decorator(func: t.Union[t.Callable, t.Type]) -> t.Callable:

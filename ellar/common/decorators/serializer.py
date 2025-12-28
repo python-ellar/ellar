@@ -22,13 +22,22 @@ def serializer_filter(
     ========= ROUTE FUNCTION DECORATOR ==============
 
     defines route function pydantic filters for data serialization
-    :param include:
-    :param exclude:
-    :param by_alias:
-    :param exclude_unset:
-    :param exclude_defaults:
-    :param exclude_none:
-    :return:
+
+    :param include: Fields to include
+    :param exclude: Fields to exclude
+    :param by_alias: Whether to use alias
+    :param exclude_unset: Whether to exclude unset fields
+    :param exclude_defaults: Whether to exclude default fields
+    :param exclude_none: Whether to exclude none fields
+
+    ### Example
+
+    ```python
+    @get("/")
+    @serializer_filter(include={"id", "username"})
+    def index():
+        return {"id": 1, "username": "admin", "password": "password"}
+    ```
     """
 
     return set_meta(

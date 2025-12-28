@@ -34,7 +34,9 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 class AppFactory:
     """
-    Factory for creating Ellar Application
+    Factory for creating Ellar Application instances.
+
+    Provides methods to create an application from a module, controller, or existing app module.
     """
 
     @classmethod
@@ -189,6 +191,22 @@ class AppFactory:
         config_module: t.Union[str, t.Dict, None] = None,
         injector: t.Optional[EllarInjector] = None,
     ) -> App:
+        """
+        Creates an Ellar Application instance.
+
+        :param controllers: List of controllers to register.
+        :param routers: List of routers to register.
+        :param providers: List of providers to register.
+        :param modules: List of modules to register.
+        :param template_folder: Path to the template folder.
+        :param base_directory: Path to the base directory.
+        :param static_folder: Name of the static folder. Default: "static".
+        :param global_guards: List of global guards to register.
+        :param commands: List of commands to register.
+        :param config_module: Configuration module or dictionary.
+        :param injector: Optional existing injector instance.
+        :return: Configured App instance.
+        """
         module = Module(
             controllers=controllers,
             routers=routers,
@@ -219,6 +237,15 @@ class AppFactory:
         injector: t.Optional[EllarInjector] = None,
         config_module: t.Union[str, t.Dict, None] = None,
     ) -> App:
+        """
+        Creates an Ellar Application from an existing Application Module.
+
+        :param module: The application module class.
+        :param global_guards: List of global guards to register.
+        :param injector: Optional existing injector instance.
+        :param config_module: Configuration module or dictionary.
+        :return: Configured App instance.
+        """
         app = cls._create_app(
             module,
             config_module=config_module,

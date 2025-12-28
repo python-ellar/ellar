@@ -12,9 +12,20 @@ def extra_args(*args: "ExtraEndpointArg") -> t.Callable:
     """
     =========FUNCTION DECORATOR ==============
 
-    Programmatically adds extra route function parameter.
-    see https://github.com/eadwinCode/ellar/blob/main/tests/test_routing/test_extra_args.py for usages
+    **Programmatically** adds extra route function parameter.
+
     :param args: Collection ExtraEndpointArg
-    :return:
+
+    ### Example
+
+    ```python
+    from ellar.common import extra_args, Query
+    from ellar.common.params import ExtraEndpointArg
+
+    @get("/")
+    @extra_args(ExtraEndpointArg(name="query1", annotation=str, default_value=Query()))
+    def index(q: str):
+        return {"q": q}
+    ```
     """
     return set_meta(EXTRA_ROUTE_ARGS_KEY, list(args))

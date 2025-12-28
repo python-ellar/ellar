@@ -61,6 +61,10 @@ MODULE_COMPONENT = "MODULE_COMPONENT"
 
 
 class MODULE_METADATA(metaclass=AnnotationToValue):
+    """
+    Module Metadata Constants
+    """
+
     NAME: str
     CONTROLLERS: str
     BASE_DIRECTORY: str
@@ -74,6 +78,10 @@ class MODULE_METADATA(metaclass=AnnotationToValue):
 
 
 class CONTROLLER_METADATA(metaclass=AnnotationToValue):
+    """
+    Controller Metadata Constants
+    """
+
     PATH: str
     NAME: str
     INCLUDE_IN_SCHEMA: str
@@ -91,6 +99,10 @@ ELLAR_TRACE_LOG_LEVEL = 5
 
 
 class LOG_LEVELS(Enum):
+    """
+    Ellar Log Levels Variables
+    """
+
     critical = logging.CRITICAL
     error = logging.ERROR
     warning = logging.WARNING
@@ -100,6 +112,10 @@ class LOG_LEVELS(Enum):
 
 
 class NOT_SET_TYPE:
+    """
+    Ellar Not Set Type
+    """
+
     def __repr__(self) -> str:  # pragma: no cover
         return f"{__name__}.{self.__class__.__name__}"
 

@@ -30,6 +30,20 @@ def UseGuards(
 
     :param _guards: A single guard instance or class, or a list of guard instances
     or classes.
-    :return:
+
+    ### Example
+
+    ```python
+    from ellar.common import UseGuards, GuardCanActivate
+    from ellar.core import ExecutionContext
+
+    class MyGuard(GuardCanActivate):
+        async def can_activate(self, context: ExecutionContext) -> bool:
+            return True
+
+    @UseGuards(MyGuard)
+    def index():
+        return {"message": "Hello World"}
+    ```
     """
     return set_meta(GUARDS_KEY, list(_guards))

@@ -19,6 +19,7 @@ def file(media_type: t.Optional[str] = NOT_SET, streaming: bool = False) -> t.Ca
 
     :param media_type: MIME Type.
     :param streaming: Defaults ResponseModel to use. False=FileResponseModel, True=StreamingResponseModel.
+
     IF STREAMING == FALSE:
         Decorated Function is expected to return an object of dict with values keys:
             {
@@ -29,10 +30,19 @@ def file(media_type: t.Optional[str] = NOT_SET, streaming: bool = False) -> t.Ca
                 content_disposition_type: `attachment` | `inline`
                 status_code: 200
             }
+
     IF STREAMING == TRUE
         Decorated Function is expected to return:
             typing.Iterator[Content] OR typing.AsyncIterable[Content]
-    :return: typing.Callable
+
+    ### Example
+
+    ```python
+    @get("/file")
+    @file()
+    def get_file():
+        return {"path": "path/to/file.txt", "filename": "file.txt"}
+    ```
     """
     if media_type is not NOT_SET:
         assert isinstance(media_type, str), "File decorator must invoked eg. @file()"

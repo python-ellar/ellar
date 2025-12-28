@@ -52,6 +52,10 @@ class _LocalMemCacheBackendSync(IBaseCacheBackendAsync, ABC):
 
 
 class LocalMemCacheBackend(_LocalMemCacheBackendSync, BaseCacheBackend):
+    """
+    A thread-safe in-memory cache backend.
+    """
+
     pickle_protocol = pickle.HIGHEST_PROTOCOL
 
     def __init__(self, **kwargs: t.Any) -> None:

@@ -10,7 +10,10 @@ if t.TYPE_CHECKING:  # pragma: no cover
 
 class AuthenticatedRequiredGuard(GuardCanActivate):
     """
-    This guard will check if the user is authenticated and also allow you to define the authentication scheme and openapi scope.
+    Guard that enforces authentication for a route.
+
+    It checks if the user is authenticated and optionally validates against a specific authentication scheme.
+    It acts as a bridge between the `@AuthenticationRequired` decorator and the execution context.
     """
 
     status_code = starlette.status.HTTP_401_UNAUTHORIZED

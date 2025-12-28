@@ -13,6 +13,10 @@ from .service import CacheService
 
 @Module(exports=[ICacheService])
 class CacheModule(ModuleBase, IModuleSetup):
+    """
+    Cache Module responsible for setting up cache services.
+    """
+
     @classmethod
     def _create_dynamic_module(cls, schema: CacheModuleSchemaSetup) -> DynamicModule:
         cache_service = CacheService(

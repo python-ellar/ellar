@@ -28,6 +28,22 @@ def UseInterceptors(
     using `app.use_global_interceptors()`.
 
     :param args: A single EllarInterceptor instance or class, or a list of EllarInterceptor instances or classes.
-    :return:
+
+    ### Example
+
+    ```python
+    from ellar.common import UseInterceptors, EllarInterceptor, IExecutionContext
+
+    class LoggingInterceptor(EllarInterceptor):
+        async def intercept(self, context: IExecutionContext, next_interceptor):
+            print("Before...")
+            result = await next_interceptor()
+            print("After...")
+            return result
+
+    @UseInterceptors(LoggingInterceptor)
+    def index():
+        return {"message": "Hello World"}
+    ```
     """
     return set_meta(ROUTE_INTERCEPTORS, list(args))

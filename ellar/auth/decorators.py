@@ -13,26 +13,22 @@ def CheckPolicies(*policies: t.Union[str, PolicyType]) -> t.Callable:
     """
     Applies policy requirements to a controller or route function.
 
-    This decorator allows you to specify one or more policies that must be satisfied
-    for the user to access the decorated endpoint. Policies can be either string
-    identifiers or PolicyType objects.
+    This decorator enforces one or more policies that must be satisfied for the user to access the decorated endpoint.
+    Policies can be specified as string identifiers (resolved via provider) or `PolicyType` objects.
 
     Example:
-        ```python
-        @Controller()
-        class UserController:
-            @CheckPolicies('admin', RequireRole('manager'))
-            def get_sensitive_data(self):
-                return {'data': 'sensitive information'}
-        ```
+    ```python
+    @Controller()
+    class UserController:
+        @CheckPolicies('admin', RequireRole('manager'))
+        def get_sensitive_data(self):
+            return {'data': 'sensitive information'}
+    ```
 
-    Args:
-        *policies: Variable number of policy requirements. Can be strings or PolicyType objects.
-            - String policies are resolved using the policy provider
-            - PolicyType objects are evaluated directly
-
-    Returns:
-        A decorator function that applies the policy requirements.
+    :param policies: Variable number of policy requirements.
+        - String policies are resolved using the service provider.
+        - `PolicyType` objects are evaluated directly.
+    :return: A decorator function that applies the policy requirements.
     """
 
     def _decorator(target: t.Callable) -> t.Union[t.Callable, t.Any]:
@@ -46,23 +42,22 @@ def Authorize() -> t.Callable:
     """
     Enables authorization checks for a controller or route function.
 
-    This decorator adds the AuthorizationInterceptor which performs two main checks:
-    1. Verifies that the user is authenticated
-    2. Validates any policy requirements specified using @CheckPolicies
+    This decorator registers the `AuthorizationInterceptor`, which performs two primary checks:
+    1. Verifies that the user is authenticated.
+    2. Validates any policy requirements specified using `@CheckPolicies`.
 
     Example:
-        ```python
-        @Controller()
-        @Authorize()  # Enable authorization for all routes in controller
-        class SecureController:
-            @get('/')
-            @CheckPolicies('admin')  # Require admin policy
-            def secure_endpoint(self):
-                return {'message': 'secure data'}
-        ```
+    ```python
+    @Controller()
+    @Authorize()  # Enable authorization for all routes in the controller
+    class SecureController:
+        @get('/')
+        @CheckPolicies('admin')  # Require admin policy for this specific route
+        def secure_endpoint(self):
+            return {'message': 'secure data'}
+    ```
 
-    Returns:
-        A decorator function that enables authorization checks.
+    :return: A decorator function that enables authorization checks.
     """
 
     return set_meta(constants.ROUTE_INTERCEPTORS, [AuthorizationInterceptor])
@@ -75,32 +70,29 @@ def AuthenticationRequired(
     """
     Requires authentication for accessing a controller or route function.
 
-    This decorator adds the AuthenticatedRequiredGuard which ensures that requests
-    are authenticated before they can access the protected resource.
+    This decorator adds the `AuthenticatedRequiredGuard` to ensure that requests are authenticated
+    before accessing the protected resource.
 
     Example:
-        ```python
-        @Controller()
-        class UserController:
-            @get('/profile')
-            @AuthenticationRequired('jwt')  # Require JWT authentication
-            def get_profile(self):
-                return {'user': 'data'}
+    ```python
+    @Controller()
+    class UserController:
+        @get('/profile')
+        @AuthenticationRequired('jwt')  # Require JWT authentication
+        def get_profile(self):
+            return {'user': 'data'}
 
-            @get('/public')
-            @AuthenticationRequired(openapi_scope=['read:public'])
-            def public_data(self):
-                return {'public': 'data'}
-        ```
+        @get('/public')
+        @AuthenticationRequired(openapi_scope=['read:public'])
+        def public_data(self):
+            return {'public': 'data'}
+    ```
 
-    Args:
-        authentication_scheme: Optional name of the authentication scheme to use.
-            This should match the scheme name defined in your authentication setup.
-        openapi_scope: Optional list of OpenAPI security scopes required for the endpoint.
-            These scopes will be reflected in the OpenAPI documentation.
-
-    Returns:
-        A decorator function that enforces authentication requirements.
+    :param authentication_scheme: Optional name of the authentication scheme to use.
+        This must match a scheme defined in the application's authentication setup.
+    :param openapi_scope: Optional list of OpenAPI security scopes required for the endpoint.
+        These scopes are reflected in the OpenAPI documentation.
+    :return: A decorator function that enforces authentication requirements.
     """
     if callable(authentication_scheme):
         return set_meta(constants.GUARDS_KEY, [AuthenticatedRequiredGuard(None, [])])(
@@ -117,26 +109,25 @@ def SkipAuth() -> t.Callable:
     """
     Marks a controller or route function to skip authentication checks.
 
-    This decorator is useful when you have a controller with @AuthenticationRequired
-    but want to exclude specific routes from the authentication requirement.
+    This decorator is useful for excluding specific routes from authentication requirements
+    applied at the controller level (e.g., via `@AuthenticationRequired`).
 
     Example:
-        ```python
-        @Controller()
-        @AuthenticationRequired()  # Require auth for all routes
-        class UserController:
-            @get('/private')
-            def private_data(self):  # This requires auth
-                return {'private': 'data'}
+    ```python
+    @Controller()
+    @AuthenticationRequired()  # Require auth for all routes by default
+    class UserController:
+        @get('/private')
+        def private_data(self):  # Inherits auth requirement
+            return {'private': 'data'}
 
-            @get('/public')
-            @SkipAuth()  # This endpoint skips auth
-            def public_data(self):
-                return {'public': 'data'}
-        ```
+        @get('/public')
+        @SkipAuth()  # Overrides controller-level auth requirement
+        def public_data(self):
+            return {'public': 'data'}
+    ```
 
-    Returns:
-        A decorator function that marks the endpoint to skip authentication.
+    :return: A decorator function that marks the endpoint to skip authentication.
     """
 
     return set_meta(

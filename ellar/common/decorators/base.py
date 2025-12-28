@@ -9,6 +9,17 @@ def set_metadata(
     meta_key: t.Any,
     meta_value: t.Optional[t.Any] = NOT_SET,
 ) -> t.Callable:
+    """
+    Sets metadata for a given target.
+
+    ### Example
+
+    ```python
+    @set_metadata("role", "admin")
+    def some_function():
+        pass
+    ```
+    """
     if meta_value is NOT_SET:
         return partial(set_metadata, meta_key)
 
