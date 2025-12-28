@@ -318,7 +318,7 @@ class HTTPBase(SecurityBase):
     scheme: str
 
 
-class HTTPBearer(HTTPBase):  # type: ignore[override]
+class HTTPBearer(HTTPBase):
     scheme: t.Literal["bearer"] = "bearer"
     bearerFormat: t.Optional[str] = None
 

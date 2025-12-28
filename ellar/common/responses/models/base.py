@@ -33,7 +33,7 @@ class ResponseModelField(ModelField):
         )
         values, error = self.validate(obj, {}, loc=(self.alias,))
         if error:
-            _errors = list(error) if isinstance(error, list) else [error]  # type: ignore[list-item]
+            _errors = list(error) if isinstance(error, list) else [error]
             return None, _errors
         return values, []
 
