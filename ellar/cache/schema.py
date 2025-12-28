@@ -6,6 +6,10 @@ from ellar.pydantic import BaseModel, as_pydantic_validator, field_validator
 
 @as_pydantic_validator("__validate_input__", schema={"type": "object"})
 class TBaseCacheBackend:
+    """
+    Validator to ensure input is an instance of BaseCacheBackend.
+    """
+
     @classmethod
     def __validate_input__(
         cls: t.Type["TBaseCacheBackend"], __input: t.Any, _: t.Any
@@ -17,10 +21,17 @@ class TBaseCacheBackend:
 
 
 class CacheModuleSchemaSetup(BaseModel):
+    """
+    Schema for Cache Module Setup.
+    """
+
     CACHES: t.Dict[str, TBaseCacheBackend] = {}
 
     @field_validator("CACHES", mode="before")
     def pre_cache_validate(cls, value: t.Dict) -> t.Any:
+        """
+        Validates the CACHES configuration to ensure a 'default' backend is present.
+        """
         if value and not value.get("default"):
             raise ValueError("CACHES configuration must have a 'default' key")
         return value

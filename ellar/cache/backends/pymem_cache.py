@@ -15,7 +15,8 @@ from .base import BasePylibMemcachedCache
 
 
 class Client(HashClient):
-    """pymemcache client.
+    """
+    Pymemcache client.
     Customize pymemcache behavior as python-memcached (default backend)'s one.
     """
 
@@ -46,7 +47,9 @@ class Client(HashClient):
 
 
 class PyMemcacheCacheBackend(BasePylibMemcachedCache):
-    """An implementation of a cache binding using pymemcache."""
+    """
+    An implementation of a cache binding using pymemcache.
+    """
 
     MEMCACHE_CLIENT = Client
 

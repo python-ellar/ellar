@@ -16,9 +16,12 @@ from ellar.events import ensure_build_context
 @ensure_build_context(app_ready=True)
 def ensure_available_in_providers(*items: t.Any) -> None:
     """
-    Ensures that Providers at least belows to a particular module
-    :param items:
-    :return:
+    Ensures that Providers belong to a particular module.
+
+    If a provider is not found in any existing module, it is added to the
+    application module and exported.
+
+    :param items: List of providers to check.
     """
     app_module = current_injector.tree_manager.get_app_module()
 
@@ -43,9 +46,9 @@ def ensure_available_in_providers(*items: t.Any) -> None:
 @ensure_build_context(app_ready=True)
 def use_authentication_schemes(*authentication: AuthenticationHandlerType) -> None:
     """
-    Registered Authentication Handlers to the application
-    :param authentication:
-    :return:
+    Registers Authentication Handlers to the application.
+
+    :param authentication: List of authentication handlers or schemes.
     """
     __identity_scheme = current_injector.get(IIdentitySchemes)
     for auth in authentication:
@@ -58,9 +61,9 @@ def use_exception_handler(
     *exception_handlers: IExceptionHandler,
 ) -> None:
     """
-    Adds Application Exception Handlers
-    :param exception_handlers: IExceptionHandler
-    :return:
+    Adds Application Exception Handlers.
+
+    :param exception_handlers: List of exception handlers to register.
     """
     for exception_handler in exception_handlers:
         if exception_handler not in current_config.EXCEPTION_HANDLERS:
@@ -78,12 +81,12 @@ def enable_versioning(
     **init_kwargs: t.Any,
 ) -> None:
     """
-    Enables an Application Versioning scheme
-    :param schema: VersioningSchemes
-    :param version_parameter: versioning parameter lookup key. Default: 'version'
-    :param default_version: versioning default value. Default: None
-    :param init_kwargs: Other schema initialization keyword args.
-    :return:
+    Enables an Application Versioning scheme.
+
+    :param schema: The versioning scheme to use (e.g., URL, Header, Query).
+    :param version_parameter: The parameter name for version lookup. Default: 'version'.
+    :param default_version: The default version to use if none is specified. Default: None.
+    :param init_kwargs: Additional initialization arguments for the versioning scheme.
     """
     current_config.VERSIONING_SCHEME = schema.value(
         version_parameter=version_parameter,
@@ -97,9 +100,9 @@ def use_global_guards(
     *guards: t.Union[GuardCanActivate, t.Type[GuardCanActivate]],
 ) -> None:
     """
-    Registers Application Global Guards that affects all routes registered in ApplicationRouter
-    :param guards:
-    :return: None
+    Registers Application Global Guards that affect all routes registered in the ApplicationRouter.
+
+    :param guards: List of guards to register globally.
     """
     current_config.GLOBAL_GUARDS = list(current_config.GLOBAL_GUARDS) + list(guards)
     ensure_available_in_providers(*guards)
@@ -110,9 +113,9 @@ def use_global_interceptors(
     *interceptors: t.Union[EllarInterceptor, t.Type[EllarInterceptor]],
 ) -> None:
     """
-    Registers Application Global Interceptor that affects all routes registered in ApplicationRouter
-    :param interceptors:
-    :return: None
+    Registers Application Global Interceptors that affect all routes registered in the ApplicationRouter.
+
+    :param interceptors: List of interceptors to register globally.
     """
     current_config.GLOBAL_INTERCEPTORS = list(
         current_config.GLOBAL_INTERCEPTORS

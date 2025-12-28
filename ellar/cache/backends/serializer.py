@@ -8,10 +8,16 @@ class ICacheSerializer(ABC):
 
     @abstractmethod
     def load(self, data: t.Any) -> t.Any:  # pragma: no cover
+        """
+        Load data from cache.
+        """
         ...
 
     @abstractmethod
     def dumps(self, data: t.Any) -> t.Any:  # pragma: no cover
+        """
+        Dump data to cache.
+        """
         ...
 
 
@@ -20,12 +26,18 @@ class RedisSerializer(ICacheSerializer):
         self._protocol = protocol or self.default_protocol
 
     def load(self, data: t.Any) -> t.Any:
+        """
+        Load data from cache.
+        """
         try:
             return int(data)
         except ValueError:
             return pickle.loads(data)
 
     def dumps(self, data: t.Any) -> t.Any:
+        """
+        Dump data to cache.
+        """
         # Only skip pickling for integers, an int subclasses as bool should be
         # pickled.
         if isinstance(data, int):

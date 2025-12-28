@@ -20,6 +20,13 @@ from .options import SessionCookieOption
 
 @injectable
 class SessionClientStrategy(SessionStrategy):
+    """
+    Implements a client-side session strategy using signed cookies.
+
+    This strategy stores session data directly in the client's browser cookies,
+    signed with a secret key to prevent tampering.
+    """
+
     def __init__(self, config: Config) -> None:
         self._signer = itsdangerous.TimestampSigner(str(config.SECRET_KEY))
         self.config = config
@@ -42,6 +49,13 @@ class SessionClientStrategy(SessionStrategy):
         session: t.Union[str, SessionCookieObject],
         config: t.Optional[SessionCookieOption] = None,
     ) -> str:
+        """
+        Serializes the session object into a signed string suitable for a cookie value.
+
+        :param session: The session data to serialize.
+        :param config: Optional cookie configuration overrides.
+        :return: A serialized and signed session string.
+        """
         session_config = config or self._session_config
         if isinstance(session, SessionCookieObject):
             data = b64encode(json.dumps(dict(session)).encode("utf-8"))
@@ -58,6 +72,13 @@ class SessionClientStrategy(SessionStrategy):
         session_data: t.Optional[str],
         config: t.Optional[SessionCookieOption] = None,
     ) -> SessionCookieObject:
+        """
+        Deserializes a session string from a cookie into a SessionCookieObject.
+
+        :param session_data: The signed session string from the cookie.
+        :param config: Optional cookie configuration overrides.
+        :return: A SessionCookieObject containing the session data, or an empty object if validation fails.
+        """
         session_config = config or self._session_config
         if session_data:
             data = session_data.encode("utf-8")

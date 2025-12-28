@@ -9,6 +9,13 @@ from starlette.types import ASGIApp
 
 
 class IdentityMiddleware:
+    """
+    Middleware that manages user identity for requests.
+
+    It initializes the execution context and attempts to authenticate the user using the configured identity service.
+    If authentication fails or is not required, an `AnonymousIdentity` is assigned.
+    """
+
     def __init__(
         self,
         app: ASGIApp,
@@ -43,7 +50,7 @@ class IdentityMiddleware:
 
     def is_static(self, scope: TScope) -> bool:
         """
-        Check is the request is for a static file
+        Checks if the current request is for a static file.
         """
         return self._path_regex.match(scope["path"]) is not None
 

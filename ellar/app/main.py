@@ -44,6 +44,10 @@ logger = logging.getLogger("ellar")
 
 
 class App:
+    """
+    The main Ellar Application class.
+    """
+
     def __init__(
         self,
         config: "Config",
@@ -117,6 +121,11 @@ class App:
     async def use_global_guards(
         self, *guards: t.Union["GuardCanActivate", t.Type["GuardCanActivate"]]
     ) -> None:
+        """
+        Registers global guards for the application.
+
+        :param guards: Guards to register.
+        """
         async with self.with_injector_context():
             use_global_guards(*guards)
 
@@ -125,6 +134,11 @@ class App:
     async def use_global_interceptors(
         self, *interceptors: t.Union[EllarInterceptor, t.Type[EllarInterceptor]]
     ) -> None:
+        """
+        Registers global interceptors for the application.
+
+        :param interceptors: Interceptors to register.
+        """
         async with self.with_injector_context():
             use_global_interceptors(*interceptors)
 
@@ -173,11 +187,13 @@ class App:
         send: TSend = constants.empty_send,
     ) -> HttpRequestConnectionContext:
         """
-        Create an RequestContext during request and provides instance for `current_connection`.
-        e.g
+        Creates a RequestContext during a request and provides an instance for `current_connection`.
 
+        Example:
+        ```python
         request = current_connection.switch_http_connection().get_request()
         websocket = current_connection.switch_to_websocket().get_client()
+        ```
         """
         context_factory = self.injector.get(IHostContextFactory)
         return HttpRequestConnectionContext(
@@ -226,6 +242,14 @@ class App:
         default_version: t.Optional[str] = None,
         **init_kwargs: t.Any,
     ) -> None:
+        """
+        Enables API versioning for the application.
+
+        :param schema: Versioning scheme to use.
+        :param version_parameter: Parameter name for versioning.
+        :param default_version: Default version if none specified.
+        :param init_kwargs: Additional arguments for the versioning scheme.
+        """
         async with self.with_injector_context():
             enable_versioning(
                 schema,
@@ -262,6 +286,11 @@ class App:
         self,
         *exception_handlers: IExceptionHandler,
     ) -> None:
+        """
+        Registers global exception handlers.
+
+        :param exception_handlers: Exception handlers to register.
+        """
         async with self.with_injector_context():
             use_exception_handler(*exception_handlers)
 
@@ -274,6 +303,11 @@ class App:
     async def add_authentication_schemes(
         self, *authentication: AuthenticationHandlerType
     ) -> None:
+        """
+        Registers authentication schemes for the application.
+
+        :param authentication: Authentication schemes to register.
+        """
         async with self.with_injector_context():
             use_authentication_schemes(*authentication)
 
@@ -319,7 +353,11 @@ class App:
         return jinja_env
 
     def setup_jinja_environment(self) -> Environment:
-        """Sets up Jinja2 Environment and adds it to DI"""
+        """
+        Sets up the Jinja2 Environment and adds it to the dependency injection container.
+
+        :return: Configured Jinja2 Environment.
+        """
         jinja_environment = self._create_jinja_environment()
 
         self.injector.tree_manager.get_app_module().add_provider(

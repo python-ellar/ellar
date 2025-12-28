@@ -12,24 +12,33 @@ build_with_context_event = EventManager()
 
 def ensure_build_context(app_ready: bool = False) -> t.Callable:
     """
-    Ensure function runs under injector_context or when injector_context when bootstrapping application
-    This is useful when running a function that modifies Application config but at the time execution,
-    build_context is not available is not ready.
+    Ensures a function runs within an active `injector_context` or defers execution until the application is bootstrapping.
 
-    example:
+    This decorator is useful for functions that need to modify the Application configuration
+    or interact with the injector at execution time, handling cases where the
+    build context might not yet be ready.
+
+    If the `injector_context` is not available when the decorated function is called,
+    execution is deferred until the context is established.
+
+    Example:
+    ```python
     from ellar.core import config
 
     @ensure_build_context
     def set_config_value(key, value):
         config[key] = value
 
+    # These calls will run immediately if context is ready,
+    # or be deferred until bootstrapping overlaps.
     set_config_value("MY_SETTINGS", 45)
     set_config_value("MY_SETTINGS_2", 100)
+    ```
 
-    :param app_ready: Determine when a decorated function is called.
-    True value executes decorated function when App is ready in build context chain
-    False value executes decorated function when injector_context is ready
-    :return:
+    :param app_ready: Determines the required state for execution.
+        If ``True``, the function is executed only when the `App` instance is ready within the build context.
+        If ``False`` (default), the function is executed as soon as the `injector_context` is available.
+    :return: A decorator that wraps the target function.
     """
 
     async def _on_context(

@@ -30,12 +30,22 @@ def Controller(
     ========= CLASS DECORATOR ==============
 
     Controller Class Decorator
+
     :param prefix: Route Prefix default=[ControllerName]
     :param name: route name prefix for url reversing, eg name:route_name default=''
     :param include_in_schema: include controller in OPENAPI schema
     :param scope: Controller Instance Lifetime scope
     :param middleware: Controller Middlewares
-    :return: t.Type[ControllerBase]
+
+    ### Example
+
+    ```python
+    @Controller("/users")
+    class UserController(ControllerBase):
+        @get("/")
+        def index(self):
+            return {"message": "Hello World"}
+    ```
     """
     _prefix: t.Optional[t.Any] = prefix if prefix is not None else NOT_SET
     if prefix and isinstance(prefix, type):

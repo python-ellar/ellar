@@ -4,6 +4,10 @@ from ellar.common import Identity
 
 
 class UserIdentity(Identity):
+    """
+    Represents the identity of an authenticated user.
+    """
+
     roles: t.Any
     first_name: t.Optional[str]
     last_name: t.Optional[str]

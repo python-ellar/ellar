@@ -8,6 +8,12 @@ from .mixin import GuardAuthMixin
 
 
 class GuardAPIKeyQuery(APIKeyQuery, GuardAuthMixin, ABC):
+    """
+    Abstract base class for API Key authentication via query parameters.
+
+    Subclasses must implement `authentication_handler` to validate the key.
+    """
+
     openapi_in: str = "query"
     exception_class = APIException
 
@@ -21,6 +27,12 @@ class GuardAPIKeyQuery(APIKeyQuery, GuardAuthMixin, ABC):
 
 
 class GuardAPIKeyCookie(APIKeyCookie, GuardAuthMixin, ABC):
+    """
+    Abstract base class for API Key authentication via cookies.
+
+    Subclasses must implement `authentication_handler` to validate the key.
+    """
+
     openapi_in: str = "cookie"
     exception_class = APIException
 
@@ -34,6 +46,12 @@ class GuardAPIKeyCookie(APIKeyCookie, GuardAuthMixin, ABC):
 
 
 class GuardAPIKeyHeader(APIKeyHeader, GuardAuthMixin, ABC):
+    """
+    Abstract base class for API Key authentication via headers.
+
+    Subclasses must implement `authentication_handler` to validate the key.
+    """
+
     openapi_in: str = "header"
     exception_class = APIException
 

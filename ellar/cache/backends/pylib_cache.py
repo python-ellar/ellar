@@ -15,7 +15,9 @@ from .base import BasePylibMemcachedCache
 
 
 class PyLibMCCacheBackend(BasePylibMemcachedCache):
-    """An implementation of a cache binding using pylibmc"""
+    """
+    An implementation of a cache binding using pylibmc.
+    """
 
     MEMCACHE_CLIENT = Client
 

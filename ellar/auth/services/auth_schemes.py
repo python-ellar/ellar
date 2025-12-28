@@ -6,6 +6,10 @@ from ..handlers import AuthenticationHandlerType
 
 
 class AppIdentitySchemes(IIdentitySchemes):
+    """
+    Manages the collection of registered authentication schemes for the application.
+    """
+
     __slots__ = ("_authentication_schemes",)
 
     def __init__(self) -> None:
@@ -14,11 +18,19 @@ class AppIdentitySchemes(IIdentitySchemes):
     def add_authentication(
         self, authentication_scheme: AuthenticationHandlerType
     ) -> None:
+        """
+        Registers a new authentication scheme.
+        """
         self._authentication_schemes[authentication_scheme.scheme] = (
             authentication_scheme
         )
 
     def find_authentication_scheme(self, scheme: str) -> AuthenticationHandlerType:
+        """
+        Retrieves an authentication scheme by name.
+
+        :raises RuntimeError: If the scheme is not found.
+        """
         try:
             return self._authentication_schemes[scheme]
         except KeyError as ex:
@@ -29,5 +41,8 @@ class AppIdentitySchemes(IIdentitySchemes):
     def get_authentication_schemes(
         self,
     ) -> t.Generator[AuthenticationHandlerType, t.Any, t.Any]:
+        """
+        Yields all registered authentication schemes.
+        """
         for _, v in self._authentication_schemes.items():
             yield v

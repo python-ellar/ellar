@@ -15,6 +15,10 @@ from ellar.di import injectable
 
 @dataclasses.dataclass
 class RouteCacheOptions:
+    """
+    Cache Options for Route handlers
+    """
+
     ttl: t.Union[int, float]
     key_prefix: str
     make_key_callback: t.Callable[[IExecutionContext, str], str]
@@ -75,14 +79,33 @@ def Cache(
     make_key_callback: t.Optional[t.Callable[[IExecutionContext, str], str]] = None,
 ) -> t.Callable:
     """
-    =========CONTROLLER AND ROUTE FUNCTION DECORATOR ==============
+    Decorates a controller or route function to cache its response.
 
-    :param ttl: the time to live
-    :param key_prefix: cache key prefix
-    :param version: will be used in constructing the key
-    :param backend: Cache Backend to use. Default is `default`
-    :param make_key_callback: Key dynamic construct.
-    :return: TCallable
+    :param ttl: The time-to-live for the cache in seconds.
+    :param key_prefix: A prefix to identify the cache key.
+    :param version: A version string to be used in constructing the key.
+    :param backend: The name of the cache backend to use. Defaults to `default`.
+    :param make_key_callback: A callable to dynamically construct the cache key.
+    :return: A callable decorator.
+
+    Examples:
+    ---------
+    ```python
+    from ellar.common import get, Controller
+    from ellar.cache import Cache
+
+    @Controller
+    class MyController:
+        @get("/cached-route")
+        @Cache(ttl=60, key_prefix="my_route")
+        def cached_route(self):
+            return {"message": "This response is cached for 60 seconds"}
+
+        @get("/dynamic-key")
+        @Cache(ttl=300, make_key_callback=lambda ctx, prefix: f"{prefix}:{ctx.switch_to_http_connection().query_params['id']}")
+        def dynamic_key_route(self, id: int):
+            return {"id": id, "message": "Cached based on query param 'id'"}
+    ```
     """
 
     def _wraps(func: t.Callable) -> t.Callable:

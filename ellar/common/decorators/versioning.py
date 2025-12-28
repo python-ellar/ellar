@@ -11,6 +11,14 @@ def Version(*_version: str) -> t.Callable:
 
      Defines route function version
     :param _version: allowed versions
-    :return:
+
+    ### Example
+
+    ```python
+    @get("/")
+    @Version("1.0", "1.1")
+    def index():
+        return {"version": "1.0"}
+    ```
     """
     return set_meta(VERSIONING_KEY, {str(i) for i in _version})
