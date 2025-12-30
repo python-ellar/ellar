@@ -120,7 +120,7 @@ class RouteOperationBase:
         if match[0] is Match.FULL:
             version_scheme_resolver: "BaseAPIVersioningResolver" = t.cast(
                 "BaseAPIVersioningResolver",
-                scope[constants.SCOPE_API_VERSIONING_RESOLVER],
+                scope.get(constants.SCOPE_API_VERSIONING_RESOLVER),
             )
             if not version_scheme_resolver.can_activate(
                 route_versions=self.allowed_version

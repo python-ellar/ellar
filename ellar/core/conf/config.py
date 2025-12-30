@@ -22,7 +22,7 @@ class Config(ConfigDefaultTypesMixin):
 
     def __init__(
         self,
-        config_module: t.Optional[str] = None,
+        config_module: t.Optional[t.Union[str, dict]] = None,
         config_prefix: t.Optional[str] = None,
         **mapping: t.Any,
     ):
