@@ -1,4 +1,3 @@
-import secrets
 import typing as t
 
 from ellar.common import EllarInterceptor, GuardCanActivate
@@ -254,60 +253,3 @@ class ConfigSchema(Serializer, ConfigDefaultTypesMixin):
 
 
 ConfigSchema.model_rebuild()
-
-
-def default_config_settings():
-    from ellar.common import JSONResponse
-    from ellar.core.versioning import DefaultAPIVersioning
-    from ellar.pydantic import ENCODERS_BY_TYPE as encoders_by_type
-
-    return {
-        "DEBUG": False,
-        "DEFAULT_JSON_CLASS": JSONResponse,
-        "SECRET_KEY": secrets.token_hex(16),
-        # injector auto_bind = True allows you to resolve types that are not registered on the container
-        # For more info, read: https://injector.readthedocs.io/en/latest/index.html
-        "INJECTOR_AUTO_BIND": False,
-        # jinja Environment options
-        # https://jinja.palletsprojects.com/en/3.0.x/api/#high-level-api
-        "JINJA_TEMPLATES_OPTIONS": {},
-        # Injects context to jinja templating context values
-        "TEMPLATES_CONTEXT_PROCESSORS": [
-            "ellar.core.templating.context_processors:request_context",
-            "ellar.core.templating.context_processors:user",
-            "ellar.core.templating.context_processors:request_state",
-        ],
-        # Application route versioning scheme
-        "VERSIONING_SCHEME": DefaultAPIVersioning(),
-        # Enable or Disable Application Router route searching by appending backslash
-        "REDIRECT_SLASHES": False,
-        # Define references to static folders in python packages.
-        # eg STATIC_FOLDER_PACKAGES = [('boostrap4', 'statics')]
-        "STATIC_FOLDER_PACKAGES": [],
-        # Define references to static folders defined within the project
-        "STATIC_DIRECTORIES": [],
-        # static route path
-        "STATIC_MOUNT_PATH": "/static",
-        "CORS_ALLOW_ORIGINS": ["*"],
-        "CORS_ALLOW_METHODS": ["*"],
-        "CORS_ALLOW_HEADERS": ["*"],
-        "ALLOWED_HOSTS": ["*"],
-        # Application middlewares
-        "MIDDLEWARE": [
-            "ellar.core.middleware.trusted_host:trusted_host_middleware",
-            "ellar.core.middleware.cors:cors_middleware",
-            "ellar.core.middleware.errors:server_error_middleware",
-            "ellar.core.middleware.versioning:versioning_middleware",
-            "ellar.auth.middleware.session:session_middleware",
-            "ellar.auth.middleware.auth:identity_middleware",
-            "ellar.core.middleware.exceptions:exception_middleware",
-        ],
-        # A dictionary mapping either integer status codes,
-        # or exception class types onto callables which handle the exceptions.
-        # Exception handler callables should be of the form
-        # `handler(context:IExecutionContext, exc: Exception) -> response`
-        # and may be either standard functions, or async functions.
-        "EXCEPTION_HANDLERS": ["ellar.core.exceptions:error_404_handler"],
-        # Object Serializer custom encoders
-        "SERIALIZER_CUSTOM_ENCODER": encoders_by_type,
-    }
