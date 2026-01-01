@@ -1,3 +1,18 @@
+# 0.9.5
+## What's Changed
+* Delete .github/FUNDING.yml by @eadwinCode in https://github.com/python-ellar/ellar/pull/308
+* chores: Adding more code documentation Part 1 by @eadwinCode in https://github.com/python-ellar/ellar/pull/309
+* Bump ruff from 0.14.3 to 0.14.7 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/307
+* Bump mypy from 1.18.2 to 1.19.0 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/306
+* Bump actions/checkout from 5 to 6 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/304
+* Bump uvicorn[standard] from 0.38.0 to 0.39.0 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/312
+* Bump mypy from 1.19.0 to 1.19.1 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/313
+* Bump codecov/codecov-action from 5.5.1 to 5.5.2 by @dependabot[bot] in https://github.com/python-ellar/ellar/pull/311
+* fixed keyerror when resolving api versioning by @eadwinCode in https://github.com/python-ellar/ellar/pull/310
+
+
+**Full Changelog**: https://github.com/python-ellar/ellar/compare/0.9.4...0.9.5
+
 # 0.9.4
 ## What's Changed
 * chores: Response Model Tuple Refactor by @eadwinCode in https://github.com/python-ellar/ellar/pull/303
