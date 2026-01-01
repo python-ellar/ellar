@@ -20,12 +20,12 @@ from .sample import EventGateway, GatewayOthers, GatewayWithGuards
 class TestEventGateway:
     test_client = TestGateway.create_test_module(controllers=[EventGateway])
 
-    async def test_socket_connection_work(self):
+    async def test_socket_connection_work(self, unused_tcp_port):
         my_response_message = []
         connected_called = False
         disconnected_called = False
 
-        async with self.test_client.run_with_server() as ctx:
+        async with self.test_client.run_with_server(port=unused_tcp_port) as ctx:
 
             @ctx.sio.event
             async def my_response(message):
@@ -52,11 +52,11 @@ class TestEventGateway:
         ]
         assert disconnected_called and connected_called
 
-    async def test_broadcast_work(self):
+    async def test_broadcast_work(self, unused_tcp_port):
         sio_1_response_message = []
         sio_2_response_message = []
 
-        async with self.test_client.run_with_server() as ctx:
+        async with self.test_client.run_with_server(port=unused_tcp_port) as ctx:
             ctx_2 = ctx.new_socket_client_context()
 
             @ctx.sio.on("my_response")
@@ -94,10 +94,10 @@ class TestEventGateway:
 class TestGatewayWithGuards:
     test_client = TestGateway.create_test_module(controllers=[GatewayWithGuards])
 
-    async def test_socket_connection_work(self):
+    async def test_socket_connection_work(self, unused_tcp_port):
         my_response_message = []
 
-        async with self.test_client.run_with_server() as ctx:
+        async with self.test_client.run_with_server(port=unused_tcp_port) as ctx:
 
             @ctx.sio.event
             async def my_response(message):
@@ -113,10 +113,10 @@ class TestGatewayWithGuards:
             {"auth-key": "supersecret", "data": "Testing Broadcast"}
         ]
 
-    async def test_event_with_header_work(self):
+    async def test_event_with_header_work(self, unused_tcp_port):
         my_response_message = []
 
-        async with self.test_client.run_with_server() as ctx:
+        async with self.test_client.run_with_server(port=unused_tcp_port) as ctx:
 
             @ctx.sio.event
             async def my_response(message):
@@ -132,10 +132,10 @@ class TestGatewayWithGuards:
             {"data": "Testing Broadcast", "x_auth_key": "supersecret"}
         ]
 
-    async def test_event_with_plain_response(self):
+    async def test_event_with_plain_response(self, unused_tcp_port):
         my_response_message = []
 
-        async with self.test_client.run_with_server() as ctx:
+        async with self.test_client.run_with_server(port=unused_tcp_port) as ctx:
 
             @ctx.sio.on("my_plain_response")
             async def message_receive(message):
@@ -151,10 +151,10 @@ class TestGatewayWithGuards:
             {"data": "Testing Broadcast", "x_auth_key": "supersecret"}
         ]
 
-    async def test_failed_to_connect(self):
+    async def test_failed_to_connect(self, unused_tcp_port):
         my_response_message = []
 
-        async with self.test_client.run_with_server() as ctx:
+        async with self.test_client.run_with_server(port=unused_tcp_port) as ctx:
             ctx = typing.cast(RunWithServerContext, ctx)
 
             @ctx.sio.on("error")
@@ -169,10 +169,10 @@ class TestGatewayWithGuards:
 
         assert my_response_message == [{"code": 1011, "reason": "Authorization Failed"}]
 
-    async def test_failed_process_message_sent(self):
+    async def test_failed_process_message_sent(self, unused_tcp_port):
         my_response_message = []
 
-        async with self.test_client.run_with_server() as ctx:
+        async with self.test_client.run_with_server(port=unused_tcp_port) as ctx:
             ctx = typing.cast(RunWithServerContext, ctx)
 
             @ctx.sio.on("error")
@@ -224,13 +224,15 @@ class TestGatewayExceptions:
             ),
         ],
     )
-    async def test_exception_handling_works_debug_true_or_false(self, debug, result):
+    async def test_exception_handling_works_debug_true_or_false(
+        self, debug, result, unused_tcp_port
+    ):
         test_client = TestGateway.create_test_module(
             controllers=[GatewayOthers], config_module={"DEBUG": debug}
         )
         my_response_message = []
 
-        async with test_client.run_with_server() as ctx:
+        async with test_client.run_with_server(port=unused_tcp_port) as ctx:
             ctx = typing.cast(RunWithServerContext, ctx)
             ctx2 = ctx.new_socket_client_context()
 
@@ -253,11 +255,11 @@ class TestGatewayExceptions:
 
         assert my_response_message == result
 
-    async def test_message_with_extra_args(self):
+    async def test_message_with_extra_args(self, unused_tcp_port):
         test_client = TestGateway.create_test_module(controllers=[GatewayOthers])
         my_response_message = []
 
-        async with test_client.run_with_server() as ctx:
+        async with test_client.run_with_server(port=unused_tcp_port) as ctx:
             ctx = typing.cast(RunWithServerContext, ctx)
 
             @ctx.sio.on("error")

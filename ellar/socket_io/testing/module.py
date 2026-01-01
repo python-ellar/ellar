@@ -1,9 +1,17 @@
 import typing as t
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import socketio
 from ellar.testing.module import Test, TestingModule
 from ellar.testing.uvicorn_server import EllarUvicornServer
+from starlette.routing import Host, Mount
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from ellar.common import ControllerBase, GuardCanActivate, ModuleRouter
+    from ellar.core import ModuleBase
+    from ellar.core.routing import EllarControllerMount
+    from ellar.di import ProviderConfig
 
 
 class RunWithServerContext:
@@ -62,3 +70,37 @@ class SocketIOTestingModule(TestingModule):
 
 class TestGateway(Test):
     TESTING_MODULE = SocketIOTestingModule
+
+    @classmethod
+    def create_test_module(
+        cls,
+        controllers: t.Sequence[t.Union[t.Type["ControllerBase"], t.Type]] = (),
+        routers: t.Sequence[
+            t.Union["ModuleRouter", "EllarControllerMount", Mount, Host, t.Callable]
+        ] = (),
+        providers: t.Sequence[t.Union[t.Type, "ProviderConfig"]] = (),
+        template_folder: t.Optional[str] = "templates",
+        base_directory: t.Optional[t.Union[Path, str]] = None,
+        static_folder: str = "static",
+        modules: t.Sequence[t.Union[t.Type, t.Any]] = (),
+        application_module: t.Optional[t.Union[t.Type["ModuleBase"], str]] = None,
+        global_guards: t.Optional[
+            t.List[t.Union[t.Type["GuardCanActivate"], "GuardCanActivate"]]
+        ] = None,
+        config_module: t.Optional[t.Union[str, t.Dict]] = None,
+    ) -> SocketIOTestingModule:
+        return t.cast(
+            SocketIOTestingModule,
+            super().create_test_module(
+                controllers=controllers,
+                routers=routers,
+                providers=providers,
+                template_folder=template_folder,
+                base_directory=base_directory,
+                static_folder=static_folder,
+                modules=modules,
+                application_module=application_module,
+                global_guards=global_guards,
+                config_module=config_module,
+            ),
+        )

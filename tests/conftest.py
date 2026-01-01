@@ -1,4 +1,6 @@
+import contextlib
 import functools
+import socket
 from pathlib import PurePath, PurePosixPath, PureWindowsPath
 from uuid import uuid4
 
@@ -52,3 +54,17 @@ def reflect_context():
 async def async_reflect_context():
     async with reflect.async_context():
         yield
+
+
+def _unused_port(socket_type: int) -> int:
+    """Find an unused localhost port from 1024-65535 and return it."""
+    with contextlib.closing(socket.socket(type=socket_type)) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
+
+
+# This was copied from pytest-asyncio.
+# Ref.: https://github.com/pytest-dev/pytest-asyncio/blob/25d9592286682bc6dbfbf291028ff7a9594cf283/pytest_asyncio/plugin.py#L525-L527
+@pytest.fixture
+def unused_tcp_port() -> int:
+    return _unused_port(socket.SOCK_STREAM)

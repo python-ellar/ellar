@@ -116,7 +116,7 @@ def router_default_decorator(func: ASGIApp) -> ASGIApp:
     @functools.wraps(func)
     async def _wrap(scope: TScope, receive: TReceive, send: TSend) -> None:
         version_scheme_resolver: "BaseAPIVersioningResolver" = t.cast(
-            "BaseAPIVersioningResolver", scope[SCOPE_API_VERSIONING_RESOLVER]
+            "BaseAPIVersioningResolver", scope.get(SCOPE_API_VERSIONING_RESOLVER)
         )
         if version_scheme_resolver and version_scheme_resolver.matched_any_route:
             version_scheme_resolver.raise_exception()
